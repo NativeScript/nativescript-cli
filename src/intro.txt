@@ -1,0 +1,28 @@
+(function(undefined) {
+
+  // Save reference to global object (window in browser, global on server)
+  var root = this;
+
+  // Define top-level namespace. Export for browser and CommonJS.
+  /** @namespace Kinvey */
+  var Kinvey;
+  if('undefined' !== typeof exports) {
+    Kinvey = exports;
+  }
+  else {
+    Kinvey = root.Kinvey = {};
+  }
+
+  // Convenient methods for object extending and inheritance.
+  var extend = function(target, source) {
+    Object.getOwnPropertyNames(source).forEach(function(property) {
+      Object.defineProperty(
+        target, property, Object.getOwnPropertyDescriptor(source, property) || {}
+      );
+    });
+    return target;
+  };
+  var inherits = function(sub, sup) {
+    sub.prototype = extend(Object.create(sup.prototype), sub.prototype);
+    sub._super = sup.prototype;
+  };

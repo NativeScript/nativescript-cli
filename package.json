@@ -1,0 +1,16 @@
+{
+  "name": "js-library",
+  "version": "0.1.0dev",
+  "private": true,
+  "description": "Kinvey JavaScript SDK for HTML5",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.2.15"
+  },
+  "engines": {
+    "node": ">= 0.6.13"
+  },
+  "scripts": {
+    "test": "grunt test"
+  }
+}

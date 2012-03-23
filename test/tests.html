@@ -1,0 +1,74 @@
+<!--
+
+Copyright (c) 2012 Kinvey, Inc. All rights reserved.
+
+Licensed to Kinvey, Inc. under one or more contributor
+license agreements.  See the NOTICE file distributed with 
+this work for additional information regarding copyright 
+ownership.  Kinvey, Inc. licenses this file to you under the 
+Apache License, Version 2.0 (the "License"); you may not 
+use this file except in compliance with the License.  You 
+may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+-->
+<!doctype html>
+<html>
+<head>
+<title>Kinvey Library for JavaScript</title>
+<link href="../lib/jasmine-1.1.0/jasmine.css" rel="stylesheet"></link>
+</head>
+<body>
+    <!-- Environment -->
+    <script src="../lib/jasmine-1.1.0/jasmine.js"></script>
+    <script src="../lib/jasmine-1.1.0/jasmine-html.js"></script>
+
+    <!-- Source -->
+    <script src="../dist/kinvey.js"></script>
+
+    <!-- Test base -->
+    <script>
+          // Define test client
+          Kinvey.init({
+            appKey: 'kid1080',
+            appSecret: 'bee3678b11bd4d268da44902e8ddb3ad'
+          });
+          var TEST_COLLECTION = 'testobject';
+          var TEST_TIMEOUT = 10 * 1000;//10s
+        </script>
+
+    <!-- Test suite -->
+    <script src="UtilTest.js"></script>
+    <script src="KinveyTest.js"></script>
+
+    <script src="JsonQueryBuilderTest.js"></script>
+
+    <script src="EntityTest.js"></script>
+    <script src="UserTest.js"></script>
+    <script src="CollectionTest.js"></script>
+    <script src="UserCollectionTest.js"></script>
+
+    <!-- Run -->
+    <script>
+          // Mock user
+          Kinvey.setCurrentUser(new Kinvey.User({
+            _id: '4f6c901ab19f16d9380012cb',
+            username: 'c5b8b3f2-85e5-456a-a90d-65374824c3c4',
+            password: '29bb3a83-a653-48e1-95f0-0e6547e21bd2'
+          }));
+
+          // Start tests
+          var env = jasmine.getEnv();
+          env.addReporter(new jasmine.TrivialReporter());
+          env.execute();
+        </script>
+</body>
+</html>
