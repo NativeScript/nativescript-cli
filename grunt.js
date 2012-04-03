@@ -1,70 +1,112 @@
-/*global config:true, task:true*/
-config.init({
-  pkg: '<json:package.json>',
-  meta: {
-    banner: '/*!\n' +
-      ' * Copyright (c) <%= template.today("yyyy") %> Kinvey, Inc. All rights reserved.\n' +
-      ' *\n' +
-      ' * Licensed to Kinvey, Inc. under one or more contributor\n' +
-      ' * license agreements.  See the NOTICE file distributed with\n' +
-      ' * this work for additional information regarding copyright\n' +
-      ' * ownership.  Kinvey, Inc. licenses this file to you under the\n' +
-      ' * Apache License, Version 2.0 (the "License"); you may not\n' +
-      ' * use this file except in compliance with the License.  You\n' +
-      ' * may obtain a copy of the License at\n' +
-      ' *\n' +
-      ' *         http://www.apache.org/licenses/LICENSE-2.0\n' +
-      ' *\n' +
-      ' * Unless required by applicable law or agreed to in writing,\n' +
-      ' * software distributed under the License is distributed on an\n' +
-      ' * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n' +
-      ' * KIND, either express or implied.  See the License for the\n' +
-      ' * specific language governing permissions and limitations\n' +
-      ' * under the License.\n' +
-      ' */'
-  },
-  concat: {
-    'dist/kinvey.js': ['<banner>', 'src/intro.txt', 'src/Kinvey.js', 'src/query/Query.js', 'src/query/JsonQueryBuilder.js', 'src/query/SimpleQuery.js', 'src/net/Net.js', 'lib/net/Http.js', 'src/Entity.js', 'src/Collection.js', 'src/User.js', 'src/UserCollection.js', 'src/outro.txt']
-  },
-  min: {
-    'dist/kinvey.min.js': ['<banner>', 'dist/kinvey.js']
-  },
-  test: {
-    files: ['test/Kinvey.js']
-  },
-  lint: {
-    beforeconcat: ['grunt.js', 'src/**/*.js', 'test/Kinvey.js'],//, 'test/**/*.js'
-    afterconcat:  ['dist/kinvey.js']
-  },
-  watch: {
-    files: '<config:lint.files>',
-    tasks: 'lint test'
-  },
-  jshint: {
-    options: {
-      curly: true,
-      eqeqeq: true,
-      immed: true,
-      latedef: true,
-      newcap: true,
-      noarg: true,
-      undef: true,
-      boss: true,
-      eqnull: true,
-      expr: true
-    },
-    globals: {
-      exports: true,
-      window: true,//should be removed at some point
-      
-      Kinvey: true,
-      extend: true,
-      inherits: true,
-      currentUser: true
-    }
-  },
-  uglify: {}
-});
+// Export configuration
+module.exports = function(grunt) {
 
-// Default task.
-task.registerTask('default', 'lint:beforeconcat concat test lint:afterconcat min');
+  // Project configuration
+  grunt.initConfig({
+    // Meta information
+    dir: {//project directories
+      apidoc: 'docs/api',
+      dist: 'dist',
+      src: 'src',
+      test: 'test'
+    },
+    pkg: '<json:package.json>',
+    sdk: '<%= pkg.name %>-<%= pkg.version %>',//dist base filename
+    meta: {
+      banner: [//sdk will be prefixed with this banner
+        '/*!', ' * <%= sdk %>', ' *',
+        ' * Copyright (c) <%= grunt.template.today("yyyy") %> Kinvey, Inc. All rights reserved.', ' *',
+        ' * Licensed to Kinvey, Inc. under one or more contributor',
+        ' * license agreements.  See the NOTICE file distributed with',
+        ' * this work for additional information regarding copyright',
+        ' * ownership.  Kinvey, Inc. licenses this file to you under the',
+        ' * Apache License, Version 2.0 (the "License"); you may not',
+        ' * use this file except in compliance with the License.  You',
+        ' * may obtain a copy of the License at', ' *',
+        ' *         http://www.apache.org/licenses/LICENSE-2.0', ' *',
+        ' * Unless required by applicable law or agreed to in writing,',
+        ' * software distributed under the License is distributed on an',
+        ' * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY',
+        ' * KIND, either express or implied.  See the License for the',
+        ' * specific language governing permissions and limitations',
+        ' * under the License.', ' */'
+      ].join("\n")
+    },
+
+    // JSHint task
+    lint: {
+//      beforeconcat: ['grunt.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.js' ],
+      beforeconcat: ['grunt.js', '<%= dir.src %>/**/*.js' ],
+      afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
+    },
+    jshint: {//http://www.jshint.com/options/
+      options: {
+        curly: true,//require { }
+        eqeqeq: true,//=== instead of ==
+        immed: true,//wrap IIFE in parentheses
+        latedef: true,//variable declared before usage
+        newcap: true,//capitalize class names
+        noarg: true,//forbids arguments.calle(e/r)
+        undef: true,//checks for undefined variables
+        trailing: true,//forbid trailing whitespace
+
+        eqnull: true,//== allowed for undefined/null checking
+
+        node: true//node environment
+      }
+    },
+
+    // Concatenation task
+    concat: {
+      dist: {
+        src: [
+          '<banner>',
+          '<%= dir.src %>/intro.txt',
+          '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/JsonQueryBuilder.js',
+          '<%= dir.src %>/query/SimpleQuery.js',
+          '<%= dir.src %>/net/Net.js',
+          '<%= dir.src %>/net/Http.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/User.js',
+          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/outro.txt'
+        ],
+        dest: '<%= dir.dist %>/<%= sdk %>.js'
+      }
+    },
+
+    // API generation task
+    apidoc: {
+      files: {
+        src: ['<%= dir.dist %>/<%= sdk %>.js'],
+        dest: '<%= dir.apidoc %>'
+      }
+    },
+
+    // Minification task
+    min: {
+      '<%= dir.dist %>/<%= sdk %>.min.js': [ '<banner>', '<%= dir.dist %>/<%= sdk %>.js' ],
+    },
+
+    // Watch files
+    watch: {
+      files: '<config:lint.beforeconcat>',
+      tasks: 'default'
+    },
+
+    // Clean task
+    clean: {
+      files: ['<%= dir.apidoc %>', '<%= dir.dist %>']
+    }
+  });
+
+  // Load task plugins
+  grunt.loadTasks('lib/grunt/tasks');
+
+  // Register tasks
+  grunt.registerTask('default', 'lint:beforeconcat concat lint:afterconcat apidoc min');
+
+};

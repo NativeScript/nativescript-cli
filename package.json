@@ -3,10 +3,12 @@
   "version": "0.1.0dev",
   "private": true,
   "description": "Kinvey JavaScript SDK for HTML5",
-  "dependencies": {},
-  "devDependencies": {
-    "grunt": "~0.2.15"
+  "dependencies": {
+    "grunt": "~0.2.15",
+    "jsdoc-toolkit": "~0.0.2",
+    "rimraf": "~2.0.1"
   },
+  "devDependencies": { },
   "engines": {
     "node": ">= 0.6.13"
   },
