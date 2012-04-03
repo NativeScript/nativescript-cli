@@ -5,21 +5,21 @@
 
   /**
    * API version
-   *
+   * 
    * @constant
    */
   Kinvey.API_VERSION = 0;
 
   /**
    * SDK version
-   *
+   * 
    * @constant
    */
   Kinvey.SDK_VERSION = '0.1.0dev';
 
   /**
    * Returns current user, or null if not set
-   *
+   * 
    * @return {Kinvey.User} current user
    */
   Kinvey.getCurrentUser = function() {
@@ -28,14 +28,14 @@
 
   /**
    * Initializes library for use with Kinvey services
-   *
+   * 
    * @example <code>
    * Kinvey.init({
    *   appKey: '<your-app-key>',
    *   appSecret: '<your-app-secret>'
    * });
    * </code>
-   *
+   * 
    * @param {Object} options
    * @throws {Error} on empty appKey, empty appSecret
    */
@@ -54,7 +54,7 @@
 
   /**
    * Round trips a request to the server and back, helps ensure connectivity
-   *
+   * 
    * @example <code>
    * Kinvey.ping(function(response) {
    *   console.log('Ping successful', response);
@@ -62,7 +62,7 @@
    *   console.log('Ping failed', error);
    * });
    * </code>
-   *
+   * 
    * @param {function(Object)} [success] success callback
    * @param {function(Object)} [failure] failure callback
    */
@@ -73,7 +73,7 @@
 
   /**
    * Sets current user
-   *
+   * 
    * @param {Kinvey.User} user user instance
    */
   Kinvey.setCurrentUser = function(user) {

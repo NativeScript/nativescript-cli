@@ -53,7 +53,6 @@ module.exports = function(grunt) {
         newcap: true,//capitalize class names
         noarg: true,//forbids arguments.calle(e/r)
         undef: true,//checks for undefined variables
-        trailing: true,//forbid trailing whitespace
 
         eqnull: true,//== allowed for undefined/null checking
 
