@@ -18,9 +18,9 @@
     if(null == name) {
       throw new Error('Name must not be null');
     }
-    if(null != query && !(query instanceof Kinvey.Query.SimpleQuery)) {
-      throw new Error('Query must be an instance of Kinvey.Query.SimpleQuery');
-    }
+    // if(null != query && !(query instanceof Kinvey.Query.SimpleQuery)) {
+    // throw new Error('Query must be an instance of Kinvey.Query.SimpleQuery');
+    // }
 
     // Constants
     /**
@@ -33,9 +33,16 @@
 
     // Properties
     /**
-     * List of entities in collection
+     * Object owned by collection
      * 
      * @private
+     * @type Object
+     */
+    this.entity = Kinvey.Entity;
+
+    /**
+     * List of entities in collection
+     * 
      * @type Array
      */
     this.list = [ ];
@@ -54,40 +61,78 @@
      * @private
      * @type Kinvey.Query.SimpleQuery
      */
-    this.query = query || new Kinvey.Query.SimpleQuery();
+    // this.query = query || new Kinvey.Query.SimpleQuery();
   };
 
   // Methods
   extend(Kinvey.Collection.prototype, {
     /** @lends Kinvey.Collection# */
 
+    // /**
+    // * Adds filter criteria to collection query
+    // *
+    // * @param {string} property property name
+    // * @param {string} operator one of Kinvey.Query operator constants
+    // * @param {*} value property value
+    // * @throws {Error} on empty property or empty operator
+    // */
+    // addFilterCriteria: function(property, operator, value) {
+    // if(null == property) {
+    // throw new Error('Property must not be null');
+    // }
+    // if(null == operator) {
+    // throw new Error('Operator must not be null');
+    // }
+    // this.query.addCriteria(property, operator, value);
+    // },
     /**
-     * Adds filter criteria to collection query
+     * Fetches all entities in collection.
      * 
-     * @param {string} property property name
-     * @param {string} operator one of Kinvey.Query operator constants
-     * @param {*} value property value
-     * @throws {Error} on empty property or empty operator
+     * @param {function()} [success] Success callback. {this} is the collection
+     *          instance.
+     * @param {function(Object)} [failure] Failure callback. {this} is the
+     *          collection instance. Only argument is an error object.
      */
-    addFilterCriteria: function(property, operator, value) {
-      if(null == property) {
-        throw new Error('Property must not be null');
-      }
-      if(null == operator) {
-        throw new Error('Operator must not be null');
-      }
-      this.query.addCriteria(property, operator, value);
+    all: function(success, failure) {
+      // Build request
+      var net = Kinvey.Net.factory(this.API, this.name);
+      net.send(Kinvey.Net.READ, bind(this, function(response) {
+        for( var entity in response) {
+          this.list.push(new this.entity(this.name, response[entity]));
+        }
+        bind(this, success)();
+      }), bind(this, failure));
     },
 
     /**
-     * Fetches all entities in collection
+     * Clears collection. This method is NOT atomic, it exits on first failure.
      * 
-     * @param {function([Array])} [success] success callback
-     * @param {function([Object])} [failure] failure callback
+     * @param {function()} [success] Success callback. {this} is the collection
+     *          instance.
+     * @param {function(Object)} [failure] Failure callback. {this} is the
+     *          collection instance. Only argument is an error object.
      */
-    all: function(success, failure) {
-      this.clearFilterCriteria();
-      this.fetch(success, failure);
+    clear: function(success, failure) {
+      failure = bind(this, failure);
+      this.list = [];//clear list
+
+      // Retrieve all entities, and remove them one by one.
+      var self = this;
+      this.all(function() {
+        var it = function() {
+          var entity = self.list[0];
+          if(entity) {
+            entity.destroy(function() {
+              self.list.shift();
+              it();
+            }, failure);
+          }
+          else {
+            bind(self, success)();
+          }
+        };
+        it();
+      }, failure);
     },
 
     /**
@@ -143,54 +188,6 @@
       }, function(error) {
         failure && failure(error);
       });
-    },
-
-    /**
-     * Removes all entities in collection. This operation is not atomic, should
-     * be used with caution.
-     * 
-     * @param {function()} [success] success callback
-     * @param {function(Object)} [failure] failure callback
-     */
-    removeAll: function(success, failure) {
-      var self = this;// context
-
-      // Retrieve all entities first
-      this.all(function() {
-        // If collection is already empty, return immediately
-        if(0 === self.list.length) {
-          success && success();
-          return;
-        }
-
-        // Collection not empty, remove one by one and track status
-        var i = self.list.length;
-        var updateStatus = function() {
-          // On every update, an item is removed. When all items are
-          // removed, success callback is triggered.
-          if(0 === --i) {
-            success && success();
-          }
-        };
-
-        // Remove entities one by one. Failures are not caught.
-        self.list.forEach(function(entity) {
-          entity.remove(updateStatus);
-        });
-      }, function(error) {
-        failure && failure(error);
-      });
-    },
-
-    /**
-     * Creates entity from JSON data
-     * 
-     * @private
-     * @param {Object} map
-     * @return {Kinvey.Entity}
-     */
-    _toEntity: function(map) {
-      return new Kinvey.Entity(this.name, map);
     }
   });
 

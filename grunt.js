@@ -40,8 +40,8 @@ module.exports = function(grunt) {
 
     // JSHint task
     lint: {
-//      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.js' ],
       beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js' ],
+//    beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.spec.js' ],
       afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
     },
     jshint: {//http://www.jshint.com/options/
@@ -55,8 +55,18 @@ module.exports = function(grunt) {
         undef: true,//checks for undefined variables
 
         eqnull: true,//== allowed for undefined/null checking
+        expr: true,//allow foo && foo()
 
         node: true//node environment
+      },
+      globals: {//variables defined in src/intro.txt
+        Kinvey: true,
+        bind: true,
+        extend: true,
+        inherits: true,
+
+        XMLHttpRequest: true,
+        btoa: true
       }
     },
 
@@ -70,10 +80,10 @@ module.exports = function(grunt) {
 //          '<%= dir.src %>/query/Query.js',
 //          '<%= dir.src %>/query/JsonQueryBuilder.js',
 //          '<%= dir.src %>/query/SimpleQuery.js',
-//          '<%= dir.src %>/net/Net.js',
-//          '<%= dir.src %>/net/Http.js',
-//          '<%= dir.src %>/Entity.js',
-//          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/net/Net.js',
+          '<%= dir.src %>/net/Xhr.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
 //          '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/outro.txt'
@@ -140,6 +150,6 @@ module.exports = function(grunt) {
   grunt.loadTasks('lib/grunt/tasks');
 
   // Register tasks
-  grunt.registerTask('default', 'lint:beforeconcat concat replace lint:afterconcat apidoc min');
+  grunt.registerTask('default', 'lint:beforeconcat concat replace:firstPass replace:secondPass replace:thirdPass lint:afterconcat apidoc min replace:reset');
 
 };

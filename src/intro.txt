@@ -1,10 +1,14 @@
 (function(undefined) {
 
-  // Save reference to global object (window in browser, global on server)
+  // Save reference to global object (window in browser, global on server).
   var root = this;
 
-  // Define top-level namespace. Export for browser and CommonJS.
-  /** @namespace Kinvey */
+  /**
+   * Top-level namespace. Exported for browser and CommonJS.
+   * 
+   * @name Kinvey
+   * @namespace
+   */
   var Kinvey;
   if('undefined' !== typeof exports) {
     Kinvey = exports;
@@ -13,7 +17,14 @@
     Kinvey = root.Kinvey = {};
   }
 
-  // Convenient methods for object extending and inheritance.
+  // Convenient method for binding context to anonymous callbacks.
+  var bind = function(thisArg, fn) {
+    return function() {
+      return (fn || function() { }).apply(thisArg, arguments);
+    };
+  };
+
+  // Convenient method for object extending.
   var extend = function(target, source) {
     Object.getOwnPropertyNames(source).forEach(function(property) {
       Object.defineProperty(
@@ -22,6 +33,8 @@
     });
     return target;
   };
+
+  // Convenient method for object inheritance.
   var inherits = function(sub, sup) {
     sub.prototype = extend(Object.create(sup.prototype), sub.prototype);
     sub._super = sup.prototype;

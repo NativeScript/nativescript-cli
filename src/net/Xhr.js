@@ -1,16 +1,16 @@
 (function(Kinvey) {
 
   /**
-   * Net adapter for HTTP requests
+   * Net adapter for XMLHttpRequest.
    * 
    * @constructor
-   * @param {string} api one of Kinvey.Net api constants
-   * @param {string} [collection] collection name. Required when using AppData
-   *          api.
-   * @param {string} [id] entity id
-   * @throws {Error} on invalid api, invalid operation or undefined collection
+   * @param {string} api One of Kinvey.Net api constants.
+   * @param {string} [collection] collection name. Required when using the
+   *          AppData API.
+   * @param {string} [id] Entity id.
+   * @throws {Error} On invalid api, invalid operation or undefined collection.
    */
-  Kinvey.Net.Http = function(api, collection, id) {
+  Kinvey.Net.Xhr = function(api, collection, id) {
     if(null == api) {
       throw new Error('API must not be null');
     }
@@ -28,10 +28,7 @@
     this.METHOD_MAP[Kinvey.Net.UPDATE] = 'PUT';
     this.METHOD_MAP[Kinvey.Net.DELETE] = 'DELETE';
 
-    // Request constants
-    this.TIMEOUT = 1;// 1 minute timeout
-
-    // Construct URL
+    // Construct URL.
     var url;
     switch(api) {
       // AppData API
@@ -59,7 +56,7 @@
         // https://baas.kinvey.com/user/<appKey>?query does not work, while
         // https://baas.kinvey.com/user/<appKey>/?query does.
 
-        // User API does not have collections, only IDs
+        // User API does not have collections, only IDs.
         if(null != id) {
           url += id;
         }
@@ -73,7 +70,7 @@
 
     // Properties
     /**
-     * Data
+     * Request data.
      * 
      * @private
      * @type string
@@ -81,7 +78,7 @@
     this.data = null;
 
     /**
-     * Request headers
+     * Request headers.
      * 
      * @see http://www.w3.org/TR/XMLHttpRequest/#the-setrequestheader-method
      * @private
@@ -93,7 +90,7 @@
     };
 
     /**
-     * Query
+     * Query.
      * 
      * @private
      * @type Kinvey.Query.SimpleQuery
@@ -101,7 +98,7 @@
     this.query = null;
 
     /**
-     * Request url
+     * Request url.
      * 
      * @private
      * @type string
@@ -110,16 +107,16 @@
   };
 
   // Methods
-  extend(Kinvey.Net.Http.prototype, {
-    /** @lends Kinvey.Net.Http# */
+  extend(Kinvey.Net.Xhr.prototype, {
+    /** @lends Kinvey.Net.Xhr# */
 
     /**
-     * Sends HTTP request
+     * Sends HTTP request.
      * 
-     * @param {string} operation one of Kinvey.Net operation constants
-     * @param {function(Object)} success success callback
-     * @param {function(Object)} failure failure callback
-     * @throws {Error} on invalid operation or unsupported client
+     * @param {string} operation One of Kinvey.Net operation constants.
+     * @param {function(Object)} success Success callback.
+     * @param {function(Object)} failure Failure callback.
+     * @throws {Error} On invalid operation or unsupported client.
      */
     send: function(operation, success, failure) {
       if(null == this.METHOD_MAP[operation]) {
@@ -129,7 +126,7 @@
       // Build url
       var url = this.url;
       if(null != this.query) {
-        url += '?query=' + this._encode(window.JSON.stringify(this.query.get()));
+        url += '?query=' + this._encode(JSON.stringify(this.query.get()));
       }
       var xhr = this._createClient(this.METHOD_MAP[operation], url);
 
@@ -142,7 +139,7 @@
       };
       xhr.onload = function() {
         // Fail if response yields an error message
-        var response = window.JSON.parse(xhr.responseText || '{}');
+        var response = JSON.parse(xhr.responseText || '{}');
         response.error ? failure(response) : success(response);
       };
       xhr.send(this.data);
@@ -154,7 +151,7 @@
      * @param {Object} data JSON data
      */
     setData: function(data) {
-      this.data = data ? window.JSON.stringify(data) : null;
+      this.data = data ? JSON.stringify(data) : null;
     },
 
     /**
@@ -180,15 +177,13 @@
      * @return Object
      */
     _createClient: function(method, url) {
-      if(!window.XMLHttpRequest) {
+      if('undefined' === typeof (XMLHttpRequest)) {
         throw new Error('XHR not supported');
       }
 
       // Create request object
-      var xhr = new window.XMLHttpRequest();
+      var xhr = new XMLHttpRequest();
       xhr.open(method, url, true);// async
-      xhr.timeout = this.TIMEOUT;
-
       // Set headers
       for( var header in this.headers) {
         xhr.setRequestHeader(header, this.headers[header]);
@@ -197,12 +192,12 @@
       // Set authorization header
       var auth, user = Kinvey.getCurrentUser();
       if(null !== user) {
-        auth = user.getUsername() + ':' + user.getSecret();
+        auth = user.getUsername() + ':' + user.getPassword();
       }
       else {// no user, fallback to app credentials
         auth = Kinvey.appKey + ':' + Kinvey.appSecret;
       }
-      xhr.setRequestHeader('Authorization', 'Basic ' + window.btoa(auth));
+      xhr.setRequestHeader('Authorization', 'Basic ' + btoa(auth));
 
       // All set
       return xhr;
@@ -216,7 +211,7 @@
      * @return {string} encoded value
      */
     _encode: function(value) {
-      return window.encodeURIComponent(value);
+      return encodeURIComponent(value);
     }
   });
 
