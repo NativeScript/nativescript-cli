@@ -1,51 +1,39 @@
-(function(Kinvey) {
+(function() {
 
-  /**
-   * Creates new user collection
-   * 
-   * @example
-   * 
-   * <pre>
-   * var collection = new Kinvey.UserCollection();
-   * </pre>
-   * 
-   * @extends Kinvey.Collection
-   * @constructor
-   * @param {Kinvey.Query.SimpleQuery} [query] collection query
-   */
-  Kinvey.UserCollection = function(query) {
-    // Call parent constructor, pass empty collection name.
-    Kinvey.UserCollection._super.constructor.call(this, '', query);
+  // Define the Kinvey UserCollection class.
+  Kinvey.UserCollection = Kinvey.Collection.extend({
+    // Associated Kinvey API.
+    API: Kinvey.Net.USER_API,
 
-    // Constants
+    // Entity class.
+    entity: Kinvey.User,
+
     /**
-     * @override
-     * @private
-     * @constant
+     * Creates new user collection.
+     * 
+     * @example <code>
+     * var collection = new Kinvey.UserCollection();
+     * </code>
+     * 
+     * @name Kinvey.UserCollection
+     * @constructor
+     * @extends Kinvey.Collection
      */
-    this.API = Kinvey.Net.USER_API;
-  };
-  inherits(Kinvey.UserCollection, Kinvey.Collection);
+    constructor: function() {
+      // Users reside in a distinct API, without the notion of collections.
+      // Therefore, an empty string is passed to the parent constructor.
+      Kinvey.Collection.prototype.constructor.call(this, '');
+    },
 
-  // Methods
-  extend(Kinvey.UserCollection.prototype, {
     /** @lends Kinvey.UserCollection# */
 
     /**
      * @override
-     * @see Kinvey.Collection#removeAll
+     * @see Kinvey.Collection#clear
      */
-    removeAll: function(success, failure) {
+    clear: function(success, failure) {
       throw new Error('This request requires the master secret');
-    },
-
-    /**
-     * @override
-     * @private
-     */
-    _toEntity: function(map) {
-      return new Kinvey.User(map);
     }
   });
 
-}(Kinvey));
+}());

@@ -1,14 +1,16 @@
-// Test top-level namespace
+/**
+ * Top-level test suite.
+ */
 describe('Kinvey', function() {
 
   // Kinvey#init
   describe('#init', function() {
-    it('throws an Error on empty appKey', function() {
+    it('throws an Error on empty appKey.', function() {
       (function() {
         Kinvey.init({ appSecret: 'foo' });
       }.should.throw());
     });
-    it('throws an Error on empty appSecret', function() {
+    it('throws an Error on empty appSecret.', function() {
       (function() {
         Kinvey.init({ appKey: 'foo' });
       }.should.throw());

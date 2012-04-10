@@ -1,111 +1,39 @@
-(function(Kinvey) {
+(function() {
 
-  /**
-   * Creates new collection
-   * 
-   * @example
-   * 
-   * <pre>
-   * var collection = new Kinvey.Collection('my-collection');
-   * </pre>
-   * 
-   * @constructor
-   * @param {string} name collection name
-   * @param {Kinvey.Query.SimpleQuery} [query] collection query
-   * @throws {Error} on empty name or invalid query instance
-   */
-  Kinvey.Collection = function(name, query) {
-    if(null == name) {
-      throw new Error('Name must not be null');
-    }
-    // if(null != query && !(query instanceof Kinvey.Query.SimpleQuery)) {
-    // throw new Error('Query must be an instance of Kinvey.Query.SimpleQuery');
-    // }
+  // Define the Kinvey Collection class.
+  Kinvey.Collection = Base.extend({
+    // Associated Kinvey API.
+    API: Kinvey.Net.APPDATA_API,
 
-    // Constants
-    /**
-     * Collection api
-     * 
-     * @private
-     * @constant
-     */
-    this.API = Kinvey.Net.APPDATA_API;
+    // Entity class.
+    entity: Kinvey.Entity,
 
-    // Properties
-    /**
-     * Object owned by collection
-     * 
-     * @private
-     * @type Object
-     */
-    this.entity = Kinvey.Entity;
+    // List of entities.
+    list: [ ],
 
     /**
-     * List of entities in collection
+     * Creates new collection.
      * 
-     * @type Array
-     */
-    this.list = [ ];
-
-    /**
-     * Collection name
+     * @example <code>
+     * var collection = new Kinvey.Collection('my-collection');
+     * </code>
      * 
-     * @private
-     * @type string
+     * @constructor
+     * @name Kinvey.Collection
+     * @param {string} name Collection name.
+     * @throws {Error} On empty name or invalid query instance.
      */
-    this.name = name;
-
-    /**
-     * Collection query
-     * 
-     * @private
-     * @type Kinvey.Query.SimpleQuery
-     */
-    // this.query = query || new Kinvey.Query.SimpleQuery();
-  };
-
-  // Methods
-  extend(Kinvey.Collection.prototype, {
-    /** @lends Kinvey.Collection# */
-
-    // /**
-    // * Adds filter criteria to collection query
-    // *
-    // * @param {string} property property name
-    // * @param {string} operator one of Kinvey.Query operator constants
-    // * @param {*} value property value
-    // * @throws {Error} on empty property or empty operator
-    // */
-    // addFilterCriteria: function(property, operator, value) {
-    // if(null == property) {
-    // throw new Error('Property must not be null');
-    // }
-    // if(null == operator) {
-    // throw new Error('Operator must not be null');
-    // }
-    // this.query.addCriteria(property, operator, value);
-    // },
-    /**
-     * Fetches all entities in collection.
-     * 
-     * @param {function()} [success] Success callback. {this} is the collection
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          collection instance. Only argument is an error object.
-     */
-    all: function(success, failure) {
-      // Build request
-      var net = Kinvey.Net.factory(this.API, this.name);
-      net.send(Kinvey.Net.READ, bind(this, function(response) {
-        for( var entity in response) {
-          this.list.push(new this.entity(this.name, response[entity]));
-        }
-        bind(this, success)();
-      }), bind(this, failure));
+    constructor: function(name) {
+      if(null == name) {
+        throw new Error('Name must not be null');
+      }
+      this.name = name;
     },
 
+    /** @lends Kinvey.Collection# */
+
     /**
-     * Clears collection. This method is NOT atomic, it exits on first failure.
+     * Clears collection. This method is NOT atomic, it stops on first failure.
      * 
      * @param {function()} [success] Success callback. {this} is the collection
      *          instance.
@@ -114,81 +42,72 @@
      */
     clear: function(success, failure) {
       failure = bind(this, failure);
-      this.list = [];//clear list
+      this.list = [ ];// clear list
 
       // Retrieve all entities, and remove them one by one.
-      var self = this;
-      this.all(function() {
-        var it = function() {
-          var entity = self.list[0];
+      this.fetch(bind(this, function() {
+        var it = bind(this, function() {
+          var entity = this.list[0];
           if(entity) {
-            entity.destroy(function() {
-              self.list.shift();
+            entity.destroy(bind(this, function() {
+              this.list.shift();
               it();
-            }, failure);
+            }), failure);
           }
           else {
-            bind(self, success)();
+            bind(this, success)();
           }
-        };
+        });
         it();
-      }, failure);
+      }), failure);
     },
 
     /**
-     * Clears filter criteria
+     * Counts number of entities.
      * 
-     */
-    clearFilterCriteria: function() {
-      this.query.clear();
-    },
-
-    /**
-     * Counts number of entities in collection
-     * 
-     * @param {function([number])} [success] success callback
-     * @param {function([Object])} [failure] failure callback
+     * @param {function(number)} [success] Success callback. {this} is the
+     *          Collection instance. Only argument is the number of entities.
+     * @param {function(Object)} [failure] Failure callback. {this} is the
+     *          Collection instance. Only argument is an error object.
      */
     count: function(success, failure) {
-      // Create request and set query
       var net = Kinvey.Net.factory(this.API, this.name, '_count');
-      net.setQuery(this.query);
-
-      // Send request
-      net.send(Kinvey.Net.READ, function(response) {
-        success && success(response.count);
-      }, function(error) {
-        failure && failure(error);
-      });
+      net.send(bind(this, function(response) {
+        bind(this, success)(response.count);
+      }), bind(this, failure));
     },
 
     /**
-     * Fetches entities in collection, based on query
+     * Fetches entities in collection.
      * 
-     * @param {function(Array)} [success] success callback
-     * @param {function(Object)} [failure] failure callback
+     * @param {Kinvey.Filter} [filter] Filter object.
+     * @param {function()} [success] Success callback. {this} is the collection
+     *          instance.
+     * @param {function(Object)} [failure] Failure callback. {this} is the
+     *          collection instance. Only argument is an error object.
      */
-    fetch: function(success, failure) {
-      var self = this;// context
+    fetch: function(filter, success, failure) {
+      // Parse arguments.
+      // TODO filter support to be implemented.
+      if(true) {// no filter.
+        success = filter;
+        failure = success;
+        filter = null;
+      }
 
-      // Clear list
+      // Clear list.
       this.list = [ ];
 
-      // Create request and set query
+      // Send request.
       var net = Kinvey.Net.factory(this.API, this.name);
-      net.setQuery(this.query);
-
-      // Send request
-      net.send(Kinvey.Net.READ, function(datalist) {
-        // Convert datalist to list of entities and store them in list
-        datalist.forEach(function(data) {
-          self.list.push(self._toEntity(data));
-        });
-        success && success(self.list);
-      }, function(error) {
-        failure && failure(error);
-      });
+      net.setFilter(filter);
+      net.send(bind(this, function(response) {
+        response.forEach(bind(this, function(attr) {
+          this.list.push(new this.entity(this.name, attr));
+        }));
+        bind(this, success)();
+      }), bind(this, failure));
     }
   });
 
-}(Kinvey));
+}());

@@ -1,21 +1,28 @@
-// Test entity namespace
+/**
+ * Kinvey.Entity test suite.
+ */
 describe('Kinvey.Entity', function() {
-  // Make sure user context is available
-  before(function() {
-    var user = new Kinvey.User({
-      username: 'foo',
-      password: 'bar'
-    });
-    user.isLoggedIn = true;
-    Kinvey.setCurrentUser(user);
+  // Entities need an owner.
+  before(function(done) {
+    this.user = Kinvey.User.create(done, done);
   });
-  after(function() {//reset
-    Kinvey.setCurrentUser(null);
+  after(function(done) {
+    this.user.destroy(done, done);
+  });
+
+  // Inheritance
+  it('is extendable.', function() {
+    var TestEntity = Kinvey.Entity.extend({
+      constructor: function() {
+        Kinvey.Entity.prototype.constructor.call(this, 'test-collection');
+      }
+    });
+    (new TestEntity()).should.be.an.instanceof(Kinvey.Entity);
   });
 
   // Kinvey.Entity#constructor
   describe('#constructor', function() {
-    it('throws an Error on empty collection', function() {
+    it('throws an Error on empty collection.', function() {
       (function() {
         new Kinvey.Entity();
       }.should.throw());
@@ -24,11 +31,13 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#destroy
   describe('#destroy', function() {
-    beforeEach(function(done) {// create mock
-      this.entity = new Kinvey.Entity('test-collection', { _id: 'test-id' });
+    // Create mock.
+    beforeEach(function(done) {
+      this.entity = new Kinvey.Entity('test-collection');
       this.entity.save(done, done);
     });
 
+    // Test suite.
     it('destroys an entity', function(done) {
       var entity = this.entity;
       entity.destroy(function() {
@@ -43,18 +52,23 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#load
   describe('#load', function() {
-    beforeEach(function(done) {// create mock
-      new Kinvey.Entity('test-collection', { _id: 'test-id' }).save(done, done);
+    // Create mock.
+    beforeEach(function(done) {
+      this.entity = new Kinvey.Entity('test-collection');
+      this.entity.save(done, done);
     });
-    afterEach(function(done) {// destroy mock
-      new Kinvey.Entity('test-collection', { _id: 'test-id' }).destroy(done, done);
+    afterEach(function(done) {
+      this.entity.destroy(done, done);
     });
 
+    // Test suite.
     it('loads an entity', function(done) {
+      var id = this.entity.getId();
+     
       var entity = new Kinvey.Entity('test-collection');
-      entity.load('test-id', function() {
+      entity.load(id, function() {
         this.should.equal(entity);
-        (this.getId()).should.equal('test-id');
+        (this.getId()).should.equal(id);
         done();
       }, function(error) {
         this.should.equal(entity);
@@ -65,25 +79,27 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#save
   describe('#save', function() {
-    before(function() {
-      this.entity = new Kinvey.Entity('test-collection', { foo: 'bar' });
+    // Create mock.
+    beforeEach(function() {
+      this.entity = new Kinvey.Entity('test-collection', { key: 'value' });
     });
-    after(function(done) {// cleanup
+    afterEach(function(done) {
       this.entity.destroy(done, done);
     });
 
+    // Test suite.
     it('saves a new entity', function(done) {
       var entity = this.entity;
       entity.save(function() {
         this.should.equal(entity);
         (this.getId()).should.not.equal(null);// id is auto-generated
+        (this.get('key')).should.equal('value');
         done();
       }, function(error) {
         this.should.equal(entity);
         done(new Error(error.error));
       });
     });
-
     it('updates an existing entity', function(done) {
       var entity = this.entity;
       entity.set('baz', 'quux');

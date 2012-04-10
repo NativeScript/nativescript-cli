@@ -1,9 +1,9 @@
-(function(Kinvey) {
+(function() {
 
   /**
    * Kinvey Net namespace definition. This namespace provides API and operation
-   * constants to allow different net adapters. Net adapters live in this
-   * namespace as well.
+   * constants to allow different network adapters. Network adapters live in
+   * this namespace as well.
    * 
    * @namespace
    */
@@ -30,7 +30,7 @@
      */
     RESOURCE_API: 'RESOURCE',
 
-    // API operation constants
+    // CRUD operation constants
     /**
      * Create operation.
      * 
@@ -61,7 +61,7 @@
 
     // Methods
     /**
-     * Returns net adapter.
+     * Returns network adapter.
      * 
      * @example <code>
      * var net = Kinvey.Net.factory(Kinvey.Net.USER_API);
@@ -70,16 +70,18 @@
      * var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, 'col-name', 'entity-id');
      * </code>
      * 
-     * @param {string} api One of Kinvey.Net api constants.
-     * @param {string} [collection] Collection name. Required when using the AppData
-     *          API.
+     * @param {string} api One of Kinvey.Net API constants.
+     * @param {string} [collection] Collection name. Required when using the
+     *          AppData API.
      * @param {string} [id] Entity id.
      * @return {Object} One of Kinvey.Net.* adapters.
      */
     factory: function(api, collection, id) {
-      // Currently, only the XMLHttpRequest adapter is supported.
-      return new Kinvey.Net.Xhr(api, collection, id);
+      if('node' === Kinvey.env.toLowerCase()) {
+        return new Kinvey.Net.Node(api, collection, id);
+      }
+      return new Kinvey.Net.Http(api, collection, id);
     }
   };
 
-}(Kinvey));
+}());

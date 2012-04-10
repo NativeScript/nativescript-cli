@@ -40,8 +40,7 @@ module.exports = function(grunt) {
 
     // JSHint task
     lint: {
-      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js' ],
-//    beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.spec.js' ],
+      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.js' ],
       afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
     },
     jshint: {//http://www.jshint.com/options/
@@ -59,14 +58,21 @@ module.exports = function(grunt) {
 
         node: true//node environment
       },
-      globals: {//variables defined in src/intro.txt
+      globals: {
+        // Scoped variables in library.
         Kinvey: true,
+        Base: true,
         bind: true,
-        extend: true,
-        inherits: true,
+        deviceUser: true,
 
-        XMLHttpRequest: true,
-        btoa: true
+        // Test variables.
+        after: true,
+        afterEach: true,
+        before: true,
+        beforeEach: true,
+        describe: true,
+        it: true,
+        should: true
       }
     },
 
@@ -77,15 +83,16 @@ module.exports = function(grunt) {
           '<banner>',
           '<%= dir.src %>/intro.txt',
           '<%= dir.src %>/Kinvey.js',
-//          '<%= dir.src %>/query/Query.js',
-//          '<%= dir.src %>/query/JsonQueryBuilder.js',
-//          '<%= dir.src %>/query/SimpleQuery.js',
           '<%= dir.src %>/net/Net.js',
-          '<%= dir.src %>/net/Xhr.js',
+          '<%= dir.src %>/net/Http.js',
+          '<%= dir.src %>/net/Node.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
-//          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/UserCollection.js',
+//        '<%= dir.src %>/query/Query.js',
+//        '<%= dir.src %>/query/JsonQueryBuilder.js',
+//        '<%= dir.src %>/query/SimpleQuery.js',
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk %>.js'
@@ -96,9 +103,9 @@ module.exports = function(grunt) {
     replace: {
       firstPass: {//remove IIFE from source files
         src: '<%= dir.dist %>/<%= sdk %>.js',
-        find: /^\(function\(Kinvey\) \{|\}\(Kinvey\)\);$/gm
+        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
       },
-      secondPass: {//remove gaps in newlines due to firstPass
+      secondPass: {//remove gaps in newlines caused by firstPass
         src: '<%= dir.dist %>/<%= sdk %>.js',
         find: /\n{3,}/g,
         replace: '\n\n'
@@ -108,11 +115,10 @@ module.exports = function(grunt) {
         find: /\n(\(function\(undefined\) \{)/g,
         replace: '$1'
       },
-
-      reset: {//minification damages undefined argument, undo here 
+      arg: {
         src: '<%= dir.dist %>/<%= sdk %>.min.js',
-        find: /\(function\(a\)\{/g,
-        replace: '(function(undefined){'
+        find: /^\(function\(a\)/m,
+        replace: '(function(undefined)'
       }
     },
 
@@ -150,6 +156,6 @@ module.exports = function(grunt) {
   grunt.loadTasks('lib/grunt/tasks');
 
   // Register tasks
-  grunt.registerTask('default', 'lint:beforeconcat concat replace:firstPass replace:secondPass replace:thirdPass lint:afterconcat apidoc min replace:reset');
+  grunt.registerTask('default', 'lint:beforeconcat concat replace:firstPass replace:secondPass replace:thirdPass lint:afterconcat apidoc min replace:arg');
 
 };

@@ -1,57 +1,37 @@
-(function(Kinvey) {
+(function() {
 
-  /**
-   * Creates new entity.
-   * 
-   * @example <code>
-   * var entity = new Kinvey.Entity('my-collection');
-   * var entity = new Kinvey.Entity('my-collection', {
-   *   property: 'value'
-   * });
-   * </code>
-   * 
-   * @constructor
-   * @param {string} collection Entity collection.
-   * @param {Object} [prop] Entity data.
-   * @throws {Error} On empty collection.
-   */
-  Kinvey.Entity = function(collection, prop) {
-    if(null == collection) {
-      throw new Error('Collection must not be null');
-    }
+  // Define the Kinvey Entity class.
+  Kinvey.Entity = Base.extend({
+    // Associated Kinvey API.
+    API: Kinvey.Net.APPDATA_API,
 
-    // Constants
-    /**
-     * Collection API.
-     * 
-     * @private
-     * @constant
-     */
-    this.API = Kinvey.Net.APPDATA_API;
-
-    // Key constant
-    this.KEY_ID = '_id';
-
-    // Properties
-    /**
-     * Entity collection.
-     * 
-     * @private
-     * @type string
-     */
-    this.collection = collection;
+    // Identifier attribute key.
+    ATTR_ID: '_id',
 
     /**
-     * Entity data.
+     * Creates a new entity.
      * 
-     * @private
-     * @type Object
+     * @example <code>
+     * var entity = new Kinvey.Entity('my-collection');
+     * var entity = new Kinvey.Entity('my-collection', {
+     *   name: 'value'
+     * });
+     * </code>
+     * 
+     * @name Kinvey.Entity
+     * @constructor
+     * @param {string} collection Owner collection.
+     * @param {Object} [attr] Attribute object.
+     * @throws {Error} On empty collection.
      */
-    this.prop = null != prop ? prop : {};
-  };
+    constructor: function(collection, attr) {
+      if(null == collection) {
+        throw new Error('Collection must not be null');
+      }
+      this.attr = attr || {};
+      this.collection = collection;
+    },
 
-  // Methods
-  extend(Kinvey.Entity.prototype, {
     /** @lends Kinvey.Entity# */
 
     /**
@@ -61,45 +41,55 @@
      *          entity instance.
      * @param {function(Object)} [failure] Failure callback. {this} is the
      *          entity instance. Only argument is an error object.
-     * @throws {Error} On empty id.
      */
     destroy: function(success, failure) {
-      var id = this.getId();
-      if(null == id) {
-        throw new Error('Id must not be null');
+      // Return instantly if entity is not saved yet.
+      if(this.isNew()) {
+        bind(this, success)();
+        return;
       }
 
-      // Build request
-      var net = Kinvey.Net.factory(this.API, this.collection, id);
-      net.send(Kinvey.Net.DELETE, bind(this, function() {
+      // Send request.
+      var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
+      net.setOperation(Kinvey.Net.DELETE);
+      net.send(bind(this, function() {
         bind(this, success)();
       }), bind(this, failure));
     },
 
     /**
-     * Returns entity id or null if not set.
+     * Returns attribute or null if not set.
      * 
-     * @return {string} id
-     */
-    getId: function() {
-      return this.get(this.KEY_ID);
-    },
-
-    /**
-     * Returns entity property value or null if not set.
-     * 
-     * @param {string} key Property key.
+     * @param {string} key Attribute key.
      * @throws {Error} On empty key.
-     * @return {*} Property value.
+     * @return {*} Attribute.
      */
     get: function(key) {
       if(null == key) {
         throw new Error('Key must not be null');
       }
 
-      // Find property, and return its value.
-      var value = this.prop[key];
+      // Return attribute, or null if attribute is null or undefined.
+      var value = this.attr[key];
       return null != value ? value : null;
+    },
+
+    /**
+     * Returns id or null if not set.
+     * 
+     * @return {string} id
+     */
+    getId: function() {
+      return this.get(this.ATTR_ID);
+    },
+
+    /**
+     * Returns whether entity is saved.
+     * 
+     * @return {boolean}
+     */
+    isNew: function() {
+      return null === this.getId();
     },
 
     /**
@@ -117,10 +107,10 @@
         throw new Error('Id must not be null');
       }
 
-      // Build request
+      // Retrieve data.
       var net = Kinvey.Net.factory(this.API, this.collection, id);
-      net.send(Kinvey.Net.READ, bind(this, function(response) {
-        this.prop = response;
+      net.send(bind(this, function(response) {
+        this.attr = response;
         bind(this, success)();
       }), bind(this, failure));
     },
@@ -134,45 +124,62 @@
      *          entity instance. Only argument is an error object.
      */
     save: function(success, failure) {
-      // If entity has an id, update it. Otherwise, create it.
-      var id = this.getId();
-      var operation = null != id ? Kinvey.Net.UPDATE : Kinvey.Net.CREATE;
+      var operation = this.isNew() ? Kinvey.Net.CREATE : Kinvey.Net.UPDATE;
 
-      // Build request
-      var net = Kinvey.Net.factory(this.API, this.collection, id);
-      net.setData(this.prop);// include properties
-      net.send(operation, bind(this, function(response) {
-        this.prop = response;
+      // Retrieve data.
+      var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
+      net.setData(this.attr);// include attributes
+      net.setOperation(operation);
+      net.send(bind(this, function(response) {
+        this.attr = response;
         bind(this, success)();
       }), bind(this, failure));
     },
 
     /**
-     * Sets entity id.
+     * Sets id.
      * 
-     * @param {string} id Entity id.
+     * @param {string} id Id.
      * @throws {Error} On empty id.
      */
     setId: function(id) {
       if(null == id) {
         throw new Error('Id must not be null');
       }
-      this.set(this.KEY_ID, id);
+      this.set(this.ATTR_ID, id);
     },
 
     /**
-     * Sets entity property.
+     * Sets attribute.
      * 
-     * @param {string} key Property key.
-     * @param {*} value Property value.
+     * @param {string} key Attribute key.
+     * @param {*} value Attribute value.
      * @throws {Error} On empty key.
      */
     set: function(key, value) {
       if(null == key) {
         throw new Error('Key must not be null');
       }
-      this.prop[key] = value;
+      this.attr[key] = value;
+    },
+
+    /**
+     * Returns JSON representation.
+     * 
+     * @returns {Object} JSON representation.
+     */
+    toJSON: function() {
+      return this.attr;
+    },
+
+    /**
+     * Removes attribute.
+     * 
+     * @param {string} key Attribute key.
+     */
+    unset: function(key) {
+      delete this.attr[key];
     }
   });
 
-}(Kinvey));
+}());

@@ -17,25 +17,37 @@
     Kinvey = root.Kinvey = {};
   }
 
-  // Convenient method for binding context to anonymous callbacks.
+  // Define a base class for all Kinvey classes. Provides a property method for
+  // class inheritance. This method is available to all child definitions.
+  var Base = Object.defineProperty(function() { }, 'extend', {
+    value: function(prototype, properties) {
+      // Create class definition
+      var constructor = prototype && prototype.hasOwnProperty('constructor') ? prototype.constructor : this;
+      var def = function() {
+        constructor.apply(this, arguments);
+      };
+
+      // Set prototype by merging child prototype into parents.
+      def.prototype = (function(parent, child) {
+        Object.getOwnPropertyNames(child).forEach(function(property) {
+          Object.defineProperty(parent, property, Object.getOwnPropertyDescriptor(child, property));
+        });
+        return parent;
+      }(Object.create(this.prototype), prototype || {}));
+
+      // Set static properties.
+      properties || (properties = {});
+      properties.extend = Object.getOwnPropertyDescriptor(this, 'extend').value;
+      Object.getOwnPropertyNames(properties).forEach(function(property) {
+        Object.defineProperty(def, property, { value: properties[property] });
+      });
+
+      // Return definition.
+      return def;
+    }
+  });
+
+  // Convenient method for binding context to anonymous functions.
   var bind = function(thisArg, fn) {
-    return function() {
-      return (fn || function() { }).apply(thisArg, arguments);
-    };
-  };
-
-  // Convenient method for object extending.
-  var extend = function(target, source) {
-    Object.getOwnPropertyNames(source).forEach(function(property) {
-      Object.defineProperty(
-        target, property, Object.getOwnPropertyDescriptor(source, property) || {}
-      );
-    });
-    return target;
-  };
-
-  // Convenient method for object inheritance.
-  var inherits = function(sub, sup) {
-    sub.prototype = extend(Object.create(sup.prototype), sub.prototype);
-    sub._super = sup.prototype;
+    return (fn || function() { }).bind(thisArg);
   };

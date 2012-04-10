@@ -7,9 +7,6 @@
 <body>
   <div id="mocha"></div>
 
-  <!-- Sources -->
-  <script src="../dist/js-library-0.1.0dev.js"></script>
-
   <!-- Environment -->
   <script src="../node_modules/mocha/mocha.js"></script>
   <script>mocha.setup('bdd');</script>
@@ -17,21 +14,17 @@
   <script src="../node_modules/chai/chai.js"></script>
   <script>var should = chai.should();</script>
 
+  <!-- Setup -->
+  <script src="spec.js"></script>
+
+  <!-- Sources -->
+  <script src="../dist/js-library-0.1.0dev.js"></script>
+
   <!-- Specs -->
   <script src="Kinvey.spec.js"></script>
   <script src="Entity.spec.js"></script>
-  <script src="User.spec.js"></script>
   <script src="Collection.spec.js"></script>
-
-  <!-- Run -->
-  <script>
-    // Initialize test app
-    Kinvey.init({
-      appKey: 'kid1131',
-      appSecret: '4696ceefee9343a29439e1d1d355e300'
-    });
-  </script>
-
-  <script>window.onload = mocha.run;</script>
+  <script src="User.spec.js"></script>
+  <script src="UserCollection.spec.js"></script>
 </body>
 </html>

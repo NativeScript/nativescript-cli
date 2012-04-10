@@ -1,7 +1,7 @@
-(function(Kinvey) {
+(function() {
 
-  // Active user
-  var currentUser;
+  // Device user
+  var deviceUser = null;
 
   /**
    * API version.
@@ -18,12 +18,12 @@
   Kinvey.SDK_VERSION = '0.1.0dev';
 
   /**
-   * Returns current user, or null if not set.
+   * Returns device user, or null if not set.
    * 
-   * @return {Kinvey.User} Current user.
+   * @return {Kinvey.User} Device user.
    */
-  Kinvey.getCurrentUser = function() {
-    return currentUser || null;
+  Kinvey.getDeviceUser = function() {
+    return deviceUser;
   };
 
   /**
@@ -32,12 +32,13 @@
    * @example <code>
    * Kinvey.init({
    *   appKey: '<your-app-key>',
-   *   appSecret: '<your-app-secret>'
+   *   appSecret: '<your-app-secret>',
+   *   env: 'node'
    * });
    * </code>
    * 
    * @param {Object} options Kinvey credentials. Object expects properties:
-   *          "appKey", "appSecret".
+   *          "appKey", "appSecret". Optional properties: "env".
    * @throws {Error} On empty appKey, empty appSecret.
    */
   Kinvey.init = function(options) {
@@ -51,6 +52,7 @@
     // Store credentials
     Kinvey.appKey = options.appKey;
     Kinvey.appSecret = options.appSecret;
+    Kinvey.env = options.env || 'HTML5';
   };
 
   /**
@@ -71,18 +73,9 @@
    */
   Kinvey.ping = function(success, failure) {
     var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, '');
-    net.send(Kinvey.Net.READ, function(response) {
+    net.send(function(response) {
       bind(response, success)();
     }, bind({}, failure));
   };
 
-  /**
-   * Sets current user.
-   * 
-   * @param {Kinvey.User} user User instance.
-   */
-  Kinvey.setCurrentUser = function(user) {
-    currentUser = user;
-  };
-
-}(Kinvey));
+}());

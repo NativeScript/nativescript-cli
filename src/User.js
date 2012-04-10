@@ -1,57 +1,56 @@
-(function(Kinvey) {
+(function() {
 
-  /**
-   * Creates a new user.
-   * 
-   * @example <code>
-   * var user = new Kinvey.User();
-   * var user = new Kinvey.User({
-   *   property: 'value'
-   * });
-   * </code>
-   * 
-   * @extends Kinvey.Entity
-   * @constructor
-   * @param {Object} [prop] Entity data.
-   */
-  Kinvey.User = function(prop) {
-    // Call parent constructor, pass empty collection name.
-    Kinvey.User._super.constructor.call(this, '', prop);
+  // Define the Kinvey User class.
+  Kinvey.User = Kinvey.Entity.extend({
+    // Associated Kinvey API.
+    API: Kinvey.Net.USER_API,
 
-    // Constants
+    // Credential attribute keys.
+    ATTR_USERNAME: 'username',
+    ATTR_PASSWORD: 'password',
+
     /**
-     * @override
-     * @private
-     * @constant
-     */
-    this.API = Kinvey.Net.USER_API;
-
-    // Key constants
-    this.KEY_USERNAME = 'username';
-    this.KEY_PASSWORD = 'password';
-
-    // Properties
-    /**
-     * Flag whether user is logged in.
+     * Creates a new user.
      * 
-     * @type boolean
+     * @example <code>
+     * var user = new Kinvey.User();
+     * var user = new Kinvey.User({
+     *   key: 'value'
+     * });
+     * </code>
+     * 
+     * @name Kinvey.User
+     * @constructor
+     * @extends Kinvey.Entity
+     * @param {Object} [attr] Attributes.
      */
-    this.isLoggedIn = false;
-  };
-  inherits(Kinvey.User, Kinvey.Entity);
+    constructor: function(attr) {
+      // Users reside in a distinct API, without the notion of collections.
+      // Therefore, an empty string is passed to the parent constructor.
+      Kinvey.Entity.prototype.constructor.call(this, '', attr);
+    },
 
-  // Methods
-  extend(Kinvey.User.prototype, {
     /** @lends Kinvey.User# */
 
     /**
-     * Destroys user.
+     * Destroys user. Use with caution.
      * 
      * @override
-     * @throws {Error} Always.
+     * @see Kinvey.Entity#destroy
      */
-    destroy: function() {
-      throw new Error('Cannot delete a user');
+    destroy: function(success, failure) {
+      if(!this.isLoggedIn) {
+        bind(this, failure)({
+          error: 'This request requires the master secret'
+        });
+        return;
+      }
+
+      // User is logged in, so it can remove itself.
+      Kinvey.Entity.prototype.destroy.call(this, function() {
+        this.logout();
+        bind(this, success)();
+      }, bind(this, failure));
     },
 
     /**
@@ -60,7 +59,7 @@
      * @return {string} Password.
      */
     getPassword: function() {
-      return this.get(this.KEY_PASSWORD);
+      return this.get(this.ATTR_PASSWORD);
     },
 
     /**
@@ -69,139 +68,80 @@
      * @return {string} Username.
      */
     getUsername: function() {
-      return this.get(this.KEY_USERNAME);
+      return this.get(this.ATTR_USERNAME);
     },
 
     /**
      * Logs in user.
      * 
-     * @param {function(Kinvey.User)} [success] success callback
-     * @param {function(Object)} [failure] failure callback
+     * @param {string} username Username.
+     * @param {string} password Password.
+     * @param {function()} [success] Success callback. {this} is the User
+     *          instance.
+     * @param {function(Object)} [failure] Failure callback. {this} is the User
+     *          instance. Only argument is an error object.
      */
-    login: function(success, failure) {
-      // Make sure only one user is active at the time
-      var currentUser = Kinvey.getCurrentUser();
-      if(null !== currentUser) {
-        currentUser.logout();
+    login: function(username, password, success, failure) {
+      // Make sure only one user is active at the time.
+      if(null !== deviceUser) {
+        deviceUser.logout();
       }
-      Kinvey.setCurrentUser(this);
 
-      // Retrieve user
-      var password = this.getPassword();
-      this.findBy({
-        username: this.getUsername(),
-        password: password
-      }, function() {
+      // Retrieve user.
+      this.setUsername(username);
+      this.setPassword(password);
+
+      // Send request.
+      var net = Kinvey.Net.factory(this.API, this.collection, 'login');
+      net.setData(this.attr);
+      net.setOperation(Kinvey.Net.CREATE);
+      net.send(bind(this, function(response) {
+        // Update attributes. Preserve password since it is needed as part of
+        // the authorization.
+        this.attr = response;
+        this.setPassword(password);
+
+        // Update device status.
+        deviceUser = this;
         this.isLoggedIn = true;
-        this.setPassword(password);//keep password from getting overwritten
 
         bind(this, success)();
-      }, function(error) {//failed, reset
-        Kinvey.setCurrentUser(null);
-        bind(this, failure)(error);
-      });
+      }), bind(this, failure));
     },
 
     /**
      * Logs out user.
      * 
-     * @return {boolean} Success.
      */
     logout: function() {
-      // !null === true
-      return this.isLoggedIn && !Kinvey.setCurrentUser(null);
+      if(this.isLoggedIn) {
+        deviceUser = null;
+        this.isLoggedIn = false;
+      }
     },
 
     /**
-     * Registers new user.
+     * Saves a user.
      * 
-     * @param {function(Kinvey.User)} [success] success callback
-     * @param {function(Object)} [failure] failure callback
+     * @override
+     * @see Kinvey.Entity#save
      */
-    register: function(success, failure) {
-      // TODO
+    save: function(success, failure) {
+      if(!this.isLoggedIn) {
+        bind(this, failure)({
+          error: 'This request requires the master secret'
+        });
+        return;
+      }
+
+      // Parent method will always update. Response does not include the
+      // password, so persist it manually.
+      var password = this.getPassword();
+      Kinvey.Entity.prototype.save.call(this, function() {
+        this.setPassword(password);
+        bind(this, success)();
+      }, failure);
     },
-
-    // /**
-    // * Stores user as current user and links to device.
-    // *
-    // * <ol>
-    // * <li>reads user from disk</li>
-    // * <li>creates user and save to disk</li>
-    // * <li>creates anonymous user and save to disk</li>
-    // * </ol>
-    // *
-    // * @param {function()} [success] success callback
-    // * @param {function([Object])} [failure] failure callback
-    // * @throws {Error} on conflicting invocation, or when user is not the
-    // device
-    // * user, or when secret cannot be retrieved
-    // */
-    // initCurrentUser: function(success, failure) {
-    // // FIXME complete, also consider login + logout, ability to reset
-    // // currentuser
-    // // Since method is asynchronous, block on conflicting invocation
-    // if(isInitializing) {
-    // throw new Error('User is currently being initialized');
-    // }
-    //
-    // // Only init when current user is not set
-    // if(null != currentUser) {
-    // throw new Error('Current user already set');
-    // }
-    //
-    // // Set current user
-    // this.isDeviceUser = true;
-    // if(window.localStorage && window.localStorage['knvy.user']) {
-    // this.map = window.JSON.parse(window.localStorage['knvy.user']);
-    // currentUser = this;
-    // success && success();
-    // }
-    // else {// create anonymous user (asynchronous)
-    // var that = this;// context
-    // isInitializing = true;// flip flag
-    // this.save(function() {
-    // // Save to disk
-    // window.localStorage['knvy.user'] = window.JSON.stringify(that.map);
-    //
-    // // Done
-    // currentUser = that;
-    // isInitializing = false;// reset flag
-    // success && success();
-    // }, function(error) {
-    // isInitializing = false;// reset flag
-    // failure && failure(error);
-    // });
-    // }
-    // },
-
-    // /**
-    // * @override
-    // * @see Kinvey.Entity#remove
-    // */
-    // remove: function(success, failure) {
-    // if(!this.isDeviceUser) {
-    // failure && failure({
-    // error: 'Not authorized to remove user'
-    // });
-    // return;
-    // }
-    // Kinvey.User._super.remove.call(this, success, failure);
-    // },
-    //
-    // /**
-    // * @override
-    // * @see Kinvey.Entity#save
-    // */
-    // save: function(success, failure) {
-    // if(!this.isDeviceUser) {
-    // failure && failure({
-    // error: 'Not authorized to save user'
-    // });
-    // return;
-    // }
-    // Kinvey.User._super.save.call(this, success, failure);
-    // },
 
     /**
      * Sets password.
@@ -213,7 +153,7 @@
       if(null == password) {
         throw new Error('Password must not be null');
       }
-      this.set(this.KEY_PASSWORD, password);
+      this.set(this.ATTR_PASSWORD, password);
     },
 
     /**
@@ -226,16 +166,53 @@
       if(null == username) {
         throw new Error('Username must not be null');
       }
-      this.set(this.KEY_USERNAME, username);
+      this.set(this.ATTR_USERNAME, username);
+    }
+  }, {
+    /** @lends Kinvey.User */
+
+    /**
+     * Creates a new device user.
+     * 
+     * @param {string} [username] Username.
+     * @param {string} [password] Password.
+     * @param {function()} [success] Success callback. {this} is the User
+     *          instance.
+     * @param {function(Object)} [failure] Failure callback. {this} is the User
+     *          instance. Only argument is an error object.
+     * @return {Kinvey.User} The created user instance.
+     */
+    create: function(username, password, success, failure) {
+      // Parse arguments.
+      if('function' === typeof username) {// auto-generate credentials.
+        success = username;
+        failure = password;
+        username = password = '';
+      }
+      else if('function' === typeof password) {// only auto-generate password.
+        failure = success;
+        success = password;
+        password = '';
+      }
+      deviceUser = null;// reset device user.
+
+      // Instantiate a user object.
+      var user = new Kinvey.User();
+      user.setUsername(username);
+      user.setPassword(password);
+
+      // Persist user, and link to device.
+      Kinvey.Entity.prototype.save.call(user, function() {
+        // Update device status.
+        deviceUser = this;
+        this.isLoggedIn = true;
+
+        bind(this, success)();
+      }, failure);
+
+      // Return the instance.
+      return user;
     }
   });
 
-  //  /**
-  //   * User initializing status flag
-  //   *
-  //   * @private
-  //   * @type boolean
-  //   */
-  //  var isInitializing = false;
-
-}(Kinvey));
+}());
