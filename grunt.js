@@ -1,19 +1,22 @@
-// Export configuration
+/**
+ * Gruntfile
+ * 
+ */
 module.exports = function(grunt) {
 
-  // Project configuration
+  // Project configuration.
   grunt.initConfig({
-    // Meta information
-    dir: {//project directories
+    // Project meta information.
+    dir: {// directories
       apidoc: 'docs/api',
       dist: 'dist',
       src: 'src',
       test: 'test'
     },
     pkg: '<json:package.json>',
-    sdk: '<%= pkg.name %>-<%= pkg.version %>',//dist base filename
+    sdk: '<%= pkg.name %>-<%= pkg.version %>',// dist base filename
     meta: {
-      banner: [//sdk will be prefixed with this banner
+      banner: [// sdk will be prefixed with this banner
         '/*!', ' * <%= sdk %>',
         ' *',
         ' * Copyright (c) <%= grunt.template.today("yyyy") %> Kinvey, Inc. All rights reserved.',
@@ -38,7 +41,7 @@ module.exports = function(grunt) {
       ].join("\n")
     },
 
-    // JSHint task
+    // Specify lint task.
     lint: {
       beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.js' ],
       afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
@@ -76,7 +79,7 @@ module.exports = function(grunt) {
       }
     },
 
-    // Concatenation task
+    // Specify concatenation task.
     concat: {
       dist: {
         src: [
@@ -99,7 +102,7 @@ module.exports = function(grunt) {
       }
     },
 
-    // Replace task
+    // Specify replace task.
     replace: {
       firstPass: {//remove IIFE from source files
         src: '<%= dir.dist %>/<%= sdk %>.js',
@@ -122,23 +125,18 @@ module.exports = function(grunt) {
       }
     },
 
-    // Mocha test task.
+    // Specify Mocha test task.
     mocha: {
       test: {
         require: ['<%= dir.test %>/spec.js'],
         src: ['<%= dir.test %>/**/*.spec.js']
       }
     },
-
-    // API generation task
-    apidoc: {
-      files: {
-        src: ['<%= dir.dist %>/<%= sdk %>.js'],
-        dest: '<%= dir.apidoc %>'
-      }
+    mochaOptions: {
+      timeout: 10000// 10s
     },
 
-    // Minification task
+    // Specify minification task.
     min: {
       dist: {
         src: [ '<banner>', '<%= dir.dist %>/<%= sdk %>.js' ],
@@ -146,27 +144,44 @@ module.exports = function(grunt) {
       }
     },
 
-    // Watch files
-    watch: {
-      files: '<config:lint.beforeconcat>',
-      tasks: 'default'
+    // Specify JSDoc task.
+    jsdoc: {
+      core: {
+        src: '<%= dir.dist %>/<%= sdk %>.js',
+        dest: '<%= dir.apidoc %>'
+      }
     },
 
-    // Clean task
+    // Specify watch task.
+    watch: {
+      files: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js'],
+      tasks: 'default',
+
+      reload: {
+        files: '<config:watch.files>',
+        tasks: 'clean default'
+      },
+      test: {
+        files: '<%= dir.test %>/**/*.js',
+        tasks: 'test'
+      }
+    },
+
+    // Specify clean task.
     clean: {
       files: ['<%= dir.apidoc %>', '<%= dir.dist %>']
     }
   });
 
-  // Load task plugins
+  // Load task plugins.
   grunt.loadTasks('lib/grunt/tasks');
 
-  // Register tasks
-  grunt.registerTask('default', 'build test minify apidoc');
+  // Register tasks.
+  grunt.registerTask('default', 'build test minify doc');
 
   grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
+  grunt.registerTask('doc', 'jsdoc');
   grunt.registerTask('minify', 'min replace:arg');
   grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass')
   grunt.registerTask('test', 'mocha');
-
 };
