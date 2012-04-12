@@ -59,13 +59,13 @@ module.exports = function(grunt) {
         node: true//node environment
       },
       globals: {
-        // Scoped variables in library.
+        // Library globals.
         Kinvey: true,
         Base: true,
         bind: true,
         deviceUser: true,
 
-        // Test variables.
+        // Mocha globals.
         after: true,
         afterEach: true,
         before: true,
@@ -122,7 +122,13 @@ module.exports = function(grunt) {
       }
     },
 
-    // TODO create testing task
+    // Mocha test task.
+    mocha: {
+      test: {
+        require: ['<%= dir.test %>/spec.js'],
+        src: ['<%= dir.test %>/**/*.spec.js']
+      }
+    },
 
     // API generation task
     apidoc: {
@@ -156,6 +162,11 @@ module.exports = function(grunt) {
   grunt.loadTasks('lib/grunt/tasks');
 
   // Register tasks
-  grunt.registerTask('default', 'lint:beforeconcat concat replace:firstPass replace:secondPass replace:thirdPass lint:afterconcat apidoc min replace:arg');
+  grunt.registerTask('default', 'build test minify apidoc');
+
+  grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
+  grunt.registerTask('minify', 'min replace:arg');
+  grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass')
+  grunt.registerTask('test', 'mocha');
 
 };

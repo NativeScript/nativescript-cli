@@ -17,6 +17,6 @@
   },
   "main": "./dist/js-library-0.1.0dev.js",
   "scripts": {
-    "test": "mocha -R spec -r test/spec.js test/*.spec.js"
+    "test": "grunt test"
   }
 }
