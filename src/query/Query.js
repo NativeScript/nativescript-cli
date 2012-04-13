@@ -43,6 +43,17 @@
     },
 
     /**
+     * Sets exist condition.
+     * 
+     * @throws {Error} When there is no key under condition.
+     * @return {Kinvey.Query} Current instance.
+     */
+    exist: function() {
+      this._set(Kinvey.Query.EXIST, null);
+      return this;
+    },
+
+    /**
      * Sets greater than condition.
      * 
      * @param {*} value Expression.
@@ -113,9 +124,21 @@
      */
     nearSphere: function(value, maxDistance) {
       this._set(Kinvey.Query.NEAR_SPHERE, {
-        value: value,
+        point: value,
         maxDistance: maxDistance
       });
+      return this;
+    },
+
+    /**
+     * Sets not equal condition.
+     * 
+     * @param {*} value Expression.
+     * @throws {Error} When there is no key under condition.
+     * @return {Kinvey.Query} Current instance.
+     */
+    notEqual: function(value) {
+      this._set(Kinvey.Query.NOT_EQUAL, value);
       return this;
     },
 
@@ -143,17 +166,6 @@
     },
 
     /**
-     * Sets query skip.
-     * 
-     * @param {number} skip Skip.
-     * @return {Kinvey.Query} Current instance.
-     */
-    setSkip: function(skip) {
-      this.builder.setSkip(skip);
-      return this;
-    },
-
-    /**
      * Sets query limit.
      * 
      * @param {number} limit Limit.
@@ -161,6 +173,17 @@
      */
     setLimit: function(limit) {
       this.builder.setLimit(limit);
+      return this;
+    },
+
+    /**
+     * Sets query skip.
+     * 
+     * @param {number} skip Skip.
+     * @return {Kinvey.Query} Current instance.
+     */
+    setSkip: function(skip) {
+      this.builder.setSkip(skip);
       return this;
     },
 
@@ -260,12 +283,19 @@
     EQUAL: 16,
 
     /**
+     * Exist operator. Checks if an element exists.
+     * 
+     * @constant
+     */
+    EXIST: 17,
+
+    /**
      * Less than operator. Checks if an element is less than the specified
      * expression.
      * 
      * @constant
      */
-    LESS_THAN: 17,
+    LESS_THAN: 18,
 
     /**
      * Less than or equal to operator. Checks if an element is less than or
@@ -273,7 +303,7 @@
      * 
      * @constant
      */
-    LESS_THAN_EQUAL: 18,
+    LESS_THAN_EQUAL: 19,
 
     /**
      * Greater than operator. Checks if an element is greater than the specified
@@ -281,7 +311,7 @@
      * 
      * @constant
      */
-    GREATER_THAN: 19,
+    GREATER_THAN: 20,
 
     /**
      * Greater than or equal to operator. Checks if an element is greater than
@@ -289,7 +319,7 @@
      * 
      * @constant
      */
-    GREATER_THAN_EQUAL: 20,
+    GREATER_THAN_EQUAL: 21,
 
     /**
      * Not equal operator. Checks if an element does not equals the specified
@@ -297,7 +327,7 @@
      * 
      * @constant
      */
-    NOT_EQUAL: 21,
+    NOT_EQUAL: 22,
 
     // Geoqueries.
     /**

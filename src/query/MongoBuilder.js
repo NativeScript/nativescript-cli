@@ -31,8 +31,12 @@
     addCondition: function(field, condition, value) {
       switch(condition) {
         // Basic operators.
+        // @see http://www.mongodb.org/display/DOCS/Advanced+Queries
         case Kinvey.Query.EQUAL:
           this._set(field, value);
+          break;
+        case Kinvey.Query.EXIST:
+          this._set(field, { $exists: true });
           break;
         case Kinvey.Query.LESS_THAN:
           this._set(field, {$lt: value});
@@ -47,26 +51,28 @@
           this._set(field, {$gte: value});
           break;
         case Kinvey.Query.NOT_EQUAL:
-          this._set(field, {$neq: value});
+          this._set(field, {$ne: value});
           break;
 
         // Geoqueries.
+        // @see http://www.mongodb.org/display/DOCS/Geospatial+Indexing
         case Kinvey.Query.NEAR_SPHERE:
-          var condition = { $near: value.value };
-          value.maxDistance && (condition.$maxDistance = value.maxDistance);
-          this._set(field, condition);
+          var query = { $nearSphere: value.point };
+          value.maxDistance && (query.$maxDistance = value.maxDistance);
+          this._set(field, query);
           break;
         case Kinvey.Query.WITHIN_BOX:
           this._set(field, {$within: {$box: value}});
           break;
         case Kinvey.Query.WITHIN_CENTER_SPHERE:
-          this._set(field, {$within: {$center: [value.center, value.radius]}});
+          this._set(field, {$within: {$centerSphere: [value.center, value.radius] }});
           break;
         case Kinvey.Query.WITHIN_POLYGON:
           this._set(field, {$within: {$polygon: value}});
           break;
 
         // Set membership.
+        // @see http://www.mongodb.org/display/DOCS/Advanced+Queries
         case Kinvey.Query.IN:
           this._set(field, {$in: value});
           break;
@@ -75,6 +81,7 @@
           break;
 
         // Array operators.
+        // @see http://www.mongodb.org/display/DOCS/Advanced+Queries
         case Kinvey.Query.ALL:
           this._set(field, {$all: value});
           break;
@@ -113,13 +120,14 @@
      * @param {number} direction Sort direction, or null to reset sort.
      */
     setSort: function(field, direction) {
-      this.sort = {};// reset
-      if(null === direction) {
+      if(null == direction) {
+        this.sort = null;// hard reset
         return;
       }
 
       // Set sort value.
       var value = Kinvey.Query.ASC === direction ? 1 : -1;
+      this.sort = {};// reset
       this.sort[field] = value;
     },
 

@@ -14,7 +14,7 @@ describe('Kinvey.Collection', function() {
   it('is extendable.', function() {
     var TestCollection = Kinvey.Collection.extend({
       constructor: function() {
-        Kinvey.Collection.prototype.constructor.call(this, 'test-collection');
+        Kinvey.Collection.prototype.constructor.call(this, COLLECTION_UNDER_TEST);
       }
     });
     (new TestCollection()).should.be.an.instanceOf(Kinvey.Collection);
@@ -33,12 +33,12 @@ describe('Kinvey.Collection', function() {
   describe('#clear', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
-      new Kinvey.Entity('test-collection', { 'foo': 'bar' }).save(done, done);
+      new Kinvey.Entity(COLLECTION_UNDER_TEST, { 'foo': 'bar' }).save(done, done);
     });
 
     // Test suite.
     it('clears all entities.', function(done) {
-      var collection = new Kinvey.Collection('test-collection');
+      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
       collection.clear(function() {
         this.should.equal(collection);
         this.list.should.have.length(0);
@@ -54,8 +54,8 @@ describe('Kinvey.Collection', function() {
   describe('#count', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
-      this.collection = new Kinvey.Collection('test-collection');
-      new Kinvey.Entity('test-collection', { 'foo': 'bar' }).save(done, done);
+      this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      new Kinvey.Entity(COLLECTION_UNDER_TEST, { 'foo': 'bar' }).save(done, done);
     });
     afterEach(function(done) {
       this.collection.clear(done, done);
@@ -79,8 +79,8 @@ describe('Kinvey.Collection', function() {
   describe('#fetch', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
-      this.collection = new Kinvey.Collection('test-collection');
-      new Kinvey.Entity('test-collection', { 'foo': 'bar' }).save(done, done);
+      this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      new Kinvey.Entity(COLLECTION_UNDER_TEST, { 'foo': 'bar' }).save(done, done);
     });
     afterEach(function(done) {
       this.collection.clear(done, done);

@@ -9,7 +9,12 @@
 
   <!-- Environment -->
   <script src="../node_modules/mocha/mocha.js"></script>
-  <script>mocha.setup('bdd');</script>
+  <script>
+  mocha.setup({
+    timeout: 10000,
+    ui: 'bdd'
+  });
+  </script>
 
   <script src="../node_modules/chai/chai.js"></script>
   <script>var should = chai.should();</script>
@@ -26,5 +31,7 @@
   <script src="Collection.spec.js"></script>
   <script src="User.spec.js"></script>
   <script src="UserCollection.spec.js"></script>
+  <script src="query/Query.spec.js"></script>
+  <script src="query/MongoBuilder.spec.js"></script>
 </body>
 </html>

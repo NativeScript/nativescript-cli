@@ -14,7 +14,7 @@ describe('Kinvey.Entity', function() {
   it('is extendable.', function() {
     var TestEntity = Kinvey.Entity.extend({
       constructor: function() {
-        Kinvey.Entity.prototype.constructor.call(this, 'test-collection');
+        Kinvey.Entity.prototype.constructor.call(this, COLLECTION_UNDER_TEST);
       }
     });
     (new TestEntity()).should.be.an.instanceOf(Kinvey.Entity);
@@ -33,7 +33,7 @@ describe('Kinvey.Entity', function() {
   describe('#destroy', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.entity = new Kinvey.Entity('test-collection');
+      this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
       this.entity.save(done, done);
     });
 
@@ -54,7 +54,7 @@ describe('Kinvey.Entity', function() {
   describe('#load', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.entity = new Kinvey.Entity('test-collection');
+      this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
       this.entity.save(done, done);
     });
     afterEach(function(done) {
@@ -65,7 +65,7 @@ describe('Kinvey.Entity', function() {
     it('loads an entity', function(done) {
       var id = this.entity.getId();
      
-      var entity = new Kinvey.Entity('test-collection');
+      var entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
       entity.load(id, function() {
         this.should.equal(entity);
         (this.getId()).should.equal(id);
@@ -81,7 +81,7 @@ describe('Kinvey.Entity', function() {
   describe('#save', function() {
     // Create mock.
     beforeEach(function() {
-      this.entity = new Kinvey.Entity('test-collection', { key: 'value' });
+      this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST, { key: 'value' });
     });
     afterEach(function(done) {
       this.entity.destroy(done, done);

@@ -195,16 +195,16 @@
         var query = this.query.toJSON();
         var param = [];
         if(query.limit) {
-          param.push('limit=' + query.limit);
+          param.push('limit=' + encodeURIComponent(query.limit));
         }
         if(query.skip) {
-          param.push('skip=' + query.skip);
+          param.push('skip=' + encodeURIComponent(query.skip));
         }
         if(query.sort) {
-          param.push('sort=' + JSON.stringify(query.sort));
+          param.push('sort=' + encodeURIComponent(JSON.stringify(query.sort)));
         }
         if(query.query) {
-          param.push('query=' + JSON.stringify(query.query));
+          param.push('query=' + encodeURIComponent(JSON.stringify(query.query)));
         }
         url += '?' + param.join('&');
       }

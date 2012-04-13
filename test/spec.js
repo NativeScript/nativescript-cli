@@ -3,6 +3,7 @@
  */
 var APP_KEY = 'kid1131';
 var APP_SECRET = '4696ceefee9343a29439e1d1d355e300';
+global.COLLECTION_UNDER_TEST = 'test-collection';
 
 // Run test suite.
 if('undefined' !== typeof require) {// CommonJS

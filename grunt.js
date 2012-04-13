@@ -68,14 +68,15 @@ module.exports = function(grunt) {
         bind: true,
         deviceUser: true,
 
-        // Mocha globals.
+        // Test globals.
         after: true,
         afterEach: true,
         before: true,
         beforeEach: true,
         describe: true,
         it: true,
-        mocha: true
+        mocha: true,
+        COLLECTION_UNDER_TEST: true
       }
     },
 

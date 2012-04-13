@@ -16,8 +16,7 @@
      */
     send: function(success, failure) {
       var parts = url.parse(this._buildEndpoint());
-
-      var client = http.createClient(80, parts.hostname);
+      var client = http.createClient(80, parts.hostname, true);
 
       // Add authorization.
       var auth;
@@ -30,7 +29,7 @@
       this.headers.Authorization = 'Basic ' + new Buffer(auth, 'utf8').toString('base64');
 
       // Define callbacks and fire request
-      var request = client.request(this.METHOD[this.operation], parts.pathname, this.headers);
+      var request = client.request(this.METHOD[this.operation], parts.pathname + (parts.search || ''), this.headers);
       
       // Add body
       if(this.data) {
