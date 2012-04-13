@@ -17,7 +17,7 @@ describe('Kinvey.Collection', function() {
         Kinvey.Collection.prototype.constructor.call(this, 'test-collection');
       }
     });
-    (new TestCollection()).should.be.an.instanceof(Kinvey.Collection);
+    (new TestCollection()).should.be.an.instanceOf(Kinvey.Collection);
   });
 
   // Kinvey.Collection#constructor
@@ -25,7 +25,7 @@ describe('Kinvey.Collection', function() {
     it('throws an Error on empty name.', function() {
       (function() {
         new Kinvey.Collection();
-      }.should.throw());
+      }.should['throw']());
     });
   });
 
@@ -94,7 +94,7 @@ describe('Kinvey.Collection', function() {
         this.list.should.have.length(1);
 
         // Test entity.
-        this.list[0].should.be.an.instanceof(Kinvey.Entity);
+        this.list[0].should.be.an.instanceOf(Kinvey.Entity);
 
         done();
       }, function(error) {

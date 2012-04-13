@@ -75,7 +75,7 @@ module.exports = function(grunt) {
         beforeEach: true,
         describe: true,
         it: true,
-        should: true
+        mocha: true
       }
     },
 
@@ -182,6 +182,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
   grunt.registerTask('doc', 'jsdoc');
   grunt.registerTask('minify', 'min replace:arg');
-  grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass')
+  grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass');
   grunt.registerTask('test', 'mocha');
 };

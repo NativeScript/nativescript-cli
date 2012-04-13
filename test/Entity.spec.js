@@ -17,7 +17,7 @@ describe('Kinvey.Entity', function() {
         Kinvey.Entity.prototype.constructor.call(this, 'test-collection');
       }
     });
-    (new TestEntity()).should.be.an.instanceof(Kinvey.Entity);
+    (new TestEntity()).should.be.an.instanceOf(Kinvey.Entity);
   });
 
   // Kinvey.Entity#constructor
@@ -25,7 +25,7 @@ describe('Kinvey.Entity', function() {
     it('throws an Error on empty collection.', function() {
       (function() {
         new Kinvey.Entity();
-      }.should.throw());
+      }.should['throw']());
     });
   });
 

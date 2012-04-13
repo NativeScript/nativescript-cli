@@ -6,12 +6,12 @@ describe('Kinvey.User', function() {
   // Inheritance
   it('extends Kinvey.Entity.', function() {
     var user = new Kinvey.User();
-    user.should.be.an.instanceof(Kinvey.Entity);
-    user.should.be.an.instanceof(Kinvey.User);
+    user.should.be.an.instanceOf(Kinvey.Entity);
+    user.should.be.an.instanceOf(Kinvey.User);
   });
   it('is extendable.', function() {
     var SuperUser = Kinvey.User.extend();
-    (new SuperUser()).should.be.an.instanceof(Kinvey.User);
+    (new SuperUser()).should.be.an.instanceOf(Kinvey.User);
   });
 
   // Kinvey.User::create
@@ -30,7 +30,7 @@ describe('Kinvey.User', function() {
 
         // Test device status.
         Kinvey.getDeviceUser().should.equal(this);
-        this.isLoggedIn.should.be.true;
+        this.isLoggedIn.should.be.True;
 
         done();
       }, function(error) {
@@ -46,7 +46,7 @@ describe('Kinvey.User', function() {
 
         // Test device status.
         Kinvey.getDeviceUser().should.equal(this);
-        (this.isLoggedIn).should.be.true;
+        (this.isLoggedIn).should.be.True;
 
         done();
       }, function(error) {
@@ -62,7 +62,7 @@ describe('Kinvey.User', function() {
 
         // Test device status.
         Kinvey.getDeviceUser().should.equal(this);
-        (this.isLoggedIn).should.be.true;
+        (this.isLoggedIn).should.be.True;
 
         done();
       }, function(error) {
@@ -91,6 +91,32 @@ describe('Kinvey.User', function() {
     });
   });
 
+  // Kinvey.User#load
+  describe('#load', function() {
+    // Create mock.
+    beforeEach(function(done) {
+      this.user = Kinvey.User.create('foo', done, done);
+    });
+    afterEach(function(done) {
+      this.user.destroy(done, done);
+    });
+
+    // Test suite.
+    it('loads a user', function(done) {
+      var username = this.user.getUsername();
+
+      var user = new Kinvey.User();
+      user.load(this.user.getId(), function() {
+        this.should.equal(user);
+        (this.getUsername()).should.equal(username);
+        done();
+      }, function(error) {
+        this.should.equal(user);
+        done(new Error(error.error));
+      });
+    });
+  });
+
   // Kinvey.User#login
   describe('#login', function() {
     // Create a device user, to allow logging in using its credentials.
@@ -114,7 +140,7 @@ describe('Kinvey.User', function() {
 
         // Test device status.
         Kinvey.getDeviceUser().should.equal(this);
-        (this.isLoggedIn).should.be.true;
+        (this.isLoggedIn).should.be.True;
 
         done();
       }, function(error) {
@@ -142,34 +168,8 @@ describe('Kinvey.User', function() {
       this.user.logout();
 
       // Test device status.
-      (null === Kinvey.getDeviceUser()).should.be.true;
-      (this.user.isLoggedIn).should.be.false;
-    });
-  });
-
-  // Kinvey.User#load
-  describe('#load', function() {
-    // Create mock.
-    beforeEach(function(done) {
-      this.user = Kinvey.User.create('foo', done, done);
-    });
-    afterEach(function(done) {
-      this.user.destroy(done, done);
-    });
-
-    // Test suite.
-    it('loads a user', function(done) {
-      var username = this.user.getUsername();
-
-      var user = new Kinvey.User();
-      user.load(this.user.getId(), function() {
-        this.should.equal(user);
-        (this.getUsername()).should.equal(username);
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+      (null === Kinvey.getDeviceUser()).should.be.True;
+      (this.user.isLoggedIn).should.be.False;
     });
   });
 

@@ -16,12 +16,12 @@ if('undefined' !== typeof require) {// CommonJS
   });
 }
 else {// browser
-  window.require = function() {
+  global.require = function() {
     // Mock require.
   };
 
   // Run tests on load.
-  window.onload = function() {
+  global.onload = function() {
     Kinvey.init({
       appKey: APP_KEY,
       appSecret: APP_SECRET

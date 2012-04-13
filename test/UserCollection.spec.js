@@ -13,12 +13,12 @@ describe('Kinvey.UserCollection', function() {
   // Inheritance
   it('extends Kinvey.Collection.', function() {
     var collection = new Kinvey.UserCollection();
-    collection.should.be.an.instanceof(Kinvey.Collection);
-    collection.should.be.an.instanceof(Kinvey.UserCollection);
+    collection.should.be.an.instanceOf(Kinvey.Collection);
+    collection.should.be.an.instanceOf(Kinvey.UserCollection);
   });
   it('is extendable.', function() {
     var SuperCollection = Kinvey.UserCollection.extend();
-    (new SuperCollection()).should.be.an.instanceof(Kinvey.UserCollection);
+    (new SuperCollection()).should.be.an.instanceOf(Kinvey.UserCollection);
   });
 
   // Kinvey.Collection#clear
@@ -27,7 +27,7 @@ describe('Kinvey.UserCollection', function() {
       var collection = new Kinvey.UserCollection();
       (function() {
         collection.clear();
-      }.should.throw());
+      }.should['throw']());
     });
   });
 
@@ -57,7 +57,7 @@ describe('Kinvey.UserCollection', function() {
         this.list.should.have.length(1);
 
         // Test entity.
-        this.list[0].should.be.an.instanceof(Kinvey.User);
+        this.list[0].should.be.an.instanceOf(Kinvey.User);
 
         done();
       }, function(error) {

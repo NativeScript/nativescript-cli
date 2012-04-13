@@ -8,12 +8,12 @@ describe('Kinvey', function() {
     it('throws an Error on empty appKey.', function() {
       (function() {
         Kinvey.init({ appSecret: 'foo' });
-      }.should.throw());
+      }.should['throw']());
     });
     it('throws an Error on empty appSecret.', function() {
       (function() {
         Kinvey.init({ appKey: 'foo' });
-      }.should.throw());
+      }.should['throw']());
     });
   });
 
