@@ -5,7 +5,7 @@
     // Associated Kinvey API.
     API: Kinvey.Net.APPDATA_API,
 
-    // Entity class.
+    // Mapped entity class.
     entity: Kinvey.Entity,
 
     // List of entities.
@@ -21,7 +21,7 @@
      * @constructor
      * @name Kinvey.Collection
      * @param {string} name Collection name.
-     * @throws {Error} On empty name or invalid query instance.
+     * @throws {Error} On empty name.
      */
     constructor: function(name) {
       if(null == name) {
@@ -80,19 +80,18 @@
     /**
      * Fetches entities in collection.
      * 
-     * @param {Kinvey.Filter} [filter] Filter object.
+     * @param {Kinvey.Query} [query] Filter object.
      * @param {function()} [success] Success callback. {this} is the collection
      *          instance.
      * @param {function(Object)} [failure] Failure callback. {this} is the
      *          collection instance. Only argument is an error object.
      */
-    fetch: function(filter, success, failure) {
+    fetch: function(query, success, failure) {
       // Parse arguments.
-      // TODO filter support to be implemented.
-      if(true) {// no filter.
-        success = filter;
+      if(!(query instanceof Kinvey.Query)) {// no filter.
+        success = query;
         failure = success;
-        filter = null;
+        query = null;
       }
 
       // Clear list.
@@ -100,7 +99,7 @@
 
       // Send request.
       var net = Kinvey.Net.factory(this.API, this.name);
-      net.setFilter(filter);
+      net.setQuery(query);
       net.send(bind(this, function(response) {
         response.forEach(bind(this, function(attr) {
           this.list.push(new this.entity(this.name, attr));

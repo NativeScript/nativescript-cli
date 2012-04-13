@@ -61,7 +61,7 @@
 
     // Methods
     /**
-     * Returns network adapter.
+     * Returns a network adapter.
      * 
      * @example <code>
      * var net = Kinvey.Net.factory(Kinvey.Net.USER_API);

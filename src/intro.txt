@@ -36,11 +36,14 @@
       }(Object.create(this.prototype), prototype || {}));
 
       // Set static properties.
-      properties || (properties = {});
-      properties.extend = Object.getOwnPropertyDescriptor(this, 'extend').value;
-      Object.getOwnPropertyNames(properties).forEach(function(property) {
-        Object.defineProperty(def, property, { value: properties[property] });
-      });
+      if(properties) {
+        for(var prop in properties) {
+          def[prop] = properties[prop];
+        }
+      }
+
+      // Add extend to definition.
+      Object.defineProperty(def, 'extend', Object.getOwnPropertyDescriptor(this, 'extend'));
 
       // Return definition.
       return def;

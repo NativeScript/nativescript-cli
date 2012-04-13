@@ -93,9 +93,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
-//        '<%= dir.src %>/query/Query.js',
-//        '<%= dir.src %>/query/JsonQueryBuilder.js',
-//        '<%= dir.src %>/query/SimpleQuery.js',
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk %>.js'
@@ -157,10 +156,6 @@ module.exports = function(grunt) {
       files: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js'],
       tasks: 'default',
 
-      reload: {
-        files: '<config:watch.files>',
-        tasks: 'clean default'
-      },
       test: {
         files: '<%= dir.test %>/**/*.js',
         tasks: 'test'

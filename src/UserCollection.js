@@ -5,7 +5,7 @@
     // Associated Kinvey API.
     API: Kinvey.Net.USER_API,
 
-    // Entity class.
+    // Mapped entity class.
     entity: Kinvey.User,
 
     /**

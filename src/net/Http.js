@@ -26,12 +26,12 @@
 
     // Properties
     data: null,
-    filter: null,
     headers: {
       Accept: 'application/json, text/javascript',
       'Content-Type': 'application/json; charset=utf-8'
     },
     operation: Kinvey.Net.READ,
+    query: null,
 
     /**
      * Creates a new HTTP network adapter.
@@ -149,15 +149,6 @@
     },
 
     /**
-     * Sets filter.
-     * 
-     * @param {Object} filter
-     */
-    setFilter: function(filter) {
-      this.filter = filter;
-    },
-
-    /**
      * Sets operation
      * 
      * @param {string} operation Operation.
@@ -168,6 +159,15 @@
         throw new Error('Operation ' + operation + ' is not supported');
       }
       this.operation = operation;
+    },
+
+    /**
+     * Sets query.
+     * 
+     * @param {Kinvey.Query} query Query object.
+     */
+    setQuery: function(query) {
+      this.query = query;
     },
 
     /**
@@ -191,8 +191,22 @@
       }
 
       // Append query string
-      if(null != this.filter) {
-        url += '?' + this.filter.toJSON();
+      if(null != this.query) {
+        var query = this.query.toJSON();
+        var param = [];
+        if(query.limit) {
+          param.push('limit=' + query.limit);
+        }
+        if(query.skip) {
+          param.push('skip=' + query.skip);
+        }
+        if(query.sort) {
+          param.push('sort=' + JSON.stringify(query.sort));
+        }
+        if(query.query) {
+          param.push('query=' + JSON.stringify(query.query));
+        }
+        url += '?' + param.join('&');
       }
       return url;
     }

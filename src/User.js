@@ -184,12 +184,14 @@
      */
     create: function(username, password, success, failure) {
       // Parse arguments.
-      if('function' === typeof username) {// auto-generate credentials.
+      if(null == username || 'function' === typeof username) {
+        // Auto-generate credentials.
         success = username;
         failure = password;
         username = password = '';
       }
-      else if('function' === typeof password) {// only auto-generate password.
+      else if(null == password || 'function' === typeof password) {
+        // Only auto-generate password.
         failure = success;
         success = password;
         password = '';
