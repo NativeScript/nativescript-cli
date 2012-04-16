@@ -42,7 +42,11 @@
      * @param {string} [collection] Collection name. Required when using the
      *          AppData API.
      * @param {string} [id] Entity id.
-     * @throws {Error} On invalid api, undefined collection.
+     * @throws {Error}
+     *           <ul>
+     *           <li>On invalid api,</li>
+     *           <li>On undefined collection.</li>
+     *           </ul>
      */
     constructor: function(api, collection, id) {
       if(null == api) {
@@ -81,57 +85,24 @@
         throw new Error('XMLHttpRequest is not supported');
       }
 
-      // Create client.
+      // Create client and build request.
       var request = new XMLHttpRequest();
-      request.open(this.METHOD[this.operation], this._buildEndpoint(), true);
+      request.open(this.METHOD[this.operation], this._getUrl(), true);
 
       // Add headers.
       for( var header in this.headers) {
         request.setRequestHeader(header, this.headers[header]);
       }
+      request.setRequestHeader('Authorization', 'Basic ' + btoa(this._getAuth()));
 
-      // Add authorization.
-      var auth;
-      if(null !== deviceUser) {
-        auth = deviceUser.getUsername() + ':' + deviceUser.getPassword();
-      }
-      else {
-        auth = Kinvey.appKey + ':' + Kinvey.appSecret;
-      }
-      request.setRequestHeader('Authorization', 'Basic ' + btoa(auth));
-
-      // Set callbacks.
-      request.onabort = request.onerror = request.ontimeout = function() {
-        failure && failure({
-          error: 'Error'
-        });
-        request.onabort = request.onerror = request.ontimeout = null;
+      // Handle response.
+      var self = this;
+      request.onerror = function() {
+        // Unfortunately, no error message is provided by XHR.
+        failure({ error: 'Error' });
       };
       request.onload = function() {
-        // Determine request success.
-        var callback;
-        if(200 <= this.status && 300 > this.status || 304 === this.status) {
-          callback = success;
-        }
-        else {
-          callback = failure;
-        }
-
-        // Parse response
-        var response;
-        try {
-          response = '' !== this.responseText ? JSON.parse(this.responseText)
-              : this.responseText;
-        }
-        catch(_) {
-          callback = failure;
-          response = {
-            error: 'Error parsing response'
-          };
-        }
-
-        // Trigger
-        callback && callback(response);
+        self._handleResponse(this.status, this.responseText, success, failure);
       };
 
       // Fire request.
@@ -173,8 +144,30 @@
     /**
      * @private
      */
-    _buildEndpoint: function() {
-      var url;
+    _encode: function(value) {
+      if(value instanceof Object) {
+        value = JSON.stringify(value);
+      }
+      return encodeURIComponent(value);
+    },
+
+    /**
+     * @private
+     */
+    _getAuth: function() {
+      if(null !== deviceUser) {
+        return deviceUser.getUsername() + ':' + deviceUser.getPassword();
+      }
+      return Kinvey.appKey + ':' + Kinvey.appSecret;
+    },
+
+    /**
+     * @private
+     */
+    _getUrl: function() {
+      var url = '';
+
+      // Build path.
       switch(this.api) {
         case Kinvey.Net.APPDATA_API:
           url = this.ENDPOINT.APPDATA + '/' + Kinvey.appKey + '/' + this.collection;
@@ -183,6 +176,7 @@
           }
           break;
         case Kinvey.Net.USER_API:
+          // User API does not have a collection.
           url = this.ENDPOINT.USER + '/' + Kinvey.appKey + '/';
           if(null != this.id) {
             url += this.id;
@@ -190,25 +184,37 @@
           break;
       }
 
-      // Append query string
+      // Build query string.
       if(null != this.query) {
-        var query = this.query.toJSON();
-        var param = [];
-        if(query.limit) {
-          param.push('limit=' + encodeURIComponent(query.limit));
-        }
-        if(query.skip) {
-          param.push('skip=' + encodeURIComponent(query.skip));
-        }
-        if(query.sort) {
-          param.push('sort=' + encodeURIComponent(JSON.stringify(query.sort)));
-        }
-        if(query.query) {
-          param.push('query=' + encodeURIComponent(JSON.stringify(query.query)));
-        }
+        var param = [ ];
+
+        // Fill param with all query string parameters.
+        var parts = this.query.toJSON();
+        parts.limit && param.push('limit=' + this._encode(parts.limit));
+        parts.skip && param.push('skip=' + this._encode(parts.skip));
+        parts.sort && param.push('sort=' + this._encode(parts.sort));
+        parts.query && param.push('query=' + this._encode(parts.query));
+
+        // Append parts to URL.
         url += '?' + param.join('&');
       }
       return url;
+    },
+
+    /**
+     * @private
+     */
+    _handleResponse: function(statusCode, body, success, failure) {
+      // Parse body. Failing to parse body is not a big deal.
+      try {
+        body = JSON.parse(body);
+      }
+      catch(_) {
+      }
+
+      // Fire callback.
+      (200 <= statusCode && 300 > statusCode) || 304 === statusCode ? success(body)
+          : failure(body);
     }
   });
 

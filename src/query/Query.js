@@ -305,7 +305,7 @@
      */
     notIn: function(unexpected) {
       if(!(unexpected instanceof Array)) {
-        throw new Error('Value must be of type Array');
+        throw new Error('Argument must be of type Array');
       }
       this._set(Kinvey.Query.NOT_IN, unexpected);
       return this;
@@ -468,7 +468,7 @@
      */
     withinCenterSphere: function(point, radius) {
       if(!(point instanceof Array) || 2 !== point.length) {
-        throw new Error('Value must be of type Array[lng, lat]');
+        throw new Error('Point must be of type Array[lng, lat]');
       }
       this._set(Kinvey.Query.WITHIN_CENTER_SPHERE, {
         center: point,

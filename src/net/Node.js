@@ -1,77 +1,67 @@
 (function() {
 
-  // Utilities
-  var http = require('http');
+  // Utilities.
+  var https = require('https');
   var url = require('url');
 
-  // Define a NodeJS network adapter.
+  // Define the Kinvey.Net.Node network adapter.
   Kinvey.Net.Node = Kinvey.Net.Http.extend({
+    /**
+     * Creates a new Node network adapter.
+     * 
+     * @name Kinvey.Net.Node
+     * @constructor
+     * @extends Kinvey.Net.Http
+     * @param {string} api One of Kinvey.Net API constants.
+     * @param {string} [collection] Collection name. Required when using the
+     *          AppData API.
+     * @param {string} [id] Entity id.
+     * @throws {Error}
+     *           <ul>
+     *           <li>On invalid api,</li>
+     *           <li>On undefined collection.</li>
+     *           </ul>
+     */
+    constructor: function(api, collection, id) {
+      Kinvey.Net.Http.prototype.constructor.call(this, api, collection, id);
+    },
+
+    /** @lends Kinvey.Net.Node# */
 
     /**
-     * Sends HTTP request
-     * 
-     * @param {function(Object)} success Success callback.
-     * @param {function(Object)} failure Failure callback.
-     * @throws {Error} On invalid operation.
+     * @override
+     * @see Kinvey.Net.Http#send
      */
     send: function(success, failure) {
-      var parts = url.parse(this._buildEndpoint());
-      var client = http.createClient(80, parts.hostname, true);
+      // Split URL in parts.
+      var parts = url.parse(this._getUrl());
 
-      // Add authorization.
-      var auth;
-      if(null !== deviceUser) {
-        auth = deviceUser.getUsername() + ':' + deviceUser.getPassword();
-      }
-      else {
-        auth = Kinvey.appKey + ':' + Kinvey.appSecret;
-      }
-      this.headers.Authorization = 'Basic ' + new Buffer(auth, 'utf8').toString('base64');
-
-      // Define callbacks and fire request
-      var request = client.request(this.METHOD[this.operation], parts.pathname + (parts.search || ''), this.headers);
-      
-      // Add body
-      if(this.data) {
-        request.write(JSON.stringify(this.data));
-      }
-
-      // Wait for response
-      request.on('response', function(response) {
-        var data = '';
-        response.on('data', function(chunk) {
-          data += chunk;
+      // Build request.
+      var self = this;
+      var request = https.request({
+        host: parts.host,
+        path: parts.path,
+        method: this.METHOD[this.operation],
+        headers: this.headers,
+        auth: this._getAuth()
+      }, function(response) {
+        // Capture data stream.
+        var body = '';
+        response.on('data', function(data) {
+          body += data;
         });
+
+        // Handle response when it completes.
         response.on('end', function() {
-          // Determine request success.
-          var callback;
-          if(200 <= response.statusCode && 300 > response.statusCode || 304 === response.statusCode) {
-            callback = success;
-          }
-          else {
-            callback = failure;
-          }
-
-          // Parse response
-          var d;
-          try {
-            d = '' !== data ? JSON.parse(data) : data;
-          }
-          catch(_) {
-            callback = failure;
-            d = {
-              error: 'Error parsing response'
-            };
-          }
-
-          // Trigger
-          callback && callback(d);
-
+          self._handleResponse(response.statusCode, body, success, failure);
         });
       });
-      request.end();
+      request.on('error', function(error) {// failed to fire request.
+        failure({ error: error.code });
+      });
+      this.data && request.write(JSON.stringify(this.data));// pass body.
+      request.end();// fire request.
     }
-
   });
 
 }());
