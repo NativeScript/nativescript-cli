@@ -66,7 +66,6 @@ module.exports = function(grunt) {
         Kinvey: true,
         Base: true,
         bind: true,
-        deviceUser: true,
 
         // Test globals.
         after: true,

@@ -22,14 +22,14 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('creates a device user.', function(done) {
+    it('creates the current user.', function(done) {
       var user = this.user = Kinvey.User.create('foo', 'bar', function() {
         this.should.equal(user);
         (this.getUsername()).should.equal('foo');
         (this.getPassword()).should.equal('bar');
 
-        // Test device status.
-        Kinvey.getDeviceUser().should.equal(this);
+        // Test current user.
+        Kinvey.getCurrentUser().should.equal(this);
         this.isLoggedIn.should.be.True;
 
         done();
@@ -38,14 +38,14 @@ describe('Kinvey.User', function() {
         done(new Error(error.error));
       });
     });
-    it('creates a device user with auto-generated password.', function(done) {
+    it('creates the current user with auto-generated password.', function(done) {
       var user = this.user = Kinvey.User.create('foo', function() {
         this.should.equal(user);
         (this.getUsername()).should.equal('foo');
         (this.getPassword()).should.not.equal(null);
 
-        // Test device status.
-        Kinvey.getDeviceUser().should.equal(this);
+        // Test current user.
+        Kinvey.getCurrentUser().should.equal(this);
         (this.isLoggedIn).should.be.True;
 
         done();
@@ -54,14 +54,14 @@ describe('Kinvey.User', function() {
         done(new Error(error.error));
       });
     });
-    it('creates an anonymous device user.', function(done) {
+    it('creates an anonymous current user.', function(done) {
       var user = this.user = Kinvey.User.create(function() {
         this.should.equal(user);
         (this.getUsername()).should.not.equal(null);
         (this.getPassword()).should.not.equal(null);
 
-        // Test device status.
-        Kinvey.getDeviceUser().should.equal(this);
+        // Test current user.
+        Kinvey.getCurrentUser().should.equal(this);
         (this.isLoggedIn).should.be.True;
 
         done();
@@ -119,7 +119,7 @@ describe('Kinvey.User', function() {
 
   // Kinvey.User#login
   describe('#login', function() {
-    // Create a device user, to allow logging in using its credentials.
+    // Create the current user, to allow logging in using its credentials.
     beforeEach(function(done) {
       this.user = Kinvey.User.create(done, done);
     });
@@ -138,8 +138,8 @@ describe('Kinvey.User', function() {
         (this.getUsername()).should.equal(username);
         (this.getPassword()).should.equal(password);
 
-        // Test device status.
-        Kinvey.getDeviceUser().should.equal(this);
+        // Test current user.
+        Kinvey.getCurrentUser().should.equal(this);
         (this.isLoggedIn).should.be.True;
 
         done();
@@ -164,18 +164,18 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('logs out a device user.', function() {
+    it('logs out the current user.', function() {
       this.user.logout();
 
-      // Test device status.
-      (null === Kinvey.getDeviceUser()).should.be.True;
+      // Test current user.
+      (null === Kinvey.getCurrentUser()).should.be.True;
       (this.user.isLoggedIn).should.be.False;
     });
   });
 
   // Kinvey.User#save
   describe('#save', function() {
-    // Create a device user.
+    // Create the current user.
     beforeEach(function(done) {
       this.user = Kinvey.User.create('foo', done, done);
     });

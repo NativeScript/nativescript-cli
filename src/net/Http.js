@@ -1,5 +1,6 @@
-/*globals btoa, XMLHttpRequest*/
 (function() {
+
+  /*globals btoa, XMLHttpRequest*/
 
   // Define the Kinvey.Net.Http network adapter.
   Kinvey.Net.Http = Base.extend({
@@ -155,8 +156,9 @@
      * @private
      */
     _getAuth: function() {
-      if(null !== deviceUser) {
-        return deviceUser.getUsername() + ':' + deviceUser.getPassword();
+      var currentUser = Kinvey.getCurrentUser();
+      if(null !== currentUser) {
+        return currentUser.getUsername() + ':' + currentUser.getPassword();
       }
       return Kinvey.appKey + ':' + Kinvey.appSecret;
     },

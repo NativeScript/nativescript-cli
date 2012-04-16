@@ -83,8 +83,9 @@
      */
     login: function(username, password, success, failure) {
       // Make sure only one user is active at the time.
-      if(null !== deviceUser) {
-        deviceUser.logout();
+      var currentUser = Kinvey.getCurrentUser();
+      if(null !== currentUser) {
+        currentUser.logout();
       }
 
       // Retrieve user.
@@ -101,8 +102,8 @@
         this.attr = response;
         this.setPassword(password);
 
-        // Update device status.
-        deviceUser = this;
+        // Update current user.
+        Kinvey.setCurrentUser(this);
         this.isLoggedIn = true;
 
         bind(this, success)();
@@ -115,7 +116,7 @@
      */
     logout: function() {
       if(this.isLoggedIn) {
-        deviceUser = null;
+        Kinvey.setCurrentUser(null);
         this.isLoggedIn = false;
       }
     },
@@ -139,6 +140,11 @@
       var password = this.getPassword();
       Kinvey.Entity.prototype.save.call(this, function() {
         this.setPassword(password);
+
+        // Update curent user.
+        Kinvey.setCurrentUser(this);
+        this.isLoggedIn = true;
+
         bind(this, success)();
       }, failure);
     },
@@ -172,7 +178,7 @@
     /** @lends Kinvey.User */
 
     /**
-     * Creates a new device user.
+     * Creates the current user.
      * 
      * @param {string} [username] Username.
      * @param {string} [password] Password.
@@ -196,17 +202,22 @@
         success = password;
         password = '';
       }
-      deviceUser = null;// reset device user.
+
+      // Make sure only one user is active at the time.
+      var currentUser = Kinvey.getCurrentUser();
+      if(null !== currentUser) {
+        currentUser.logout();
+      }
 
       // Instantiate a user object.
       var user = new Kinvey.User();
       user.setUsername(username);
       user.setPassword(password);
 
-      // Persist user, and link to device.
+      // Persist and link to user.
       Kinvey.Entity.prototype.save.call(user, function() {
-        // Update device status.
-        deviceUser = this;
+        // Update current user.
+        Kinvey.setCurrentUser(this);
         this.isLoggedIn = true;
 
         bind(this, success)();

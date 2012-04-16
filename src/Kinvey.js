@@ -1,7 +1,7 @@
 (function() {
 
-  // Device user
-  var deviceUser = null;
+  // Current user.
+  var currentUser = null;
 
   /**
    * API version.
@@ -18,12 +18,12 @@
   Kinvey.SDK_VERSION = '0.1.0dev';
 
   /**
-   * Returns device user, or null if not set.
+   * Returns current user, or null if not set.
    * 
-   * @return {Kinvey.User} Device user.
+   * @return {Kinvey.User} Current user.
    */
-  Kinvey.getDeviceUser = function() {
-    return deviceUser;
+  Kinvey.getCurrentUser = function() {
+    return currentUser;
   };
 
   /**
@@ -45,7 +45,7 @@
    *           <li>On empty appSecret.</li>
    *           </ul>
    */
-  Kinvey.init = function(options) {
+  Kinvey.init = function(options, success, failure) {
     if('undefined' === typeof options.appKey || null == options.appKey) {
       throw new Error('appKey must be defined');
     }
@@ -53,7 +53,7 @@
       throw new Error('appSecret must be defined');
     }
 
-    // Store credentials
+    // Store credentials.
     Kinvey.appKey = options.appKey;
     Kinvey.appSecret = options.appSecret;
     Kinvey.env = options.env || 'HTML5';
@@ -80,6 +80,15 @@
     net.send(function(response) {
       bind(response, success)();
     }, bind({}, failure));
+  };
+
+  /**
+   * Sets the current user.
+   * 
+   * @param {Kinvey.User} user Current user.
+   */
+  Kinvey.setCurrentUser = function(user) {
+    currentUser = user;
   };
 
 }());
