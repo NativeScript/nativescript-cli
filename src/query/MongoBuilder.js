@@ -36,7 +36,7 @@
           this._set(field, value);
           break;
         case Kinvey.Query.EXIST:
-          this._set(field, { $exists: true });
+          this._set(field, { $exists: value });
           break;
         case Kinvey.Query.LESS_THAN:
           this._set(field, {$lt: value});
@@ -80,6 +80,20 @@
           this._set(field, {$nin: value});
           break;
 
+        // Joining operators.
+        case Kinvey.Query.AND:
+          if(!(value instanceof Kinvey.Query.MongoBuilder)) {
+            throw new Error('Query must be of type Kinvey.Query.Mongobuilder');
+          }
+          this.query = { $and: [this.query || {}, value.query || {}] };
+          break;
+        case Kinvey.Query.OR:
+          if(!(value instanceof Kinvey.Query.MongoBuilder)) {
+            throw new Error('Query must be of type Kinvey.Query.Mongobuilder');
+          }
+          this.query = { $or: [this.query || {}, value.query || {}] };
+          break;
+
         // Array operators.
         // @see http://www.mongodb.org/display/DOCS/Advanced+Queries
         case Kinvey.Query.ALL:
@@ -93,6 +107,14 @@
         default:
           throw new Error('Condition ' + condition + ' is not supported');
       }
+    },
+
+    /**
+     * Resets query.
+     * 
+     */
+    reset: function() {
+      this.query = null;
     },
 
     /**

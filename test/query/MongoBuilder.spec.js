@@ -40,9 +40,13 @@ describe('Kinvey.Query.MongoBuilder', function() {
 
     // Kinvey.Query.MongoBuilder#addCondition(.., EXIST, ..)
     describe('.exist', function() {
-      it('sets an exist condition', function() {
-        this.query.addCondition('foo', Kinvey.Query.EXIST);
+      it('sets a positive exist condition', function() {
+        this.query.addCondition('foo', Kinvey.Query.EXIST, true);
         this.query.toJSON().query.should.eql({ foo: { $exists: true } });
+      });
+      it('sets a negative exist condition', function() {
+        this.query.addCondition('foo', Kinvey.Query.EXIST, false);
+        this.query.toJSON().query.should.eql({ foo: { $exists: false } });
       });
     });
 
@@ -93,6 +97,32 @@ describe('Kinvey.Query.MongoBuilder', function() {
       it('sets a not equal condition.', function() {
         this.query.addCondition('foo', Kinvey.Query.NOT_EQUAL, 'bar');
         this.query.toJSON().query.should.eql({ foo: { $ne: 'bar' } });
+      });
+    });
+
+    // Kinvey.Query.MongoBuilder#addCondition(.., AND, ..)
+    describe('.and', function() {
+      it('sets an and condition.', function() {
+        var query = new Kinvey.Query.MongoBuilder();
+        query.addCondition('baz', Kinvey.Query.EQUAL, 'qux');
+
+        this.query.addCondition(null, Kinvey.Query.AND, query);
+        this.query.toJSON().query.should.eql({
+          $and: [ {}, { baz: 'qux' }]
+        });        
+      });
+    });
+
+    // Kinvey.Query.MongoBuilder#addCondition(.., OR, ..)
+    describe('.or', function() {
+      it('sets an or condition.', function() {
+        var query = new Kinvey.Query.MongoBuilder();
+        query.addCondition('baz', Kinvey.Query.EQUAL, 'qux');
+
+        this.query.addCondition(null, Kinvey.Query.OR, query);
+        this.query.toJSON().query.should.eql({
+          $or: [ {}, { baz: 'qux' }]
+        });
       });
     });
 

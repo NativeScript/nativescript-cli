@@ -27,7 +27,7 @@ describe('Kinvey.Query', function() {
   // Reset collection and query.
   beforeEach(function() {
     this.query = new Kinvey.Query(new Kinvey.Query.MongoBuilder());
-    this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+    this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST, this.query);
   });
 
   // Remove all created data.
@@ -46,7 +46,7 @@ describe('Kinvey.Query', function() {
     it('performs a matching all query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').all(['HTML', 'CSS', 'JavaScript']);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -56,7 +56,39 @@ describe('Kinvey.Query', function() {
     });
     it('performs an unmatching all query.', function(done) {
       this.query.on('hobbies').all(['HTML', 'CSS', 'PHP']);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
+        this.list.length.should.equal(0);
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').all('foo');
+      }.should['throw']());
+    });
+  });
+
+  // Kinvey.query#and
+  describe('#and', function() {
+    it('performs a matching and query.', function(done) {
+      var complex = this.complex;      
+      this.query.on('age').greaterThan(25);
+      this.query.and(new Kinvey.Query().on('age').lessThan(75));
+      this.collection.fetch(function() {
+        this.list.length.should.equal(1);
+        this.list[0].should.eql(complex);
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+    it('performs a unmatching and query.', function(done) {
+      this.query.on('age').greaterThan(75);
+      this.query.and(new Kinvey.Query().on('age').lessThan(25));
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
@@ -70,7 +102,7 @@ describe('Kinvey.Query', function() {
     it('performs an equal query.', function(done) {
       var complex = this.complex;
       this.query.on('name').equal('John');
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -82,12 +114,23 @@ describe('Kinvey.Query', function() {
 
   // Kinvey.Query#exist
   describe('#exist', function() {
-    it('performs an exist query.', function(done) {
+    it('performs a positive exist query.', function(done) {
       var complex = this.complex;
-      this.query.on('name').exist();
-      this.collection.fetch(this.query, function() {
+      this.query.on('name').exist(true);
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+    it('performs a negative exist query', function(done) {
+      var simple = this.simple;
+      this.query.on('name').exist(false);
+      this.collection.fetch(function() {
+        this.list.length.should.equal(1);
+        this.list[0].should.eql(simple);
         done();
       }, function(error) {
         done(new Error(error.error));
@@ -100,7 +143,7 @@ describe('Kinvey.Query', function() {
     it('performs a greater than query.', function(done) {
       var complex = this.complex;
       this.query.on('age').greaterThan(25);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -115,7 +158,7 @@ describe('Kinvey.Query', function() {
     it('performs a greater than equal query.', function(done) {
       var complex = this.complex;
       this.query.on('age').greaterThanEqual(50);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -130,13 +173,19 @@ describe('Kinvey.Query', function() {
     it('performs an in query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').in_(['HTML', 'CSS']);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
       }, function(error) {
         done(new Error(error.error));
       });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').in_('foo');
+      }.should['throw']());
     });
   });
 
@@ -145,7 +194,7 @@ describe('Kinvey.Query', function() {
     it('performs a less than query.', function(done) {
       var complex = this.complex;
       this.query.on('age').lessThan(100);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -160,7 +209,7 @@ describe('Kinvey.Query', function() {
     it('performs a less than equal query.', function(done) {
       var complex = this.complex;
       this.query.on('age').lessThanEqual(50);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -175,7 +224,7 @@ describe('Kinvey.Query', function() {
     it('performs a matching near sphere query.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').nearSphere([-71, 42]);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -186,7 +235,7 @@ describe('Kinvey.Query', function() {
     it('performs a near sphere query with matching distance.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').nearSphere([-71, 42], 100);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -196,12 +245,18 @@ describe('Kinvey.Query', function() {
     });
     it('performs a near sphere query with unmatching distance.', function(done) {
       this.query.on('_geoloc').nearSphere([-71, 42], 1);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
         done(new Error(error.error));
       });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').nearSphere('foo');
+      }.should['throw']());
     });
   });
 
@@ -210,7 +265,7 @@ describe('Kinvey.Query', function() {
     it('performs a not equal query.', function(done) {
       var complex = this.complex;
       this.query.on('surname').notEqual('Brown');
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -225,13 +280,19 @@ describe('Kinvey.Query', function() {
     it('performs a not in query.', function(done) {
       var complex = this.complex;
       this.query.on('surname').notIn(['Brown', 'Lee']);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
       }, function(error) {
         done(new Error(error.error));
       }); 
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').notIn('foo');
+      }.should['throw']());
     });
   });
 
@@ -245,11 +306,37 @@ describe('Kinvey.Query', function() {
     });
   });
 
+  // Kinvey.Query#or
+  describe('#or', function() {
+    it('performs a matching or query.', function(done) {
+      var complex = this.complex;
+      this.query.on('age').lessThan(75);
+      this.query.or(new Kinvey.Query().on('age').lessThan(25));
+      this.collection.fetch(function() {
+        this.list.length.should.equal(1);
+        this.list[0].should.eql(complex);
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+    it('performs an unmatching or query.', function(done) {
+      this.query.on('age').lessThan(50);
+      this.query.or(new Kinvey.Query().on('age').lessThan(25));
+      this.collection.fetch(function() {
+        this.list.length.should.equal(0);
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });      
+    });
+  });
+
   // Kinvey.Query#setLimit
   describe('#setLimit', function() {
     it('sets a limit.', function(done) {
       this.query.setLimit(1);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         done();
       }, function(error) {
@@ -262,7 +349,7 @@ describe('Kinvey.Query', function() {
   describe('#setSkip', function() {
     it('sets a skip.', function(done) {
       this.query.setSkip(2);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
@@ -278,7 +365,7 @@ describe('Kinvey.Query', function() {
       var simple = this.simple;
 
       this.query.on('surname').sort(Kinvey.Query.ASC);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(2);
         this.list[0].should.eql(simple);
         this.list[1].should.eql(complex);
@@ -292,7 +379,7 @@ describe('Kinvey.Query', function() {
       var simple = this.simple;
 
       this.query.on('surname').sort(Kinvey.Query.DESC);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(2);
         this.list[0].should.eql(complex);
         this.list[1].should.eql(simple);
@@ -308,7 +395,7 @@ describe('Kinvey.Query', function() {
     it('performs a size query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').size(3);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -323,7 +410,7 @@ describe('Kinvey.Query', function() {
     it('performs a matching within box query.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').withinBox([[-72, 41], [-70, 43]]);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -333,12 +420,18 @@ describe('Kinvey.Query', function() {
     });
     it('performs an unmatching within box query.', function(done) {
       this.query.on('_geoloc').withinBox([[-74, 39], [-72, 41]]);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
         done(new Error(error.error));
       });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').withinBox('foo');
+      }.should['throw']());
     });
   });
 
@@ -346,8 +439,8 @@ describe('Kinvey.Query', function() {
   describe('#withinCenterSphere', function() {
     it('performs a matching within center sphere query.', function(done) {
       var complex = this.complex;
-      this.query.on('_geoloc').withinCenterSphere([-71, 42], 0.01);// ~100 miles
-      this.collection.fetch(this.query, function() {
+      this.query.on('_geoloc').withinCenterSphere([-71, 42], 0.025);// ~100 miles
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -356,13 +449,19 @@ describe('Kinvey.Query', function() {
       });
     });
     it('performs an unmatching within center sphere query.', function(done) {
-      this.query.on('_geoloc').withinCenterSphere([-71, 42], 0.0025);// ~1 mile
-      this.collection.fetch(this.query, function() {
+      this.query.on('_geoloc').withinCenterSphere([-71, 42], 0.00025);// ~1 mile
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
         done(new Error(error.error));
       });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').withinCenterSphere('foo');
+      }.should['throw']());
     });
   });
 
@@ -393,7 +492,7 @@ describe('Kinvey.Query', function() {
                             [ -72.8146, 42.0371 ], [ -72.8160, 41.9962 ], [ -72.7803, 42.0024 ] ];
 
       this.query.on('_geoloc').withinPolygon(massachusetts);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(1);
         this.list[0].should.eql(complex);
         done();
@@ -463,12 +562,18 @@ describe('Kinvey.Query', function() {
                     [ -106.6168, 32.0023 ] ];
 
       this.query.on('_geoloc').withinPolygon(texas);
-      this.collection.fetch(this.query, function() {
+      this.collection.fetch(function() {
         this.list.length.should.equal(0);
         done();
       }, function(error) {
         done(new Error(error.error));
       });
+    });
+    it('throws an Error on invalid argument.', function() {
+      var query = this.query;
+      (function() {
+        query.on('field').withinPolygon('foo');
+      }.should['throw']());
     });
   });
 });

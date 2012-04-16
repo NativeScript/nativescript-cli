@@ -39,7 +39,11 @@
    * 
    * @param {Object} options Kinvey credentials. Object expects properties:
    *          "appKey", "appSecret". Optional properties: "env".
-   * @throws {Error} On empty appKey, empty appSecret.
+   * @throws {Error}
+   *           <ul>
+   *           <li>On empty appKey,</li>
+   *           <li>On empty appSecret.</li>
+   *           </ul>
    */
   Kinvey.init = function(options) {
     if('undefined' === typeof options.appKey || null == options.appKey) {
