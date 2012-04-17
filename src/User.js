@@ -7,7 +7,7 @@
     // Associated Kinvey API.
     API: Kinvey.Net.USER_API,
 
-    // Credential attribute keys.
+    // Credential attributes.
     ATTR_USERNAME: 'username',
     ATTR_PASSWORD: 'password',
 
@@ -48,7 +48,7 @@
         return;
       }
 
-      // User is logged in, so it can remove itself.
+      // Users are allowed to remove themselves.
       Kinvey.Entity.prototype.destroy.call(this, function() {
         this.logout();
         bind(this, success)();
@@ -56,7 +56,7 @@
     },
 
     /**
-     * Returns password or null if not set.
+     * Returns password, or null if not set.
      * 
      * @return {string} Password.
      */
@@ -65,7 +65,7 @@
     },
 
     /**
-     * Returns username or null if not set.
+     * Returns username, or null if not set.
      * 
      * @return {string} Username.
      */
@@ -75,6 +75,15 @@
 
     /**
      * Logs in user.
+     * 
+     * @example <code>
+     * var user = new Kinvey.User();
+     * user.login('username', 'password', function() {
+     *   console.log('Login successful');
+     * }, function(error) {
+     *   console.log('Login failed', error);
+     * });
+     * </code>
      * 
      * @param {string} username Username.
      * @param {string} password Password.
@@ -99,7 +108,7 @@
       net.setData(this.attr);
       net.setOperation(Kinvey.Net.CREATE);
       net.send(bind(this, function(response) {
-        // Update attributes. Preserve password since it is needed as part of
+        // Update attributes. Preserve password since it is part of
         // the authorization.
         this.attr = response;
         this.setPassword(password);
@@ -171,6 +180,8 @@
     },
 
     /**
+     * Removes any user saved on disk.
+     * 
      * @private
      */
     _deleteFromDisk: function() {
@@ -178,6 +189,9 @@
     },
 
     /**
+     * Marks user as logged in. This method should never be called standalone,
+     * but always involve some network request.
+     * 
      * @private
      */
     _login: function() {
@@ -187,6 +201,8 @@
     },
 
     /**
+     * Saves current user to disk.
+     * 
      * @private
      */
     _saveToDisk: function() {
@@ -201,8 +217,16 @@
     /**
      * Creates the current user.
      * 
-     * @param {string} [username] Username.
-     * @param {string} [password] Password.
+     * @example <code>
+     * var user = Kinvey.create('username', 'password', function() {
+     *   console.log('User created', this);
+     * }, function(error) {
+     *   console.log('User not created', error.error);
+     * });
+     * </code>
+     * 
+     * @param {string} [username] Username. Defaults to auto-generated one.
+     * @param {string} [password] Password. Defaults to auto-generated one.
      * @param {function()} [success] Success callback. {this} is the User
      *          instance.
      * @param {function(Object)} [failure] Failure callback. {this} is the User
@@ -246,8 +270,9 @@
     },
 
     /**
-     * Initializes the current user. Restores the user from cache, or creates an
-     * anonymous user if not set. This method should only be called internally.
+     * Initializes a current user. Restores the user from cache, or creates an
+     * anonymous user. This method is called internally when doing a network
+     * request. Manually invoking this function is however allowed.
      * 
      * @param {function()} [success] Success callback. {this} is the current
      *          user instance.

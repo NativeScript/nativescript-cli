@@ -31,6 +31,7 @@
     /**
      * @override
      * @private
+     * @see Kinvey.Net.Http#_process
      */
     _process: function(success, failure) {
       // Split URL in parts.

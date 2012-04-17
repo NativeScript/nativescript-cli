@@ -29,10 +29,12 @@
     /** @lends Kinvey.UserCollection# */
 
     /**
+     * Clears collection. This action is not allowed.
+     * 
      * @override
-     * @see Kinvey.Collection#clear
+     * @throws {Error}
      */
-    clear: function(success, failure) {
+    clear: function() {
       throw new Error('This request requires the master secret');
     }
   });

@@ -31,8 +31,8 @@
    * 
    * @example <code>
    * Kinvey.init({
-   *   appKey: '<your-app-key>',
-   *   appSecret: '<your-app-secret>',
+   *   appKey: 'your-app-key',
+   *   appSecret: 'your-app-secret',
    *   env: 'node'
    * });
    * </code>
@@ -66,7 +66,7 @@
    * Kinvey.ping(function() {
    *   console.log('Ping successful', this.kinvey, this.version);
    * }, function(error) {
-   *   console.log('Ping failed', error);
+   *   console.log('Ping failed', error.error);
    * });
    * </code>
    * 
@@ -83,8 +83,10 @@
   };
 
   /**
-   * Sets the current user.
+   * Sets the current user. This method is only used by the Kinvey.User
+   * namespace.
    * 
+   * @private
    * @param {Kinvey.User} user Current user.
    */
   Kinvey.setCurrentUser = function(user) {

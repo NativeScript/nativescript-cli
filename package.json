@@ -1,5 +1,5 @@
 {
-  "name": "js-library",
+  "name": "kinvey-js",
   "version": "0.1.0dev",
   "private": true,
   "description": "Kinvey JavaScript SDK for HTML5",
@@ -16,7 +16,7 @@
   "engines": {
     "node": ">= 0.6.13"
   },
-  "main": "./dist/js-library-0.1.0dev.js",
+  "main": "./dist/kinvey-js-0.1.0dev.js",
   "scripts": {
     "test": "grunt test"
   }

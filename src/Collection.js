@@ -74,6 +74,15 @@
     /**
      * Counts number of entities.
      * 
+     * @example <code>
+     * var collection = new Kinvey.Collection('my-collection');
+     * collection.count(function(i) {
+     *   console.log('Number of entities: ' + i);
+     * }, function(error) {
+     *   console.log('Count failed', error.error);
+     * });
+     * </code>
+     * 
      * @param {function(number)} [success] Success callback. {this} is the
      *          Collection instance. Only argument is the number of entities.
      * @param {function(Object)} [failure] Failure callback. {this} is the

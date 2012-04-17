@@ -5,7 +5,7 @@
     // Associated Kinvey API.
     API: Kinvey.Net.APPDATA_API,
 
-    // Identifier attribute key.
+    // Identifier attribute.
     ATTR_ID: '_id',
 
     /**
@@ -14,7 +14,7 @@
      * @example <code>
      * var entity = new Kinvey.Entity('my-collection');
      * var entity = new Kinvey.Entity('my-collection', {
-     *   name: 'value'
+     *   key: 'value'
      * });
      * </code>
      * 
@@ -58,7 +58,7 @@
     },
 
     /**
-     * Returns attribute or null if not set.
+     * Returns attribute, or null if not set.
      * 
      * @param {string} key Attribute key.
      * @throws {Error} On empty key.
@@ -84,7 +84,7 @@
     },
 
     /**
-     * Returns whether entity is saved.
+     * Returns whether entity is persisted.
      * 
      * @return {boolean}
      */
@@ -164,7 +164,7 @@
     },
 
     /**
-     * Returns JSON representation.
+     * Returns JSON representation. Used by JSON#stringify.
      * 
      * @returns {Object} JSON representation.
      */

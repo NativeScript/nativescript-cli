@@ -66,8 +66,8 @@
      * @example <code>
      * var net = Kinvey.Net.factory(Kinvey.Net.USER_API);
      * var net = Kinvey.Net.factory(Kinvey.Net.USER_API, 'user-id');
-     * var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, 'col-name');
-     * var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, 'col-name', 'entity-id');
+     * var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, 'my-collection');
+     * var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, 'my-collection', 'entity-id');
      * </code>
      * 
      * @param {string} api One of Kinvey.Net API constants.
@@ -77,7 +77,7 @@
      * @return {Object} One of Kinvey.Net.* adapters.
      */
     factory: function(api, collection, id) {
-      if('node' === Kinvey.env.toLowerCase()) {
+      if('node' === Kinvey.env.toLowerCase() && 'undefined' !== typeof Kinvey.Net.Node) {
         return new Kinvey.Net.Node(api, collection, id);
       }
       return new Kinvey.Net.Http(api, collection, id);

@@ -9,7 +9,6 @@
      * Creates a new query.
      * 
      * @example <code>
-     * var query = new Kinvey.Query(new Kinvey.Query.MongoBuilder());
      * var query = new Kinvey.Query();
      * </code>
      * 

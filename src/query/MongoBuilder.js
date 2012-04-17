@@ -154,7 +154,7 @@
     },
 
     /**
-     * Returns JSON representation.
+     * Returns JSON representation. Used by JSON#stringify.
      * 
      * @return {Object} JSON representation.
      */

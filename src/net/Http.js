@@ -17,15 +17,15 @@
 
     // Map CRUD operations to HTTP request methods.
     METHOD: (function(Net) {
-      var map = {};var cached = 
-      map[Net.CREATE] = 'POST';
+      var map = {};
+      var cached = map[Net.CREATE] = 'POST';
       map[Net.READ] = 'GET';
       map[Net.UPDATE] = 'PUT';
       map[Net.DELETE] = 'DELETE';
       return map;
     }(Kinvey.Net)),
 
-    // Properties
+    // Properties.
     data: null,
     headers: {
       Accept: 'application/json, text/javascript',
@@ -95,7 +95,7 @@
     },
 
     /**
-     * Sets data
+     * Sets data.
      * 
      * @param {Object} data JSON object.
      */
@@ -104,7 +104,7 @@
     },
 
     /**
-     * Sets operation
+     * Sets operation.
      * 
      * @param {string} operation Operation.
      * @throws {Error} On invalid operation.
@@ -130,7 +130,12 @@
     },
 
     /**
+     * Encodes a value, so that it can be safely used as part of the query
+     * string.
+     * 
      * @private
+     * @param {*} value Value to be encoded.
+     * @return {string} Encoded value.
      */
     _encode: function(value) {
       if(value instanceof Object) {
@@ -140,7 +145,10 @@
     },
 
     /**
+     * Returns plain authorization value.
+     * 
      * @private
+     * @return {string} Authorization value.
      */
     _getAuth: function() {
       var currentUser = Kinvey.getCurrentUser();
@@ -151,7 +159,10 @@
     },
 
     /**
+     * Builds URL.
+     * 
      * @private
+     * @return {string} URL.
      */
     _getUrl: function() {
       var url = '';
@@ -191,7 +202,15 @@
     },
 
     /**
+     * Parses HTTP response.
+     * 
      * @private
+     * @param {number} statusCode Status code.
+     * @param {string} body Response body.
+     * @param {function(Object)} success Success callback. Only argument is the
+     *          parsed response body.
+     * @param {function(Object)} failure Failure callback. Only argument is the
+     *          parsed response body.
      */
     _handleResponse: function(statusCode, body, success, failure) {
       // Parse body. Failing to parse body is not a big deal.
@@ -202,12 +221,17 @@
       }
 
       // Fire callback.
-      (200 <= statusCode && 300 > statusCode) || 304 === statusCode ? success(body)
-          : failure(body);
+      (200 <= statusCode && 300 > statusCode) || 304 === statusCode ? success(body) : failure(body);
     },
 
     /**
+     * Processes and fires HTTP request.
+     * 
      * @private
+     * @param {function(Object)} success Success callback. Only argument is a
+     *          response object.
+     * @param {function(Object)} failure Failure callback. Only argument is an
+     *          error object.
      */
     _process: function(success, failure) {
       if('undefined' === typeof XMLHttpRequest) {
