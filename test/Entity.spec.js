@@ -2,12 +2,9 @@
  * Kinvey.Entity test suite.
  */
 describe('Kinvey.Entity', function() {
-  // Entities need an owner.
-  before(function(done) {
-    this.user = Kinvey.User.create(done, done);
-  });
+  // Destroy the created anonymous user.
   after(function(done) {
-    this.user.destroy(done, done);
+    Kinvey.getCurrentUser().destroy(done, done);
   });
 
   // Inheritance

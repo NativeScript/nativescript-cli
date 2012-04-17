@@ -72,6 +72,78 @@ describe('Kinvey.User', function() {
     });
   });
 
+  // Kinvey.User::init
+  describe('::init', function() {
+    // Destroy the created anonymous user.
+    afterEach(function(done) {
+      Kinvey.getCurrentUser().destroy(done, done);
+    });
+
+    it('returns the current user.', function(done) {
+      // Create a current user.
+      var user = Kinvey.User.create(function() {
+        Kinvey.User.init(function() {
+          this.should.equal(user);
+
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(this);
+          (this.isLoggedIn).should.be.True;
+
+          done();
+        }, function(error) {
+          done(new Error(error.error));
+        });
+      }, done);
+    });
+    it('restored a cached user.', function(done) {
+      var user = Kinvey.User.create(function() {
+        // Reset current user manually, so cache keeps intact.
+        Kinvey.setCurrentUser(null);
+
+        // Init should recreate the user from cache.
+        Kinvey.User.init(function() {
+          this.should.eql(user);
+
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(this);
+          (this.isLoggedIn).should.be.True;
+
+          done();
+        }, function(error) {
+          done(new Error(error.error));
+        });
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+    it('creates an anonymous user.', function(done) {
+      // Create spy.
+      var create = Kinvey.User.create;
+      Kinvey.User.create = function() {
+        invoked = true;
+        return create.apply(this, arguments);
+      };
+      var invoked = false;
+
+      // Init should internally call the spy defined above.
+      var user = Kinvey.User.init(function() {
+        // Reset spy.
+        Kinvey.User.create = create;
+
+        invoked.should.be.True;
+        this.should.equal(user);
+
+        // Test current user.
+        Kinvey.getCurrentUser().should.equal(this);
+        (this.isLoggedIn).should.be.True;
+
+        done();
+      }, function(error) {
+        done(new Error(error.error));
+      });
+    });
+  });
+
   // Kinvey.User#destroy
   describe('#destroy', function() {
     // Create mock.

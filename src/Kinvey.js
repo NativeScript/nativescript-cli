@@ -45,7 +45,7 @@
    *           <li>On empty appSecret.</li>
    *           </ul>
    */
-  Kinvey.init = function(options, success, failure) {
+  Kinvey.init = function(options) {
     if('undefined' === typeof options.appKey || null == options.appKey) {
       throw new Error('appKey must be defined');
     }

@@ -5,16 +5,6 @@
   // Define the Kinvey.Net.Http network adapter.
   Kinvey.Net.Http = Base.extend({
     // Constants
-    // Map CRUD operations to HTTP request methods.
-    METHOD: (function(Net) {
-      var map = {};
-      map[Net.CREATE] = 'POST';
-      map[Net.READ] = 'GET';
-      map[Net.UPDATE] = 'PUT';
-      map[Net.DELETE] = 'DELETE';
-      return map;
-    }(Kinvey.Net)),
-
     // Endpoints URLs.
     ENDPOINT: (function(base) {
       return {
@@ -24,6 +14,16 @@
         USER: base + '/user'
       };
     }('https://baas.kinvey.com')),
+
+    // Map CRUD operations to HTTP request methods.
+    METHOD: (function(Net) {
+      var map = {};var cached = 
+      map[Net.CREATE] = 'POST';
+      map[Net.READ] = 'GET';
+      map[Net.UPDATE] = 'PUT';
+      map[Net.DELETE] = 'DELETE';
+      return map;
+    }(Kinvey.Net)),
 
     // Properties
     data: null,
@@ -82,33 +82,16 @@
      * @throws {Error} On unsupported client.
      */
     send: function(success, failure) {
-      if('undefined' === typeof XMLHttpRequest) {
-        throw new Error('XMLHttpRequest is not supported');
+      // A current user is required for all but the User API.
+      if(null === Kinvey.getCurrentUser() && Kinvey.Net.USER_API !== this.api) {
+        Kinvey.User.init(bind(this, function() {
+          this._process(success, failure);
+        }), failure);
+        return;
       }
 
-      // Create client and build request.
-      var request = new XMLHttpRequest();
-      request.open(this.METHOD[this.operation], this._getUrl(), true);
-
-      // Add headers.
-      for( var header in this.headers) {
-        request.setRequestHeader(header, this.headers[header]);
-      }
-      request.setRequestHeader('Authorization', 'Basic ' + btoa(this._getAuth()));
-
-      // Handle response.
-      var self = this;
-      request.onerror = function() {
-        // Unfortunately, no error message is provided by XHR.
-        failure({ error: 'Error' });
-      };
-      request.onload = function() {
-        self._handleResponse(this.status, this.responseText, success, failure);
-      };
-
-      // Fire request.
-      var data = this.data ? JSON.stringify(this.data) : null;
-      request.send(data);
+      // There is a current user already, or the User API is requested.
+      this._process(success, failure);
     },
 
     /**
@@ -137,8 +120,12 @@
      * Sets query.
      * 
      * @param {Kinvey.Query} query Query object.
+     * @throws {Error} On invalid instance.
      */
     setQuery: function(query) {
+      if(!(query instanceof Kinvey.Query)) {
+        throw new Error('Query must be of instance Kinvey.Query');
+      }
       this.query = query;
     },
 
@@ -217,6 +204,41 @@
       // Fire callback.
       (200 <= statusCode && 300 > statusCode) || 304 === statusCode ? success(body)
           : failure(body);
+    },
+
+    /**
+     * @private
+     */
+    _process: function(success, failure) {
+      if('undefined' === typeof XMLHttpRequest) {
+        throw new Error('XMLHttpRequest is not supported');
+      }
+
+      // Create client and build request.
+      var request = new XMLHttpRequest();
+      request.open(this.METHOD[this.operation], this._getUrl(), true);
+
+      // Add headers.
+      for( var header in this.headers) {
+        request.setRequestHeader(header, this.headers[header]);
+      }
+      request.setRequestHeader('Authorization', 'Basic ' + btoa(this._getAuth()));
+
+      // Handle response.
+      var self = this;
+      request.onerror = function() {
+        // Unfortunately, no error message is provided by XHR.
+        failure({
+          error: 'Error'
+        });
+      };
+      request.onload = function() {
+        self._handleResponse(this.status, this.responseText, success, failure);
+      };
+
+      // Fire request.
+      var data = this.data ? JSON.stringify(this.data) : null;
+      request.send(data);
     }
   });
 

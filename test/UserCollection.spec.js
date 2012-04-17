@@ -2,12 +2,12 @@
  * Kinvey.UserCollection test suite.
  */
 describe('Kinvey.UserCollection', function() {
-  // Entities need an owner.
+  // Users need an explicit owner.
   before(function(done) {
-    this.user = Kinvey.User.create(done, done);
+    Kinvey.User.create(done, done);
   });
   after(function(done) {
-    this.user.destroy(done, done);
+    Kinvey.getCurrentUser().destroy(done, done);
   });
 
   // Inheritance

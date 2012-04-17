@@ -5,7 +5,7 @@ describe('Kinvey.Query', function() {
   // Create a variety of data, so queries actually have results.
   before(function(done) {
     // Define two entities, subject to all query options.
-    var complex = this.complex = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
+    this.complex = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
       name: 'John',
       surname: 'Smith',
       age: 50,
@@ -16,11 +16,9 @@ describe('Kinvey.Query', function() {
       surname: 'Brown'
     });
 
-    // Create anonymous user and save all.
-    this.user = Kinvey.User.create(function() {
-      complex.save(function() {
-        simple.save(done, done);
-      }, done);
+    // Save both.
+    this.complex.save(function() {
+      simple.save(done, done);
     }, done);
   });
 
@@ -33,10 +31,9 @@ describe('Kinvey.Query', function() {
   // Remove all created data.
   after(function(done) {
     var complex = this.complex;
-    var user = this.user;
     this.simple.destroy(function() {
       complex.destroy(function() {
-        user.destroy(done, done);
+        Kinvey.getCurrentUser().destroy(done, done);
       }, done);
     }, done);
   });

@@ -30,9 +30,9 @@
 
     /**
      * @override
-     * @see Kinvey.Net.Http#send
+     * @private
      */
-    send: function(success, failure) {
+    _process: function(success, failure) {
       // Split URL in parts.
       var parts = url.parse(this._getUrl());
 

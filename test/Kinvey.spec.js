@@ -19,6 +19,11 @@ describe('Kinvey', function() {
 
   // Kinvey#ping
   describe('#ping', function() {
+    // Destroy the created anonymous user.
+    after(function(done) {
+      Kinvey.getCurrentUser().destroy(done, done);
+    });
+
     it('pings the Kinvey service', function(done) {
       Kinvey.ping(function() {
         this.should.have.property('kinvey');

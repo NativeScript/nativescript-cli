@@ -1,5 +1,7 @@
 (function() {
 
+  /*globals localStorage*/
+
   // Define the Kinvey User class.
   Kinvey.User = Kinvey.Entity.extend({
     // Associated Kinvey API.
@@ -101,11 +103,7 @@
         // the authorization.
         this.attr = response;
         this.setPassword(password);
-
-        // Update current user.
-        Kinvey.setCurrentUser(this);
-        this.isLoggedIn = true;
-
+        this._login();
         bind(this, success)();
       }), bind(this, failure));
     },
@@ -117,6 +115,7 @@
     logout: function() {
       if(this.isLoggedIn) {
         Kinvey.setCurrentUser(null);
+        this._deleteFromDisk();
         this.isLoggedIn = false;
       }
     },
@@ -140,11 +139,7 @@
       var password = this.getPassword();
       Kinvey.Entity.prototype.save.call(this, function() {
         this.setPassword(password);
-
-        // Update curent user.
-        Kinvey.setCurrentUser(this);
-        this.isLoggedIn = true;
-
+        this._login();
         bind(this, success)();
       }, failure);
     },
@@ -173,9 +168,35 @@
         throw new Error('Username must not be null');
       }
       this.set(this.ATTR_USERNAME, username);
+    },
+
+    /**
+     * @private
+     */
+    _deleteFromDisk: function() {
+      localStorage.removeItem(Kinvey.User.CACHE_TAG);
+    },
+
+    /**
+     * @private
+     */
+    _login: function() {
+      Kinvey.setCurrentUser(this);
+      this._saveToDisk();
+      this.isLoggedIn = true;
+    },
+
+    /**
+     * @private
+     */
+    _saveToDisk: function() {
+      localStorage.setItem(Kinvey.User.CACHE_TAG, JSON.stringify(this));
     }
   }, {
     /** @lends Kinvey.User */
+
+    // Cache tag.
+    CACHE_TAG: 'Kinvey.currentUser',
 
     /**
      * Creates the current user.
@@ -186,7 +207,7 @@
      *          instance.
      * @param {function(Object)} [failure] Failure callback. {this} is the User
      *          instance. Only argument is an error object.
-     * @return {Kinvey.User} The created user instance.
+     * @return {Kinvey.User} The user instance (not necessarily persisted yet).
      */
     create: function(username, password, success, failure) {
       // Parse arguments.
@@ -214,17 +235,45 @@
       user.setUsername(username);
       user.setPassword(password);
 
-      // Persist and link to user.
+      // Persist, and implicitly mark the created user as logged in.
       Kinvey.Entity.prototype.save.call(user, function() {
-        // Update current user.
-        Kinvey.setCurrentUser(this);
-        this.isLoggedIn = true;
-
+        this._login();
         bind(this, success)();
       }, failure);
 
       // Return the instance.
       return user;
+    },
+
+    /**
+     * Initializes the current user. Restores the user from cache, or creates an
+     * anonymous user if not set. This method should only be called internally.
+     * 
+     * @param {function()} [success] Success callback. {this} is the current
+     *          user instance.
+     * @param {function()} [failure] Failure callback. {this} is a user
+     *          instance. Only argument is an error object.
+     * @return {Kinvey.User} The user instance. (not necessarily persisted yet).
+     */
+    init: function(success, failure) {
+      // First, check whether there already is a current user.
+      var user = Kinvey.getCurrentUser();
+      if(null !== user) {
+        bind(user, success)();
+        return user;
+      }
+
+      // Second, check if user attributes are stored locally on the device.
+      var attr = JSON.parse(localStorage.getItem(Kinvey.User.CACHE_TAG));
+      if(null !== attr && null != attr.username && null != attr.password) {
+        // Re-authenticate user to ensure it is not stale.
+        user = new Kinvey.User();
+        user.login(attr.username, attr.password, success, failure);
+        return user;
+      }
+
+      // No cached user available either, create anonymous user.
+      return Kinvey.User.create(success, failure);
     }
   });
 
