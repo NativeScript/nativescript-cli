@@ -15,7 +15,7 @@
    * 
    * @constant
    */
-  Kinvey.SDK_VERSION = '0.1.0dev';
+  Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
   /**
    * Returns current user, or null if not set.

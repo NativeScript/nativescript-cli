@@ -88,7 +88,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/Kinvey.js',
           '<%= dir.src %>/net/Net.js',
           '<%= dir.src %>/net/Http.js',
-          '<%= dir.src %>/net/Node.js',
+          // '<%= dir.src %>/net/Node.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
@@ -121,6 +121,12 @@ module.exports = function(grunt) {
         src: '<%= dir.dist %>/<%= sdk %>.min.js',
         find: /^\(function\(a\)/m,
         replace: '(function(undefined)'
+      }
+    },
+
+    filter: {
+      dest: {
+        src: '<%= dir.dist %>/<%= sdk %>.js'
       }
     },
 
@@ -177,6 +183,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
   grunt.registerTask('doc', 'jsdoc');
   grunt.registerTask('minify', 'min replace:arg');
-  grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass');
+  grunt.registerTask('pack', 'concat replace:firstPass replace:secondPass replace:thirdPass filter');
   grunt.registerTask('test', 'mocha');
 };
