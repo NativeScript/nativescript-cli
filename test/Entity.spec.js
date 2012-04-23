@@ -4,7 +4,7 @@
 describe('Kinvey.Entity', function() {
   // Destroy the created anonymous user.
   after(function(done) {
-    Kinvey.getCurrentUser().destroy(done, done);
+    Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Inheritance
@@ -31,19 +31,12 @@ describe('Kinvey.Entity', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
-      this.entity.save(done, done);
+      this.entity.save(callback(done));
     });
 
     // Test suite.
     it('destroys an entity', function(done) {
-      var entity = this.entity;
-      entity.destroy(function() {
-        this.should.equal(entity);
-        done();
-      }, function(error) {
-        this.should.equal(entity);
-        done(new Error(error.error));
-      });
+      this.entity.destroy(callback(done));
     });
   });
 
@@ -52,25 +45,22 @@ describe('Kinvey.Entity', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
-      this.entity.save(done, done);
+      this.entity.save(callback(done));
     });
     afterEach(function(done) {
-      this.entity.destroy(done, done);
+      this.entity.destroy(callback(done));
     });
 
     // Test suite.
     it('loads an entity', function(done) {
-      var id = this.entity.getId();
-     
-      var entity = new Kinvey.Entity(COLLECTION_UNDER_TEST);
-      entity.load(id, function() {
-        this.should.equal(entity);
-        (this.getId()).should.equal(id);
-        done();
-      }, function(error) {
-        this.should.equal(entity);
-        done(new Error(error.error));
-      });
+      var entity = this.entity;
+      new Kinvey.Entity(COLLECTION_UNDER_TEST).load(entity.getId(), callback(done, {
+        success: function(response) {
+          response.should.eql(entity);// Kinvey.Entity
+          (response.getId()).should.equal(entity.getId());
+          done();
+        }
+      }));
     });
   });
 
@@ -78,36 +68,36 @@ describe('Kinvey.Entity', function() {
   describe('#save', function() {
     // Create mock.
     beforeEach(function() {
-      this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST, { key: 'value' });
+      this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
+        key: 'value'
+      });
     });
     afterEach(function(done) {
-      this.entity.destroy(done, done);
+      this.entity.destroy(callback(done));
     });
 
     // Test suite.
     it('saves a new entity', function(done) {
       var entity = this.entity;
-      entity.save(function() {
-        this.should.equal(entity);
-        (this.getId()).should.not.equal(null);// id is auto-generated
-        (this.get('key')).should.equal('value');
-        done();
-      }, function(error) {
-        this.should.equal(entity);
-        done(new Error(error.error));
-      });
+      entity.save(callback(done, {
+        success: function(response) {
+          response.should.equal(entity);// Kinvey.Entity
+          (response.getId()).should.not.equal(null);// id is auto-generated
+          (response.get('key')).should.equal('value');
+          done();
+        }
+      }));
     });
     it('updates an existing entity', function(done) {
       var entity = this.entity;
       entity.set('baz', 'quux');
-      entity.save(function() {
-        this.should.equal(entity);
-        (this.get('baz')).should.equal('quux');
-        done();
-      }, function(error) {
-        this.should.equal(entity);
-        done(new Error(error.error));
-      });
+      entity.save(callback(done, {
+        success: function(response) {
+          response.should.equal(entity);// Kinvey.Entity
+          (response.get('baz')).should.equal('quux');
+          done();
+        }
+      }));
     });
   });
 

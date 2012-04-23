@@ -37,24 +37,28 @@
     /**
      * Destroys entity.
      * 
-     * @param {function()} [success] Success callback. {this} is the (destroyed)
-     *          entity instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          entity instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function()} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      */
-    destroy: function(success, failure) {
+    destroy: function(options) {
+      options || (options = {});
+
       // Return instantly if entity is not saved yet.
       if(this.isNew()) {
-        bind(this, success)();
+        options.success && options.success();
         return;
       }
 
       // Send request.
       var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
       net.setOperation(Kinvey.Net.DELETE);
-      net.send(bind(this, function() {
-        bind(this, success)();
-      }), bind(this, failure));
+      net.send({
+        success: function() {
+          options.success && options.success();
+        },
+        error: options.error
+      });
     },
 
     /**
@@ -96,44 +100,49 @@
      * Loads entity by id.
      * 
      * @param {string} id Entity id.
-     * @param {function()} [success] Success callback. {this} is the entity
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          entity instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      * @throws {Error} On empty id.
      */
-    load: function(id, success, failure) {
+    load: function(id, options) {
       if(null == id) {
         throw new Error('Id must not be null');
       }
+      options || (options = {});
 
       // Retrieve data.
-      var net = Kinvey.Net.factory(this.API, this.collection, id);
-      net.send(bind(this, function(response) {
-        this.attr = response;
-        bind(this, success)();
-      }), bind(this, failure));
+      Kinvey.Net.factory(this.API, this.collection, id).send({
+        success: bind(this, function(response) {
+          this.attr = response;
+          options.success && options.success(this);
+        }),
+        error: options.error
+      });
     },
 
     /**
      * Saves entity.
      * 
-     * @param {function()} [success] Success callback. {this} is the entity
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          entity instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      */
-    save: function(success, failure) {
+    save: function(options) {
+      options || (options = {});
       var operation = this.isNew() ? Kinvey.Net.CREATE : Kinvey.Net.UPDATE;
 
       // Retrieve data.
       var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
       net.setData(this.attr);// include attributes
       net.setOperation(operation);
-      net.send(bind(this, function(response) {
-        this.attr = response;
-        bind(this, success)();
-      }), bind(this, failure));
+      net.send({
+        success: bind(this, function(response) {
+          this.attr = response;
+          options.success && options.success(this);
+        }),
+        error: options.error
+      });
     },
 
     /**

@@ -44,31 +44,36 @@
     /**
      * Clears collection. This method is NOT atomic, it stops on first failure.
      * 
-     * @param {function()} [success] Success callback. {this} is the collection
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          collection instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function()} [success] Success callback.
+     * @param {function(error)} [error] Failure callback.
      */
-    clear: function(success, failure) {
-      failure = bind(this, failure);
+    clear: function(options) {
+      options || (options = {});
       this.list = [ ];// clear list
 
       // Retrieve all entities, and remove them one by one.
-      this.fetch(bind(this, function() {
-        var it = bind(this, function() {
-          var entity = this.list[0];
-          if(entity) {
-            entity.destroy(bind(this, function() {
-              this.list.shift();
-              it();
-            }), failure);
-          }
-          else {
-            bind(this, success)();
-          }
-        });
-        it();
-      }), failure);
+      this.fetch({
+        success: bind(this, function() {
+          var iterator = bind(this, function() {
+            var entity = this.list[0];
+            if(entity) {
+              entity.destroy({
+                success: bind(this, function() {
+                  this.list.shift();
+                  iterator();
+                }),
+                error: options.error
+              });
+            }
+            else {
+              options.success && options.success();
+            }
+          });
+          iterator();
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -76,47 +81,58 @@
      * 
      * @example <code>
      * var collection = new Kinvey.Collection('my-collection');
-     * collection.count(function(i) {
-     *   console.log('Number of entities: ' + i);
-     * }, function(error) {
-     *   console.log('Count failed', error.error);
+     * collection.count({
+     *   success: function(i) {
+     *    console.log('Number of entities: ' + i);
+     *   },
+     *   error: function(error) {
+     *     console.log('Count failed', error.error);
+     *   }
      * });
      * </code>
      * 
-     * @param {function(number)} [success] Success callback. {this} is the
-     *          Collection instance. Only argument is the number of entities.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          Collection instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(number)} [success] Success callback.
+     * @param {function(error)} [error] Failure callback.
      */
-    count: function(success, failure) {
+    count: function(options) {
+      options || (options = {});
+
       var net = Kinvey.Net.factory(this.API, this.name, '_count');
       this.query && net.setQuery(this.query);// set query
-      net.send(bind(this, function(response) {
-        bind(this, success)(response.count);
-      }), bind(this, failure));
+      net.send({
+        success: function(response) {
+          options.success && options.success(response.count);
+        },
+        error: options.error
+      });
     },
 
     /**
      * Fetches entities in collection.
      * 
-     * @param {function()} [success] Success callback. {this} is the collection
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the
-     *          collection instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(list)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      */
-    fetch: function(success, failure) {
+    fetch: function(options) {
+      options || (options = {});
+
       // Clear list.
       this.list = [ ];
 
       // Send request.
       var net = Kinvey.Net.factory(this.API, this.name);
       this.query && net.setQuery(this.query);// set query
-      net.send(bind(this, function(response) {
-        response.forEach(bind(this, function(attr) {
-          this.list.push(new this.map(this.name, attr));
-        }));
-        bind(this, success)();
-      }), bind(this, failure));
+      net.send({
+        success: bind(this, function(response) {
+          response.forEach(bind(this, function(attr) {
+            this.list.push(new this.map(this.name, attr));
+          }));
+          options.success && options.success(this.list);
+        }),
+        error: options.error
+      });
     }
   });
 

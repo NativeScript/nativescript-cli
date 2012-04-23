@@ -18,57 +18,61 @@ describe('Kinvey.User', function() {
   describe('::create', function() {
     // Each test below creates a user, cleanup after.
     afterEach(function(done) {
-      this.user.destroy(done, done);
+      this.user.destroy(callback(done));
     });
 
     // Test suite.
     it('creates the current user.', function(done) {
-      var user = this.user = Kinvey.User.create('foo', 'bar', function() {
-        this.should.equal(user);
-        (this.getUsername()).should.equal('foo');
-        (this.getPassword()).should.equal('bar');
+      var user = this.user = Kinvey.User.create({
+        username: 'foo',
+        password: 'bar',
+        attribute: 'value'
+      }, callback(done, {
+        success: function(response) {
+          response.should.equal(user);// Kinvey.User
+          (response.getUsername()).should.equal('foo');
+          (response.getPassword()).should.equal('bar');
+          (response.get('attribute')).should.equal('value');
 
-        // Test current user.
-        Kinvey.getCurrentUser().should.equal(this);
-        this.isLoggedIn.should.be.True;
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(response);
+          response.isLoggedIn.should.be.True;
 
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+          done();
+        }
+      }));
     });
     it('creates the current user with auto-generated password.', function(done) {
-      var user = this.user = Kinvey.User.create('foo', function() {
-        this.should.equal(user);
-        (this.getUsername()).should.equal('foo');
-        (this.getPassword()).should.not.equal(null);
+      var user = this.user = Kinvey.User.create({
+        username: 'foo'
+      }, callback(done, {
+        success: function(response) {
+          response.should.equal(user);
+          (response.getUsername()).should.equal('foo');
+          (response.getPassword()).should.not.equal(null);
 
-        // Test current user.
-        Kinvey.getCurrentUser().should.equal(this);
-        (this.isLoggedIn).should.be.True;
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(response);
+          (response.isLoggedIn).should.be.True;
 
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+          done();
+        }
+      }));
     });
     it('creates an anonymous current user.', function(done) {
-      var user = this.user = Kinvey.User.create(function() {
-        this.should.equal(user);
-        (this.getUsername()).should.not.equal(null);
-        (this.getPassword()).should.not.equal(null);
+      var user = this.user = Kinvey.User.create({}, callback(done, {
+        success: function(response) {
+          response.should.equal(user);
+          (response.getUsername()).should.not.equal(null);
+          (response.getPassword()).should.not.equal(null);
 
-        // Test current user.
-        Kinvey.getCurrentUser().should.equal(this);
-        (this.isLoggedIn).should.be.True;
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(response);
+          (response.isLoggedIn).should.be.True;
 
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+          done();
+        }
+      }));
     });
   });
 
@@ -76,45 +80,47 @@ describe('Kinvey.User', function() {
   describe('::init', function() {
     // Destroy the created anonymous user.
     afterEach(function(done) {
-      Kinvey.getCurrentUser().destroy(done, done);
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     it('returns the current user.', function(done) {
       // Create a current user.
-      var user = Kinvey.User.create(function() {
-        Kinvey.User.init(function() {
-          this.should.equal(user);
+      Kinvey.User.create({}, callback(done, {
+        success: function(user) {
+          Kinvey.User.init(callback(done, {
+            success: function(response) {
+              response.should.equal(user);
 
-          // Test current user.
-          Kinvey.getCurrentUser().should.equal(this);
-          (this.isLoggedIn).should.be.True;
+              // Test current user.
+              Kinvey.getCurrentUser().should.equal(response);
+              (response.isLoggedIn).should.be.True;
 
-          done();
-        }, function(error) {
-          done(new Error(error.error));
-        });
-      }, done);
+              done();
+            }
+          }));
+        }
+      }));
     });
     it('restored a cached user.', function(done) {
-      var user = Kinvey.User.create(function() {
-        // Reset current user manually, so cache keeps intact.
-        Kinvey.setCurrentUser(null);
+      Kinvey.User.create({}, callback(done, {
+        success: function(user) {
+          // Manually reset current user, so cache keeps intact.
+          Kinvey.setCurrentUser(null);
 
-        // Init should recreate the user from cache.
-        Kinvey.User.init(function() {
-          this.should.eql(user);
+          // Init should recreate the user from cache.
+          Kinvey.User.init(callback(done, {
+            success: function(response) {
+              response.should.eql(user);
 
-          // Test current user.
-          Kinvey.getCurrentUser().should.equal(this);
-          (this.isLoggedIn).should.be.True;
+              // Test current user.
+              Kinvey.getCurrentUser().should.equal(response);
+              (response.isLoggedIn).should.be.True;
 
-          done();
-        }, function(error) {
-          done(new Error(error.error));
-        });
-      }, function(error) {
-        done(new Error(error.error));
-      });
+              done();
+            }
+          }));
+        }
+      }));
     });
     it('creates an anonymous user.', function(done) {
       // Create spy.
@@ -126,21 +132,21 @@ describe('Kinvey.User', function() {
       var invoked = false;
 
       // Init should internally call the spy defined above.
-      var user = Kinvey.User.init(function() {
-        // Reset spy.
-        Kinvey.User.create = create;
+      var user = Kinvey.User.init(callback(done, {
+        success: function(response) {
+          // Reset spy.
+          Kinvey.User.create = create;
 
-        invoked.should.be.True;
-        this.should.equal(user);
+          invoked.should.be.True;
+          response.should.equal(user);
 
-        // Test current user.
-        Kinvey.getCurrentUser().should.equal(this);
-        (this.isLoggedIn).should.be.True;
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(response);
+          (response.isLoggedIn).should.be.True;
 
-        done();
-      }, function(error) {
-        done(new Error(error.error));
-      });
+          done();
+        }
+      }));
     });
   });
 
@@ -148,18 +154,12 @@ describe('Kinvey.User', function() {
   describe('#destroy', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.user = Kinvey.User.create(done, done);
+      this.user = Kinvey.User.init(callback(done));
     });
 
     // Test suite.
     it('destroys a user.', function(done) {
-      var user = this.user;
-      this.user.destroy(function() {
-        this.should.equal(user);
-        done();
-      }, function(error) {
-        done(new Error(error.error));
-      });
+      this.user.destroy(callback(done));
     });
   });
 
@@ -167,25 +167,22 @@ describe('Kinvey.User', function() {
   describe('#load', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.user = Kinvey.User.create('foo', done, done);
+      this.user = Kinvey.User.init(callback(done));
     });
     afterEach(function(done) {
-      this.user.destroy(done, done);
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     // Test suite.
     it('loads a user', function(done) {
-      var username = this.user.getUsername();
-
-      var user = new Kinvey.User();
-      user.load(this.user.getId(), function() {
-        this.should.equal(user);
-        (this.getUsername()).should.equal(username);
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+      var user = this.user;
+      new Kinvey.User().load(user.getId(), callback(done, {
+        success: function(response) {
+          (response.getId()).should.equal(user.getId());
+          (response.getUsername()).should.equal(user.getUsername());
+          done();
+        }
+      }));
     });
   });
 
@@ -193,32 +190,27 @@ describe('Kinvey.User', function() {
   describe('#login', function() {
     // Create the current user, to allow logging in using its credentials.
     beforeEach(function(done) {
-      this.user = Kinvey.User.create(done, done);
+      this.user = Kinvey.User.init(callback(done));
     });
     afterEach(function(done) {
-      this.user.destroy(done, done);
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     // Test suite.
     it('authenticates a user', function(done) {
-      var username = this.user.getUsername();
-      var password = this.user.getPassword();
+      var user = this.user;
+      new Kinvey.User().login(user.getUsername(), user.getPassword(), callback(done, {
+        success: function(response) {
+          (response.getUsername()).should.equal(user.getUsername());
+          (response.getPassword()).should.equal(user.getPassword());
 
-      var user = this.user = new Kinvey.User();
-      user.login(username, password, function() {
-        this.should.equal(user);
-        (this.getUsername()).should.equal(username);
-        (this.getPassword()).should.equal(password);
+          // Test current user.
+          Kinvey.getCurrentUser().should.equal(response);
+          (response.isLoggedIn).should.be.True;
 
-        // Test current user.
-        Kinvey.getCurrentUser().should.equal(this);
-        (this.isLoggedIn).should.be.True;
-
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+          done();
+        }
+      }));
     });
   });
 
@@ -226,18 +218,21 @@ describe('Kinvey.User', function() {
   describe('#logout', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.user = Kinvey.User.create('foo', 'bar', done, done);
+      this.user = Kinvey.User.init(callback(done));
     });
     afterEach(function(done) {
       // User is logged out. To destroy, log back in first.
-      this.user.login('foo', 'bar', function() {
-        this.destroy(done, done);
-      }, done);
+      this.user
+          .login(this.user.getUsername(), this.user.getPassword(), callback(done, {
+            success: function(user) {
+              user.destroy(callback(done));
+            }
+          }));
     });
 
     // Test suite.
     it('logs out the current user.', function() {
-      this.user.logout();
+      Kinvey.getCurrentUser().logout();
 
       // Test current user.
       (null === Kinvey.getCurrentUser()).should.be.True;
@@ -249,24 +244,23 @@ describe('Kinvey.User', function() {
   describe('#save', function() {
     // Create the current user.
     beforeEach(function(done) {
-      this.user = Kinvey.User.create('foo', done, done);
+      this.user = Kinvey.User.init(callback(done));
     });
     afterEach(function(done) {
-      this.user.destroy(done, done);
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     // Test suite.
     it('Updates an existing user', function(done) {
       var user = this.user;
       user.set('key', 'value');
-      user.save(function() {
-        this.should.equal(user);
-        (this.get('key')).should.equal('value');
-        done();
-      }, function(error) {
-        this.should.equal(user);
-        done(new Error(error.error));
-      });
+      user.save(callback(done, {
+        success: function(response) {
+          response.should.equal(user);
+          (response.get('key')).should.equal('value');
+          done();
+        }
+      }));
     });
   });
 

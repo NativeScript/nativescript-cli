@@ -21,17 +21,17 @@ describe('Kinvey', function() {
   describe('#ping', function() {
     // Destroy the created anonymous user.
     after(function(done) {
-      Kinvey.getCurrentUser().destroy(done, done);
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     it('pings the Kinvey service', function(done) {
-      Kinvey.ping(function() {
-        this.should.have.property('kinvey');
-        this.should.have.property('version');
-        done();
-      }, function(error) {
-        done(new Error(error.error));
-      });
+      Kinvey.ping(callback(done, {
+        success: function(response) {
+          response.should.have.property('kinvey');
+          response.should.have.property('version');
+          done();
+        }
+      }));
     });
   });
 

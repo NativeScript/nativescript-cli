@@ -16,7 +16,7 @@ Kinvey SDK for HTML5.
 In your web page:
 
 ```html
-<script src="dist/kinvey-js-0.1.0dev.min.js"></script>
+<script src="dist/kinvey-js-0.9.1.min.js"></script>
 <script>
 Kinvey.init({
   appKey: '<your-app-key>',

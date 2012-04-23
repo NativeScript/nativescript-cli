@@ -33,7 +33,7 @@
      * @private
      * @see Kinvey.Net.Http#_process
      */
-    _process: function(success, failure) {
+    _process: function(options) {
       // Split URL in parts.
       var parts = url.parse(this._getUrl());
 
@@ -54,11 +54,11 @@
 
         // Handle response when it completes.
         response.on('end', function() {
-          self._handleResponse(response.statusCode, body, success, failure);
+          self._handleResponse(response.statusCode, body, options);
         });
       });
       request.on('error', function(error) {// failed to fire request.
-        failure({ error: error.code });
+        options.error({ error: error.code });
       });
       this.data && request.write(JSON.stringify(this.data));// pass body.
       request.end();// fire request.

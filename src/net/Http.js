@@ -81,17 +81,26 @@
      *          error object.
      * @throws {Error} On unsupported client.
      */
-    send: function(success, failure) {
+    send: function(options) {
+      options || (options = {});
+      options.success || (options.success = function() {
+      });
+      options.error || (options.error = function() {
+      });
+
       // A current user is required for all but the User API.
       if(null === Kinvey.getCurrentUser() && Kinvey.Net.USER_API !== this.api) {
-        Kinvey.User.init(bind(this, function() {
-          this._process(success, failure);
-        }), failure);
+        Kinvey.User.init({
+          success: bind(this, function() {
+            this._process(options);
+          }),
+          error: options.error
+        });
         return;
       }
 
       // There is a current user already, or the User API is requested.
-      this._process(success, failure);
+      this._process(options);
     },
 
     /**
@@ -207,12 +216,11 @@
      * @private
      * @param {number} statusCode Status code.
      * @param {string} body Response body.
-     * @param {function(Object)} success Success callback. Only argument is the
-     *          parsed response body.
-     * @param {function(Object)} failure Failure callback. Only argument is the
-     *          parsed response body.
+     * @param {Object} options
+     * @param {function(response)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
      */
-    _handleResponse: function(statusCode, body, success, failure) {
+    _handleResponse: function(statusCode, body, options) {
       // Parse body. Failing to parse body is not a big deal.
       try {
         body = JSON.parse(body);
@@ -221,19 +229,23 @@
       }
 
       // Fire callback.
-      (200 <= statusCode && 300 > statusCode) || 304 === statusCode ? success(body) : failure(body);
+      if((200 <= statusCode && 300 > statusCode) || 304 === statusCode) {
+        options.success(body);
+      }
+      else {
+        options.error(body);
+      }
     },
 
     /**
      * Processes and fires HTTP request.
      * 
      * @private
-     * @param {function(Object)} success Success callback. Only argument is a
-     *          response object.
-     * @param {function(Object)} failure Failure callback. Only argument is an
-     *          error object.
+     * @param {Object} options
+     * @param {function(response)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
      */
-    _process: function(success, failure) {
+    _process: function(options) {
       if('undefined' === typeof XMLHttpRequest) {
         throw new Error('XMLHttpRequest is not supported');
       }
@@ -252,12 +264,12 @@
       var self = this;
       request.onerror = function() {
         // Unfortunately, no error message is provided by XHR.
-        failure({
+        options.error({
           error: 'Error'
         });
       };
       request.onload = function() {
-        self._handleResponse(this.status, this.responseText, success, failure);
+        self._handleResponse(this.status, this.responseText, options);
       };
 
       // Fire request.

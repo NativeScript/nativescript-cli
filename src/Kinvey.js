@@ -63,23 +63,22 @@
    * Round trips a request to the server and back, helps ensure connectivity.
    * 
    * @example <code>
-   * Kinvey.ping(function() {
-   *   console.log('Ping successful', this.kinvey, this.version);
-   * }, function(error) {
-   *   console.log('Ping failed', error.error);
+   * Kinvey.ping({
+   *   success: function(response) {
+   *     console.log('Ping successful', response.kinvey, response.version);
+   *   },
+   *   error: function(error) {
+   *     console.log('Ping failed', error.error);
+   *   }
    * });
    * </code>
    * 
-   * @param {function()} [success] Success callback. {this} is a response object
-   *          with properties: "kinvey", "version".
-   * @param {function(Object)} [failure] Failure callback, {this} is an empty
-   *          object. Only argument is an error object.
+   * @param {Object} [options]
+   * @param {function(response)} [options.success] Success callback.
+   * @param {function(error)} [options.error] Failure callback.
    */
-  Kinvey.ping = function(success, failure) {
-    var net = Kinvey.Net.factory(Kinvey.Net.APPDATA_API, '');
-    net.send(function(response) {
-      bind(response, success)();
-    }, bind({}, failure));
+  Kinvey.ping = function(options) {
+    Kinvey.Net.factory(Kinvey.Net.APPDATA_API, '').send(options);
   };
 
   /**

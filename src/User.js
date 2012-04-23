@@ -40,19 +40,23 @@
      * @override
      * @see Kinvey.Entity#destroy
      */
-    destroy: function(success, failure) {
+    destroy: function(options) {
+      options || (options = {});
       if(!this.isLoggedIn) {
-        bind(this, failure)({
+        options.error && options.error({
           error: 'This request requires the master secret'
         });
         return;
       }
 
       // Users are allowed to remove themselves.
-      Kinvey.Entity.prototype.destroy.call(this, function() {
-        this.logout();
-        bind(this, success)();
-      }, bind(this, failure));
+      Kinvey.Entity.prototype.destroy.call(this, {
+        success: bind(this, function() {
+          this.logout();
+          options.success && options.success();
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -76,23 +80,26 @@
     /**
      * Logs in user.
      * 
-     * @example <code>
+     * @example <code> 
      * var user = new Kinvey.User();
-     * user.login('username', 'password', function() {
-     *   console.log('Login successful');
-     * }, function(error) {
-     *   console.log('Login failed', error);
+     * user.login('username', 'password', {
+     *   success: function() {
+     *     console.log('Login successful');
+     *   },
+     *   error: function(error) {
+     *     console.log('Login failed', error);
+     *   }
      * });
      * </code>
      * 
      * @param {string} username Username.
      * @param {string} password Password.
-     * @param {function()} [success] Success callback. {this} is the User
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the User
-     *          instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      */
-    login: function(username, password, success, failure) {
+    login: function(username, password, options) {
+      options || (options = {});
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
@@ -107,14 +114,17 @@
       var net = Kinvey.Net.factory(this.API, this.collection, 'login');
       net.setData(this.attr);
       net.setOperation(Kinvey.Net.CREATE);
-      net.send(bind(this, function(response) {
-        // Update attributes. Preserve password since it is part of
-        // the authorization.
-        this.attr = response;
-        this.setPassword(password);
-        this._login();
-        bind(this, success)();
-      }), bind(this, failure));
+      net.send({
+        success: bind(this, function(response) {
+          // Update attributes. Preserve password since it is part of
+          // the authorization.
+          this.attr = response;
+          this.setPassword(password);
+          this._login();
+          options.success && options.success(this);
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -135,9 +145,10 @@
      * @override
      * @see Kinvey.Entity#save
      */
-    save: function(success, failure) {
+    save: function(options) {
+      options || (options = {});
       if(!this.isLoggedIn) {
-        bind(this, failure)({
+        options.error && options.error({
           error: 'This request requires the master secret'
         });
         return;
@@ -146,11 +157,14 @@
       // Parent method will always update. Response does not include the
       // password, so persist it manually.
       var password = this.getPassword();
-      Kinvey.Entity.prototype.save.call(this, function() {
-        this.setPassword(password);
-        this._login();
-        bind(this, success)();
-      }, failure);
+      Kinvey.Entity.prototype.save.call(this, {
+        success: bind(this, function() {
+          this.setPassword(password);
+          this._login();
+          options.success && options.success(this);
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -218,35 +232,26 @@
      * Creates the current user.
      * 
      * @example <code>
-     * var user = Kinvey.create('username', 'password', function() {
-     *   console.log('User created', this);
-     * }, function(error) {
-     *   console.log('User not created', error.error);
+     * Kinvey.create({
+     *   username: 'username'
+     * }, {
+     *   success: function(user) {
+     *     console.log('User created', user);
+     *   },
+     *   error: function(error) {
+     *     console.log('User not created', error.error);
+     *   }
      * });
      * </code>
      * 
-     * @param {string} [username] Username. Defaults to auto-generated one.
-     * @param {string} [password] Password. Defaults to auto-generated one.
-     * @param {function()} [success] Success callback. {this} is the User
-     *          instance.
-     * @param {function(Object)} [failure] Failure callback. {this} is the User
-     *          instance. Only argument is an error object.
+     * @param {Object} attr Attributes.
+     * @param {Object} [options]
+     * @param {function(user)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      * @return {Kinvey.User} The user instance (not necessarily persisted yet).
      */
-    create: function(username, password, success, failure) {
-      // Parse arguments.
-      if(null == username || 'function' === typeof username) {
-        // Auto-generate credentials.
-        success = username;
-        failure = password;
-        username = password = '';
-      }
-      else if(null == password || 'function' === typeof password) {
-        // Only auto-generate password.
-        failure = success;
-        success = password;
-        password = '';
-      }
+    create: function(attr, options) {
+      options || (options = {});
 
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
@@ -254,19 +259,16 @@
         currentUser.logout();
       }
 
-      // Instantiate a user object.
-      var user = new Kinvey.User();
-      user.setUsername(username);
-      user.setPassword(password);
-
-      // Persist, and implicitly mark the created user as logged in.
-      Kinvey.Entity.prototype.save.call(user, function() {
-        this._login();
-        bind(this, success)();
-      }, failure);
-
-      // Return the instance.
-      return user;
+      // Persist, and mark the created user as logged in.
+      var user = new Kinvey.User(attr);
+      Kinvey.Entity.prototype.save.call(user, {
+        success: bind(user, function() {
+          this._login();
+          options.success && options.success(this);
+        }),
+        error: options.error
+      });
+      return user;// return the instance
     },
 
     /**
@@ -274,17 +276,18 @@
      * anonymous user. This method is called internally when doing a network
      * request. Manually invoking this function is however allowed.
      * 
-     * @param {function()} [success] Success callback. {this} is the current
-     *          user instance.
-     * @param {function()} [failure] Failure callback. {this} is a user
-     *          instance. Only argument is an error object.
+     * @param {Object} [options]
+     * @param {function(user)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
      * @return {Kinvey.User} The user instance. (not necessarily persisted yet).
      */
-    init: function(success, failure) {
+    init: function(options) {
+      options || (options = {});
+
       // First, check whether there already is a current user.
       var user = Kinvey.getCurrentUser();
       if(null !== user) {
-        bind(user, success)();
+        options.success && options.success(user);
         return user;
       }
 
@@ -293,12 +296,12 @@
       if(null !== attr && null != attr.username && null != attr.password) {
         // Re-authenticate user to ensure it is not stale.
         user = new Kinvey.User();
-        user.login(attr.username, attr.password, success, failure);
+        user.login(attr.username, attr.password, options);
         return user;
       }
 
       // No cached user available either, create anonymous user.
-      return Kinvey.User.create(success, failure);
+      return Kinvey.User.create({}, options);
     }
   });
 

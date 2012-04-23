@@ -17,7 +17,8 @@ module.exports = function(grunt) {
     sdk: '<%= pkg.name %>-<%= pkg.version %>',// dist base filename
     meta: {
       banner: [// sdk will be prefixed with this banner
-        '/*!', ' * <%= sdk %>',
+        '/*!',
+        ' * <%= sdk %>',
         ' *',
         ' * Copyright (c) <%= grunt.template.today("yyyy") %> Kinvey, Inc. All rights reserved.',
         ' *',
@@ -72,6 +73,7 @@ module.exports = function(grunt) {
         afterEach: true,
         before: true,
         beforeEach: true,
+        callback: true,
         describe: true,
         it: true,
         mocha: true,

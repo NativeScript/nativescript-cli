@@ -32,10 +32,11 @@
      * Clears collection. This action is not allowed.
      * 
      * @override
-     * @throws {Error}
      */
-    clear: function() {
-      throw new Error('This request requires the master secret');
+    clear: function(options) {
+      options && options.error && options.error({
+        error: 'This request requires the master secret'
+      });
     }
   });
 

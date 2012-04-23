@@ -4,10 +4,10 @@
 describe('Kinvey.UserCollection', function() {
   // Users need an explicit owner.
   before(function(done) {
-    Kinvey.User.create(done, done);
+    Kinvey.User.init(callback(done));
   });
   after(function(done) {
-    Kinvey.getCurrentUser().destroy(done, done);
+    Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Inheritance
@@ -23,11 +23,15 @@ describe('Kinvey.UserCollection', function() {
 
   // Kinvey.Collection#clear
   describe('#clear', function() {
-    it('throws an error on invoking.', function() {
-      var collection = new Kinvey.UserCollection();
-      (function() {
-        collection.clear();
-      }.should['throw']());
+    it('does invoke the error handler.', function(done) {
+      new Kinvey.UserCollection().clear({
+        success: function() {
+          new Error('Error handler should have been invoked');
+        },
+        error: function() {
+          done();
+        }
+      });
     });
   });
 
@@ -35,15 +39,12 @@ describe('Kinvey.UserCollection', function() {
   describe('#count', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
-      var collection = new Kinvey.UserCollection();
-      collection.count(function(count) {
-        collection.should.equal(this);
-        count.should.equal(1);
-        done();
-      }, function(error) {
-        collection.should.equal(this);
-        done(new Error(error.error));
-      });
+      new Kinvey.UserCollection().count(callback(done, {
+        success: function(count) {
+          count.should.equal(1);
+          done();
+        }
+      }));
     });
   });
 
@@ -51,19 +52,13 @@ describe('Kinvey.UserCollection', function() {
   describe('#fetch', function() {
     // Test suite.
     it('fetches all users.', function(done) {
-      var collection = new Kinvey.UserCollection();
-      collection.fetch(function() {
-        this.should.equal(collection);
-        this.list.should.have.length(1);
-
-        // Test entity.
-        this.list[0].should.be.an.instanceOf(Kinvey.User);
-
-        done();
-      }, function(error) {
-        collection.should.equal(this);
-        done(new Error(error.error));
-      });
+      new Kinvey.UserCollection().fetch(callback(done, {
+        success: function(list) {
+          list.should.have.length(1);
+          list[0].should.be.an.instanceOf(Kinvey.User);
+          done();
+        }
+      }));
     });
   });
 
