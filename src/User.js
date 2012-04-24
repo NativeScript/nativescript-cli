@@ -1,7 +1,5 @@
 (function() {
 
-  /*globals localStorage*/
-
   // Define the Kinvey User class.
   Kinvey.User = Kinvey.Entity.extend({
     // Associated Kinvey API.
@@ -199,7 +197,7 @@
      * @private
      */
     _deleteFromDisk: function() {
-      localStorage.removeItem(Kinvey.User.CACHE_TAG);
+      Storage.remove(Kinvey.User.CACHE_TAG);
     },
 
     /**
@@ -220,7 +218,7 @@
      * @private
      */
     _saveToDisk: function() {
-      localStorage.setItem(Kinvey.User.CACHE_TAG, JSON.stringify(this));
+      Storage.set(Kinvey.User.CACHE_TAG, this);
     }
   }, {
     /** @lends Kinvey.User */
@@ -292,7 +290,7 @@
       }
 
       // Second, check if user attributes are stored locally on the device.
-      var attr = JSON.parse(localStorage.getItem(Kinvey.User.CACHE_TAG));
+      var attr = Storage.get(Kinvey.User.CACHE_TAG);
       if(null !== attr && null != attr.username && null != attr.password) {
         // Re-authenticate user to ensure it is not stale.
         user = new Kinvey.User();

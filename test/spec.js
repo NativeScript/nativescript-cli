@@ -23,7 +23,6 @@ if('undefined' !== typeof require) {// CommonJS
   global.Kinvey = require('./../');// @see "main" in package.json
 
   // Utilities only used for testing purposes.
-  global.localStorage = require('localStorage');
   global.should = require('should');
 
   Kinvey.init({
