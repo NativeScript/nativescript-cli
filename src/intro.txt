@@ -52,5 +52,8 @@
 
   // Convenient method for binding context to anonymous functions.
   var bind = function(thisArg, fn) {
-    return (fn || function() { }).bind(thisArg);
+    fn || (fn = function() { });
+    return fn.bind ? fn.bind(thisArg) : function() {
+      return fn.apply(thisArg, arguments);
+    };
   };

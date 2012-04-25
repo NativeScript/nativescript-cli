@@ -6,7 +6,7 @@
     API: Kinvey.Net.USER_API,
 
     // Mapped entity class.
-    map: Kinvey.User,
+    entity: Kinvey.User,
 
     /**
      * Creates new user collection.

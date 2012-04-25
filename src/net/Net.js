@@ -77,7 +77,7 @@
      * @return {Object} One of Kinvey.Net.* adapters.
      */
     factory: function(api, collection, id) {
-      if('node' === Kinvey.env.toLowerCase() && 'undefined' !== typeof Kinvey.Net.Node) {
+      if('undefined' !== typeof exports) {// node.js
         return new Kinvey.Net.Node(api, collection, id);
       }
       return new Kinvey.Net.Http(api, collection, id);

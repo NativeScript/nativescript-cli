@@ -32,13 +32,12 @@
    * @example <code>
    * Kinvey.init({
    *   appKey: 'your-app-key',
-   *   appSecret: 'your-app-secret',
-   *   env: 'node'
+   *   appSecret: 'your-app-secret'
    * });
    * </code>
    * 
    * @param {Object} options Kinvey credentials. Object expects properties:
-   *          "appKey", "appSecret". Optional properties: "env".
+   *          "appKey", "appSecret".
    * @throws {Error}
    *           <ul>
    *           <li>On empty appKey,</li>
@@ -56,7 +55,6 @@
     // Store credentials.
     Kinvey.appKey = options.appKey;
     Kinvey.appSecret = options.appSecret;
-    Kinvey.env = options.env || 'HTML5';
   };
 
   /**

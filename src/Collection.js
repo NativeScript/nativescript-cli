@@ -9,7 +9,7 @@
     list: [ ],
 
     // Mapped entity class.
-    map: Kinvey.Entity,
+    entity: Kinvey.Entity,
 
     /**
      * Creates new collection.
@@ -32,11 +32,8 @@
       if(null == name) {
         throw new Error('Name must not be null');
       }
-      if(query && !(query instanceof Kinvey.Query)) {
-        throw new Error('Query must be an instanceof Kinvey.Query');
-      }
+      this.setQuery(query);
       this.name = name;
-      this.query = query;
     },
 
     /** @lends Kinvey.Collection# */
@@ -127,12 +124,25 @@
       net.send({
         success: bind(this, function(response) {
           response.forEach(bind(this, function(attr) {
-            this.list.push(new this.map(this.name, attr));
+            this.list.push(new this.entity(this.name, attr));
           }));
           options.success && options.success(this.list);
         }),
         error: options.error
       });
+    },
+
+    /**
+     * Sets query.
+     * 
+     * @param {Kinvey.Query} [query] Query.
+     * @throws {Error} On invalid instance.
+     */
+    setQuery: function(query) {
+      if(query && !(query instanceof Kinvey.Query)) {
+        throw new Error('Query must be an instanceof Kinvey.Query');
+      }
+      this.query = query || null;
     }
   });
 

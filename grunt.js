@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     pkg: '<json:package.json>',
     sdk: {
       html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename,
-      node: '<%= pkg.name %>-node-<%= pkg.version %>'// node dist filename
+      node: '<%= pkg.name %>-nodejs-<%= pkg.version %>'// node dist filename
     },
     meta: {
       banner: [// sdk will be prefixed with this banner

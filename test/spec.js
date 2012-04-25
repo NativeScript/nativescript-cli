@@ -22,13 +22,12 @@ global.callback = function(done, defaults) {
 if('undefined' !== typeof require) {// CommonJS
   global.Kinvey = require('./../');// @see "main" in package.json
 
-  // Utilities only used for testing purposes.
+  // Utilities, only used for testing purposes.
   global.should = require('should');
 
   Kinvey.init({
     appKey: APP_KEY,
-    appSecret: APP_SECRET,
-    env: 'node'
+    appSecret: APP_SECRET
   });
 }
 else {// browser
