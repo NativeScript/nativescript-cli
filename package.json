@@ -5,7 +5,7 @@
   "description": "Kinvey JavaScript Library",
   "dependencies": { },
   "devDependencies": {
-    "chai": "~0.5.2",
+    "chai": "~0.5.3",
     "grunt": "~0.3.0",
     "jsdoc-toolkit": "~0.0.2",
     "mocha": "~1.0.0",
