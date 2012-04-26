@@ -49,7 +49,7 @@ describe('Kinvey.User', function() {
         success: function(response) {
           response.should.equal(user);
           (response.getUsername()).should.equal('foo');
-          (response.getPassword()).should.not.equal(null);
+          (null !== response.getPassword()).should.be.True;
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
@@ -63,8 +63,8 @@ describe('Kinvey.User', function() {
       var user = this.user = Kinvey.User.create({}, callback(done, {
         success: function(response) {
           response.should.equal(user);
-          (response.getUsername()).should.not.equal(null);
-          (response.getPassword()).should.not.equal(null);
+          (null !== response.getUsername()).should.be.True;
+          (null !== response.getPassword()).should.be.True;
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);

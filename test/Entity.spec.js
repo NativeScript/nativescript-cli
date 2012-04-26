@@ -82,7 +82,7 @@ describe('Kinvey.Entity', function() {
       entity.save(callback(done, {
         success: function(response) {
           response.should.equal(entity);// Kinvey.Entity
-          (response.getId()).should.not.equal(null);// id is auto-generated
+          (null !== response.getId()).should.be.True;// id is auto-generated
           (response.get('key')).should.equal('value');
           done();
         }
