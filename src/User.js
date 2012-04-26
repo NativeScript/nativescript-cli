@@ -1,5 +1,10 @@
 (function() {
 
+  // Function to get the cache key for this app.
+  var CACHE_TAG = function() {
+    return 'Kinvey.' + Kinvey.appKey;
+  };
+
   // Define the Kinvey User class.
   Kinvey.User = Kinvey.Entity.extend({
     // Associated Kinvey API.
@@ -197,7 +202,7 @@
      * @private
      */
     _deleteFromDisk: function() {
-      Storage.remove(Kinvey.User.CACHE_TAG);
+      Storage.remove(CACHE_TAG());
     },
 
     /**
@@ -218,13 +223,10 @@
      * @private
      */
     _saveToDisk: function() {
-      Storage.set(Kinvey.User.CACHE_TAG, this);
+      Storage.set(CACHE_TAG(), this);
     }
   }, {
     /** @lends Kinvey.User */
-
-    // Cache tag.
-    CACHE_TAG: 'Kinvey.currentUser',
 
     /**
      * Creates the current user.
@@ -290,8 +292,15 @@
       }
 
       // Second, check if user attributes are stored locally on the device.
-      var attr = Storage.get(Kinvey.User.CACHE_TAG);
+      var attr = Storage.get(CACHE_TAG());
       if(null !== attr && null != attr.username && null != attr.password) {
+        // Extend the error callback, so local data can be destroyed if stale.
+        var error = options.error;
+        options.error = function() {
+          Storage.remove(CACHE_TAG());
+          error && error();
+        };
+
         // Re-authenticate user to ensure it is not stale.
         user = new Kinvey.User();
         user.login(attr.username, attr.password, options);

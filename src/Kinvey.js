@@ -45,10 +45,11 @@
    *           </ul>
    */
   Kinvey.init = function(options) {
-    if('undefined' === typeof options.appKey || null == options.appKey) {
+    options || (options = {});
+    if(null == options.appKey) {
       throw new Error('appKey must be defined');
     }
-    if('undefined' === typeof options.appSecret || null == options.appSecret) {
+    if(null == options.appSecret) {
       throw new Error('appSecret must be defined');
     }
 
