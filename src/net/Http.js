@@ -83,10 +83,8 @@
      */
     send: function(options) {
       options || (options = {});
-      options.success || (options.success = function() {
-      });
-      options.error || (options.error = function() {
-      });
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
 
       // A current user is required for all but the User API.
       if(null === Kinvey.getCurrentUser() && Kinvey.Net.USER_API !== this.api) {

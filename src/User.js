@@ -295,10 +295,10 @@
       var attr = Storage.get(CACHE_TAG());
       if(null !== attr && null != attr.username && null != attr.password) {
         // Extend the error callback, so local data can be destroyed if stale.
-        var error = options.error;
-        options.error = function() {
+        var original = options.error;
+        options.error = function(error) {
           Storage.remove(CACHE_TAG());
-          error && error();
+          original && original(error);
         };
 
         // Re-authenticate user to ensure it is not stale.
