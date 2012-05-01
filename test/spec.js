@@ -1,8 +1,8 @@
 /**
  * Bootstraps tests for browser and CommonJS.
  */
-var APP_KEY = 'kid1437';
-var APP_SECRET = 'fb784d5502b14c8cbdc1aaa2b72c14a7';
+var APP_KEY = 'kid1259';
+var APP_SECRET = '498efd9f9c60493f8806516cb824fe20';
 global.COLLECTION_UNDER_TEST = 'test-collection';
 
 // Convenience method to generate options object containing default callbacks.

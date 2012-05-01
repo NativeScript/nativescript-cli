@@ -1,6 +1,6 @@
 (function() {
 
-  /*globals btoa, XMLHttpRequest*/
+  /*globals btoa, navigator, XMLHttpRequest*/
 
   // Define the Kinvey.Net.Http network adapter.
   Kinvey.Net.Http = Base.extend({
@@ -13,7 +13,7 @@
         RESOURCE: base + '/resource',
         USER: base + '/user'
       };
-    }('https://baas.kinvey.com')),
+    }('<%= pkg.hostname %>')),
 
     // Map CRUD operations to HTTP request methods.
     METHOD: (function(Net) {
@@ -27,9 +27,11 @@
 
     // Properties.
     data: null,
-    headers: {
-      Accept: 'application/json, text/javascript',
-      'Content-Type': 'application/json; charset=utf-8'
+    headers: function() {
+      return {
+        Accept: 'application/json, text/javascript',
+        'Content-Type': 'application/json; charset=utf-8'
+      };
     },
     operation: Kinvey.Net.READ,
     query: null,
@@ -56,7 +58,7 @@
       switch(api) {
         case Kinvey.Net.APPDATA_API:
           if(null == collection) {
-            throw new Error('Collection must not be null');
+            throw new Error('Collection must no.toLowerCase()t be null');
           }
           break;
         case Kinvey.Net.USER_API:
@@ -166,6 +168,36 @@
     },
 
     /**
+     * Returns device information.
+     * 
+     * @private
+     * @return {string} Device information
+     */
+    _getDeviceInfo: function() {
+      // Try the most common browsers, fall back to navigator.appName otherwise.
+      var ua = navigator.userAgent.toLowerCase();
+
+      var rChrome = /(chrome)\/([\w]+)/;
+      var rSafari = /(safari)\/([\w.]+)/;
+      var rFirefox = /(firefox)\/([\w.]+)/;
+      var rOpera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
+      var rIE = /(msie) ([\w.]+)/i;
+
+      var browser = rChrome.exec(ua) || rSafari.exec(ua) || rFirefox.exec(ua) || rOpera.exec(ua) || rIE.exec(ua) || [ ];
+
+      // Build device information.
+      // Example: "linux chrome 18 0".
+      return [
+        navigator.platform,
+        browser[1] || navigator.appName,
+        browser[2] || 0,
+        0 // always set device ID to 0.
+      ].map(function(value) {
+        return value.toString().toLowerCase().replace(' ', '_');
+      }).join(' ');
+    },
+
+    /**
      * Builds URL.
      * 
      * @private
@@ -223,8 +255,7 @@
       try {
         body = JSON.parse(body);
       }
-      catch(_) {
-      }
+      catch(_) { }
 
       // Fire callback.
       if((200 <= statusCode && 300 > statusCode) || 304 === statusCode) {
@@ -253,10 +284,12 @@
       request.open(this.METHOD[this.operation], this._getUrl(), true);
 
       // Add headers.
-      for( var header in this.headers) {
-        request.setRequestHeader(header, this.headers[header]);
+      var headers = this.headers();
+      headers.Authorization = 'Basic ' + btoa(this._getAuth());
+      headers['X-Kinvey-Device-Information'] = this._getDeviceInfo();
+      for( var header in headers) {
+        request.setRequestHeader(header, headers[header]);
       }
-      request.setRequestHeader('Authorization', 'Basic ' + btoa(this._getAuth()));
 
       // Handle response.
       var self = this;

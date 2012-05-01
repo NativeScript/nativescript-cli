@@ -99,6 +99,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.js'
@@ -118,6 +120,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.node %>.js'

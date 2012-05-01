@@ -39,6 +39,26 @@
     /** @lends Kinvey.Collection# */
 
     /**
+     * Aggregates entities in collection.
+     * 
+     * @param {Kinvey.Aggregation} aggregation Aggregation object.
+     * @param {Object} [options] Options.
+     * @param {function(list)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     */
+    aggregate: function(aggregation, options) {
+      if(!(aggregation instanceof Kinvey.Aggregation)) {
+        throw new Error('Aggregation must be an instanceof Kinvey.Aggregation');
+      }
+      aggregation.setQuery(this.query);// respect collection query.
+
+      var net = Kinvey.Net.factory(this.API, this.name, '_group');
+      net.setData(aggregation);
+      net.setOperation(Kinvey.Net.UPDATE);
+      net.send(options);
+    },
+
+    /**
      * Clears collection. This method is NOT atomic, it stops on first failure.
      * 
      * @param {Object} [options]

@@ -29,6 +29,24 @@
     /** @lends Kinvey.Net.Node# */
 
     /**
+     * Returns device information.
+     * 
+     * @private
+     * @return {string} Device information
+     */
+    _getDeviceInfo: function() {
+      // Example: "linux node v0.6.13 0".
+      return [
+        process.platform,
+        process.title,
+        process.version,
+        0// always set device ID to 0.
+      ].map(function(value) {
+        return value.toString().toLowerCase().replace(' ', '_');
+      }).join(' ');
+    },
+
+    /**
      * @override
      * @private
      * @see Kinvey.Net.Http#_process
@@ -37,13 +55,21 @@
       // Split URL in parts.
       var parts = url.parse(this._getUrl());
 
+      // Build body.
+      var data = this.data ? JSON.stringify(this.data) : '';
+
+      // Build headers.
+      var headers = this.headers();
+      headers['X-Kinvey-Device-Information'] = this._getDeviceInfo();
+      headers['Content-Length'] = data.length;
+
       // Build request.
       var self = this;
       var request = https.request({
         host: parts.host,
         path: parts.path,
         method: this.METHOD[this.operation],
-        headers: this.headers,
+        headers: headers,
         auth: this._getAuth()
       }, function(response) {
         // Capture data stream.
@@ -60,7 +86,7 @@
       request.on('error', function(error) {// failed to fire request.
         options.error({ error: error.code });
       });
-      this.data && request.write(JSON.stringify(this.data));// pass body.
+      data && request.write(data);// pass body.
       request.end();// fire request.
     }
   });

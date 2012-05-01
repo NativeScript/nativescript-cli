@@ -1,0 +1,94 @@
+(function() {
+
+  // Define the Kinvey Aggregation MongoBuilder class.
+  Kinvey.Aggregation.MongoBuilder = Base.extend({
+    // Fields
+    finalize: null,
+    initial: {},
+    keys: {},
+    reduce: function() { },
+    query: null,
+
+    /**
+     * Creates a new MongoDB aggregation builder.
+     * 
+     * @name Kinvey.Aggregation.MongoBuilder
+     * @constructor
+     */
+    constructor: function() {
+      //
+    },
+
+    /** @lends Kinvey.Aggregation.MongoBuilder# */
+
+    /**
+     * Adds key under condition.
+     * 
+     * @param {string} key Key under condition.
+     * @return {Kinvey.Aggregation} Current instance.
+     */
+    on: function(key) {
+      this.keys[key] = true;
+    },
+
+    /**
+     * Sets the finalize function.
+     * 
+     * @param {function(counter)} fn Finalize function.
+     */
+    setFinalize: function(fn) {
+      this.finalize = fn;
+    },
+
+    /**
+     * Sets the initial counter object.
+     * 
+     * @param {Object} counter Counter object.
+     */
+    setInitial: function(counter) {
+      this.initial = counter;
+    },
+
+    /**
+     * Sets query.
+     * 
+     * @param {Kinvey.Query} [query] query.
+     */
+    setQuery: function(query) {
+      this.query = query;
+      return this;
+    },
+
+    /**
+     * Sets the reduce function.
+     * 
+     * @param {function(doc, counter)} fn Reduce function.
+     */
+    setReduce: function(fn) {
+      this.reduce = fn;
+    },
+
+    /**
+     * Returns JSON representation.
+     * 
+     * @return {Object} JSON representation.
+     */
+    toJSON: function() {
+      // Required fields.
+      var result = {
+        initial: this.initial,
+        key: this.keys,
+        reduce: this.reduce.toString()
+      };
+
+      // Optional fields.
+      this.finalize && (result.finalize = this.finalize.toString());
+
+      var query = this.query && this.query.toJSON().query;
+      query && (result.cond = query);
+
+      return result;
+    }
+  });
+
+}());
