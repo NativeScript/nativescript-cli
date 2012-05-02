@@ -54,7 +54,7 @@
 
       var net = Kinvey.Net.factory(this.API, this.name, '_group');
       net.setData(aggregation);
-      net.setOperation(Kinvey.Net.UPDATE);
+      net.setOperation(Kinvey.Net.CREATE);
       net.send(options);
     },
 

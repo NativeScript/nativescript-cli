@@ -31,7 +31,7 @@
     },
 
     /**
-     * Sets the finalize function.
+     * Sets the finalize function. Currently not supported.
      * 
      * @param {function(counter)} fn Finalize function.
      * @return {Kinvey.Aggregation} Current instance.

@@ -18,17 +18,21 @@ global.callback = function(done, defaults) {
   };
 };
 
+//Initialization function.
+var init = function() {
+  Kinvey.init({
+   appKey: APP_KEY,
+   appSecret: APP_SECRET
+  });
+};
+
 // Run test suite.
 if('undefined' !== typeof require) {// CommonJS
   global.Kinvey = require('./../');// @see "main" in package.json
 
   // Utilities, only used for testing purposes.
   global.should = require('should');
-
-  Kinvey.init({
-    appKey: APP_KEY,
-    appSecret: APP_SECRET
-  });
+  init();
 }
 else {// browser
   global.require = function() {
@@ -37,10 +41,7 @@ else {// browser
 
   // Run tests on load.
   global.onload = function() {
-    Kinvey.init({
-      appKey: APP_KEY,
-      appSecret: APP_SECRET
-    });
+    init();
     mocha.run();
   };
 }

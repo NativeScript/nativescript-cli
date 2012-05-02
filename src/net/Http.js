@@ -58,7 +58,7 @@
       switch(api) {
         case Kinvey.Net.APPDATA_API:
           if(null == collection) {
-            throw new Error('Collection must no.toLowerCase()t be null');
+            throw new Error('Collection must not be null');
           }
           break;
         case Kinvey.Net.USER_API:

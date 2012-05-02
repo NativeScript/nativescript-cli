@@ -30,9 +30,9 @@ describe('Kinvey.Collection', function() {
   // Kinvey.Collection#clear
   describe('#clear', function() {
     // Create mock.
-    beforeEach(function(done) {// create mock
+    beforeEach(function(done) {
       new Kinvey.Entity(COLLECTION_UNDER_TEST, {
-        'foo': 'bar'
+        foo: 'bar'
       }).save(callback(done));
     });
 
