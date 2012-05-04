@@ -59,7 +59,9 @@
       var data = this.data ? JSON.stringify(this.data) : '';
 
       // Build headers.
+      // Authorization header is set explicitly to support node 0.4.X.
       var headers = this.headers();
+      headers.Authorization = 'Basic ' + new Buffer(this._getAuth(), 'utf8').toString('base64');
       headers['X-Kinvey-Device-Information'] = this._getDeviceInfo();
       headers['Content-Length'] = data.length;
 
@@ -67,10 +69,9 @@
       var self = this;
       var request = https.request({
         host: parts.host,
-        path: parts.path,
+        path: parts.pathname + (parts.search ? parts.search : ''),
         method: this.METHOD[this.operation],
-        headers: headers,
-        auth: this._getAuth()
+        headers: headers
       }, function(response) {
         // Capture data stream.
         var body = '';
