@@ -46,8 +46,10 @@
     destroy: function(options) {
       options || (options = {});
       if(!this.isLoggedIn) {
+        var message = 'This request requires the master secret';
         options.error && options.error({
-          error: 'This request requires the master secret'
+          error: message,
+          message: message
         });
         return;
       }
@@ -151,8 +153,10 @@
     save: function(options) {
       options || (options = {});
       if(!this.isLoggedIn) {
+        var message = 'This request requires the master secret';
         options.error && options.error({
-          error: 'This request requires the master secret'
+          error: message,
+          message: message
         });
         return;
       }
@@ -239,7 +243,7 @@
      *     console.log('User created', user);
      *   },
      *   error: function(error) {
-     *     console.log('User not created', error.error);
+     *     console.log('User not created', error.message);
      *   }
      * });
      * </code>

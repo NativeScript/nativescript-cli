@@ -262,6 +262,8 @@
         options.success(body);
       }
       else {
+        // Copy error message to message attribute as a convenience.
+        body.error && (body.message = body.error);
         options.error(body);
       }
     },
@@ -296,7 +298,8 @@
       request.onerror = function() {
         // Unfortunately, no error message is provided by XHR.
         options.error({
-          error: 'Error'
+          error: 'Unknown error',
+          message: 'Unknown error'
         });
       };
       request.onload = function() {

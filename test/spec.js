@@ -13,7 +13,7 @@ global.callback = function(done, defaults) {
       done();
     },
     error: defaults.error || function(error) {
-      done(new Error(error.error));
+      done(new Error(error.message));
     }
   };
 };

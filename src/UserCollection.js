@@ -34,8 +34,10 @@
      * @override
      */
     clear: function(options) {
+      var message = 'This request requires the master secret';
       options && options.error && options.error({
-        error: 'This request requires the master secret'
+        error: message,
+        message: message
       });
     }
   });

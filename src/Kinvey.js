@@ -67,7 +67,7 @@
    *     console.log('Ping successful', response.kinvey, response.version);
    *   },
    *   error: function(error) {
-   *     console.log('Ping failed', error.error);
+   *     console.log('Ping failed', error.message);
    *   }
    * });
    * </code>

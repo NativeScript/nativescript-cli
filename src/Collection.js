@@ -102,7 +102,7 @@
      *    console.log('Number of entities: ' + i);
      *   },
      *   error: function(error) {
-     *     console.log('Count failed', error.error);
+     *     console.log('Count failed', error.message);
      *   }
      * });
      * </code>

@@ -88,7 +88,7 @@
         response.on('end', onComplete);
       });
       request.on('error', function(error) {// failed to fire request.
-        options.error({ error: error.code });
+        options.error({ error: error.code, message: error.code });
       });
       data && request.write(data);// pass body.
       request.end();// fire request.
