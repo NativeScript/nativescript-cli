@@ -67,7 +67,6 @@
      */
     clear: function(options) {
       options || (options = {});
-      this.list = [ ];// clear list
 
       // Retrieve all entities, and remove them one by one.
       this.fetch({

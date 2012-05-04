@@ -80,9 +80,12 @@
         });
 
         // Handle response when it completes.
-        response.on('end', function() {
+        // @link https://github.com/joyent/node/issues/728
+        var onComplete = function() {
           self._handleResponse(response.statusCode, body, options);
-        });
+        };
+        response.on('close', onComplete);
+        response.on('end', onComplete);
       });
       request.on('error', function(error) {// failed to fire request.
         options.error({ error: error.code });

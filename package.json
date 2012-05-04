@@ -17,7 +17,8 @@
   },
   "main": "./dist/kinvey-nodejs-0.9.2.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "test-fallback": "mocha --require test/spec.js --timeout 10000 test/*.spec.js test/**/*.spec.js"
   },
   "hostname": "https://v3yk1n.kinvey.com"
 }
