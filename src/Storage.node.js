@@ -1,18 +1,34 @@
 (function() {
 
+  // Utilities.
+  var fs = require('fs');
+  var filename = __dirname + '/.kinvey';
+
+  // Load cache.
+  var cache = {};// container.
+  try {
+    cache = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  }
+  catch(_) {
+    // Will fail when file does not exist, or is malformed.
+  }
+
   // Define the Storage class.
-  // For the time being, this class does not implement any "real" storage.
-  var cache = {};
   var Storage = {
     get: function(key) {
-      var value = cache[key];
-      return value ? JSON.parse(value) : null;
+      return cache[key] || null;
     },
     set: function(key, value) {
-      cache[key] = JSON.stringify(value);
+      cache[key] = value.toJSON();
+
+      // Update file cache.
+      fs.writeFileSync(filename, JSON.stringify(cache), 'utf8');
     },
     remove: function(key) {
       delete cache[key];
+
+      // Update file cache.
+      fs.writeFileSync(filename, JSON.stringify(cache), 'utf8');
     }
   };
 
