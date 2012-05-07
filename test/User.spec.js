@@ -174,7 +174,7 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('loads a user', function(done) {
+    it('loads a user.', function(done) {
       var user = this.user;
       new Kinvey.User().load(user.getId(), callback(done, {
         success: function(response) {
@@ -197,7 +197,7 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('authenticates a user', function(done) {
+    it('authenticates a user.', function(done) {
       var user = this.user;
       new Kinvey.User().login(user.getUsername(), user.getPassword(), callback(done, {
         success: function(response) {
@@ -251,7 +251,7 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('Updates an existing user', function(done) {
+    it('Updates an existing user.', function(done) {
       var user = this.user;
       user.set('key', 'value');
       user.save(callback(done, {

@@ -27,7 +27,8 @@
   };
 
   /**
-   * Initializes library for use with Kinvey services.
+   * Initializes library for use with Kinvey services. Never use the master
+   * secret in client-side code.
    * 
    * @example <code>
    * Kinvey.init({
@@ -37,11 +38,11 @@
    * </code>
    * 
    * @param {Object} options Kinvey credentials. Object expects properties:
-   *          "appKey", "appSecret".
+   *          "appKey", and "appSecret" or "masterSecret".
    * @throws {Error}
    *           <ul>
    *           <li>On empty appKey,</li>
-   *           <li>On empty appSecret.</li>
+   *           <li>On empty appSecret and masterSecret.</li>
    *           </ul>
    */
   Kinvey.init = function(options) {
@@ -49,13 +50,14 @@
     if(null == options.appKey) {
       throw new Error('appKey must be defined');
     }
-    if(null == options.appSecret) {
-      throw new Error('appSecret must be defined');
+    if(null == options.appSecret && null == options.masterSecret) {
+      throw new Error('appSecret or masterSecret must be defined');
     }
 
     // Store credentials.
     Kinvey.appKey = options.appKey;
-    Kinvey.appSecret = options.appSecret;
+    Kinvey.appSecret = options.appSecret || null;
+    Kinvey.masterSecret = options.masterSecret || null;
   };
 
   /**

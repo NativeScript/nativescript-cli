@@ -88,8 +88,9 @@
       options.success || (options.success = function() { });
       options.error || (options.error = function() { });
 
-      // A current user is required for all but the User API.
-      if(null === Kinvey.getCurrentUser() && Kinvey.Net.USER_API !== this.api) {
+      // A current user is required for all but the User API, unless the master
+      // secret is specified.
+      if(null === Kinvey.getCurrentUser() && Kinvey.Net.USER_API !== this.api && null === Kinvey.masterSecret) {
         Kinvey.User.init({
           success: bind(this, function() {
             this._process(options);
@@ -160,6 +161,12 @@
      * @return {string} Authorization value.
      */
     _getAuth: function() {
+      // Use master secret if specified.
+      if(null !== Kinvey.masterSecret) {
+        return Kinvey.appKey + ':' + Kinvey.masterSecret;
+      }
+
+      // Use user credentials if specified, use app secret as last resort.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
         return currentUser.getUsername() + ':' + currentUser.getPassword();

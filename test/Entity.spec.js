@@ -35,7 +35,7 @@ describe('Kinvey.Entity', function() {
     });
 
     // Test suite.
-    it('destroys an entity', function(done) {
+    it('destroys an entity.', function(done) {
       this.entity.destroy(callback(done));
     });
   });
@@ -52,7 +52,7 @@ describe('Kinvey.Entity', function() {
     });
 
     // Test suite.
-    it('loads an entity', function(done) {
+    it('loads an entity.', function(done) {
       var entity = this.entity;
       new Kinvey.Entity(COLLECTION_UNDER_TEST).load(entity.getId(), callback(done, {
         success: function(response) {
@@ -77,7 +77,7 @@ describe('Kinvey.Entity', function() {
     });
 
     // Test suite.
-    it('saves a new entity', function(done) {
+    it('saves a new entity.', function(done) {
       var entity = this.entity;
       entity.save(callback(done, {
         success: function(response) {
@@ -88,7 +88,7 @@ describe('Kinvey.Entity', function() {
         }
       }));
     });
-    it('updates an existing entity', function(done) {
+    it('updates an existing entity.', function(done) {
       var entity = this.entity;
       entity.set('baz', 'quux');
       entity.save(callback(done, {

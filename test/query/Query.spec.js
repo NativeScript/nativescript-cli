@@ -128,7 +128,7 @@ describe('Kinvey.Query', function() {
         }
       }));
     });
-    it('performs a negative exist query', function(done) {
+    it('performs a negative exist query.', function(done) {
       var simple = this.simple;
       this.query.on('name').exist(false);
       this.collection.fetch(callback(done, {

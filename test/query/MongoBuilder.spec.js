@@ -40,11 +40,11 @@ describe('Kinvey.Query.MongoBuilder', function() {
 
     // Kinvey.Query.MongoBuilder#addCondition(.., EXIST, ..)
     describe('.exist', function() {
-      it('sets a positive exist condition', function() {
+      it('sets a positive exist condition.', function() {
         this.query.addCondition('foo', Kinvey.Query.EXIST, true);
         this.query.toJSON().query.should.eql({ foo: { $exists: true } });
       });
-      it('sets a negative exist condition', function() {
+      it('sets a negative exist condition.', function() {
         this.query.addCondition('foo', Kinvey.Query.EXIST, false);
         this.query.toJSON().query.should.eql({ foo: { $exists: false } });
       });

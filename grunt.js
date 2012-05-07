@@ -78,6 +78,7 @@ module.exports = function(grunt) {
         callback: true,
         describe: true,
         it: true,
+        MASTER_SECRET: true,
         mocha: true,
         COLLECTION_UNDER_TEST: true
       }

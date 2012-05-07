@@ -4,6 +4,7 @@
 var APP_KEY = 'kid1259';
 var APP_SECRET = '498efd9f9c60493f8806516cb824fe20';
 global.COLLECTION_UNDER_TEST = 'test-collection';
+global.MASTER_SECRET = '9cf348a5589c445d84e900d15b6a8aed';
 
 // Convenience method to generate options object containing default callbacks.
 global.callback = function(done, defaults) {
