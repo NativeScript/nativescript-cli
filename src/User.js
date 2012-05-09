@@ -276,8 +276,8 @@
     },
 
     /**
-     * Initializes a current user. Restores the user from cache, or creates an
-     * anonymous user. This method is called internally when doing a network
+     * Initializes a current user. Returns the current user, otherwise creates
+     * an anonymous user. This method is called internally when doing a network
      * request. Manually invoking this function is however allowed.
      * 
      * @param {Object} [options]
@@ -288,31 +288,34 @@
     init: function(options) {
       options || (options = {});
 
-      // First, check whether there already is a current user.
+      // Check whether there already is a current user.
       var user = Kinvey.getCurrentUser();
       if(null !== user) {
         options.success && options.success(user);
         return user;
       }
 
-      // Second, check if user attributes are stored locally on the device.
-      var attr = Storage.get(CACHE_TAG());
-      if(null !== attr && null != attr.username && null != attr.password) {
-        // Extend the error callback, so local data can be destroyed if stale.
-        var original = options.error;
-        options.error = function(error) {
-          Storage.remove(CACHE_TAG());
-          original && original(error);
-        };
+      // No cached user available, create anonymous user.
+      return Kinvey.User.create({}, options);
+    },
 
-        // Re-authenticate user to ensure it is not stale.
-        user = new Kinvey.User();
-        user.login(attr.username, attr.password, options);
-        return user;
+    /**
+     * Restores user stored locally on the device. This method is called by
+     * Kinvey.init(), and should not be called anywhere else.
+     * 
+     * @private
+     */
+    _restore: function() {
+      // Return if there already is a current user. Safety check.
+      if(null !== Kinvey.getCurrentUser()) {
+        return;
       }
 
-      // No cached user available either, create anonymous user.
-      return Kinvey.User.create({}, options);
+      // Retrieve and restore user from storage.
+      var attr = Storage.get(CACHE_TAG());
+      if(null !== attr && null != attr.username && null != attr.password) {
+        new Kinvey.User(attr)._login();
+      }
     }
   });
 

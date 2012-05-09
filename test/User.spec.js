@@ -107,18 +107,11 @@ describe('Kinvey.User', function() {
           // Manually reset current user, so cache keeps intact.
           Kinvey.setCurrentUser(null);
 
-          // Init should recreate the user from cache.
-          Kinvey.User.init(callback(done, {
-            success: function(response) {
-              response.should.eql(user);
+          // Restore should recreate the user from cache.
+          Kinvey.User._restore();
+          Kinvey.getCurrentUser().should.eql(user);
 
-              // Test current user.
-              Kinvey.getCurrentUser().should.equal(response);
-              (response.isLoggedIn).should.be.True;
-
-              done();
-            }
-          }));
+          done();
         }
       }));
     });
@@ -222,12 +215,11 @@ describe('Kinvey.User', function() {
     });
     afterEach(function(done) {
       // User is logged out. To destroy, log back in first.
-      this.user
-          .login(this.user.getUsername(), this.user.getPassword(), callback(done, {
-            success: function(user) {
-              user.destroy(callback(done));
-            }
-          }));
+      this.user.login(this.user.getUsername(), this.user.getPassword(), callback(done, {
+        success: function(user) {
+          user.destroy(callback(done));
+        }
+      }));
     });
 
     // Test suite.
