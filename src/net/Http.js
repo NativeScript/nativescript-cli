@@ -1,6 +1,6 @@
 (function() {
 
-  /*globals btoa, navigator, XMLHttpRequest*/
+  /*globals btoa, navigator, XMLHttpRequest, window*/
 
   // Define the Kinvey.Net.Http network adapter.
   Kinvey.Net.Http = Base.extend({
@@ -296,7 +296,15 @@
       var headers = this.headers();
       headers.Authorization = 'Basic ' + btoa(this._getAuth());
       headers['X-Kinvey-Device-Information'] = this._getDeviceInfo();
-      for( var header in headers) {
+
+      // Compatibility with Android 2.3.3.
+      // @link http://stackoverflow.com/questions/9146491/ajax-get-request-with-authorization-header-and-cors-on-android-2-3-3
+      if(window && window.location && Kinvey.Net.Read === this.operation) {
+        // Set origin header manually.
+        var origin = window.location.protocol + '//' + window.location.host;
+        headers['X-Kinvey-Origin'] = origin;
+      }
+      for(var header in headers) {
         request.setRequestHeader(header, headers[header]);
       }
 

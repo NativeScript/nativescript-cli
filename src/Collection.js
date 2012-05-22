@@ -59,37 +59,17 @@
     },
 
     /**
-     * Clears collection. This method is NOT atomic, it stops on first failure.
+     * Clears collection.
      * 
      * @param {Object} [options]
      * @param {function()} [success] Success callback.
      * @param {function(error)} [error] Failure callback.
      */
     clear: function(options) {
-      options || (options = {});
-
-      // Retrieve all entities, and remove them one by one.
-      this.fetch({
-        success: bind(this, function() {
-          var iterator = bind(this, function() {
-            var entity = this.list[0];
-            if(entity) {
-              entity.destroy({
-                success: bind(this, function() {
-                  this.list.shift();
-                  iterator();
-                }),
-                error: options.error
-              });
-            }
-            else {
-              options.success && options.success();
-            }
-          });
-          iterator();
-        }),
-        error: options.error
-      });
+      var net = Kinvey.Net.factory(this.API, this.name);
+      net.setOperation(Kinvey.Net.DELETE);
+      this.query && net.setQuery(this.query);
+      net.send(options);
     },
 
     /**
