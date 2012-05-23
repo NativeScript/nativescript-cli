@@ -68,7 +68,7 @@
     clear: function(options) {
       var net = Kinvey.Net.factory(this.API, this.name);
       net.setOperation(Kinvey.Net.DELETE);
-      this.query && net.setQuery(this.query);
+      this.query ? net.setQuery(this.query) : net.setQuery(new Kinvey.Query());
       net.send(options);
     },
 

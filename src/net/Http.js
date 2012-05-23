@@ -239,7 +239,7 @@
         parts.limit && param.push('limit=' + this._encode(parts.limit));
         parts.skip && param.push('skip=' + this._encode(parts.skip));
         parts.sort && param.push('sort=' + this._encode(parts.sort));
-        parts.query && param.push('query=' + this._encode(parts.query));
+        param.push('query=' + (parts.query ? this._encode(parts.query) : '{}'));
 
         // Append parts to URL.
         url += '?' + param.join('&');
@@ -299,7 +299,7 @@
 
       // Compatibility with Android 2.3.3.
       // @link http://stackoverflow.com/questions/9146491/ajax-get-request-with-authorization-header-and-cors-on-android-2-3-3
-      if(window && window.location && Kinvey.Net.Read === this.operation) {
+      if(window && window.location && Kinvey.Net.READ === this.operation) {
         // Set origin header manually.
         var origin = window.location.protocol + '//' + window.location.host;
         headers['X-Kinvey-Origin'] = origin;
