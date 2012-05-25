@@ -33,7 +33,7 @@
     /**
      * Sets the finalize function. Currently not supported.
      * 
-     * @param {function(counter)} fn Finalize function.
+     * @param {function(doc, counter)} fn Finalize function.
      * @return {Kinvey.Aggregation} Current instance.
      */
     setFinalize: function(fn) {

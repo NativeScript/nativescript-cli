@@ -231,20 +231,22 @@
       }
 
       // Build query string.
+      var param = [ ];
       if(null != this.query) {
-        var param = [ ];
-
         // Fill param with all query string parameters.
         var parts = this.query.toJSON();
         parts.limit && param.push('limit=' + this._encode(parts.limit));
         parts.skip && param.push('skip=' + this._encode(parts.skip));
         parts.sort && param.push('sort=' + this._encode(parts.sort));
         param.push('query=' + (parts.query ? this._encode(parts.query) : '{}'));
-
-        // Append parts to URL.
-        url += '?' + param.join('&');
       }
-      return url;
+      else if(Kinvey.Net.READ === this.operation) {
+        param.push('query={}');
+      }
+      param.push('_=' + new Date().getTime());
+
+      // Join parts.
+      return url + (param.length ? '?' + param.join('&') : '');
     },
 
     /**

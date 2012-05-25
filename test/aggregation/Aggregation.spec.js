@@ -52,8 +52,9 @@ describe('Kinvey.Aggregation', function() {
       }).setReduce(function(doc, out) {
         out.count++;
         out.total += doc.age;
-      }).setFinalize(function(out) {
+      }).setFinalize(function(doc, out) {
         out.average = out.total / out.count;
+        return out;
       });
       this.collection.aggregate(this.agg, callback(done, {
         success: function(response) {

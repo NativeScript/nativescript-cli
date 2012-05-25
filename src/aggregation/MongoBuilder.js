@@ -3,7 +3,7 @@
   // Define the Kinvey Aggregation MongoBuilder class.
   Kinvey.Aggregation.MongoBuilder = Base.extend({
     // Fields.
-    finalize: function() { },
+    finalize: null,
     initial: { count: 0 },
     keys: null,
     reduce: function(doc, out) {
@@ -80,13 +80,13 @@
     toJSON: function() {
       // Required fields.
       var result = {
-        finalize: this.finalize.toString(),
         initial: this.initial,
         key: this.keys,
         reduce: this.reduce.toString()
       };
 
       // Optional fields.
+      this.finalize && (result.finalize = this.finalize.toString());
       var query = this.query && this.query.toJSON().query;
       query && (result.condition = query);
 
