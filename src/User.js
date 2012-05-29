@@ -236,7 +236,7 @@
      * Creates the current user.
      * 
      * @example <code>
-     * Kinvey.create({
+     * Kinvey.User.create({
      *   username: 'username'
      * }, {
      *   success: function(user) {
