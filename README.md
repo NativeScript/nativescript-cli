@@ -1,40 +1,17 @@
 # Kinvey JavaScript Library
 
-Kinvey SDK for HTML5.
+Kinvey SDK for HTML5. Kinvey is a Backend as a Service platform that makes it ridiculously easy for developers to setup and operate backends for their mobile, tablet and web apps.
 
-## Getting Started
-
-### Environment setup
-  * Uses node.js version 0.6.13
-
-### Checkout the code
-
-  $ svn co https://subversion.assembla.com/svn/kinvey/js-library/trunk
-
-## Open in browser
-
-In your web page:
-
-```html
-<script src="dist/kinvey-js-0.9.3.min.js"></script>
-<script>
-Kinvey.init({
-  appKey: '<your-app-key>',
-  appSecret: '<your-app-secret>'
-});
-</script>
-```
+## Setup
+ * Checkout the code.
+   $ svn co https://subversion.assembla.com/svn/kinvey/js-library/trunk
+ * Make sure you have Node.js installed (> 0.6.0).
+ * Run a `npm install`.
+ * Building, testing, documentation generation is controlled through the gruntfile.
 
 ## Documentation
-_(Coming soon)_
-
-## Examples
-_(Coming soon)_
+Full documentation is available at https://console.kinvey.com/#docs/JavaScript/JS-Getting-Started.
 
 ## Testing
 
-  See the gruntfile.
-
-## License
-Copyright (c) 2012 Kinvey, Inc.
-Licensed under the Apache License 2.0.
+  See the gruntfile. To run tests in Node.js < 0.6.0, run the test-fallback command.
