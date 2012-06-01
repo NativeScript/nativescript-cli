@@ -59,6 +59,9 @@
     Kinvey.appSecret = options.appSecret || null;
     Kinvey.masterSecret = options.masterSecret || null;
 
+    // Configuration.
+    Kinvey.local = !!options.local;
+
     // Restore current user.
     Kinvey.User._restore();
   };

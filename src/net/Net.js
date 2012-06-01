@@ -80,6 +80,9 @@
       if('undefined' !== typeof exports) {// node.js
         return new Kinvey.Net.Node(api, collection, id);
       }
+      if(Kinvey.local) {
+        return new Kinvey.Net.Local(api, collection, id);
+      }
       return new Kinvey.Net.Http(api, collection, id);
     }
   };

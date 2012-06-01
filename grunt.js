@@ -94,6 +94,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/Kinvey.js',
           '<%= dir.src %>/net/Net.js',
           '<%= dir.src %>/net/Http.js',
+          '<%= dir.src %>/net/Local.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
