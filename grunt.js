@@ -68,6 +68,7 @@ module.exports = function(grunt) {
         Kinvey: true,
         Base: true,
         bind: true,
+        LocalDatabase: true,
         Storage: true,
 
         // Test globals.
@@ -92,6 +93,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/intro.txt',
           '<%= dir.src %>/Storage.js',
           '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/sync/LocalDatabase.js',
           '<%= dir.src %>/net/Net.js',
           '<%= dir.src %>/net/Http.js',
           '<%= dir.src %>/net/Local.js',
