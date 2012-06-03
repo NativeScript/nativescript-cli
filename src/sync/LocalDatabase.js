@@ -1,6 +1,10 @@
 (function() {
 
-  /*globals indexedDB, IDBTransaction*/
+  /*globals window*/
+
+  // Grab native implementation.
+  var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+  var IDBTransaction = window.IDBTransaction || window.mozIDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
 
   // Define the Database class.
   var LocalDatabase = Base.extend({
