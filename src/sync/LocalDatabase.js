@@ -119,6 +119,20 @@
     },
 
     /**
+     * Pings the local database. Success guaranteed.
+     * 
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     */
+    ping: function(options) {
+      options && options.success && options.success({
+        kinvey: 'Hello ' + Kinvey.appKey,
+        version: null
+      });
+    },
+
+    /**
      * Saves entity to collection.
      * 
      * @param {string} collection Collection.

@@ -1,7 +1,7 @@
 /**
  * Local test suite.
  */
-describe('Local', function() {
+describe('LocalDatabase', function() {
   // Configure network adapter.
   before(function() {
     Kinvey.local = true;
@@ -17,8 +17,13 @@ describe('Local', function() {
     });
   });
 
-  // Destroy item locally.
-  describe('destroy', function() {
+  // Clears entities locally.
+  describe('#clear', function() {
+    it('clears all entities.');
+  });
+
+  // Destroy entity locally.
+  describe('#destroy', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity.save(callback(done));
@@ -30,8 +35,13 @@ describe('Local', function() {
     });
   });
 
+  // Fetches entities locally.
+  describe('#fetch', function() {
+    it('loads all entities.');
+  });
+
   // Load entity locally.
-  describe('load', function() {
+  describe('#load', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity.save(callback(done));
@@ -64,21 +74,20 @@ describe('Local', function() {
   });
 
   // Pinging the local database is not possible.
-  describe('ping', function() {
+  describe('#ping', function() {
     it('fails when pinging the local database.', function(done) {
-      Kinvey.ping({
-        success: function(){
-          done(new Error('Ping should fail.'));
-        },
-        error: function() {
+      Kinvey.ping(callback(done, {
+        success: function(response) {
+          response.should.have.property('kinvey');
+          response.should.have.property('version');
           done();
         }
-      });
+      }));
     });
   });
 
   // Save entity locally.
-  describe('save', function() {
+  describe('#save', function() {
     afterEach(function(done) {
       this.entity.destroy(callback(done));
     });

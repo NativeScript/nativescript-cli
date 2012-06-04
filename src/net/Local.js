@@ -19,31 +19,51 @@
     send: function(options) {
       options || (options = {});
 
+      // Define callback to invoke when request is not supported.
+      var unsupported = function() {
+        options.error({
+          error: 'This request is not supported',
+          message: 'This request is not supported'
+        });
+      };
+
+      // _<id> requests are not supported.
+      if(this.id && 0 === this.id.indexOf('_')) {
+        unsupported();
+        return;
+      }
+
       new LocalDatabase('Kinvey.' + Kinvey.appKey, {
         success: bind(this, function(database) {
-          if(this.multi) {
-            options.error && options.error({
-              error: 'Complex operations are not supported',
-              message: 'Complex operations are not supported'
-            });
-            return;
-          }
-
-          // Single entry, we support that.
           switch(this.operation) {
             case Kinvey.Net.CREATE:
             case Kinvey.Net.UPDATE:
-              database.save(this.collection, this.data, options);
+              if(Kinvey.Net.APPDATA_API === this.api) {
+                return database.save(this.collection, this.data, options);
+              }
               break;
             case Kinvey.Net.READ:
-              database.load(this.collection, this.id, options);
-              break;
+              if('' !== this.collection) {
+                if(null != this.id) {
+                  return database.load(this.collection, this.id, options);
+                }
+                return database.fetch(this.collection, this.query, options);
+              }
+              return database.ping(options);
             case Kinvey.Net.DELETE:
-              database.destroy(this.collection, this.id, options);
+              if(Kinvey.Net.APPDATA_API === this.api) {
+                if(null != this.id) {
+                  return database.destroy(this.collection, this.id, options);
+                }
+                return database.clear(this.collection, this.query, options);
+              }
               break;
             default:
               throw new Error('Operation ' + this.operation + ' is not supported');
           }
+
+          // If code reaches this point, the request is not supported.
+          unsupported();
         }),
         error: options.error
       });
