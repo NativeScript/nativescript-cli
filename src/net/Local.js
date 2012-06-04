@@ -1,8 +1,6 @@
 (function() {
 
-  // TODO support for > 1 entity at the time (collections, queries etc.).
   // TODO make multi-tab proof, by handling onversionchange/onupgradeneeded better.
-  // TODO decide on user management when local.
 
   // Define the Kinvey.Net.Local network adapter.
   Kinvey.Net.Local = Base.extend({
@@ -18,17 +16,19 @@
 
     send: function(options) {
       options || (options = {});
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
 
       // Define callback to invoke when request is not supported.
       var unsupported = function() {
         options.error({
-          error: 'This request is not supported',
-          message: 'This request is not supported'
+          error: 'This request requires a network connection',
+          message: 'This request requires a network connection'
         });
       };
 
       // _<id> requests are not supported.
-      if(this.id && 0 === this.id.indexOf('_')) {
+      if((null != this.id && 0 === this.id.indexOf('_')) || this.query) {
         unsupported();
         return;
       }
@@ -47,7 +47,7 @@
                 if(null != this.id) {
                   return database.load(this.collection, this.id, options);
                 }
-                return database.fetch(this.collection, this.query, options);
+                return database.fetch(this.collection, options);
               }
               return database.ping(options);
             case Kinvey.Net.DELETE:
@@ -55,7 +55,7 @@
                 if(null != this.id) {
                   return database.destroy(this.collection, this.id, options);
                 }
-                return database.clear(this.collection, this.query, options);
+                return database.clear(this.collection, options);
               }
               break;
             default:
@@ -79,7 +79,7 @@
       if(query && !(query instanceof Kinvey.Query)) {
         throw new Error('Query must be an instanceof Kinvey.Query');
       }
-      this.query = query;
+      this.query = query || null;
     }
   });
 

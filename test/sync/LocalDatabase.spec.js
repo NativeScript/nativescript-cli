@@ -19,7 +19,36 @@ describe('LocalDatabase', function() {
 
   // Clears entities locally.
   describe('#clear', function() {
-    it('clears all entities.');
+    // Create mock.
+    beforeEach(function(done) {
+      this.entity.save(callback(done));
+    });
+    afterEach(function(done) {
+      this.entity.destroy(callback(done));
+    });
+
+    // Test suite.
+    it('fails when a query is specified.', function(done) {
+      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      collection.setQuery(new Kinvey.Query().on('foo').equal('bar'));
+      collection.clear(callback(done, {
+        success: function() {
+          done(new Error('Queries are not allowed'));
+        },
+        error: function() {
+          done();
+        }
+      }));
+    });
+    it('clears all entities.', function(done) {
+      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      collection.clear(callback(done, {
+        success: function() {
+          collection.list.should.have.length(0);
+          done();
+        }
+      }));
+    });
   });
 
   // Destroy entity locally.
@@ -37,7 +66,37 @@ describe('LocalDatabase', function() {
 
   // Fetches entities locally.
   describe('#fetch', function() {
-    it('loads all entities.');
+    // Create mock.
+    beforeEach(function(done) {
+      this.entity.save(callback(done));
+    });
+    afterEach(function(done) {
+      this.entity.destroy(callback(done));
+    });
+
+    // Test suite.
+    it('fails when a query is specified.', function(done) {
+      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      collection.setQuery(new Kinvey.Query().on('foo').equal('bar'));
+      collection.fetch(callback(done, {
+        success: function() {
+          done(new Error('Queries are not allowed'));
+        },
+        error: function() {
+          done();
+        }
+      }));
+    });
+    it('fetches all entities.', function(done) {
+      var entity = this.entity;
+      new Kinvey.Collection(COLLECTION_UNDER_TEST).fetch(callback(done, {
+        success: function(response) {
+          response.should.have.length(1);
+          response[0].should.eql(entity);
+          done();
+        }
+      }));
+    });
   });
 
   // Load entity locally.

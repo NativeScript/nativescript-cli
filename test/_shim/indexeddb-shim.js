@@ -92,7 +92,8 @@ window.idbModules = {};
           return prefix + "-" + JSON.stringify(key);
         },
         decode: function(key){
-          return JSON.parse(key.substring(2));
+          // XXX added check for when key is integer (affected: Safari).
+          return JSON.parse(key.substring ? key.substring(2) : key);
         }
       }
     }());

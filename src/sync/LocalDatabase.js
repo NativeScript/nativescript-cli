@@ -11,11 +11,11 @@
     /**
      * Creates a new database.
      * 
-     * @name Kinvey.Database
+     * @name LocalDatabase
      * @constructor
      * @param {string} name Database name.
      * @param {Object} [options]
-     * @param {function(db)} [options.success] Success callback.
+     * @param {function(database)} [options.success] Success callback.
      * @param {function(error)} [options.error] Failure callback.
      * @throws {Error} On unsupported client.
      */
@@ -45,6 +45,57 @@
     },
 
     /** @lends LocalDatabase# */
+
+    /**
+     * Clears collection.
+     * 
+     * @param {string} collection Collection.
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     */
+    clear: function(collection, options) {
+      options || (options = {});
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
+
+      // First pass; check whether collection exists.
+      var c = this._collection(collection);
+      if(!this.db.objectStoreNames.contains(c)) {
+        // Collection does not exist, so return empty list.
+        options.success([]);
+        return;
+      }
+
+      // Retrieve all entities.
+      var list = [];
+      var store = this.db.transaction([c], IDBTransaction.READ_WRITE).objectStore(c);
+      var cursor = store.openCursor();
+      cursor.onsuccess = function() {
+        // Iterate through cursor, until all results have been retrieved.
+        if(cursor.result && cursor.result.value) {
+          var tnx = store['delete'](cursor.result.value._id);
+          tnx.onsuccess = function() {
+            cursor.result['continue']();
+          };
+          tnx.onerror = function() {
+            options.error({
+              error: tnx.error,
+              message: tnx.error
+            });
+          };
+        }
+        else {// list contains all results, return here.
+          options.success();
+        }
+      };
+      cursor.onerror = function() {
+        options.error({
+          error: cursor.error,
+          message: cursor.error
+        });
+      };
+    },
 
     /**
      * Destroys entity.
@@ -77,6 +128,48 @@
         options.error({
           error: tnx.error,
           message: tnx.error
+        });
+      };
+    },
+
+    /**
+     * Fetches all entities from collection.
+     * 
+     * @param {string} collection Collection.
+     * @param {Object} [options]
+     * @param {function(entity)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     */
+    fetch: function(collection, options) {
+      options || (options = {});
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
+
+      // First pass; check whether collection exists.
+      var c = this._collection(collection);
+      if(!this.db.objectStoreNames.contains(c)) {
+        // Collection does not exist, so return empty list.
+        options.success([]);
+        return;
+      }
+
+      // Retrieve all entities.
+      var list = [];
+      var cursor = this.db.transaction([c], IDBTransaction.READ_ONLY).objectStore(c).openCursor();
+      cursor.onsuccess = function() {
+        // Iterate through cursor, until all results have been retrieved.
+        if(cursor.result && cursor.result.value) {
+          list.push(cursor.result.value);
+          cursor.result['continue']();
+        }
+        else {// list contains all results, return here.
+          options.success(list);
+        }
+      };
+      cursor.onerror = function() {
+        options.error({
+          error: cursor.error,
+          message: cursor.error
         });
       };
     },

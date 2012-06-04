@@ -240,7 +240,7 @@
         parts.sort && param.push('sort=' + this._encode(parts.sort));
         param.push('query=' + (parts.query ? this._encode(parts.query) : '{}'));
       }
-      else if(Kinvey.Net.READ === this.operation) {
+      else if(Kinvey.Net.READ === this.operation || (null == this.id && Kinvey.Net.DELETE === this.operation)) {
         param.push('query={}');
       }
       param.push('_=' + new Date().getTime());
