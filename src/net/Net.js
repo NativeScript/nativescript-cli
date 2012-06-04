@@ -81,6 +81,8 @@
         return new Kinvey.Net.Node(api, collection, id);
       }
       if(Kinvey.local) {
+        // Switch to sync once adapter is stable and passes tests.
+//        return new Kinvey.Net.Sync(api, collection, id);
         return new Kinvey.Net.Local(api, collection, id);
       }
       return new Kinvey.Net.Http(api, collection, id);

@@ -97,6 +97,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/net/Net.js',
           '<%= dir.src %>/net/Http.js',
           '<%= dir.src %>/net/Local.js',
+          '<%= dir.src %>/net/Sync.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',

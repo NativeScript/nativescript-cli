@@ -20,11 +20,8 @@ describe('LocalDatabase', function() {
   // Clears entities locally.
   describe('#clear', function() {
     // Create mock.
-    beforeEach(function(done) {
+    before(function(done) {
       this.entity.save(callback(done));
-    });
-    afterEach(function(done) {
-      this.entity.destroy(callback(done));
     });
 
     // Test suite.
