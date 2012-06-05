@@ -66,10 +66,18 @@
      * @param {function(error)} [error] Failure callback.
      */
     clear: function(options) {
+      options || (options = {});
+
       var net = Kinvey.Net.factory(this.API, this.name);
       net.setOperation(Kinvey.Net.DELETE);
       this.query && net.setQuery(this.query);
-      net.send(options);
+      net.send({
+        success: bind(this, function() {
+          this.list = [];
+          options.success && options.success();
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -114,14 +122,12 @@
     fetch: function(options) {
       options || (options = {});
 
-      // Clear list.
-      this.list = [ ];
-
       // Send request.
       var net = Kinvey.Net.factory(this.API, this.name);
       this.query && net.setQuery(this.query);// set query
       net.send({
         success: bind(this, function(response) {
+          this.list = [];
           response.forEach(bind(this, function(attr) {
             this.list.push(new this.entity(this.name, attr));
           }));

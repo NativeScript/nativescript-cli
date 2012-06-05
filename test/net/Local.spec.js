@@ -1,42 +1,31 @@
 /**
- * Local test suite.
+ * Kinvey.Net.Local test suite. Only works in browsers.
  */
-describe('LocalDatabase', function() {
-  // Configure network adapter.
+describe('Kinvey.Net.Local', function() {
+  // Stub network factory to always return the local network adapter.
   before(function() {
-    Kinvey.local = true;
+    this.factory = Kinvey.Net.factory;
+    Kinvey.Net.factory = function(api, collection, id) {
+      return new Kinvey.Net.Local(api, collection, id);
+    };
   });
   after(function() {
-    Kinvey.local = false;
+    // Restore original factory method.
+    Kinvey.Net.factory = this.factory;
   });
 
   // Create mock.
   beforeEach(function() {
-    this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
-      key: 'value'
-    });
+    this.entity = new Kinvey.Entity(COLLECTION_UNDER_TEST, { key: 'value' });
   });
 
   // Clears entities locally.
   describe('#clear', function() {
     // Create mock.
-    before(function(done) {
+    beforeEach(function(done) {
       this.entity.save(callback(done));
     });
 
-    // Test suite.
-    it('fails when a query is specified.', function(done) {
-      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
-      collection.setQuery(new Kinvey.Query().on('foo').equal('bar'));
-      collection.clear(callback(done, {
-        success: function() {
-          done(new Error('Queries are not allowed'));
-        },
-        error: function() {
-          done();
-        }
-      }));
-    });
     it('clears all entities.', function(done) {
       var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
       collection.clear(callback(done, {

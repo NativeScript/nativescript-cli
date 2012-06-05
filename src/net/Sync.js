@@ -46,9 +46,8 @@
 
       if(Kinvey.Net.READ === this.operation) {
         this.local.send({
-          success: function() {
-            options.success.apply(this, arguments);
-  
+          success: function(response) {
+            options.success(response);
             oncomplete();
           },
           error: oncomplete
