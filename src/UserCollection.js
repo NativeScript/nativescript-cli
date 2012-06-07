@@ -2,9 +2,6 @@
 
   // Define the Kinvey UserCollection class.
   Kinvey.UserCollection = Kinvey.Collection.extend({
-    // Associated Kinvey API.
-    API: Kinvey.Net.USER_API,
-
     // Mapped entity class.
     entity: Kinvey.User,
 
@@ -21,9 +18,7 @@
      * @param {Kinvey.Query} [query] Query.
      */
     constructor: function(query) {
-      // Users reside in a distinct API, without the notion of collections.
-      // Therefore, an empty string is passed to the parent constructor.
-      Kinvey.Collection.prototype.constructor.call(this, '', query);
+      Kinvey.Collection.prototype.constructor.call(this, 'user', query);
     },
 
     /** @lends Kinvey.UserCollection# */

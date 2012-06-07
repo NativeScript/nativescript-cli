@@ -7,9 +7,6 @@
 
   // Define the Kinvey User class.
   Kinvey.User = Kinvey.Entity.extend({
-    // Associated Kinvey API.
-    API: Kinvey.Net.USER_API,
-
     // Credential attributes.
     ATTR_USERNAME: 'username',
     ATTR_PASSWORD: 'password',
@@ -30,9 +27,7 @@
      * @param {Object} [attr] Attributes.
      */
     constructor: function(attr) {
-      // Users reside in a distinct API, without the notion of collections.
-      // Therefore, an empty string is passed to the parent constructor.
-      Kinvey.Entity.prototype.constructor.call(this, '', attr);
+      Kinvey.Entity.prototype.constructor.call(this, 'user', attr);
     },
 
     /** @lends Kinvey.User# */
@@ -60,7 +55,9 @@
           this.logout();
           options.success && options.success();
         }),
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 
@@ -105,6 +102,7 @@
      */
     login: function(username, password, options) {
       options || (options = {});
+
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
@@ -116,10 +114,7 @@
       this.setPassword(password);
 
       // Send request.
-      var net = Kinvey.Net.factory(this.API, this.collection, 'login');
-      net.setData(this.attr);
-      net.setOperation(Kinvey.Net.CREATE);
-      net.send({
+      this.store.login(this.toJSON(), {
         success: bind(this, function(response) {
           // Update attributes. Preserve password since it is part of
           // the authorization.
@@ -165,11 +160,11 @@
       // password, so persist it manually.
       var password = this.getPassword();
       Kinvey.Entity.prototype.save.call(this, {
-        success: bind(this, function() {
-          this.setPassword(password);
-          this._login();
-          options.success && options.success(this);
-        }),
+        success: function(self) {
+          self.setPassword(password);
+          self._login();
+          options.success && options.success(self);
+        },
         error: options.error
       });
     },
@@ -266,10 +261,10 @@
       // Persist, and mark the created user as logged in.
       var user = new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, {
-        success: bind(user, function() {
-          this._login();
-          options.success && options.success(this);
-        }),
+        success: function(user) {
+          user._login();
+          options.success && options.success(user);
+        },
         error: options.error
       });
       return user;// return the instance

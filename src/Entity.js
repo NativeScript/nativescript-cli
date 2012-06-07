@@ -2,9 +2,6 @@
 
   // Define the Kinvey Entity class.
   Kinvey.Entity = Base.extend({
-    // Associated Kinvey API.
-    API: Kinvey.Net.APPDATA_API,
-
     // Identifier attribute.
     ATTR_ID: '_id',
 
@@ -30,6 +27,8 @@
       }
       this.attr = attr || {};
       this.collection = collection;
+
+      this.store = new Kinvey.Store.AppData(this.collection);
     },
 
     /** @lends Kinvey.Entity# */
@@ -44,20 +43,13 @@
     destroy: function(options) {
       options || (options = {});
 
-      // Return instantly if entity is not saved yet.
-      if(this.isNew()) {
-        options.success && options.success();
-        return;
-      }
-
-      // Send request.
-      var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
-      net.setOperation(Kinvey.Net.DELETE);
-      net.send({
+      this.store.remove(this.toJSON(), {
         success: function() {
           options.success && options.success();
         },
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 
@@ -112,12 +104,14 @@
       options || (options = {});
 
       // Retrieve data.
-      Kinvey.Net.factory(this.API, this.collection, id).send({
+      this.store.query(id, {
         success: bind(this, function(response) {
           this.attr = response;
           options.success && options.success(this);
         }),
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 
@@ -130,18 +124,15 @@
      */
     save: function(options) {
       options || (options = {});
-      var operation = this.isNew() ? Kinvey.Net.CREATE : Kinvey.Net.UPDATE;
 
-      // Retrieve data.
-      var net = Kinvey.Net.factory(this.API, this.collection, this.getId());
-      net.setData(this.attr);// include attributes
-      net.setOperation(operation);
-      net.send({
+      this.store.save(this.toJSON(), {
         success: bind(this, function(response) {
           this.attr = response;
           options.success && options.success(this);
         }),
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 

@@ -93,11 +93,11 @@ module.exports = function(grunt) {
           '<%= dir.src %>/intro.txt',
           '<%= dir.src %>/Storage.js',
           '<%= dir.src %>/Kinvey.js',
-          '<%= dir.src %>/sync/LocalDatabase.js',
-          '<%= dir.src %>/net/Net.js',
-          '<%= dir.src %>/net/Http.js',
-          '<%= dir.src %>/net/Local.js',
-          '<%= dir.src %>/net/Sync.js',
+//          '<%= dir.src %>/sync/LocalDatabase.js',
+//          '<%= dir.src %>/net/Net.js',
+//          '<%= dir.src %>/net/Http.js',
+//          '<%= dir.src %>/net/Local.js',
+//          '<%= dir.src %>/net/Sync.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
@@ -106,6 +106,11 @@ module.exports = function(grunt) {
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/AppData.js',
+          '<%= dir.src %>/store/Local.js',
+
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.js'
@@ -116,9 +121,9 @@ module.exports = function(grunt) {
           '<%= dir.src %>/intro.txt',
           '<%= dir.src %>/Storage.node.js',
           '<%= dir.src %>/Kinvey.js',
-          '<%= dir.src %>/net/Net.js',
-          '<%= dir.src %>/net/Http.js',
-          '<%= dir.src %>/net/Node.js',
+//          '<%= dir.src %>/net/Net.js',
+//          '<%= dir.src %>/net/Http.js',
+//          '<%= dir.src %>/net/Node.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
@@ -127,6 +132,11 @@ module.exports = function(grunt) {
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/AppData.js',
+          '<%= dir.src %>/store/NodeAppData.js',
+
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.node %>.js'

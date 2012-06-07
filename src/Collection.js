@@ -2,9 +2,6 @@
 
   // Define the Kinvey Collection class.
   Kinvey.Collection = Base.extend({
-    // Associated Kinvey API.
-    API: Kinvey.Net.APPDATA_API,
-
     // List of entities.
     list: [ ],
 
@@ -34,6 +31,8 @@
       }
       this.setQuery(query);
       this.name = name;
+
+      this.store = new Kinvey.Store.AppData(name);
     },
 
     /** @lends Kinvey.Collection# */
@@ -52,10 +51,7 @@
       }
       aggregation.setQuery(this.query);// respect collection query.
 
-      var net = Kinvey.Net.factory(this.API, this.name, '_group');
-      net.setData(aggregation);
-      net.setOperation(Kinvey.Net.CREATE);
-      net.send(options);
+      this.store.aggregate(aggregation, options);
     },
 
     /**
@@ -68,15 +64,14 @@
     clear: function(options) {
       options || (options = {});
 
-      var net = Kinvey.Net.factory(this.API, this.name);
-      net.setOperation(Kinvey.Net.DELETE);
-      this.query && net.setQuery(this.query);
-      net.send({
+      this.store.removeWithQuery(this.query, {
         success: bind(this, function() {
           this.list = [];
-          options.success && options.success();
+          options.success && options.success(this);
         }),
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 
@@ -102,11 +97,15 @@
     count: function(options) {
       options || (options = {});
 
-      var net = Kinvey.Net.factory(this.API, this.name, '_count');
-      this.query && net.setQuery(this.query);// set query
-      net.send({
+      var aggregation = new Kinvey.Aggregation();
+      aggregation.setInitial({ count: 0 });
+      aggregation.setReduce(function(doc, out) {
+        out.count += 1;
+      });
+
+      this.store.aggregate(aggregation.toJSON(), {
         success: function(response) {
-          options.success && options.success(response.count);
+          options.success && options.success(response[0].count);
         },
         error: options.error
       });
@@ -123,9 +122,7 @@
       options || (options = {});
 
       // Send request.
-      var net = Kinvey.Net.factory(this.API, this.name);
-      this.query && net.setQuery(this.query);// set query
-      net.send({
+      this.store.queryWithQuery(this.query, {
         success: bind(this, function(response) {
           this.list = [];
           response.forEach(bind(this, function(attr) {
@@ -133,7 +130,9 @@
           }));
           options.success && options.success(this.list);
         }),
-        error: options.error
+        error: function(error) {
+          options.error && options.error(error);
+        }
       });
     },
 
@@ -147,7 +146,7 @@
       if(query && !(query instanceof Kinvey.Query)) {
         throw new Error('Query must be an instanceof Kinvey.Query');
       }
-      this.query = query || null;
+      this.query = query || new Kinvey.Query();
     }
   });
 

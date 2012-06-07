@@ -85,7 +85,7 @@
    * @param {function(error)} [options.error] Failure callback.
    */
   Kinvey.ping = function(options) {
-    Kinvey.Net.factory(Kinvey.Net.APPDATA_API, '').send(options);
+    new Kinvey.Store.AppData(null).query(null, options);
   };
 
   /**
