@@ -36,7 +36,7 @@ describe('Kinvey.User', function() {
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
-          response.isLoggedIn.should.be.True;
+          response.isLoggedIn.should.be['true'];
 
           done();
         }
@@ -49,11 +49,11 @@ describe('Kinvey.User', function() {
         success: function(response) {
           response.should.equal(user);
           (response.getUsername()).should.equal('foo');
-          (null !== response.getPassword()).should.be.True;
+          (null !== response.getPassword()).should.be['true'];
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
-          (response.isLoggedIn).should.be.True;
+          (response.isLoggedIn).should.be['true'];
 
           done();
         }
@@ -63,12 +63,12 @@ describe('Kinvey.User', function() {
       var user = this.user = Kinvey.User.create({}, callback(done, {
         success: function(response) {
           response.should.equal(user);
-          (null !== response.getUsername()).should.be.True;
-          (null !== response.getPassword()).should.be.True;
+          (null !== response.getUsername()).should.be['true'];
+          (null !== response.getPassword()).should.be['true'];
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
-          (response.isLoggedIn).should.be.True;
+          (response.isLoggedIn).should.be['true'];
 
           done();
         }
@@ -93,7 +93,7 @@ describe('Kinvey.User', function() {
 
               // Test current user.
               Kinvey.getCurrentUser().should.equal(response);
-              (response.isLoggedIn).should.be.True;
+              (response.isLoggedIn).should.be['true'];
 
               done();
             }
@@ -130,12 +130,12 @@ describe('Kinvey.User', function() {
           // Reset spy.
           Kinvey.User.create = create;
 
-          invoked.should.be.True;
+          invoked.should.be['true'];
           response.should.equal(user);
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
-          (response.isLoggedIn).should.be.True;
+          (response.isLoggedIn).should.be['true'];
 
           done();
         }
@@ -199,7 +199,7 @@ describe('Kinvey.User', function() {
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
-          (response.isLoggedIn).should.be.True;
+          (response.isLoggedIn).should.be['true'];
 
           done();
         }
@@ -227,7 +227,7 @@ describe('Kinvey.User', function() {
       Kinvey.getCurrentUser().logout();
 
       // Test current user.
-      (null === Kinvey.getCurrentUser()).should.be.True;
+      (null === Kinvey.getCurrentUser()).should.be['true'];
       (this.user.isLoggedIn).should.be.False;
     });
   });

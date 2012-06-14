@@ -17,7 +17,8 @@ describe('Kinvey.Store.Local', function() {
         success: function() {
           done(new Error('Success callback was invoked.'));
         },
-        error: function() {
+        error: function(_, info) {
+          info.local.should.be['true'];
           done();
         }
       });
@@ -38,8 +39,9 @@ describe('Kinvey.Store.Local', function() {
     it('loads an object.', function(done) {
       var object = this.object;
       this.store.query(object._id, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response.should.eql(object);
+          info.local.should.be['true'];
           done();
         }
       }));
@@ -54,7 +56,8 @@ describe('Kinvey.Store.Local', function() {
         success: function() {
           done(new Error('Success callback was invoked.'));
         },
-        error: function() {
+        error: function(_, info) {
+          info.local.should.be['true'];
           done();
         }
       });
@@ -82,7 +85,8 @@ describe('Kinvey.Store.Local', function() {
         success: function() {
           done(new Error('Success callback was invoked.'));
         },
-        error: function() {
+        error: function(_, info) {
+          info.local.should.be['true'];
           done();
         }
       });
@@ -101,9 +105,10 @@ describe('Kinvey.Store.Local', function() {
     // Test suite.
     it('saves a new object', function(done) {
       this.store.save(this.object, callback(done, {
-        success: function(response) {
-          (null != response._id).should.be.True;
+        success: function(response, info) {
+          (null != response._id).should.be['true'];
           response.foo.should.equal('bar');
+          info.local.should.be['true'];
           done();
         }
       }));
@@ -111,8 +116,9 @@ describe('Kinvey.Store.Local', function() {
     it('updates an existing object.', function(done) {
       this.object._id = 'id';
       this.store.save(this.object, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response._id.should.equal('id');
+          info.local.should.be['true'];
           done();
         }
       }));

@@ -29,7 +29,7 @@ describe('Kinvey', function() {
     it('pings the Kinvey service.', function(done) {
       Kinvey.ping(callback(done, {
         success: function(response) {
-          (null !== Kinvey.getCurrentUser()).should.be.True;
+          (null !== Kinvey.getCurrentUser()).should.be['true'];
           response.should.have.property('kinvey');
           response.should.have.property('version');
           done();
@@ -40,7 +40,7 @@ describe('Kinvey', function() {
       Kinvey.masterSecret = MASTER_SECRET;// set property directly
       Kinvey.ping(callback(done, {
         success: function(response) {
-          (null === Kinvey.getCurrentUser()).should.be.True;
+          (null === Kinvey.getCurrentUser()).should.be['true'];
           response.should.have.property('kinvey');
           response.should.have.property('version');
           done();

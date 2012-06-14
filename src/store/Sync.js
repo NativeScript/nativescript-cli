@@ -30,6 +30,8 @@
       options && this.configure(options);
     },
 
+    /** @lends Kinvey.Store.Sync# */
+
     /**
      * Aggregates objects from the store.
      * 
@@ -80,7 +82,7 @@
       // Extend success handler to cache network response.
       var fnSuccess = options.success;
       options.success = bind(this, function(response, info) {
-        if(this._shouldUpdateCache(options.policy) && !info.local) {
+        if(info.network && this._shouldUpdateCache(options.policy)) {
           // Save locally in the background.
           this.local.save(response);
         }
@@ -103,7 +105,7 @@
       // Extend success handler to cache network response.
       var fnSuccess = options.success;
       options.success = bind(this, function(response, info) {
-        if(this._shouldUpdateCache(options.policy) && !info.local) {
+        if(info.network && this._shouldUpdateCache(options.policy)) {
           // Save locally in the background.
           response.forEach(bind(this, function(object) {
             this.local.save(object);
@@ -271,12 +273,43 @@
       return -1 !== accepted.indexOf(policy);
     }
   }, {
+    /** @lends Kinvey.Store.Sync */
+
     // Cache policies.
-    NO_CACHE: 0,// Ignore cache and only use the network.
-    CACHE_ONLY: 1,// Don't use the network.
-    CACHE_FIRST: 2,// Pull from cache if available, otherwise network.
-    NETWORK_FIRST: 3,// Pull from network if available, otherwise cache.
-    BOTH: 4// Pull the cache copy (if it exists), then pull from network.
+    /**
+     * No Cache policy. Ignore cache and only use the network.
+     * 
+     * @constant
+     */
+    NO_CACHE: 0,
+
+    /**
+     * Cache Only policy. Don't use the network.
+     * 
+     * @constant
+     */
+    CACHE_ONLY: 1,
+
+    /**
+     * Cache First policy. Pull from cache if available, otherwise network.
+     * 
+     * @constant
+     */
+    CACHE_FIRST: 2,
+
+    /**
+     * Network first policy. Pull from network if available, otherwise cache.
+     * 
+     * @constant
+     */
+    NETWORK_FIRST: 3,
+
+    /**
+     * Both policy. Pull the cache copy (if it exists), then pull from network.
+     * 
+     * @constant
+     */
+    BOTH: 4
   });
 
 }());

@@ -1,6 +1,10 @@
 (function() {
 
-  // Define the Kinvey.Store object.
+  /**
+   * Kinvey Store namespace. Home to all stores.
+   * 
+   * @namespace
+   */
   Kinvey.Store = {
     /**
      * Returns default store.

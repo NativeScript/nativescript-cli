@@ -10,7 +10,7 @@ Kinvey SDK for HTML5. Kinvey is a Backend as a Service platform that makes it ri
  * Building, testing, documentation generation is controlled through the gruntfile.
 
 ## Documentation
-Full documentation is available at https://console.kinvey.com/#docs/JavaScript/JS-Getting-Started.
+Full documentation is available at http://docs.kinvey.com/js-getting-started.html.
 
 ## Testing
 

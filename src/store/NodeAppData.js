@@ -7,6 +7,24 @@
   /** @lends Kinvey.Store.AppData# */
 
   /**
+   * Returns device information.
+   * 
+   * @private
+   * @return {string} Device information
+   */
+  Kinvey.Store.AppData.prototype._getDeviceInfo = function() {
+    // Example: "linux node v0.6.13 0".
+    return [
+      process.platform,
+      process.title,
+      process.version,
+      0// always set device ID to 0.
+    ].map(function(value) {
+      return value.toString().toLowerCase().replace(' ', '_');
+    }).join(' ');
+  };
+
+  /**
    * Sends the request.
    * 
    * @private
@@ -16,73 +34,74 @@
    * @param {Object} options Options.
    */
   Kinvey.Store.AppData.prototype._send = function(method, url, body, options) {
-      options || (options = {});
-      options.error || (options.error = this.options.error);
-      options.success || (options.success = this.options.success);
+    options || (options = {});
+    options.error || (options.error = this.options.error);
+    options.success || (options.success = this.options.success);
 
-      // For now, include authorization in this adapter. Ideally, it should
-      // have some external interface.
-      if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api) {
-        return Kinvey.User.create({}, {
-          success: bind(this, function() {
-            this._send(method, url, body, options);
-          }),
-          error: options.error
-        });
-      }
-
-      // Set headers.
-      var headers = {
-        Accept: 'application/json, text/javascript',
-        Authorization: 'Basic ' + new Buffer(this._getAuth(), 'utf8').toString('base64')
-      };
-      body && (headers['Content-Type'] = 'application/json; charset=UTF-8');
-      headers['Content-Length'] = body ? body.length : 0;
-
-      // Create the request.
-      var path = nodeUrl.parse(url);
-      var request = nodeHttps.request({
-        host: path.host,
-        path: path.pathname + (path.search ? path.search : ''),
-        method: method,
-        headers: headers
-      }, function(response) {
-        // Capture data stream.
-        var data = '';
-        response.on('data', function(chunk) {
-          data += chunk;
-        });
-
-        // Handle response when it completes.
-        // @link https://github.com/joyent/node/issues/728
-        var onComplete = function() {
-          // Data is expected to be either empty, or valid JSON.
-          data && (data = JSON.parse(data));
-
-          // Success implicates status 2xx (Successful), or 304 (Not Modified).
-          if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
-            options.success(data, { network: true });
-          }
-          else {
-            options.error(data, { network: true });
-          }
-        };
-        response.on('close', onComplete);
-        response.on('end', onComplete);
+    // For now, include authorization in this adapter. Ideally, it should
+    // have some external interface.
+    if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
+      return Kinvey.User.create({}, {
+        success: bind(this, function() {
+          this._send(method, url, body, options);
+        }),
+        error: options.error
       });
+    }
 
-      // Define request error handlers.
-      request.on('error', function(error) {
-        // Execute application-level handler.
-        options.error({
-          error: error.code,
-          message: error.code
-        }, { network: true });
-      });
-
-      // Fire request.
-      body && request.write(body);// pass body.
-      request.end();
+    // Set headers.
+    var headers = {
+      Accept: 'application/json, text/javascript',
+      Authorization: 'Basic ' + new Buffer(this._getAuth(), 'utf8').toString('base64'),
+      'Content-Length': body ? body.length : 0,
+      'X-Kinvey-Device-Information': this._getDeviceInfo()
     };
+    body && (headers['Content-Type'] = 'application/json; charset=UTF-8');
+
+    // Create the request.
+    var path = nodeUrl.parse(url);
+    var request = nodeHttps.request({
+      host: path.host,
+      path: path.pathname + (path.search ? path.search : ''),
+      method: method,
+      headers: headers
+    }, function(response) {
+      // Capture data stream.
+      var data = '';
+      response.on('data', function(chunk) {
+        data += chunk;
+      });
+
+      // Handle response when it completes.
+      // @link https://github.com/joyent/node/issues/728
+      var onComplete = function() {
+        // Data is expected to be either empty, or valid JSON.
+        data && (data = JSON.parse(data));
+
+        // Success implicates status 2xx (Successful), or 304 (Not Modified).
+        if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
+          options.success(data, { network: true });
+        }
+        else {
+          options.error(data, { network: true });
+        }
+      };
+      response.on('close', onComplete);
+      response.on('end', onComplete);
+    });
+
+    // Define request error handlers.
+    request.on('error', function(error) {
+      // Execute application-level handler.
+      options.error({
+        error: error.code,
+        message: error.code
+      }, { network: true });
+    });
+
+    // Fire request.
+    body && request.write(body);// pass body.
+    request.end();
+  };
 
 }());

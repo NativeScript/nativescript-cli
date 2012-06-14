@@ -1,6 +1,6 @@
 (function() {
 
-  /*globals btoa, XMLHttpRequest, window*/
+  /*globals btoa, navigator, XMLHttpRequest, window*/
 
   // Define the Kinvey.Store.AppData class.
   Kinvey.Store.AppData = Base.extend({
@@ -182,6 +182,36 @@
     },
 
     /**
+     * Returns device information.
+     * 
+     * @private
+     * @return {string} Device information.
+     */
+    _getDeviceInfo: function() {
+      // Try the most common browsers, fall back to navigator.appName otherwise.
+      var ua = navigator.userAgent.toLowerCase();
+
+      var rChrome = /(chrome)\/([\w]+)/;
+      var rSafari = /(safari)\/([\w.]+)/;
+      var rFirefox = /(firefox)\/([\w.]+)/;
+      var rOpera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
+      var rIE = /(msie) ([\w.]+)/i;
+
+      var browser = rChrome.exec(ua) || rSafari.exec(ua) || rFirefox.exec(ua) || rOpera.exec(ua) || rIE.exec(ua) || [ ];
+
+      // Build device information.
+      // Example: "linux chrome 18 0".
+      return [
+        navigator.platform,
+        browser[1] || navigator.appName,
+        browser[2] || 0,
+        0 // always set device ID to 0.
+      ].map(function(value) {
+        return value.toString().toLowerCase().replace(' ', '_');
+      }).join(' ');
+    },
+
+    /**
      * Constructs URL.
      * 
      * @private
@@ -250,7 +280,8 @@
       // Set headers.
       var headers = {
         Accept: 'application/json, text/javascript',
-        Authorization: 'Basic ' + btoa(this._getAuth())
+        Authorization: 'Basic ' + btoa(this._getAuth()),
+        'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
       body && (headers['Content-Type'] = 'application/json; charset=UTF-8');
 

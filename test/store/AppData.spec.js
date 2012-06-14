@@ -28,9 +28,10 @@ describe('Kinvey.Store.AppData', function() {
           out.count++;
         }.toString()
       }, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response.should.have.length(1);
           response[0].count.should.equal(1);
+          info.network.should.be['true'];
           done();
         }
       }));
@@ -51,9 +52,10 @@ describe('Kinvey.Store.AppData', function() {
     it('loads an object.', function(done) {
       var object = this.object;
       this.store.query(object._id, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
+          info.network.should.be['true'];
           done();
         }
       }));
@@ -73,9 +75,10 @@ describe('Kinvey.Store.AppData', function() {
       var query = new Kinvey.Query();
       query.on('foo').equal('bar');
       this.store.queryWithQuery(query, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response.should.have.length(1);
           response[0].foo.should.equal('bar');
+          info.network.should.be['true'];
           done();
         }
       }));
@@ -120,9 +123,10 @@ describe('Kinvey.Store.AppData', function() {
     it('saves a new object', function(done) {
       var self = this;
       this.store.save(this.object, callback(done, {
-        success: function(response) {
-          (null != response._id).should.be.True;
+        success: function(response, info) {
+          (null != response._id).should.be['true'];
           response.foo.should.equal('bar');
+          info.network.should.be['true'];
 
           // Update object, so it can be removed in afterEach().
           self.object = response;
@@ -134,8 +138,9 @@ describe('Kinvey.Store.AppData', function() {
     it('updates an existing object.', function(done) {
       this.object._id = 'id';
       this.store.save(this.object, callback(done, {
-        success: function(response) {
+        success: function(response, info) {
           response._id.should.equal('id');
+          info.network.should.be['true'];
           done();
         }
       }));
