@@ -16,9 +16,7 @@
      * 
      * @example <code>
      * var user = new Kinvey.User();
-     * var user = new Kinvey.User({
-     *   key: 'value'
-     * });
+     * var user = new Kinvey.User({ key: 'value' });
      * </code>
      * 
      * @name Kinvey.User
@@ -27,7 +25,7 @@
      * @param {Object} [attr] Attributes.
      */
     constructor: function(attr) {
-      Kinvey.Entity.prototype.constructor.call(this, 'user', attr);
+      Kinvey.Entity.prototype.constructor.call(this, attr, 'user');
     },
 
     /** @lends Kinvey.User# */
@@ -45,19 +43,17 @@
         options.error && options.error({
           error: message,
           message: message
-        });
+        }, {});
         return;
       }
 
       // Users are allowed to remove themselves.
       Kinvey.Entity.prototype.destroy.call(this, {
-        success: bind(this, function() {
-          this.logout();
-          options.success && options.success();
-        }),
-        error: function(error) {
-          options.error && options.error(error);
-        }
+        success: function(user, info) {
+          user.logout();
+          options.success && options.success(user, info);
+        },
+        error: options.error
       });
     },
 
@@ -97,8 +93,8 @@
      * @param {string} username Username.
      * @param {string} password Password.
      * @param {Object} [options]
-     * @param {function(entity)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(entity, error, info)} [options.error] Failure callback.
      */
     login: function(username, password, options) {
       options || (options = {});
@@ -114,16 +110,18 @@
       this.setPassword(password);
 
       // Send request.
-      this.store.login(this.toJSON(), {
-        success: bind(this, function(response) {
+      this.store.login(this, {
+        success: bind(this, function(response, info) {
           // Update attributes. Preserve password since it is part of
           // the authorization.
           this.attr = response;
           this.setPassword(password);
           this._login();
-          options.success && options.success(this);
+          options.success && options.success(this, info);
         }),
-        error: options.error
+        error: bind(this, function(error, info) {
+          options.error && options.error(this, error, info);
+        })
       });
     },
 
@@ -152,7 +150,7 @@
         options.error && options.error({
           error: message,
           message: message
-        });
+        }, {});
         return;
       }
 
@@ -160,10 +158,10 @@
       // password, so persist it manually.
       var password = this.getPassword();
       Kinvey.Entity.prototype.save.call(this, {
-        success: function(self) {
-          self.setPassword(password);
-          self._login();
-          options.success && options.success(self);
+        success: function(user, info) {
+          user.setPassword(password);
+          user._login();
+          options.success && options.success(user, info);
         },
         error: options.error
       });
@@ -261,9 +259,9 @@
       // Persist, and mark the created user as logged in.
       var user = new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, {
-        success: function(user) {
+        success: function(user, info) {
           user._login();
-          options.success && options.success(user);
+          options.success && options.success(user, info);
         },
         error: options.error
       });
@@ -286,7 +284,7 @@
       // Check whether there already is a current user.
       var user = Kinvey.getCurrentUser();
       if(null !== user) {
-        options.success && options.success(user);
+        options.success && options.success(user, {});
         return user;
       }
 

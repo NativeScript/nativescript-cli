@@ -9,26 +9,27 @@
      * Creates a new entity.
      * 
      * @example <code>
-     * var entity = new Kinvey.Entity('my-collection');
-     * var entity = new Kinvey.Entity('my-collection', {
-     *   key: 'value'
-     * });
+     * var entity = new Kinvey.Entity({}, 'my-collection');
+     * var entity = new Kinvey.Entity({ key: 'value' }, 'my-collection');
      * </code>
      * 
      * @name Kinvey.Entity
      * @constructor
-     * @param {string} collection Owner collection.
      * @param {Object} [attr] Attribute object.
+     * @param {string} collection Owner collection.
+     * @param {Object} options
      * @throws {Error} On empty collection.
      */
-    constructor: function(collection, attr) {
+    constructor: function(attr, collection, options) {
       if(null == collection) {
         throw new Error('Collection must not be null');
       }
       this.attr = attr || {};
       this.collection = collection;
 
-      this.store = new Kinvey.Store.AppData(this.collection);
+      // Options
+      options || (options = {});
+      this.store = (options.store || Kinvey.Store.factory)(this.collection);
     },
 
     /** @lends Kinvey.Entity# */
@@ -37,19 +38,19 @@
      * Destroys entity.
      * 
      * @param {Object} [options]
-     * @param {function()} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(entity, error, info)} [options.error] Failure callback.
      */
     destroy: function(options) {
       options || (options = {});
 
       this.store.remove(this.toJSON(), {
-        success: function() {
-          options.success && options.success();
-        },
-        error: function(error) {
-          options.error && options.error(error);
-        }
+        success: bind(this, function(_, info) {
+          options.success && options.success(this, info);
+        }),
+        error: bind(this, function(error, info) {
+          options.error && options.error(this, error, info);
+        })
       });
     },
 
@@ -93,8 +94,8 @@
      * 
      * @param {string} id Entity id.
      * @param {Object} [options]
-     * @param {function(entity)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(entity, error, info)} [options.error] Failure callback.
      * @throws {Error} On empty id.
      */
     load: function(id, options) {
@@ -103,14 +104,13 @@
       }
       options || (options = {});
 
-      // Retrieve data.
       this.store.query(id, {
-        success: bind(this, function(response) {
+        success: bind(this, function(response, info) {
           this.attr = response;
-          options.success && options.success(this);
+          options.success && options.success(this, info);
         }),
-        error: function(error) {
-          options.error && options.error(error);
+        error: function(error, info) {
+          options.error && options.error(this, error, info);
         }
       });
     },
@@ -119,19 +119,19 @@
      * Saves entity.
      * 
      * @param {Object} [options]
-     * @param {function(entity)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(entity, error, info)} [options.error] Failure callback.
      */
     save: function(options) {
       options || (options = {});
 
       this.store.save(this.toJSON(), {
-        success: bind(this, function(response) {
+        success: bind(this, function(response, info) {
           this.attr = response;
-          options.success && options.success(this);
+          options.success && options.success(this, info);
         }),
-        error: function(error) {
-          options.error && options.error(error);
+        error: function(error, info) {
+          options.error && options.error(this, error, info);
         }
       });
     },

@@ -4,8 +4,22 @@
   var nodeHttps = require('https');
   var nodeUrl = require('url');
 
-  // Define the Kinvey.Store.AppData class.
+  /** @lends Kinvey.Store.AppData# */
+
+  /**
+   * Sends the request.
+   * 
+   * @private
+   * @param {string} method Request method.
+   * @param {string} url Request URL.
+   * @param {string} body Request body.
+   * @param {Object} options Options.
+   */
   Kinvey.Store.AppData.prototype._send = function(method, url, body, options) {
+      options || (options = {});
+      options.error || (options.error = this.options.error);
+      options.success || (options.success = this.options.success);
+
       // For now, include authorization in this adapter. Ideally, it should
       // have some external interface.
       if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api) {
@@ -47,10 +61,10 @@
 
           // Success implicates status 2xx (Successful), or 304 (Not Modified).
           if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
-            options.success(data);
+            options.success(data, {});
           }
           else {
-            options.error(data);
+            options.error(data, {});
           }
         };
         response.on('close', onComplete);
@@ -63,7 +77,7 @@
         options.error({
           error: error.code,
           message: error.code
-        });
+        }, {});
       });
 
       // Fire request.

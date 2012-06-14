@@ -11,8 +11,7 @@ describe('Kinvey.Collection', function() {
   it('is extendable.', function() {
     var TestCollection = Kinvey.Collection.extend({
       constructor: function() {
-        Kinvey.Collection.prototype.constructor
-            .call(this, COLLECTION_UNDER_TEST);
+        Kinvey.Collection.prototype.constructor.call(this, COLLECTION_UNDER_TEST);
       }
     });
     (new TestCollection()).should.be.an.instanceOf(Kinvey.Collection);
@@ -31,16 +30,13 @@ describe('Kinvey.Collection', function() {
   describe('#clear', function() {
     // Create mock.
     beforeEach(function(done) {
-      new Kinvey.Entity(COLLECTION_UNDER_TEST, {
-        foo: 'bar'
-      }).save(callback(done));
+      new Kinvey.Entity({ foo: 'bar' }, COLLECTION_UNDER_TEST).save(callback(done));
     });
 
     // Test suite.
     it('clears all entities.', function(done) {
-      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
-      collection.clear(callback(done, {
-        success: function() {
+      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done, {
+        success: function(collection) {
           collection.list.should.have.length(0);
           done();
         }
@@ -53,9 +49,7 @@ describe('Kinvey.Collection', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
       this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
-      new Kinvey.Entity(COLLECTION_UNDER_TEST, {
-        'foo': 'bar'
-      }).save(callback(done));
+      new Kinvey.Entity({ foo: 'bar' }, COLLECTION_UNDER_TEST).save(callback(done));
     });
     afterEach(function(done) {
       this.collection.clear(callback(done));
@@ -64,7 +58,7 @@ describe('Kinvey.Collection', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
       this.collection.count(callback(done, {
-        success: function(count) {
+        success: function(_, count) {
           count.should.equal(1);
           done();
         }
@@ -77,9 +71,7 @@ describe('Kinvey.Collection', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
       this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
-      new Kinvey.Entity(COLLECTION_UNDER_TEST, {
-        'foo': 'bar'
-      }).save(callback(done));
+      new Kinvey.Entity({ foo: 'bar' }, COLLECTION_UNDER_TEST).save(callback(done));
     });
     afterEach(function(done) {
       this.collection.clear(callback(done));
@@ -88,9 +80,32 @@ describe('Kinvey.Collection', function() {
     // Test suite.
     it('fetches all entities.', function(done) {
       this.collection.fetch(callback(done, {
-        success: function(list) {
+        success: function(_, list) {
           list.should.have.length(1);
           list[0].should.be.an.instanceOf(Kinvey.Entity);
+          done();
+        }
+      }));
+    });
+
+    it('fetches custom entities.', function(done) {
+      var MyEntity = Kinvey.Entity.extend({
+        constructor: function(attr) {
+          Kinvey.Entity.prototype.constructor.call(this, attr, COLLECTION_UNDER_TEST);
+        }
+      });
+      var MyCollection = Kinvey.Collection.extend({
+        entity: MyEntity,
+        constructor: function(query) {
+          Kinvey.Collection.prototype.constructor.call(this, COLLECTION_UNDER_TEST, query);
+        }
+      });
+
+      new MyCollection().fetch(callback(done, {
+        success: function(_, list) {
+          list.should.have.length(1);
+          list[0].should.be.an.instanceOf(MyEntity);
+          list[0].get('foo').should.equal('bar');
           done();
         }
       }));

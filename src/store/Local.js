@@ -12,69 +12,82 @@
     database: null,
 
     // Default options.
-    options: { },
+    options: {
+      error: function() { },
+      success: function() { }
+    },
 
     /**
      * Kinvey.Store.Local
      * 
      * @name Kinvey.Store.Local
      * @constructor
-     * @param {string} collection
+     * @param {string} collection Collection name.
      * @param {Object} [options]
      */
     constructor: function(collection, options) {
       this.collection = collection.replace('-', '_');
       this.name = 'Kinvey.' + Kinvey.appKey;// database name.
 
+      // Options.
       options && this.configure(options);
     },
 
     /** @lends Kinvey.Store.Local# */
 
     /**
-     * Aggregates entities from the store.
+     * Aggregates objects from the store.
      * 
-     * @param {Object} aggregation
-     * @param {Object} options
+     * @param {Object} aggregation Aggregation object.
+     * @param {Object} [options] Options.
      */
     aggregate: function(aggregation, options) {
+      options = this._options(options);
+
       var msg = 'Aggregation is not supported by this store.';
       options.error({
         error: msg,
         message: msg
-      });
+      }, {});
     },
 
     /**
      * Configures store.
      * 
      * @param {Object} options
+     * @param {function(response, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
     configure: function(options) {
-      //
+      options.error && (this.options.error = options.error);
+      options.success && (this.options.success = options.success);
     },
 
     /**
      * Logs in user.
      * 
      * @param {Object} object
-     * @param {Object} options
+     * @param {Object} [options] Options.
      */
     login: function(object, options) {
+      options = this._options(options);
+
       var msg = 'Logging in is not supported by this store.';
       options.error({
         error: msg,
         message: msg
-      });
+      }, {});
     },
 
     /**
-     * Queries the store for a specific entity.
+     * Queries the store for a specific object.
      * 
-     * @param {string} id
-     * @param {Object} options
+     * @param {string} id Object id.
+     * @param {Object} [options] Options.
      */
     query: function(id, options) {
+      options = this._options(options);
+
       // Convenience shortcut.
       var c = this.collection;
       var errorMsg = 'Not found';
@@ -86,7 +99,7 @@
             options.error({
               error: errorMsg,
               message: errorMsg
-            });
+            }, {});
             return;
           }
 
@@ -95,10 +108,10 @@
           var tnx = store.get(id);
           tnx.onsuccess = tnx.onerror = function() {
             // Success handler is also fired when entity is not found. Check here.
-            null != tnx.result ? options.success(tnx.result) : options.error({
+            null != tnx.result ? options.success(tnx.result, {}) : options.error({
               error: tnx.error || errorMsg,
               message: tnx.error || errorMsg
-            });
+            }, {});
           };
         }),
         error: options.error
@@ -106,26 +119,30 @@
     },
 
     /**
-     * Queries the store for multiple entities.
+     * Queries the store for multiple objects.
      * 
-     * @param {Object} query
-     * @param {Object} options
+     * @param {Object} query Query object.
+     * @param {Object} [options] Options.
      */
     queryWithQuery: function(query, options) {
+      options = this._options(options);
+
       var msg = 'Querying is not supported by this store.';
       options.error({
         error: msg,
         message: msg
-      });
+      }, {});
     },
 
     /**
-     * Removes entity from the store.
+     * Removes object from the store.
      * 
-     * @param {Object} object
-     * @param {Object} options
+     * @param {Object} object Object to be removed.
+     * @param {Object} [options] Options.
      */
     remove: function(object, options) {
+      options = this._options(options);
+
       // Convenience shortcut.
       var c = this.collection;
 
@@ -133,7 +150,7 @@
         success: bind(this, function(db) {
           // First pass; check whether collection exists.
           if(!db.objectStoreNames.contains(c)) {
-            options.success();
+            options.success(null, {});
             return;
           }
 
@@ -141,13 +158,13 @@
           var store = db.transaction([c], IDBTransaction.READ_WRITE).objectStore(c);
           var tnx = store['delete'](object._id);
           tnx.onsuccess = function() {
-            options.success();
+            options.success(null, {});
           };
           tnx.onerror = function() {
             options.error({
               error: tnx.error,
               message: tnx.error
-            });
+            }, {});
           };
         }),
         error: options.error
@@ -155,26 +172,30 @@
     },
 
     /**
-     * Removes multiple entities from the store.
+     * Removes multiple objects from the store.
      * 
-     * @param {Object} query
-     * @param {Object} options
+     * @param {Object} query Query object.
+     * @param {Object} [options] Options.
      */
     removeWithQuery: function(query, options) {
+      options = this._options(options);
+
       var msg = 'Querying is not supported by this store.';
       options.error({
         error: msg,
         message: msg
-      });
+      }, {});
     },
 
     /**
-     * Saves entity to the store.
+     * Saves object to the store.
      * 
-     * @param {Object} object
-     * @param {Object} options
+     * @param {Object} object Object to be saved.
+     * @param {Object} [options] Options.
      */
     save: function(object, options) {
+      options = this._options(options);
+
       // Convenience shortcut.
       var c = this.collection;
 
@@ -208,12 +229,13 @@
      * Returns database handle.
      * 
      * @private
-     * @param {Object} options
+     * @param {Object} options Options.
      */
     _db: function(options) {
       // Return if already openend.
       if(this.database && !options.version) {
-        return options.success(this.database);
+        options.success(this.database);
+        return;
       }
 
       // Open database.
@@ -237,7 +259,7 @@
         options.error({
           error: request.error,
           message: request.error
-        });
+        }, {});
       };
     },
 
@@ -245,8 +267,8 @@
      * Migrates database.
      * 
      * @private
-     * @param {function(done)} command
-     * @param {Object} options
+     * @param {function(database)} command Migration command.
+     * @param {Object} options Options.
      */
     _migrate: function(db, command, options) {
       // Increment version number.
@@ -258,12 +280,13 @@
         var versionRequest = db.setVersion(version);
         versionRequest.onsuccess = function() {
           command(db);
+          options.success(db);
         };
         versionRequest.onerror = function() {
           options.error({
             error: versionRequest.error,
             message: versionRequest.error
-          });
+          }, {});
         };
         return;
       }
@@ -275,12 +298,25 @@
     },
 
     /**
+     * Returns complete options object.
+     * 
+     * @param {Object} options Options.
+     * @return {Object} Options.
+     */
+    _options: function(options) {
+      options || (options = {});
+      options.success || (options.success = this.options.success);
+      options.error || (options.error = this.options.error);
+      return options;
+    },
+
+    /**
      * Saves entity to the store.
      * 
      * @private
-     * @param {Object} db
-     * @param {Object} object
-     * @param {Object} options
+     * @param {Object} db Database handle.
+     * @param {Object} object Object to be saved.
+     * @param {Object} options Options.
      */
     _save: function(db, object, options) {
       var c = this.collection;
@@ -293,13 +329,13 @@
       // Save to collection.
       var tnx = store.put(object);
       tnx.onsuccess = function() {
-        options.success(object);
+        options.success(object, {});
       };
       tnx.onerror = function() {
         options.error({
           error: tnx.error,
           message: tnx.error
-        });
+        }, {});
       };
     }
   });

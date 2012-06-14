@@ -59,9 +59,6 @@
     Kinvey.appSecret = options.appSecret || null;
     Kinvey.masterSecret = options.masterSecret || null;
 
-    // Configuration.
-    Kinvey.local = !!options.local;
-
     // Restore current user.
     Kinvey.User._restore();
   };
@@ -81,10 +78,11 @@
    * </code>
    * 
    * @param {Object} [options]
-   * @param {function(response)} [options.success] Success callback.
-   * @param {function(error)} [options.error] Failure callback.
+   * @param {function(response, info)} [options.success] Success callback.
+   * @param {function(error, info)} [options.error] Failure callback.
    */
   Kinvey.ping = function(options) {
+    options || (options = {});
     new Kinvey.Store.AppData(null).query(null, options);
   };
 

@@ -4,16 +4,16 @@
 describe('Kinvey.Aggregation', function() {
   // Create a variety of data, so aggregations actually has a result.
   before(function(done) {
-    this.smith = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
+    this.smith = new Kinvey.Entity({
       name: 'John',
       surname: 'Smith',
       age: 30
-    });
-    var jones = this.jones = new Kinvey.Entity(COLLECTION_UNDER_TEST, {
+    }, COLLECTION_UNDER_TEST);
+    var jones = this.jones = new Kinvey.Entity({
       name: 'Dan',
       surname: 'Smith',
       age: 50
-    });
+    }, COLLECTION_UNDER_TEST);
 
     // Save both.
     this.smith.save(callback(done, {
@@ -57,7 +57,7 @@ describe('Kinvey.Aggregation', function() {
         return out;
       });
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(1);
           response[0].should.eql({ count: 2, total: 80, average: 40 });
           done();
@@ -70,7 +70,7 @@ describe('Kinvey.Aggregation', function() {
   describe('count', function() {
     it('performs a simple count.', function(done) {
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(1);
           response[0].should.eql({ count: 2 });
           done();
@@ -80,7 +80,7 @@ describe('Kinvey.Aggregation', function() {
     it('performs a count with multiple groups.', function(done) {
       this.agg.on('name');
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(2);
           response.should.eql([
             { name: 'John', count: 1 }, { name: 'Dan', count: 1 }
@@ -92,7 +92,7 @@ describe('Kinvey.Aggregation', function() {
     it('performs a count with one group.', function(done) {
       this.agg.on('surname');
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(1);
           response[0].should.eql({ surname: 'Smith', count: 2 });
           done();
@@ -102,7 +102,7 @@ describe('Kinvey.Aggregation', function() {
     it('performs a count with two groups.', function(done) {
       this.agg.on('name').on('age');
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(2);
           response.should.eql([
             { name: 'John', age: 30, count: 1 },
@@ -123,7 +123,7 @@ describe('Kinvey.Aggregation', function() {
 
       this.collection.setQuery(query);
       this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
+        success: function(_, response) {
           response.should.have.length(1);
           response[0].should.eql({ age: 30, count: 1 });
           done();

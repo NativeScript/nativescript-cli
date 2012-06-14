@@ -3,7 +3,7 @@
   // Define the Kinvey Collection class.
   Kinvey.Collection = Base.extend({
     // List of entities.
-    list: [ ],
+    list: [],
 
     // Mapped entity class.
     entity: Kinvey.Entity,
@@ -18,21 +18,23 @@
      * @constructor
      * @name Kinvey.Collection
      * @param {string} name Collection name.
-     * @param {Kinvey.Query} [query] Query.
+     * @param {Object} [options] Options.
      * @throws {Error}
      *           <ul>
      *           <li>On empty name,</li>
      *           <li>On invalid query instance.</li>
      *           </ul>
      */
-    constructor: function(name, query) {
+    constructor: function(name, options) {
       if(null == name) {
         throw new Error('Name must not be null');
       }
-      this.setQuery(query);
       this.name = name;
 
-      this.store = new Kinvey.Store.AppData(name);
+      // Options
+      options || (options = {});
+      this.setQuery(options.query || new Kinvey.Query());
+      this.store = (options.store || Kinvey.Store.factory)(this.name);
     },
 
     /** @lends Kinvey.Collection# */
@@ -42,36 +44,44 @@
      * 
      * @param {Kinvey.Aggregation} aggregation Aggregation object.
      * @param {Object} [options] Options.
-     * @param {function(list)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(collection, aggregation, info)} [options.success] Success callback.
+     * @param {function(collection, error, info)} [options.error] Failure callback.
      */
     aggregate: function(aggregation, options) {
       if(!(aggregation instanceof Kinvey.Aggregation)) {
         throw new Error('Aggregation must be an instanceof Kinvey.Aggregation');
       }
-      aggregation.setQuery(this.query);// respect collection query.
+      options || (options = {});
 
-      this.store.aggregate(aggregation, options);
+      aggregation.setQuery(this.query);// respect collection query.
+      this.store.aggregate(aggregation.toJSON(), {
+        success: bind(this, function(response, info) {
+          options.success && options.success(this, response, info);
+        }),
+        error: bind(this, function(error, info) {
+          options.error && options.error(this, error, info);
+        })
+      });
     },
 
     /**
      * Clears collection.
      * 
      * @param {Object} [options]
-     * @param {function()} [success] Success callback.
-     * @param {function(error)} [error] Failure callback.
+     * @param {function(collection, info)} [success] Success callback.
+     * @param {function(collection, error, info)} [error] Failure callback.
      */
     clear: function(options) {
       options || (options = {});
 
-      this.store.removeWithQuery(this.query, {
-        success: bind(this, function() {
+      this.store.removeWithQuery(this.query.toJSON(), {
+        success: bind(this, function(_, info) {
           this.list = [];
-          options.success && options.success(this);
+          options.success && options.success(this, info);
         }),
-        error: function(error) {
-          options.error && options.error(error);
-        }
+        error: bind(this, function(error, info) {
+          options.error && options.error(this, error, info);
+        })
       });
     },
 
@@ -91,8 +101,8 @@
      * </code>
      * 
      * @param {Object} [options]
-     * @param {function(number)} [success] Success callback.
-     * @param {function(error)} [error] Failure callback.
+     * @param {function(collection, count, info)} [success] Success callback.
+     * @param {function(collection, error, info)} [error] Failure callback.
      */
     count: function(options) {
       options || (options = {});
@@ -104,10 +114,12 @@
       });
 
       this.store.aggregate(aggregation.toJSON(), {
-        success: function(response) {
-          options.success && options.success(response[0].count);
+        success: function(response, info) {
+          options.success && options.success(this, response[0].count, info);
         },
-        error: options.error
+        error: function(error, info) {
+          options.error && options.error(this, error, info);
+        }
       });
     },
 
@@ -115,24 +127,24 @@
      * Fetches entities in collection.
      * 
      * @param {Object} [options]
-     * @param {function(list)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
+     * @param {function(collection, list, info)} [options.success] Success callback.
+     * @param {function(collection, error, info)} [options.error] Failure callback.
      */
     fetch: function(options) {
       options || (options = {});
 
       // Send request.
-      this.store.queryWithQuery(this.query, {
-        success: bind(this, function(response) {
+      this.store.queryWithQuery(this.query.toJSON(), {
+        success: bind(this, function(response, info) {
           this.list = [];
           response.forEach(bind(this, function(attr) {
-            this.list.push(new this.entity(this.name, attr));
+            this.list.push(new this.entity(attr, this.name));
           }));
-          options.success && options.success(this.list);
+          options.success && options.success(this, this.list, info);
         }),
-        error: function(error) {
-          options.error && options.error(error);
-        }
+        error: bind(this, function(error, info) {
+          options.error && options.error(this, error, info);
+        })
       });
     },
 

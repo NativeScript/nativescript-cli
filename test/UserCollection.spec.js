@@ -40,7 +40,7 @@ describe('Kinvey.UserCollection', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
       new Kinvey.UserCollection().count(callback(done, {
-        success: function(count) {
+        success: function(_, count) {
           count.should.equal(1);
           done();
         }
@@ -53,7 +53,7 @@ describe('Kinvey.UserCollection', function() {
     // Test suite.
     it('fetches all users.', function(done) {
       new Kinvey.UserCollection().fetch(callback(done, {
-        success: function(list) {
+        success: function(_, list) {
           list.should.have.length(1);
           list[0].should.be.an.instanceOf(Kinvey.User);
           done();

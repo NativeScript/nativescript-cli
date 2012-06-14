@@ -11,31 +11,34 @@
 
     // Default options.
     options: {
+      error: function() { },
+      success: function() { },
       timeout: 10000//ms
     },
 
     /**
-     * Constructor.
+     * Creates a new store.
      * 
      * @name Kinvey.Store.AppData
      * @constructor
-     * @param {string} collection
-     * @param {Object} [options]
+     * @param {string} collection Collection name.
+     * @param {Object} [options] Options.
      */
     constructor: function(collection, options) {
       this.api = this.USER_API === collection ? this.USER_API : this.APPDATA_API;
       this.collection = collection;
 
+      // Options.
       options && this.configure(options);
     },
 
     /** @lends Kinvey.Store.AppData# */
 
     /**
-     * Aggregates entities from the store.
+     * Aggregates objects from the store.
      * 
-     * @param {Object} aggregation
-     * @param {Object} options
+     * @param {Object} aggregation Aggregation.
+     * @param {Object} [options] Options.
      */
     aggregate: function(aggregation, options) {
       // Construct URL.
@@ -48,9 +51,14 @@
     /**
      * Configures store.
      * 
-     * @param {Object} options
+     * @param {Object} options Options.
+     * @param {function(response, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
+     * @param {integer} [options.timeout] Request timeout (in milliseconds).
      */
     configure: function(options) {
+      options.error && (this.options.error = options.error);
+      options.success && (this.options.success = options.success);
       options.timeout && (this.options.timeout = options.timeout);
     },
 
@@ -58,7 +66,7 @@
      * Logs in user.
      * 
      * @param {Object} object
-     * @param {Object} options
+     * @param {Object} [options] Options.
      */
     login: function(object, options) {
       // Construct URL.
@@ -69,10 +77,10 @@
     },
 
     /**
-     * Queries the store for a specific entity.
+     * Queries the store for a specific object.
      * 
-     * @param {string} id
-     * @param {Object} options
+     * @param {string} id Object id.
+     * @param {Object} [options] Options.
      */
     query: function(id, options) {
       // Construct URL.
@@ -83,24 +91,24 @@
     },
 
     /**
-     * Queries the store for multiple entities.
+     * Queries the store for multiple objects.
      * 
-     * @param {Object} query
-     * @param {Object} options
+     * @param {Object} query Query object.
+     * @param {Object} [options] Options.
      */
     queryWithQuery: function(query, options) {
       // Construct URL.
-      var url = this._getUrl({ query: query.toJSON() });
+      var url = this._getUrl({ query: query });
 
       // Send request.
       this._send('GET', url, null, options);
     },
 
     /**
-     * Removes entity from the store.
+     * Removes object from the store.
      * 
-     * @param {Object} object
-     * @param {Object} options
+     * @param {Object} object Object to be removed.
+     * @param {Object} [options] Options.
      */
     remove: function(object, options) {
       // Construct URL.
@@ -111,24 +119,24 @@
     },
 
     /**
-     * Removes multiple entities from the store.
+     * Removes multiple objects from the store.
      * 
-     * @param {Object} query
-     * @param {Object} options
+     * @param {Object} query Query object.
+     * @param {Object} [options] Options.
      */
     removeWithQuery: function(query, options) {
        // Construct URL.
-      var url = this._getUrl({ query: query.toJSON() });
+      var url = this._getUrl({ query: query });
 
       // Send request.
       this._send('DELETE', url, null, options);
     },
 
     /**
-     * Saves entity to the store.
+     * Saves object to the store.
      * 
-     * @param {Object} object
-     * @param {Object} options
+     * @param {Object} object Object to be saved.
+     * @param {Object} [options] Options.
      */
     save: function(object, options) {
       // Set request method and construct URL.
@@ -142,8 +150,9 @@
     /**
      * Encodes value for use in query string.
      * 
-     * @param {*} value
-     * @return {string}
+     * @private
+     * @param {*} value Value to be encoded.
+     * @return {string} Encoded value.
      */
     _encode: function(value) {
       if(value instanceof Object) {
@@ -153,9 +162,10 @@
     },
 
     /**
-     * Returns authorization.
+     * Returns authorization string.
      * 
-     * @return {string}
+     * @private
+     * @return {string} Authorization string.
      */
     _getAuth: function() {
       // Use master secret if specified.
@@ -175,8 +185,8 @@
      * Constructs URL.
      * 
      * @private
-     * @param {Object} parts
-     * @return {string} URctStoreNames.contains(c)) {L.
+     * @param {Object} parts URL parts.
+     * @return {string} URL.
      */
     _getUrl: function(parts) {
       var url = this.HOST + '/' + this.api + '/' + Kinvey.appKey + '/';
@@ -210,12 +220,17 @@
      * Sends the request.
      * 
      * @private
-     * @param {string} method
-     * @param {string} url
-     * @param {string} body
-     * @param {Object} options
+     * @param {string} method Request method.
+     * @param {string} url Request URL.
+     * @param {string} body Request body.
+     * @param {Object} options Options.
      */
     _send: function(method, url, body, options) {
+      options || (options = {});
+      options.error || (options.error = this.options.error);
+      options.success || (options.success = this.options.success);
+      options.timeout || (options.timeout = this.options.timeout);
+
       // For now, include authorization in this adapter. Ideally, it should
       // have some external interface.
       if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
@@ -230,9 +245,7 @@
       // Create the request.
       var request = new XMLHttpRequest();
       request.open(method, url, true);
-
-      // Apply options.
-      request.timeout = this.options.timeout;
+      request.timeout = options.timeout;
 
       // Set headers.
       var headers = {
@@ -259,10 +272,10 @@
 
         // Success implicates status 2xx (Successful), or 304 (Not Modified).
         if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
-          options.success(response);
+          options.success(response, {});
         }
         else {
-          options.error(response);
+          options.error(response, {});
         }
       };
 
@@ -279,7 +292,7 @@
         options.error({
           error: msg,
           message: msg
-        });
+        }, {});
       };
 
       // Fire request.
