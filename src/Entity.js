@@ -109,9 +109,9 @@
           this.attr = response;
           options.success && options.success(this, info);
         }),
-        error: function(error, info) {
+        error: bind(this, function(error, info) {
           options.error && options.error(this, error, info);
-        }
+        })
       });
     },
 

@@ -48,7 +48,7 @@
       options.error({
         error: msg,
         message: msg
-      }, {});
+      }, { local: true });
     },
 
     /**
@@ -76,7 +76,7 @@
       options.error({
         error: msg,
         message: msg
-      }, {});
+      }, { local: true });
     },
 
     /**
@@ -99,7 +99,7 @@
             options.error({
               error: errorMsg,
               message: errorMsg
-            }, {});
+            }, { local: true });
             return;
           }
 
@@ -108,10 +108,10 @@
           var tnx = store.get(id);
           tnx.onsuccess = tnx.onerror = function() {
             // Success handler is also fired when entity is not found. Check here.
-            null != tnx.result ? options.success(tnx.result, {}) : options.error({
+            null != tnx.result ? options.success(tnx.result, { local: true }) : options.error({
               error: tnx.error || errorMsg,
               message: tnx.error || errorMsg
-            }, {});
+            }, { local: true });
           };
         }),
         error: options.error
@@ -131,7 +131,7 @@
       options.error({
         error: msg,
         message: msg
-      }, {});
+      }, { local: true });
     },
 
     /**
@@ -150,7 +150,7 @@
         success: bind(this, function(db) {
           // First pass; check whether collection exists.
           if(!db.objectStoreNames.contains(c)) {
-            options.success(null, {});
+            options.success(null, { local: true });
             return;
           }
 
@@ -158,13 +158,13 @@
           var store = db.transaction([c], IDBTransaction.READ_WRITE).objectStore(c);
           var tnx = store['delete'](object._id);
           tnx.onsuccess = function() {
-            options.success(null, {});
+            options.success(null, { local: true });
           };
           tnx.onerror = function() {
             options.error({
               error: tnx.error,
               message: tnx.error
-            }, {});
+            }, { local: true });
           };
         }),
         error: options.error
@@ -184,7 +184,7 @@
       options.error({
         error: msg,
         message: msg
-      }, {});
+      }, { local: true });
     },
 
     /**
@@ -250,7 +250,7 @@
         // onversionchange is called when another thread migrates the same
         // database. Avoid blocking by closing and unsetting our instance.
         this.database.onversionchange = bind(this, function() {
-          this.database.close();
+          request.result.close();
           this.database = null;
         });
         options.success(this.database);
@@ -259,7 +259,7 @@
         options.error({
           error: request.error,
           message: request.error
-        }, {});
+        }, { local: true });
       };
     },
 
@@ -286,7 +286,7 @@
           options.error({
             error: versionRequest.error,
             message: versionRequest.error
-          }, {});
+          }, { local: true });
         };
         return;
       }
@@ -329,13 +329,13 @@
       // Save to collection.
       var tnx = store.put(object);
       tnx.onsuccess = function() {
-        options.success(object, {});
+        options.success(object, { local: true });
       };
       tnx.onerror = function() {
         options.error({
           error: tnx.error,
           message: tnx.error
-        }, {});
+        }, { local: true });
       };
     }
   });

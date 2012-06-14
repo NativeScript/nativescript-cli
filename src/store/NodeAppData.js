@@ -61,10 +61,10 @@
 
           // Success implicates status 2xx (Successful), or 304 (Not Modified).
           if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
-            options.success(data, {});
+            options.success(data, { network: true });
           }
           else {
-            options.error(data, {});
+            options.error(data, { network: true });
           }
         };
         response.on('close', onComplete);
@@ -77,7 +77,7 @@
         options.error({
           error: error.code,
           message: error.code
-        }, {});
+        }, { network: true });
       });
 
       // Fire request.

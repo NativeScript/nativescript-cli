@@ -4,6 +4,7 @@
   Kinvey.Store.Sync = Base.extend({
     // Default options.
     options: {
+      policy: null,
       error: function() { },
       success: function() { }
     },
@@ -25,6 +26,7 @@
       this.network = new Kinvey.Store.AppData(collection);
 
       // Options.
+      this.options.policy = Kinvey.Store.Sync.NO_CACHE;// default
       options && this.configure(options);
     },
 
@@ -36,17 +38,23 @@
      */
     aggregate: function(aggregation, options) {
       options = this._options(options);
-      this.network.aggregate(aggregation, options);
+
+      // Aggregation response is not cached for the time being.
+      this._read('aggregate', aggregation, options);
     },
 
     /**
      * Configures store.
      * 
      * @param {Object} options Options.
+     * @param {integer} [options.policy] Cache policy.
+     * @param {function(response, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
     configure: function(options) {
       options.error && (this.options.error = options.error);
       options.success && (this.options.success = options.success);
+      'undefined' !== typeof options.policy && (this.options.policy = options.policy);
     },
 
     /**
@@ -69,42 +77,18 @@
     query: function(id, options) {
       options = this._options(options);
 
-      // Flag used for minimizing local database access.
-      var hasLocal = false;
-
-      // Define the handler to query remotely.
-      var remote = bind(this, function() {
-        this.network.query(id, {
-          success: bind(this, function(response, info) {
-            // Notify application.
-            options.success(response, info);
-
-            // Save locally in the background.
-            this.local.save(response);
-          }),
-          error: bind(this, function(error, info) {
-            // Notify application.
-            options.error(error, info);
-
-            // Remove locally in the background (if existent).
-            hasLocal && this.local.remove({ _id: id });
-          })
-        });
+      // Extend success handler to cache network response.
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        if(this._shouldUpdateCache(options.policy) && !info.local) {
+          // Save locally in the background.
+          this.local.save(response);
+        }
+        fnSuccess(response, info);
       });
 
-      // First, query the local interface.
-      this.local.query(id, {
-        success: function(response, info) {
-          // Item available locally, notify application.
-          info.cache = true;
-          options.success(response, info);
-          hasLocal = true;
-
-          // Trigger remote handler.
-          remote();
-        },
-        error: remote
-      });
+      // Perform read operation.
+      this._read('query', id, options);
     },
 
     /**
@@ -116,18 +100,20 @@
     queryWithQuery: function(query, options) {
       options = this._options(options);
 
-      // Query remotely.
-      this.network.queryWithQuery(query, {
-        success: bind(this, function(response, info) {
-          options.success(response, info);
-
+      // Extend success handler to cache network response.
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        if(this._shouldUpdateCache(options.policy) && !info.local) {
           // Save locally in the background.
           response.forEach(bind(this, function(object) {
             this.local.save(object);
           }));
-        }),
-        error: options.error
+        }
+        fnSuccess(response, info);
       });
+
+      // Perform read operation.
+      this._read('queryWithQuery', query, options);
     },
 
     /**
@@ -188,15 +174,109 @@
     /**
      * Returns complete options object.
      * 
+     * @private
      * @param {Object} options Options.
      * @return {Object} Options.
      */
     _options: function(options) {
       options || (options = {});
+      'undefined' !== typeof options.policy || (options.policy = this.options.policy);
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
       return options;
+    },
+
+    /**
+     * Performs read operation, according to the caching policy.
+     * 
+     * @private
+     * @param {string} operation Operation. One of aggregation, query or
+     *          queryWithQuery.
+     * @param {*} arg Operation argument.
+     * @param {Object} options Options.
+     */
+    _read: function(operation, arg, options) {
+      // Extract primary and secondary store from cache policy.
+      var networkFirst = this._shouldCallNetworkFirst(options.policy);
+      var primaryStore = networkFirst ? this.network : this.local;
+      var secondaryStore = networkFirst ? this.local : this.network;
+
+      // Handle according to policy.
+      primaryStore[operation](arg, {
+        success: bind(this, function(response, info) {
+          options.success(response, info);
+
+          // Only call secondary store if the policy allows calling both.
+          if(this._shouldCallBoth(options.policy)) {
+            options.error = function() { };// reset error, we already succeeded.
+            secondaryStore[operation](arg, options);
+          }
+        }),
+        error: bind(this, function(error, info) {
+          // Switch to secondary store if the caching policy allows a fallback.
+          if(this._shouldCallFallback(options.policy)) {
+            secondaryStore[operation](arg, options);
+          }
+          else {// no fallback, error out here.
+            options.error(error, info);
+          }
+        })
+      });
+    },
+
+    /**
+     * Returns whether both the local and network store should be used.
+     * 
+     * @private
+     * @param {integer} policy Cache policy.
+     * @return {boolean}
+     */
+    _shouldCallBoth: function(policy) {
+      return Kinvey.Store.Sync.BOTH === policy;
+    },
+
+    /**
+     * Returns whether another store should be tried on initial failure.
+     * 
+     * @private
+     * @param {integer} policy Cache policy.
+     * @return {boolean}
+     */
+    _shouldCallFallback: function(policy) {
+      var accepted = [Kinvey.Store.Sync.CACHE_FIRST, Kinvey.Store.Sync.NETWORK_FIRST];
+      return this._shouldCallBoth(policy) || -1 !== accepted.indexOf(policy);
+    },
+
+    /**
+     * Returns whether network store should be accessed first.
+     * 
+     * @private
+     * @param {integer} policy Cache policy.
+     * @return {boolean}
+     */
+    _shouldCallNetworkFirst: function(policy) {
+      var accepted = [Kinvey.Store.Sync.NO_CACHE, Kinvey.Store.Sync.NETWORK_FIRST];
+      return -1 !== accepted.indexOf(policy);
+    },
+
+    /**
+     * Returns whether the local cache should be updated.
+     * 
+     * @private
+     * @param {integer} policy Cache policy.
+     * @return {boolean}
+     */
+    _shouldUpdateCache: function(policy) {
+      var accepted = [Kinvey.Store.Sync.CACHE_FIRST, Kinvey.Store.Sync.NETWORK_FIRST, Kinvey.Store.Sync.BOTH];
+      return -1 !== accepted.indexOf(policy);
     }
+  }, {
+    // Cache policies.
+    NO_CACHE: 0,// Ignore cache and only use the network.
+    CACHE_ONLY: 1,// Don't use the network.
+    CACHE_FIRST: 2,// Pull from cache if available, otherwise network.
+    NETWORK_FIRST: 3,// Pull from network if available, otherwise cache.
+    BOTH: 4// Pull the cache copy (if it exists), then pull from network.
   });
 
 }());

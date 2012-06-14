@@ -59,7 +59,7 @@
     configure: function(options) {
       options.error && (this.options.error = options.error);
       options.success && (this.options.success = options.success);
-      options.timeout && (this.options.timeout = options.timeout);
+      'undefined' !== typeof options.timeout && (this.options.timeout = options.timeout);
     },
 
     /**
@@ -229,7 +229,7 @@
       options || (options = {});
       options.error || (options.error = this.options.error);
       options.success || (options.success = this.options.success);
-      options.timeout || (options.timeout = this.options.timeout);
+      'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
 
       // For now, include authorization in this adapter. Ideally, it should
       // have some external interface.
@@ -272,10 +272,10 @@
 
         // Success implicates status 2xx (Successful), or 304 (Not Modified).
         if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
-          options.success(response, {});
+          options.success(response, { network: true });
         }
         else {
-          options.error(response, {});
+          options.error(response, { network: true });
         }
       };
 
@@ -292,7 +292,7 @@
         options.error({
           error: msg,
           message: msg
-        }, {});
+        }, { network: true });
       };
 
       // Fire request.
