@@ -5,42 +5,48 @@ describe('Kinvey.Store.Local', function() {
   before(function() {
     this.store = new Kinvey.Store.Local(COLLECTION_UNDER_TEST);
   });
-  after(function() {
-    delete this.store;
+  after(function(done) {
+    this.store.purge(callback(done));
   });
 
   // Kinvey.Store.Local#aggregate
   describe('#aggregate', function() {
+    before(function(done) {
+      // Build mock aggregation response.
+      this.aggregation = new Kinvey.Aggregation();
+      this.response = [{ count: 1 }];
+
+      // Store mock.
+      this.store.cacheAggregation(this.aggregation.toJSON(), this.response, callback(done));
+    });
+
     // Test suite.
-    it('is not supported.', function(done) {
-      this.store.removeWithQuery(null, {
-        success: function() {
-          done(new Error('Success callback was invoked.'));
-        },
-        error: function(_, info) {
+    it('performs an aggregation.', function(done) {
+      var expected = this.response;
+      this.store.aggregate(this.aggregation.toJSON(), callback(done, {
+        success: function(response, info) {
+          response.should.eql(expected);
           info.local.should.be['true'];
           done();
         }
-      });
+      }));
     });
   });
 
   // Kinvey.Store.Local#query
   describe('#query', function() {
     before(function(done) {
-      this.object = { _id: 'id', foo: 'bar' };
-      this.store.save(this.object, callback(done));
-    });
-    after(function(done) {
-      this.store.remove(this.object, callback(done));
+      // Build mock.
+      this.object = { _id: 'my-id', foo: 'bar' };
+      this.store.cacheObject(this.object, callback(done));
     });
 
     // Test suite.
     it('loads an object.', function(done) {
-      var object = this.object;
-      this.store.query(object._id, callback(done, {
+      var expected = this.object;
+      this.store.query(expected._id, callback(done, {
         success: function(response, info) {
-          response.should.eql(object);
+          response.should.eql(expected);
           info.local.should.be['true'];
           done();
         }
@@ -50,25 +56,38 @@ describe('Kinvey.Store.Local', function() {
 
   // Kinvey.Store.Local#queryWithQuery
   describe('#queryWithQuery', function() {
+    before(function(done) {
+      // Build mock query response.
+      this.query = new Kinvey.Query();
+      this.first = { _id: 'first', foo: 'bar' };
+      this.second = { _id: 'second', foo: 'baz' };
+
+      // Store mock.
+      this.store.cacheQuery(this.query.toJSON(), [this.first, this.second], callback(done));
+    });
+
     // Test suite.
-    it('is not supported.', function(done) {
-      this.store.removeWithQuery(null, {
-        success: function() {
-          done(new Error('Success callback was invoked.'));
-        },
-        error: function(_, info) {
+    it('performs a query.', function(done) {
+      var first = this.first;
+      var second = this.second;
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        success: function(response, info) {
+          response.should.have.length(2);
+          response[0].should.eql(first);
+          response[1].should.eql(second);
           info.local.should.be['true'];
           done();
         }
-      });
+      }));
     });
   });
 
   // Kinvey.Store.Local#remove
   describe('#remove', function() {
     beforeEach(function(done) {
-      this.object = { id: '_id', foo: 'bar' };
-      this.store.save(this.object, callback(done));
+      // Build mock.
+      this.object = { _id: 'my-id', foo: 'bar' };
+      this.store.cacheObject(this.object, callback(done));
     });
 
     // Test suite.
@@ -95,11 +114,8 @@ describe('Kinvey.Store.Local', function() {
 
   // Kinvey.Store.Local#save
   describe('#save', function() {
-    beforeEach(function() {
+    before(function() {
       this.object = { foo: 'bar' };
-    });
-    afterEach(function(done) {
-      this.store.remove(this.object, callback(done));
     });
 
     // Test suite.

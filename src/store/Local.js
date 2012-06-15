@@ -4,7 +4,8 @@
 
   // Grab local database implementation.
   var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-  var IDBTransaction = window.IDBTransaction || window.mozIDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+  var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
+  var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 
   // Define the Kinvey.Store.Local class.
   Kinvey.Store.Local = Base.extend({
@@ -44,11 +45,86 @@
     aggregate: function(aggregation, options) {
       options = this._options(options);
 
-      var msg = 'Aggregation is not supported by this store.';
-      options.error({
-        error: msg,
-        message: msg
-      }, { local: true });
+      // Aggregations are cached in the meta data table only.
+      this._getMeta(Kinvey.Store.Local.AGGREGATION_STORE, this._getCacheKey(aggregation), {
+        success: function(response, info) {
+          options.success(response.value, info);
+        },
+        error: options.error
+      });
+    },
+
+    /**
+     * Caches aggregation.
+     * 
+     * @param {Object} aggregation Aggregation object.
+     * @param {Array} response Response.
+     * @param {Object} [options] Options.
+     */
+    cacheAggregation: function(aggregation, response, options) {
+      options = this._options(options);
+      this._setMeta(Kinvey.Store.Local.AGGREGATION_STORE, {
+        key: this._getCacheKey(aggregation),
+        value: response
+      }, options);
+    },
+
+    /**
+     * Caches object.
+     * 
+     * @param {Object} object Object to be cached.
+     * @param {Object} [options] Options.
+     */
+    cacheObject: function(object, options) {
+      this.save(object, options);
+    },
+
+    /**
+     * Caches query.
+     * 
+     * @param {Object} query Query object.
+     * @param {Array} response Response.
+     * @param {Object} [options] options.
+     */
+    cacheQuery: function(query, response, options) {
+      options = this._options(options);
+
+      // Prepare result.
+      var list = [];
+
+      // Define handler to cache the query and its list of ids.
+      var oncomplete = bind(this, function() {
+        this._setMeta(Kinvey.Store.Local.QUERY_STORE, {
+          key: this._getCacheKey(query),
+          value: list
+        }, options);
+      });
+
+      // First pass; cache response.
+      var cache = bind(this, function(i, complete) {
+        var object = response[i];
+        if(object) {
+          // Add id to list.
+          list.push(object._id);
+
+          // Trigger caching of next object.
+          var next = function() {
+            cache(i + 1, complete);
+          };
+
+          // Save object to cache. On failure, just continue.
+          return this.cacheObject(object, {
+            success: next,
+            error: next
+          });
+        }
+
+        // All objects are cached, proceed.
+        complete();
+      });
+
+      // Trigger first pass.
+      cache(0, oncomplete);
     },
 
     /**
@@ -80,6 +156,35 @@
     },
 
     /**
+     * Purges local database. Use with caution.
+     * 
+     * @param {Object} [options] Options.
+     */
+    purge: function(options) {
+      options = this._options(options);
+
+      // Delete all collections from the database.
+      this._db({
+        success: bind(this, function(db) {
+          // This operation is performed through a versionchange transaction.
+          this._migrate(db, function(db) {
+            // Delete all stores, one by one.
+            var store;
+            while(null !== (store = db.objectStoreNames.item(0))) {
+              db.deleteObjectStore(store);
+            }
+          }, {
+            success: function() {
+              options.success({}, { local: true });
+            },
+            error: options.error
+          });
+        }),
+        error: options.error
+      });
+    },
+
+    /**
      * Queries the store for a specific object.
      * 
      * @param {string} id Object id.
@@ -104,7 +209,7 @@
           }
 
           // Second pass; check whether entity exists.
-          var store = db.transaction([c], IDBTransaction.READ_ONLY).objectStore(c);
+          var store = db.transaction(c).objectStore(c);
           var tnx = store.get(id);
           tnx.onsuccess = tnx.onerror = function() {
             // Success handler is also fired when entity is not found. Check here.
@@ -127,11 +232,76 @@
     queryWithQuery: function(query, options) {
       options = this._options(options);
 
-      var msg = 'Querying is not supported by this store.';
-      options.error({
-        error: msg,
-        message: msg
-      }, { local: true });
+      // Convenience shortcut.
+      var c = this.collection;
+
+      // First pass; get query meta data.
+      this._getMeta(Kinvey.Store.Local.QUERY_STORE, this._getCacheKey(query), {
+        success: bind(this, function(response, info) {
+          // Response is a list of object ids we need to retrieve.
+          var list = response.value;
+          var result = [];
+          var total = list.length;
+
+          // If response is empty, return here.
+          if(0 === total) {
+            return options.success(result, info);
+          }
+
+          // IndexedDB allows iterating through objects, as long as they
+          // are sorted by key. Do that here.
+          var sortedList = list;
+          sortedList.sort();
+
+          // Retrieve objects.
+          this._db({
+            success: bind(this, function(db) {
+              // If somehow the store is gone, return with an error.
+              if(!db.objectStoreNames.contains(c)) {
+                var msg = 'Not found.';
+                return options.error({
+                  error: msg,
+                  message: msg
+                });
+              }
+
+              // Create iterator for iterating from lowest to highest id.
+              var store = db.transaction(c).objectStore(c);
+              var it = store.openCursor(IDBKeyRange.bound(sortedList[0], sortedList[total - 1]));
+              it.onsuccess = function() {
+                var cursor = it.result;
+                if(cursor) {// some object found.
+                  var object = cursor.value;
+                  result.push(object);
+
+                  // It is possible our cache is not complete, therefore, we
+                  // need to make sure the iterator counter is updated.
+                  var next = sortedList.indexOf(object._id) + 1;
+                  if(next < total) {
+                    // Skip to desired object next in range.
+                    return cursor['continue'](sortedList[next]);
+                  }
+                }
+
+                // No more objects. Re-apply original order.
+                result.sort(function(a, b) {
+                  return list.indexOf(a._id) > list.indexOf(b._id) ? 1 : -1;
+                });
+                options.success(result, info);
+              };
+              it.onerror = function() {
+                var msg = it.error || 'Error.';
+                options.error({
+                  error: msg,
+                  message: msg
+                }, info);
+              };
+            }),
+            error: options.error
+          });
+        }),
+        error: options.error
+      });
     },
 
     /**
@@ -155,7 +325,7 @@
           }
 
           // Second pass; check whether entity exists.
-          var store = db.transaction([c], IDBTransaction.READ_WRITE).objectStore(c);
+          var store = db.transaction(c, IDBTransaction.READ_WRITE).objectStore(c);
           var tnx = store['delete'](object._id);
           tnx.onsuccess = function() {
             options.success(null, { local: true });
@@ -180,7 +350,7 @@
     removeWithQuery: function(query, options) {
       options = this._options(options);
 
-      var msg = 'Querying is not supported by this store.';
+      var msg = 'Removal based on a query is not supported by this store.';
       options.error({
         error: msg,
         message: msg
@@ -264,6 +434,53 @@
     },
 
     /**
+     * Returns cache key.
+     * 
+     * @private
+     * @param {Object} object
+     * @return {string} Cache key.
+     */
+    _getCacheKey: function(object) {
+      object.collection = this.collection;
+      return JSON.stringify(object);
+    },
+
+    /**
+     * Returns meta data.
+     * 
+     * @private
+     * @param {string} collection Meta data collection.
+     * @param {string} key Record key.
+     * @param {Object} options Options.
+     */
+    _getMeta: function(collection, key, options) {
+      this._db({
+        success: bind(this, function(db) {
+          // First pass; check whether collection exists.
+          if(!db.objectStoreNames.contains(collection)) {
+            var msg = 'Not found.';
+            return options.error({
+              error: msg,
+              message: msg
+            }, { local: true });
+          }
+
+          // Second pass; check whether record exists.
+          var store = db.transaction(collection).objectStore(collection);
+          var tnx = store.get(key);
+          tnx.onsuccess = tnx.onerror = function() {
+            var msg = 'Not found.';
+            null != tnx.result ? options.success(tnx.result, { local: true }) : options.error({
+              error: tnx.error || msg,
+              message: tnx.error || msg
+            }, { local: true });
+          };
+        }),
+        error: options.error
+      });
+    },
+
+    /**
      * Migrates database.
      * 
      * @private
@@ -320,7 +537,7 @@
      */
     _save: function(db, object, options) {
       var c = this.collection;
-      var store = db.transaction([c], IDBTransaction.READ_WRITE).objectStore(c);
+      var store = db.transaction(c, IDBTransaction.READ_WRITE).objectStore(c);
 
       // If entity is new, assign an ID. This is done because IndexedDB uses
       // simple integers, and we need something more robust.
@@ -337,7 +554,54 @@
           message: tnx.error
         }, { local: true });
       };
+    },
+
+    /**
+     * Sets meta data.
+     * 
+     * @private
+     * @param {string} collection Meta data collection.
+     * @param {Object} object Meta data object.
+     * @param {Object} options Options.
+     */
+    _setMeta: function(collection, object, options) {
+      this._db({
+        success: bind(this, function(db) {
+          // Define handler for storing meta data.
+          var progress = bind(this, function(db) {
+            var store = db.transaction(collection, IDBTransaction.READ_WRITE).objectStore(collection);
+            var tnx = store.put(object);
+            tnx.onsuccess = function() {
+              options.success(object, { local: true });
+            };
+            tnx.onerror = function() {
+              options.error({
+                error: tnx.error,
+                message: tnx.error
+              }, { local: true });
+            };
+          });
+
+          // First pass, create the collection if not existent. This operation is
+          // performed through a versionchange transaction.
+          if(!db.objectStoreNames.contains(collection)) {
+            // Create collection by migrating the database.
+            this._migrate(db, function(db) {
+              // Command to be executed on versionchange.
+              db.createObjectStore(collection, { keyPath: 'key' });
+            }, { success: progress, error: options.error });
+          }
+          else {
+            progress(db);
+          }
+        }),
+        error: options.error
+      });
     }
+  }, {
+    // Meta data stores.
+    AGGREGATION_STORE: '_aggregation',
+    QUERY_STORE: '_query'
   });
 
 }());

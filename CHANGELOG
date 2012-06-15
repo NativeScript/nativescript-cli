@@ -1,13 +1,13 @@
 v0.9.5
 * Added caching.
 
-v0.9.4
+v0.9.4 (Jun 15, 2012)
 * Fixed bug where Kinvey.Entity inheritance didn't work properly.
 
-v0.9.3
+v0.9.3 (Jun 5, 2012)
 * Added Android 2.2, 2.3.3 & 3.2 support.
 
-v0.9.2
+v0.9.2 (May 18, 2012)
 * Added Node.JS 0.4.X support,
 * Added aggregation support,
 * Added master secret support for Node.JS,

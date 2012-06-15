@@ -1,9 +1,12 @@
 // This shim is a concatenated and slighly altered version of:
 // https://github.com/axemclion/IndexedDBShim
 
-// XXX native implementations use DOMStringList, which has a contains method.
+// XXX native implementations use DOMStringList, which has a contains & item method.
 Array.prototype.contains = function(item) {
   return -1 !== this.indexOf(item);
+};
+Array.prototype.item = function(i) {
+  return 'undefined' !== typeof this[i] ? this[i] : null;
 };
 
 (function(){
@@ -14,7 +17,7 @@ Array.prototype.contains = function(item) {
   
   var logger = {};
   logger.log = logger.error = logger.warn = logger.debug = function(){
-    //console.log.apply(console, arguments);
+//    console.log.apply(console, arguments);
   };
   if (typeof window.openDatabase === 'undefined') {
     return;
@@ -228,23 +231,28 @@ Array.prototype.contains = function(item) {
       sql.push("WHERE ", me.__keyColumnName, " NOT NULL");
       if (me.__range && (me.__range.lower || me.__range.upper)) {
         sql.push("AND");
+        // XXX switched open to < and > instead of <= and >=
+        // XXX switched <= to < and vice verse according to spec.
+        // XXX encoded lower and upper range.
+        // XXX switched ORDER BY and WHERE addition for lower bound.
         if (me.__range.lower) {
-          sql.push("key " + (me.__range.lowerOpen ? "<=" : "<") + " ?");
-          sqlValues.push(me.__range.lower);
+          sql.push("key " + (me.__range.lowerOpen ? ">" : ">=") + " ?");
+          sqlValues.push(idbModules.Key.encode(me.__range.lower));
         }
         (me.__range.lower && me.__range.upper) && sql.push("AND");
         if (me.__range.upper) {
-          sql.push("key " + (me.__range.upperOpen ? ">=" : ">") + " ?");
-          sqlValues.push(me.__range.upper);
+          sql.push("key " + (me.__range.upperOpen ? "<" : "<=") + " ?");
+          sqlValues.push(idbModules.Key.encode(me.__range.upper));
         }
       }
-      sql.push(" ORDER BY ", me.__keyColumnName);
       if (typeof key !== "undefined") {
         sql.push((me.__range && (me.__range.lower || me.__range.upper)) ? "AND" : "WHERE")
         sql.push("key = ?");
         sqlValues.push(idbModules.Key.encode(key));
+        sql.push(" ORDER BY ", me.__keyColumnName);
         sql.push("LIMIT 1");
       } else {
+        sql.push(" ORDER BY ", me.__keyColumnName);
         sql.push("LIMIT 1 OFFSET " + me.__offset);
       }
       logger.log(sql.join(" "), sqlValues);
@@ -673,7 +681,7 @@ Array.prototype.contains = function(item) {
           var primaryKey = idbModules.Key.encode(key);
           logger.log("Fetching", me.name, primaryKey);
           tx.executeSql("SELECT * FROM " + idbModules.util.quote(me.name) + " where key = ?", [primaryKey], function(tx, data){
-            // XXX console.log below accessed a property which may not exist.
+            // XXX logger.log below accessed a property which may not exist.
 //            logger.log("Fetched data", data.rows.item(0));
             logger.log('Fetched data', data);
             try {

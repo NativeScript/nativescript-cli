@@ -26,7 +26,7 @@
       this.network = new Kinvey.Store.AppData(collection);
 
       // Options.
-      this.options.policy = Kinvey.Store.Sync.NO_CACHE;// default
+      this.options.policy = Kinvey.Store.Sync.NETWORK_FIRST;// default
       options && this.configure(options);
     },
 
@@ -41,7 +41,23 @@
     aggregate: function(aggregation, options) {
       options = this._options(options);
 
-      // Aggregation response is not cached for the time being.
+      // Extend success handler to cache network response.
+      var invoked = false;
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        if(info.network && this._shouldUpdateCache(options.policy)) {
+          // Save locally in the background.
+          this.local.cacheAggregation(aggregation, response);
+        }
+
+        // Determine whether application-level handler should be triggered.
+        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
+          invoked = true;
+          fnSuccess(response, info);
+        }
+      });
+
+      // Perform read operation.
       this._read('aggregate', aggregation, options);
     },
 
@@ -80,13 +96,19 @@
       options = this._options(options);
 
       // Extend success handler to cache network response.
+      var invoked = false;
       var fnSuccess = options.success;
       options.success = bind(this, function(response, info) {
         if(info.network && this._shouldUpdateCache(options.policy)) {
           // Save locally in the background.
-          this.local.save(response);
+          this.local.cacheObject(response);
         }
-        fnSuccess(response, info);
+
+        // Determine whether application-level handler should be triggered.
+        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
+          invoked = true;
+          fnSuccess(response, info);
+        }
       });
 
       // Perform read operation.
@@ -103,15 +125,19 @@
       options = this._options(options);
 
       // Extend success handler to cache network response.
+      var invoked = false;
       var fnSuccess = options.success;
       options.success = bind(this, function(response, info) {
         if(info.network && this._shouldUpdateCache(options.policy)) {
           // Save locally in the background.
-          response.forEach(bind(this, function(object) {
-            this.local.save(object);
-          }));
+          this.local.cacheQuery(query, response);
         }
-        fnSuccess(response, info);
+
+        // Determine whether application-level handler should be triggered.
+        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
+          invoked = true;
+          fnSuccess(response, info);
+        }
       });
 
       // Perform read operation.
@@ -126,18 +152,7 @@
      */
     remove: function(object, options) {
       options = this._options(options);
-
-      // Remove remotely.
-      this.network.remove(object, {
-        success: bind(this, function(response, info) {
-          // Notify application.
-          options.success(response, info);
-
-          // Remove locally in the background.
-          this.local.remove(object);
-        }),
-        error: options.error
-      });
+      this.network.remove(object, options);
     },
 
     /**
@@ -159,18 +174,7 @@
      */
     save: function(object, options) {
       options = this._options(options);
-
-      // Save remotely.
-      this.network.save(object, {
-        success: bind(this, function(response, info) {
-          // Notify application.
-          options.success(response, info);
-
-          // Save locally in the background.
-          this.local.save(response);
-        }),
-        error: options.error
-      });
+      this.network.save(object, options);
     },
 
     /**
@@ -234,6 +238,18 @@
      * @return {boolean}
      */
     _shouldCallBoth: function(policy) {
+      var accepted = [Kinvey.Store.Sync.CACHE_FIRST, Kinvey.Store.Sync.BOTH];
+      return -1 !== accepted.indexOf(policy);
+    },
+
+    /**
+     * Returns whether both the local and network success handler should be invoked.
+     * 
+     * @private
+     * @param {integer} policy Cache policy.
+     * @return {boolean}
+     */
+    _shouldCallBothCallbacks: function(policy) {
       return Kinvey.Store.Sync.BOTH === policy;
     },
 
@@ -245,7 +261,7 @@
      * @return {boolean}
      */
     _shouldCallFallback: function(policy) {
-      var accepted = [Kinvey.Store.Sync.CACHE_FIRST, Kinvey.Store.Sync.NETWORK_FIRST];
+      var accepted = [Kinvey.Store.Sync.NETWORK_FIRST];
       return this._shouldCallBoth(policy) || -1 !== accepted.indexOf(policy);
     },
 
