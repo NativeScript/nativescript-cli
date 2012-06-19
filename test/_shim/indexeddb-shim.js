@@ -685,6 +685,9 @@ Array.prototype.item = function(i) {
 //            logger.log("Fetched data", data.rows.item(0));
             logger.log('Fetched data', data);
             try {
+              // XXX opera cant deal with error, return explicitly.
+              if(0 === data.rows.length) { return success(undefined); }
+
               success(idbModules.Sca.decode(data.rows.item(0).value));
             } catch (e) {
               logger.log(e)
@@ -872,13 +875,25 @@ Array.prototype.item = function(i) {
             };
             executeRequest();
           } catch (e) {
+            // XXX quick hack.
+            var e = idbModules.Event("error");
+            idbModules.util.callback("onerror", me, e);
+            
             // TODO - Call transaction onerror
             logger.error("An exception occured in transaction", arguments);
           }
         }, function(){
+          // XXX quick hack.
+          var e = idbModules.Event("errir");
+          idbModules.util.callback("onerror", me, e);
+          
           // TODO - Call transaction onerror
           logger.error("An error in transaction", arguments);
         }, function(){
+          // XXX quick hack.
+          var e = idbModules.Event("complete");
+          idbModules.util.callback("oncomplete", me, e);
+          
           // TODO - Call transaction oncomplete 
           logger.log("Transaction completed", arguments);
         });

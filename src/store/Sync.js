@@ -5,6 +5,7 @@
     // Default options.
     options: {
       policy: null,
+      complete: function() { },
       error: function() { },
       success: function() { }
     },
@@ -40,24 +41,6 @@
      */
     aggregate: function(aggregation, options) {
       options = this._options(options);
-
-      // Extend success handler to cache network response.
-      var invoked = false;
-      var fnSuccess = options.success;
-      options.success = bind(this, function(response, info) {
-        if(info.network && this._shouldUpdateCache(options.policy)) {
-          // Save locally in the background.
-          this.local.cacheAggregation(aggregation, response);
-        }
-
-        // Determine whether application-level handler should be triggered.
-        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
-          invoked = true;
-          fnSuccess(response, info);
-        }
-      });
-
-      // Perform read operation.
       this._read('aggregate', aggregation, options);
     },
 
@@ -66,13 +49,15 @@
      * 
      * @param {Object} options Options.
      * @param {integer} [options.policy] Cache policy.
+     * @param {function()} [options.complete] Complete callback.
      * @param {function(response, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
      */
     configure: function(options) {
+      options.complete && (this.options.complete = options.complete);
       options.error && (this.options.error = options.error);
       options.success && (this.options.success = options.success);
-      'undefined' !== typeof options.policy && (this.options.policy = options.policy);
+      options.policy && (this.options.policy = options.policy);
     },
 
     /**
@@ -94,24 +79,6 @@
      */
     query: function(id, options) {
       options = this._options(options);
-
-      // Extend success handler to cache network response.
-      var invoked = false;
-      var fnSuccess = options.success;
-      options.success = bind(this, function(response, info) {
-        if(info.network && this._shouldUpdateCache(options.policy)) {
-          // Save locally in the background.
-          this.local.cacheObject(response);
-        }
-
-        // Determine whether application-level handler should be triggered.
-        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
-          invoked = true;
-          fnSuccess(response, info);
-        }
-      });
-
-      // Perform read operation.
       this._read('query', id, options);
     },
 
@@ -123,24 +90,6 @@
      */
     queryWithQuery: function(query, options) {
       options = this._options(options);
-
-      // Extend success handler to cache network response.
-      var invoked = false;
-      var fnSuccess = options.success;
-      options.success = bind(this, function(response, info) {
-        if(info.network && this._shouldUpdateCache(options.policy)) {
-          // Save locally in the background.
-          this.local.cacheQuery(query, response);
-        }
-
-        // Determine whether application-level handler should be triggered.
-        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
-          invoked = true;
-          fnSuccess(response, info);
-        }
-      });
-
-      // Perform read operation.
       this._read('queryWithQuery', query, options);
     },
 
@@ -187,6 +136,7 @@
     _options: function(options) {
       options || (options = {});
       'undefined' !== typeof options.policy || (options.policy = this.options.policy);
+      options.complete || (options.complete = this.options.complete);
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
       return options;
@@ -207,6 +157,32 @@
       var primaryStore = networkFirst ? this.network : this.local;
       var secondaryStore = networkFirst ? this.local : this.network;
 
+      // Extend success handler to cache network response.
+      var invoked = false;
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        if(info.network && this._shouldUpdateCache(options.policy)) {
+          // Save locally in the background. This is only part of the complete
+          // step.
+          this.local.put(operation, arg, response, {
+            success: function() { options.complete(); },
+            error: function() { options.complete(); }
+          });
+        }
+
+        // Determine whether application-level handler should be triggered.
+        var secondPass = invoked;
+        if(!invoked || this._shouldCallBothCallbacks(options.policy)) {
+          invoked = true;
+          fnSuccess(response, info);
+        }
+
+        // Trigger complete callback on final pass.
+        if(secondPass || !this._shouldCallBothCallbacks(options.policy)) {
+          options.complete();
+        }
+      });
+
       // Handle according to policy.
       primaryStore[operation](arg, {
         success: bind(this, function(response, info) {
@@ -214,17 +190,25 @@
 
           // Only call secondary store if the policy allows calling both.
           if(this._shouldCallBoth(options.policy)) {
-            options.error = function() { };// reset error, we already succeeded.
+            options.error = function() {// reset error, we already succeeded.
+              options.complete();
+            };
             secondaryStore[operation](arg, options);
           }
         }),
         error: bind(this, function(error, info) {
           // Switch to secondary store if the caching policy allows a fallback.
           if(this._shouldCallFallback(options.policy)) {
+            var fnError = options.error;
+            options.error = function(error, info) {
+              fnError(error, info);
+              options.complete();
+            };
             secondaryStore[operation](arg, options);
           }
           else {// no fallback, error out here.
             options.error(error, info);
+            options.complete();
           }
         })
       });
@@ -297,35 +281,35 @@
      * 
      * @constant
      */
-    NO_CACHE: 0,
+    NO_CACHE: 'nocache',
 
     /**
      * Cache Only policy. Don't use the network.
      * 
      * @constant
      */
-    CACHE_ONLY: 1,
+    CACHE_ONLY: 'cacheonly',
 
     /**
      * Cache First policy. Pull from cache if available, otherwise network.
      * 
      * @constant
      */
-    CACHE_FIRST: 2,
+    CACHE_FIRST: 'cache',
 
     /**
      * Network first policy. Pull from network if available, otherwise cache.
      * 
      * @constant
      */
-    NETWORK_FIRST: 3,
+    NETWORK_FIRST: 'network',
 
     /**
      * Both policy. Pull the cache copy (if it exists), then pull from network.
      * 
      * @constant
      */
-    BOTH: 4
+    BOTH: 'both'
   });
 
 }());

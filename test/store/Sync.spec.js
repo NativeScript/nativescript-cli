@@ -26,10 +26,10 @@ describe('Kinvey.Store.Sync', function() {
       var object = this.object = { _id: 'foo' };
 
       // Make sure aggregation is available locally.
-      var store = this.store;
-      this.local.cacheAggregation(this.aggregation.toJSON(), response, callback(done, {
+      var local = this.local;
+      this.store.save(object, callback(done, {
         success: function() {
-          store.save(object, callback(done));
+          local.put('aggregation', aggregation.toJSON(), response, callback(done));
         }
       }));
     });
@@ -46,7 +46,6 @@ describe('Kinvey.Store.Sync', function() {
         success: function(response, info) {
           response.should.eql(expected);
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -58,7 +57,6 @@ describe('Kinvey.Store.Sync', function() {
         success: function(response, info) {
           response.should.eql(expected);
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -70,7 +68,6 @@ describe('Kinvey.Store.Sync', function() {
         success: function(response, info) {
           response.should.eql(expected);
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -82,7 +79,6 @@ describe('Kinvey.Store.Sync', function() {
         success: function(response, info) {
           response.should.eql(expected);
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -102,7 +98,6 @@ describe('Kinvey.Store.Sync', function() {
           }
           else {
             info.network.should.be['true'];
-            done();
           }
         }
       }));
@@ -113,12 +108,10 @@ describe('Kinvey.Store.Sync', function() {
   describe('#query', function() {
     before(function(done) {
       var object = this.object = { _id: 'id', foo: 'bar' };
-
-      // Save object locally and remotely.
-      var store = this.store;
-      this.local.cacheObject(object, callback(done, {
+      var local = this.local;
+      this.store.save(this.object, callback(done, {
         success: function() {
-          store.save(object, callback(done));
+          local.put('query', null, object, callback(done));
         }
       }));
     });
@@ -135,7 +128,6 @@ describe('Kinvey.Store.Sync', function() {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -147,7 +139,6 @@ describe('Kinvey.Store.Sync', function() {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -159,20 +150,18 @@ describe('Kinvey.Store.Sync', function() {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
           info.local.should.be['true'];
-          done();
         }
       }));
     });
     it('loads an inexistent object using policy CACHE_FIRST.', function(done) {
       var object = this.object;
       this.store.configure({ policy: Kinvey.Store.Sync.CACHE_FIRST });
-      this.store.query('foo', callback(done, {
+      this.store.query('bar', callback(done, {
         success: function() {
           done(new Error('Success callback was invoked.'));
         },
         error: function(_, info) {
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -184,20 +173,18 @@ describe('Kinvey.Store.Sync', function() {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
           info.network.should.be['true'];
-          done();
         }
       }));
     });
     it('loads an inexistent object using policy NETWORK_FIRST.', function(done) {
       var object = this.object;
       this.store.configure({ policy: Kinvey.Store.Sync.NETWORK_FIRST });
-      this.store.query('foo', callback(done, {
+      this.store.query('bar', callback(done, {
         success: function() {
           done(new Error('Success callback was invoked.'));
         },
         error: function(_, info) {
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -218,7 +205,6 @@ describe('Kinvey.Store.Sync', function() {
           }
           else {
             info.network.should.be['true'];
-            done();
           }
         }
       }));
@@ -237,7 +223,7 @@ describe('Kinvey.Store.Sync', function() {
       var store = this.store;
 
       // Make sure query is available locally.
-      this.local.cacheQuery(query.toJSON(), response, callback(done, {
+      this.local.put('queryWithQuery', query.toJSON(), response, callback(done, {
         success: function() {
           store.save(first, callback(done, {
             success: function() {
@@ -267,7 +253,6 @@ describe('Kinvey.Store.Sync', function() {
           response[0]._id.should.equal('first');
           response[1]._id.should.equal('second');
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -279,7 +264,6 @@ describe('Kinvey.Store.Sync', function() {
           response[0]._id.should.equal('first');
           response[1]._id.should.equal('second');
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -291,7 +275,6 @@ describe('Kinvey.Store.Sync', function() {
           response[0]._id.should.equal('first');
           response[1]._id.should.equal('second');
           info.local.should.be['true'];
-          done();
         }
       }));
     });
@@ -303,7 +286,6 @@ describe('Kinvey.Store.Sync', function() {
           response[0]._id.should.equal('first');
           response[1]._id.should.equal('second');
           info.network.should.be['true'];
-          done();
         }
       }));
     });
@@ -324,9 +306,7 @@ describe('Kinvey.Store.Sync', function() {
           }
           else {
             info.network.should.be['true'];
-            done();
           }
-          done();
         }
       }));
     });

@@ -17,7 +17,7 @@ describe('Kinvey.Store.Local', function() {
       this.response = [{ count: 1 }];
 
       // Store mock.
-      this.store.cacheAggregation(this.aggregation.toJSON(), this.response, callback(done));
+      this.store.put('aggregation', this.aggregation.toJSON(), this.response, callback(done));
     });
 
     // Test suite.
@@ -38,7 +38,7 @@ describe('Kinvey.Store.Local', function() {
     before(function(done) {
       // Build mock.
       this.object = { _id: 'my-id', foo: 'bar' };
-      this.store.cacheObject(this.object, callback(done));
+      this.store.put('query', null, this.object, callback(done));
     });
 
     // Test suite.
@@ -63,7 +63,7 @@ describe('Kinvey.Store.Local', function() {
       this.second = { _id: 'second', foo: 'baz' };
 
       // Store mock.
-      this.store.cacheQuery(this.query.toJSON(), [this.first, this.second], callback(done));
+      this.store.put('queryWithQuery', this.query.toJSON(), [this.first, this.second], callback(done));
     });
 
     // Test suite.
@@ -87,7 +87,7 @@ describe('Kinvey.Store.Local', function() {
     beforeEach(function(done) {
       // Build mock.
       this.object = { _id: 'my-id', foo: 'bar' };
-      this.store.cacheObject(this.object, callback(done));
+      this.store.put('query', null, this.object, callback(done));
     });
 
     // Test suite.

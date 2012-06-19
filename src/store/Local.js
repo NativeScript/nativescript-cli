@@ -45,86 +45,22 @@
     aggregate: function(aggregation, options) {
       options = this._options(options);
 
-      // Aggregations are cached in the meta data table only.
-      this._getMeta(Kinvey.Store.Local.AGGREGATION_STORE, this._getCacheKey(aggregation), {
-        success: function(response, info) {
-          options.success(response.value, info);
-        },
-        error: options.error
-      });
-    },
+      // Open transaction.
+      var store = Kinvey.Store.Local.AGGREGATION_STORE;
+      this._transaction(this._getSchema(store), IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
+        // Retrieve from store.
+        var req = txn.objectStore(store).get(this._getCacheKey(aggregation));
 
-    /**
-     * Caches aggregation.
-     * 
-     * @param {Object} aggregation Aggregation object.
-     * @param {Array} response Response.
-     * @param {Object} [options] Options.
-     */
-    cacheAggregation: function(aggregation, response, options) {
-      options = this._options(options);
-      this._setMeta(Kinvey.Store.Local.AGGREGATION_STORE, {
-        key: this._getCacheKey(aggregation),
-        value: response
-      }, options);
-    },
-
-    /**
-     * Caches object.
-     * 
-     * @param {Object} object Object to be cached.
-     * @param {Object} [options] Options.
-     */
-    cacheObject: function(object, options) {
-      this.save(object, options);
-    },
-
-    /**
-     * Caches query.
-     * 
-     * @param {Object} query Query object.
-     * @param {Array} response Response.
-     * @param {Object} [options] options.
-     */
-    cacheQuery: function(query, response, options) {
-      options = this._options(options);
-
-      // Prepare result.
-      var list = [];
-
-      // Define handler to cache the query and its list of ids.
-      var oncomplete = bind(this, function() {
-        this._setMeta(Kinvey.Store.Local.QUERY_STORE, {
-          key: this._getCacheKey(query),
-          value: list
-        }, options);
-      });
-
-      // First pass; cache response.
-      var cache = bind(this, function(i, complete) {
-        var object = response[i];
-        if(object) {
-          // Add id to list.
-          list.push(object._id);
-
-          // Trigger caching of next object.
-          var next = function() {
-            cache(i + 1, complete);
-          };
-
-          // Save object to cache. On failure, just continue.
-          return this.cacheObject(object, {
-            success: next,
-            error: next
-          });
-        }
-
-        // All objects are cached, proceed.
-        complete();
-      });
-
-      // Trigger first pass.
-      cache(0, oncomplete);
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          // Result is undefined if data was not found.
+          var result = req.result;
+          result ? options.success(result.value, { local: true }) : options.error('Not found.');
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
     },
 
     /**
@@ -140,22 +76,6 @@
     },
 
     /**
-     * Logs in user.
-     * 
-     * @param {Object} object
-     * @param {Object} [options] Options.
-     */
-    login: function(object, options) {
-      options = this._options(options);
-
-      var msg = 'Logging in is not supported by this store.';
-      options.error({
-        error: msg,
-        message: msg
-      }, { local: true });
-    },
-
-    /**
      * Purges local database. Use with caution.
      * 
      * @param {Object} [options] Options.
@@ -163,25 +83,40 @@
     purge: function(options) {
       options = this._options(options);
 
-      // Delete all collections from the database.
-      this._db({
-        success: bind(this, function(db) {
-          // This operation is performed through a versionchange transaction.
-          this._migrate(db, function(db) {
-            // Delete all stores, one by one.
-            var store;
-            while(null !== (store = db.objectStoreNames.item(0))) {
-              db.deleteObjectStore(store);
-            }
-          }, {
-            success: function() {
-              options.success({}, { local: true });
-            },
-            error: options.error
-          });
-        }),
-        error: options.error
-      });
+      // Open mutation.
+      this._mutate(function(db) {
+        // Remove stores one by one.
+        var store;
+        while(null !== (store = db.objectStoreNames.item(0))) {
+          db.deleteObjectStore(store);
+        }
+        options.success(null, { local: true });
+      }, options.error);
+    },
+
+    /**
+     * Adds data to the database.
+     * 
+     * @param {string} type Data type.
+     * @param {*} arg Data key.
+     * @param {*} data Data to be added.
+     * @param {Object} [options] Options.
+     */
+    put: function(type, arg, data, options) {
+      options = this._options(options);
+
+      // Handle different types of data.
+      switch(type) {
+        case 'aggregation':
+          this._putAggregation(arg, data, options);
+          break;
+        case 'query':
+          this._putObject(data, options);
+          break;
+        case 'queryWithQuery':
+          this._putQuery(arg, data, options);
+          break;
+      }
     },
 
     /**
@@ -193,34 +128,22 @@
     query: function(id, options) {
       options = this._options(options);
 
-      // Convenience shortcut.
-      var c = this.collection;
-      var errorMsg = 'Not found';
+      // Open transaction.
+      var store = this.collection;
+      this._transaction(this._getSchema(store), IDBTransaction.READ_ONLY || 'readonly', function(txn) {
+        // Retrieve from store.
+        var req = txn.objectStore(store).get(id);
 
-      this._db({
-        success: bind(this, function(db) {
-          // First pass; check whether collection exists.
-          if(!db.objectStoreNames.contains(c)) {
-            options.error({
-              error: errorMsg,
-              message: errorMsg
-            }, { local: true });
-            return;
-          }
-
-          // Second pass; check whether entity exists.
-          var store = db.transaction(c).objectStore(c);
-          var tnx = store.get(id);
-          tnx.onsuccess = tnx.onerror = function() {
-            // Success handler is also fired when entity is not found. Check here.
-            null != tnx.result ? options.success(tnx.result, { local: true }) : options.error({
-              error: tnx.error || errorMsg,
-              message: tnx.error || errorMsg
-            }, { local: true });
-          };
-        }),
-        error: options.error
-      });
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          // Result is undefined if data was not found.
+          var result = req.result;
+          result ? options.success(result, { local: true }) : options.error('Not found.');
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }, options.error);
     },
 
     /**
@@ -232,76 +155,47 @@
     queryWithQuery: function(query, options) {
       options = this._options(options);
 
-      // Convenience shortcut.
-      var c = this.collection;
+      // Open transaction.
+      this._transaction([
+        this._getSchema(Kinvey.Store.Local.QUERY_STORE),
+        this._getSchema(this.collection)
+      ], IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
+        // Prepare final response.
+        var response = [];
 
-      // First pass; get query meta data.
-      this._getMeta(Kinvey.Store.Local.QUERY_STORE, this._getCacheKey(query), {
-        success: bind(this, function(response, info) {
-          // Response is a list of object ids we need to retrieve.
-          var list = response.value;
-          var result = [];
-          var total = list.length;
+        // Open stores.
+        var metaStore = txn.objectStore(Kinvey.Store.Local.QUERY_STORE);
+        var store = txn.objectStore(this.collection);
 
-          // If response is empty, return here.
-          if(0 === total) {
-            return options.success(result, info);
+        // Retrieve metadata from store.
+        var metaReq = metaStore.get(this._getCacheKey(query));
+        metaReq.onsuccess = function() {
+          var result = metaReq.result;// query is cached.
+          if(result) {
+            // Define handler to add item to response.
+            var addToResponse = function(id) {
+              var req = store.get(id);
+              req.onsuccess = function() {
+                // Only add to response if item is found. Otherwise, ignore.
+                req.result && response.push(req.result);
+              };
+            };
+
+            // Loop through cached list of ids.
+            for(var index in result.value) {
+              addToResponse(result.value[index]);
+            }
           }
+        };
 
-          // IndexedDB allows iterating through objects, as long as they
-          // are sorted by key. Do that here.
-          var sortedList = list;
-          sortedList.sort();
-
-          // Retrieve objects.
-          this._db({
-            success: bind(this, function(db) {
-              // If somehow the store is gone, return with an error.
-              if(!db.objectStoreNames.contains(c)) {
-                var msg = 'Not found.';
-                return options.error({
-                  error: msg,
-                  message: msg
-                });
-              }
-
-              // Create iterator for iterating from lowest to highest id.
-              var store = db.transaction(c).objectStore(c);
-              var it = store.openCursor(IDBKeyRange.bound(sortedList[0], sortedList[total - 1]));
-              it.onsuccess = function() {
-                var cursor = it.result;
-                if(cursor) {// some object found.
-                  var object = cursor.value;
-                  result.push(object);
-
-                  // It is possible our cache is not complete, therefore, we
-                  // need to make sure the iterator counter is updated.
-                  var next = sortedList.indexOf(object._id) + 1;
-                  if(next < total) {
-                    // Skip to desired object next in range.
-                    return cursor['continue'](sortedList[next]);
-                  }
-                }
-
-                // No more objects. Re-apply original order.
-                result.sort(function(a, b) {
-                  return list.indexOf(a._id) > list.indexOf(b._id) ? 1 : -1;
-                });
-                options.success(result, info);
-              };
-              it.onerror = function() {
-                var msg = it.error || 'Error.';
-                options.error({
-                  error: msg,
-                  message: msg
-                }, info);
-              };
-            }),
-            error: options.error
-          });
-        }),
-        error: options.error
-      });
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          metaReq.result ? options.success(response, { local: true }) : options.error('Not found.');
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
     },
 
     /**
@@ -313,32 +207,26 @@
     remove: function(object, options) {
       options = this._options(options);
 
-      // Convenience shortcut.
-      var c = this.collection;
+      // Open transaction.
+      this._transaction([
+          this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
+          this._getSchema(this.collection)
+      ], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Remove object from the store.
+        txn.objectStore(this.collection)['delete'](object._id);
 
-      this._db({
-        success: bind(this, function(db) {
-          // First pass; check whether collection exists.
-          if(!db.objectStoreNames.contains(c)) {
-            options.success(null, { local: true });
-            return;
-          }
+        // Log transaction.
+        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+        this._log(store, object);
 
-          // Second pass; check whether entity exists.
-          var store = db.transaction(c, IDBTransaction.READ_WRITE).objectStore(c);
-          var tnx = store['delete'](object._id);
-          tnx.onsuccess = function() {
-            options.success(null, { local: true });
-          };
-          tnx.onerror = function() {
-            options.error({
-              error: tnx.error,
-              message: tnx.error
-            }, { local: true });
-          };
-        }),
-        error: options.error
-      });
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { local: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
     },
 
     /**
@@ -349,12 +237,7 @@
      */
     removeWithQuery: function(query, options) {
       options = this._options(options);
-
-      var msg = 'Removal based on a query is not supported by this store.';
-      options.error({
-        error: msg,
-        message: msg
-      }, { local: true });
+      options.error('Removal based on a query is not supported by this store.');
     },
 
     /**
@@ -366,71 +249,28 @@
     save: function(object, options) {
       options = this._options(options);
 
-      // Convenience shortcut.
-      var c = this.collection;
+      // Open transaction.
+      this._transaction([
+        this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
+        this._getSchema(this.collection)
+      ], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Store object in store. If entity is new, assign an ID. This is done
+        // manually to overcome IndexedDBs approach to only assigns integers.
+        object._id || (object._id = new Date().getTime().toString());
+        txn.objectStore(this.collection).put(object);
 
-      this._db({
-        success: bind(this, function(db) {
-          // First pass, create the collection if not existent. This operation is
-          // performed through a versionchange transaction.
-          if(!db.objectStoreNames.contains(c)) {
-            // Create collection by migrating the database.
-            this._migrate(db, function(db) {
-              // Command to be executed on versionchange.
-              db.createObjectStore(c, { keyPath: '_id' });
-            }, {
-              success: bind(this, function(db) {
-                // Collection created, proceed with saving.
-                this._save(db, object, options);
-              }),
-              error: options.error
-            });
-          }
-          else {
-            // Collection already exists, proceed with saving.
-            this._save(db, object, options);
-          }
-        }),
-        error: options.error
-      });
-    },
+        // Log transaction.
+        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+        this._log(store, object);
 
-    /**
-     * Returns database handle.
-     * 
-     * @private
-     * @param {Object} options Options.
-     */
-    _db: function(options) {
-      // Return if already openend.
-      if(this.database && !options.version) {
-        options.success(this.database);
-        return;
-      }
-
-      // Open database.
-      var request = options.version ? indexedDB.open(this.name, options.version) : indexedDB.open(this.name);
-      request.onupgradeneeded = bind(this, function() {
-        this.database = request.result;
-        options.migrate && options.migrate(this.database);
-      });
-      request.onsuccess = bind(this, function() {
-        this.database = request.result;
-
-        // onversionchange is called when another thread migrates the same
-        // database. Avoid blocking by closing and unsetting our instance.
-        this.database.onversionchange = bind(this, function() {
-          request.result.close();
-          this.database = null;
-        });
-        options.success(this.database);
-      });
-      request.onerror = request.onblocked = function() {
-        options.error({
-          error: request.error,
-          message: request.error
-        }, { local: true });
-      };
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(object, { local: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
     },
 
     /**
@@ -446,72 +286,129 @@
     },
 
     /**
-     * Returns meta data.
+     * Returns schema for object store.
      * 
      * @private
-     * @param {string} collection Meta data collection.
-     * @param {string} key Record key.
-     * @param {Object} options Options.
+     * @param {string} store Store.
+     * @return {Object} Schema.
      */
-    _getMeta: function(collection, key, options) {
-      this._db({
-        success: bind(this, function(db) {
-          // First pass; check whether collection exists.
-          if(!db.objectStoreNames.contains(collection)) {
-            var msg = 'Not found.';
-            return options.error({
-              error: msg,
-              message: msg
-            }, { local: true });
-          }
+    _getSchema: function(store) {
+      // Schemas only differ in the field used as primary key.
+      var key;
+      switch(store) {
+        // Metadata stores.
+        case Kinvey.Store.Local.AGGREGATION_STORE:
+        case Kinvey.Store.Local.QUERY_STORE:
+          key = 'key';
+        break;
 
-          // Second pass; check whether record exists.
-          var store = db.transaction(collection).objectStore(collection);
-          var tnx = store.get(key);
-          tnx.onsuccess = tnx.onerror = function() {
-            var msg = 'Not found.';
-            null != tnx.result ? options.success(tnx.result, { local: true }) : options.error({
-              error: tnx.error || msg,
-              message: tnx.error || msg
-            }, { local: true });
+        // Transaction store.
+        case Kinvey.Store.Local.TRANSACTION_STORE:
+          key = 'collection';
+          break;
+
+        // Data stores.
+        default:
+          key = '_id';
+      }
+      return {
+        name: store,
+        options: { keyPath: key }
+      };
+    },
+
+    /**
+     * Adds transaction to the transaction log. Since this method is always
+     * called within a transaction, no asynchronous callbacks are available.
+     * 
+     * @private
+     * @param {IDBObjectStore} store Object store.
+     * @param {Object} object Object.
+     */
+    _log: function(store, object) {
+      // Retrieve transaction log from the store.
+      var req = store.get(this.collection);
+      req.onsuccess = bind(this, function() {
+        // Create transaction log if non-existant.
+        var log = req.result || {
+          collection: this.collection,
+          changeset: {}
+        };
+
+        // Add object to log, if not already in there.
+        if(!log.changeset.hasOwnProperty(object._id)) {
+          // Add timestamp to log, will be useful later.
+          log.changeset[object._id] = {
+            ts: (object._kmd && object._kmd.lmd) || null
           };
-        }),
-        error: options.error
+
+          // Save to store.
+          store.put(log);
+        }
       });
     },
 
     /**
-     * Migrates database.
+     * Mutates the database schema.
      * 
      * @private
-     * @param {function(database)} command Migration command.
-     * @param {Object} options Options.
+     * @param {function(handle)} success Success callback.
+     * @param {function(error)} failure Failure callback.
      */
-    _migrate: function(db, command, options) {
-      // Increment version number.
-      var version = parseInt(db.version || 0, 10) + 1;
+    _mutate: function(upgrade, success, failure) {
+      this._open(null, null, bind(this, function(database) {
+        var version = parseInt(database.version || 0, 10) + 1;
 
-      // Earlier versions of the IndexedDB spec defines setVersion as the way
-      // to migrate. Later versions require the onupgradeevent. We support both.
-      if(db.setVersion) {//old
-        var versionRequest = db.setVersion(version);
-        versionRequest.onsuccess = function() {
-          command(db);
-          options.success(db);
-        };
-        versionRequest.onerror = function() {
-          options.error({
-            error: versionRequest.error,
-            message: versionRequest.error
-          }, { local: true });
-        };
-        return;
+        // Earlier versions of the spec defines setVersion for mutation. Later,
+        // this was changed to the onupgradeneeded event. We support both.
+        if(database.setVersion) {// old.
+          var req = database.setVersion(version);
+          req.onsuccess = function() {
+            upgrade(database);
+            success(database);
+          };
+          req.onerror = function() { failure(req.error || 'Mutation error.'); };
+        }
+        else {// new.
+          this._open(version, upgrade, success, failure);
+        }
+      }), failure);
+    },
+
+    /**
+     * Opens the database.
+     * 
+     * @private
+     * @param {integer} [version] Database version.
+     * @param {function(handle)} success Success callback.
+     * @param {function(error)} failure Failure callback.
+     */
+    _open: function(version, upgrade, success, failure) {
+      var req;
+      if(null === version) {// open latest version.
+        if(this.database) {// reuse if possible.
+          return success(this.database);
+        }
+        req = indexedDB.open(this.name);
+      }
+      else {// open specific version
+        req = indexedDB.open(this.name, version);
       }
 
-      // Otherwise, reopen the database.
-      options.migrate = command;
-      options.version = version;
-      this._db(options);
+      req.onupgradeneeded = function() {
+        upgrade && upgrade(req.result);
+      };
+      req.onsuccess = bind(this, function() {
+        this.database = req.result;
+        this.database.onversionchange = bind(this, function() {
+          this.database.close();
+          this.database = null;
+        });
+        success(this.database);
+      });
+      req.onblocked = req.onerror = function() {
+        failure(req.error || 'Failed to open database.');
+      };
     },
 
     /**
@@ -523,85 +420,191 @@
     _options: function(options) {
       options || (options = {});
       options.success || (options.success = this.options.success);
-      options.error || (options.error = this.options.error);
+
+      // Create convenience shortcut for error handler.
+      var fnError = options.error || this.options.error;
+      options.error = function(error) {
+        fnError({
+          error: error,
+          msg: error
+        }, { local: true });
+      };
+
       return options;
     },
 
     /**
-     * Saves entity to the store.
+     * Adds aggregation to the database.
      * 
      * @private
-     * @param {Object} db Database handle.
-     * @param {Object} object Object to be saved.
+     * @param {Object} aggregation Aggregation object.
+     * @param {Array} data Data.
      * @param {Object} options Options.
      */
-    _save: function(db, object, options) {
-      var c = this.collection;
-      var store = db.transaction(c, IDBTransaction.READ_WRITE).objectStore(c);
-
-      // If entity is new, assign an ID. This is done because IndexedDB uses
-      // simple integers, and we need something more robust.
-      object._id || (object._id = new Date().getTime().toString());
-
-      // Save to collection.
-      var tnx = store.put(object);
-      tnx.onsuccess = function() {
-        options.success(object, { local: true });
-      };
-      tnx.onerror = function() {
+    _putAggregation: function(aggregation, data, options) {
+      // Failure handler triggers error handler.
+      var failure = function(error) {
         options.error({
-          error: tnx.error,
-          message: tnx.error
-        }, { local: true });
+          error: error,
+          msg: error
+        });
       };
+
+      // Open transaction.
+      this._transaction({
+        name: Kinvey.Store.Local.AGGREGATION_STORE,
+        options: { keyPath: 'key' }
+      }, IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Open store.
+        var store = txn.objectStore(Kinvey.Store.Local.AGGREGATION_STORE);
+
+        // Add metadata to store.
+        var req = store.put({
+          key: this._getCacheKey(aggregation),
+          value: data
+        });
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { local: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          failure(txn.error || 'Failed to execute transaction.');
+        };
+      }), failure);
     },
 
     /**
-     * Sets meta data.
+     * Adds object to the database.
      * 
      * @private
-     * @param {string} collection Meta data collection.
-     * @param {Object} object Meta data object.
+     * @param {Object} object Object to be added.
+     * @param {Object} options Options
+     */
+    _putObject: function(object, options) {
+      // Failure handler triggers error handler.
+      var failure = function(error) {
+        options.error({
+          error: error,
+          msg: error
+        });
+      };
+
+      // Open transaction.
+      var store = this.collection;
+      this._transaction({
+        name: store,
+        options: { keyPath: '_id' }
+      }, IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
+        // Save to store.
+        txn.objectStore(store).put(object);
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(object, { local: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          failure(txn.error || 'Failed to execute transaction.');
+        };
+      }, failure);
+    },
+
+    /**
+     * Adds query to the database.
+     * 
+     * @private
+     * @param {Object} query Query object.
+     * @param {Array} data Data.
      * @param {Object} options Options.
      */
-    _setMeta: function(collection, object, options) {
-      this._db({
-        success: bind(this, function(db) {
-          // Define handler for storing meta data.
-          var progress = bind(this, function(db) {
-            var store = db.transaction(collection, IDBTransaction.READ_WRITE).objectStore(collection);
-            var tnx = store.put(object);
-            tnx.onsuccess = function() {
-              options.success(object, { local: true });
-            };
-            tnx.onerror = function() {
-              options.error({
-                error: tnx.error,
-                message: tnx.error
-              }, { local: true });
-            };
-          });
+    _putQuery: function(query, data, options) {
+      // Failure handler triggers error handler.
+      var failure = function(error) {
+        options.error({
+          error: error,
+          msg: error
+        }, { local: true });
+      };
 
-          // First pass, create the collection if not existent. This operation is
-          // performed through a versionchange transaction.
-          if(!db.objectStoreNames.contains(collection)) {
-            // Create collection by migrating the database.
-            this._migrate(db, function(db) {
-              // Command to be executed on versionchange.
-              db.createObjectStore(collection, { keyPath: 'key' });
-            }, { success: progress, error: options.error });
+      // Open transaction.
+      this._transaction([{
+        name: this.collection,
+        options: { keyPath: '_id' }
+      }, {
+        name: Kinvey.Store.Local.QUERY_STORE,
+        options: { keyPath: 'key' }
+      }], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Open object store.
+        var store = txn.objectStore(this.collection);
+
+        // Save all objects.
+        var list = [];
+        data.forEach(function(object) {
+          list.push(object._id);
+          store.put(object);
+        });
+
+        // Open metadata store.
+        var qStore = txn.objectStore(Kinvey.Store.Local.QUERY_STORE);
+
+        // Add metadata to store.
+        var req = qStore.put({
+          key: this._getCacheKey(query),
+          value: list
+        });
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { local: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          failure(txn.error || 'Failed to execute transaction.');
+        };
+      }), failure);
+    },
+
+    /**
+     * Opens transaction for some store.
+     * 
+     * @private
+     * @param {Array|Object} stores (List of) store(s)
+     * @param {function(transaction)} success Success callback.
+     * @param {function(error)} failure Failure callback.
+     */
+    _transaction: function(stores, mode, success, failure) {
+      this._open(null, null, bind(this, function(db) {
+        var queue = [];
+        var storeNames = [];
+        !(stores instanceof Array) && (stores = [stores]);
+
+        // Check if all stores exist.
+        stores.forEach(function(store) {
+          storeNames.push(store.name);
+          if(!db.objectStoreNames.contains(store.name)) {
+            queue.push(store);
           }
-          else {
-            progress(db);
-          }
-        }),
-        error: options.error
-      });
+        });
+
+        // Create missing stores.
+        if(0 !== queue.length) {
+          this._mutate(function(db) {
+            queue.forEach(function(store) {
+              db.createObjectStore(store.name, store.options);
+            });
+          }, function(db) {
+            success(db.transaction(storeNames, mode));
+          }, failure);
+        }
+        else {
+          success(db.transaction(storeNames, mode));
+        }
+      }), failure);
     }
   }, {
     // Meta data stores.
     AGGREGATION_STORE: '_aggregation',
-    QUERY_STORE: '_query'
+    QUERY_STORE: '_query',
+    TRANSACTION_STORE: '_transactions'
   });
 
 }());

@@ -22,6 +22,7 @@ describe('Kinvey.Store.AppData', function() {
     // Test suite.
     it('aggregates data.', function(done) {
       this.store.aggregate({
+        finalize: function() { }.toString(),
         key: { },
         initial: { count: 0 },
         reduce: function(doc, out) {
