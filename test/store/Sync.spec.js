@@ -5,6 +5,7 @@ describe('Kinvey.Store.Sync', function() {
   before(function() {
     this.store = new Kinvey.Store.Sync(COLLECTION_UNDER_TEST);
     this.local = this.store.local;
+    this.network = this.store.network;
   });
   after(function(done) {
     var local = this.local;
@@ -14,7 +15,7 @@ describe('Kinvey.Store.Sync', function() {
       }
     }));
   });
-
+/*
   // Kinvey.Store.Sync#aggregate
   describe('#aggregate', function() {
     before(function(done) {
@@ -307,6 +308,45 @@ describe('Kinvey.Store.Sync', function() {
           else {
             info.network.should.be['true'];
           }
+        }
+      }));
+    });
+  });
+*/
+  // Kinvey.Store.Sync#remove
+  describe('#remove', function() {
+    before(function(done) {
+      this.object = { _id: 'foo', bar: 'baz' };
+      this.network.save(this.object, callback(done));
+    });
+
+    // Test suite.
+    it('removes and synchronizes an object.', function(done) {
+      this.store.remove(this.object, callback(done, {
+        success: function(_, info) {
+          info.local.should.be['true'];
+        }
+      }));
+    });
+  });
+
+  // Kinvey.Store.Sync#save
+  describe('#save', function() {
+    before(function(done) {
+      this.object = { _id: 'foo', bar: 'baz' };
+      this.network.save(this.object, callback(done));
+    });
+    after(function(done) {
+      this.network.remove(this.object, callback(done));
+    });
+
+    // Test suite.
+    it('saves and synchronizes an object.', function(done) {
+      var object = this.object;
+      this.store.save(object, callback(done, {
+        success: function(response, info) {
+          response.should.eql(object);
+          info.local.should.be['true'];
         }
       }));
     });

@@ -101,7 +101,25 @@
      */
     remove: function(object, options) {
       options = this._options(options);
-      this.network.remove(object, options);
+
+      // Extend success handler to synchronize stores.
+      var fnError = options.error;
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        fnSuccess(response, info);
+
+        // Synchronize network with local.
+        var complete = function() { options.complete(); };
+        this.local.sync(this.network, {
+          success: complete,
+          error: complete
+        });
+      });
+      options.error = function(error, info) {
+        fnError(error, info);
+        options.complete();
+      };
+      this.local.remove(object, options);
     },
 
     /**
@@ -123,7 +141,25 @@
      */
     save: function(object, options) {
       options = this._options(options);
-      this.network.save(object, options);
+
+      // Extend success handler to synchronize stores.
+      var fnError = options.error;
+      var fnSuccess = options.success;
+      options.success = bind(this, function(response, info) {
+        fnSuccess(response, info);
+
+        // Synchronize network with local.
+        var complete = function() { options.complete(); };
+        this.local.sync(this.network, {
+          success: complete,
+          error: complete
+        });
+      });
+      options.error = function(error, info) {
+        fnError(error, info);
+        options.complete();
+      };
+      this.local.save(object, options);
     },
 
     /**

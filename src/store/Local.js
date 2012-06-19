@@ -209,8 +209,8 @@
 
       // Open transaction.
       this._transaction([
-          this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
-          this._getSchema(this.collection)
+        this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
+        this._getSchema(this.collection)
       ], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
         // Remove object from the store.
         txn.objectStore(this.collection)['delete'](object._id);
@@ -271,6 +271,129 @@
           options.error(txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
+    },
+
+    /**
+     * Synchronizes current store with provided store.
+     * 
+     * @param {Kinvey.Store.*} target Sync target.
+     * @param {Object} [options] Options.
+     */
+    sync: function(target, options) {
+      options = this._options(options);
+
+      // PROCESS:
+      // (1. For every collection C in transaction log L:)
+      //   2. For every id X in C.
+      //     3. Retrieve O by X (locally).
+      //     4. If O: save to externalStore.
+      //     5. If not O: delete from externalStore.
+      //     6. Remove X from C.
+      //     7. Goto 2, or 8 if C is empty.
+      //   8. Update C.
+      //  ( 9. Goto 1, or 10 if L is empty.)
+      // 10. <return>
+
+      // Open transaction.
+      this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Define complete callback, which will only fire if both the collection
+        // is synchronized, and the metadata is removed.
+        var pending = 2;
+        var done = function() {
+          0 === --pending && options.success(null, { local: true });
+        };
+
+        // Open store.
+        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+
+        // Retrieve transaction log from store.
+        var req = store.get(this.collection);
+        req.onsuccess = bind(this, function() {
+          var result = req.result;
+          if(req.result) {
+            this._syncCollection(result.collection, result.changeset, target, done);
+          }
+
+          // Remove collection from meta data.
+          store['delete'](this.collection);
+        });
+
+        // Handle transaction status.
+        txn.oncomplete = done;
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
+    },
+
+    /**
+     * Synchronizes store collection with provided store.
+     * 
+     * @private
+     * @param {string} collection Collection.
+     * @param {Object} changeset Changeset.
+     * @param {Kinvey.Store.*} target Sync target.
+     * @param {function()} complete Complete callback.
+     */
+    _syncCollection: function(collection, changeset, target, complete) {
+      this._transaction(this._getSchema(collection), IDBTransaction.READ_ONLY || 'readonly', function(txn) {
+        // Prepare sets.
+        var saveSet = [];
+        var removeSet = [];
+
+        // Open store.
+        var store = txn.objectStore(collection);
+
+        // Define handler to throw each object in the corresponding bucket.
+        var bucketize = function(id) {
+          var req = store.get(id);
+          req.onsuccess = function() {
+            var result = req.result;// if found, save, otherwise remove.
+            result ? saveSet.push(result) : removeSet.push(id);
+          };
+        };        
+        for(var id in changeset) {
+          bucketize(id);
+        }
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          // Save one by one.
+          var save = function(i, fn) {
+            var item = saveSet[i];
+            if(item) {
+              var next = function() {
+                save(++i, fn);
+              };
+              target.save(item, {
+                success: next,
+                error: next
+              });
+            }
+            else {
+              fn();
+            }
+          };
+
+          save(0, function() {
+            if(0 !== removeSet.length) {
+              // Delete only requires one query.
+              var query = new Kinvey.Query();
+              query.on('_id').in_(removeSet);
+              target.removeWithQuery(query.toJSON(), {
+                success: complete,
+                error: complete
+              });
+            }
+            else {
+              complete();
+            }
+          });
+        };
+        txn.onabort = txn.onerror = function() {
+          complete(txn.error || 'Failed to execute transaction.');
+        };
+      }, complete);
     },
 
     /**
@@ -339,7 +462,7 @@
         if(!log.changeset.hasOwnProperty(object._id)) {
           // Add timestamp to log, will be useful later.
           log.changeset[object._id] = {
-            ts: (object._kmd && object._kmd.lmd) || null
+            ts: (object._kmd && object._kmd.lmt) || null
           };
 
           // Save to store.
