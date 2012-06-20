@@ -55,7 +55,7 @@
         txn.oncomplete = function() {
           // Result is undefined if data was not found.
           var result = req.result;
-          result ? options.success(result.value, { local: true }) : options.error('Not found.');
+          result ? options.success(result.value, { cache: true }) : options.error('Not found.');
         };
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
@@ -90,7 +90,7 @@
         while(null !== (store = db.objectStoreNames.item(0))) {
           db.deleteObjectStore(store);
         }
-        options.success(null, { local: true });
+        options.success(null, { cache: true });
       }, options.error);
     },
 
@@ -111,7 +111,8 @@
           this._putAggregation(arg, data, options);
           break;
         case 'query':
-          this._putObject(data, options);
+          // If data is null, the object needs to be removed from cache.
+          null !== data ? this._putObject(data, options) : this._removeObject(arg, options);
           break;
         case 'queryWithQuery':
           this._putQuery(arg, data, options);
@@ -138,7 +139,7 @@
         txn.oncomplete = function() {
           // Result is undefined if data was not found.
           var result = req.result;
-          result ? options.success(result, { local: true }) : options.error('Not found.');
+          result ? options.success(result, { cache: true }) : options.error('Not found.');
         };
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
@@ -190,7 +191,7 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          metaReq.result ? options.success(response, { local: true }) : options.error('Not found.');
+          metaReq.result ? options.success(response, { cache: true }) : options.error('Not found.');
         };
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
@@ -221,7 +222,7 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          options.success(null, { local: true });
+          options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
@@ -265,7 +266,7 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          options.success(object, { local: true });
+          options.success(object, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
@@ -300,7 +301,7 @@
         // is synchronized, and the metadata is removed.
         var pending = 2;
         var done = function() {
-          0 === --pending && options.success(null, { local: true });
+          0 === --pending && options.success(null, { cache: true });
         };
 
         // Open store.
@@ -336,6 +337,7 @@
      * @param {function()} complete Complete callback.
      */
     _syncCollection: function(collection, changeset, target, complete) {
+      var self = this;
       this._transaction(this._getSchema(collection), IDBTransaction.READ_ONLY || 'readonly', function(txn) {
         // Prepare sets.
         var saveSet = [];
@@ -366,7 +368,12 @@
                 save(++i, fn);
               };
               target.save(item, {
-                success: next,
+                success: function(response) {
+                  self.put('query', null, response, {
+                    success: next,
+                    error: next
+                  });
+                },
                 error: next
               });
             }
@@ -519,13 +526,16 @@
       }
 
       req.onupgradeneeded = function() {
+        this.database = req.result;
         upgrade && upgrade(req.result);
       };
       req.onsuccess = bind(this, function() {
         this.database = req.result;
         this.database.onversionchange = bind(this, function() {
-          this.database.close();
-          this.database = null;
+          if(this.database) {
+            this.database.close();
+            this.database = null;
+          }
         });
         success(this.database);
       });
@@ -550,7 +560,7 @@
         fnError({
           error: error,
           msg: error
-        }, { local: true });
+        }, { cache: true });
       };
 
       return options;
@@ -589,7 +599,7 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          options.success(null, { local: true });
+          options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
           failure(txn.error || 'Failed to execute transaction.');
@@ -624,7 +634,7 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          options.success(object, { local: true });
+          options.success(object, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
           failure(txn.error || 'Failed to execute transaction.');
@@ -646,7 +656,7 @@
         options.error({
           error: error,
           msg: error
-        }, { local: true });
+        }, { cache: true });
       };
 
       // Open transaction.
@@ -678,12 +688,47 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          options.success(null, { local: true });
+          options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
           failure(txn.error || 'Failed to execute transaction.');
         };
       }), failure);
+    },
+
+    /**
+     * Removes object from cache.
+     * 
+     * @private
+     * @param {string} id Object id.
+     * @param {Object} options Options.
+     */
+    _removeObject: function(id, options) {
+      // Failure handler triggers error handler.
+      var failure = function(error) {
+        options.error({
+          error: error,
+          msg: error
+        });
+      };
+
+      // Open transaction.
+      var store = this.collection;
+      this._transaction({
+        name: store,
+        options: { keyPath: '_id' }
+      }, IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
+        // Save to store.
+        txn.objectStore(store)['delete'](id);
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { cache: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          failure(txn.error || 'Failed to execute transaction.');
+        };
+      }, failure);
     },
 
     /**

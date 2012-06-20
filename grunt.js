@@ -105,7 +105,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Local.js',
-          '<%= dir.src %>/store/Sync.js',
+          '<%= dir.src %>/store/Cached.js',
+          '<%= dir.src %>/store/Offline.js',
 
           '<%= dir.src %>/outro.txt'
         ],

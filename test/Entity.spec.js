@@ -86,14 +86,29 @@ describe('Kinvey.Entity', function() {
         }
       }));
     });
+    it('saves a new entity with a predefined id.', function(done) {
+      var entity = this.entity;
+      entity.setId('foo');
+      entity.save(callback(done, {
+        success: function(response) {
+          response.should.equal(entity);// Kinvey.Entity
+          response.getId().should.equal('foo');
+          done();
+        }
+      }));
+    });
     it('updates an existing entity.', function(done) {
       var entity = this.entity;
       entity.set('baz', 'quux');
       entity.save(callback(done, {
         success: function(response) {
-          response.should.equal(entity);// Kinvey.Entity
-          (response.get('baz')).should.equal('quux');
-          done();
+          response.save(callback(done, {
+            success: function(response) {
+              response.should.equal(entity);// Kinvey.Entity
+              (response.get('baz')).should.equal('quux');
+              done();
+            }
+          }));
         }
       }));
     });

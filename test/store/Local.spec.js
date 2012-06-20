@@ -26,7 +26,7 @@ describe('Kinvey.Store.Local', function() {
       this.store.aggregate(this.aggregation.toJSON(), callback(done, {
         success: function(response, info) {
           response.should.eql(expected);
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       }));
@@ -47,7 +47,7 @@ describe('Kinvey.Store.Local', function() {
       this.store.query(expected._id, callback(done, {
         success: function(response, info) {
           response.should.eql(expected);
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       }));
@@ -75,7 +75,7 @@ describe('Kinvey.Store.Local', function() {
           response.should.have.length(2);
           response[0].should.eql(first);
           response[1].should.eql(second);
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       }));
@@ -105,7 +105,7 @@ describe('Kinvey.Store.Local', function() {
           done(new Error('Success callback was invoked.'));
         },
         error: function(_, info) {
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       });
@@ -124,7 +124,7 @@ describe('Kinvey.Store.Local', function() {
         success: function(response, info) {
           (null != response._id).should.be['true'];
           response.foo.should.equal('bar');
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       }));
@@ -134,7 +134,7 @@ describe('Kinvey.Store.Local', function() {
       this.store.save(this.object, callback(done, {
         success: function(response, info) {
           response._id.should.equal('id');
-          info.local.should.be['true'];
+          info.cache.should.be['true'];
           done();
         }
       }));
