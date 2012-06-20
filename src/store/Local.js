@@ -297,30 +297,34 @@
 
       // Open transaction.
       this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
-        // Define complete callback, which will only fire if both the collection
-        // is synchronized, and the metadata is removed.
-        var pending = 2;
-        var done = function() {
-          0 === --pending && options.success(null, { cache: true });
-        };
-
         // Open store.
         var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
 
         // Retrieve transaction log from store.
         var req = store.get(this.collection);
         req.onsuccess = bind(this, function() {
-          var result = req.result;
-          if(req.result) {
-            this._syncCollection(result.collection, result.changeset, target, done);
-          }
-
           // Remove collection from meta data.
           store['delete'](this.collection);
+
+          // Synchronize changeset.
+          var result = req.result;
+          if(req.result) {
+            this._syncCollection(result.collection, result.changeset, target, function(commitSet, cancelSet) {
+              options.success({
+                commit: commitSet,
+                cancel: cancelSet
+              }, { cache: true });
+            });
+          }
+          else {
+            options.success({
+              commit: [],
+              cancel: []
+            }, { cache: true });
+          }
         });
 
         // Handle transaction status.
-        txn.oncomplete = done;
         txn.onabort = txn.onerror = function() {
           options.error(txn.error || 'Failed to execute transaction.');
         };
@@ -334,73 +338,120 @@
      * @param {string} collection Collection.
      * @param {Object} changeset Changeset.
      * @param {Kinvey.Store.*} target Sync target.
-     * @param {function()} complete Complete callback.
+     * @param {function(commitSet, cancelSet)} complete Complete callback.
      */
     _syncCollection: function(collection, changeset, target, complete) {
-      var self = this;
-      this._transaction(this._getSchema(collection), IDBTransaction.READ_ONLY || 'readonly', function(txn) {
-        // Prepare sets.
-        var saveSet = [];
-        var removeSet = [];
-
+      this._transaction(this._getSchema(collection), IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
         // Open store.
         var store = txn.objectStore(collection);
 
-        // Define handler to throw each object in the corresponding bucket.
-        var bucketize = function(id) {
+        // Bucketize all objects to be synchronized.
+        var cancelSet = [];// contains objects failed to synchronize.
+        var updateSet = [];// contains objects to be updated remotely.
+        var removeSet = [];// contains objects to be deleted remotely.
+        Object.getOwnPropertyNames(changeset).map(function(id) {
           var req = store.get(id);
           req.onsuccess = function() {
-            var result = req.result;// if found, save, otherwise remove.
-            result ? saveSet.push(result) : removeSet.push(id);
+            var result = req.result;
+            result ? updateSet.push(result) : removeSet.push(id);
           };
-        };        
-        for(var id in changeset) {
-          bucketize(id);
-        }
+          req.onerror = function() {
+            cancelSet.push(id);
+          };
+        });
 
         // Handle transaction status.
-        txn.oncomplete = function() {
-          // Save one by one.
-          var save = function(i, fn) {
-            var item = saveSet[i];
-            if(item) {
-              var next = function() {
-                save(++i, fn);
-              };
-              target.save(item, {
-                success: function(response) {
-                  self.put('query', null, response, {
-                    success: next,
-                    error: next
-                  });
-                },
-                error: next
-              });
-            }
-            else {
-              fn();
-            }
-          };
+        txn.oncomplete = bind(this, function() {
+          // Execute synchronization update.
+          this._syncUpdate(target, updateSet, bind(this, function(uCommitSet, uCancelSet) {
+            // Execute synchronization remove.
+            this._syncRemove(target, removeSet, function(rCommitSet, rCancelSet) {
+              // Gather results.
+              complete(uCommitSet.concat(rCommitSet), cancelSet.concat(uCancelSet, rCancelSet));
+            });
+          }));
+        });
+        txn.onabort = txn.onerror = function() {
+          complete([], cancelSet.concat(updateSet, removeSet));
+        };
+      }), complete);
+    },
 
-          save(0, function() {
-            if(0 !== removeSet.length) {
-              // Delete only requires one query.
-              var query = new Kinvey.Query();
-              query.on('_id').in_(removeSet);
-              target.removeWithQuery(query.toJSON(), {
-                success: complete,
-                error: complete
+    /**
+     * Removes all objects in set from target.
+     * 
+     * @private
+     * @param {Kinvey.Store.*} target Sync target.
+     * @param {Array} set List of objects to be removed.
+     * @param {function(commitSet, cancelSet)} complete Complete callback.
+     */
+    _syncRemove: function(target, set, complete) {
+      // Avoid doing a request on empty set.
+      if(0 === set.length) {
+        return complete([], []);
+      }
+
+      // Remove all at once, by constructing a query.
+      var query = new Kinvey.Query();
+      query.on('_id').in_(set);
+
+      target.removeWithQuery(query.toJSON(), {
+        success: function() {
+          complete(set, []);
+        },
+        error: function() {
+          complete([], set);
+        }
+      });
+    },
+
+    /**
+     * Updates all objects in set at target.
+     * 
+     * @private
+     * @param {Kinvey.Store.*} target Sync target.
+     * @param {Array} set List of objects to be removed.
+     * @param {function(commitSet, cancelSet)} complete Complete callback.
+     */
+    _syncUpdate: function(target, set, complete) {
+      // Avoid doing a request on empty set.
+      if(0 === set.length) {
+        return complete([], []);
+      }
+
+      // Prepare sets.
+      var commitSet = [];
+      var cancelSet = [];
+
+      // Define synchronization function for each object.
+      var self = this;
+      var sync = function(i) {
+        var object = set[i++];
+        if(object) {
+          // Save object to target.
+          target.save(object, {
+            success: function(response) {
+              // Update cache.
+              var fn = function() {
+                commitSet.push(object._id);
+                sync(i);// next.
+              };
+              self.put('query', null, response, {
+                success: fn,
+                error: fn
               });
-            }
-            else {
-              complete();
+            },
+            error: function() {
+              cancelSet.push(object._id);
+              sync(i);// next.
             }
           });
-        };
-        txn.onabort = txn.onerror = function() {
-          complete(txn.error || 'Failed to execute transaction.');
-        };
-      }, complete);
+        }
+        else {
+          complete(commitSet, cancelSet);
+        }
+      };
+      sync(0);
     },
 
     /**

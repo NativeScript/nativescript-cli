@@ -25,37 +25,19 @@
      */
     remove: function(object, options) {
       options = this._options(options);
-
-      // Extend success handler to synchronize stores.
-      var fnError = options.error;
-      var fnSuccess = options.success;
-      options.success = bind(this, function(response, info) {
-        fnSuccess(response, info);
-
-        // Synchronize network with cached.
-        var complete = function() { options.complete(); };
-        this.cached.sync(this.network, {
-          success: complete,
-          error: complete
-        });
-      });
-      options.error = function(error, info) {
-        fnError(error, info);
-        options.complete();
-      };
-      this.cached.remove(object, options);
+      this.cached.remove(object, this._wrap(options));
     },
 
     /**
      * Removes multiple objects from the store.
-     * TODO
      * 
      * @param {Object} query Query object.
      * @param {Object} [options] Options.
      */
     removeWithQuery: function(query, options) {
-      options = this._options(options);
-      this.network.removeWithQuery(query, options);
+      // Removal by query is not supported locally, so no synchronization is
+      // performed.
+      Kinvey.Store.Cached.prototype.removeWithQuery.call(this, query, options);
     },
 
     /**
@@ -66,7 +48,18 @@
      */
     save: function(object, options) {
       options = this._options(options);
+      this.cached.save(object, this._wrap(options));
+    },
 
+    /**
+     * Wraps success and error handlers to include synchronization and
+     * oncomplete support.
+     * 
+     * @private
+     * @param {Object} options Options.
+     * @return {Object}
+     */
+    _wrap: function(options) {
       // Extend success handler to synchronize stores.
       var fnError = options.error;
       var fnSuccess = options.success;
@@ -74,17 +67,16 @@
         fnSuccess(response, info);
 
         // Synchronize network with cached.
-        var complete = function() { options.complete(); };
         this.cached.sync(this.network, {
-          success: complete,
-          error: complete
+          success: function() { options.complete(); },
+          error: function() { options.complete(); }
         });
       });
       options.error = function(error, info) {
         fnError(error, info);
         options.complete();
       };
-      this.cached.save(object, options);
+      return options;
     }
   });
 
