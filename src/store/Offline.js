@@ -13,7 +13,7 @@
      */
     constructor: function(collection, options) {
       // Options. By default, no conflict resolution algorithm is defined.
-      this.options.conflict = null;
+      this.options.conflict = Kinvey.Store.Offline.ignore;
 
       // Call parent constructor.
       Kinvey.Store.Cached.prototype.constructor.call(this, collection, options);
@@ -182,13 +182,14 @@
         return options.success(cached.value);
       }
 
-      // At this point, timestamps are not equal. Hence a conflict is being
-      // detected. Invoke a resolution algorithm if specified, otherwise
-      // return in a erroneous state.
-      if(options.conflict) {
-        return options.conflict(cached.value, remote, options.success);
-      }
-      return options.error(cached.value, remote);
+      // At this point, cached and remote are not equal: conflict. Alter error
+      // callback to allow the conflict resolution algorithm to report a
+      // conflicting state.
+      var fnError = options.error;
+      options.error = function() {
+        fnError(cached.value, remote);
+      };
+      options.conflict(cached.value, remote, options);
     },
 
     /**
@@ -196,6 +197,10 @@
      */
     _options: function(options) {
       options = Kinvey.Store.Cached.prototype._options.call(this, options);
+
+      // Always prefer cache over network. For write operations, this setting
+      // means all network responses are always cached. Which is good :)
+      options.policy = Kinvey.Store.Cached.CACHE_FIRST;
 
       // Conflict resolution handler.
       options.conflict || (options.conflict = this.options.conflict);
@@ -267,7 +272,6 @@
         if(object) {
           // Save to cached store, so cache will also be updated.
           Kinvey.Store.Cached.prototype.save.call(this, object, {
-            policy: Kinvey.Store.Cached.BOTH,// make sure copy is saved.
             success: function(_, info) {
               committed.push(object._id);
             },
@@ -331,7 +335,7 @@
       options.success = bind(this, function(response, info) {
         fnSuccess(response, info);
         this.synchronize({
-          success: function() { console.log(arguments); options.complete(); },
+          success: function(status) { options.complete(status); },
           error: function() { options.complete(); }
         });
       });
@@ -343,13 +347,17 @@
     }
   }, {
     // Built-in conflict resolution handlers.
-    clientAlwaysWins: function(cached, _, complete) {
+    clientAlwaysWins: function(cached, _, options) {
       // Client always wins, so simply return the cached version.
-      complete(cached);
+      options.success(cached);
     },
-    serverAlwaysWins: function(_, remote, complete) {
+    ignore: function(_, __, options) {
+      // Ignore and maintain conflicting state.
+      options.error();
+    },
+    serverAlwaysWins: function(_, remote, options) {
       // Server always wins, so simply return the remote version.
-      complete(remote);
+      options.success(remote);
     }
   });
 

@@ -265,12 +265,20 @@
         this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
         this._getSchema(this.collection)
       ], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
-        // Remove object from the store.
-        txn.objectStore(this.collection)['delete'](object._id);
+        // Open store.
+        var store = txn.objectStore(this.collection);
 
-        // Log transaction.
-        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
-        this._logTransaction(store, object);
+        // Retrieve latest version of the object from the store.
+        var req = store.get(object._id);
+        req.onsuccess = bind(this, function() {
+          // Remove object from the store.
+          var result = req.result;
+          store['delete'](result._id);
+
+          // Log transaction.
+          var metaStore = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+          this._logTransaction(metaStore, result);
+        });
 
         // Handle transaction status.
         txn.oncomplete = function() {

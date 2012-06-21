@@ -309,11 +309,10 @@
               error: function() { options.complete(); }
             });
             this.cached.put.apply(this.cached, cacheHandle[operation]);
+            return;
           }
         }
-        else {
-          options.complete();
-        }
+        options.complete();
       });
       options.error = function(error, info) {
         // On error, there is nothing we can do except trigger both handlers.

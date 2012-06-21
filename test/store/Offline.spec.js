@@ -19,8 +19,8 @@ describe('Kinvey.Store.Offline', function() {
   // Kinvey.Store.Offline#remove
   describe('#remove', function() {
     before(function(done) {
-      this.object = { _id: 'foo', bar: 'baz' };
-      this.network.save(this.object, callback(done));
+      this.object = { _id: 'foo', bar: true };
+      this.store.save(this.object, callback(done, { success: function() { } }));
     });
 
     // Test suite.
@@ -28,6 +28,10 @@ describe('Kinvey.Store.Offline', function() {
       this.store.remove(this.object, callback(done, {
         success: function(_, info) {
           info.cache.should.be['true'];
+        },
+        complete: function(status) {
+          status.committed.should.equal(1);
+          done();
         }
       }));
     });
@@ -39,7 +43,7 @@ describe('Kinvey.Store.Offline', function() {
       this.object = { _id: 'foo', bar: 'baz' };
     });
     after(function(done) {
-      this.network.remove(this.object, callback(done));
+      this.store.remove(this.object, callback(done, { success: function() { } }));
     });
 
     // Test suite.
@@ -49,6 +53,10 @@ describe('Kinvey.Store.Offline', function() {
         success: function(response, info) {
           response.should.eql(object);
           info.cache.should.be['true'];
+        },
+        complete: function(status) {
+          status.committed.should.equal(1);
+          done();
         }
       }));
     });
