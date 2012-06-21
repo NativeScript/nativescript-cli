@@ -89,8 +89,7 @@
         this._getSchema(this.collection)
       ], IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
         // Prepare response.
-        var updates = [];
-        var removals = [];
+        var response = {};
 
         // Open store.
         var metaStore = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
@@ -101,17 +100,15 @@
         req.onsuccess = function() {
           var result = req.result;
           if(result) {
-            // Add actual object to corresponding item in transaction log.
+            // Add actual object to transaction log.
             var changes = result.changes;
             Object.getOwnPropertyNames(changes).forEach(function(id) {
               var req = store.get(id);
               req.onsuccess = function() {
-                // If result exists, object was updated. Removed otherwise.
-                var result = req.result;
-                result ? updates.push(result) : removals.push({
-                  _id: id,
-                  ts: changes[id].ts
-                });
+                response[id] = {
+                  ts: changes[id],
+                  value: req.result || null
+                };
               };
             });
           }
@@ -120,8 +117,7 @@
         // Handle transaction status.
         txn.oncomplete = bind(this, function() {
           options.success({
-            updates: updates,
-            removals: removals,
+            changes: response,
             observer: bind(this, this._updateTransactionLog)
           }, { cache: true });
         });
@@ -386,22 +382,15 @@
       // Retrieve transaction log from the store.
       var req = store.get(this.collection);
       req.onsuccess = bind(this, function() {
-        // Create transaction log if non-existant.
+        // Create transaction log if non-existant, and add our change.
         var log = req.result || {
           collection: this.collection,
           changes: {}
         };
+        log.changes[object._id] = (object._kmd && object._kmd.lmt) || null;
 
-        // Add object to log, if not already in there.
-        if(!log.changes.hasOwnProperty(object._id)) {
-          // Add timestamp to log, will be useful later.
-          log.changes[object._id] = {
-            ts: (object._kmd && object._kmd.lmt) || null
-          };
-
-          // Save to store.
-          store.put(log);
-        }
+        // Save to store.
+        store.put(log);
       });
     },
 
@@ -703,10 +692,11 @@
      * 
      * @private
      * @param {Array} committed Committed objects.
+     * @param {Array} conflicted Conflicted objects.
      * @param {Array} canceled Canceled objects.
      * @param {Object} [options] Options.
      */
-    _updateTransactionLog: function(committed, canceled, options) {
+    _updateTransactionLog: function(committed, conflicted, canceled, options) {
       options = this._options(options);
 
       // Open transaction.
@@ -723,8 +713,8 @@
             changes: {}
           };
 
-          // Remove all committed object from changes. The canceled objects
-          // stay, so they can be synchronized later on.
+          // Remove all committed object from changes. Any other changes are
+          // maintained, so they can be synchronized (again) later on.
           committed.forEach(function(id) {
             delete result.changes[id];
           });
