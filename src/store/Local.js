@@ -76,6 +76,62 @@
     },
 
     /**
+     * Returns transaction log of operations performed locally.
+     * 
+     * @param {Object} [options] Options.
+     */
+    getTransactionLog: function(options) {
+      options = this._options(options);
+
+      // Open transaction.
+      this._transaction([
+        this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
+        this._getSchema(this.collection)
+      ], IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
+        // Prepare response.
+        var updates = [];
+        var removals = [];
+
+        // Open store.
+        var metaStore = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+        var store = txn.objectStore(this.collection);
+
+        // Retrieve transaction log.
+        var req = metaStore.get(this.collection);
+        req.onsuccess = function() {
+          var result = req.result;
+          if(result) {
+            // Add actual object to corresponding item in transaction log.
+            var changes = result.changes;
+            Object.getOwnPropertyNames(changes).forEach(function(id) {
+              var req = store.get(id);
+              req.onsuccess = function() {
+                // If result exists, object was updated. Removed otherwise.
+                var result = req.result;
+                result ? updates.push(result) : removals.push({
+                  _id: id,
+                  ts: changes[id].ts
+                });
+              };
+            });
+          }
+        };
+
+        // Handle transaction status.
+        txn.oncomplete = bind(this, function() {
+          options.success({
+            updates: updates,
+            removals: removals,
+            observer: bind(this, this._updateTransactionLog)
+          }, { cache: true });
+        });
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
+    },
+
+    /**
      * Purges local database. Use with caution.
      * 
      * @param {Object} [options] Options.
@@ -218,7 +274,7 @@
 
         // Log transaction.
         var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
-        this._log(store, object);
+        this._logTransaction(store, object);
 
         // Handle transaction status.
         txn.oncomplete = function() {
@@ -262,7 +318,7 @@
 
         // Log transaction.
         var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
-        this._log(store, object);
+        this._logTransaction(store, object);
 
         // Handle transaction status.
         txn.oncomplete = function() {
@@ -272,186 +328,6 @@
           options.error(txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
-    },
-
-    /**
-     * Synchronizes current store with provided store.
-     * 
-     * @param {Kinvey.Store.*} target Sync target.
-     * @param {Object} [options] Options.
-     */
-    sync: function(target, options) {
-      options = this._options(options);
-
-      // PROCESS:
-      // (1. For every collection C in transaction log L:)
-      //   2. For every id X in C.
-      //     3. Retrieve O by X (locally).
-      //     4. If O: save to externalStore.
-      //     5. If not O: delete from externalStore.
-      //     6. Remove X from C.
-      //     7. Goto 2, or 8 if C is empty.
-      //   8. Update C.
-      //  ( 9. Goto 1, or 10 if L is empty.)
-      // 10. <return>
-
-      // Open transaction.
-      this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
-        // Open store.
-        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
-
-        // Retrieve transaction log from store.
-        var req = store.get(this.collection);
-        req.onsuccess = bind(this, function() {
-          // Remove collection from meta data.
-          store['delete'](this.collection);
-
-          // Synchronize changeset.
-          var result = req.result;
-          if(req.result) {
-            this._syncCollection(result.collection, result.changeset, target, function(commitSet, cancelSet) {
-              options.success({
-                commit: commitSet,
-                cancel: cancelSet
-              }, { cache: true });
-            });
-          }
-          else {
-            options.success({
-              commit: [],
-              cancel: []
-            }, { cache: true });
-          }
-        });
-
-        // Handle transaction status.
-        txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
-        };
-      }), options.error);
-    },
-
-    /**
-     * Synchronizes store collection with provided store.
-     * 
-     * @private
-     * @param {string} collection Collection.
-     * @param {Object} changeset Changeset.
-     * @param {Kinvey.Store.*} target Sync target.
-     * @param {function(commitSet, cancelSet)} complete Complete callback.
-     */
-    _syncCollection: function(collection, changeset, target, complete) {
-      this._transaction(this._getSchema(collection), IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
-        // Open store.
-        var store = txn.objectStore(collection);
-
-        // Bucketize all objects to be synchronized.
-        var cancelSet = [];// contains objects failed to synchronize.
-        var updateSet = [];// contains objects to be updated remotely.
-        var removeSet = [];// contains objects to be deleted remotely.
-        Object.getOwnPropertyNames(changeset).map(function(id) {
-          var req = store.get(id);
-          req.onsuccess = function() {
-            var result = req.result;
-            result ? updateSet.push(result) : removeSet.push(id);
-          };
-          req.onerror = function() {
-            cancelSet.push(id);
-          };
-        });
-
-        // Handle transaction status.
-        txn.oncomplete = bind(this, function() {
-          // Execute synchronization update.
-          this._syncUpdate(target, updateSet, bind(this, function(uCommitSet, uCancelSet) {
-            // Execute synchronization remove.
-            this._syncRemove(target, removeSet, function(rCommitSet, rCancelSet) {
-              // Gather results.
-              complete(uCommitSet.concat(rCommitSet), cancelSet.concat(uCancelSet, rCancelSet));
-            });
-          }));
-        });
-        txn.onabort = txn.onerror = function() {
-          complete([], cancelSet.concat(updateSet, removeSet));
-        };
-      }), complete);
-    },
-
-    /**
-     * Removes all objects in set from target.
-     * 
-     * @private
-     * @param {Kinvey.Store.*} target Sync target.
-     * @param {Array} set List of objects to be removed.
-     * @param {function(commitSet, cancelSet)} complete Complete callback.
-     */
-    _syncRemove: function(target, set, complete) {
-      // Avoid doing a request on empty set.
-      if(0 === set.length) {
-        return complete([], []);
-      }
-
-      // Remove all at once, by constructing a query.
-      var query = new Kinvey.Query();
-      query.on('_id').in_(set);
-
-      target.removeWithQuery(query.toJSON(), {
-        success: function() {
-          complete(set, []);
-        },
-        error: function() {
-          complete([], set);
-        }
-      });
-    },
-
-    /**
-     * Updates all objects in set at target.
-     * 
-     * @private
-     * @param {Kinvey.Store.*} target Sync target.
-     * @param {Array} set List of objects to be removed.
-     * @param {function(commitSet, cancelSet)} complete Complete callback.
-     */
-    _syncUpdate: function(target, set, complete) {
-      // Avoid doing a request on empty set.
-      if(0 === set.length) {
-        return complete([], []);
-      }
-
-      // Prepare sets.
-      var commitSet = [];
-      var cancelSet = [];
-
-      // Define synchronization function for each object.
-      var self = this;
-      var sync = function(i) {
-        var object = set[i++];
-        if(object) {
-          // Save object to target.
-          target.save(object, {
-            success: function(response) {
-              // Update cache.
-              var fn = function() {
-                commitSet.push(object._id);
-                sync(i);// next.
-              };
-              self.put('query', null, response, {
-                success: fn,
-                error: fn
-              });
-            },
-            error: function() {
-              cancelSet.push(object._id);
-              sync(i);// next.
-            }
-          });
-        }
-        else {
-          complete(commitSet, cancelSet);
-        }
-      };
-      sync(0);
     },
 
     /**
@@ -499,27 +375,27 @@
     },
 
     /**
-     * Adds transaction to the transaction log. Since this method is always
-     * called within a transaction, no asynchronous callbacks are available.
+     * Adds transaction to the log. Since this method is always called inside a
+     * transaction, no asynchronous callbacks are necessary.
      * 
      * @private
      * @param {IDBObjectStore} store Object store.
      * @param {Object} object Object.
      */
-    _log: function(store, object) {
+    _logTransaction: function(store, object) {
       // Retrieve transaction log from the store.
       var req = store.get(this.collection);
       req.onsuccess = bind(this, function() {
         // Create transaction log if non-existant.
         var log = req.result || {
           collection: this.collection,
-          changeset: {}
+          changes: {}
         };
 
         // Add object to log, if not already in there.
-        if(!log.changeset.hasOwnProperty(object._id)) {
+        if(!log.changes.hasOwnProperty(object._id)) {
           // Add timestamp to log, will be useful later.
-          log.changeset[object._id] = {
+          log.changes[object._id] = {
             ts: (object._kmd && object._kmd.lmt) || null
           };
 
@@ -811,13 +687,60 @@
               db.createObjectStore(store.name, store.options);
             });
           }, function(db) {
+            // Create and return the transaction.
             success(db.transaction(storeNames, mode));
           }, failure);
         }
         else {
+          // Create and return the transaction.
           success(db.transaction(storeNames, mode));
         }
       }), failure);
+    },
+
+    /**
+     * Updates transaction log.
+     * 
+     * @private
+     * @param {Array} committed Committed objects.
+     * @param {Array} canceled Canceled objects.
+     * @param {Object} [options] Options.
+     */
+    _updateTransactionLog: function(committed, canceled, options) {
+      options = this._options(options);
+
+      // Open transaction.
+      this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Open store.
+        var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
+
+        // Retrieve meta data.
+        var req = store.get(this.collection);
+        req.onsuccess = bind(this, function() {
+          // Create transaction log if non-existant.
+          var result = req.result || {
+            collection: this.collection,
+            changes: {}
+          };
+
+          // Remove all committed object from changes. The canceled objects
+          // stay, so they can be synchronized later on.
+          committed.forEach(function(id) {
+            delete result.changes[id];
+          });
+
+          // Save to store.
+          store.put(result);
+        });
+        
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { cache: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          options.error(txn.error || 'Failed to execute transaction.');
+        };
+      }), options.error);
     }
   }, {
     // Meta data stores.

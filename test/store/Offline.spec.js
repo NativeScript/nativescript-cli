@@ -35,9 +35,8 @@ describe('Kinvey.Store.Offline', function() {
 
   // Kinvey.Store.Offline#save
   describe('#save', function() {
-    before(function(done) {
+    before(function() {
       this.object = { _id: 'foo', bar: 'baz' };
-      this.network.save(this.object, callback(done));
     });
     after(function(done) {
       this.network.remove(this.object, callback(done));

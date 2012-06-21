@@ -52,6 +52,120 @@
     },
 
     /**
+     * Synchronizes network and cached store.
+     * 
+     * @param {Object} [options] Options.
+     */
+    synchronize: function(options) {
+      options = this._options(options);
+
+      // Pull changes from cached.
+      this.cached.getTransactionLog({
+        success: bind(this, function(data) {
+          // Synchronize updates.
+          this._synchronizeUpdates(data.updates, bind(this, function(uCommitted, uCanceled) {
+            // Synchronize removals.
+            this._synchronizeRemovals(data.removals, function(rCommitted, rCanceled) {
+              // Merge result sets.
+              var committed = uCommitted.concat(rCommitted);
+              var canceled = uCanceled.concat(rCanceled);
+
+              // Notify observer.
+              data.observer(committed, canceled, {
+                success: function(_, info) {
+                  options.success(null, info);
+                },
+                error: options.error
+              });
+            });
+          }));
+        }),
+        error: options.error
+      });
+    },
+
+    /**
+     * Removes specified objects from the network store.
+     * 
+     * @private
+     * @param {Array} removals Objects to be removed.
+     * @param {function(committed, canceled)} complete Complete callback.
+     */
+    _synchronizeRemovals: function(removals, complete) {
+      // Save a network request when there is nothing to be removed.
+      if(0 === removals.length) {
+        return complete([], []);
+      }
+
+      // Build list of ids.
+      var list = [];
+      removals.forEach(function(object) {
+        list.push(object._id);
+      });
+
+      // Remove all objects at once.
+      var query = new Kinvey.Query();
+      query.on('_id').in_(list);
+      this.network.removeWithQuery(query, {
+        success: function() {
+          // Mark all as committed.
+          complete(list, []);
+        },
+        error: function() {
+          // Mark all as canceled.
+          complete([], list);
+        }
+      });
+    },
+
+    /**
+     * Updates specified objects at the network store.
+     * 
+     * @private
+     * @param {Array} updates Objects to be updated.
+     * @param {function(committed, canceled)} complete Complete callback.
+     */
+    _synchronizeUpdates: function(updates, complete) {
+      // Prepare sets.
+      var committed = [];
+      var canceled = [];
+
+      // Define update handle.
+      var updater = bind(this, function(i) {
+        var object = updates[i];
+        if(object) {
+          // Define complete handle, which advances to the next object to sync.
+          var next = function() { updater(i + 1); };
+
+          // Synchronize object.
+          this.network.save(object, {
+            success: bind(this, function(response) {
+              // Add to set.
+              committed.push(response._id);
+
+              // Since network store is the primary store, we need to update
+              // the cached version.
+              this.cached.put('query', null, response, {
+                success: next,
+                error: next
+              });
+            }),
+            error: function() {// add to set and advance.
+              canceled.push(object._id);
+              next();
+            }
+          });
+        }
+        else {// no more updates.
+          complete(committed, canceled);
+        }
+      });
+
+      // Trigger synchronization.
+      updater(0);
+    },
+
+    /**
      * Wraps success and error handlers to include synchronization and
      * oncomplete support.
      * 
@@ -65,9 +179,7 @@
       var fnSuccess = options.success;
       options.success = bind(this, function(response, info) {
         fnSuccess(response, info);
-
-        // Synchronize network with cached.
-        this.cached.sync(this.network, {
+        this.synchronize({
           success: function() { options.complete(); },
           error: function() { options.complete(); }
         });
