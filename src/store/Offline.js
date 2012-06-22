@@ -22,10 +22,24 @@
     /** @lends Kinvey.Store.Offline# */
 
     /**
+     * Configures store.
+     * 
+     * @override
+     * @see Kinvey.Store.Cached#configure
+     * @param {Object} options Options.
+     * @param {function(cached, remote, options)} [options.conflict]
+     *          Conflict handler.
+     */
+    configure: function(options) {
+      Kinvey.Store.Cached.prototype.configure.call(this, options);
+      options.conflict && (this.options.conflict = options.conflict);
+    },
+
+    /**
      * Removes object from the store.
      * 
-     * @param {Object} object Object to be removed.
-     * @param {Object} [options] Options.
+     * @override
+     * @see Kinvey.Store.Cached#remove
      */
     remove: function(object, options) {
       options = this._options(options);
@@ -35,11 +49,11 @@
     /**
      * Removes multiple objects from the store.
      * 
-     * @param {Object} query Query object.
-     * @param {Object} [options] Options.
+     * @override
+     * @see Kinvey.Store.Cached#removeWithQuery
      */
     removeWithQuery: function(query, options) {
-      // Removal by query is not supported locally, so no synchronization is
+      // Cache removal by query is not supported, hence no synchronization is
       // performed.
       Kinvey.Store.Cached.prototype.removeWithQuery.call(this, query, options);
     },
@@ -47,8 +61,8 @@
     /**
      * Saves object to the store.
      * 
-     * @param {Object} object Object to be saved.
-     * @param {Object} [options] Options.
+     * @override
+     * @see Kinvey.Store.Cached#save
      */
     save: function(object, options) {
       options = this._options(options);
@@ -56,7 +70,7 @@
     },
 
     /**
-     * Synchronizes network and cached store.
+     * Synchronizes network store with cached store.
      * 
      * @param {Object} [options] Options.
      */
@@ -66,7 +80,7 @@
       // Pull changes from cached.
       this.cached.getTransactionLog({
         success: bind(this, function(data) {
-          // Pull "stale" objects from remote.
+          // Pull all "stale" objects from remote.
           var query = new Kinvey.Query();
           query.on('_id').in_(Object.keys(data.changes));
 
@@ -74,35 +88,40 @@
             success: bind(this, function(response) {
               // Compare objects and bucketize changes.
               this._bucketize(data.changes, response, {
+                // Conflict resolution handler.
+                conflict: options.conflict,
+
+                // After bucketizing, it is time for the actual
+                // synchronization.
                 complete: bind(this, function(commit, conflicted) {
-                  // After bucketizing, it is time for the actual synchronization.
                   this._synchronize(commit, function(committed, canceled) {
-                    // On completion, notify observer of changes made and
+                    // After synchronization, notify observer of results and
                     // terminate synchronization algorithm.
                     data.observer(committed, conflicted, canceled, {
-                      success: function(_, info) {
+                      success: function() {
+                        // Trigger application success handler, passing the
+                        // results of the synchronization algorithm.
                         options.success({
                           committed: committed.length,
-                          conflicted:  conflicted.length,
+                          conflicted: conflicted.length,
                           canceled: canceled.length
-                        }, info);
+                        }, { offline: true });
                       },
-                      error: options.error
+                      error: options.error// Observer failed.
                     });
                   });
-                }),
-                conflict: options.conflict
+                })
               });
             }),
-            error: options.error
+            error: options.error// Failed to pull objects from remote.
           });
         }),
-        error: options.error
+        error: options.error// Failed to get changes.
       });
     },
 
     /**
-     * Bucketizes changes into three buckets: commit, conflict or cancel.
+     * Bucketizes changes into the committable or conflicted bucket.
      * 
      * @private
      * @param {Object} changes List of changes.
@@ -113,11 +132,16 @@
       // Extract list of ids.
       var ids = Object.keys(changes);
 
-      // Define done callback, which will be invoked for each object compared.
+      // Quick way out if there are no changes.
+      if(0 === ids.length) {
+        options.complete([], []);
+      }
+
+      // Define handler to be invoked for each object compared.
       var done = function(id) {
-        // commitSet contains the desired final state of all changed objects.
+        // commitSet contains the desired final state of changed objects.
         var commit = {};
-        var conflicted = [];// list of ids.
+        var conflicted = [ ];// list of ids.
         var pending = ids.length;
 
         // Return options object.
@@ -127,27 +151,23 @@
 
           // Handlers.
           success: function(object) {
-            // The user may have erroneously altered the id, which we absolutely
-            // need to undo here.
+            // The user may have erroneously altered the id, which we
+            // absolutely need to undo here.
             object && (object._id = id);
 
-            // Synchronize sets upon completion.
+            // Add to committable bucket.
             commit[id] = object;
-            if(0 === --pending) {
-              return options.complete(commit, conflicted);
-            }
-         },
-          error: function(/*cached, remote*/) {
-            // Synchronize sets upon completion.
+            0 === --pending && options.complete(commit, conflicted);
+          },
+          error: function(/* cached, remote */) {
+            // Add to conflict bucket.
             conflicted.push(id);
-            if(0 === --pending) {
-              return options.complete(commit, conflicted);
-            }
+            0 === --pending && options.complete(commit, conflicted);
           }
         };
       };
 
-      // Handle objects available both locally and remotely.
+      // Handle objects available both in cache and remotely.
       objects.forEach(bind(this, function(object) {
         var id = object._id;
 
@@ -156,7 +176,7 @@
         delete changes[id];
       }));
 
-      // Handle objects only available locally.
+      // Handle objects only available in cache.
       Object.keys(changes).forEach(bind(this, function(id) {
         // Invoke compare function, and remove from changes.
         this._compare(changes[id], null, done(id));
@@ -165,15 +185,17 @@
     },
 
     /**
-     * Compares cached and remote object. The success handler is invoked with
-     * the preferred version. On conflict, the error handler is invoked.
+     * Compares cached and remote object. The success handler is invoked
+     * with the preferred version. On conflict, the error handler is
+     * invoked.
      * 
      * @private
      * @param {Object} cached Cached object.
      * @param {Object} remote Remote object.
      * @param {Object} options Options.
      * @param {function(object)} options.success Success callback.
-     * @param {function(cached, remote, success)} options.conflict Conflict resolution callback.
+     * @param {function(cached, remote, success)} options.conflict Conflict
+     *          resolution callback.
      * @param {function(cached, remote)} options.error Failure callback.
      */
     _compare: function(cached, remote, options) {
@@ -182,9 +204,11 @@
         return options.success(cached.value);
       }
 
-      // At this point, cached and remote are not equal: conflict. Alter error
-      // callback to allow the conflict resolution algorithm to report a
-      // conflicting state.
+      // At this point, cached and remote are not equal: conflict. Call
+      // conflict
+      // resolution callback to resolve the conflict. Optionally, the
+      // handler
+      // can maintain the conflicting state by triggering the error handler.
       var fnError = options.error;
       options.error = function() {
         fnError(cached.value, remote);
@@ -193,14 +217,23 @@
     },
 
     /**
+     * Returns complete options object.
+     * 
+     * @private
      * @override
+     * @see Kinvey.Store.Cached#_options
      */
     _options: function(options) {
       options = Kinvey.Store.Cached.prototype._options.call(this, options);
 
-      // Always prefer cache over network. For write operations, this setting
-      // means all network responses are always cached. Which is good :)
-      options.policy = Kinvey.Store.Cached.CACHE_FIRST;
+      // Always involve cache when reading. For write operations, this
+      // setting means all network responses are always cached. Which is good :)
+      var accepted = [
+        Kinvey.Store.Cached.NETWORK_FIRST,
+        Kinvey.Store.Cached.CACHE_FIRST,
+        Kinvey.Store.Cached.BOTH
+      ];
+      -1 !== accepted.indexOf(options.policy) || (options.policy = Kinvey.Store.Cached.CACHE_FIRST);
 
       // Conflict resolution handler.
       options.conflict || (options.conflict = this.options.conflict);
@@ -218,10 +251,10 @@
     _pushRemovals: function(removals, complete) {
       // Quick way out if there are no removals.
       if(0 === removals.length) {
-        return complete([], []);
+        return complete([ ], [ ]);
       }
 
-      // Remove remotely can be done in one call.
+      // Remove objects remotely is done using one operation.
       var query = new Kinvey.Query();
       query.on('_id').in_(removals);
 
@@ -234,13 +267,17 @@
               // Remove object from cache.
               this.cached.put('query', id, null, {
                 // Advance with next object.
-                success: function() { remove(i); },
-                error: function() { remove(i); }
+                success: function() {
+                  remove(i);
+                },
+                error: function() {
+                  remove(i);
+                }
               });
             }
             else {
               // All are completed.
-              complete(removals, []);
+              complete(removals, [ ]);
             }
           });
 
@@ -249,7 +286,7 @@
         }),
         error: function() {
           // All are canceled.
-          complete([], removals);
+          complete([ ], removals);
         }
       });
     },
@@ -263,14 +300,14 @@
      */
     _pushUpdates: function(updates, complete) {
       // Prepare response.
-      var committed = [];
-      var canceled = [];
+      var committed = [ ];
+      var canceled = [ ];
 
       // Define handler to push a single update.
       var update = bind(this, function(i) {
         var object = updates[i];
         if(object) {
-          // Save to cached store, so cache will also be updated.
+          // Save to cached store, so cache will get updated.
           Kinvey.Store.Cached.prototype.save.call(this, object, {
             success: function(_, info) {
               committed.push(object._id);
@@ -303,13 +340,13 @@
      */
     _synchronize: function(set, complete) {
       // Divide in updates, and removals.
-      var updates = [];// list of objects.
-      var removals = [];// list of ids.
+      var updates = [ ];// list of objects.
+      var removals = [ ];// list of ids.
 
       // Bucketize once again.
       Object.getOwnPropertyNames(set).forEach(function(id) {
         var value = set[id];
-        null !== value ? updates.push(value) : removals.push(id); 
+        null !== value ? updates.push(value) : removals.push(id);
       });
 
       // Synchronize per set.
@@ -321,42 +358,75 @@
     },
 
     /**
-     * Wraps success and error handlers to include synchronization and
-     * oncomplete support.
+     * Wraps success and error handlers to trigger synchronization.
      * 
      * @private
      * @param {Object} options Options.
      * @return {Object}
      */
     _wrap: function(options) {
-      // Extend success handler to synchronize stores.
       var fnError = options.error;
       var fnSuccess = options.success;
-      options.success = bind(this, function(response, info) {
-        fnSuccess(response, info);
+      options.success = bind(this, function(response) {
+        fnSuccess(response, { offline: true });
         this.synchronize({
-          success: function(status) { options.complete(status); },
-          error: function() { options.complete(); }
+          success: function(status) {
+            options.complete(status);
+          },
+          error: function() {
+            options.complete();
+          }
         });
       });
-      options.error = function(error, info) {
-        fnError(error, info);
+      options.error = function(error) {
+        fnError(error, { offline: true });
         options.complete();
       };
       return options;
     }
   }, {
+    /** @lends Kinvey.Store.Offline */
+
     // Built-in conflict resolution handlers.
+    /**
+     * Client always wins conflict resolution. Prioritizes cached copy over
+     * remote copy.
+     * 
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options Options.
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
     clientAlwaysWins: function(cached, _, options) {
-      // Client always wins, so simply return the cached version.
       options.success(cached);
     },
+
+    /**
+     * Do not resolve conflicts. This leaves both copies in a conflicting
+     * state.
+     * 
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options Options.
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
     ignore: function(_, __, options) {
-      // Ignore and maintain conflicting state.
       options.error();
     },
-    serverAlwaysWins: function(_, remote, options) {
-      // Server always wins, so simply return the remote version.
+
+    /**
+     * Server always wins conflict resolution. Prioritizes remote copy over
+     * cached copy.
+     * 
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options Options.
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
+    serverAlwaysWins: function(cached, remote, options) {
       options.success(remote);
     }
   });

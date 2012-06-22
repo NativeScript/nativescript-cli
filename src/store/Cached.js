@@ -174,7 +174,7 @@
           options.complete();
         }
 
-        // Save locally in the background. This is only part of the complete
+        // Update cache in the background. This is only part of the complete
         // step.
         if(info.network && this._shouldUpdateCache(options.policy)) {
           this.cached.put(operation, arg, response, {
@@ -263,7 +263,7 @@
     },
 
     /**
-     * Returns whether the local cache should be updated.
+     * Returns whether the cache should be updated.
      * 
      * @private
      * @param {integer} policy Cache policy.
@@ -291,7 +291,7 @@
         // Trigger application-level handler.
         fnSuccess(response, info);
 
-        // Save locally in the background. This is the only part of the complete
+        // Update cache in the background. This is the only part of the complete
         // step.
         if(this._shouldUpdateCache(options.policy)) {
           // The cache handle defines how the cache is updated. This differs
