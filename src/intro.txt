@@ -38,7 +38,9 @@
       // Set static properties.
       if(properties) {
         for(var prop in properties) {
-          def[prop] = properties[prop];
+          if(properties.hasOwnProperty(prop)) {
+            def[prop] = properties[prop];
+          }
         }
       }
 

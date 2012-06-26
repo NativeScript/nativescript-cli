@@ -283,7 +283,7 @@
         Authorization: 'Basic ' + btoa(this._getAuth()),
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
-      body && (headers['Content-Type'] = 'application/json; charset=UTF-8');
+      body && (headers['Content-Type'] = 'application/json; charset=utf-8');
 
       // Add header for compatibility with Android 2.2, 2.3.3 and 3.2.
       // @link http://stackoverflow.com/questions/9146491/ajax-get-request-with-authorization-header-and-cors-on-android-2-3-3
@@ -293,7 +293,9 @@
 
       // Pass headers to request.
       for(var name in headers) {
-        request.setRequestHeader(name, headers[name]);
+        if(headers.hasOwnProperty(name)) {
+          request.setRequestHeader(name, headers[name]);
+        }
       }
 
       // Attach request response handler.

@@ -56,7 +56,7 @@
       'Content-Length': body ? body.length : 0,
       'X-Kinvey-Device-Information': this._getDeviceInfo()
     };
-    body && (headers['Content-Type'] = 'application/json; charset=UTF-8');
+    body && (headers['Content-Type'] = 'application/json; charset=utf-8');
 
     // Create the request.
     var path = nodeUrl.parse(url);

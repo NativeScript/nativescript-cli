@@ -182,7 +182,9 @@
       // Complex condition.
       this.query[field] instanceof Object || (this.query[field] = {});
       for(var operator in expression) {
-        this.query[field][operator] = expression[operator];
+        if(expression.hasOwnProperty(operator)) {
+          this.query[field][operator] = expression[operator];
+        }
       }
     }
   });

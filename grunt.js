@@ -15,8 +15,9 @@ module.exports = function(grunt) {
     },
     pkg: '<json:package.json>',
     sdk: {
-      html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename,
-      node: '<%= pkg.name %>-nodejs-<%= pkg.version %>'// node dist filename
+      html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename
+      node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename
+      titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>'// titanium dist filename
     },
     meta: {
       banner: [// sdk will be prefixed with this banner
@@ -70,6 +71,9 @@ module.exports = function(grunt) {
         bind: true,
         LocalDatabase: true,
         Storage: true,
+
+        // Titanium.
+        Titanium: true,
 
         // Test globals.
         after: true,
@@ -129,11 +133,34 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/NodeAppData.js',
+          '<%= dir.src %>/store/AppData.node.js',
 
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.node %>.js'
+      },
+      titanium: {
+        src: [
+          '<banner>',
+          '<%= dir.src %>/intro.txt',
+          '<%= dir.src %>/Storage.titanium.js',
+          '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/User.js',
+          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/AppData.js',
+          '<%= dir.src %>/store/AppData.titanium.js',
+
+          '<%= dir.src %>/outro.txt'
+        ],
+        dest: '<%= dir.dist %>/<%= sdk.titanium %>.js'
       }
     },
 
@@ -172,6 +199,21 @@ module.exports = function(grunt) {
         src: '<%= dir.dist %>/<%= sdk.node %>.js',
         find: /\n(\(function\(undefined\) \{)/g,
         replace: '$1'
+      },
+
+      titaniumFirstPass: {//remove IIFE from source files
+        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
+        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
+      },
+      titaniumSecondPass: {//remove gaps in newlines caused by firstPass
+        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
+        find: /\n{3,}/g,
+        replace: '\n\n'
+      },
+      titaniumThirdPass: {//remove newline below <banner>
+        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
+        find: /\n(\(function\(undefined\) \{)/g,
+        replace: '$1'
       }
     },
 
@@ -181,6 +223,9 @@ module.exports = function(grunt) {
       },
       node: {
         src: '<%= dir.dist %>/<%= sdk.node %>.js'
+      },
+      titanium: {
+        src: '<%= dir.dist %>/<%= sdk.titanium %>.js'
       }
     },
 
@@ -237,6 +282,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
   grunt.registerTask('doc', 'jsdoc');
   grunt.registerTask('minify', 'min replace:html5Arg');
-  grunt.registerTask('pack', 'concat replace:html5FirstPass replace:nodeFirstPass replace:html5SecondPass replace:nodeSecondPass replace:html5ThirdPass replace:nodeThirdPass filter');
+  grunt.registerTask('pack', 'concat replace:html5FirstPass replace:nodeFirstPass replace:titaniumFirstPass replace:html5SecondPass replace:nodeSecondPass replace:titaniumSecondPass replace:html5ThirdPass replace:nodeThirdPass replace:titaniumThirdPass filter');
   grunt.registerTask('test', 'mocha');
 };

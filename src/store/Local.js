@@ -4,7 +4,6 @@
 
   // Grab local database implementation.
   var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-  var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
   var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 
   // Define the Kinvey.Store.Local class.
@@ -236,7 +235,9 @@
 
             // Loop through cached list of ids.
             for(var index in result.value) {
-              addToResponse(result.value[index]);
+              if(result.value.hasOwnProperty(index)) {
+                addToResponse(result.value[index]);
+              }
             }
           }
         };

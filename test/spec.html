@@ -7,6 +7,16 @@
 <body>
   <div id="mocha"></div>
 
+  <!-- Shims -->
+  <script>
+  Object.defineProperty ||// Android 2.1
+  document.write('<script src="_shim/es5-shim.min.js"><\/script>');
+  </script>
+  <script>
+  window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB ||
+  document.write('<script src="_shim/indexeddb-shim.js"><\/script>');
+  </script>
+
   <!-- Environment -->
   <script src="../node_modules/mocha/mocha.js"></script>
   <script>
@@ -23,11 +33,7 @@
   <!-- Setup -->
   <script src="spec.js"></script>
 
-  <!-- Sources -->
-  <script>
-  window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB ||
-  document.write('<script src="_shim/indexeddb-shim.js"><\/script>');
-  </script>
+  <!-- Source -->
   <script src="../dist/kinvey-js-0.9.5.js"></script>
 
   <!-- Specs -->
@@ -41,8 +47,10 @@
   <script src="aggregation/Aggregation.spec.js"></script>
   <script src="aggregation/MongoBuilder.spec.js"></script>
   <script src="store/AppData.spec.js"></script>
-  <script src="store/Local.spec.js"></script>
-  <script src="store/Cached.spec.js"></script>
-  <script src="store/Offline.spec.js"></script>
+
+  <!-- Browser only specs -->
+  <script src="store/Local.spec.browser.js"></script>
+  <script src="store/Cached.spec.browser.js"></script>
+  <script src="store/Offline.spec.browser.js"></script>
 </body>
 </html>
