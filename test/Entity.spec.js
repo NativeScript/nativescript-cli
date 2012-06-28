@@ -114,4 +114,28 @@ describe('Kinvey.Entity', function() {
     });
   });
 
+  // Kinvey.Entity#setMetadata
+  describe('#setMetadata', function() {
+    // Create mock.
+    beforeEach(function() {
+      this.entity = new Kinvey.Entity({ key: 'value' }, COLLECTION_UNDER_TEST);
+    });
+    afterEach(function(done) {
+      this.entity.destroy(callback(done));
+    });
+
+    // Test suite.
+    it('sets the entity metadata.', function(done) {
+      var meta = this.entity.getMetadata();
+      meta.setGloballyWritable(true);
+      this.entity.save(callback(done, {
+        success: function(entity) {
+          entity.getMetadata().should.not.equal(meta);// attributes are updated.
+          entity.getMetadata().isGloballyWritable().should.be['true'];
+          done();
+        }
+      }));
+    });
+  });
+
 });

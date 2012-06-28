@@ -26,6 +26,7 @@
       }
       this.attr = attr || {};
       this.collection = collection;
+      this.metadata = null;
 
       // Options
       options || (options = {});
@@ -81,6 +82,17 @@
     },
 
     /**
+     * Returns metadata.
+     * 
+     * @return {Kinvey.Metadata} Metadata.
+     */
+    getMetadata: function() {
+      // Lazy load metadata object, and return it.
+      this.metadata || (this.metadata = new Kinvey.Metadata(this.attr));
+      return this.metadata;
+    },
+
+    /**
      * Returns whether entity is persisted.
      * 
      * @return {boolean}
@@ -107,6 +119,7 @@
       this.store.query(id, {
         success: bind(this, function(response, info) {
           this.attr = response;
+          this.metadata = null;// Reset.
           options.success && options.success(this, info);
         }),
         error: bind(this, function(error, info) {
@@ -128,25 +141,13 @@
       this.store.save(this.toJSON(), {
         success: bind(this, function(response, info) {
           this.attr = response;
+          this.metadata = null;// Reset.
           options.success && options.success(this, info);
         }),
         error: function(error, info) {
           options.error && options.error(this, error, info);
         }
       });
-    },
-
-    /**
-     * Sets id.
-     * 
-     * @param {string} id Id.
-     * @throws {Error} On empty id.
-     */
-    setId: function(id) {
-      if(null == id) {
-        throw new Error('Id must not be null');
-      }
-      this.set(this.ATTR_ID, id);
     },
 
     /**
@@ -164,12 +165,43 @@
     },
 
     /**
+     * Sets id.
+     * 
+     * @param {string} id Id.
+     * @throws {Error} On empty id.
+     */
+    setId: function(id) {
+      if(null == id) {
+        throw new Error('Id must not be null');
+      }
+      this.set(this.ATTR_ID, id);
+    },
+
+    /**
+     * Sets metadata.
+     * 
+     * @param {Kinvey.Metadata} metadata Metadata object.
+     * @throws {Error} On invalid instance.
+     */
+    setMetadata: function(metadata) {
+      if(metadata && !(metadata instanceof Kinvey.Metadata)) {
+        throw new Error('Metadata must be an instanceof Kinvey.Metadata');
+      }
+      this.metadata = metadata || null;
+    },
+
+    /**
      * Returns JSON representation. Used by JSON#stringify.
      * 
      * @returns {Object} JSON representation.
      */
     toJSON: function() {
-      return this.attr;
+      var result = this.attr;
+
+      // Add ACL metadata.
+      this.metadata && (result._acl = this.metadata.toJSON()._acl);
+
+      return result;
     },
 
     /**

@@ -47,6 +47,15 @@
     },
 
     /**
+     * Returns metadata.
+     * 
+     * @throws {Error} Always.
+     */
+    getMetadata: function() {
+      throw new Error('Users do not have any metadata.');
+    },
+
+    /**
      * Returns password, or null if not set.
      * 
      * @return {string} Password.
@@ -154,6 +163,15 @@
         },
         error: options.error
       });
+    },
+
+    /**
+     * Sets metadata.
+     * 
+     * @throws {Error} Always.
+     */
+    setMetadata: function() {
+      throw new Error('Users do not have any metadata.');
     },
 
     /**
