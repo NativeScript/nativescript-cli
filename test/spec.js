@@ -17,7 +17,7 @@ global.callback = function(done, defaults) {
       done();
     },
     error: defaults.error || function(error) {
-      done(new Error(error.message));
+      done(new Error(error.description));
     }
   };
 };

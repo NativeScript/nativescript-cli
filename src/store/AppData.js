@@ -240,7 +240,7 @@
       }
 
       // Android < 4.0 caches all requests aggressively. For now, work around
-      // by adding a cache bursting query string.
+      // by adding a cache busting query string.
       param.push('_=' + new Date().getTime());
 
       return url + '?' + param.join('&');
@@ -281,12 +281,13 @@
       var headers = {
         Accept: 'application/json, text/javascript',
         Authorization: 'Basic ' + btoa(this._getAuth()),
+        'X-Kinvey-API-Version': Kinvey.API_VERSION,
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
       body && (headers['Content-Type'] = 'application/json; charset=utf-8');
 
       // Add header for compatibility with Android 2.2, 2.3.3 and 3.2.
-      // @link http://stackoverflow.com/questions/9146491/ajax-get-request-with-authorization-header-and-cors-on-android-2-3-3
+      // @link http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
       if('GET' === method && window && window.location) {
         headers['X-Kinvey-Origin'] = window.location.protocol + '//' + window.location.host;
       }
@@ -319,12 +320,13 @@
           error: 'The request failed',
           timeout: 'The request timed out'
         };
-        var msg = error[event.type] || error.error;
+        var description = error[event.type] || error.error;
 
         // Execute application-level handler.
         options.error({
-          error: msg,
-          message: msg
+          code: Kinvey.Error.REQUEST_FAILED,
+          description: description,
+          debug: ''
         }, { network: true });
       };
 

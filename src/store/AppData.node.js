@@ -54,6 +54,7 @@
       Accept: 'application/json, text/javascript',
       Authorization: 'Basic ' + new Buffer(this._getAuth(), 'utf8').toString('base64'),
       'Content-Length': body ? body.length : 0,
+      'X-Kinvey-API-Version': Kinvey.API_VERSION,
       'X-Kinvey-Device-Information': this._getDeviceInfo()
     };
     body && (headers['Content-Type'] = 'application/json; charset=utf-8');
@@ -94,8 +95,9 @@
     request.on('error', function(error) {
       // Execute application-level handler.
       options.error({
-        error: error.code,
-        message: error.code
+        code: Kinvey.Error.REQUEST_FAILED,
+        description: error.error || 'The request failed',
+        debug: ''
       }, { network: true });
     });
 

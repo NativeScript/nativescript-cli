@@ -37,21 +37,10 @@
      * @see Kinvey.Entity#destroy
      */
     destroy: function(options) {
-      options || (options = {});
-      if(!this.isLoggedIn) {
-        var message = 'This request requires the master secret';
-        options.error && options.error({
-          error: message,
-          message: message
-        }, {});
-        return;
-      }
-
-      // Users are allowed to remove themselves.
       Kinvey.Entity.prototype.destroy.call(this, {
         success: function(user, info) {
           user.logout();
-          options.success && options.success(user, info);
+          options.success(user, info);
         },
         error: options.error
       });
@@ -146,10 +135,10 @@
     save: function(options) {
       options || (options = {});
       if(!this.isLoggedIn) {
-        var message = 'This request requires the master secret';
         options.error && options.error({
-          error: message,
-          message: message
+          code: Kinvey.Error.OPERATION_DENIED,
+          description: 'This operation is not allowed',
+          debug: 'Cannot save a user which is not logged in.'
         }, {});
         return;
       }

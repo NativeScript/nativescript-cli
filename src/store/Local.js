@@ -54,10 +54,13 @@
         txn.oncomplete = function() {
           // Result is undefined if data was not found.
           var result = req.result;
-          result ? options.success(result.value, { cache: true }) : options.error('Not found.');
+          if(result) {
+            return options.success(result.value, { cache: true });
+          }
+          options.error(Kinvey.Error.NOT_FOUND);
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     },
@@ -121,7 +124,7 @@
           }, { cache: true });
         });
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     },
@@ -190,10 +193,13 @@
         txn.oncomplete = function() {
           // Result is undefined if data was not found.
           var result = req.result;
-          result ? options.success(result, { cache: true }) : options.error('Not found.');
+          if(result) {
+            return options.success(result, { cache: true });
+          }
+          options.error(Kinvey.Error.NOT_FOUND);
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }, options.error);
     },
@@ -244,10 +250,13 @@
 
         // Handle transaction status.
         txn.oncomplete = function() {
-          metaReq.result ? options.success(response, { cache: true }) : options.error('Not found.');
+          if(metaReq.result) {
+            return options.success(response, { cache: true });
+          }
+          options.error(Kinvey.Error.NOT_FOUND);
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     },
@@ -286,7 +295,7 @@
           options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     },
@@ -299,7 +308,7 @@
      */
     removeWithQuery: function(query, options) {
       options = this._options(options);
-      options.error('Removal based on a query is not supported by this store.');
+      options.error(Kinvey.Error.FEATURE_UNAVAILABLE, 'Removal based on a query is not supported by this store.');
     },
 
     /**
@@ -330,7 +339,7 @@
           options.success(object, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     },
@@ -422,7 +431,9 @@
             upgrade(database);
             success(database);
           };
-          req.onerror = function() { failure(req.error || 'Mutation error.'); };
+          req.onerror = function() {
+            failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, req.error || 'Mutation error.');
+          };
         }
         else {// new.
           this._open(version, upgrade, success, failure);
@@ -465,7 +476,7 @@
         success(this.database);
       });
       req.onblocked = req.onerror = function() {
-        failure(req.error || 'Failed to open database.');
+        failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, req.error || 'Failed to open database.');
       };
     },
 
@@ -481,10 +492,11 @@
 
       // Create convenience shortcut for error handler.
       var fnError = options.error || this.options.error;
-      options.error = function(error) {
+      options.error = function(code, description) {
         fnError({
-          error: error,
-          msg: error
+          code: code,
+          description: description || code,
+          debug: ''
         }, { cache: true });
       };
 
@@ -501,10 +513,11 @@
      */
     _putAggregation: function(aggregation, data, options) {
       // Failure handler triggers error handler.
-      var failure = function(error) {
+      var failure = function(code, description) {
         options.error({
-          error: error,
-          msg: error
+          code: code,
+          description: description || code,
+          debug: ''
         });
       };
 
@@ -527,7 +540,7 @@
           options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          failure(txn.error || 'Failed to execute transaction.');
+          failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), failure);
     },
@@ -541,10 +554,11 @@
      */
     _putObject: function(object, options) {
       // Failure handler triggers error handler.
-      var failure = function(error) {
+      var failure = function(code, description) {
         options.error({
-          error: error,
-          msg: error
+          code: code,
+          description: description || code,
+          debug: ''
         });
       };
 
@@ -562,7 +576,7 @@
           options.success(object, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          failure(txn.error || 'Failed to execute transaction.');
+          failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }, failure);
     },
@@ -577,10 +591,11 @@
      */
     _putQuery: function(query, data, options) {
       // Failure handler triggers error handler.
-      var failure = function(error) {
+      var failure = function(code, description) {
         options.error({
-          error: error,
-          msg: error
+          code: code,
+          description: description || code,
+          debug: ''
         }, { cache: true });
       };
 
@@ -616,7 +631,7 @@
           options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          failure(txn.error || 'Failed to execute transaction.');
+          failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), failure);
     },
@@ -630,10 +645,11 @@
      */
     _removeObject: function(id, options) {
       // Failure handler triggers error handler.
-      var failure = function(error) {
+      var failure = function(code, description) {
         options.error({
-          error: error,
-          msg: error
+          code: code,
+          description: description,
+          debug: ''
         });
       };
 
@@ -651,7 +667,7 @@
           options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          failure(txn.error || 'Failed to execute transaction.');
+          failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }, failure);
     },
@@ -737,7 +753,7 @@
           options.success(null, { cache: true });
         };
         txn.onabort = txn.onerror = function() {
-          options.error(txn.error || 'Failed to execute transaction.');
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
         };
       }), options.error);
     }

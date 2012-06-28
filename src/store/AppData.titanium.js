@@ -63,6 +63,7 @@
     var headers = {
       Accept: 'application/json, text/javascript',
       Authorization: 'Basic ' + Titanium.Utils.base64encode(this._getAuth()),
+      'X-Kinvey-API-Version': Kinvey.API_VERSION,
       'X-Kinvey-Device-Information': this._getDeviceInfo()
     };
     body && (headers['Content-Type'] = 'application/json; charset=utf-8');
@@ -91,10 +92,10 @@
     // Define request error handlers.
     request.onerror = function(error) {
       // Execute application-level handler.
-      var msg = error.error || 'Unknown error';
       options.error({
-        error: msg,
-        message: msg
+        code: Kinvey.Error.REQUEST_FAILED,
+        description: error.error || 'The request failed',
+        debug: ''
       }, { network: true });
     };
 

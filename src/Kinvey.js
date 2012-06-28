@@ -8,7 +8,7 @@
    * 
    * @constant
    */
-  Kinvey.API_VERSION = 0;
+  Kinvey.API_VERSION = 1;
 
   /**
    * SDK version.

@@ -29,10 +29,10 @@
      * @override
      */
     clear: function(options) {
-      var message = 'This request requires the master secret';
       options && options.error && options.error({
-        error: message,
-        message: message
+        code: Kinvey.Error.OPERATION_DENIED,
+        description: 'This operation is not allowed',
+        debug: ''
       });
     }
   });

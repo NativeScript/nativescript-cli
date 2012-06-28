@@ -398,7 +398,7 @@
      * @param {function(copy)} options.success Success callback.
      * @param {function()} options.error Failure callback.
      */
-    clientAlwaysWins: function(cached, _, options) {
+    clientAlwaysWins: function(cached, remote, options) {
       options.success(cached);
     },
 
@@ -412,7 +412,7 @@
      * @param {function(copy)} options.success Success callback.
      * @param {function()} options.error Failure callback.
      */
-    ignore: function(_, __, options) {
+    ignore: function(cached, remote, options) {
       options.error();
     },
 
