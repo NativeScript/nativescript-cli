@@ -5,7 +5,7 @@ describe('Kinvey.Store.Offline', function() {
   before(function() {
     this.store = new Kinvey.Store.Offline(COLLECTION_UNDER_TEST);
     this.cached = this.store.cached;
-    this.network = this.store.network;
+    this.appdata = this.store.appdata;
   });
   after(function(done) {
     var cached = this.cached;
@@ -81,7 +81,7 @@ describe('Kinvey.Store.Offline', function() {
       // Remove separately, since calling remove would yield a conflict.
       var cached = this.cached;
       var object = this.object;
-      this.network.remove(this.object, callback(done, {
+      this.appdata.remove(this.object, callback(done, {
         success: function() {
           cached.remove(object, callback(done));
         },

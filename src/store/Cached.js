@@ -4,15 +4,15 @@
   Kinvey.Store.Cached = Base.extend({
     // Default options.
     options: {
-      policy: null,
       complete: function() { },
       error: function() { },
-      success: function() { }
-    },
+      success: function() { },
 
-    // Stores.
-    cached: null,
-    network: null,
+      policy: null,
+
+      appdata: { },
+      cached: { }
+    },
 
     /**
      * Creates new cached store.
@@ -20,15 +20,16 @@
      * @name Kinvey.Store.Cached
      * @constructor
      * @param {string} collection Collection.
-     * @param {Object} [options] options
+     * @param {Object} [options] Options.
      */
     constructor: function(collection, options) {
-      // Create two stores, one network store, and one cached.
+      // This class basically bridges between Cached and AppData store. The
+      // Cached store really is the protected Local store.
+      this.appdata = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
       this.cached = new Kinvey.Store.Local(collection);
-      this.network = new Kinvey.Store.AppData(collection);
 
       // Options.
-      this.options.policy = Kinvey.Store.Cached.NETWORK_FIRST;// default policy.
+      this.options.policy = Kinvey.Store.Cached.NETWORK_FIRST;// Default policy.
       options && this.configure(options);
     },
 
@@ -49,16 +50,25 @@
      * Configures store.
      * 
      * @param {Object} options Options.
-     * @param {integer} [options.policy] Cache policy.
      * @param {function()} [options.complete] Complete callback.
      * @param {function(response, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
+     * @param {string} [options.policy] Cache policy.
+     * @param {Object} [options.appdata] AppData store options.
+     * @param {Object} [options.cached] Cached store options.
      */
     configure: function(options) {
+      // Callback options.
       options.complete && (this.options.complete = options.complete);
       options.error && (this.options.error = options.error);
       options.success && (this.options.success = options.success);
+
+      // Store options.
       options.policy && (this.options.policy = options.policy);
+
+      // Child store options.
+      options.appdata && (this.options.appdata = options.appdata);
+      options.cached && (this.options.cached = options.cached);
     },
 
     /**
@@ -69,7 +79,7 @@
      */
     login: function(object, options) {
       options = this._options(options);
-      this.network.login(object, options);
+      this.appdata.login(object, options);
     },
 
     /**
@@ -128,7 +138,7 @@
     },
 
     /**
-     * Returns complete options object.
+     * Returns full options object.
      * 
      * @private
      * @param {Object} options Options.
@@ -136,10 +146,19 @@
      */
     _options: function(options) {
       options || (options = {});
-      'undefined' !== typeof options.policy || (options.policy = this.options.policy);
+
+      // Configure child stores.
+      this.appdata.configure(options.appdata || this.options.appdata);
+      this.cached.configure(options.cached || this.options.cached);
+
+      // Callback options.
       options.complete || (options.complete = this.options.complete);
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
+
+      // Store options.
+      'undefined' !== typeof options.policy || (options.policy = this.options.policy);
+
       return options;
     },
 
@@ -155,8 +174,8 @@
     _read: function(operation, arg, options) {
       // Extract primary and secondary store from cache policy.
       var networkFirst = this._shouldCallNetworkFirst(options.policy);
-      var primaryStore = networkFirst ? this.network : this.cached;
-      var secondaryStore = networkFirst ? this.cached : this.network;
+      var primaryStore = networkFirst ? this.appdata : this.cached;
+      var secondaryStore = networkFirst ? this.cached : this.appdata;
 
       // Extend success handler to cache network response.
       var invoked = false;
@@ -297,10 +316,15 @@
           // The cache handle defines how the cache is updated. This differs
           // per operation.
           var cacheHandle = {
-            save: ['query', null, response],
             remove: ['query', arg._id, null],
             removeWithQuery: ['queryWithQuery', arg, []]
           };
+
+          // Upon save, appdata returns the document. Cache this, except for
+          // when a user (with password!) is returned.
+          if('user' !== this.appdata.collection) {
+            cacheHandle.save = ['query', null, response];
+          }
 
           // If a cache handle is defined, append the callbacks and trigger.
           if(cacheHandle[operation]) {
@@ -321,7 +345,7 @@
       };
 
       // Perform operation.
-      this.network[operation](arg, options);
+      this.appdata[operation](arg, options);
     }
   }, {
     /** @lends Kinvey.Store.Cached */

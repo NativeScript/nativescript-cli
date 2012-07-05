@@ -59,3 +59,14 @@
       return fn.apply(thisArg, arguments);
     };
   };
+
+  // Merges multiple source objects into one newly created object.
+  var merge = function(/*sources*/) {
+    var target = {};
+    Array.prototype.slice.call(arguments, 0).forEach(function(source) {
+      for(var prop in source) {
+        target[prop] = source[prop];
+      }
+    });
+    return target;
+  };

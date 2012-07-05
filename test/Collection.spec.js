@@ -35,8 +35,9 @@ describe('Kinvey.Collection', function() {
 
     // Test suite.
     it('clears all entities.', function(done) {
-      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done, {
-        success: function(collection) {
+      var collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+      collection.clear(callback(done, {
+        success: function() {
           collection.list.should.have.length(0);
           done();
         }
@@ -58,7 +59,7 @@ describe('Kinvey.Collection', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
       this.collection.count(callback(done, {
-        success: function(_, count) {
+        success: function(count) {
           count.should.equal(1);
           done();
         }
@@ -80,7 +81,7 @@ describe('Kinvey.Collection', function() {
     // Test suite.
     it('fetches all entities.', function(done) {
       this.collection.fetch(callback(done, {
-        success: function(_, list) {
+        success: function(list) {
           list.should.have.length(1);
           list[0].should.be.an.instanceOf(Kinvey.Entity);
           done();
@@ -102,7 +103,7 @@ describe('Kinvey.Collection', function() {
       });
 
       new MyCollection().fetch(callback(done, {
-        success: function(_, list) {
+        success: function(list) {
           list.should.have.length(1);
           list[0].should.be.an.instanceOf(MyEntity);
           list[0].get('foo').should.equal('bar');

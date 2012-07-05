@@ -17,7 +17,7 @@
      * @constructor
      * @param {Object} [attr] Attribute object.
      * @param {string} collection Owner collection.
-     * @param {Object} options
+     * @param {Object} options Options.
      * @throws {Error} On empty collection.
      */
     constructor: function(attr, collection, options) {
@@ -28,9 +28,9 @@
       this.collection = collection;
       this.metadata = null;
 
-      // Options
+      // Options.
       options || (options = {});
-      this.store = (options.store || Kinvey.Store.factory)(this.collection);
+      this.store = Kinvey.Store.factory(collection, options.store, options.options);
     },
 
     /** @lends Kinvey.Entity# */
@@ -40,19 +40,15 @@
      * 
      * @param {Object} [options]
      * @param {function(entity, info)} [options.success] Success callback.
-     * @param {function(entity, error, info)} [options.error] Failure callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
     destroy: function(options) {
       options || (options = {});
-
-      this.store.remove(this.toJSON(), {
+      this.store.remove(this.toJSON(), merge(options, {
         success: bind(this, function(_, info) {
           options.success && options.success(this, info);
-        }),
-        error: bind(this, function(error, info) {
-          options.error && options.error(this, error, info);
         })
-      });
+      }));
     },
 
     /**
@@ -107,7 +103,7 @@
      * @param {string} id Entity id.
      * @param {Object} [options]
      * @param {function(entity, info)} [options.success] Success callback.
-     * @param {function(entity, error, info)} [options.error] Failure callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      * @throws {Error} On empty id.
      */
     load: function(id, options) {
@@ -116,16 +112,13 @@
       }
       options || (options = {});
 
-      this.store.query(id, {
+      this.store.query(id, merge(options, {
         success: bind(this, function(response, info) {
           this.attr = response;
           this.metadata = null;// Reset.
           options.success && options.success(this, info);
-        }),
-        error: bind(this, function(error, info) {
-          options.error && options.error(this, error, info);
         })
-      });
+      }));
     },
 
     /**
@@ -133,21 +126,17 @@
      * 
      * @param {Object} [options]
      * @param {function(entity, info)} [options.success] Success callback.
-     * @param {function(entity, error, info)} [options.error] Failure callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
     save: function(options) {
       options || (options = {});
-
-      this.store.save(this.toJSON(), {
+      this.store.save(this.toJSON(), merge(options, {
         success: bind(this, function(response, info) {
           this.attr = response;
           this.metadata = null;// Reset.
           options.success && options.success(this, info);
-        }),
-        error: function(error, info) {
-          options.error && options.error(this, error, info);
-        }
-      });
+        })
+      }));
     },
 
     /**

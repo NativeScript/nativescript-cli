@@ -41,12 +41,11 @@
     // For now, include authorization in this adapter. Ideally, it should
     // have some external interface.
     if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
-      return Kinvey.User.create({}, {
+      return Kinvey.User.create({}, merge(options, {
         success: bind(this, function() {
           this._send(method, url, body, options);
-        }),
-        error: options.error
-      });
+        })
+      }));
     }
 
     // Set headers.

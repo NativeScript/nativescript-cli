@@ -82,7 +82,7 @@
      * @return {string} ISO-8601 formatted date.
      */
     lastModified: function() {
-      return (this.kmd && this.kmd.lmt) || null;
+      return this.kmd.lmt || null;
     },
 
     /**

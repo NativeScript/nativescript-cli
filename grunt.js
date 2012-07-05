@@ -69,7 +69,7 @@ module.exports = function(grunt) {
         Kinvey: true,
         Base: true,
         bind: true,
-        LocalDatabase: true,
+        merge: true,
         Storage: true,
 
         // Titanium.

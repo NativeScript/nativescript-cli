@@ -10,8 +10,15 @@
      * @extends Kinvey.Store.Cached
      * @param {string} collection Collection.
      * @param {Object} [options] Options.
+     * @throws {Error} On usage with user collection.
      */
     constructor: function(collection, options) {
+      // The user collection cannot be used offline due to the lack of
+      // metadata and possible security issues.
+      if('user' === collection) {
+        throw new Error('The user collection cannot be used with the OfflineStore');
+      }
+
       // Options. By default, no conflict resolution algorithm is defined.
       this.options.conflict = Kinvey.Store.Offline.ignore;
 
@@ -28,7 +35,7 @@
      * @see Kinvey.Store.Cached#configure
      * @param {Object} options Options.
      * @param {function(cached, remote, options)} [options.conflict]
-     *          Conflict handler.
+     *          Conflict resolution handler.
      */
     configure: function(options) {
       Kinvey.Store.Cached.prototype.configure.call(this, options);
@@ -84,7 +91,7 @@
           var query = new Kinvey.Query();
           query.on('_id').in_(Object.keys(data.changes));
 
-          this.network.queryWithQuery(query.toJSON(), {
+          this.appdata.queryWithQuery(query.toJSON(), {
             success: bind(this, function(response) {
               // Compare objects and bucketize changes.
               this._bucketize(data.changes, response, {
@@ -258,7 +265,7 @@
       var query = new Kinvey.Query();
       query.on('_id').in_(removals);
 
-      this.network.removeWithQuery(query.toJSON(), {
+      this.appdata.removeWithQuery(query.toJSON(), {
         success: bind(this, function() {
           // All are committed, update cache.
           var remove = bind(this, function(i) {

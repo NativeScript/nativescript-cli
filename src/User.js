@@ -37,13 +37,13 @@
      * @see Kinvey.Entity#destroy
      */
     destroy: function(options) {
-      Kinvey.Entity.prototype.destroy.call(this, {
+      options || (options = {});
+      Kinvey.Entity.prototype.destroy.call(this, merge(options, {
         success: function(user, info) {
           user.logout();
           options.success(user, info);
-        },
-        error: options.error
-      });
+        }
+      }));
     },
 
     /**
@@ -92,7 +92,7 @@
      * @param {string} password Password.
      * @param {Object} [options]
      * @param {function(entity, info)} [options.success] Success callback.
-     * @param {function(entity, error, info)} [options.error] Failure callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
     login: function(username, password, options) {
       options || (options = {});
@@ -108,7 +108,7 @@
       this.setPassword(password);
 
       // Send request.
-      this.store.login(this, {
+      this.store.login(this, merge(options, {
         success: bind(this, function(response, info) {
           // Update attributes. Preserve password since it is part of
           // the authorization.
@@ -116,11 +116,8 @@
           this.setPassword(password);
           this._login();
           options.success && options.success(this, info);
-        }),
-        error: bind(this, function(error, info) {
-          options.error && options.error(this, error, info);
         })
-      });
+      }));
     },
 
     /**
@@ -155,14 +152,13 @@
       // Parent method will always update. Response does not include the
       // password, so persist it manually.
       var password = this.getPassword();
-      Kinvey.Entity.prototype.save.call(this, {
+      Kinvey.Entity.prototype.save.call(this, merge(options, {
         success: function(user, info) {
           user.setPassword(password);
           user._login();
           options.success && options.success(user, info);
-        },
-        error: options.error
-      });
+        }
+      }));
     },
 
     /**
@@ -265,13 +261,12 @@
 
       // Persist, and mark the created user as logged in.
       var user = new Kinvey.User(attr);
-      Kinvey.Entity.prototype.save.call(user, {
+      Kinvey.Entity.prototype.save.call(user, merge(options, {
         success: function(user, info) {
           user._login();
           options.success && options.success(user, info);
-        },
-        error: options.error
-      });
+        }
+      }));
       return user;// return the instance
     },
 

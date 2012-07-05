@@ -35,16 +35,16 @@
     options || (options = {});
     options.error || (options.error = this.options.error);
     options.success || (options.success = this.options.success);
+    'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
 
     // For now, include authorization in this adapter. Ideally, it should
     // have some external interface.
     if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
-      return Kinvey.User.create({}, {
+      return Kinvey.User.create({}, merge(options, {
         success: bind(this, function() {
           this._send(method, url, body, options);
-        }),
-        error: options.error
-      });
+        })
+      }));
     }
 
     // Create the request. Titanium.Network.createHTTPClient is buggy for
