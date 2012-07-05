@@ -11,6 +11,9 @@
     ATTR_USERNAME: 'username',
     ATTR_PASSWORD: 'password',
 
+    // Authorization token.
+    token: null,
+
     /**
      * Creates a new user.
      * 
@@ -38,11 +41,14 @@
      */
     destroy: function(options) {
       options || (options = {});
+
+      // Destroying the user will automatically invalidate its token, so no
+      // need to logout explicitly.
       Kinvey.Entity.prototype.destroy.call(this, merge(options, {
-        success: function(user, info) {
-          user.logout();
-          options.success(user, info);
-        }
+        success: bind(this, function(_, info) {
+          this._logout();
+          options.success(this, info);
+        })
       }));
     },
 
@@ -56,12 +62,12 @@
     },
 
     /**
-     * Returns password, or null if not set.
+     * Returns token, or null if not set.
      * 
-     * @return {string} Password.
+     * @return {string} Token.
      */
-    getPassword: function() {
-      return this.get(this.ATTR_PASSWORD);
+    getToken: function() {
+      return this.token;
     },
 
     /**
@@ -100,21 +106,26 @@
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
-        currentUser.logout();
+        currentUser.logout(merge(options, {
+          success: bind(this, function() {
+            this.login(username, password, options);
+          })
+        }));
+        return;
       }
 
-      // Retrieve user.
-      this.setUsername(username);
-      this.setPassword(password);
-
       // Send request.
-      this.store.login(this, merge(options, {
+      this.store.login({
+        username: username,
+        password: password
+      }, merge(options, {
         success: bind(this, function(response, info) {
-          // Update attributes. Preserve password since it is part of
-          // the authorization.
+          // Update attributes. This does not include the users password.
           this.attr = response;
-          this.setPassword(password);
-          this._login();
+
+          // Info object should include an authorization token, pull here.
+          this._login(info.token);
+
           options.success && options.success(this, info);
         })
       }));
@@ -123,13 +134,23 @@
     /**
      * Logs out user.
      * 
+     * @param {Object} [options] Options.
+     * @param {function(info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
      */
-    logout: function() {
-      if(this.isLoggedIn) {
-        Kinvey.setCurrentUser(null);
-        this._deleteFromDisk();
-        this.isLoggedIn = false;
+    logout: function(options) {
+      options || (options = {});
+
+      // Make sure we only logout the current user.
+      if(!this.isLoggedIn) {
+        options.success && options.success({});
       }
+      this.store.logout({}, merge(options, {
+        success: bind(this, function(_, info) {
+          this._logout();
+          options.success && options.success(info);
+        })
+      }));
     },
 
     /**
@@ -149,15 +170,12 @@
         return;
       }
 
-      // Parent method will always update. Response does not include the
-      // password, so persist it manually.
-      var password = this.getPassword();
+      // Parent method will always update.
       Kinvey.Entity.prototype.save.call(this, merge(options, {
-        success: function(user, info) {
-          user.setPassword(password);
-          user._login();
-          options.success && options.success(user, info);
-        }
+        success: bind(this, function(_, info) {
+          this._saveToDisk();// Refresh cache.
+          options.success && options.success(this, info);
+        })
       }));
     },
 
@@ -168,32 +186,6 @@
      */
     setMetadata: function() {
       throw new Error('Users do not have any metadata.');
-    },
-
-    /**
-     * Sets password.
-     * 
-     * @param {string} password Password.
-     * @throws {Error} On empty password.
-     */
-    setPassword: function(password) {
-      if(null == password) {
-        throw new Error('Password must not be null');
-      }
-      this.set(this.ATTR_PASSWORD, password);
-    },
-
-    /**
-     * Sets username.
-     * 
-     * @param {string} username Username.
-     * @throws {Error} On empty username.
-     */
-    setUsername: function(username) {
-      if(null == username) {
-        throw new Error('Username must not be null');
-      }
-      this.set(this.ATTR_USERNAME, username);
     },
 
     /**
@@ -210,11 +202,25 @@
      * but always involve some network request.
      * 
      * @private
+     * @param {string} token Token.
      */
-    _login: function() {
+    _login: function(token) {
       Kinvey.setCurrentUser(this);
-      this._saveToDisk();
       this.isLoggedIn = true;
+      this.token = token;
+      this._saveToDisk();
+    },
+
+    /**
+     * Marks user no longer as logged in.
+     * 
+     * @private
+     */
+    _logout: function() {
+      Kinvey.setCurrentUser(null);
+      this.isLoggedIn = false;
+      this.token = null;
+      this._deleteFromDisk();
     },
 
     /**
@@ -223,7 +229,10 @@
      * @private
      */
     _saveToDisk: function() {
-      Storage.set(CACHE_TAG(), this);
+      Storage.set(CACHE_TAG(), {
+        token: this.token,
+        user: this.toJSON()
+      });
     }
   }, {
     /** @lends Kinvey.User */
@@ -256,16 +265,25 @@
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
-        currentUser.logout();
+        currentUser.logout(merge(options, {
+          success: function() {
+            Kinvey.User.create(attr, options);
+          }
+        }));
+        return;
       }
 
-      // Persist, and mark the created user as logged in.
+      // Create a new user.
       var user = new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, merge(options, {
-        success: function(user, info) {
-          user._login();
-          options.success && options.success(user, info);
-        }
+        success: bind(user, function() {
+          // Unset the password, we don't need it any more.
+          var password = this.get(this.ATTR_PASSWORD);
+          this.unset(this.ATTR_PASSWORD);
+
+          // Login the created user.
+          this.login(this.getUsername(), password, options);
+        })
       }));
       return user;// return the instance
     },
@@ -307,9 +325,9 @@
       }
 
       // Retrieve and restore user from storage.
-      var attr = Storage.get(CACHE_TAG());
-      if(null !== attr && null != attr.username && null != attr.password) {
-        new Kinvey.User(attr)._login();
+      var data = Storage.get(CACHE_TAG());
+      if(null !== data && null != data.token && null != data.user) {
+        new Kinvey.User(data.user)._login(data.token);
       }
     }
   });

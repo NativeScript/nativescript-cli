@@ -77,6 +77,20 @@
     },
 
     /**
+     * Logs out user.
+     * 
+     * @param {Object} object
+     * @param {Object} [options] Options.
+     */
+    logout: function(object, options) {
+      // Construct URL.
+      var url = this._getUrl({ id: '_logout' });
+
+      // Send request.
+      this._send('POST', url, null, options);
+    },
+
+    /**
      * Queries the store for a specific object.
      * 
      * @param {string} id Object id.
@@ -148,6 +162,17 @@
     },
 
     /**
+     * Base 64 encodes string.
+     * 
+     * @private
+     * @param {string} value
+     * @return {string} Encoded string.
+     */
+    _base64: function(value) {
+      return btoa(value);
+    },
+
+    /**
      * Encodes value for use in query string.
      * 
      * @private
@@ -165,20 +190,20 @@
      * Returns authorization string.
      * 
      * @private
-     * @return {string} Authorization string.
+     * @return {Object} Authorization.
      */
     _getAuth: function() {
       // Use master secret if specified.
       if(null !== Kinvey.masterSecret) {
-        return Kinvey.appKey + ':' + Kinvey.masterSecret;
+        return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.masterSecret);
       }
 
       // Use user credentials if specified, use app secret as last resort.
       var user = Kinvey.getCurrentUser();
       if(null === user) {
-        return Kinvey.appKey + ':' + Kinvey.appSecret;
+        return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.appSecret);
       }
-      return user.getUsername() + ':' + user.getPassword();
+      return 'Kinvey ' + user.getToken();
     },
 
     /**
@@ -279,7 +304,7 @@
       // Set headers.
       var headers = {
         Accept: 'application/json, text/javascript',
-        Authorization: 'Basic ' + btoa(this._getAuth()),
+        Authorization: this._getAuth(),
         'X-Kinvey-API-Version': Kinvey.API_VERSION,
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
@@ -305,7 +330,13 @@
 
         // Success implicates status 2xx (Successful), or 304 (Not Modified).
         if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
-          options.success(response, { network: true });
+          var info = { network: true };
+
+          // Add authorization token, if set.
+          var token = this.getResponseHeader('X-Kinvey-Auth-Token');
+          token && (info.token = token);
+
+          options.success(response, info);
         }
         else {
           options.error(response, { network: true });

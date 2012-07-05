@@ -31,12 +31,13 @@ describe('Kinvey.User', function() {
         success: function(response) {
           response.should.equal(user);// Kinvey.User
           (response.getUsername()).should.equal('foo');
-          (response.getPassword()).should.equal('bar');
+          (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
           (response.get('attribute')).should.equal('value');
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
           response.isLoggedIn.should.be['true'];
+          (null !== response.getToken()).should.be['true'];
 
           done();
         }
@@ -49,11 +50,12 @@ describe('Kinvey.User', function() {
         success: function(response) {
           response.should.equal(user);
           (response.getUsername()).should.equal('foo');
-          (null !== response.getPassword()).should.be['true'];
+          (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
           (response.isLoggedIn).should.be['true'];
+          (null !== response.getToken()).should.be['true'];
 
           done();
         }
@@ -64,11 +66,12 @@ describe('Kinvey.User', function() {
         success: function(response) {
           response.should.equal(user);
           (null !== response.getUsername()).should.be['true'];
-          (null !== response.getPassword()).should.be['true'];
+          (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
           (response.isLoggedIn).should.be['true'];
+          (null !== response.getToken()).should.be['true'];
 
           done();
         }
@@ -183,7 +186,8 @@ describe('Kinvey.User', function() {
   describe('#login', function() {
     // Create the current user, to allow logging in using its credentials.
     beforeEach(function(done) {
-      this.user = Kinvey.User.init(callback(done));
+      this.password = 'foo';
+      this.user = Kinvey.User.create({ password: this.password }, callback(done));
     });
     afterEach(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
@@ -192,14 +196,18 @@ describe('Kinvey.User', function() {
     // Test suite.
     it('authenticates a user.', function(done) {
       var user = this.user;
-      new Kinvey.User().login(user.getUsername(), user.getPassword(), callback(done, {
-        success: function(response) {
+      new Kinvey.User().login(user.getUsername(), this.password, callback(done, {
+        success: function(response, info) {
           (response.getUsername()).should.equal(user.getUsername());
-          (response.getPassword()).should.equal(user.getPassword());
+          (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
+
+          // Authorization token.
+          info.should.have.property('token');
 
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
           (response.isLoggedIn).should.be['true'];
+          (null !== response.getToken()).should.be['true'];
 
           done();
         }
@@ -211,11 +219,12 @@ describe('Kinvey.User', function() {
   describe('#logout', function() {
     // Create mock.
     beforeEach(function(done) {
-      this.user = Kinvey.User.init(callback(done));
+      this.password = 'foo';
+      this.user = Kinvey.User.create({ password: this.password }, callback(done));
     });
     afterEach(function(done) {
       // User is logged out. To destroy, log back in first.
-      this.user.login(this.user.getUsername(), this.user.getPassword(), callback(done, {
+      this.user.login(this.user.getUsername(), this.password, callback(done, {
         success: function(user) {
           user.destroy(callback(done));
         }
@@ -223,12 +232,17 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('logs out the current user.', function() {
-      Kinvey.getCurrentUser().logout();
+    it('logs out the current user.', function(done) {
+      var user = Kinvey.getCurrentUser();
+      user.logout(callback(done, {
+        success: function() {
+          // Test current user.
+          (null === Kinvey.getCurrentUser()).should.be['true'];
+          (user.isLoggedIn).should.be['false'];
 
-      // Test current user.
-      (null === Kinvey.getCurrentUser()).should.be['true'];
-      (this.user.isLoggedIn).should.be.False;
+          done();
+        }
+      }));
     });
   });
 

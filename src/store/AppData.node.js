@@ -7,6 +7,17 @@
   /** @lends Kinvey.Store.AppData# */
 
   /**
+   * Base 64 encodes string.
+   * 
+   * @private
+   * @param {string} value
+   * @return {string} Encoded string.
+   */
+  Kinvey.Store.AppData.prototype._base64 = function(value) {
+    return new Buffer(value, 'utf8').toString('base64');
+  };
+
+  /**
    * Returns device information.
    * 
    * @private
@@ -51,7 +62,7 @@
     // Set headers.
     var headers = {
       Accept: 'application/json, text/javascript',
-      Authorization: 'Basic ' + new Buffer(this._getAuth(), 'utf8').toString('base64'),
+      Authorization: this._getAuth(),
       'Content-Length': body ? body.length : 0,
       'X-Kinvey-API-Version': Kinvey.API_VERSION,
       'X-Kinvey-Device-Information': this._getDeviceInfo()
@@ -80,7 +91,13 @@
 
         // Success implicates status 2xx (Successful), or 304 (Not Modified).
         if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
-          options.success(data, { network: true });
+          var info = { network: true };
+
+          // Add authorization token, if set.
+          var token = response.headers['x-kinvey-auth-token'] || null;
+          token && (info.token = token);
+
+          options.success(data, info);
         }
         else {
           options.error(data, { network: true });

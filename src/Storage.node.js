@@ -19,7 +19,7 @@
       return cache[key] || null;
     },
     set: function(key, value) {
-      cache[key] = value.toJSON();
+      cache[key] = value;
 
       // Update file cache.
       fs.writeFileSync(filename, JSON.stringify(cache), 'utf8');
