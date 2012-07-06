@@ -53,15 +53,6 @@
     },
 
     /**
-     * Returns metadata.
-     * 
-     * @throws {Error} Always.
-     */
-    getMetadata: function() {
-      throw new Error('Users do not have any metadata.');
-    },
-
-    /**
      * Returns token, or null if not set.
      * 
      * @return {string} Token.
@@ -178,15 +169,6 @@
           options.success && options.success(this, info);
         })
       }));
-    },
-
-    /**
-     * Sets metadata.
-     * 
-     * @throws {Error} Always.
-     */
-    setMetadata: function() {
-      throw new Error('Users do not have any metadata.');
     },
 
     /**
