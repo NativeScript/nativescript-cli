@@ -880,7 +880,7 @@ Array.prototype.item = function(i) {
             idbModules.util.callback("onerror", me, e);
             
             // TODO - Call transaction onerror
-            logger.error("An exception occured in transaction", arguments);
+            logger.error("An exception occurred in transaction", arguments);
           }
         }, function(){
           // XXX quick hack.

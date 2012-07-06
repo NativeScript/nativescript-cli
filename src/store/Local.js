@@ -8,9 +8,6 @@
 
   // Define the Kinvey.Store.Local class.
   Kinvey.Store.Local = Base.extend({
-    // Database handle.
-    database: null,
-
     // Default options.
     options: {
       error: function() { },
@@ -78,6 +75,79 @@
     },
 
     /**
+     * Returns objects by id.
+     * 
+     * @param {Array} list
+     * @param {Options} [options] Options.
+     */
+    getById: function(list, options) {
+      options = this._options(options);
+
+      // Open transaction.
+      this._transaction(this._getSchema(this.collection), IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
+        // Prepare response.
+        var response = {};
+
+        // Open store.
+        var store = txn.objectStore(this.collection);
+
+        // Retrieve in parallel.
+        list.forEach(function(id) {
+          var req = store.get(id);
+          req.onsuccess = function() {
+            response[id] = req.result || null;
+          };
+        });
+
+        // Handle transaction status.
+        txn.oncomplete = bind(this, function() {
+          options.success(response, { cache: true });
+        });
+        txn.onabort = txn.onerror = function() {
+          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
+        };
+      }));
+    },
+
+    /**
+     * Removes objects by id.
+     * 
+     * @param {Array} list List of ids.
+     * @param {Object} [options] Options.
+     */
+    removeById: function(list, options) {
+      options = this._options(options);
+
+      // Failure handler triggers error handler.
+      var failure = function(code, description) {
+        options.error({
+          code: code,
+          description: description || code,
+          debug: ''
+        });
+      };
+
+      // Open transaction.
+      this._transaction(this._getSchema(this.collection), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+        // Open store.
+        var store = txn.objectStore(this.collection);
+
+        // Remove all objects.
+        list.forEach(function(id) {
+          store['delete'](id);
+        });
+
+        // Handle transaction status.
+        txn.oncomplete = function() {
+          options.success(null, { cache: true });
+        };
+        txn.onabort = txn.onerror = function() {
+          failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
+        };
+      }));
+    },
+
+    /**
      * Returns transaction log of operations performed locally.
      * 
      * @param {Object} [options] Options.
@@ -86,42 +156,28 @@
       options = this._options(options);
 
       // Open transaction.
-      this._transaction([
-        this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE),
-        this._getSchema(this.collection)
-      ], IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
+      var store = Kinvey.Store.Local.TRANSACTION_STORE;
+      this._transaction(this._getSchema(store), IDBTransaction.READ_ONLY || 'readonly', bind(this, function(txn) {
         // Prepare response.
         var response = {};
 
-        // Open store.
-        var metaStore = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
-        var store = txn.objectStore(this.collection);
+        // Iterate over all collections to collect changes.
+        var it = txn.objectStore(store).openCursor();
+        it.onsuccess = function() {
+          var cursor = it.result;
+          if(cursor && cursor.value) {
+            var result = cursor.value;
+            result.collection = result.collection.replace('_', '-');// Restore original.
 
-        // Retrieve transaction log.
-        var req = metaStore.get(this.collection);
-        req.onsuccess = function() {
-          var result = req.result;
-          if(result) {
-            // Add actual object to transaction log.
-            var changes = result.changes;
-            Object.getOwnPropertyNames(changes).forEach(function(id) {
-              var req = store.get(id);
-              req.onsuccess = function() {
-                response[id] = {
-                  ts: changes[id],
-                  value: req.result || null
-                };
-              };
-            });
+            // Add to response and proceed.
+            response[result.collection] = result.changes;
+            cursor['continue']();
           }
         };
 
         // Handle transaction status.
         txn.oncomplete = bind(this, function() {
-          options.success({
-            changes: response,
-            observer: bind(this, this._updateTransactionLog)
-          }, { cache: true });
+          options.success(response);
         });
         txn.onabort = txn.onerror = function() {
           options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
@@ -452,8 +508,8 @@
     _open: function(version, upgrade, success, failure) {
       var req;
       if(null === version) {// open latest version.
-        if(this.database) {// reuse if possible.
-          return success(this.database);
+        if(null !== Kinvey.Store.Local.database) {// reuse if possible.
+          return success(Kinvey.Store.Local.database);
         }
         req = indexedDB.open(this.name);
       }
@@ -462,18 +518,18 @@
       }
 
       req.onupgradeneeded = function() {
-        this.database = req.result;
-        upgrade && upgrade(req.result);
+        Kinvey.Store.Local.database = req.result;
+        upgrade && upgrade(Kinvey.Store.Local.database);
       };
       req.onsuccess = bind(this, function() {
-        this.database = req.result;
-        this.database.onversionchange = bind(this, function() {
-          if(this.database) {
-            this.database.close();
-            this.database = null;
+        Kinvey.Store.Local.database = req.result;
+        Kinvey.Store.Local.database.onversionchange = function() {
+          if(Kinvey.Store.Local.database) {
+            Kinvey.Store.Local.database.close();
+            Kinvey.Store.Local.database = null;
           }
-        });
-        success(this.database);
+        };
+        success(Kinvey.Store.Local.database);
       });
       req.onblocked = req.onerror = function() {
         failure(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, req.error || 'Failed to open database.');
@@ -522,15 +578,10 @@
       };
 
       // Open transaction.
-      this._transaction({
-        name: Kinvey.Store.Local.AGGREGATION_STORE,
-        options: { keyPath: 'key' }
-      }, IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
-        // Open store.
-        var store = txn.objectStore(Kinvey.Store.Local.AGGREGATION_STORE);
-
+      var store = Kinvey.Store.Local.AGGREGATION_STORE;
+      this._transaction(this._getSchema(store), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
         // Add metadata to store.
-        var req = store.put({
+        var req = txn.objectStore(store).put({
           key: this._getCacheKey(aggregation),
           value: data
         });
@@ -564,10 +615,7 @@
 
       // Open transaction.
       var store = this.collection;
-      this._transaction({
-        name: store,
-        options: { keyPath: '_id' }
-      }, IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
+      this._transaction(this._getSchema(store), IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
         // Save to store.
         txn.objectStore(store).put(object);
 
@@ -600,13 +648,10 @@
       };
 
       // Open transaction.
-      this._transaction([{
-        name: this.collection,
-        options: { keyPath: '_id' }
-      }, {
-        name: Kinvey.Store.Local.QUERY_STORE,
-        options: { keyPath: 'key' }
-      }], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+      this._transaction([
+        this._getSchema(this.collection),
+        this._getSchema(Kinvey.Store.Local.QUERY_STORE)
+      ], IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
         // Open object store.
         var store = txn.objectStore(this.collection);
 
@@ -655,10 +700,7 @@
 
       // Open transaction.
       var store = this.collection;
-      this._transaction({
-        name: store,
-        options: { keyPath: '_id' }
-      }, IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
+      this._transaction(this._getSchema(store), IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
         // Save to store.
         txn.objectStore(store)['delete'](id);
 
@@ -716,52 +758,48 @@
      * Updates transaction log.
      * 
      * @private
-     * @param {Array} committed Committed objects.
-     * @param {Array} conflicted Conflicted objects.
-     * @param {Array} canceled Canceled objects.
-     * @param {Object} [options] Options.
+     * @param {Object} status Synchronization status.
+     * @param {function()} complete Complete callback.
      */
-    _updateTransactionLog: function(committed, conflicted, canceled, options) {
-      options = this._options(options);
-
+    updateTransactionLog: function(sets, complete) {
       // Open transaction.
-      this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', bind(this, function(txn) {
+      this._transaction(this._getSchema(Kinvey.Store.Local.TRANSACTION_STORE), IDBTransaction.READ_WRITE || 'readwrite', function(txn) {
         // Open store.
         var store = txn.objectStore(Kinvey.Store.Local.TRANSACTION_STORE);
 
-        // Retrieve meta data.
-        var req = store.get(this.collection);
-        req.onsuccess = bind(this, function() {
-          // Create transaction log if non-existant.
-          var result = req.result || {
-            collection: this.collection,
-            changes: {}
-          };
+        // Iterate through collections.
+        Object.getOwnPropertyNames(sets).forEach(function(collection) {
+          var name = collection.replace('-', '_');
+          var req = store.get(name);
+          req.onsuccess = bind(this, function() {
+            var result = req.result || {
+              collection: name,
+              changes: {}
+            };
 
-          // Remove all committed object from changes. Any other changes are
-          // maintained, so they can be synchronized (again) later on.
-          committed.forEach(function(id) {
-            delete result.changes[id];
+            // Remove all committed object from changes. Any other changes are
+            // maintained, so they can be synchronized (again) later on.
+            sets[collection].committed.forEach(function(id) {
+              delete result.changes[id];
+            });
+
+            // Update store.            
+            0 === Object.keys(result.changes).length ? store['delete'](name) : store.put(result);
           });
-
-          // Save to store.
-          store.put(result);
         });
-        
+
         // Handle transaction status.
-        txn.oncomplete = function() {
-          options.success(null, { cache: true });
-        };
-        txn.onabort = txn.onerror = function() {
-          options.error(Kinvey.Error.KINVEY_INTERNAL_ERROR_RETRY, txn.error || 'Failed to execute transaction.');
-        };
-      }), options.error);
+        txn.onabort = txn.oncomplete = txn.onerror = complete;
+      }, complete);
     }
   }, {
     // Meta data stores.
     AGGREGATION_STORE: '_aggregation',
     QUERY_STORE: '_query',
-    TRANSACTION_STORE: '_transactions'
+    TRANSACTION_STORE: '_transactions',
+
+    // Shared database instance.
+    database: null
   });
 
 }());

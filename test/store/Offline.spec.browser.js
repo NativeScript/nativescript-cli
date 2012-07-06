@@ -9,11 +9,7 @@ describe('Kinvey.Store.Offline', function() {
   });
   after(function(done) {
     var cached = this.cached;
-    Kinvey.getCurrentUser().destroy(callback(done, {
-      success: function() {
-        cached.purge(callback(done));
-      }
-    }));
+    Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Kinvey.Store.Offline#remove
@@ -30,7 +26,7 @@ describe('Kinvey.Store.Offline', function() {
           info.offline.should.be['true'];
         },
         complete: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
           done();
         }
       }));
@@ -55,7 +51,7 @@ describe('Kinvey.Store.Offline', function() {
           info.offline.should.be['true'];
         },
         complete: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
           done();
         }
       }));
@@ -94,104 +90,97 @@ describe('Kinvey.Store.Offline', function() {
 
     // Test suite.
     it('detects a conflict.', function(done) {
-      // Update remote. Use case: two devices updated the same data.
-      this.store.configure({ conflict: function(cached, remote, options) {
-        cached.bar.should.be['false'];
-        remote.bar.should.be['true'];
-
-        // Do not change conflicting state.
-        options.error();
-      } });
-      this.store.synchronize(callback(done, {
+      Kinvey.Store.Sync.synchronize(callback(done, {
+        conflict: function(cached, remote, options) {
+          cached.bar.should.be['false'];
+          remote.bar.should.be['true'];
+  
+          // Do not change conflicting state.
+          options.error();
+        },
         success: function(status) {
-          status.conflicted.should.equal(1);
+          status[COLLECTION_UNDER_TEST].conflicted.should.have.length(1);
           done();
         }
       }));
     });
     it('resolves a conflict using clientAlwaysWins.', function(done) {
-      var store = this.store;
+      var store = this.appdata;
       var object = this.object;
-      store.configure({
-        conflict: Kinvey.Store.Offline.clientAlwaysWins,
-        policy: Kinvey.Store.Cached.BOTH
-      });
-      store.synchronize(callback(done, {
+      Kinvey.Store.Sync.synchronize(callback(done, {
+        conflict: Kinvey.Store.Sync.clientAlwaysWins,
         success: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure client really did win.
           store.query(object._id, callback(done, {
             success: function(response) {
               response.bar.should.be['false'];
+              done();
             }
           }));
         }
       }));
     });
     it('resolves a conflict using serverAlwaysWins.', function(done) {
-      var store = this.store;
+      var store = this.appdata;
       var object = this.object;
-      store.configure({
-        conflict: Kinvey.Store.Offline.serverAlwaysWins,
-        policy: Kinvey.Store.Cached.BOTH
-      });
-      store.synchronize(callback(done, {
+      Kinvey.Store.Sync.synchronize(callback(done, {
+        conflict: Kinvey.Store.Sync.serverAlwaysWins,
         success: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure server really did win.
           store.query(object._id, callback(done, {
             success: function(response) {
               response.bar.should.be['true'];
+              done();
             }
           }));
         }
       }));
     });
     it('resolves a conflict using a custom handler.', function(done) {
-      var store = this.store;
+      var store = this.appdata;
       var object = this.object;
-      store.configure({
+      Kinvey.Store.Sync.synchronize(callback(done, {
         conflict: function(_, __, options) {
           // The object to be persisted will be an empty object.
           options.success({});
         },
-        policy: Kinvey.Store.Cached.BOTH
-      });
-      store.synchronize(callback(done, {
         success: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure item is really gone.
           store.query(object._id, callback(done, {
             success: function(response) {
               (null == response.bar).should.be['true'];
+              done();
             }
           }));
         }
       }));
     });
     it('resolves a conflict using a custom handler.', function(done) {
-      var store = this.store;
+      var store = this.appdata;
       var object = this.object;
-      store.configure({
+      Kinvey.Store.Sync.synchronize(callback(done, {
         conflict: function(_, __, options) {
           // Remove both objects.
           options.success(null);
         },
-        policy: Kinvey.Store.Cached.BOTH
-      });
-      store.synchronize(callback(done, {
         success: function(status) {
-          status.committed.should.equal(1);
+          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure item is really gone.
           store.query(object._id, callback(done, {
             success: function() {
               done(new Error('Success callback was invoked.'));
             },
-            error: function() { }
+            error: function(error) {
+              error.error.should.equal(Kinvey.Error.ENTITY_NOT_FOUND);
+              done();
+            }
           }));
         }
       }));

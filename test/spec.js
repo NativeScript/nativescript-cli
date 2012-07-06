@@ -10,6 +10,7 @@ global.MASTER_SECRET = '9cf348a5589c445d84e900d15b6a8aed';
 global.callback = function(done, defaults) {
   defaults || (defaults = {});
   return {
+    conflict: defaults.conflict || null,// only for Store/Sync.js.
     complete: defaults.complete || function() {// only for Store/Cached+Offline.spec.js.
       done();
     },

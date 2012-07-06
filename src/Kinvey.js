@@ -82,7 +82,7 @@
    * @param {function(error, info)} [options.error] Failure callback.
    */
   Kinvey.ping = function(options) {
-    options || (options = {});
+    // Ping always targets the Kinvey backend.
     new Kinvey.Store.AppData(null).query(null, options);
   };
 
