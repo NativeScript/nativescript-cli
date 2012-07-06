@@ -83,6 +83,17 @@
     },
 
     /**
+     * Logs out user.
+     * 
+     * @param {Object} object
+     * @param {Object} [options] Options.
+     */
+    logout: function(object, options) {
+      options = this._options(options);
+      this.appdata.logout(object, options);
+    },
+
+    /**
      * Queries the store for a specific object.
      * 
      * @param {string} id Object id.

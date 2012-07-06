@@ -120,11 +120,12 @@
         password: password
       }, merge(options, {
         success: bind(this, function(response, info) {
+          // Extract token.
+          this._login(response._kmd.authtoken);
+          delete response._kmd.authtoken;
+
           // Update attributes. This does not include the users password.
           this.attr = response;
-
-          // Info object should include an authorization token, pull here.
-          this._login(info.token);
 
           options.success && options.success(this, info);
         })

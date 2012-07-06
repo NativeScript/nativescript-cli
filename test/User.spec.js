@@ -201,9 +201,6 @@ describe('Kinvey.User', function() {
           (response.getUsername()).should.equal(user.getUsername());
           (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
 
-          // Authorization token.
-          info.should.have.property('token');
-
           // Test current user.
           Kinvey.getCurrentUser().should.equal(response);
           (response.isLoggedIn).should.be['true'];

@@ -93,13 +93,7 @@
 
       // Success implicates status 2xx (Successful), or 304 (Not Modified).
       if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
-        var info = { network: true };
-
-        // Add authorization token, if set.
-        var token = this.getResponseHeader('X-Kinvey-Auth-Token');
-        token && (info.token = token);
-
-        options.success(response, info);
+        options.success(response, { network: true });
       }
       else {
         options.error(response, { network: true });
