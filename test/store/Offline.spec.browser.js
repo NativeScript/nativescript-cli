@@ -2,18 +2,17 @@
  * Kinvey.Store.Offline test suite.
  */
 describe('Kinvey.Store.Offline', function() {
+  // Create store.
   before(function() {
     this.store = new Kinvey.Store.Offline(COLLECTION_UNDER_TEST);
-    this.cached = this.store.cached;
-    this.appdata = this.store.appdata;
   });
   after(function(done) {
-    var cached = this.cached;
     Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Kinvey.Store.Offline#remove
   describe('#remove', function() {
+    // Create mock.
     before(function(done) {
       this.object = { _id: 'foo', bar: true };
       this.store.save(this.object, callback(done, { success: function() { } }));
@@ -57,29 +56,29 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
   });
-
+  /*
   // Kinvey.Store.Offline#synchronize
   describe('#synchronize', function() {
+    // Create mock.
     beforeEach(function(done) {
       // Add object to store, and change cached copy to yield a conflict.
-      var cached = this.cached;
+      var db = this.db = this.store.db;
       var object = this.object = { _id: 'foo', bar: true };
-
-      this.store.save(this.object, callback(done, {
+      this.store.save(object, callback(done, {
         complete: function() {
           object.bar = false;// Update cached copy.
-          cached.save(object, callback(done));
+          db.save(object, callback(done));
         },
         success: function() { }
       }));
     });
     afterEach(function(done) {
       // Remove separately, since calling remove would yield a conflict.
-      var cached = this.cached;
+      var db = this.db;
       var object = this.object;
-      this.appdata.remove(this.object, callback(done, {
+      this.appdata.remove(object, callback(done, {
         success: function() {
-          cached.remove(object, callback(done));
+          db.remove(object, callback(done));
         },
         error: function() {
           // Last test case will throw an error here, but that's OK.
@@ -186,5 +185,5 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
   });
-
+*/
 });

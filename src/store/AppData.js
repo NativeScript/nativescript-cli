@@ -348,7 +348,7 @@
 
         // Execute application-level handler.
         options.error({
-          code: Kinvey.Error.REQUEST_FAILED,
+          error: Kinvey.Error.REQUEST_FAILED,
           description: description,
           debug: ''
         }, { network: true });

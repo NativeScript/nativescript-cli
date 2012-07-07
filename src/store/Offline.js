@@ -13,8 +13,7 @@
      * @throws {Error} On usage with user collection.
      */
     constructor: function(collection, options) {
-      // The user collection cannot be used offline due to the lack of
-      // metadata and possible security issues.
+      // The user collection cannot be used offline for security issues.
       if('user' === collection) {
         throw new Error('The user collection cannot be used with the OfflineStore');
       }
@@ -47,7 +46,7 @@
      */
     remove: function(object, options) {
       options = this._options(options);
-      this.cached.remove(object, this._wrap(options));
+      this.db.remove(object, this._wrap(options));
     },
 
     /**
@@ -58,7 +57,7 @@
      */
     removeWithQuery: function(query, options) {
       options = this._options(options);
-      this.cached.removeWithQuery(query, this._wrap(options));
+      this.db.removeWithQuery(query, this._wrap(options));
     },
 
     /**
@@ -69,7 +68,7 @@
      */
     save: function(object, options) {
       options = this._options(options);
-      this.cached.save(object, this._wrap(options));
+      this.db.save(object, this._wrap(options));
     },
 
     /**
@@ -83,9 +82,9 @@
       options = Kinvey.Store.Cached.prototype._options.call(this, options);
 
       // Override the cache policy when offline.
-      if(!Kinvey.Store.Sync.isOnline) {
+//      if(!Kinvey.Store.Sync.isOnline) {
         options.policy = Kinvey.Store.Cached.CACHE_ONLY;
-      }
+//      }
 
       return options;
     },
@@ -104,9 +103,13 @@
         fnSuccess(response, { offline: true });
 
         // Trigger synchronization.
-        Kinvey.Store.Sync.synchronize({
-          success: options.complete,
-          error: options.complete
+        new Sync().app({
+          success: function(status) {
+            options.complete(status);
+          },
+          error: function() {
+            options.complete({});
+          }
         });
       });
       options.error = function(error) {

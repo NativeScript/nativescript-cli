@@ -9,18 +9,17 @@ global.MASTER_SECRET = '9cf348a5589c445d84e900d15b6a8aed';
 // Convenience method to generate options object containing default callbacks.
 global.callback = function(done, defaults) {
   defaults || (defaults = {});
-  return {
-    conflict: defaults.conflict || null,// only for Store/Sync.js.
-    complete: defaults.complete || function() {// only for Store/Cached+Offline.spec.js.
-      done();
-    },
-    success: defaults.success || function() {
-      done();
-    },
-    error: defaults.error || function(error) {
-      done(new Error(error.description));
-    }
-  };
+  defaults.complete || (defaults.complete = function() {
+    // For Store/Cached+Offline.spec.js.
+    done();
+  });
+  defaults.error || (defaults.error = function(error) {
+    done(new Error(error.description));
+  });
+  defaults.success || (defaults.success = function() {
+    done();
+  });
+  return defaults;
 };
 
 //Initialization function.

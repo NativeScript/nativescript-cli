@@ -9,9 +9,7 @@
       success: function() { },
 
       policy: null,
-
-      appdata: { },
-      cached: { }
+      store: { }
     },
 
     /**
@@ -23,10 +21,9 @@
      * @param {Object} [options] Options.
      */
     constructor: function(collection, options) {
-      // This class basically bridges between Cached and AppData store. The
-      // Cached store really is the protected Local store.
-      this.appdata = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
-      this.cached = new Kinvey.Store.Local(collection);
+      // This class basically bridges between a store and local database.
+      this.db = new Database(collection);
+      this.store = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
 
       // Options.
       this.options.policy = Kinvey.Store.Cached.NETWORK_FIRST;// Default policy.
@@ -54,8 +51,7 @@
      * @param {function(response, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
      * @param {string} [options.policy] Cache policy.
-     * @param {Object} [options.appdata] AppData store options.
-     * @param {Object} [options.cached] Cached store options.
+     * @param {Object} [options.store] Store options.
      */
     configure: function(options) {
       // Callback options.
@@ -65,10 +61,7 @@
 
       // Store options.
       options.policy && (this.options.policy = options.policy);
-
-      // Child store options.
-      options.appdata && (this.options.appdata = options.appdata);
-      options.cached && (this.options.cached = options.cached);
+      options.store && (this.options.store = options.store);
     },
 
     /**
@@ -79,7 +72,7 @@
      */
     login: function(object, options) {
       options = this._options(options);
-      this.appdata.login(object, options);
+      this.store.login(object, options);
     },
 
     /**
@@ -90,7 +83,7 @@
      */
     logout: function(object, options) {
       options = this._options(options);
-      this.appdata.logout(object, options);
+      this.store.logout(object, options);
     },
 
     /**
@@ -158,10 +151,6 @@
     _options: function(options) {
       options || (options = {});
 
-      // Configure child stores.
-      this.appdata.configure(options.appdata || this.options.appdata);
-      this.cached.configure(options.cached || this.options.cached);
-
       // Callback options.
       options.complete || (options.complete = this.options.complete);
       options.success || (options.success = this.options.success);
@@ -169,6 +158,7 @@
 
       // Store options.
       'undefined' !== typeof options.policy || (options.policy = this.options.policy);
+      this.store.configure(options.store || this.options.store);
 
       return options;
     },
@@ -185,8 +175,8 @@
     _read: function(operation, arg, options) {
       // Extract primary and secondary store from cache policy.
       var networkFirst = this._shouldCallNetworkFirst(options.policy);
-      var primaryStore = networkFirst ? this.appdata : this.cached;
-      var secondaryStore = networkFirst ? this.cached : this.appdata;
+      var primaryStore = networkFirst ? this.store : this.db;
+      var secondaryStore = networkFirst ? this.db : this.store;
 
       // Extend success handler to cache network response.
       var invoked = false;
@@ -207,10 +197,8 @@
         // Update cache in the background. This is only part of the complete
         // step.
         if(info.network && this._shouldUpdateCache(options.policy)) {
-          this.cached.put(operation, arg, response, {
-            success: function() { options.complete(); },
-            error: function() { options.complete(); }
-          });
+          var fn = function() { options.complete(); };
+          this.db.put(operation, arg, response, { success: fn, error: fn });
         }
       });
 
@@ -327,14 +315,14 @@
           // The cache handle defines how the cache is updated. This differs
           // per operation.
           var cacheHandle = {
-            remove: ['query', arg._id, null],
-            removeWithQuery: ['queryWithQuery', arg, []]
+            remove: ['query', arg, null],
+            removeWithQuery: ['queryWithQuery', arg, null]
           };
 
-          // Upon save, appdata returns the document. Cache this, except for
+          // Upon save, store returns the document. Cache this, except for
           // when a user (with password!) is returned.
-          if('user' !== this.appdata.collection) {
-            cacheHandle.save = ['query', null, response];
+          if('user' !== this.store.collection) {
+            cacheHandle.save = ['query', response._id, response];
           }
 
           // If a cache handle is defined, append the callbacks and trigger.
@@ -343,7 +331,7 @@
               success: function() { options.complete(); },
               error: function() { options.complete(); }
             });
-            this.cached.put.apply(this.cached, cacheHandle[operation]);
+            this.db.put.apply(this.db, cacheHandle[operation]);
             return;
           }
         }
@@ -356,7 +344,7 @@
       };
 
       // Perform operation.
-      this.appdata[operation](arg, options);
+      this.store[operation](arg, options);
     }
   }, {
     /** @lends Kinvey.Store.Cached */

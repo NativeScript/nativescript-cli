@@ -105,7 +105,7 @@
     request.on('error', function(error) {
       // Execute application-level handler.
       options.error({
-        code: Kinvey.Error.REQUEST_FAILED,
+        error: Kinvey.Error.REQUEST_FAILED,
         description: error.error || 'The request failed',
         debug: ''
       }, { network: true });

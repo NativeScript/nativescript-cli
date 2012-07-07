@@ -8,6 +8,9 @@
   Kinvey.Error = {
     // Client-side.
     /** @constant */
+    DATABASE_ERROR: 'DatabaseError',
+
+    /** @constant */
     NO_NETWORK: 'NoNetwork',
 
     /** @constant */

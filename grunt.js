@@ -70,8 +70,10 @@ module.exports = function(grunt) {
         Kinvey: true,
         Base: true,
         bind: true,
+        Database: true,
         merge: true,
         Storage: true,
+        Sync: true,
 
         // Titanium.
         Titanium: true,
@@ -111,9 +113,9 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/Local.js',
-          '<%= dir.src %>/store/Cached.js',
 
+          '<%= dir.src %>/store/Database.js',
+          '<%= dir.src %>/store/Cached.js',
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
 
