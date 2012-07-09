@@ -2,14 +2,14 @@
 
   // Define the Kinvey.Store.Cached class.
   Kinvey.Store.Cached = Base.extend({
-    // Default options.
+    // Store options.
     options: {
-      complete: function() { },
-      error: function() { },
-      success: function() { },
-
       policy: null,
-      store: { }
+      store: { },// AppData store options.
+
+      success: function() { },
+      error: function() { },
+      complete: function() { }
     },
 
     /**
@@ -21,7 +21,9 @@
      * @param {Object} [options] Options.
      */
     constructor: function(collection, options) {
-      // This class basically bridges between a store and local database.
+      this.collection = collection;
+
+      // This class bridges between the AppData store and local database.
       this.db = new Database(collection);
       this.store = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
 
@@ -46,22 +48,22 @@
     /**
      * Configures store.
      * 
-     * @param {Object} options Options.
-     * @param {function()} [options.complete] Complete callback.
-     * @param {function(response, info)} [options.success] Success callback.
-     * @param {function(error, info)} [options.error] Failure callback.
+     * @param {Object} options
      * @param {string} [options.policy] Cache policy.
      * @param {Object} [options.store] Store options.
+     * @param {function(response, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
+     * @param {function()} [options.complete] Complete callback.
      */
     configure: function(options) {
-      // Callback options.
-      options.complete && (this.options.complete = options.complete);
-      options.error && (this.options.error = options.error);
-      options.success && (this.options.success = options.success);
-
       // Store options.
       options.policy && (this.options.policy = options.policy);
       options.store && (this.options.store = options.store);
+
+      // Callback options.
+      options.success && (this.options.success = options.success);
+      options.error && (this.options.error = options.error);
+      options.complete && (this.options.complete = options.complete);
     },
 
     /**
@@ -151,14 +153,14 @@
     _options: function(options) {
       options || (options = {});
 
+      // Store options.
+      options.policy || (options.policy = this.options.policy);
+      this.store.configure(options.store || this.options.store);
+
       // Callback options.
-      options.complete || (options.complete = this.options.complete);
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
-
-      // Store options.
-      'undefined' !== typeof options.policy || (options.policy = this.options.policy);
-      this.store.configure(options.store || this.options.store);
+      options.complete || (options.complete = this.options.complete);
 
       return options;
     },
@@ -321,7 +323,7 @@
 
           // Upon save, store returns the document. Cache this, except for
           // when a user (with password!) is returned.
-          if('user' !== this.store.collection) {
+          if('user' !== this.collection) {
             cacheHandle.save = ['query', response._id, response];
           }
 

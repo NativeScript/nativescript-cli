@@ -4,16 +4,12 @@
 
   // Define the Kinvey.Store.AppData class.
   Kinvey.Store.AppData = Base.extend({
-    // Path constants.
-    HOST: '<%= pkg.hostname %>',
-    APPDATA_API: 'appdata',
-    USER_API: 'user',
-
     // Default options.
     options: {
-      error: function() { },
+      timeout: 10000,// Timeout in ms.
+
       success: function() { },
-      timeout: 10000//ms
+      error: function() { }
     },
 
     /**
@@ -25,7 +21,7 @@
      * @param {Object} [options] Options.
      */
     constructor: function(collection, options) {
-      this.api = this.USER_API === collection ? this.USER_API : this.APPDATA_API;
+      this.api = Kinvey.Store.AppData.USER_API === collection ? Kinvey.Store.AppData.USER_API : Kinvey.Store.AppData.APPDATA_API;
       this.collection = collection;
 
       // Options.
@@ -41,25 +37,23 @@
      * @param {Object} [options] Options.
      */
     aggregate: function(aggregation, options) {
-      // Construct URL.
       var url = this._getUrl({ id: '_group' });
-
-      // Send request.
       this._send('POST', url, JSON.stringify(aggregation), options);
     },
 
     /**
      * Configures store.
      * 
-     * @param {Object} options Options.
+     * @param {Object} options
      * @param {function(response, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
      * @param {integer} [options.timeout] Request timeout (in milliseconds).
      */
     configure: function(options) {
-      options.error && (this.options.error = options.error);
-      options.success && (this.options.success = options.success);
       'undefined' !== typeof options.timeout && (this.options.timeout = options.timeout);
+
+      options.success && (this.options.success = options.success);
+      options.error && (this.options.error = options.error);
     },
 
     /**
@@ -69,10 +63,7 @@
      * @param {Object} [options] Options.
      */
     login: function(object, options) {
-      // Construct URL.
       var url = this._getUrl({ id: 'login' });
-
-      // Send request.
       this._send('POST', url, JSON.stringify(object), options);
     },
 
@@ -83,10 +74,7 @@
      * @param {Object} [options] Options.
      */
     logout: function(object, options) {
-      // Construct URL.
       var url = this._getUrl({ id: '_logout' });
-
-      // Send request.
       this._send('POST', url, null, options);
     },
 
@@ -97,10 +85,7 @@
      * @param {Object} [options] Options.
      */
     query: function(id, options) {
-      // Construct URL.
       var url = this._getUrl({ id: id });
-
-      // Send request.
       this._send('GET', url, null, options);
     },
 
@@ -111,10 +96,7 @@
      * @param {Object} [options] Options.
      */
     queryWithQuery: function(query, options) {
-      // Construct URL.
       var url = this._getUrl({ query: query });
-
-      // Send request.
       this._send('GET', url, null, options);
     },
 
@@ -125,10 +107,7 @@
      * @param {Object} [options] Options.
      */
     remove: function(object, options) {
-      // Construct URL.
       var url = this._getUrl({ id: object._id });
-
-      // Send request.
       this._send('DELETE', url, null, options);
     },
 
@@ -139,10 +118,7 @@
      * @param {Object} [options] Options.
      */
     removeWithQuery: function(query, options) {
-       // Construct URL.
       var url = this._getUrl({ query: query });
-
-      // Send request.
       this._send('DELETE', url, null, options);
     },
 
@@ -153,11 +129,10 @@
      * @param {Object} [options] Options.
      */
     save: function(object, options) {
-      // Set request method and construct URL.
+      // Create the object if nonexistent, update otherwise.
       var method = object._id ? 'PUT' : 'POST';
-      var url = this._getUrl({ id: object._id });
 
-      // Send request.
+      var url = this._getUrl({ id: object._id });
       this._send(method, url, JSON.stringify(object), options);
     },
 
@@ -198,12 +173,14 @@
         return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.masterSecret);
       }
 
-      // Use user credentials if specified, use app secret as last resort.
+      // Use Session Auth if there is a current user.
       var user = Kinvey.getCurrentUser();
-      if(null === user) {
-        return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.appSecret);
+      if(null !== user) {
+        return 'Kinvey ' + user.getToken();
       }
-      return 'Kinvey ' + user.getToken();
+
+      // Use application credentials as last resort.
+      return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.appSecret);
     },
 
     /**
@@ -244,10 +221,10 @@
      * @return {string} URL.
      */
     _getUrl: function(parts) {
-      var url = this.HOST + '/' + this.api + '/' + Kinvey.appKey + '/';
+      var url = Kinvey.Store.AppData.HOST + '/' + this.api + '/' + Kinvey.appKey + '/';
 
-      // Only the appdata API has explicit collections.
-      if(this.APPDATA_API === this.api && null != this.collection) {
+      // Only the AppData API has explicit collections.
+      if(Kinvey.Store.AppData.APPDATA_API === this.api && null != this.collection) {
         url += this.collection + '/';
       }
       parts.id && (url += parts.id);
@@ -282,13 +259,13 @@
      */
     _send: function(method, url, body, options) {
       options || (options = {});
-      options.error || (options.error = this.options.error);
-      options.success || (options.success = this.options.success);
       'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
+      options.success || (options.success = this.options.success);
+      options.error || (options.error = this.options.error);
 
       // For now, include authorization in this adapter. Ideally, it should
       // have some external interface.
-      if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
+      if(null === Kinvey.getCurrentUser() && Kinvey.Store.AppData.APPDATA_API === this.api && null === Kinvey.masterSecret) {
         return Kinvey.User.create({}, merge(options, {
           success: bind(this, function() {
             this._send(method, url, body, options);
@@ -357,6 +334,11 @@
       // Fire request.
       request.send(body);
     }
+  }, {
+    // Path constants.
+    HOST: '<%= pkg.hostname %>',
+    APPDATA_API: 'appdata',
+    USER_API: 'user'
   });
 
 }());

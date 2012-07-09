@@ -14,16 +14,13 @@
      * @param {string} collection Collection name.
      */
     constructor: function(collection) {
-      // Database name is unique per app.
-      this.name = 'Kinvey.' + Kinvey.appKey;
-
-      // Tie the database to a particular collection, if specified.
-      this.collection = collection ? collection.replace('-', '_') : null;
+      this.name = 'Kinvey.' + Kinvey.appKey;// Unique per app.
+      this.collection = collection;
     },
 
     /** @lends Database# */
 
-    // As a convenience, the database implements the same methods as a store.
+    // As a convenience, implement the store interface.
 
     /**
      * Aggregates objects in database.
@@ -410,23 +407,32 @@
       options = this._options(options);
 
       // Open transaction.
-      this._transaction(Database.TRANSACTION_STORE, Database.READ_ONLY, function(txn) {
+      this._transaction(Database.TRANSACTION_STORE, Database.READ_ONLY, bind(this, function(txn) {
         // Prepare response.
         var response = {};
 
-        // Iterate over all collections to collect transactions.
-        var it = txn.objectStore(Database.TRANSACTION_STORE).openCursor();
-        it.onsuccess = function() {
-          var cursor = it.result;
-          if(cursor) {
-            var result = cursor.value;
-            result.collection = result.collection.replace('_', '-');// Restore.
+        // If this instance is tied to a particular collection, retrieve
+        // transactions for that collection only.
+        if(Database.TRANSACTION_STORE !== this.collection) {
+          var req = txn.objectStore(Database.TRANSACTION_STORE).get(this.collection);
+          req.onsuccess = bind(this, function() {
+            var result = req.result;
+            result && (response[this.collection] = result.transactions);
+          });
+        }
+        else {// Iterate over all collections, and collect their transactions.
+          var it = txn.objectStore(Database.TRANSACTION_STORE).openCursor();
+          it.onsuccess = function() {
+            var cursor = it.result;
+            if(cursor) {
+              var result = cursor.value;
+              response[result.collection] = result.transactions;
 
-            // Add to response and proceed.
-            response[result.collection] = result.transactions;
-            cursor['continue']();
-          }
-        };
+              // Proceed.
+              cursor['continue']();
+            }
+          };
+        }
 
         // Handle transaction status.
         txn.oncomplete = function() {
@@ -435,7 +441,7 @@
         txn.onabort = txn.onerror = function() {
           options.error(Kinvey.Error.DATABASE_ERROR, txn.error || 'Failed to execute transaction.');
         };
-      }, options.error);
+      }), options.error);
     },
 
     /**
@@ -525,7 +531,8 @@
      * @return {Object} Schema.
      */
     _getSchema: function(store) {
-      // Map with keys for stores.
+      // Map defining primary key for metadata stores. If the store is not
+      // a metadata store, simply return _id (see below).
       var key = {};
       key[Database.TRANSACTION_STORE] = 'collection';
       key[Database.AGGREGATION_STORE] = 'aggregation';
@@ -655,37 +662,31 @@
      * @param {function(error)} error Failure callback.
      */
     _transaction: function(stores, mode, success, error) {
+      !(stores instanceof Array) && (stores = [stores]);
+
+      // Open database.
       this._open(null, null, bind(this, function(db) {
-        var queue = [];
-        var storeNames = [];
-        !(stores instanceof Array) && (stores = [stores]);
-
-        // Check if all stores exist.
-        stores.forEach(bind(this, function(store) {
-          // Lookup store schema.
-          var schema = this._getSchema(store);
-
-          // Add to stores, and queue for creation if nonexistent.
-          storeNames.push(schema.name);
-          if(!db.objectStoreNames.contains(schema.name)) {
-            queue.push(schema);
+        // Make sure all stores exist.
+        var missingStores = [];
+        stores.forEach(function(store) {
+          if(!db.objectStoreNames.contains(store)) {
+            missingStores.push(store);
           }
-        }));
+        });
 
         // Create missing stores.
-        if(0 !== queue.length) {
-          this._mutate(function(db) {
-            queue.forEach(function(store) {
-              db.createObjectStore(store.name, store.options);
-            });
-          }, function(db) {
-            // Create and return the transaction.
-            success(db.transaction(storeNames, mode));
+        if(0 !== missingStores.length) {
+          this._mutate(bind(this, function(db) {
+            missingStores.forEach(bind(this, function(store) {
+              var schema = this._getSchema(store);
+              db.createObjectStore(schema.name, schema.options);
+            }));
+          }), function(db) {// Return a transaction.
+            success(db.transaction(stores, mode));
           }, error);
         }
-        else {
-          // Create and return the transaction.
-          success(db.transaction(storeNames, mode));
+        else {// Return a transaction.
+          success(db.transaction(stores, mode));
         }
       }), error);
     }

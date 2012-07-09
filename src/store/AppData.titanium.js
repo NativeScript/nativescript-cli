@@ -44,13 +44,13 @@
    */
   Kinvey.Store.AppData.prototype._send = function(method, url, body, options) {
     options || (options = {});
-    options.error || (options.error = this.options.error);
-    options.success || (options.success = this.options.success);
     'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
+    options.success || (options.success = this.options.success);
+    options.error || (options.error = this.options.error);
 
     // For now, include authorization in this adapter. Ideally, it should
     // have some external interface.
-    if(null === Kinvey.getCurrentUser() && this.APPDATA_API === this.api && null === Kinvey.masterSecret) {
+    if(null === Kinvey.getCurrentUser() && Kinvey.Store.AppData.APPDATA_API === this.api && null === Kinvey.masterSecret) {
       return Kinvey.User.create({}, merge(options, {
         success: bind(this, function() {
           this._send(method, url, body, options);

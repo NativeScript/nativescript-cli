@@ -56,7 +56,7 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
   });
-  /*
+
   // Kinvey.Store.Offline#synchronize
   describe('#synchronize', function() {
     // Create mock.
@@ -76,7 +76,7 @@ describe('Kinvey.Store.Offline', function() {
       // Remove separately, since calling remove would yield a conflict.
       var db = this.db;
       var object = this.object;
-      this.appdata.remove(object, callback(done, {
+      this.store.store.remove(object, callback(done, {
         success: function() {
           db.remove(object, callback(done));
         },
@@ -89,7 +89,7 @@ describe('Kinvey.Store.Offline', function() {
 
     // Test suite.
     it('detects a conflict.', function(done) {
-      Kinvey.Store.Sync.synchronize(callback(done, {
+      new Sync().application(callback(done, {
         conflict: function(cached, remote, options) {
           cached.bar.should.be['false'];
           remote.bar.should.be['true'];
@@ -104,15 +104,16 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
     it('resolves a conflict using clientAlwaysWins.', function(done) {
-      var store = this.appdata;
+      var store = this.store;
       var object = this.object;
-      Kinvey.Store.Sync.synchronize(callback(done, {
-        conflict: Kinvey.Store.Sync.clientAlwaysWins,
+      new Sync().application(callback(done, {
+        conflict: Sync.clientAlwaysWins,
         success: function(status) {
           status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure client really did win.
           store.query(object._id, callback(done, {
+            policy: Kinvey.Store.Cached.NO_CACHE,
             success: function(response) {
               response.bar.should.be['false'];
               done();
@@ -122,15 +123,16 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
     it('resolves a conflict using serverAlwaysWins.', function(done) {
-      var store = this.appdata;
+      var store = this.store;
       var object = this.object;
-      Kinvey.Store.Sync.synchronize(callback(done, {
-        conflict: Kinvey.Store.Sync.serverAlwaysWins,
+      new Sync().application(callback(done, {
+        conflict: Sync.serverAlwaysWins,
         success: function(status) {
           status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
           // Make sure server really did win.
           store.query(object._id, callback(done, {
+            policy: Kinvey.Store.Cached.NO_CACHE,
             success: function(response) {
               response.bar.should.be['true'];
               done();
@@ -140,9 +142,9 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
     it('resolves a conflict using a custom handler.', function(done) {
-      var store = this.appdata;
+      var store = this.store;
       var object = this.object;
-      Kinvey.Store.Sync.synchronize(callback(done, {
+      new Sync().application(callback(done, {
         conflict: function(_, __, options) {
           // The object to be persisted will be an empty object.
           options.success({});
@@ -150,8 +152,9 @@ describe('Kinvey.Store.Offline', function() {
         success: function(status) {
           status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
 
-          // Make sure item is really gone.
+          // Make sure properties are really unset.
           store.query(object._id, callback(done, {
+            policy: Kinvey.Store.Cached.NO_CACHE,
             success: function(response) {
               (null == response.bar).should.be['true'];
               done();
@@ -161,9 +164,9 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
     it('resolves a conflict using a custom handler.', function(done) {
-      var store = this.appdata;
+      var store = this.store;
       var object = this.object;
-      Kinvey.Store.Sync.synchronize(callback(done, {
+      new Sync().application(callback(done, {
         conflict: function(_, __, options) {
           // Remove both objects.
           options.success(null);
@@ -173,6 +176,7 @@ describe('Kinvey.Store.Offline', function() {
 
           // Make sure item is really gone.
           store.query(object._id, callback(done, {
+            policy: Kinvey.Store.Cached.NO_CACHE,
             success: function() {
               done(new Error('Success callback was invoked.'));
             },
@@ -185,5 +189,5 @@ describe('Kinvey.Store.Offline', function() {
       }));
     });
   });
-*/
+
 });

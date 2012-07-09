@@ -10,12 +10,12 @@
      * @extends Kinvey.Store.Cached
      * @param {string} collection Collection.
      * @param {Object} [options] Options.
-     * @throws {Error} On usage with user collection.
+     * @throws {Error} On usage with User API.
      */
     constructor: function(collection, options) {
-      // The user collection cannot be used offline for security issues.
-      if('user' === collection) {
-        throw new Error('The user collection cannot be used with the OfflineStore');
+      // The User API cannot be used offline for security issues.
+      if(Kinvey.Store.AppData.USER_API === collection) {
+        throw new Error('The User API cannot be used with OfflineStore');
       }
 
       // Call parent constructor.
@@ -29,7 +29,7 @@
      * 
      * @override
      * @see Kinvey.Store.Cached#configure
-     * @param {Object} options Options.
+     * @param {Object} options
      * @param {function(cached, remote, options)} [options.conflict]
      *          Conflict resolution handler.
      */
@@ -45,6 +45,7 @@
      * @see Kinvey.Store.Cached#remove
      */
     remove: function(object, options) {
+      this.id = object._id;
       options = this._options(options);
       this.db.remove(object, this._wrap(options));
     },
@@ -103,7 +104,7 @@
         fnSuccess(response, { offline: true });
 
         // Trigger synchronization.
-        new Sync().app({
+        new Sync().object(this.collection, response ? response._id : this.id, {
           success: function(status) {
             options.complete(status);
           },
