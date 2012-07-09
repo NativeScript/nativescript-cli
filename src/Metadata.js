@@ -23,9 +23,9 @@
      * @param {string} user User id.
      */
     addReader: function(user) {
-      this.acl.readers || (this.acl.readers = []);
-      if(-1 === this.acl.readers.indexOf(user)) {
-        this.acl.readers.push(user);
+      this.acl.r || (this.acl.r = []);
+      if(-1 === this.acl.r.indexOf(user)) {
+        this.acl.r.push(user);
       }
     },
 
@@ -35,9 +35,9 @@
      * @param {string} user User id.
      */
     addWriter: function(user) {
-      this.acl.writers || (this.acl.writers = []);
-      if(-1 === this.acl.writers.indexOf(user)) {
-        this.acl.writers.push(user);
+      this.acl.w || (this.acl.w = []);
+      if(-1 === this.acl.w.indexOf(user)) {
+        this.acl.w.push(user);
       }
     },
 
@@ -47,7 +47,7 @@
      * @return {Array} List of readers.
      */
     getReaders: function() {
-      return this.acl.readers || [];
+      return this.acl.r || [];
     },
 
     /**
@@ -56,7 +56,7 @@
      * @return {Array} List of writers.
      */
     getWriters: function() {
-      return this.acl.writers || [];
+      return this.acl.w || [];
     },
 
     /**
@@ -96,8 +96,8 @@
       }
 
       var currentUser = Kinvey.getCurrentUser();
-      if(currentUser && this.acl.writers) {
-        return -1 !== this.acl.writers.indexOf(currentUser.getId());
+      if(currentUser && this.acl.w) {
+        return -1 !== this.acl.w.indexOf(currentUser.getId());
       }
       return false;
     },
@@ -108,7 +108,7 @@
      * @returns {Boolean}
      */
     isGloballyReadable: function() {
-      return !!this.acl.globalRead;
+      return !!this.acl.gr;
     },
 
     /**
@@ -117,7 +117,7 @@
      * @returns {Boolean}
      */
     isGloballyWritable: function() {
-      return !!this.acl.globalWrite;
+      return !!this.acl.gw;
     },
 
     /**
@@ -126,10 +126,10 @@
      * @param {string} user User id.
      */
     removeReader: function(user) {
-      if(this.acl.readers) {
-        var index = this.acl.readers.indexOf(user);
+      if(this.acl.r) {
+        var index = this.acl.r.indexOf(user);
         if(-1 !== index) {
-          this.acl.readers.splice(index, 1);
+          this.acl.r.splice(index, 1);
         }
       }
     },
@@ -140,10 +140,10 @@
      * @param {string} user User id.
      */
     removeWriter: function(user) {
-      if(this.acl.writers) {
-        var index = this.acl.writers.indexOf(user);
+      if(this.acl.w) {
+        var index = this.acl.w.indexOf(user);
         if(-1 !== index) {
-          this.acl.writers.splice(index, 1);
+          this.acl.w.splice(index, 1);
         }
       }
     },
@@ -154,7 +154,7 @@
      * @param {Boolean} flag
      */
     setGloballyReadable: function(flag) {
-      this.acl.globalRead = !!flag;
+      this.acl.gr = !!flag;
     },
 
     /**
@@ -163,7 +163,7 @@
      * @param {Boolean} flag
      */
     setGloballyWritable: function(flag) {
-      this.acl.globalWrite = !!flag;
+      this.acl.gw = !!flag;
     },
 
     /**

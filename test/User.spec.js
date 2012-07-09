@@ -267,28 +267,4 @@ describe('Kinvey.User', function() {
     });
   });
 
-  // Kinvey.User#setMetadata
-  describe('#setMetadata', function() {
-    // Create mock.
-    beforeEach(function(done) {
-      Kinvey.User.init(callback(done));
-    });
-    afterEach(function(done) {
-      Kinvey.getCurrentUser().destroy(callback(done));
-    });
-
-    // Test suite.
-    it('sets the user metadata.', function(done) {
-      var meta = Kinvey.getCurrentUser().getMetadata();
-      meta.setGloballyWritable(true);
-      Kinvey.getCurrentUser().save(callback(done, {
-        success: function(entity) {
-          entity.getMetadata().should.not.equal(meta);// attributes are updated.
-          entity.getMetadata().isGloballyWritable().should.be['true'];
-          done();
-        }
-      }));
-    });
-  });
-
 });
