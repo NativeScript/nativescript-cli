@@ -1,28 +1,140 @@
 (function() {
 
-  // Define the Kinvey.Sync class.
-  global.Sync = Base.extend({
+  /**
+   * Kinvey Sync namespace definition. This namespace manages the data
+   * synchronization between local and remote backend.
+   * 
+   * @namespace
+   */
+  Kinvey.Sync = {
     /**
-     * Creates a new synchronization instance.
+     * Environment status.
+     */
+    isOnline: true,
+
+    /**
+     * Synchronizes application.
+     * 
+     * @param {Object} [options]
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     */
+    application: function(options) {
+      new Synchronizer(options).application();
+    },
+
+    /**
+     * Synchronizes collection.
+     * 
+     * @param {string} name Collection name.
+     * @param {Object} [options]
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     */
+    collection: function(name, options) {
+      new Synchronizer(options).collection(name);
+    },
+
+    /**
+     * Synchronizes object.
+     * 
+     * @param {string} collection Collection name.
+     * @param {Object} object Object.
+     * @param {Object} [options]
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     */
+    object: function(collection, object, options) {
+      new Synchronizer(options).object(collection, object);
+    },
+
+    // Built-in conflict resolution handlers.
+
+    /**
+     * Client always wins conflict resolution. Prioritizes cached copy over
+     * remote copy.
+     * 
+     * @param {string} collection Collection name.
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
+    clientAlwaysWins: function(collection, cached, remote, options) {
+      options.success(cached);
+    },
+
+    /**
+     * Leaves conflicts as is.
+     * 
+     * @param {string} collection Collection name.
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
+    ignore: function(collection, cached, remote, options) {
+      options.error();
+    },
+
+    /**
+     * Server always wins conflict resolution. Prioritizes remote copy over
+     * cached copy.
+     * 
+     * @param {string} collection Collection name.
+     * @param {Object} cached Cached copy.
+     * @param {Object} remote Remote copy.
+     * @param {Object} options
+     * @param {function(copy)} options.success Success callback.
+     * @param {function()} options.error Failure callback.
+     */
+    serverAlwaysWins: function(collection, cached, remote, options) {
+      options.success(remote);
+    },
+
+    /**
+     * Default conflict resolution handler.
      * 
      */
-    constructor: function() {
-      //
+    conflict: this.ignore
+  };
+
+  // Define the Synchronizer class.
+  var Synchronizer = Base.extend({
+    /**
+     * Creates a new synchronizer.
+     * 
+     * @constructor
+     * @name Synchronizer
+     * @param {Object} [options]
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status) options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     */
+    constructor: function(options) {
+      options || (options = {});
+
+      // Configure.
+      this.conflict = options.conflict || Kinvey.Sync.conflict;
+      this.success = options.success || function() { };
+      this.error = options.error || function() { };
     },
 
     /**
      * Synchronizes all application data.
      * 
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(status) options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
      */
-    application: function(options) {
-      options = this._options(options);
-
-      // Obtain pending transactions.
+    application: function() {
+      // Retrieve pending transactions.
       new Database(Database.TRANSACTION_STORE).getTransactions({
         success: bind(this, function(transactions) {
           // Prepare response.
@@ -31,33 +143,30 @@
           // If there are no pending transactions, return here.
           var collections = Object.keys(transactions);
           if(0 === collections.length) {
-            return options.success(response);
+            return this.success(response);
           }
 
-          // There are pending transactions. Define handler to aggregate the
-          // synchronization responses per collection.
+          // There are pending transactions. Define a handler to aggregate the
+          // responses per synchronized collection.
           var pending = 0;
-          var handler = function(collection) {
+          var handler = bind(this, function(collection) {
             pending += 1;
-            return {
-              conflict: options.conflict,// Conflict resolution callback.
-              complete: function(result) {
-                // Add results to response.
-                response[collection] = result;
-  
-                // When all collections are synchronized, terminate the
-                // algorithm.
-                !--pending && options.success(response);
-              }
-            };
-          };
+            return bind(this, function(result) {
+              // Add results to response.
+              result && (response[collection] = result);
 
-          // Trigger synchronizing per collection (in parallel).
+              // When all collections are synchronized, terminate the
+              // algorithm.
+              !--pending && this.success(response);
+            });
+          });
+
+          // Synchronizing each collection (in parallel).
           collections.forEach(bind(this, function(collection) {
             this._collection(collection, transactions[collection], handler(collection));
           }));
         }),
-        error: options.error
+        error: this.error
       });
     },
 
@@ -65,61 +174,46 @@
      * Synchronizes a collection.
      * 
      * @param {string} name Collection name.
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(status) options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
      */
-    collection: function(name, options) {
-      options = this._options(options);
-
-      // Obtain pending transactions.
+    collection: function(name) {
+      // Retrieve pending transactions.
       new Database(name).getTransactions({
         success: bind(this, function(transactions) {
           // If there are no pending transactions, return here.
           if(null == transactions[name]) {
-            return options.success({});
+            return this.success({});
           }
 
-          // There are pending transactions. Trigger synchronization.
-          this._collection(name, transactions[name], {
-            conflict: options.conflict,// Conflict resolution callback.
-            complete: function(result) {
-              // Wrap result in collection property.
-              var response = {};
-              response[name] = result;
+          // There are pending transactions. Synchronize.
+          this._collection(name, transactions[name], bind(this, function(result) {
+            // Wrap result in collection property.
+            var response = {};
+            result && (response[name] = result);
 
-              // Terminate the algorithm.
-              options.success(response);
-            }
-          });
+            // Terminate the algorithm.
+            this.success(response);
+          }));
         }),
-        error: options.error
+        error: this.error
       });
     },
 
     /**
-     * Synchronizes a object.
+     * Synchronizes an object.
      * 
      * @param {string} collection Collection name.
-     * @param {string} id Object id.
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(status) options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
+     * @param {Object} object Object.
      */
-    object: function(collection, id, options) {
-      options = this._options(options);
+    object: function(collection, object) {
+      var id = object._id;
 
-      // Create cached store and obtain pending transactions.
+      // Retrieve pending transactions for the collection.
       var db = new Database(collection);
       db.getTransactions({
         success: bind(this, function(transactions) {
           // If there is no pending transaction for this object, return here.
           if(null == transactions[collection] || !transactions[collection].hasOwnProperty(id)) {
-            return options.success({});
+            return this.success({});
           }
 
           // There is a pending transaction. Make sure this is the only
@@ -128,187 +222,146 @@
           transactions = {};
           transactions[id] = value;
 
-          // Create remote store.
-          var appdata = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
-
-          // Iterate over transactions. In this case, there is only one.
-          this._iterate(transactions, {
-            appdata: appdata,
+          // Classify and commit.
+          this._classifyAndCommit(collection, transactions, {
+            db: db,
             objects: [id],
-            db: db
-          }, {
-            conflict: options.conflict,// Conflict resolution callback.
+            store: Kinvey.Store.factory(collection, Kinvey.Store.APPDATA)
+          }, bind(this, function(result) {
+            // Wrap result in collection property.
+            var response = {};
+            response[collection] = result;
 
-            // Commit the committable.
-            success: bind(this, function(committable, conflicted) {
-              this._commit(committable, {
-                appdata: appdata,
-                objects: [id],
-                db: db
-              }, function(committed, canceled) {
-                // Gather results, and return.
-                var response = {};
-                response[collection] = {
-                  committed: committed,
-                  conflicted: conflicted,
-                  canceled: canceled
-                };
-                options.success(response);
-              });
-            }),
-
-            // Iteration failed. Mark all objects as canceled, and return.
-            error: function() {
-             // Gather results, and return.
-              var response = {};
-              response[collection] = {
-                committed: [],
-                conflicted: [],
-                canceled: [id]
-              };
-              options.success(response);
-            }
-          });
+            // Terminate the algorithm.
+            this.success(response);
+          }));
         }),
-        error: options.error
+        error: this.error
       });
     },
 
     /**
-     * Bucketizes all transactions in either committable or conflicted
-     * bucket.
+     * Classifies each transaction as committable, conflicted or canceled.
      * 
      * @private
-     * @param {Object} transactions Transactions.
-     * @param {Object} objects
-     * @param {Object} objects.cached Cached copies.
-     * @param {Array} objects.remote Remote copies.
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(committable, conflicted)} options.complete Complete
-     *          callback.
+     * @param {string} collection Collection name.
+     * @param {Object} transactions Pending transactions.
+     * @param {Object} data
+     * @param {Database} data.db Database.
+     * @param {Array} data.objects Object ids under transaction.
+     * @param {Kinvey.Store.AppData} data.store Store.
+     * @param {function(committable, conflicted, canceled)} complete Complete callback.
      */
-    _bucketize: function(transactions, objects, options) {
-      // Prepare response.
-      var committable = {};
-      var conflicted = [ ];
+    _classify: function(collection, transactions, data, complete) {
+      // Retrieve all objects under transaction.
+      this._retrieve(data.objects, data, bind(this, function(cached, remote) {
+        // Prepare response.
+        var committable = {};
+        var conflicted = [];
 
-      // Define handler to bucketize objects.
-      var pending = 0;
-      var handler = function(id) {
-        pending += 1;
-        return {
-          conflict: options.conflict,// Conflict resolution callback.
+        // Define handler to handle the classification process below.
+        var pending = 0;
+        var handler = function(id) {
+          pending += 1;
+          return {
+            success: function(copy) {
+              // The user may have erroneously altered the id, which we
+              // absolutely need to undo here.
+              copy && (copy._id = id);
 
-          success: function(copy) {
-            // The user may have erroneously altered the id, which we
-            // absolutely need to undo here.
-            copy && (copy._id = id);
-
-            // Add to bucket and proceed.
-            committable[id] = copy;
-            !--pending && options.complete(committable, conflicted);
-          },
-          error: function(/* cached, remote */) {
-            // Add to bucket and proceed.
-            conflicted.push(id);
-            !--pending && options.complete(committable, conflicted);
-          }
+              // Add to set and continue.
+              committable[id] = copy;
+              !--pending && complete(committable, conflicted, []);
+            },
+            error: function(collection, cached, remote) {
+              // Add to set and continue.
+              conflicted.push(id);
+              !--pending && complete(committable, conflicted, []);
+            } 
+          };
         };
-      };
 
-      // Bucketize each transaction (in parallel). First, handle objects
-      // available both in cached and remote.
-      objects.remote.forEach(bind(this, function(object) {
-        var id = object._id;
-        this._object(transactions[id], objects.cached[id], object, handler(id));
+        // Classify each transaction (in parallel). First, handle objects
+        // available both in the store and database.
+        remote.forEach(bind(this, function(object) {
+          var id = object._id;
+          this._object(collection, transactions[id], cached[id], object, handler(id));
 
-        // Housekeeping; remove from cached objects to avoid looping a second
-        // time below.
-        delete objects.cached[id];
-      }));
+          // Housekeeping, remove from cached to not loop it again below.
+          delete cached[id];
+        }));
 
-      // Next, handle objects only available in cached.
-      Object.keys(objects.cached).forEach(bind(this, function(id) {
-        this._object(transactions[id], objects.cached[id], null, handler(id));
+        // Next, handle objects only available in the database.
+        Object.keys(cached).forEach(bind(this, function(id) {
+          this._object(collection, transactions[id], cached[id], null, handler(id));
+        }));
+      }), function() {// An error occured. Mark all transactions as cancelled.
+        complete([], [], data.objects);
+      });
+    },
+
+    /**
+     * Classifies and commits all transactions for a collection.
+     * 
+     * @private 
+     * @param {string} collection Collection name.
+     * @param {Object} transactions Pending transactions.
+     * @param {Object} data
+     * @param {Database} data.db Database.
+     * @param {Array} data.objects Object ids under transaction.
+     * @param {Kinvey.Store.AppData} data.store Store.
+     * @param {function(result)} complete Complete callback.
+     */
+    _classifyAndCommit: function(collection, transactions, data, complete) {
+      this._classify(collection, transactions, data, bind(this, function(committable, conflicted, canceled) {
+        this._commit(committable, data, function(committed, cCanceled) {
+          // Merge sets and return.
+          complete({
+            committed: committed,
+            conflicted: conflicted,
+            canceled: canceled.concat(cCanceled)
+          });
+        });
       }));
     },
 
     /**
-     * Synchronizes collection.
+     * Processes synchronization for collection.
      * 
      * @private
      * @param {string} name Collection name.
-     * @param {Object} transactions Pending transactions.
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(result)} options.complete Complete callback.
+     * @param {Object} transactions List of pending transactions.
+     * @param {function(result)} complete Complete callback.
      */
-    _collection: function(name, transactions, options) {
-      // Prepare response.
-      var response = {
-        committed: [ ],
-        conflicted: [ ],
-        canceled: [ ]
-      };
-
+    _collection: function(name, transactions, complete) {
       // If there are no pending transactions, return here.
       var objects = Object.keys(transactions);
       if(0 === objects.length) {
-        return options.complete(response);
+        return complete();
       }
 
-      // There are pending transactions. Create cached and remote stores.
-      var appdata = Kinvey.Store.factory(name, Kinvey.Store.APPDATA);
-      var db = new Database(name);
-
-      // Iterate over transactions.
-      this._iterate(transactions, {
-        appdata: appdata,
+      // There are pending transactions. Classify and commit all.
+      this._classifyAndCommit(name, transactions, {
+        db: new Database(name),
         objects: objects,
-        db: db
-      }, {
-        conflict: options.conflict,// Conflict resolution callback.
-
-        // Commit the committable.
-        success: bind(this, function(committable, conflicted) {
-          this._commit(committable, {
-            appdata: appdata,
-            objects: objects,
-            db: db
-          }, function(committed, canceled) {
-            // Gather results, and return.
-            response.committed = committed;
-            response.conflicted = conflicted;
-            response.canceled = canceled;
-            options.complete(response);
-          });
-        }),
-
-        // Iteration failed. Mark all objects as canceled, and return.
-        error: function() {
-          response.canceled = objects;
-          options.complete(response);
-        }
-      });
+        store: Kinvey.Store.factory(name, Kinvey.Store.APPDATA)
+      }, complete);
     },
 
     /**
      * Commits a series of transactions.
      * 
      * @private
-     * @param {Object} transactions Transactions.
+     * @param {Object} objects Objects to commit.
      * @param {Object} data
-     * @param {Kinvey.Store.AppData} data.appdata AppData store.
      * @param {Database} data.db Database.
+     * @param {Kinvey.Store.AppData} data.store Store.
      * @param {function(committed, canceled)} complete Complete callback.
      */
-    _commit: function(transactions, data, complete) {
+    _commit: function(objects, data, complete) {
       // If there are no transactions to be committed, return here.
-      var objects = Object.keys(transactions);
-      if(0 === objects.length) {
+      data.objects = Object.keys(objects);
+      if(0 === data.objects.length) {
         return complete([ ], [ ]);
       }
 
@@ -316,18 +369,20 @@
       // and removals.
       var updates = [ ];
       var removals = [ ];
-      objects.forEach(function(id) {
-        var transaction = transactions[id];
-        null !== transaction ? updates.push(transaction) : removals.push(id);
+      data.objects.forEach(function(id) {
+        var object = objects[id];
+        null != object ? updates.push(object) : removals.push(id);
       });
 
-      // Commit updates first, and removals second.
+      // First, commit updates.
       this._commitUpdates(updates, data, bind(this, function(uCommitted, uCanceled) {
+        // Then, commit removals.
         this._commitRemovals(removals, data, function(rCommitted, rCanceled) {
-          // Merge commit sets.
+          // Merge sets.
           var committed = uCommitted.concat(rCommitted);
 
-          // Commit transactions to cached.
+          // Remove transactions from database. Failure at this stage is
+          // non-fatal.
           var fn = function() {
             complete(committed, uCanceled.concat(rCanceled));
           };
@@ -340,41 +395,65 @@
     },
 
     /**
-     * Commits a series of removal transactions.
+     * Commits object.
      * 
      * @private
-     * @param {Array} transactions Transactions.
+     * @param {Object} object Object to commit.
      * @param {Object} data
      * @param {Database} data.db Database.
-     * @param {Kinvey.Store.AppData} data.appdata AppData store.
+     * @param {Kinvey.Store.AppData} data.store Store.
      * @param {function(committed, canceled)} complete Complete callback.
      */
-    _commitRemovals: function(transactions, data, complete) {
-      // If there are no transactions, return here.
-      if(0 === transactions.length) {
-        return complete(transactions, [ ]);
-      }
-
-      // There are transactions to commit.
-      var query = new Kinvey.Query().on('_id').in_(transactions);
-      data.appdata.removeWithQuery(query.toJSON(), {
-        success: function() {
-          // All is committed to remote, proceed with cached.
-          data.db.multiRemove(transactions, {
-            success: function() {
-              // Mark all as committed.
-              complete(transactions, [ ]);
-            },
-            error: function() {
-              // Remote is up to date, which is most important. We can afford
-              // ignoring cached.
-              complete(transactions, [ ]);
-            }
+    _commitObject: function(object, data, complete) {
+      // First, commit to the store.
+      data.store.save(object, {
+        success: function(response) {
+          // Next, commit response to database. Failure is non-fatal.
+          var fn = function() {
+            complete([response._id], []);
+          };
+          data.db.put('query', response._id, response, {
+            success: fn,
+            error: fn
           });
         },
         error: function() {
-          // Mark all as canceled and return.
-          complete([ ], transactions);
+          complete([], [object._id]);
+        }
+      });
+    },
+
+    /**
+     * Commits a series of removal transactions.
+     * 
+     * @private
+     * @param {Array} objects Objects to commit.
+     * @param {Object} data
+     * @param {Database} data.db Database.
+     * @param {Kinvey.Store.AppData} data.store Store.
+     * @param {function(committed, canceled)} complete Complete callback.
+     */
+    _commitRemovals: function(objects, data, complete) {
+      // If there are no transactions, return here.
+      if(0 === objects.length) {
+        return complete([], []);
+      }
+
+      // There are transactions to commit. First, commit to the store.
+      var query = new Kinvey.Query().on('_id').in_(objects);
+      data.store.removeWithQuery(query.toJSON(), {
+        success: function() {
+          // Next, commit to the database. Failure is non-fatal.
+          var fn = function() {
+            complete(objects, []);
+          };
+          data.db.multiRemove(objects, {
+            success: fn,
+            error: fn
+          });
+        },
+        error: function() {// Mark all as canceled and return.
+          complete([ ], objects);
         }
       });
     },
@@ -383,16 +462,16 @@
      * Commits a series of update transactions.
      * 
      * @private
-     * @param {Array} transactions Transactions.
+     * @param {Array} objects Objects to commit.
      * @param {Object} data
-     * @param {Database} data.cached Database.
-     * @param {Kinvey.Store.AppData} data.remote Remote store.
+     * @param {Database} data.db Database.
+     * @param {Kinvey.Store.AppData} data.store Store.
      * @param {function(committed, canceled)} complete Complete callback.
      */
-    _commitUpdates: function(transactions, data, complete) {
+    _commitUpdates: function(objects, data, complete) {
       // If there are no transactions, return here.
-      if(0 === transactions.length) {
-        return complete(transactions, [ ]);
+      if(0 === objects.length) {
+        return complete([], []);
       }
 
       // Prepare response.
@@ -404,114 +483,32 @@
       var handler = function() {
         pending += 1;
         return function(uCommitted, uCanceled) {
+          // Add to set and continue.
           committed = committed.concat(uCommitted);
           canceled = canceled.concat(uCanceled);
-
-          // Continue.
           !--pending && complete(committed, canceled);
         };
       };
 
-      // There are transactions to commit.
-      transactions.forEach(bind(this, function(transaction) {
-        this._commitObject(transaction, data, handler());
+      // Commit each transaction (in parallel).
+      objects.forEach(bind(this, function(object) {
+        this._commitObject(object, data, handler());
       }));
     },
 
     /**
-     * Commits object.
+     * Processes synchronization for object.
      * 
      * @private
-     * @param {Object} object Object to be commited.
-     * @param {Object} data
-     * @param {Kinvey.Store.AppData} data.appdata AppData store.
-     * @param {Database} data.db Database.
-     * @param {function(committed, canceled)} complete Complete callback.
-     */
-    _commitObject: function(object, data, complete) {
-      // Commit to appdata first.
-      data.appdata.save(object, {
-        success: function(response) {
-          // Object is committed to appdata. Update database, do nothing on
-          // failure.
-          var fn = function() {
-            complete([ response._id ], [ ]);
-          };
-          data.db.put('query', response._id, response, {
-            success: fn,
-            error: fn
-          });
-        },
-        error: function() {
-          complete([ ], [ object._id ]);
-        }
-      });
-    },
-
-    /**
-     * Iterates over each transaction to bucketize them.
-     * 
-     * @private
-     * @param {Object} transactions Transactions.
-     * @param {Object} data
-     * @param {Database} data.db Database.
-     * @param {Array} data.objects Objects under transaction.
-     * @param {Kinvey.Store.AppData} data.appdata AppData store.
-     * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
-     * @param {function(committable, conflicted)} options.success Success
-     *          callback.
-     * @param {function()} options.error Failure callback.
-     */
-    _iterate: function(transactions, data, options) {
-      // Prepare objects under transaction.
-      var cached = [ ];
-      var remote = [ ];
-
-      // Define handler to bucketize transaction.
-      var pending = 0;
-      var handler = bind(this, function() {
-        pending += 1;
-        return {
-          success: bind(this, function(list, info) {
-            info.network ? remote = list : cached = list;
-            !--pending && this._bucketize(transactions, {
-              cached: cached,
-              remote: remote
-            }, {
-              conflict: options.conflict,// Conflict resolution callback.
-              complete: options.success
-            });
-          }),
-          error: function() {
-            // Make sure error handler is only invoked once.
-            options.error();
-            options.error = function() { };// Unset.
-          }
-        };
-      });
-
-      // Pull objects under transaction (in parallel).
-      var query = new Kinvey.Query().on('_id').in_(data.objects);
-      data.appdata.queryWithQuery(query.toJSON(), handler());
-      data.db.multiQuery(data.objects, handler());
-    },
-
-    /**
-     * Synchronizes object.
-     * 
-     * @private
+     * @param {string} collection Collection name.
      * @param {string} transaction Transaction timestamp.
      * @param {Object} cached Cached copy.
      * @param {Object} remote Remote copy.
      * @param {Object} options
-     * @param {function(cached, remote, options)} options.conflict Conflict
-     *          resolution callback.
      * @param {function(copy)} options.success Success handler.
-     * @param {function(cached, remote)} options.error Failure callback.
+     * @param {function(collection, cached, remote)} options.error Failure callback.
      */
-    _object: function(transaction, cached, remote, options) {
+    _object: function(collection, transaction, cached, remote, options) {
       // If remote copy does not exist, or timestamps match; cached copy wins.
       if(null === remote || transaction === remote._kmd.lmt) {
         return options.success(cached);
@@ -521,65 +518,51 @@
       // conflict resolution callback to resolve the conflict. Optionally, the
       // handler can maintain the conflicting state by triggering the error
       // handler.
-      options.conflict(cached, remote, {
+      this.conflict(collection, cached, remote, {
         success: options.success,
         error: function() {
-          options.error(cached, remote);
+          options.error(collection, cached, remote);
         }
       });
     },
 
     /**
-     * Returns full options object.
+     * Retrieves objects from store and database.
      * 
-     * @private
-     * @param {Object} options Options.
-     * @return {Object} Options.
+     * @param {Array} object List of object ids.
+     * @param {Object} data
+     * @param {Database} data.db Database
+     * @param {Kinvey.Store.AppData} data.store Store.
+     * @param {function(cached, remote)} success Success callback.
+     * @param {function()} error Failure callback.
      */
-    _options: function(options) {
-      options || (options = {});
+    _retrieve: function(objects, data, success, error) {
+      // Prepare response.
+      var cached = [];
+      var remote = [];
 
-      // The default conflict resolution is to NOT resolve them :)
-      options.conflict || (options.conflict = function(cached, remote, options) {
-        options.error();
-      });
+      // Define handler to handle store and database responses.
+      var pending = 0;
+      var handler = function() {
+        pending += 1;
+        return {
+          success: function(list, info) {
+            // Add to set and continue.
+            info.network ? remote = list : cached = list;
+            !--pending && success(cached, remote);
+          },
+          error: function() {
+            // Failed to retrieve objects. This is a fatal error.
+            error();
+            error = function() { };// Unset, to avoid invoking it twice.
+          }
+        };
+      };
 
-      options.success || (options.success = function() { });
-      options.error || (options.error = function() { });
-      return options;
-    }
-  }, {
-
-    /** @lends Sync */
-
-    // Built-in conflict resolution handlers.
-
-    /**
-     * Client always wins conflict resolution. Prioritizes cached copy over
-     * remote copy.
-     * 
-     * @param {Object} cached Cached copy.
-     * @param {Object} remote Remote copy.
-     * @param {Object} options
-     * @param {function(copy)} options.success Success callback.
-     * @param {function()} options.error Failure callback.
-     */
-    clientAlwaysWins: function(cached, remote, options) {
-      options.success(cached);
-    },
-
-    /**
-     * Server always wins conflict resolution. Prioritizes remote copy over
-     * cached copy.
-     * 
-     * @param {Object} cached Cached copy.
-     * @param {Object} remote Remote copy.
-     * @param {Object} options
-     * @param {function(copy)} options.success Success callback.
-     * @param {function()} options.error Failure callback.
-     */
-    serverAlwaysWins: function(cached, remote, options) {
-      options.success(remote);
+      // Retrieve objects (in parallel).
+      var query = new Kinvey.Query().on('_id').in_(objects);
+      data.store.queryWithQuery(query, handler());
+      data.db.multiQuery(objects, handler());
     }
   });
 

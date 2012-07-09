@@ -411,17 +411,20 @@
         // Prepare response.
         var response = {};
 
+        // Open store.
+        var store = txn.objectStore(Database.TRANSACTION_STORE);
+
         // If this instance is tied to a particular collection, retrieve
         // transactions for that collection only.
         if(Database.TRANSACTION_STORE !== this.collection) {
-          var req = txn.objectStore(Database.TRANSACTION_STORE).get(this.collection);
+          var req = store.get(this.collection);
           req.onsuccess = bind(this, function() {
             var result = req.result;
             result && (response[this.collection] = result.transactions);
           });
         }
         else {// Iterate over all collections, and collect their transactions.
-          var it = txn.objectStore(Database.TRANSACTION_STORE).openCursor();
+          var it = store.openCursor();
           it.onsuccess = function() {
             var cursor = it.result;
             if(cursor) {

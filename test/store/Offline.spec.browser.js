@@ -89,16 +89,21 @@ describe('Kinvey.Store.Offline', function() {
 
     // Test suite.
     it('detects a conflict.', function(done) {
-      new Sync().application(callback(done, {
-        conflict: function(cached, remote, options) {
+      Kinvey.Sync.application(callback(done, {
+        conflict: function(collection, cached, remote, options) {
+          collection.should.equal(COLLECTION_UNDER_TEST);
           cached.bar.should.be['false'];
           remote.bar.should.be['true'];
-  
+
           // Do not change conflicting state.
           options.error();
         },
         success: function(status) {
-          status[COLLECTION_UNDER_TEST].conflicted.should.have.length(1);
+          status[COLLECTION_UNDER_TEST].should.eql({
+            committed: [],
+            conflicted: ['foo'],
+            canceled: []
+          });
           done();
         }
       }));
@@ -106,10 +111,14 @@ describe('Kinvey.Store.Offline', function() {
     it('resolves a conflict using clientAlwaysWins.', function(done) {
       var store = this.store;
       var object = this.object;
-      new Sync().application(callback(done, {
-        conflict: Sync.clientAlwaysWins,
+      Kinvey.Sync.application(callback(done, {
+        conflict: Kinvey.Sync.clientAlwaysWins,
         success: function(status) {
-          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+          status[COLLECTION_UNDER_TEST].should.eql({
+            committed: ['foo'],
+            conflicted: [],
+            canceled: []
+          });
 
           // Make sure client really did win.
           store.query(object._id, callback(done, {
@@ -125,10 +134,14 @@ describe('Kinvey.Store.Offline', function() {
     it('resolves a conflict using serverAlwaysWins.', function(done) {
       var store = this.store;
       var object = this.object;
-      new Sync().application(callback(done, {
-        conflict: Sync.serverAlwaysWins,
+      Kinvey.Sync.application(callback(done, {
+        conflict: Kinvey.Sync.serverAlwaysWins,
         success: function(status) {
-          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+          status[COLLECTION_UNDER_TEST].should.eql({
+            committed: ['foo'],
+            conflicted: [],
+            canceled: []
+          });
 
           // Make sure server really did win.
           store.query(object._id, callback(done, {
@@ -144,13 +157,19 @@ describe('Kinvey.Store.Offline', function() {
     it('resolves a conflict using a custom handler.', function(done) {
       var store = this.store;
       var object = this.object;
-      new Sync().application(callback(done, {
-        conflict: function(_, __, options) {
+      Kinvey.Sync.application(callback(done, {
+        conflict: function(collection, cached, remote, options) {
+          collection.should.equal(COLLECTION_UNDER_TEST);
+
           // The object to be persisted will be an empty object.
           options.success({});
         },
         success: function(status) {
-          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+          status[COLLECTION_UNDER_TEST].should.eql({
+            committed: ['foo'],
+            conflicted: [],
+            canceled: []
+          });
 
           // Make sure properties are really unset.
           store.query(object._id, callback(done, {
@@ -166,13 +185,19 @@ describe('Kinvey.Store.Offline', function() {
     it('resolves a conflict using a custom handler.', function(done) {
       var store = this.store;
       var object = this.object;
-      new Sync().application(callback(done, {
-        conflict: function(_, __, options) {
+      Kinvey.Sync.application(callback(done, {
+        conflict: function(collection, cached, remote, options) {
+          collection.should.equal(COLLECTION_UNDER_TEST);
+
           // Remove both objects.
           options.success(null);
         },
         success: function(status) {
-          status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+          status[COLLECTION_UNDER_TEST].should.eql({
+            committed: ['foo'],
+            conflicted: [],
+            canceled: []
+          });
 
           // Make sure item is really gone.
           store.query(object._id, callback(done, {

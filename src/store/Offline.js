@@ -30,7 +30,7 @@
      * @override
      * @see Kinvey.Store.Cached#configure
      * @param {Object} options
-     * @param {function(cached, remote, options)} [options.conflict]
+     * @param {function(collection, cached, remote, options)} [options.conflict]
      *          Conflict resolution handler.
      */
     configure: function(options) {
@@ -45,9 +45,8 @@
      * @see Kinvey.Store.Cached#remove
      */
     remove: function(object, options) {
-      this.id = object._id;
       options = this._options(options);
-      this.db.remove(object, this._wrap(options));
+      this.db.remove(object, this._wrap(object, options));
     },
 
     /**
@@ -58,7 +57,7 @@
      */
     removeWithQuery: function(query, options) {
       options = this._options(options);
-      this.db.removeWithQuery(query, this._wrap(options));
+      this.db.removeWithQuery(query, this._wrap(null, options));
     },
 
     /**
@@ -69,7 +68,7 @@
      */
     save: function(object, options) {
       options = this._options(options);
-      this.db.save(object, this._wrap(options));
+      this.db.save(object, this._wrap(object, options));
     },
 
     /**
@@ -82,42 +81,47 @@
     _options: function(options) {
       options = Kinvey.Store.Cached.prototype._options.call(this, options);
 
-      // Override the cache policy when offline.
-//      if(!Kinvey.Store.Sync.isOnline) {
+      // Override the caching policy when offline.
+      if(!Kinvey.Sync.isOnline) {
         options.policy = Kinvey.Store.Cached.CACHE_ONLY;
-//      }
-
+      }
       return options;
     },
 
     /**
-     * Wraps success and error handlers to trigger synchronization.
+     * Wraps success and error handlers to include synchronization.
      * 
      * @private
-     * @param {Object} options Options
+     * @param {Object} scope Synchronization scope.
+     * @param {Object} options Options.
      * @return {Object}
      */
-    _wrap: function(options) {
-      var fnError = options.error;
-      var fnSuccess = options.success;
-      options.success = bind(this, function(response) {
-        fnSuccess(response, { offline: true });
+    _wrap: function(scope, options) {
+      // Wrap options for handling synchronization.
+      return merge(options, {
+        success: bind(this, function(response) {
+          options.success(response, { offline: true });
 
-        // Trigger synchronization.
-        new Sync().object(this.collection, response ? response._id : this.id, {
-          success: function(status) {
-            options.complete(status);
-          },
-          error: function() {
-            options.complete({});
+          // If the scope parameter is defined, use the response to scope the
+          // the synchronization to this object only. 
+          var opts = {
+            conflict: options.conflict,
+            success: options.complete,
+            error: options.complete
+          };
+          if(scope) {
+            // Fallback to the scope itself if response is null.
+            return Kinvey.Sync.object(this.collection, response || scope, opts);
           }
-        });
+
+          // No scope, synchronize the whole collection.
+          Kinvey.Sync.collection(this.collection, opts);
+        }),
+        error: function(error) {// Cannot perform synchronization, so terminate.
+          options.error(error, { offline: true });
+          options.complete();
+        }
       });
-      options.error = function(error) {
-        fnError(error, { offline: true });
-        options.complete();
-      };
-      return options;
     }
   });
 
