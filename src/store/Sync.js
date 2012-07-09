@@ -9,8 +9,28 @@
   Kinvey.Sync = {
     /**
      * Environment status.
+     * 
      */
-    isOnline: true,
+    isOnline: navigator.onLine,
+
+    /**
+     * Sets environment to offline mode.
+     * 
+     */
+    offline: function() {
+      Kinvey.Sync.isOnline = false;
+    },
+
+    /**
+     * Sets environment to online mode. This will trigger synchronization.
+     * 
+     */
+    online: function() {
+      if(!Kinvey.Sync.isOnline) {
+        Kinvey.Sync.isOnline = true;
+        Kinvey.Sync.application();
+      }
+    },
 
     /**
      * Synchronizes application.
@@ -22,7 +42,12 @@
      * @param {function(error)} options.error Failure callback.
      */
     application: function(options) {
-      new Synchronizer(options).application();
+      options = Kinvey.Sync._options(options);
+      Kinvey.Sync.isOnline ? new Synchronizer(options).application() : options.error({
+        error: Kinvey.Error.NO_NETWORK,
+        description: 'There is no active network connection.',
+        debug: 'Synchronization requires an active network connection.'
+      });
     },
 
     /**
@@ -36,7 +61,12 @@
      * @param {function(error)} options.error Failure callback.
      */
     collection: function(name, options) {
-      new Synchronizer(options).collection(name);
+      options = Kinvey.Sync._options(options);
+      Kinvey.Sync.isOnline ? new Synchronizer(options).collection(name) : options.error({
+        error: Kinvey.Error.NO_NETWORK,
+        description: 'There is no active network connection.',
+        debug: 'Synchronization requires an active network connection.'
+      });
     },
 
     /**
@@ -51,10 +81,21 @@
      * @param {function(error)} options.error Failure callback.
      */
     object: function(collection, object, options) {
-      new Synchronizer(options).object(collection, object);
+      options = Kinvey.Sync._options(options);
+      Kinvey.Sync.isOnline ? new Synchronizer(options).object(collection, object) : options.error({
+        error: Kinvey.Error.NO_NETWORK,
+        description: 'There is no active network connection.',
+        debug: 'Synchronization requires an active network connection.'
+      });
     },
 
     // Built-in conflict resolution handlers.
+
+    /**
+     * Default conflict resolution handler.
+     * 
+     */
+    conflict: null,
 
     /**
      * Client always wins conflict resolution. Prioritizes cached copy over
@@ -101,11 +142,27 @@
     },
 
     /**
-     * Default conflict resolution handler.
+     * Returns complete options object.
      * 
+     * @private
+     * @param {Object} [options]
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
      */
-    conflict: this.ignore
+    _options: function(options) {
+      options || (options = {});
+      options.conflict || (options.conflict = Kinvey.Sync.conflict || Kinvey.Sync.ignore);
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
+      return options;
+    }
   };
+
+  // Listen to browser events to adapt the environment to.
+  window.addEventListener('online', Kinvey.Sync.online, false);
+  window.addEventListener('offline', Kinvey.Sync.offline, false);
 
   // Define the Synchronizer class.
   var Synchronizer = Base.extend({
@@ -114,19 +171,17 @@
      * 
      * @constructor
      * @name Synchronizer
-     * @param {Object} [options]
+     * @param {Object} options
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
      * @param {function(status) options.success Success callback.
      * @param {function(error)} options.error Failure callback.
      */
     constructor: function(options) {
-      options || (options = {});
-
       // Configure.
-      this.conflict = options.conflict || Kinvey.Sync.conflict;
-      this.success = options.success || function() { };
-      this.error = options.error || function() { };
+      this.conflict = options.conflict;
+      this.success = options.success;
+      this.error = options.error;
     },
 
     /**
@@ -561,9 +616,9 @@
 
       // Retrieve objects (in parallel).
       var query = new Kinvey.Query().on('_id').in_(objects);
-      data.store.queryWithQuery(query, handler());
+      data.store.queryWithQuery(query.toJSON(), handler());
       data.db.multiQuery(objects, handler());
     }
   });
-
+    
 }());

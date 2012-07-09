@@ -110,7 +110,7 @@
             error: options.complete
           };
           if(scope) {
-            // Fallback to the scope itself if response is null.
+            // Fallback to scope itself if response is null.
             return Kinvey.Sync.object(this.collection, response || scope, opts);
           }
 

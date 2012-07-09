@@ -61,6 +61,9 @@
 
     // Restore current user.
     Kinvey.User._restore();
+
+    // Synchronize app in the background.
+    Kinvey.Sync && Kinvey.Sync.application();
   };
 
   /**
