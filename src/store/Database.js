@@ -216,7 +216,7 @@
       this._transaction([this.collection, Database.TRANSACTION_STORE], Database.READ_WRITE, bind(this, function(txn) {
         // Store object in store. If entity is new, assign an ID. This is done
         // manually to overcome IndexedDBs approach to only assigns integers.
-        object._id || (object._id = new Date().getTime().toString());
+        object._id || (object._id = this._getRandomId());
 
         // Save object and add transaction.
         txn.objectStore(this.collection).put(object);
@@ -515,6 +515,16 @@
     // IndexedDB convenience methods.
 
     /**
+     * Returns a random id. Actually, this method concatenates the current
+     * timestamp with a random string.
+     * 
+     * @return {string} Random id.
+     */
+    _getRandomId: function() {
+      return new Date().getTime().toString() + Math.random().toString(36).substring(2, 12);
+    },
+
+    /**
      * Returns key.
      * 
      * @private
@@ -568,12 +578,8 @@
             upgrade(database);
             success(database);
           };
-          req.onerror = function() {
-            error({
-              error: Kinvey.Error.DATABASE_ERROR,
-              description: req.error || 'Mutation error.',
-              debug: ''
-            });
+          req.onblocked = req.onerror = function() {
+            error(Kinvey.Error.DATABASE_ERROR, req.error || 'Mutation error.');
           };
         }
         else {// According to spec: reopen database with newer version.
@@ -592,10 +598,27 @@
      * @param {function(error)} error Failure callback.
      */
     _open: function(version, upgrade, success, error) {
+      // Extend success callback to handle method concurrency.
+      var fnSuccess = success;
+      success = bind(this, function(db) {
+        // If idle, handle next request in queue.
+        if(Database.isIdle) {
+          var next = Database.queue.shift();
+          next && this._open.apply(this, next);
+        }
+        fnSuccess(db);
+      });
+
       // Reuse if possible.
-      if(null !== Database.instance && null == version) {
+      if(null != Database.instance && (null == version || Database.instance.version === version)) {
         return success(Database.instance);
       }
+
+      // Concurrency control, allow only one request at the time, queue others.
+      if(!Database.isIdle) {
+        return Database.queue.push(arguments);
+      }
+      Database.isIdle = false;
 
       // If no version is specified, use the latest version.
       var req;
@@ -621,14 +644,13 @@
             Database.instance = null;
           }
         };
+
+        // We're done, reset flag.
+        Database.isIdle = true;
         success(Database.instance);
       });
       req.onblocked = req.onerror = function() {
-        error({
-          error: Kinvey.Error.DATABASE_ERROR,
-          description: req.error || 'Failed to open database.',
-          debug: ''
-        });
+        error(Kinvey.Error.DATABASE_ERROR, 'Failed to open the database.');
       };
     },
 
@@ -681,8 +703,12 @@
         if(0 !== missingStores.length) {
           this._mutate(bind(this, function(db) {
             missingStores.forEach(bind(this, function(store) {
-              var schema = this._getSchema(store);
-              db.createObjectStore(schema.name, schema.options);
+              // Since another process may already have created the store
+              // concurrently, check again whether the store exists.
+              if(!db.objectStoreNames.contains(store)) {
+                var schema = this._getSchema(store);
+                db.createObjectStore(schema.name, schema.options);
+              }
             }));
           }), function(db) {// Return a transaction.
             success(db.transaction(stores, mode));
@@ -704,6 +730,10 @@
     AGGREGATION_STORE: '_aggregations',
     QUERY_STORE: '_queries',
     TRANSACTION_STORE: '_transactions',
+
+    // Concurrency mechanism to queue database open requests.
+    isIdle: true,
+    queue: [],
 
     // For performance reasons, keep one database open for the whole app.
     instance: null

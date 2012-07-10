@@ -35,11 +35,7 @@
     /**
      * Synchronizes application.
      * 
-     * @param {Object} [options]
-     * @param {function(collection, cached, remote, options)} options.conflict
-     *          Conflict resolution callback.
-     * @param {function(status)} options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
+     * @param {Object} [options] Options.
      */
     application: function(options) {
       options = Kinvey.Sync._options(options);
@@ -54,11 +50,7 @@
      * Synchronizes collection.
      * 
      * @param {string} name Collection name.
-     * @param {Object} [options]
-     * @param {function(collection, cached, remote, options)} options.conflict
-     *          Conflict resolution callback.
-     * @param {function(status)} options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
+     * @param {Object} [options] Options.
      */
     collection: function(name, options) {
       options = Kinvey.Sync._options(options);
@@ -74,11 +66,7 @@
      * 
      * @param {string} collection Collection name.
      * @param {Object} object Object.
-     * @param {Object} [options]
-     * @param {function(collection, cached, remote, options)} options.conflict
-     *          Conflict resolution callback.
-     * @param {function(status)} options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
+     * @param {Object} [options] Options.
      */
     object: function(collection, object, options) {
       options = Kinvey.Sync._options(options);
@@ -141,11 +129,14 @@
       options.success(remote);
     },
 
+    // Helper methods.
+
     /**
      * Returns complete options object.
      * 
      * @private
      * @param {Object} [options]
+     * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
      * @param {function(status)} options.success Success callback.
@@ -153,6 +144,7 @@
      */
     _options: function(options) {
       options || (options = {});
+      options.store || (options.store = {});
       options.conflict || (options.conflict = Kinvey.Sync.conflict || Kinvey.Sync.ignore);
       options.success || (options.success = function() { });
       options.error || (options.error = function() { });
@@ -172,6 +164,7 @@
      * @constructor
      * @name Synchronizer
      * @param {Object} options
+     * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
      * @param {function(status) options.success Success callback.
@@ -179,6 +172,7 @@
      */
     constructor: function(options) {
       // Configure.
+      this.store = options.store;// AppData store options.
       this.conflict = options.conflict;
       this.success = options.success;
       this.error = options.error;
@@ -197,15 +191,14 @@
 
           // If there are no pending transactions, return here.
           var collections = Object.keys(transactions);
-          if(0 === collections.length) {
+          var pending = collections.length;
+          if(0 === pending) {
             return this.success(response);
           }
 
           // There are pending transactions. Define a handler to aggregate the
           // responses per synchronized collection.
-          var pending = 0;
           var handler = bind(this, function(collection) {
-            pending += 1;
             return bind(this, function(result) {
               // Add results to response.
               result && (response[collection] = result);
@@ -281,7 +274,7 @@
           this._classifyAndCommit(collection, transactions, {
             db: db,
             objects: [id],
-            store: Kinvey.Store.factory(collection, Kinvey.Store.APPDATA)
+            store: Kinvey.Store.factory(collection, Kinvey.Store.APPDATA, this.store)
           }, bind(this, function(result) {
             // Wrap result in collection property.
             var response = {};
@@ -315,9 +308,8 @@
         var conflicted = [];
 
         // Define handler to handle the classification process below.
-        var pending = 0;
+        var pending = data.objects.length;
         var handler = function(id) {
-          pending += 1;
           return {
             success: function(copy) {
               // The user may have erroneously altered the id, which we
@@ -399,7 +391,7 @@
       this._classifyAndCommit(name, transactions, {
         db: new Database(name),
         objects: objects,
-        store: Kinvey.Store.factory(name, Kinvey.Store.APPDATA)
+        store: Kinvey.Store.factory(name, Kinvey.Store.APPDATA, this.store)
       }, complete);
     },
 
@@ -534,20 +526,17 @@
       var canceled = [ ];
 
       // Define progress handler.
-      var pending = 0;
-      var handler = function() {
-        pending += 1;
-        return function(uCommitted, uCanceled) {
-          // Add to set and continue.
-          committed = committed.concat(uCommitted);
-          canceled = canceled.concat(uCanceled);
-          !--pending && complete(committed, canceled);
-        };
+      var pending = objects.length;
+      var handler = function(uCommitted, uCanceled) {
+        // Add to set and continue.
+        committed = committed.concat(uCommitted);
+        canceled = canceled.concat(uCanceled);
+        !--pending && complete(committed, canceled);
       };
 
       // Commit each transaction (in parallel).
       objects.forEach(bind(this, function(object) {
-        this._commitObject(object, data, handler());
+        this._commitObject(object, data, handler);
       }));
     },
 
@@ -597,9 +586,8 @@
       var remote = [];
 
       // Define handler to handle store and database responses.
-      var pending = 0;
+      var pending = 2;// store and database.
       var handler = function() {
-        pending += 1;
         return {
           success: function(list, info) {
             // Add to set and continue.
