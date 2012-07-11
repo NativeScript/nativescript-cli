@@ -421,24 +421,30 @@
         null != object ? updates.push(object) : removals.push(id);
       });
 
-      // First, commit updates.
-      this._commitUpdates(updates, data, bind(this, function(uCommitted, uCanceled) {
-        // Then, commit removals.
-        this._commitRemovals(removals, data, function(rCommitted, rCanceled) {
-          // Merge sets.
-          var committed = uCommitted.concat(rCommitted);
+      // Prepare response.
+      var committed = [];
+      var canceled = [];
+      var pending = 2;// Updates and removals.
+      var handler = function(partialCommitted, partialCanceled) {
+        committed = committed.concat(partialCommitted);
+        canceled = canceled.concat(partialCanceled);
 
-          // Remove transactions from database. Failure at this stage is
-          // non-fatal.
+        // On complete, remove transactions from database. Failure at this
+        // stage is non-fatal.
+        if(!--pending) {
           var fn = function() {
-            complete(committed, uCanceled.concat(rCanceled));
+            complete(committed, canceled);
           };
           data.db.removeTransactions(committed, {
             success: fn,
             error: fn
           });
-        });
-      }));
+        }
+      };
+
+      // Commit updates and removals (in parallel).
+      this._commitUpdates(updates, data, handler);
+      this._commitRemovals(removals, data, handler);
     },
 
     /**
