@@ -239,7 +239,7 @@
      * Returns whether both the local and network store should be used.
      * 
      * @private
-     * @param {integer} policy Cache policy.
+     * @param {string} policy Cache policy.
      * @return {boolean}
      */
     _shouldCallBoth: function(policy) {
@@ -251,7 +251,7 @@
      * Returns whether both the local and network success handler should be invoked.
      * 
      * @private
-     * @param {integer} policy Cache policy.
+     * @param {string} policy Cache policy.
      * @return {boolean}
      */
     _shouldCallBothCallbacks: function(policy) {
@@ -262,7 +262,7 @@
      * Returns whether another store should be tried on initial failure.
      * 
      * @private
-     * @param {integer} policy Cache policy.
+     * @param {string} policy Cache policy.
      * @return {boolean}
      */
     _shouldCallFallback: function(policy) {
@@ -274,7 +274,7 @@
      * Returns whether network store should be accessed first.
      * 
      * @private
-     * @param {integer} policy Cache policy.
+     * @param {string} policy Cache policy.
      * @return {boolean}
      */
     _shouldCallNetworkFirst: function(policy) {
@@ -286,7 +286,7 @@
      * Returns whether the cache should be updated.
      * 
      * @private
-     * @param {integer} policy Cache policy.
+     * @param {string} policy Cache policy.
      * @return {boolean}
      */
     _shouldUpdateCache: function(policy) {

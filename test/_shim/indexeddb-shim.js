@@ -10,6 +10,10 @@ Array.prototype.item = function(i) {
 };
 
 (function(){
+  if (typeof window.openDatabase === 'undefined') {
+    return;
+  }
+  
   /**
    * An initialization file that checks for conditions, removes console.log and warn, etc
    */
@@ -17,11 +21,8 @@ Array.prototype.item = function(i) {
   
   var logger = {};
   logger.log = logger.error = logger.warn = logger.debug = function(){
-//    console.log.apply(console, arguments);
+    console.log.apply(console, arguments);
   };
-  if (typeof window.openDatabase === 'undefined') {
-    return;
-  }
   
   (function(idbModules){
     /**
@@ -84,38 +85,50 @@ Array.prototype.item = function(i) {
     /**
      * Encodes the keys and values based on their types. This is required to maintain collations
      */
+    var collations = ["", "number", "string", "boolean", "object", "undefined"];
+    var getGenericEncoder = function(){
+      return {
+        "encode": function(key){
+          return collations.indexOf(typeof key) + "-" + JSON.stringify(key);
+        },
+        "decode": function(key){
+          if (typeof key === "undefined") {
+            return undefined;
+          } else {
+            return JSON.parse(key.substring(2));
+          }
+        }
+      }
+    };
+    
+    var types = {
+      "number": getGenericEncoder("number"), // decoder will fail for NaN
+      "boolean": getGenericEncoder(),
+      "object": getGenericEncoder(),
+      "string": {
+        "encode": function(key){
+          return collations.indexOf("string") + "-" + key;
+        },
+        "decode": function(key){
+          return "" + key.substring(2);
+        }
+      },
+      "undefined": {
+        "encode": function(key){
+          return collations.indexOf("undefined") + "-undefined";
+        },
+        "decode": function(key){
+          return undefined;
+        }
+      }
+    }
     var Key = (function(){
       return {
         encode: function(key){
-          // TODO The keys should be numbers, as they need to be compared
-          var prefix = "5";
-          switch (typeof key) {
-            case "number":
-              prefix = 1;
-              break;
-            case "string":
-              prefix = 2;
-              break;
-            case "boolean":
-              prefix = 3;
-              break;
-            case "object":
-              prefix = 4;
-              break;
-            case "undefined":
-              prefix = 5;
-              break;
-            default:
-              prefix = 6;
-              break;
-          }
-          return prefix + "-" + JSON.stringify(key);
+          return types[typeof key].encode(key);
         },
         decode: function(key){
-          if (typeof key === "undefined" || key === null) {
-            return key;
-          }
-          return JSON.parse(key.substring(2));
+          return types[collations[key.substring(0, 1)]].decode(key);
         }
       }
     }());
@@ -231,28 +244,23 @@ Array.prototype.item = function(i) {
       sql.push("WHERE ", me.__keyColumnName, " NOT NULL");
       if (me.__range && (me.__range.lower || me.__range.upper)) {
         sql.push("AND");
-        // XXX switched open to < and > instead of <= and >=
-        // XXX switched <= to < and vice verse according to spec.
-        // XXX encoded lower and upper range.
-        // XXX switched ORDER BY and WHERE addition for lower bound.
         if (me.__range.lower) {
-          sql.push("key " + (me.__range.lowerOpen ? ">" : ">=") + " ?");
+          sql.push(me.__keyColumnName + (me.__range.lowerOpen ? " >=" : " >") + " ?");
           sqlValues.push(idbModules.Key.encode(me.__range.lower));
         }
         (me.__range.lower && me.__range.upper) && sql.push("AND");
         if (me.__range.upper) {
-          sql.push("key " + (me.__range.upperOpen ? "<" : "<=") + " ?");
+          sql.push(me.__keyColumnName + (me.__range.upperOpen ? " < " : " <= ") + " ?");
           sqlValues.push(idbModules.Key.encode(me.__range.upper));
         }
       }
+      sql.push(" ORDER BY ", me.__keyColumnName);
       if (typeof key !== "undefined") {
         sql.push((me.__range && (me.__range.lower || me.__range.upper)) ? "AND" : "WHERE")
         sql.push("key = ?");
         sqlValues.push(idbModules.Key.encode(key));
-        sql.push(" ORDER BY ", me.__keyColumnName);
         sql.push("LIMIT 1");
       } else {
-        sql.push(" ORDER BY ", me.__keyColumnName);
         sql.push("LIMIT 1 OFFSET " + me.__offset);
       }
       logger.log(sql.join(" "), sqlValues);
@@ -875,27 +883,15 @@ Array.prototype.item = function(i) {
             };
             executeRequest();
           } catch (e) {
-            // XXX quick hack.
-            var e = idbModules.Event("error");
-            idbModules.util.callback("onerror", me, e);
-            
-            // TODO - Call transaction onerror
-            logger.error("An exception occurred in transaction", arguments);
+            logger.error("An exception occured in transaction", arguments);
+            typeof me.onerror === "function" && me.onerror();
           }
         }, function(){
-          // XXX quick hack.
-          var e = idbModules.Event("errir");
-          idbModules.util.callback("onerror", me, e);
-          
-          // TODO - Call transaction onerror
           logger.error("An error in transaction", arguments);
+          typeof me.onerror === "function" && me.onerror();
         }, function(){
-          // XXX quick hack.
-          var e = idbModules.Event("complete");
-          idbModules.util.callback("oncomplete", me, e);
-          
-          // TODO - Call transaction oncomplete 
           logger.log("Transaction completed", arguments);
+          typeof me.oncomplete === "function" && me.oncomplete();
         });
       }, 1);
     }
