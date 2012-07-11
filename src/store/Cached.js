@@ -191,16 +191,16 @@
           fnSuccess(response, info);
         }
 
-        // Trigger complete callback on final pass.
-        if(secondPass || !this._shouldCallBothCallbacks(options.policy)) {
-          options.complete();
-        }
-
         // Update cache in the background. This is only part of the complete
         // step.
         if(info.network && this._shouldUpdateCache(options.policy)) {
           var fn = function() { options.complete(); };
           this.db.put(operation, arg, response, { success: fn, error: fn });
+        }
+
+        // Trigger complete callback on final pass.
+        else if(secondPass || !this._shouldCallBothCallbacks(options.policy)) {
+          options.complete();
         }
       });
 
