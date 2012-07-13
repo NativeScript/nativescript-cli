@@ -7,11 +7,44 @@
    * @namespace
    */
   Kinvey.Sync = {
+
+    // Properties.
+
     /**
      * Environment status.
      * 
      */
     isOnline: navigator.onLine,
+
+    /**
+     * Default options.
+     * 
+     */
+    options: {
+      conflict: null,
+      store: { },
+      success: function() { },
+      error: function() { }
+    },
+
+    // Methods.
+
+    /**
+     * Configures sync.
+     * 
+     * @param {Object} options
+     * @param {Object} options.store Store options.
+     * @param {function(collection, cached, remote, options)} options.conflict
+     *          Conflict resolution callback.
+     * @param {function(status)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     */
+    configure: function(options) {
+      options.conflict && (Kinvey.Sync.options.conflict = options.confict);
+      options.store && (Kinvey.Sync.options.store = options.store);
+      options.success && (Kinvey.Sync.options.success = options.success);
+      options.error && (Kinvey.Sync.options.error = options.error);
+    },
 
     /**
      * Sets environment to offline mode.
@@ -80,12 +113,6 @@
     // Built-in conflict resolution handlers.
 
     /**
-     * Default conflict resolution handler.
-     * 
-     */
-    conflict: null,
-
-    /**
      * Client always wins conflict resolution. Prioritizes cached copy over
      * remote copy.
      * 
@@ -135,19 +162,14 @@
      * Returns complete options object.
      * 
      * @private
-     * @param {Object} [options]
-     * @param {Object} options.store Store options.
-     * @param {function(collection, cached, remote, options)} options.conflict
-     *          Conflict resolution callback.
-     * @param {function(status)} options.success Success callback.
-     * @param {function(error)} options.error Failure callback.
+     * @param {Object} [options] Options.
      */
     _options: function(options) {
       options || (options = {});
-      options.store || (options.store = {});
-      options.conflict || (options.conflict = Kinvey.Sync.conflict || Kinvey.Sync.ignore);
-      options.success || (options.success = function() { });
-      options.error || (options.error = function() { });
+      options.store || (options.store = Kinvey.Sync.options.store);
+      options.conflict || (options.conflict = Kinvey.Sync.options.conflict || Kinvey.Sync.ignore);
+      options.success || (options.success = Kinvey.Sync.options.success);
+      options.error || (options.error = Kinvey.Sync.options.error);
       return options;
     }
   };
