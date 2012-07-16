@@ -214,13 +214,26 @@
 
       // Open transaction.
       this._transaction([this.collection, Database.TRANSACTION_STORE], Database.READ_WRITE, bind(this, function(txn) {
+        // Open store.
+        var store = txn.objectStore(this.collection);
+
         // Store object in store. If entity is new, assign an ID. This is done
         // manually to overcome IndexedDBs approach to only assigns integers.
         object._id || (object._id = this._getRandomId());
 
-        // Save object and add transaction.
-        txn.objectStore(this.collection).put(object);
-        !options.silent && this._addTransaction(txn.objectStore(Database.TRANSACTION_STORE), object);
+        // Retrieve object to see if there is any metadata we need.
+        var req = store.get(object._id);
+        req.onsuccess = bind(this, function() {
+          var result = req.result;
+          if(result) {
+            null == object._acl && result._acl && (object._acl = result._acl);
+            null == object._kmd && result._kmd && (object._kmd = result._kmd);
+          }
+
+          // Save object and add transaction.
+          txn.objectStore(this.collection).put(object);
+          !options.silent && this._addTransaction(txn.objectStore(Database.TRANSACTION_STORE), object);
+        });
 
         // Handle transaction status.
         txn.oncomplete = function() {

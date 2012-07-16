@@ -46,7 +46,7 @@ module.exports = function(grunt) {
 
     // Specify lint task.
     lint: {
-      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.spec.js' ],
+      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.spec.js', '<%= dir.test %>/**/*.spec.browser.js'],
       afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
     },
     jshint: {//http://www.jshint.com/options/

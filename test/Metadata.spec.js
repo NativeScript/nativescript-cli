@@ -65,7 +65,46 @@ describe('Kinvey.Metadata', function() {
     });
     after(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
-    });
+//    it('creates the current user.', function(done) {
+//    var user = this.user = Kinvey.User.create({
+//      username: 'foo',
+//      password: 'bar',
+//      attribute: 'value'
+//    }, callback(done, {
+//      success: function(response) {
+//        response.should.equal(user);// Kinvey.User
+//        (response.getUsername()).should.equal('foo');
+//        (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
+//        (response.get('attribute')).should.equal('value');
+//
+//        // Test current user.
+//        Kinvey.getCurrentUser().should.equal(response);
+//        response.isLoggedIn.should.be['true'];
+//        (null !== response.getToken()).should.be['true'];
+//
+//        done();
+//      }
+//    }));
+//  });
+//  it('creates the current user with auto-generated password.', function(done) {
+//    var user = this.user = Kinvey.User.create({
+//      username: 'foo'
+//    }, callback(done, {
+//      success: function(response) {
+//        response.should.equal(user);
+//        (response.getUsername()).should.equal('foo');
+//        (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
+//
+//        // Test current user.
+//        Kinvey.getCurrentUser().should.equal(response);
+//        (response.isLoggedIn).should.be['true'];
+//        (null !== response.getToken()).should.be['true'];
+//
+//        done();
+//      }
+//    }));
+//  });
+   });
 
     // Test suite.
     it('returns true when the current user is the owner.', function() {
@@ -227,8 +266,8 @@ describe('Kinvey.Metadata', function() {
       this.entity = new Kinvey.Entity({ foo: 'bar' }, COLLECTION_UNDER_TEST);
 
       // Define two users.
-      var ownerAttr = this.ownerAttr = { username: 'foo', password: 'bar' };// Entity owner.
-      this.userAttr = { username: 'baz', password: 'qux' };// Secondary user.
+      var ownerAttr = this.ownerAttr = { password: 'bar' };// Entity owner.
+      this.userAttr = { password: 'qux' };// Secondary user.
 
       // Create both.
       var self = this;
@@ -238,19 +277,25 @@ describe('Kinvey.Metadata', function() {
           self.user = user;
 
           // Create and login the entity owner.
-          Kinvey.User.create(ownerAttr, callback(done));
+          Kinvey.User.create(ownerAttr, callback(done, {
+            success: function(user) {
+              self.owner = user;
+              done();
+            }
+          }));
         }
       }));
     });
     afterEach(function(done) {
       var entity = this.entity;
-      var owner = this.ownerAttr;
+      var owner = this.owner;
+      var ownerAttr = this.ownerAttr;
 
       // Destroy both users.
       Kinvey.getCurrentUser().destroy(callback(done, {
         success: function() {
           // Login the entity owner.
-          new Kinvey.User().login(owner.username, owner.password, callback(done, {
+          new Kinvey.User().login(owner.getUsername(), ownerAttr.password, callback(done, {
             // Destroy user and entity.
             success: function(user) {
               entity.destroy(callback(done, {
@@ -266,14 +311,15 @@ describe('Kinvey.Metadata', function() {
 
     // Test suite.
     it('is readable by a specific user.', function(done) {
-      var userAttr = this.userAttr;
+      var username = this.user.getUsername();
+      var password = this.userAttr.password;
 
       // Set permissions.
       this.entity.getMetadata().addReader(this.user.getId());
       this.entity.save(callback(done, {
         success: function(entity) {
           // Login the test user, and fetch the entity.
-          new Kinvey.User().login(userAttr.username, userAttr.password, callback(done, {
+          new Kinvey.User().login(username, password, callback(done, {
             success: function() {
               entity.load(entity.getId(), callback(done, {
                 success: function(entity) {
@@ -287,14 +333,15 @@ describe('Kinvey.Metadata', function() {
       }));
     });
     it('is writable by a specific user.', function(done) {
-      var userAttr = this.userAttr;
+      var username = this.user.getUsername();
+      var password = this.userAttr.password;
 
       // Set permissions.
       this.entity.getMetadata().addWriter(this.user.getId());
       this.entity.save(callback(done, {
         success: function(entity) {
           // Login the test user, and write to entity.
-          new Kinvey.User().login(userAttr.username, userAttr.password, callback(done, {
+          new Kinvey.User().login(username, password, callback(done, {
             success: function() {
               entity.set('foo', 'baz');
               entity.save(callback(done, {
@@ -309,14 +356,15 @@ describe('Kinvey.Metadata', function() {
       }));
     });
     it('is globally readable.', function(done) {
-      var userAttr = this.userAttr;
+      var username = this.user.getUsername();
+      var password = this.userAttr.password;
 
       // Set permissions.
       this.entity.getMetadata().setGloballyReadable(true);
       this.entity.save(callback(done, {
         success: function(entity) {
           // Login the test user, and fetch the entity.
-          new Kinvey.User().login(userAttr.username, userAttr.password, callback(done, {
+          new Kinvey.User().login(username, password, callback(done, {
             success: function() {
               entity.load(entity.getId(), callback(done, {
                 success: function(entity) {
@@ -330,14 +378,15 @@ describe('Kinvey.Metadata', function() {
       }));
     });
     it('is globally writable.', function(done) {
-      var userAttr = this.userAttr;
+      var username = this.user.getUsername();
+      var password = this.userAttr.password;
 
       // Set permissions.
       this.entity.getMetadata().setGloballyWritable(true);
       this.entity.save(callback(done, {
         success: function(entity) {
           // Login the test user, and write to entity.
-          new Kinvey.User().login(userAttr.username, userAttr.password, callback(done, {
+          new Kinvey.User().login(username, password, callback(done, {
             success: function() {
               entity.set('foo', 'baz');
               entity.save(callback(done, {
