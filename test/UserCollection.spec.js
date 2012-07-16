@@ -54,7 +54,8 @@ describe('Kinvey.UserCollection', function() {
     it('fetches all users.', function(done) {
       new Kinvey.UserCollection().fetch(callback(done, {
         success: function(list) {
-          list.should.have.length(1);
+// Commented out since inactive users count too, and we don't know anything on these.
+//          list.should.have.length(1);
           list[0].should.be.an.instanceOf(Kinvey.User);
           done();
         }
