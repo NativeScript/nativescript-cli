@@ -514,20 +514,29 @@
         return complete([], []);
       }
 
+      // Define remote commit success handler.
+      var success = function() {
+        // Second step is to commit to the database. Failure is non-fatal.
+        var fn = function() {
+          complete(objects, []);
+        };
+        data.db.multiRemove(objects, {
+          success: fn,
+          error: fn
+        });
+      };
+
       // There are transactions to commit. First, commit to the store.
       var query = new Kinvey.Query().on('_id').in_(objects);
       data.store.removeWithQuery(query.toJSON(), {
-        success: function() {
-          // Next, commit to the database. Failure is non-fatal.
-          var fn = function() {
-            complete(objects, []);
-          };
-          data.db.multiRemove(objects, {
-            success: fn,
-            error: fn
-          });
-        },
-        error: function() {// Mark all as canceled and return.
+        success: success,
+        error: function(error) {
+          // EntityNotFound is our friend, catch here.
+          if(Kinvey.Error.ENTITY_NOT_FOUND === error.error) {
+            return success();
+          }
+
+          // Mark all as canceled and return.
           complete([ ], objects);
         }
       });
