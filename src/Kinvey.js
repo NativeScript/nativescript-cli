@@ -38,7 +38,7 @@
    * </code>
    * 
    * @param {Object} options Kinvey credentials. Object expects properties:
-   *          "appKey", and "appSecret" or "masterSecret".
+   *          "appKey", and "appSecret" or "masterSecret". Optional: "sync".
    * @throws {Error}
    *           <ul>
    *           <li>On empty appKey,</li>
@@ -63,7 +63,7 @@
     Kinvey.User._restore();
 
     // Synchronize app in the background.
-    Kinvey.Sync && Kinvey.Sync.application();
+    options.sync && Kinvey.Sync && Kinvey.Sync.application();
   };
 
   /**
