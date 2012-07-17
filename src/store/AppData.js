@@ -204,7 +204,7 @@
       // Build device information.
       // Example: "linux chrome 18 0".
       return [
-        navigator.platform,
+        window.cordova ? 'phonegap' : navigator.platform,
         browser[1] || navigator.appName,
         browser[2] || 0,
         0 // always set device ID to 0.
