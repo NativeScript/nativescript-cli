@@ -371,14 +371,14 @@
      * 
      * @constant
      */
-    CACHE_FIRST: 'cache',
+    CACHE_FIRST: 'cachefirst',
 
     /**
      * Network first policy. Pull from network if available, otherwise cache.
      * 
      * @constant
      */
-    NETWORK_FIRST: 'network',
+    NETWORK_FIRST: 'networkfirst',
 
     /**
      * Both policy. Pull the cache copy (if it exists), then pull from network.
