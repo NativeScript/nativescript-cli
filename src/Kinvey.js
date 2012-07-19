@@ -11,6 +11,13 @@
   Kinvey.API_VERSION = 1;
 
   /**
+   * Host.
+   * 
+   * @constant
+   */
+  Kinvey.HOST = '<%= pkg.hostname %>';
+
+  /**
    * SDK version.
    * 
    * @constant

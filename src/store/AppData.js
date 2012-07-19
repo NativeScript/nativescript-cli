@@ -1,7 +1,5 @@
 (function() {
 
-  /*globals btoa, navigator, XMLHttpRequest, window*/
-
   // Define the Kinvey.Store.AppData class.
   Kinvey.Store.AppData = Base.extend({
     // Default options.
@@ -137,17 +135,6 @@
     },
 
     /**
-     * Base 64 encodes string.
-     * 
-     * @private
-     * @param {string} value
-     * @return {string} Encoded string.
-     */
-    _base64: function(value) {
-      return btoa(value);
-    },
-
-    /**
      * Encodes value for use in query string.
      * 
      * @private
@@ -162,58 +149,6 @@
     },
 
     /**
-     * Returns authorization string.
-     * 
-     * @private
-     * @return {Object} Authorization.
-     */
-    _getAuth: function() {
-      // Use master secret if specified.
-      if(null !== Kinvey.masterSecret) {
-        return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.masterSecret);
-      }
-
-      // Use Session Auth if there is a current user.
-      var user = Kinvey.getCurrentUser();
-      if(null !== user) {
-        return 'Kinvey ' + user.getToken();
-      }
-
-      // Use application credentials as last resort.
-      return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.appSecret);
-    },
-
-    /**
-     * Returns device information.
-     * 
-     * @private
-     * @return {string} Device information.
-     */
-    _getDeviceInfo: function() {
-      // Try the most common browsers, fall back to navigator.appName otherwise.
-      var ua = navigator.userAgent.toLowerCase();
-
-      var rChrome = /(chrome)\/([\w]+)/;
-      var rSafari = /(safari)\/([\w.]+)/;
-      var rFirefox = /(firefox)\/([\w.]+)/;
-      var rOpera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
-      var rIE = /(msie) ([\w.]+)/i;
-
-      var browser = rChrome.exec(ua) || rSafari.exec(ua) || rFirefox.exec(ua) || rOpera.exec(ua) || rIE.exec(ua) || [ ];
-
-      // Build device information.
-      // Example: "linux chrome 18 0".
-      return [
-        window.cordova ? 'phonegap' : navigator.platform,
-        browser[1] || navigator.appName,
-        browser[2] || 0,
-        0 // always set device ID to 0.
-      ].map(function(value) {
-        return value.toString().toLowerCase().replace(' ', '_');
-      }).join(' ');
-    },
-
-    /**
      * Constructs URL.
      * 
      * @private
@@ -221,7 +156,7 @@
      * @return {string} URL.
      */
     _getUrl: function(parts) {
-      var url = Kinvey.Store.AppData.HOST + '/' + this.api + '/' + Kinvey.appKey + '/';
+      var url = '/' + this.api + '/' + Kinvey.appKey + '/';
 
       // Only the AppData API has explicit collections.
       if(Kinvey.Store.AppData.APPDATA_API === this.api && null != this.collection) {
@@ -246,99 +181,14 @@
       param.push('_=' + new Date().getTime());
 
       return url + '?' + param.join('&');
-    },
-
-    /**
-     * Sends the request.
-     * 
-     * @private
-     * @param {string} method Request method.
-     * @param {string} url Request URL.
-     * @param {string} body Request body.
-     * @param {Object} options Options.
-     */
-    _send: function(method, url, body, options) {
-      options || (options = {});
-      'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
-      options.success || (options.success = this.options.success);
-      options.error || (options.error = this.options.error);
-
-      // For now, include authorization in this adapter. Ideally, it should
-      // have some external interface.
-      if(null === Kinvey.getCurrentUser() && Kinvey.Store.AppData.APPDATA_API === this.api && null === Kinvey.masterSecret) {
-        return Kinvey.User.create({}, merge(options, {
-          success: bind(this, function() {
-            this._send(method, url, body, options);
-          })
-        }));
-      }
-
-      // Create the request.
-      var request = new XMLHttpRequest();
-      request.open(method, url, true);
-      request.timeout = options.timeout;
-
-      // Set headers.
-      var headers = {
-        Accept: 'application/json, text/javascript',
-        Authorization: this._getAuth(),
-        'X-Kinvey-API-Version': Kinvey.API_VERSION,
-        'X-Kinvey-Device-Information': this._getDeviceInfo()
-      };
-      body && (headers['Content-Type'] = 'application/json; charset=utf-8');
-
-      // Add header for compatibility with Android 2.2, 2.3.3 and 3.2.
-      // @link http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
-      if('GET' === method && window && window.location) {
-        headers['X-Kinvey-Origin'] = window.location.protocol + '//' + window.location.host;
-      }
-
-      // Pass headers to request.
-      for(var name in headers) {
-        if(headers.hasOwnProperty(name)) {
-          request.setRequestHeader(name, headers[name]);
-        }
-      }
-
-      // Attach request response handler.
-      request.onload = function() {
-        // Response is expected to be either empty, or valid JSON.
-        var response = this.responseText && JSON.parse(this.responseText);
-
-        // Success implicates status 2xx (Successful), or 304 (Not Modified).
-        if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
-          options.success(response, { network: true });
-        }
-        else {
-          options.error(response, { network: true });
-        }
-      };
-
-      // Define request error handlers.
-      request.onabort = request.onerror = request.ontimeout = function(event) {
-        var error = {
-          abort: 'The request was aborted',
-          error: 'The request failed',
-          timeout: 'The request timed out'
-        };
-        var description = error[event.type] || error.error;
-
-        // Execute application-level handler.
-        options.error({
-          error: Kinvey.Error.REQUEST_FAILED,
-          description: description,
-          debug: ''
-        }, { network: true });
-      };
-
-      // Fire request.
-      request.send(body);
     }
   }, {
     // Path constants.
-    HOST: '<%= pkg.hostname %>',
     APPDATA_API: 'appdata',
     USER_API: 'user'
   });
+
+  // Apply mixin.
+  Xhr.call(Kinvey.Store.AppData.prototype);
 
 }());

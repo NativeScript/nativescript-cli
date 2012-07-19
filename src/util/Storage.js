@@ -1,7 +1,5 @@
 (function() {
 
-  /*globals localStorage*/
-
   // Define the Storage class. Simple wrapper around the localStorage interface.
   var Storage = {
     get: function(key) {

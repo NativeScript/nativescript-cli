@@ -74,6 +74,7 @@ module.exports = function(grunt) {
         merge: true,
         Storage: true,
         Sync: true,
+        Xhr: true,
 
         // Titanium.
         Titanium: true,
@@ -98,14 +99,18 @@ module.exports = function(grunt) {
         src: [
           '<banner>',
           '<%= dir.src %>/intro.txt',
-          '<%= dir.src %>/Storage.js',
+          '<%= dir.src %>/util/Storage.js',
+          '<%= dir.src %>/util/Xhr.js',
+
           '<%= dir.src %>/Kinvey.js',
-          '<%= dir.src %>/Metadata.js',
           '<%= dir.src %>/Error.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+          '<%= dir.src %>/Resource.js',
+
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
@@ -113,11 +118,11 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-
           '<%= dir.src %>/store/Database.js',
           '<%= dir.src %>/store/Cached.js',
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -127,14 +132,18 @@ module.exports = function(grunt) {
         src: [
           '<banner>',
           '<%= dir.src %>/intro.txt',
-          '<%= dir.src %>/Storage.node.js',
+          '<%= dir.src %>/util/Storage.node.js',
+          '<%= dir.src %>/util/Xhr.node.js',
+
           '<%= dir.src %>/Kinvey.js',
-          '<%= dir.src %>/Metadata.js',
           '<%= dir.src %>/Error.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+          '<%= dir.src %>/Resource.js',
+
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
@@ -142,7 +151,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/AppData.node.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -152,14 +161,18 @@ module.exports = function(grunt) {
         src: [
           '<banner>',
           '<%= dir.src %>/intro.txt',
-          '<%= dir.src %>/Storage.titanium.js',
+          '<%= dir.src %>/util/Storage.titanium.js',
+          '<%= dir.src %>/util/Xhr.titanium.js',
+
           '<%= dir.src %>/Kinvey.js',
-          '<%= dir.src %>/Metadata.js',
           '<%= dir.src %>/Error.js',
           '<%= dir.src %>/Entity.js',
           '<%= dir.src %>/Collection.js',
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+          '<%= dir.src %>/Resource.js',
+
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
@@ -167,7 +180,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/AppData.titanium.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
