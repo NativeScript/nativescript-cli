@@ -91,7 +91,6 @@
       var headers = {
         Accept: 'application/json, text/javascript',
         Authorization: this._getAuth(),
-        'Content-Length': body ? body.length : 0,
         'X-Kinvey-API-Version': Kinvey.API_VERSION,
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
@@ -150,12 +149,16 @@
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
 
+      // Add Content-Length header.
+      options.headers['Content-Length'] = body ? body.length : 0;
+
       // Create request.
       var path = nodeUrl.parse(url);
       var adapter = 'https:' === path.protocol ? nodeHttps : nodeHttp;
       var request = adapter.request({
-        host: path.host,
+        host: path.hostname,
         path: path.pathname + (path.search ? path.search : ''),
+        port: path.port,
         method: method,
         headers: options.headers
       }, function(response) {

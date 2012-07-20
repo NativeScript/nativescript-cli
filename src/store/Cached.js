@@ -323,7 +323,7 @@
 
           // Upon save, store returns the document. Cache this, except for
           // when a user (with password!) is returned.
-          if('user' !== this.collection) {
+          if('user' !== this.collection && null != response) {
             cacheHandle.save = ['query', response._id, response];
           }
 

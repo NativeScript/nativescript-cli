@@ -129,7 +129,7 @@
             success: function(_, info) {
               options.success(file, info);
             },
-            error: function(_, info) {console.log(arguments);
+            error: function(_, info) {
               options.error({
                 error: Kinvey.Error.RESPONSE_PROBLEM,
                 description: 'There was a problem uploading the file.',
