@@ -17,6 +17,7 @@ module.exports = function(grunt) {
     sdk: {
       html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename
       node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename
+      phonegap: '<%= pkg.name %>-phonegap-<%= pkg.version %>',// phonegap dist filename
       titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>'// titanium dist filename
     },
     meta: {
@@ -109,7 +110,6 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -122,7 +122,6 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Cached.js',
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
-          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -142,7 +141,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-          '<%= dir.src %>/Resource.js',
+//          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -151,11 +150,40 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/Blob.js',
+//          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.node %>.js'
+      },
+      phonegap: {
+        src: [
+          '<banner>',
+          '<%= dir.src %>/intro.txt',
+          '<%= dir.src %>/util/Storage.js',
+          '<%= dir.src %>/util/Xhr.js',
+
+          '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/Error.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/User.js',
+          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+//          '<%= dir.src %>/Resource.js',
+
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/AppData.js',
+//          '<%= dir.src %>/store/Blob.js',
+
+          '<%= dir.src %>/outro.txt'
+        ],
+        dest: '<%= dir.dist %>/<%= sdk.phonegap %>.js'
       },
       titanium: {
         src: [
@@ -171,7 +199,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-          '<%= dir.src %>/Resource.js',
+//          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -180,7 +208,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-          '<%= dir.src %>/store/Blob.js',
+//          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -225,6 +253,26 @@ module.exports = function(grunt) {
         replace: '$1'
       },
 
+      phonegapFirstPass: {//remove IIFE from source files
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
+        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
+      },
+      phonegapSecondPass: {//remove gaps in newlines caused by firstPass
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
+        find: /\n{3,}/g,
+        replace: '\n\n'
+      },
+      phonegapThirdPass: {//remove newline below <banner>
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
+        find: /\n(\(function\(undefined\) \{)/g,
+        replace: '$1'
+      },
+      phonegapArg: {
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.min.js',
+        find: /^\(function\(a\)/m,
+        replace: '(function(undefined)'
+      },
+
       titaniumFirstPass: {//remove IIFE from source files
         src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
         find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
@@ -248,6 +296,9 @@ module.exports = function(grunt) {
       node: {
         src: '<%= dir.dist %>/<%= sdk.node %>.js'
       },
+      phonegap: {
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js'
+      },
       titanium: {
         src: '<%= dir.dist %>/<%= sdk.titanium %>.js'
       }
@@ -269,6 +320,10 @@ module.exports = function(grunt) {
       html5: {
         src: [ '<banner>', '<%= dir.dist %>/<%= sdk.html5 %>.js' ],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.min.js'
+      },
+      phonegap: {
+        src: [ '<banner>', '<%= dir.dist %>/<%= sdk.phonegap %>.js' ],
+        dest: '<%= dir.dist %>/<%= sdk.phonegap %>.min.js'
       }
     },
 
@@ -305,7 +360,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
   grunt.registerTask('doc', 'jsdoc');
-  grunt.registerTask('minify', 'min replace:html5Arg');
-  grunt.registerTask('pack', 'concat replace:html5FirstPass replace:nodeFirstPass replace:titaniumFirstPass replace:html5SecondPass replace:nodeSecondPass replace:titaniumSecondPass replace:html5ThirdPass replace:nodeThirdPass replace:titaniumThirdPass filter');
+  grunt.registerTask('minify', 'min replace:html5Arg replace:phonegapArg');
+  grunt.registerTask('pack', 'concat replace:html5FirstPass replace:nodeFirstPass replace:phonegapFirstPass replace:titaniumFirstPass replace:html5SecondPass replace:nodeSecondPass replace:phonegapSecondPass replace:titaniumSecondPass replace:html5ThirdPass replace:nodeThirdPass replace:phonegapThirdPass replace:titaniumThirdPass filter');
   grunt.registerTask('test', 'mocha');
 };
