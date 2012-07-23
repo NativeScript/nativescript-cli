@@ -23,6 +23,7 @@
     options: {
       conflict: null,
       store: { },
+      start: function() { },
       success: function() { },
       error: function() { }
     },
@@ -36,12 +37,14 @@
      * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
+     * @param {function()} options.start Start callback.
      * @param {function(status)} options.success Success callback.
      * @param {function(error)} options.error Failure callback.
      */
     configure: function(options) {
-      options.conflict && (Kinvey.Sync.options.conflict = options.confict);
+      options.conflict && (Kinvey.Sync.options.conflict = options.conflict);
       options.store && (Kinvey.Sync.options.store = options.store);
+      options.start && (Kinvey.Sync.options.start = options.start);
       options.success && (Kinvey.Sync.options.success = options.success);
       options.error && (Kinvey.Sync.options.error = options.error);
     },
@@ -168,6 +171,7 @@
       options || (options = {});
       options.store || (options.store = Kinvey.Sync.options.store);
       options.conflict || (options.conflict = Kinvey.Sync.options.conflict || Kinvey.Sync.ignore);
+      options.start || (options.start = Kinvey.Sync.options.start);
       options.success || (options.success = Kinvey.Sync.options.success);
       options.error || (options.error = Kinvey.Sync.options.error);
       return options;
@@ -189,6 +193,7 @@
      * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
+     * @param {function()} options.start Start callback.
      * @param {function(status) options.success Success callback.
      * @param {function(error)} options.error Failure callback.
      */
@@ -196,6 +201,7 @@
       // Configure.
       this.store = options.store;// AppData store options.
       this.conflict = options.conflict;
+      this.start = options.start;
       this.success = options.success;
       this.error = options.error;
     },
@@ -205,6 +211,9 @@
      * 
      */
     application: function() {
+      // Start event.
+      this.start();
+
       // Retrieve pending transactions.
       new Database(Database.TRANSACTION_STORE).getTransactions({
         success: bind(this, function(transactions) {
@@ -246,6 +255,9 @@
      * @param {string} name Collection name.
      */
     collection: function(name) {
+      // Start event.
+      this.start();
+
       // Retrieve pending transactions.
       new Database(name).getTransactions({
         success: bind(this, function(transactions) {
@@ -275,6 +287,10 @@
      * @param {Object} object Object.
      */
     object: function(collection, object) {
+      // Start event.
+      this.start();
+
+      // Extract object id.
       var id = object._id;
 
       // Retrieve pending transactions for the collection.
