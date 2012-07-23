@@ -47,7 +47,7 @@
       Kinvey.Entity.prototype.destroy.call(this, merge(options, {
         success: bind(this, function(_, info) {
           this._logout();
-          options.success(this, info);
+          options.success && options.success(this, info);
         })
       }));
     },

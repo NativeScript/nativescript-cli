@@ -78,7 +78,6 @@ describe('Kinvey.Sync', function() {
 
     // Test suite.
     it('synchronizes the entire application.', function(done) {
-
       var pending = 0;
       var handler = function() {
         pending += 1;
@@ -135,13 +134,8 @@ describe('Kinvey.Sync', function() {
           db.remove(remove, callback(done, {
             success: function() {
               // Synchronize.
-              var started = false;
               Kinvey.Sync.collection(COLLECTION_UNDER_TEST, callback(done, {
-                start: function() {
-                  started = true;// Switch flag.
-                },
                 success: function(status) {
-                  started.should.be['true'];
                   status[COLLECTION_UNDER_TEST].committed.should.have.length(2);
                   done();
                 }

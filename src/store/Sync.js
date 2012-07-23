@@ -75,7 +75,9 @@
      */
     application: function(options) {
       options = Kinvey.Sync._options(options);
-      Kinvey.Sync.isOnline ? new Synchronizer(options).application() : options.error({
+      Kinvey.Sync.isOnline ? new Synchronizer(options).application({
+        start: Kinvey.Sync.options.start || function() { }
+      }) : options.error({
         error: Kinvey.Error.NO_NETWORK,
         description: 'There is no active network connection.',
         debug: 'Synchronization requires an active network connection.'
@@ -171,7 +173,6 @@
       options || (options = {});
       options.store || (options.store = Kinvey.Sync.options.store);
       options.conflict || (options.conflict = Kinvey.Sync.options.conflict || Kinvey.Sync.ignore);
-      options.start || (options.start = Kinvey.Sync.options.start);
       options.success || (options.success = Kinvey.Sync.options.success);
       options.error || (options.error = Kinvey.Sync.options.error);
       return options;
@@ -201,7 +202,6 @@
       // Configure.
       this.store = options.store;// AppData store options.
       this.conflict = options.conflict;
-      this.start = options.start;
       this.success = options.success;
       this.error = options.error;
     },
@@ -209,10 +209,12 @@
     /**
      * Synchronizes all application data.
      * 
+     * @param {Object} [options]
+     * @param {function()} options.start Start callback.
      */
-    application: function() {
-      // Start event.
-      this.start();
+    application: function(options) {
+      // Trigger start callback.
+      options && options.start && options.start();
 
       // Retrieve pending transactions.
       new Database(Database.TRANSACTION_STORE).getTransactions({
@@ -255,9 +257,6 @@
      * @param {string} name Collection name.
      */
     collection: function(name) {
-      // Start event.
-      this.start();
-
       // Retrieve pending transactions.
       new Database(name).getTransactions({
         success: bind(this, function(transactions) {
@@ -287,9 +286,6 @@
      * @param {Object} object Object.
      */
     object: function(collection, object) {
-      // Start event.
-      this.start();
-
       // Extract object id.
       var id = object._id;
 
