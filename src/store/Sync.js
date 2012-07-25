@@ -376,7 +376,7 @@
         Object.keys(cached).forEach(bind(this, function(id) {
           this._object(collection, transactions[id], cached[id], null, handler(id));
         }));
-      }), function() {// An error occured. Mark all transactions as cancelled.
+      }), function() {// An error occurred. Mark all transactions as cancelled.
         complete([], [], data.objects);
       });
     },

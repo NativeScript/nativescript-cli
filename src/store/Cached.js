@@ -199,7 +199,7 @@
         }
 
         // Trigger complete callback on final pass.
-        else if(secondPass || !this._shouldCallBothCallbacks(options.policy)) {
+        else if(secondPass || !this._shouldCallBoth(options.policy)) {
           options.complete();
         }
       });
@@ -211,7 +211,13 @@
 
           // Only call secondary store if the policy allows calling both.
           if(this._shouldCallBoth(options.policy)) {
-            options.error = function() {// reset error, we already succeeded.
+            // Unset success callback if it may only be called once.
+            if(!this._shouldCallBothCallbacks(options.policy)) {
+              options.success = function() {
+                options.complete();
+              };
+            }
+            options.error = function() {// Reset error, we already succeeded.
               options.complete();
             };
             secondaryStore[operation](arg, options);

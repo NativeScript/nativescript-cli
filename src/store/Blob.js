@@ -15,9 +15,11 @@
      * 
      * @name Kinvey.Store.Blob
      * @constructor
+     * @param {string} collection Collection name.
      * @param {Object} [options] Options.
      */
-    constructor: function(options) {
+    constructor: function(collection, options) {
+      // Ignore the collection name, as the blob API has only one collection.
       options && this.configure(options);
     },
 

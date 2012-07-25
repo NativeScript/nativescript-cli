@@ -122,7 +122,7 @@
           options.success(response, info);
         },
         error: function(response, info) {
-          // Response could be valid JSON if the error occured at Kinvey.
+          // Response could be valid JSON if the error occurred at Kinvey.
           try {
             response = JSON.parse(response);
           }
