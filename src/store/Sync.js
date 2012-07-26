@@ -190,6 +190,7 @@
      * 
      * @constructor
      * @name Synchronizer
+     * @private
      * @param {Object} options
      * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
@@ -205,6 +206,8 @@
       this.success = options.success;
       this.error = options.error;
     },
+
+    /** @lends Synchronizer# */
 
     /**
      * Synchronizes all application data.

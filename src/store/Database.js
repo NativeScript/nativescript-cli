@@ -11,6 +11,7 @@
      * 
      * @constructor
      * @name Database
+     * @private
      * @param {string} collection Collection name.
      */
     constructor: function(collection) {

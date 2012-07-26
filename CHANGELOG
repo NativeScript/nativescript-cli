@@ -1,5 +1,19 @@
-v0.9.5
-* Added caching.
+v0.9.8
+* Added resource API support for Node.js, PhoneGap and Titanium.
+
+v0.9.7 (Jul 30, 2012)
+* Added caching
+
+v0.9.6 (Jul 18, 2012)
+* Added device information header for PhoneGap.
+
+v0.9.5 (Jul 10, 2012)
+* Added build for iOS and Android apps powered by the Appcelerator Titanium Platform.
+* Added support for Advanced ACLs.
+* Added unified error code handling for client-, and server-side errors.
+* Upgraded to API version 1,
+* Content-Type header now indicates body is present.
+* _group always passes finalize attribute in body.
 
 v0.9.4 (Jun 15, 2012)
 * Fixed bug where Kinvey.Entity inheritance didn't work properly.
