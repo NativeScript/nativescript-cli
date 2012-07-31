@@ -211,12 +211,6 @@
 
           // Only call secondary store if the policy allows calling both.
           if(this._shouldCallBoth(options.policy)) {
-            // Unset success callback if it may only be called once.
-            if(!this._shouldCallBothCallbacks(options.policy)) {
-              options.success = function() {
-                options.complete();
-              };
-            }
             options.error = function() {// Reset error, we already succeeded.
               options.complete();
             };
