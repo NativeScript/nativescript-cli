@@ -590,7 +590,12 @@
           var req = database.setVersion(version);
           req.onsuccess = function() {
             upgrade(database);
-            success(database);
+
+            // @link https://groups.google.com/a/chromium.org/forum/?fromgroups#!topic/chromium-html5/VlWI87JFKMk
+            var txn = req.result;
+            txn.oncomplete = function() {
+              success(database);
+            };
           };
           req.onblocked = req.onerror = function() {
             error(Kinvey.Error.DATABASE_ERROR, req.error || 'Mutation error.');
