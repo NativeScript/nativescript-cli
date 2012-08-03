@@ -232,6 +232,40 @@ describe('Kinvey.Sync', function() {
         }
       }));
     });
+    it('yields and resolves a conflict on updating an object.', function(done) {
+      // Save.
+      var db = this.db;
+      var object = this.object;
+      this.store.save(object, callback(done, {
+        success: function() { },
+        complete: function() {
+          // Alter object locally.
+          object.bar = 'qux';
+          object._kmd = { lmt: null };// Corrupt timestamp.
+
+          // Save locally.
+          db.save(object, callback(done, {
+            success: function() {
+              // Synchronize. We expect a conflict to occur.
+              Kinvey.Sync.object(COLLECTION_UNDER_TEST, object, callback(done, {
+                conflict: function(collection, cached, remote, options) {
+                  collection.should.equal(COLLECTION_UNDER_TEST);
+                  cached.bar.should.equal('qux');
+                  remote.bar.should.equal('baz');
+
+                  // Client wins.
+                  Kinvey.Sync.clientAlwaysWins(collection, cached, remote, options);
+                },
+                success: function(status) {
+                  status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+                  done();
+                }
+              }));
+            }
+          }));
+        }
+      }));
+    });
     it('deletes an object.', function(done) {
       // Save.
       var db = this.db;
@@ -281,6 +315,43 @@ describe('Kinvey.Sync', function() {
                     },
                     success: function(status) {
                       status[COLLECTION_UNDER_TEST].conflicted.should.have.length(1);
+                      done();
+                    }
+                  }));
+                }
+              }));
+            }
+          }));
+        }
+      }));
+    });
+    it('yields and resolves a conflict on deleting an object.', function(done) {
+      // Save.
+      var db = this.db;
+      var object = this.object;
+      this.store.save(object, callback(done, {
+        success: function() { },
+        complete: function() {
+          // Alter object locally.
+          object._kmd = { lmt: null };// Corrupt timestamp.
+
+          // Delete locally.
+          db.save(object, callback(done, {
+            success: function() {
+              db.remove(object, callback(done, {
+                success: function() {
+                  // Synchronize. We expect a conflict to occur.
+                  Kinvey.Sync.object(COLLECTION_UNDER_TEST, object, callback(done, {
+                    conflict: function(collection, cached, remote, options) {
+                      collection.should.equal(COLLECTION_UNDER_TEST);
+                      (null === cached).should.be['true'];
+                      remote.bar.should.equal('baz');
+
+                      // Client wins.
+                      Kinvey.Sync.clientAlwaysWins(collection, cached, remote, options);
+                    },
+                    success: function(status) {
+                      status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
                       done();
                     }
                   }));

@@ -3,8 +3,11 @@
  */
 describe('Kinvey.Store.Offline', function() {
   // Create store.
-  before(function() {
+  before(function(done) {
     this.store = new Kinvey.Store.Offline(COLLECTION_UNDER_TEST);
+
+    // Create the current user.
+    Kinvey.User.create({ username: 'foo', password: 'bar' }, callback(done));
   });
   after(function(done) {
     Kinvey.getCurrentUser().destroy(callback(done));
@@ -95,6 +98,43 @@ describe('Kinvey.Store.Offline', function() {
         },
         complete: function(status) {
           status[COLLECTION_UNDER_TEST].committed.should.have.length(1);
+          done();
+        }
+      }));
+    });
+  });
+
+  // Defensive tests: edit ACL offline.
+  describe('#acl', function() {
+    // Housekeeping: create mock.
+    before(function(done) {
+      this.store.save({ _id: 'foo', bar: 'baz' }, callback(done, {
+        success: function() { },
+        complete: function() {
+          Kinvey.getCurrentUser().logout(callback(done));
+        }
+      }));
+    });
+    after(function(done) {
+      // Log the original current user back in.
+      var store = this.store;
+      Kinvey.getCurrentUser().destroy(callback(done, {
+        success: function() {
+          new Kinvey.User().login('foo', 'bar', callback(done, {
+            success: function() {
+              store.remove({ _id: 'foo' }, callback(done, { success: function() { } }));
+            }
+          }));
+        }
+      }));
+    });
+
+    // Test suite.
+    it('fails synchronization when the user has no write permissions.', function(done) {
+      this.store.save({ _id: 'foo', bar: 'qux' }, callback(done, {
+        success: function() { },
+        complete: function(status) {
+          status[COLLECTION_UNDER_TEST].canceled.should.have.length(1);
           done();
         }
       }));
