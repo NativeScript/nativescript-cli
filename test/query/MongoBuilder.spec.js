@@ -100,6 +100,32 @@ describe('Kinvey.Query.MongoBuilder', function() {
       });
     });
 
+    // Kinvey.Query.MongoBuilder#addCondition(.., REGEX, ..)
+    describe('.regex', function() {
+      it('sets a regular expression condition.', function() {
+        this.query.addCondition('foo', Kinvey.Query.REGEX, /^foo/);
+        this.query.toJSON().query.should.eql({ foo: { $regex: '^foo', $options: '' } });
+      });
+      it('sets a regular expression with options condition.', function() {
+        this.query.addCondition('foo', Kinvey.Query.REGEX, /^foo/mi);
+        this.query.toJSON().query.should.eql({ foo: { $regex: '^foo', $options: 'im' } });
+      });
+      it('sets a regular expression (as string) condition.', function() {
+        this.query.addCondition('foo', Kinvey.Query.REGEX, '^foo');
+        this.query.toJSON().query.should.eql({ foo: { $regex: '^foo', $options: '' } });
+      });
+      it('sets a regular expression (as object) condition.', function() {
+        this.query.addCondition('foo', Kinvey.Query.REGEX, new RegExp('^foo', 'm'));
+        this.query.toJSON().query.should.eql({ foo: { $regex: '^foo', $options: 'm' } });
+      });
+      it('throws an error on invalid regular expression.', function() {
+        var self = this;
+        (function() {
+          self.query.addCondition('foo', Kinvey.Query.REGEX, new RegExp('^foo', 'a'));
+        }.should['throw']());
+      });
+    });
+
     // Kinvey.Query.MongoBuilder#addCondition(.., AND, ..)
     describe('.and', function() {
       it('sets an and condition.', function() {

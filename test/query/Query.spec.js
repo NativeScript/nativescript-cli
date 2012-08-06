@@ -335,6 +335,30 @@ describe('Kinvey.Query', function() {
     });
   });
 
+  // Kinvey.Query#regex
+  describe('#regex', function() {
+    it('performs a simple regular expression.', function(done) {
+      this.query.on('name').regex(/^J/);
+      this.collection.fetch(callback(done, {
+        success: function(list) {
+          list.should.have.length(1);
+          list[0].get('name').should.equal('John');
+          done();
+        }
+      }));
+    });
+    it('performs a case-insensitive regular expression.', function(done) {
+      this.query.on('name').regex(/^j/i);
+      this.collection.fetch(callback(done, {
+        success: function(list) {
+          list.should.have.length(1);
+          list[0].get('name').should.equal('John');
+          done();
+        }
+      }));
+    });
+  });
+
   // Kinvey.Query#setLimit
   describe('#setLimit', function() {
     it('sets a limit.', function(done) {

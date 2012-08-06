@@ -1,7 +1,11 @@
-v0.9.8
+v0.9.9
 * Added resource API support for Node.js, PhoneGap and Titanium.
 
-v0.9.7 (August 1, 2012)
+v0.9.8 (August 6, 2012)
+* Added regex support in queries.
+* Fixed IndexedDB regression bug (Chrome 21).
+
+v0.9.7 (August 1, 2012 - deprecated)
 * Added caching and offline usage
 
 v0.9.6 (Jul 18, 2012)

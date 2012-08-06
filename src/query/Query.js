@@ -343,6 +343,24 @@
     },
 
     /**
+     * Sets a not in condition on the current key.
+     * 
+     * @example <code>
+     * // Attribute "field" must have a value starting with foo.
+     * var query = new Kinvey.Query();
+     * query.on('field').regex(/^foo/);
+     * </code>
+     * 
+     * @param {object} expected Regular expression.
+     * @throws {Error} On invalid regular expression.
+     * @return {Kinvey.Query} Current instance.
+     */
+    regex: function(expected) {
+      this._set(Kinvey.Query.REGEX, expected);
+      return this;
+    },
+
+    /**
      * Resets all filters.
      * 
      * @return {Kinvey.Query} Current instance.
@@ -570,6 +588,14 @@
      * @constant
      */
     NOT_EQUAL: 22,
+
+    /**
+     * Regular expression operator. Checks if an element matches the specified
+     * expression.
+     * 
+     * @constant
+     */
+    REGEX: 23,
 
     // Geoqueries.
     /**

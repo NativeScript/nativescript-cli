@@ -53,6 +53,12 @@
         case Kinvey.Query.NOT_EQUAL:
           this._set(field, {$ne: value});
           break;
+        case Kinvey.Query.REGEX:
+          // Filter through RegExp, this will throw an error on invalid regex.
+          var regex = new RegExp(value);
+          var options = ((regex.global) ? 'g' : '') + ((regex.ignoreCase) ? 'i' : '') + ((regex.multiline) ? 'm' : '');
+          this._set(field, { $regex: regex.source, $options: options });
+          break;
 
         // Geoqueries.
         // @see http://www.mongodb.org/display/DOCS/Geospatial+Indexing

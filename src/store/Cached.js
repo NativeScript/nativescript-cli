@@ -300,7 +300,7 @@
      * 
      * @private
      * @param {string} operation Operation. One of remove, removeWithquery or save.
-     * @param {*} arg Operaetion argument.
+     * @param {*} arg Operation argument.
      * @param {Object} options Options.
      */
     _write: function(operation, arg, options) {

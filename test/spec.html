@@ -21,7 +21,7 @@
   <script src="../node_modules/mocha/mocha.js"></script>
   <script>
   mocha.setup({
-    globals: ['navigator', 'stats'],// Firefox and Opera barf when omitting this.
+    globals: ['getInterface', 'navigator', 'report', 'stats'],// Firefox and Opera barf when omitting this.
     timeout: 10000,
     ui: 'bdd'
   });
