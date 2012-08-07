@@ -205,7 +205,7 @@
       });
 
       // Handle according to policy.
-      primaryStore[operation](arg, {
+      primaryStore[operation](arg, merge(options, {
         success: bind(this, function(response, info) {
           options.success(response, info);
 
@@ -232,7 +232,7 @@
             options.complete();
           }
         })
-      });
+      }));
     },
 
     /**

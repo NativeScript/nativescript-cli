@@ -259,13 +259,13 @@
       // Create a new user.
       var user = new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, merge(options, {
-        success: bind(user, function() {
+        success: bind(user, function(_, info) {
           // Extract token.
           var token = this.attr._kmd.authtoken;
           delete this.attr._kmd.authtoken;
           this._login(token);
 
-          options.success && options.success(user);
+          options.success && options.success(this, info);
         })
       }));
       return user;// return the instance
