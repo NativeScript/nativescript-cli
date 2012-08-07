@@ -260,12 +260,12 @@
       var user = new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, merge(options, {
         success: bind(user, function() {
-          // Unset the password, we don't need it any more.
-          var password = this.get(this.ATTR_PASSWORD);
-          this.unset(this.ATTR_PASSWORD);
+          // Extract token.
+          var token = this.attr._kmd.authtoken;
+          delete this.attr._kmd.authtoken;
+          this._login(token);
 
-          // Login the created user.
-          this.login(this.getUsername(), password, options);
+          options.success && options.success(user);
         })
       }));
       return user;// return the instance
