@@ -7,7 +7,7 @@ describe('Kinvey.Store.Offline', function() {
     this.store = new Kinvey.Store.Offline(COLLECTION_UNDER_TEST);
 
     // Create the current user.
-    Kinvey.User.create({ username: 'foo', password: 'bar' }, callback(done));
+    this.user = Kinvey.User.create({ password: 'foo' }, callback(done));
   });
   after(function(done) {
     Kinvey.getCurrentUser().destroy(callback(done));
@@ -117,10 +117,11 @@ describe('Kinvey.Store.Offline', function() {
     });
     after(function(done) {
       // Log the original current user back in.
+      var original = this.user;
       var store = this.store;
       Kinvey.getCurrentUser().destroy(callback(done, {
         success: function() {
-          new Kinvey.User().login('foo', 'bar', callback(done, {
+          new Kinvey.User().login(original.getUsername(), 'foo', callback(done, {
             success: function() {
               store.remove({ _id: 'foo' }, callback(done, { success: function() { } }));
             }

@@ -545,12 +545,7 @@
       var query = new Kinvey.Query().on('_id').in_(objects);
       data.store.removeWithQuery(query.toJSON(), {
         success: success,
-        error: function(error) {
-          // EntityNotFound is our friend, catch here.
-          if(Kinvey.Error.ENTITY_NOT_FOUND === error.error) {
-            return success();
-          }
-
+        error: function() {
           // Mark all as canceled and return.
           complete([ ], objects);
         }
