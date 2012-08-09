@@ -19,6 +19,7 @@ describe('Kinvey.Resource', function() {
     it('destroys a resource.', function(done) {
       Kinvey.Resource.destroy(this.resource.name, callback(done, {
         success: function(_, info) {
+          (null === _).should.be['true'];
           info.network.should.be['true'];
           done();
         }
@@ -28,8 +29,35 @@ describe('Kinvey.Resource', function() {
 
   // Kinvey.Resource#download
   describe('#download', function() {
-    it('downloads a resource.');
-    it('returns the URI for a download.');
+    // Housekeeping: create mock.
+    before(function(done) {
+      Kinvey.Resource.upload(this.resource.name, this.resource.data, callback(done));
+    });
+    after(function(done) {
+      Kinvey.Resource.destroy(this.resource.name, callback(done));
+    });
+
+    // Test suite.
+    it('downloads a resource.', function(done) {
+      var resource = this.resource;
+      Kinvey.Resource.download(resource.name, callback(done, {
+        success: function(file) {
+          file.should.eql(resource);
+          done();
+        }
+      }));
+    });
+    it('returns the URI for a download.', function(done) {
+      var resource = this.resource;
+      Kinvey.Resource.download(resource.name, callback(done, {
+        download: false,
+        success: function(file) {
+          file.should.have.property('URI');
+          file.URI.indexOf('http://').should.equal(0);
+          done();
+        }
+      }));
+    });
   });
 
   // Kinvey.Resource#upload

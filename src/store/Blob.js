@@ -51,7 +51,7 @@
       // Send request to obtain the download URL.
       var url = this._getUrl('download-loc', name);
       this._send('GET', url, null, merge(options, {
-        success: function(response, info) {
+        success: bind(this, function(response, info) {
           // Stop here if the user wants us to.
           if('undefined' !== typeof options.download && !options.download) {
             return options.success(response, info);
@@ -73,7 +73,7 @@
               }, info);
             }
           }));
-        }
+        })
       }));
     },
 
@@ -97,6 +97,9 @@
         success: bind(this, function(response, info) {
           // Delete the file.
           this._xhr('DELETE', response.URI, null, merge(options, {
+            success: function(_, info) {
+              options.success && options.success(null, info);
+            },
             error: function(_, info) {
               options.error({
                 error: Kinvey.Error.RESPONSE_PROBLEM,

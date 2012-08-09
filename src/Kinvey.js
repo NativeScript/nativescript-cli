@@ -8,7 +8,7 @@
    * 
    * @constant
    */
-  Kinvey.API_VERSION = 1;
+  Kinvey.API_VERSION = 2;
 
   /**
    * Host.

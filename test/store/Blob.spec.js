@@ -21,7 +21,7 @@ describe('Kinvey.Store.Blob', function() {
     });
 
     // Test suite.
-    it('returns a file.'/*, function(done) {
+    it('returns a file.', function(done) {
       var file = this.file;
       this.store.query(file.name, callback(done, {
         success: function(response, info) {
@@ -30,16 +30,17 @@ describe('Kinvey.Store.Blob', function() {
           done();
         }
       }));
-    }*/);
-    it('returns a file URI.'/*, function(done) {
+    });
+    it('returns a file URI.', function(done) {
       this.store.query(this.file.name, callback(done, {
+        download: false,
         success: function(response, info) {
           response.URI.indexOf('http://').should.equal(0);
           info.network.should.be['true'];
           done();
         }
       }));
-    }*/);
+    });
   });
 
   // Kinvey.Store.Blob#remove

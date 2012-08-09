@@ -141,7 +141,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-//          '<%= dir.src %>/Resource.js',
+          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -150,7 +150,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-//          '<%= dir.src %>/store/Blob.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -170,7 +170,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-//          '<%= dir.src %>/Resource.js',
+          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -179,7 +179,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-//          '<%= dir.src %>/store/Blob.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -199,7 +199,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/User.js',
           '<%= dir.src %>/UserCollection.js',
           '<%= dir.src %>/Metadata.js',
-//          '<%= dir.src %>/Resource.js',
+          '<%= dir.src %>/Resource.js',
 
           '<%= dir.src %>/query/Query.js',
           '<%= dir.src %>/query/MongoBuilder.js',
@@ -208,7 +208,7 @@ module.exports = function(grunt) {
 
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/AppData.js',
-//          '<%= dir.src %>/store/Blob.js',
+          '<%= dir.src %>/store/Blob.js',
 
           '<%= dir.src %>/outro.txt'
         ],
