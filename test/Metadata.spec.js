@@ -65,45 +65,6 @@ describe('Kinvey.Metadata', function() {
     });
     after(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
-//    it('creates the current user.', function(done) {
-//    var user = this.user = Kinvey.User.create({
-//      username: 'foo',
-//      password: 'bar',
-//      attribute: 'value'
-//    }, callback(done, {
-//      success: function(response) {
-//        response.should.equal(user);// Kinvey.User
-//        (response.getUsername()).should.equal('foo');
-//        (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
-//        (response.get('attribute')).should.equal('value');
-//
-//        // Test current user.
-//        Kinvey.getCurrentUser().should.equal(response);
-//        response.isLoggedIn.should.be['true'];
-//        (null !== response.getToken()).should.be['true'];
-//
-//        done();
-//      }
-//    }));
-//  });
-//  it('creates the current user with auto-generated password.', function(done) {
-//    var user = this.user = Kinvey.User.create({
-//      username: 'foo'
-//    }, callback(done, {
-//      success: function(response) {
-//        response.should.equal(user);
-//        (response.getUsername()).should.equal('foo');
-//        (null === response.get(response.ATTR_PASSWORD)).should.be['true'];
-//
-//        // Test current user.
-//        Kinvey.getCurrentUser().should.equal(response);
-//        (response.isLoggedIn).should.be['true'];
-//        (null !== response.getToken()).should.be['true'];
-//
-//        done();
-//      }
-//    }));
-//  });
    });
 
     // Test suite.

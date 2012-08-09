@@ -99,6 +99,7 @@
       aggregation.setReduce(function(doc, out) {
         out.count += 1;
       });
+      aggregation.setQuery(this.query);// Apply query.
 
       this.store.aggregate(aggregation.toJSON(), merge(options, {
         success: function(response, info) {

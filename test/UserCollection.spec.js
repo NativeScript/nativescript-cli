@@ -39,7 +39,9 @@ describe('Kinvey.UserCollection', function() {
   describe('#count', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
-      new Kinvey.UserCollection().count(callback(done, {
+      // Exclude inactive users.
+      var query = new Kinvey.Query().on('_kmd.status').exist(false);
+      new Kinvey.UserCollection({ query: query }).count(callback(done, {
         success: function(count) {
           count.should.equal(1);
           done();

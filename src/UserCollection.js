@@ -15,10 +15,10 @@
      * @name Kinvey.UserCollection
      * @constructor
      * @extends Kinvey.Collection
-     * @param {Kinvey.Query} [query] Query.
+     * @param {Object} options Options.
      */
-    constructor: function(query) {
-      Kinvey.Collection.prototype.constructor.call(this, 'user', query);
+    constructor: function(options) {
+      Kinvey.Collection.prototype.constructor.call(this, 'user', options);
     },
 
     /** @lends Kinvey.UserCollection# */
