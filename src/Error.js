@@ -51,6 +51,9 @@
     USER_ALREADY_EXISTS: 'UserAlreadyExists',
 
     /** @constant */
+    USER_UNAVAILABLE: 'UserUnavailable',
+
+    /** @constant */
     DUPLICATE_END_USERS: 'DuplicateEndUsers',
 
     /** @constant */
@@ -102,7 +105,13 @@
     API_VERSION_NOT_IMPLEMENTED: 'APIVersionNotImplemented',
 
     /** @constant */
-    API_VERSION_NOT_AVAILABLE: 'APIVersionNotAvailable'
+    API_VERSION_NOT_AVAILABLE: 'APIVersionNotAvailable',
+
+    /** @constant */
+    INPUT_VALIDATION_FAILED: 'InputValidationFailed',
+    
+    /** @constant */
+    BLruntimeError: 'BLruntimeError'
   };
 
 }());

@@ -14,6 +14,13 @@
     APPDATA: 'appdata',
 
     /**
+     * Blob store.
+     * 
+     * @constant
+     */
+    BLOB: 'blob',
+
+    /**
      * Returns store.
      * 
      * @param {string} collection Collection name.
@@ -30,6 +37,11 @@
           throw new Error('Store collection does not match targeted collection');
         }
         return name;
+      }
+
+      // Create store by name.
+      if(Kinvey.Store.BLOB === name) {
+        return new Kinvey.Store.Blob(collection, options);
       }
 
       // By default, use the AppData store.

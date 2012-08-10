@@ -330,7 +330,7 @@ module.exports = function(grunt) {
     // Specify JSDoc task.
     jsdoc: {
       core: {
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.js',
+        src: '<%= dir.src %>',
         dest: '<%= dir.apidoc %>'
       }
     },
