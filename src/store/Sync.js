@@ -188,15 +188,15 @@
     /**
      * Creates a new synchronizer.
      * 
-     * @constructor
      * @name Synchronizer
+     * @constructor
      * @private
      * @param {Object} options
      * @param {Object} options.store Store options.
      * @param {function(collection, cached, remote, options)} options.conflict
      *          Conflict resolution callback.
      * @param {function()} options.start Start callback.
-     * @param {function(status) options.success Success callback.
+     * @param {function(status)} options.success Success callback.
      * @param {function(error)} options.error Failure callback.
      */
     constructor: function(options) {

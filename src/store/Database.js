@@ -9,8 +9,8 @@
     /**
      * Creates a new database.
      * 
-     * @constructor
      * @name Database
+     * @constructor
      * @private
      * @param {string} collection Collection name.
      */
