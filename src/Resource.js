@@ -31,13 +31,17 @@
     /**
      * Uploads a file.
      * 
-     * @param {string} name Filename.
-     * @param {string} data File data.
+     * @param {Object} file File.
      * @param {Object} [options] Options.
+     * @throws {Error} On invalid file.
      */
-    upload: function(name, data, options) {
+    upload: function(file, options) {
+      // Validate file.
+      if(null == file || null == file.name || null == file.data) {
+        throw new Error('File should be an object containing name and data');
+      }
       Kinvey.Resource._store || (Kinvey.Resource._store = new Kinvey.Store.Blob());
-      Kinvey.Resource._store.save({ name: name, data: data }, options);
+      Kinvey.Resource._store.save(file, options);
     },
 
     /**

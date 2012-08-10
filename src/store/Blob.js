@@ -117,13 +117,8 @@
      * 
      * @param {Object} file File to be uploaded.
      * @param {Object} [options] Options.
-     * @throws {Error} On invalid file.
      */
     save: function(file, options) {
-      // Validate file.
-      if(null == file || null == file.name || null == file.data) {
-        throw new Error('File should be an object containing name and data');
-      }
       options = this._options(options);
 
       // Send request to obtain the upload URL.

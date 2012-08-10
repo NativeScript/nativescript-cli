@@ -12,7 +12,7 @@ describe('Kinvey.Resource', function() {
   describe('#destroy', function() {
     // Housekeeping: create mock.
     beforeEach(function(done) {
-      Kinvey.Resource.upload(this.resource.name, this.resource.data, callback(done));
+      Kinvey.Resource.upload(this.resource, callback(done));
     });
 
     // Test suite.
@@ -31,7 +31,7 @@ describe('Kinvey.Resource', function() {
   describe('#download', function() {
     // Housekeeping: create mock.
     before(function(done) {
-      Kinvey.Resource.upload(this.resource.name, this.resource.data, callback(done));
+      Kinvey.Resource.upload(this.resource, callback(done));
     });
     after(function(done) {
       Kinvey.Resource.destroy(this.resource.name, callback(done));
@@ -70,7 +70,7 @@ describe('Kinvey.Resource', function() {
     // Test suite.
     it('uploads a resource.', function(done) {
       var resource = this.resource;
-      Kinvey.Resource.upload(resource.name, resource.data, callback(done, {
+      Kinvey.Resource.upload(resource, callback(done, {
         success: function(response, info) {
           response.should.eql(resource);
           info.network.should.be['true'];
