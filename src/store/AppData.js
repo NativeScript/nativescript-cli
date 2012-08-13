@@ -83,7 +83,9 @@
      * @param {Object} [options] Options.
      */
     query: function(id, options) {
-      var url = this._getUrl({ id: id });
+      options || (options = {});
+
+      var url = this._getUrl({ id: id, resolve: options.resolve });
       this._send('GET', url, null, options);
     },
 
@@ -94,7 +96,9 @@
      * @param {Object} [options] Options.
      */
     queryWithQuery: function(query, options) {
-      var url = this._getUrl({ query: query });
+      options || (options = {});
+
+      var url = this._getUrl({ query: query, resolve: options.resolve });
       this._send('GET', url, null, options);
     },
 
@@ -174,6 +178,11 @@
         parts.query.limit && param.push('limit=' + this._encode(parts.query.limit));
         parts.query.skip && param.push('skip=' + this._encode(parts.query.skip));
         parts.query.sort && param.push('sort=' + this._encode(parts.query.sort));
+      }
+
+      // Resolve references.
+      if(parts.resolve) {
+        param.push('resolve=' + parts.resolve.join(','));
       }
 
       // Android < 4.0 caches all requests aggressively. For now, work around

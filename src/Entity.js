@@ -5,6 +5,9 @@
     // Identifier attribute.
     ATTR_ID: '_id',
 
+    // Map.
+    map: {},
+
     /**
      * Creates a new entity.
      * 
@@ -24,7 +27,7 @@
       if(null == collection) {
         throw new Error('Collection must not be null');
       }
-      this.attr = attr || {};
+      this.attr = attr ? this._parseAttr(attr) : {};
       this.collection = collection;
       this.metadata = null;
 
@@ -114,7 +117,7 @@
 
       this.store.query(id, merge(options, {
         success: bind(this, function(response, info) {
-          this.attr = response;
+          this.attr = this._parseAttr(response);
           this.metadata = null;// Reset.
           options.success && options.success(this, info);
         })
@@ -130,12 +133,16 @@
      */
     save: function(options) {
       options || (options = {});
-      this.store.save(this.toJSON(), merge(options, {
-        success: bind(this, function(response, info) {
-          this.attr = response;
-          this.metadata = null;// Reset.
-          options.success && options.success(this, info);
-        })
+
+      // Save references first, then save original.
+      this._saveAttr(this.attr, bind(this, function() {
+        this.store.save(this.toJSON(), merge(options, {
+          success: bind(this, function(response, info) {
+            this.attr = this._parseAttr(response);
+            this.metadata = null;// Reset.
+            options.success && options.success(this, info);
+          })
+        }));
       }));
     },
 
@@ -150,7 +157,7 @@
       if(null == key) {
         throw new Error('Key must not be null');
       }
-      this.attr[key] = value;
+      this.attr[key] = this._parse(key, value);
     },
 
     /**
@@ -185,7 +192,8 @@
      * @returns {Object} JSON representation.
      */
     toJSON: function() {
-      var result = this.attr;
+      // Flatten attributes.
+      var result = this._flattenAttr(merge(this.attr));
 
       // Add ACL metadata.
       this.metadata && (result._acl = this.metadata.toJSON()._acl);
@@ -200,6 +208,153 @@
      */
     unset: function(key) {
       delete this.attr[key];
+    },
+
+    /**
+     * Flattens references in name/value pair.
+     * 
+     * @param {string} name Attribute name.
+     * @param {*} value Attribute value.
+     * @returns {*} Flattened value.
+     */
+    _flatten: function(name, value) {
+      if(value instanceof Object) {
+        if(value instanceof Kinvey.Entity) {// Case 1: value is a reference.
+          value = {
+            _type: 'KinveyRef',
+            _collection: value.collection,
+            _id: value.getId()
+          };
+        }
+        else if(value instanceof Array) {// Case 2: value is an array.
+          return value.map(bind(this, function(x) {
+            return this._flatten(name, x);
+          }));
+        }
+        else {// Case 3: value is an object.
+          value = this._flattenAttr(value);
+        }
+      }
+      return value;
+    },
+
+    /**
+     * Flattens references in attributes.
+     * 
+     * @param {Object} attr Attributes.
+     * @returns {Object} Flattened attributes.
+     */
+    _flattenAttr: function(attr) {
+      Object.keys(attr).forEach(bind(this, function(name) {
+        attr[name] = this._flatten(name, attr[name]);
+      }));
+      return attr;
+    },
+
+    /**
+     * Parses references in name/value pair.
+     * 
+     * @private
+     * @param {string} name Attribute name.
+     * @param {*} value Attribute value.
+     * @returns {*} Parsed value.
+     */
+    _parse: function(name, value) {
+      if(value instanceof Object) {
+        if('KinveyRef' === value._type) {// Case 1: value is a reference.
+          // Create object from reference.
+          if(value._obj) {
+            var Entity = this.map[name] || Kinvey.Entity;// Mapping defined?
+            value = new Entity(value._obj, value._collection);
+          }
+        }
+        else if(value instanceof Array) {// Case 2: value is an array.
+          // Loop through and parse every element.
+          value = value.map(bind(this, function(x) {
+            return this._parse(name, x);
+          }));
+        }
+        else {// Case 3: value is an object.
+          value = this._parseAttr(value, name);
+        }
+      }
+      return value;
+    },
+
+    /**
+     * Parses references in attributes.
+     * 
+     * @private
+     * @param {Object} attr Attributes.
+     * @param {string} [prefix] Name prefix.
+     * @return {Object} Parsed attributes.
+     */
+    _parseAttr: function(attr, prefix) {
+      Object.keys(attr).forEach(bind(this, function(name) {
+        attr[name] = this._parse((prefix ? prefix + '.' : '') + name, attr[name]);
+      }));
+      return attr;
+    },
+    
+    /**
+     * Saves reference in name/value pair.
+     * 
+     * @private
+     * @param {*} value Attribute value.
+     * @param {function()} fn Complete callback.
+     */
+    _save: function(value, fn) {
+      if(value instanceof Object) {
+        // Case 1: value is a reference.
+        if(value instanceof Kinvey.Entity) {
+          return value.save({
+            success: fn,
+            error: fn
+          });
+        }
+
+        // Case 2: value is an array.
+        if(value instanceof Array) {
+          // Loop through and save each element.
+          var pending = value.length;
+          return value.map(bind(this, function(x) {
+            return this._save(x, function() {
+              !--pending && fn();
+            });
+          }));
+        }
+
+        // Case 3: value is an object.
+        return this._saveAttr(value, fn);
+      }
+
+      // Case 4: value is a scalar.
+      return fn();
+    },
+
+    /**
+     * Saves references in attributes.
+     * 
+     * @private
+     * @param {Object} attr Attributes.
+     * @param {function()} fn Complete callback.
+     */
+    _saveAttr: function(attr, fn) {
+      // Loop through and save each attribute.
+      var names = Object.keys(attr);
+      var i = 0;
+      var save = bind(this, function() {
+        if(i < names.length) {// Save attribute.
+          this._save(attr[names[i++]], save);
+        }
+        else {
+          // No more attributes, fire complete callback.
+          fn(attr);
+        }
+      });
+
+      // Trigger.
+      save();
     }
   });
 

@@ -116,7 +116,7 @@
           delete response._kmd.authtoken;
 
           // Update attributes. This does not include the users password.
-          this.attr = response;
+          this.attr = this._parseAttr(response);
 
           options.success && options.success(this, info);
         })
