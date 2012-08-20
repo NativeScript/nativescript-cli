@@ -201,7 +201,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/Metadata.js',
           '<%= dir.src %>/Resource.js',
 
-          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/Query.Titanium.js',
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',

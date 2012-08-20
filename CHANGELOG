@@ -1,8 +1,12 @@
-v0.9.9
+v0.9.10
 * Upgraded to API version 2.
 * Added resource API support for Node.js, PhoneGap and Titanium.
+
+v0.9.9 (August 21, 2012)
 * Fixed bug where query was not passed to aggregation.
 * Fixed bug where UserCollection#constructor passed a query instead of options object to Collection.
+* Fixed bug where Titanium crashed on accessing window variable.
+* Fixed bug where logged in user was not saved to disk.
 
 v0.9.8 (August 6, 2012)
 * Added regex support in queries.

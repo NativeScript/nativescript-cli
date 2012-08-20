@@ -144,8 +144,10 @@
     remove: function(object, options) {
       options = this._options(options);
 
-      // Open transaction.
-      this._transaction([this.collection, Database.TRANSACTION_STORE], Database.READ_WRITE, bind(this, function(txn) {
+      // Open transaction. Only open transaction store if we need it.
+      var stores = [this.collection];
+      !options.silent && stores.push(Database.TRANSACTION_STORE);
+      this._transaction(stores, Database.READ_WRITE, bind(this, function(txn) {
         // Open store.
         var store = txn.objectStore(this.collection);
 
@@ -179,8 +181,10 @@
       // First, retrieve all items, so we can remove them one by one.
       this.queryWithQuery(query, merge(options, {
         success: bind(this, function(list) {
-          // Open transaction.
-          this._transaction([this.collection, Database.QUERY_STORE, Database.TRANSACTION_STORE], Database.READ_WRITE, bind(this, function(txn) {
+          // Open transaction. Only open transaction store if we need it.
+          var stores = [this.collection, Database.QUERY_STORE];
+          !options.silent && stores.push(Database.TRANSACTION_STORE);
+          this._transaction(stores, Database.READ_WRITE, bind(this, function(txn) {
             // Remove query.
             var key = this._getKey(query);
             txn.objectStore(Database.QUERY_STORE)['delete'](key);
@@ -213,8 +217,10 @@
     save: function(object, options) {
       options = this._options(options);
 
-      // Open transaction.
-      this._transaction([this.collection, Database.TRANSACTION_STORE], Database.READ_WRITE, bind(this, function(txn) {
+      // Open transaction. Only open transaction store if we need it.
+      var stores = [this.collection];
+      !options.silent && stores.push(Database.TRANSACTION_STORE);
+      this._transaction(stores, Database.READ_WRITE, bind(this, function(txn) {
         // Open store.
         var store = txn.objectStore(this.collection);
 
