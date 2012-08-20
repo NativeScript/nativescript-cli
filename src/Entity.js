@@ -27,13 +27,18 @@
       if(null == collection) {
         throw new Error('Collection must not be null');
       }
-      this.attr = attr ? this._parseAttr(attr) : {};
       this.collection = collection;
       this.metadata = null;
 
       // Options.
       options || (options = {});
-      this.store = Kinvey.Store.factory(collection, options.store, options.options);
+      this.store = Kinvey.Store.factory(options.store, this.collection, options.options);
+
+      // Parse attributes.
+      this.attr = attr ? this._parseAttr(attr) : {};
+
+      // State (used by save()).
+      this._pending = false;
     },
 
     /** @lends Kinvey.Entity# */
@@ -134,16 +139,48 @@
     save: function(options) {
       options || (options = {});
 
-      // Save references first, then save original.
-      this._saveAttr(this.attr, bind(this, function() {
-        this.store.save(this.toJSON(), merge(options, {
-          success: bind(this, function(response, info) {
-            this.attr = this._parseAttr(response);
-            this.metadata = null;// Reset.
-            options.success && options.success(this, info);
-          })
-        }));
-      }));
+      // Refuse to save circular references.
+      if(this._pending && options._ref) {
+        this._pending = false;// Reset.
+        options.error({
+          error: Kinvey.Error.OPERATION_DENIED,
+          message: 'Circular reference detected, aborting save',
+          debug: ''
+        }, {});
+        return;
+      }
+      this._pending = true;
+
+      // Save children first.
+      this._saveAttr(this.attr, {
+        success: bind(this, function(references) {
+          // All children are saved, save parent.
+          this.store.save(this.toJSON(), merge(options, {
+            success: bind(this, function(response, info) {
+              this._pending = false;// Reset.
+
+              // Merge response with response of children.
+              this.attr = merge(this._parseAttr(response), references);
+              this.metadata = null;// Reset.
+
+              options.success && options.success(this, info);
+            }),
+            error: bind(this, function(error, info) {
+              this._pending = false;// Reset.
+              options.error && options.error(error, info);
+            })
+          }));
+        }),
+
+        // One of the children failed, break on error.
+        error: bind(this, function(error, info) {
+          this._pending = false;// Reset.
+          options.error && options.error(error, info);
+        }),
+
+        // Flag to detect any circular references. 
+        _ref: true
+      });
     },
 
     /**
@@ -191,13 +228,10 @@
      * 
      * @returns {Object} JSON representation.
      */
-    toJSON: function() {
-      // Flatten attributes.
-      var result = this._flattenAttr(merge(this.attr));
-
-      // Add ACL metadata.
+    toJSON: function(name) {
+      // Flatten references.
+      var result = this._flattenAttr(this.attr);// Copy by value.
       this.metadata && (result._acl = this.metadata.toJSON()._acl);
-
       return result;
     },
 
@@ -211,13 +245,13 @@
     },
 
     /**
-     * Flattens references in name/value pair.
+     * Flattens attribute value.
      * 
-     * @param {string} name Attribute name.
+     * @private
      * @param {*} value Attribute value.
-     * @returns {*} Flattened value.
+     * @returns {*}
      */
-    _flatten: function(name, value) {
+    _flatten: function(value) {
       if(value instanceof Object) {
         if(value instanceof Kinvey.Entity) {// Case 1: value is a reference.
           value = {
@@ -227,28 +261,31 @@
           };
         }
         else if(value instanceof Array) {// Case 2: value is an array.
-          return value.map(bind(this, function(x) {
-            return this._flatten(name, x);
+          // Flatten all members.
+          value = value.map(bind(this, function(x) {
+            return this._flatten(x);
           }));
         }
-        else {// Case 3: value is an object.
-          value = this._flattenAttr(value);
+        else {
+          value = this._flattenAttr(value);// Case 3: value is an object.
         }
       }
       return value;
     },
 
     /**
-     * Flattens references in attributes.
+     * Flattens attributes.
      * 
+     * @private
      * @param {Object} attr Attributes.
      * @returns {Object} Flattened attributes.
      */
     _flattenAttr: function(attr) {
+      var result = {};
       Object.keys(attr).forEach(bind(this, function(name) {
-        attr[name] = this._flatten(name, attr[name]);
+        result[name] = this._flatten(attr[name]);
       }));
-      return attr;
+      return result;
     },
 
     /**
@@ -262,14 +299,17 @@
     _parse: function(name, value) {
       if(value instanceof Object) {
         if('KinveyRef' === value._type) {// Case 1: value is a reference.
-          // Create object from reference.
+          // Create object from reference if embedded, otherwise skip.
           if(value._obj) {
-            var Entity = this.map[name] || Kinvey.Entity;// Mapping defined?
-            value = new Entity(value._obj, value._collection);
+            var Entity = this.map[name] || Kinvey.Entity;// Use mapping if defined.
+
+            // Maintain store type and configuration.
+            var opts = { store: this.store.type, options: this.store.options };
+            value = new Entity(value._obj, value._collection, opts);
           }
         }
         else if(value instanceof Array) {// Case 2: value is an array.
-          // Loop through and parse every element.
+          // Loop through and parse all members.
           value = value.map(bind(this, function(x) {
             return this._parse(name, x);
           }));
@@ -297,60 +337,65 @@
     },
     
     /**
-     * Saves reference in name/value pair.
+     * Saves an attribute value.
      * 
      * @private
      * @param {*} value Attribute value.
-     * @param {function()} fn Complete callback.
+     * @param {Object} options Options.
      */
-    _save: function(value, fn) {
+    _save: function(value, options) {
       if(value instanceof Object) {
-        // Case 1: value is a reference.
-        if(value instanceof Kinvey.Entity) {
-          return value.save({
-            success: fn,
-            error: fn
-          });
+        if(value instanceof Kinvey.Entity) {// Case 1: value is a reference.
+          return value.save(options);
         }
+        if(value instanceof Array) {// Case 2: value is an array.
+          // Save every element in the array (serially), and update in place.
+          var i = 0;
 
-        // Case 2: value is an array.
-        if(value instanceof Array) {
-          // Loop through and save each element.
-          var pending = value.length;
-          return value.map(bind(this, function(x) {
-            return this._save(x, function() {
-              !--pending && fn();
-            });
-          }));
+          // Define save handler.
+          var save = bind(this, function() {
+            var item = value[i];
+            item ? this._save(item, merge(options, {
+              success: function(response) {
+                value[i++] = response;// Update.
+                save();// Advance.
+              }
+            })) : options.success(value);
+          });
+
+          // Trigger.
+          return save();
         }
 
         // Case 3: value is an object.
-        return this._saveAttr(value, fn);
+        return this._saveAttr(value, options);
       }
 
       // Case 4: value is a scalar.
-      return fn();
+      options.success(value);
     },
 
     /**
-     * Saves references in attributes.
+     * Saves attributes.
      * 
      * @private
      * @param {Object} attr Attributes.
-     * @param {function()} fn Complete callback.
+     * @param {Object} options Options.
      */
-    _saveAttr: function(attr, fn) {
-      // Loop through and save each attribute.
-      var names = Object.keys(attr);
+    _saveAttr: function(attr, options) {
+      // Save attributes serially.
+      var attrs = Object.keys(attr);
       var i = 0;
+
+      // Define save handler.
       var save = bind(this, function() {
-        if(i < names.length) {// Save attribute.
-          this._save(attr[names[i++]], save);
-        }
-        else {
-          // No more attributes, fire complete callback.
-          fn(attr);
-        }
+        var name = attrs[i++];
+        name ? this._save(attr[name], merge(options, {
+          success: function(response) {
+            attr[name] = response;// Update.
+            save();// Advance.
+          }
+        })) : options.success(attr);
       });
 
       // Trigger.

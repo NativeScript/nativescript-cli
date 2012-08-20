@@ -2,6 +2,9 @@
 
   // Define the Kinvey.Store.Blob class.
   Kinvey.Store.Blob = Base.extend({
+    // Store name.
+    name: Kinvey.Store.BLOB,
+
     // Default options.
     options: {
       timeout: 10000,// Timeout in ms.

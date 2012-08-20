@@ -2,6 +2,9 @@
 
   // Define the Kinvey.Store.Offline class.
   Kinvey.Store.Offline = Kinvey.Store.Cached.extend({
+    // Store name.
+    name: Kinvey.Store.OFFLINE,
+
     /**
      * Creates a new offline store.
      * 

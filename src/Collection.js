@@ -34,7 +34,7 @@
       // Options.
       options || (options = {});
       this.setQuery(options.query || new Kinvey.Query());
-      this.store = Kinvey.Store.factory(this.name, options.store, options.options);
+      this.store = Kinvey.Store.factory(options.store, this.name, options.options);
     },
 
     /** @lends Kinvey.Collection# */
@@ -123,7 +123,9 @@
         success: bind(this, function(response, info) {
           this.list = [];
           response.forEach(bind(this, function(attr) {
-            this.list.push(new this.entity(attr, this.name, { store: this.store }));
+            // Maintain collection store type and configuration.
+            var opts = { store: this.store.name, options: this.store.options };
+            this.list.push(new this.entity(attr, this.name, opts));
           }));
           options.success && options.success(this.list, info);
         })

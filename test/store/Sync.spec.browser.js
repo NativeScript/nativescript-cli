@@ -5,7 +5,7 @@ describe('Kinvey.Sync', function() {
 
   // Housekeeping.
   before(function() {
-    this.store = Kinvey.Store.factory(COLLECTION_UNDER_TEST, Kinvey.Store.OFFLINE);
+    this.store = Kinvey.Store.factory(Kinvey.Store.OFFLINE, COLLECTION_UNDER_TEST);
     this.appdata = this.store.appdata;
     this.db = this.store.db;
   });

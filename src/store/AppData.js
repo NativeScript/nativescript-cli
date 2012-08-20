@@ -2,6 +2,9 @@
 
   // Define the Kinvey.Store.AppData class.
   Kinvey.Store.AppData = Base.extend({
+    // Store name.
+    name: Kinvey.Store.APPDATA,
+
     // Default options.
     options: {
       timeout: 10000,// Timeout in ms.

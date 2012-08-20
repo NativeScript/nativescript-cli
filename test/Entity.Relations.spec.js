@@ -245,9 +245,9 @@ describe('Kinvey.Entity -> Relations', function() {
       }, COLLECTION_UNDER_TEST).save(callback(done, {
         success: function(response) {
           response.should.be.an['instanceof'](Kinvey.Entity);
-//          response.get('foo').should.be.an['instanceof'](Kinvey.Entity);
-//          (null !== response.getId()).should.be['true'];
-//          response.get('foo').get('bar').should.be['true'];
+          response.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+          (null !== response.getId()).should.be['true'];
+          response.get('foo').get('bar').should.be['true'];
           done();
         }
       }));
@@ -263,9 +263,22 @@ describe('Kinvey.Entity -> Relations', function() {
       }, COLLECTION_UNDER_TEST).save(callback(done, {
         success: function(response) {
           response.should.be.an['instanceof'](Kinvey.Entity);
-//          response.get('foo')[0].should.be.an['instanceof'](Kinvey.Entity);
-//          (null !== response.getId()).should.be['true'];
-//          response.get('foo')[0].get('bar').should.be['true'];
+          response.get('foo')[0].should.be.an['instanceof'](Kinvey.Entity);
+          (null !== response.getId()).should.be['true'];
+          response.get('foo')[0].get('bar').should.be['true'];
+          done();
+        }
+      }));
+    });
+    it('fails on saving a circular reference.', function(done) {
+      var entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
+      entity.set('key', entity);
+      entity.save(callback(done, {
+        success: function() {
+          done(new Error('Success callback was invoked'));
+        },
+        error: function(error) {
+          error.error.should.equal(Kinvey.Error.OPERATION_DENIED);
           done();
         }
       }));

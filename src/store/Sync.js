@@ -311,7 +311,7 @@
           this._classifyAndCommit(collection, transactions, {
             db: db,
             objects: [id],
-            store: Kinvey.Store.factory(collection, Kinvey.Store.APPDATA, this.store)
+            store: Kinvey.Store.factory(Kinvey.Store.APPDATA, collection, this.store)
           }, bind(this, function(result) {
             // Wrap result in collection property.
             var response = {};
@@ -428,7 +428,7 @@
       this._classifyAndCommit(name, transactions, {
         db: new Database(name),
         objects: objects,
-        store: Kinvey.Store.factory(name, Kinvey.Store.APPDATA, this.store)
+        store: Kinvey.Store.factory(Kinvey.Store.APPDATA, name, this.store)
       }, complete);
     },
 

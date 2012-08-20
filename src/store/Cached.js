@@ -2,6 +2,9 @@
 
   // Define the Kinvey.Store.Cached class.
   Kinvey.Store.Cached = Base.extend({
+    // Store name.
+    name: Kinvey.Store.CACHED,
+
     // Store options.
     options: {
       policy: null,
@@ -25,7 +28,7 @@
 
       // This class bridges between the AppData store and local database.
       this.db = new Database(collection);
-      this.store = Kinvey.Store.factory(collection, Kinvey.Store.APPDATA);
+      this.store = Kinvey.Store.factory(Kinvey.Store.APPDATA, collection);
 
       // Options.
       this.options.policy = Kinvey.Store.Cached.NETWORK_FIRST;// Default policy.
