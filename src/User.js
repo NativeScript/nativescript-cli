@@ -112,11 +112,12 @@
       }, merge(options, {
         success: bind(this, function(response, info) {
           // Extract token.
-          this._login(response._kmd.authtoken);
+          var token = response._kmd.authtoken;
           delete response._kmd.authtoken;
 
           // Update attributes. This does not include the users password.
           this.attr = this._parseAttr(response);
+          this._login(token);
 
           options.success && options.success(this, info);
         })

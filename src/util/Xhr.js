@@ -109,7 +109,7 @@
 
       // Add header for compatibility with Android 2.2, 2.3.3 and 3.2.
       // @link http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
-      if('GET' === method && window && window.location) {
+      if('GET' === method && 'undefined' !== typeof window && window.location) {
         headers['X-Kinvey-Origin'] = window.location.protocol + '//' + window.location.host;
       }
 
