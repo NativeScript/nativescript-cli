@@ -147,7 +147,7 @@ describe('Kinvey.User', function() {
   });
 
   // Kinvey.User#destroy
-  describe('#destroy', function() {
+  describe('.destroy', function() {
     // Create mock.
     beforeEach(function(done) {
       this.user = Kinvey.User.init(callback(done));
@@ -160,7 +160,7 @@ describe('Kinvey.User', function() {
   });
 
   // Kinvey.User#load
-  describe('#load', function() {
+  describe('.load', function() {
     // Create mock.
     beforeEach(function(done) {
       this.user = Kinvey.User.init(callback(done));
@@ -183,7 +183,7 @@ describe('Kinvey.User', function() {
   });
 
   // Kinvey.User#login
-  describe('#login', function() {
+  describe('.login', function() {
     // Create the current user, to allow logging in using its credentials.
     beforeEach(function(done) {
       this.password = 'foo';
@@ -213,7 +213,7 @@ describe('Kinvey.User', function() {
   });
 
   // Kinvey.User#logout
-  describe('#logout', function() {
+  describe('.logout', function() {
     // Create mock.
     beforeEach(function(done) {
       this.password = 'foo';
@@ -244,7 +244,7 @@ describe('Kinvey.User', function() {
   });
 
   // Kinvey.User#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Create the current user.
     beforeEach(function(done) {
       this.user = Kinvey.User.init(callback(done));

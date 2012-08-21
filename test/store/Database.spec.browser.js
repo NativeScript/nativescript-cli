@@ -10,7 +10,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#aggregate
-  describe('#aggregate', function() {
+  describe('.aggregate', function() {
     // Create mock.
     before(function(done) {
       this.aggregation = { foo: true };
@@ -45,7 +45,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#query
-  describe('#query', function() {
+  describe('.query', function() {
     // Create mock.
     before(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
@@ -79,7 +79,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#query
-  describe('#query [relational]', function() {
+  describe('.query [relational]', function() {
     // Housekeeping: create mocks.
     before(function(done) {
       // Object with one resolvable and one fake reference.
@@ -239,7 +239,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#queryWithQuery
-  describe('#queryWithQuery', function() {
+  describe('.queryWithQuery', function() {
     // Create mock.
     before(function(done) {
       this.query = { foo: true };
@@ -274,7 +274,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#queryWithQuery
-  describe('#queryWithQuery [relational]', function() {
+  describe('.queryWithQuery [relational]', function() {
     // Housekeeping: create mocks.
     before(function(done) {
       this.object1 = {
@@ -351,7 +351,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#remove
-  describe('#remove', function() {
+  describe('.remove', function() {
     // Create mock.
     beforeEach(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
@@ -369,7 +369,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#removeWithQuery
-  describe('#removeWithQuery', function() {
+  describe('.removeWithQuery', function() {
     // Create mock.
     before(function(done) {
       this.query = { foo: true };
@@ -396,7 +396,7 @@ describe('Kinvey.Database', function() {
   });
 
   // Kinvey.Database#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Create mock.
     beforeEach(function() {
       this.object = { foo: 'bar' };

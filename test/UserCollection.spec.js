@@ -22,7 +22,7 @@ describe('Kinvey.UserCollection', function() {
   });
 
   // Kinvey.Collection#clear
-  describe('#clear', function() {
+  describe('.clear', function() {
     it('does invoke the error handler.', function(done) {
       new Kinvey.UserCollection().clear({
         success: function() {
@@ -36,7 +36,7 @@ describe('Kinvey.UserCollection', function() {
   });
 
   // Kinvey.UserCollection#count
-  describe('#count', function() {
+  describe('.count', function() {
     // Test suite.
     it('counts the number of entities.', function(done) {
       // Exclude inactive users.
@@ -51,7 +51,7 @@ describe('Kinvey.UserCollection', function() {
   });
 
   // Kinvey.Collection#fetch
-  describe('#fetch', function() {
+  describe('.fetch', function() {
     // Test suite.
     it('fetches all users.', function(done) {
       new Kinvey.UserCollection().fetch(callback(done, {

@@ -4,7 +4,7 @@
 describe('Kinvey', function() {
 
   // Kinvey#init
-  describe('#init', function() {
+  describe('.init', function() {
     it('throws an Error on empty appKey.', function() {
       (function() {
         Kinvey.init({ appSecret: 'foo' });
@@ -18,7 +18,7 @@ describe('Kinvey', function() {
   });
 
   // Kinvey#ping
-  describe('#ping', function() {
+  describe('.ping', function() {
     // Destroy the created anonymous user.
     afterEach(function(done) {
       Kinvey.masterSecret = null;// unset

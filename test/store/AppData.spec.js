@@ -10,7 +10,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#aggregate
-  describe('#aggregate', function() {
+  describe('.aggregate', function() {
     before(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
       this.store.save(this.object, callback(done));
@@ -40,7 +40,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#query
-  describe('#query', function() {
+  describe('.query', function() {
     before(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
       this.store.save(this.object, callback(done));
@@ -64,7 +64,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#queryWithQuery
-  describe('#queryWithQuery', function() {
+  describe('.queryWithQuery', function() {
     // Create mock.
     beforeEach(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
@@ -87,7 +87,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#remove
-  describe('#remove', function() {
+  describe('.remove', function() {
     beforeEach(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
       this.store.save(this.object, callback(done));
@@ -100,7 +100,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#removeWithQuery
-  describe('#removeWithQuery', function() {
+  describe('.removeWithQuery', function() {
     beforeEach(function(done) {
       this.store.save(this.object, callback(done));
     });
@@ -112,7 +112,7 @@ describe('Kinvey.Store.AppData', function() {
   });
 
   // Kinvey.Store.AppData#save
-  describe('#save', function() {
+  describe('.save', function() {
     beforeEach(function() {
       this.object = { foo: 'bar' };
     });

@@ -7,7 +7,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#constructor
-  describe('#constructor', function() {
+  describe('.constructor', function() {
     it('accepts a predefined metadata.', function() {
       var metadata = { _acl: { creator: 'foo' } };
       new Kinvey.Metadata(metadata).toJSON()._acl.should.eql(metadata._acl);
@@ -15,7 +15,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#addReader
-  describe('#addReader', function() {
+  describe('.addReader', function() {
     // Test suite.
     it('adds a reader.', function() {
       this.metadata.addReader('foo');
@@ -37,7 +37,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#addWriter
-  describe('#addWriter', function() {
+  describe('.addWriter', function() {
     // Test suite.
     it('adds a writer.', function() {
       this.metadata.addWriter('foo');
@@ -59,7 +59,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#hasWritePermissions
-  describe('#hasWritePermissions', function() {
+  describe('.hasWritePermissions', function() {
     before(function(done) {
       this.user = Kinvey.User.create({}, callback(done, {}));
     });
@@ -87,7 +87,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#isGloballyReadable
-  describe('#isGloballyReadable', function() {
+  describe('.isGloballyReadable', function() {
     // Test suite.
     it('returns true when the entity is globally readable.', function() {
       this.metadata.setGloballyReadable(true);
@@ -100,7 +100,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#isGloballyWritable
-  describe('#isGloballyWritable', function() {
+  describe('.isGloballyWritable', function() {
     // Test suite.
     it('returns true when the entity is globally writable.', function() {
       this.metadata.setGloballyWritable(true);
@@ -113,7 +113,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#isOwner
-  describe('#isOwner', function() {
+  describe('.isOwner', function() {
     before(function(done) {
       this.user = Kinvey.User.create({}, callback(done, {}));
     });
@@ -133,7 +133,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#lastModified
-  describe('#lastModified', function() {
+  describe('.lastModified', function() {
     it('returns the last modification date.', function() {
       var lmt = new Date().toISOString();
       this.acl = new Kinvey.Metadata({ _kmd: { lmt: lmt }});
@@ -142,7 +142,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#removeReader
-  describe('#removeReader', function() {
+  describe('.removeReader', function() {
     beforeEach(function() {
       this.metadata.addReader('foo');
       this.metadata.addReader('bar');
@@ -169,7 +169,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#removeWriter
-  describe('#removeWriter', function() {
+  describe('.removeWriter', function() {
     beforeEach(function() {
       this.metadata.addWriter('foo');
       this.metadata.addWriter('bar');
@@ -196,7 +196,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#setGloballyReadable
-  describe('#setGloballyReadable', function() {
+  describe('.setGloballyReadable', function() {
     // Test suite.
     it('marks the item as globally readable.', function() {
       this.metadata.setGloballyReadable(true);
@@ -209,7 +209,7 @@ describe('Kinvey.Metadata', function() {
   });
 
   // Kinvey.Metadata#setGloballyWritable
-  describe('#setGloballyWritable', function() {
+  describe('.setGloballyWritable', function() {
     // Test suite.
     it('marks the item as globally writable.', function() {
       this.metadata.setGloballyWritable(true);

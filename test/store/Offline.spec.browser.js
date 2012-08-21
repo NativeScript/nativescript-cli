@@ -14,7 +14,7 @@ describe('Kinvey.Store.Offline', function() {
   });
 
   // Kinvey.Store.Offline#remove
-  describe('#remove', function() {
+  describe('.remove', function() {
     // Create mock.
     before(function(done) {
       this.object = { _id: 'foo', bar: true };
@@ -36,7 +36,7 @@ describe('Kinvey.Store.Offline', function() {
   });
 
   // Kinvey.Store.Offline#removeWithQuery
-  describe('#removeWithQuery', function() {
+  describe('.removeWithQuery', function() {
     // Create mock.
     beforeEach(function(done) {
       var query = this.query = new Kinvey.Query().on('bar').equal('baz');
@@ -79,7 +79,7 @@ describe('Kinvey.Store.Offline', function() {
   });
 
   // Kinvey.Store.Offline#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Create mock.
     before(function() {
       this.object = { _id: 'foo', bar: 'baz' };
@@ -105,7 +105,7 @@ describe('Kinvey.Store.Offline', function() {
   });
 
   // Defensive tests: edit ACL offline.
-  describe('#acl', function() {
+  describe('.acl', function() {
     // Housekeeping: create mock.
     before(function(done) {
       this.store.save({ _id: 'foo', bar: 'baz' }, callback(done, {

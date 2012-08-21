@@ -18,7 +18,7 @@ describe('Kinvey.Collection', function() {
   });
 
   // Kinvey.Collection#constructor
-  describe('#constructor', function() {
+  describe('.constructor', function() {
     it('throws an Error on empty name.', function() {
       (function() {
         new Kinvey.Collection();
@@ -27,7 +27,7 @@ describe('Kinvey.Collection', function() {
   });
 
   // Kinvey.Collection#clear
-  describe('#clear', function() {
+  describe('.clear', function() {
     // Create mock.
     beforeEach(function(done) {
       new Kinvey.Entity({ foo: 'bar' }, COLLECTION_UNDER_TEST).save(callback(done));
@@ -46,7 +46,7 @@ describe('Kinvey.Collection', function() {
   });
 
   // Kinvey.Collection#count
-  describe('#count', function() {
+  describe('.count', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
       this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
@@ -68,7 +68,7 @@ describe('Kinvey.Collection', function() {
   });
 
   // Kinvey.Collection#fetch
-  describe('#fetch', function() {
+  describe('.fetch', function() {
     // Create mock.
     beforeEach(function(done) {// create mock
       this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
@@ -114,7 +114,7 @@ describe('Kinvey.Collection', function() {
   });
 
   // Kinvey.Collection#fetch
-  describe('#fetch [relational]', function() {
+  describe('.fetch [relational]', function() {
     // Housekeeping: create mock.
     beforeEach(function(done) {
       this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);

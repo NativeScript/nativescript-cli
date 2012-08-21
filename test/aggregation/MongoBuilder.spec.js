@@ -7,7 +7,7 @@ describe('Kinvey.Aggregation.MongoBuilder', function() {
   });
 
   // Kinvey.Aggregation.MongoBuilder#on
-  describe('#on', function() {
+  describe('.on', function() {
     it('adds a key.', function() {
       this.agg.on('foo');
       this.agg.toJSON().key.should.eql({ foo: true });
@@ -18,7 +18,7 @@ describe('Kinvey.Aggregation.MongoBuilder', function() {
   });
 
   // Kinvey.Aggregation.MongoBuilder#finalize
-  describe('#setFinalize', function() {
+  describe('.setFinalize', function() {
     it('sets a finalize function.', function() {
       var fn = function(out) {
         out.avg = out.total / out.count;
@@ -36,7 +36,7 @@ describe('Kinvey.Aggregation.MongoBuilder', function() {
   });
 
   // Kinvey.Aggregation.MongoBuilder#setInitial
-  describe('#setInitial', function() {
+  describe('.setInitial', function() {
     it('sets an initial counter object.', function() {
       this.agg.setInitial({ foo: 0 });
       this.agg.toJSON().initial.should.eql({ foo: 0 });
@@ -44,7 +44,7 @@ describe('Kinvey.Aggregation.MongoBuilder', function() {
   });
 
   // Kinvey.Aggregation.MongoBuilder#setQuery
-  describe('#setQuery', function() {
+  describe('.setQuery', function() {
     it('sets a query.', function() {
       var query = new Kinvey.Query();
       query.on('foo').equal('bar').lessThan(25);
@@ -55,7 +55,7 @@ describe('Kinvey.Aggregation.MongoBuilder', function() {
   });
 
   // Kinvey.Aggregation.MongoBuilder#setReduce
-  describe('#setReduce', function() {
+  describe('.setReduce', function() {
     it('sets the reduce function.', function() {
       var fn = function(doc, out) {
         out.count++;

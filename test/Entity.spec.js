@@ -18,7 +18,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#constructor
-  describe('#constructor', function() {
+  describe('.constructor', function() {
     it('throws an Error on empty collection.', function() {
       (function() {
         new Kinvey.Entity();
@@ -27,7 +27,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#destroy
-  describe('#destroy', function() {
+  describe('.destroy', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
@@ -41,7 +41,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#load
-  describe('#load', function() {
+  describe('.load', function() {
     // Create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
@@ -65,7 +65,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#load
-  describe('#load [relational]', function() {
+  describe('.load [relational]', function() {
     // Housekeeping: create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
@@ -107,7 +107,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Create mock.
     beforeEach(function() {
       this.entity = new Kinvey.Entity({ key: 'value' }, COLLECTION_UNDER_TEST);
@@ -157,7 +157,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#save
-  describe('#save [relational]', function() {
+  describe('.save [relational]', function() {
     // Housekeeping: create mock.
     beforeEach(function() {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
@@ -202,7 +202,7 @@ describe('Kinvey.Entity', function() {
   });
 
   // Kinvey.Entity#set
-  describe('#set [relational]', function() {
+  describe('.set [relational]', function() {
     // Housekeeping: create mock and reference mock.
     beforeEach(function() {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);

@@ -21,7 +21,7 @@ describe('Kinvey.Sync', function() {
   });
 
   // Kinvey.Sync#offline
-  describe('#offline', function() {
+  describe('.offline', function() {
     // Test suite.
     it('sets the application state to offline.', function() {
       Kinvey.Sync.offline();
@@ -42,7 +42,7 @@ describe('Kinvey.Sync', function() {
   });
 
   // Kinvey.Sync#online
-  describe('#online', function() {
+  describe('.online', function() {
     // Test suite.
     it('triggers synchronization when coming back online.', function(done) {
       // Define synchronization callbacks.
@@ -61,7 +61,7 @@ describe('Kinvey.Sync', function() {
   });
 
   // Kinvey.Sync#application
-  describe('#application', function() {
+  describe('.application', function() {
     // Housekeeping.
     beforeEach(function() {
       Kinvey.Sync.offline();
@@ -112,7 +112,7 @@ describe('Kinvey.Sync', function() {
   });
 
   // Kinvey.Sync#collection
-  describe('#collection', function() {
+  describe('.collection', function() {
     // Housekeeping.
     beforeEach(function() {
       this.object = { _id: 'foo', bar: 'baz' };
@@ -148,7 +148,7 @@ describe('Kinvey.Sync', function() {
   });
 
   // Kinvey.Sync#object
-  describe('#object', function() {
+  describe('.object', function() {
     // Housekeeping.
     beforeEach(function() {
       this.object = { _id: 'foo', bar: 'baz' };

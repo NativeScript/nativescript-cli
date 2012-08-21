@@ -11,7 +11,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#aggregate
-  describe('#aggregate', function() {
+  describe('.aggregate', function() {
     // Create mock.
     before(function(done) {
       // Aggregation will be a simple count.
@@ -104,7 +104,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#query
-  describe('#query', function() {
+  describe('.query', function() {
     // Create mock.
     before(function(done) {
       this.object = { _id: 'id', foo: 'bar' };
@@ -209,7 +209,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#query
-  describe('#query [relational]', function() {
+  describe('.query [relational]', function() {
     // Housekeeping: create mocks.
     beforeEach(function(done) {
       this.object1 = {
@@ -314,7 +314,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#queryWithQuery
-  describe('#queryWithQuery', function() {
+  describe('.queryWithQuery', function() {
     // Create mock.
     before(function(done) {
       var first = this.first = { _id: 'first', foo: true };
@@ -408,7 +408,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#queryWithQuery
-  describe('#queryWithQuery [relational]', function() {
+  describe('.queryWithQuery [relational]', function() {
     // Housekeeping: create mocks.
     beforeEach(function(done) {
       this.object1 = {
@@ -517,7 +517,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#remove
-  describe('#remove', function() {
+  describe('.remove', function() {
     // Create mock.
     beforeEach(function(done) {
       this.object = { _id: 'foo', bar: true };
@@ -551,7 +551,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#removeWithQuery
-  describe('#removeWithQuery', function() {
+  describe('.removeWithQuery', function() {
     // Create mock.
     beforeEach(function(done) {
       var query = this.query = new Kinvey.Query().on('bar').equal(true);
@@ -591,7 +591,7 @@ describe('Kinvey.Store.Cached', function() {
   });
 
   // Kinvey.Store.Cached#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Create mock.
     beforeEach(function() {
       this.object = { _id: 'foo', bar: true };

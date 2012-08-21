@@ -7,7 +7,7 @@ describe('Kinvey.Query.MongoBuilder', function() {
   });
 
   // Kinvey.Query.MongoBuilder#addCondition
-  describe('#addCondition', function() {
+  describe('.addCondition', function() {
     it('throws an error on unsupported condition.', function() {
       var query = this.query;
       (function() {
@@ -236,7 +236,7 @@ describe('Kinvey.Query.MongoBuilder', function() {
   });
 
   // Kinvey.Query.MongoBuilder#setLimit
-  describe('#setLimit', function() {
+  describe('.setLimit', function() {
     it('adds a limit.', function() {
       this.query.setLimit(25);
       this.query.toJSON().limit.should.eql(25);
@@ -249,7 +249,7 @@ describe('Kinvey.Query.MongoBuilder', function() {
   });
 
   // Kinvey.Query.MongoBuilder#setSkip
-  describe('#setSkip', function() {
+  describe('.setSkip', function() {
     it('adds a skip.', function() {
       this.query.setSkip(25);
       this.query.toJSON().skip.should.eql(25);
@@ -262,7 +262,7 @@ describe('Kinvey.Query.MongoBuilder', function() {
   });
 
   // Kinvey.Query.MongoBuilder#setSort
-  describe('#setSort', function() {
+  describe('.setSort', function() {
     it('sorts by field (ascending).', function() {
       this.query.setSort('foo', Kinvey.Query.ASC);
       this.query.toJSON().sort.should.eql({ foo: 1 });

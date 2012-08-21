@@ -10,7 +10,7 @@ describe('Kinvey.Store.Blob', function() {
   });
 
   // Kinvey.Store.Blob#query
-  describe('#query', function() {
+  describe('.query', function() {
     // Housekeeping: mock file.
     before(function(done) {
       this.file = { name: 'foo.txt', data: 'This is foo.txt' };
@@ -44,7 +44,7 @@ describe('Kinvey.Store.Blob', function() {
   });
 
   // Kinvey.Store.Blob#remove
-  describe('#remove', function() {
+  describe('.remove', function() {
     // Housekeeping: mock file.
     before(function(done) {
       this.file = { name: 'foo.txt', data: 'This is foo.txt' };
@@ -63,7 +63,7 @@ describe('Kinvey.Store.Blob', function() {
   });
     
   // Kinvey.Store.Blob#save
-  describe('#save', function() {
+  describe('.save', function() {
     // Housekeeping: mock file.
     before(function() {
       this.file = { name: 'foo.txt', data: 'This is foo.txt' };

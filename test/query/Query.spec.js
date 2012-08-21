@@ -45,7 +45,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#all
-  describe('#all', function() {
+  describe('.all', function() {
     it('performs a matching all query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').all([ 'HTML', 'CSS', 'JavaScript' ]);
@@ -75,7 +75,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.query#and
-  describe('#and', function() {
+  describe('.and', function() {
     it('performs a matching and query.', function(done) {
       var complex = this.complex;
       this.query.on('age').greaterThan(25);
@@ -101,7 +101,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#equal
-  describe('#equal', function() {
+  describe('.equal', function() {
     it('performs an equal query.', function(done) {
       var complex = this.complex;
       this.query.on('name').equal('John');
@@ -116,7 +116,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#exist
-  describe('#exist', function() {
+  describe('.exist', function() {
     it('performs a positive exist query.', function(done) {
       var complex = this.complex;
       this.query.on('name').exist(true);
@@ -142,7 +142,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#greaterThan
-  describe('#greaterThan', function() {
+  describe('.greaterThan', function() {
     it('performs a greater than query.', function(done) {
       var complex = this.complex;
       this.query.on('age').greaterThan(25);
@@ -157,7 +157,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#greaterThanEqual
-  describe('#greaterThanEqual', function() {
+  describe('.greaterThanEqual', function() {
     it('performs a greater than equal query.', function(done) {
       var complex = this.complex;
       this.query.on('age').greaterThanEqual(50);
@@ -172,7 +172,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#in_
-  describe('#in_', function() {
+  describe('.in_', function() {
     it('performs an in query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').in_([ 'HTML', 'CSS' ]);
@@ -193,7 +193,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#lessThan
-  describe('#lessThan', function() {
+  describe('.lessThan', function() {
     it('performs a less than query.', function(done) {
       var complex = this.complex;
       this.query.on('age').lessThan(100);
@@ -208,7 +208,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#lessThanEqual
-  describe('#lessThanEqual', function() {
+  describe('.lessThanEqual', function() {
     it('performs a less than equal query.', function(done) {
       var complex = this.complex;
       this.query.on('age').lessThanEqual(50);
@@ -223,7 +223,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#nearSphere
-  describe('#nearSphere', function() {
+  describe('.nearSphere', function() {
     it('performs a matching near sphere query.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').nearSphere([ -71, 42 ]);
@@ -264,7 +264,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#notEqual
-  describe('#notEqual', function() {
+  describe('.notEqual', function() {
     it('performs a not equal query.', function(done) {
       var complex = this.complex;
       this.query.on('surname').notEqual('Brown');
@@ -279,7 +279,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#notIn
-  describe('#notIn', function() {
+  describe('.notIn', function() {
     it('performs a not in query.', function(done) {
       var complex = this.complex;
       this.query.on('surname').notIn([ 'Brown', 'Lee' ]);
@@ -300,7 +300,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#on
-  describe('#on', function() {
+  describe('.on', function() {
     it('is required to be set before applying a condition.', function() {
       var query = this.query;
       (function() {
@@ -310,7 +310,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#or
-  describe('#or', function() {
+  describe('.or', function() {
     it('performs a matching or query.', function(done) {
       var complex = this.complex;
       this.query.on('age').lessThan(75);
@@ -336,7 +336,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#regex
-  describe('#regex', function() {
+  describe('.regex', function() {
     it('performs a simple regular expression.', function(done) {
       this.query.on('name').regex(/^J/);
       this.collection.fetch(callback(done, {
@@ -360,7 +360,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#setLimit
-  describe('#setLimit', function() {
+  describe('.setLimit', function() {
     it('sets a limit.', function(done) {
       this.query.setLimit(1);
       this.collection.fetch(callback(done, {
@@ -373,7 +373,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#setSkip
-  describe('#setSkip', function() {
+  describe('.setSkip', function() {
     it('sets a skip.', function(done) {
       this.query.setSkip(2);
       this.collection.fetch(callback(done, {
@@ -386,7 +386,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#sort
-  describe('#sort', function() {
+  describe('.sort', function() {
     it('sorts by field (ascending).', function(done) {
       var complex = this.complex;
       var simple = this.simple;
@@ -418,7 +418,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#size
-  describe('#size', function() {
+  describe('.size', function() {
     it('performs a size query.', function(done) {
       var complex = this.complex;
       this.query.on('hobbies').size(3);
@@ -433,7 +433,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#withinBox
-  describe('#withinBox', function() {
+  describe('.withinBox', function() {
     it('performs a matching within box query.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').withinBox([ [ -72, 41 ], [ -70, 43 ] ]);
@@ -463,7 +463,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#withinCenterSphere
-  describe('#withinCenterSphere', function() {
+  describe('.withinCenterSphere', function() {
     it('performs a matching within center sphere query.', function(done) {
       var complex = this.complex;
       this.query.on('_geoloc').withinCenterSphere([ -71, 42 ], 0.025);// ~100
@@ -495,7 +495,7 @@ describe('Kinvey.Query', function() {
   });
 
   // Kinvey.Query#withinPolygon
-  describe('#withinPolygon', function() {
+  describe('.withinPolygon', function() {
     it('performs a matching within polygon query.', function(done) {
       var complex = this.complex;
 
