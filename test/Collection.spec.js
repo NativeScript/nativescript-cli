@@ -113,4 +113,42 @@ describe('Kinvey.Collection', function() {
     });
   });
 
+  // Kinvey.Collection#fetch
+  describe('#fetch [relational]', function() {
+    // Housekeeping: create mock.
+    beforeEach(function(done) {
+      this.collection = new Kinvey.Collection(COLLECTION_UNDER_TEST);
+
+      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
+      this.entity.set('bar', {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'bar',
+        _obj: { _id: 'bar', bar: true }
+      });
+      this.entity.save(callback(done));
+    });
+    afterEach(function(done) {
+      this.collection.clear(callback(done));
+    });
+
+    // Test suite.
+    it('resolves a reference.', function(done) {
+      this.collection.fetch(callback(done, {
+        resolve: ['bar'],
+        success: function(list) {
+          list.should.have.length(2);// Entity + reference.
+          list.forEach(function(entity) {
+            if('bar' !== entity.getId()) {// Entity.
+              entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
+              entity.get('bar').get('bar').should.be['true'];
+            }
+          });
+
+          done();
+        }
+      }));
+    });
+  });
+
 });

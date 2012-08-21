@@ -298,7 +298,8 @@
      */
     _parse: function(name, value) {
       if(value instanceof Object) {
-        if('KinveyRef' === value._type) {// Case 1: value is a reference.
+        if(value instanceof Kinvey.Entity) { }// Skip.
+        else if('KinveyRef' === value._type) {// Case 1: value is a reference.
           // Create object from reference if embedded, otherwise skip.
           if(value._obj) {
             var Entity = this.map[name] || Kinvey.Entity;// Use mapping if defined.

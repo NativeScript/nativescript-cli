@@ -64,6 +64,48 @@ describe('Kinvey.Entity', function() {
     });
   });
 
+  // Kinvey.Entity#load
+  describe('#load [relational]', function() {
+    // Housekeeping: create mock.
+    beforeEach(function(done) {
+      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
+      this.entity.set('bar', {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'bar',
+        _obj: { _id: 'bar', bar: true }
+      });
+      this.entity.save(callback(done));
+    });
+    afterEach(function(done) {
+      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done));
+    });
+
+    // Test suite.
+    it('leaves non-resolved references as is.', function(done) {
+      this.entity.load(this.entity.getId(), callback(done, {
+        success: function(entity) {
+          entity.get('bar').should.eql({
+            _type: 'KinveyRef',
+            _collection: COLLECTION_UNDER_TEST,
+            _id: 'bar'
+          });
+          done();
+        }
+      }));
+    });
+    it('resolves a reference.', function(done) {
+      this.entity.load(this.entity.getId(), callback(done, {
+        resolve: ['bar'],
+        success: function(entity) {
+          entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
+          entity.get('bar').get('bar').should.be['true'];
+          done();
+        }
+      }));
+    });
+  });
+
   // Kinvey.Entity#save
   describe('#save', function() {
     // Create mock.
@@ -111,6 +153,103 @@ describe('Kinvey.Entity', function() {
           }));
         }
       }));
+    });
+  });
+
+  // Kinvey.Entity#save
+  describe('#save [relational]', function() {
+    // Housekeeping: create mock.
+    beforeEach(function() {
+      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
+      this.entity.set('bar', {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'bar',
+        _obj: { _id: 'bar', bar: true }
+      });
+    });
+    afterEach(function(done) {
+      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done));
+    });
+
+    // Test suite.
+    it('saves a relational structure.', function(done) {
+      var entity = this.entity;
+      entity.save(callback(done, {
+        success: function(response) {
+          // Structure should be identical to pre-save.
+          response.should.equal(entity);
+
+          // Reference should have been saved too.
+          (null !== entity.get('bar').getMetadata().lastModified).should.be['true'];
+
+          done();
+        }
+      }));
+    });
+  });
+
+  // Kinvey.Entity#set
+  describe('#set [relational]', function() {
+    // Housekeeping: create mock and reference mock.
+    beforeEach(function() {
+      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
+      this.ref = {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'bar',
+        _obj: { _id: 'bar', bar: true }
+      };
+    });
+
+    // Test suite.
+    it('parses a relational property.', function() {
+      this.entity.set('bar', this.ref);
+
+      // Test relation.
+      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar').get('bar').should.be['true'];
+    });
+    it('parses a nested relational property.', function() {
+      this.entity.set('bar', { baz: this.ref });
+
+      // Test relation.
+      this.entity.get('bar').baz.should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar').baz.get('bar').should.be['true'];
+    });
+    it('parses a relational array member.', function() {
+      this.entity.set('bar', [ this.ref ]);
+
+      // Test relation.
+      this.entity.get('bar')[0].should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar')[0].get('bar').should.be['true'];
+    });
+
+    it('parses a mapped relational property.', function() {
+      // Create and map class definition.
+      var MyEntity = Kinvey.Entity.extend({});
+      this.entity.map.bar = MyEntity;
+      this.entity.set('bar', this.ref);
+
+      // Test relation.
+      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar').should.be.an['instanceof'](MyEntity);
+      this.entity.get('bar').get('bar').should.be['true'];
+    });
+    it('parses nested relational properties.', function() {
+      // Append reference to itself.
+      this.ref._obj.bar = {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'baz',
+        _obj: { _id: 'baz', baz: true }
+      };
+      this.entity.set('bar', this.ref);
+
+      // Test relation.
+      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar').get('bar').should.be.an['instanceof'](Kinvey.Entity);
+      this.entity.get('bar').get('bar').get('baz').should.be['true'];
     });
   });
 
