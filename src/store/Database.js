@@ -70,16 +70,22 @@
         var req = txn.objectStore(this.collection).get(id);
 
         // Handle transaction status.
-        txn.oncomplete = function() {
+        txn.oncomplete = bind(this, function() {
           // If result is null, return a not found error.
           var result = req.result;
           if(result) {
+            // Resolve references, if desired.
+            if(options.resolve && options.resolve.length) {
+              return this._resolve(result, options.resolve, function() {
+                options.success(result, { cached: true });
+              });
+            }
             options.success(result, { cached: true });
           }
           else {
             options.error(Kinvey.Error.ENTITY_NOT_FOUND, 'This entity could not be found.');
           }
-        };
+        });
         txn.onabort = txn.onerror = function() {
           options.error(Kinvey.Error.DATABASE_ERROR, txn.error || 'Failed to execute transaction.');
         };
@@ -121,14 +127,26 @@
         });
 
         // Handle transaction status.
-        txn.oncomplete = function() {
+        txn.oncomplete = bind(this, function() {
           if(req.result) {
-            options.success(response, { cached: true });
+            // Resolve references, if desired.
+            if(options.resolve && options.resolve.length) {
+              // Solve references for each object in response.
+              var pending = response.length;
+              response.forEach(bind(this, function(object) {
+                this._resolve(object, options.resolve, function() {
+                  !--pending && options.success(response, { cached: true });
+                });
+              }));
+            }
+            else {
+              options.success(response, { cached: true });
+            }
           }
           else {
             options.error(Kinvey.Error.DATABASE_ERROR, 'Query is not in database.');
           }
-        };
+        });
         txn.onabort = txn.onerror = function() {
           options.error(Kinvey.Error.DATABASE_ERROR, txn.error || 'Failed to execute transaction.');
         };
@@ -327,8 +345,8 @@
      * @param {Object} [options]
      */
     put: function(type, key, data, options) {
-      options || (options = {});
-      options.silent = true;// Do not record transactions.
+      // Do not record transactions.
+      options = merge(options, { silent: true });
 
       // Take advantage of store methods.
       switch(type) {
@@ -336,7 +354,7 @@
           this._putAggregation(key, data, options);
           break;
         case 'query':// query, remove and save.
-          null !== data ? this.save(data, options) : this.remove(key, options);
+          null !== data ? this._putSave(data, options) : this.remove(key, options);
           break;
         case 'queryWithQuery':// queryWithQuery and removeWithQuery.
           null !== data ? this._putQueryWithQuery(key, data, options) : this.removeWithQuery(key, options);
@@ -388,32 +406,60 @@
     _putQueryWithQuery: function(query, response, options) {
       options = this._options(options);
 
-      // Open transaction.
-      this._transaction([this.collection, Database.QUERY_STORE], Database.READ_WRITE, bind(this, function(txn) {
-        // Open store.
-        var store = txn.objectStore(this.collection);
+      // Define handler to save the query and its result.
+      var result = [];// Result is a list of object ids.
+      var progress = bind(this, function() {
+        // Open transaction.
+        this._transaction(Database.QUERY_STORE, Database.READ_WRITE, bind(this, function(txn) {
+          // Save query and its results.
+          txn.objectStore(Database.QUERY_STORE).put({
+            query: this._getKey(query),
+            response: result
+          });
+  
+          // Handle transaction status.
+          txn.oncomplete = function() {
+            options.success(response);
+          };
+          txn.onabort = txn.onerror = function() {
+            options.error(Kinvey.Error.DATABASE_ERROR, txn.error || 'Failed to execute transaction.');
+          };
+        }), options.error);
+      });
 
-        // Save objects.
-        var objects = [];
-        response.forEach(function(object) {
-          store.put(object);
-          objects.push(object._id);
-        });
+      // Save objects (in parallel).
+      var pending = response.length;
+      response.forEach(bind(this, function(object) {
+        this.put('query', null, object, merge(options, {
+          success: function(response) {
+            result.push(response._id);
+            !--pending && progress();
+          },
+          error: function() {
+            !--pending && progress();
+          }
+        }));
+      }));
+    },
 
-        // Save query.
-        txn.objectStore(Database.QUERY_STORE).put({
-          query: this._getKey(query),
-          response: objects
-        });
+    /**
+     * Writes object to database.
+     * 
+     * @private
+     * @param {Object} object Object.
+     * @param {Object} options Options.
+     */
+    _putSave: function(object, options) {
+      // Extract references from object, if specified.
+      if(options.resolve && options.resolve.length) {
+        this._extract(object, options.resolve, bind(this, function() {
+          this.save(object, merge(options, { silent: true }));
+        }));
+        return;
+      }
 
-        // Handle transaction status.
-        txn.oncomplete = function() {
-          options.success(response);
-        };
-        txn.onabort = txn.onerror = function() {
-          options.error(Kinvey.Error.DATABASE_ERROR, txn.error || 'Failed to execute transaction.');
-        };
-      }), options.error);
+      // No references, save at once. Always silent.
+      this.save(object, merge(options, { silent: true }));
     },
 
     // Transaction management.
@@ -530,6 +576,169 @@
         });
         store.put(result);
       });
+    },
+
+    // Reference resolve methods.
+
+    /**
+     * Extract and saves references from object attributes.
+     * 
+     * @private
+     * @param {Object} object Attributes.
+     * @param {Array} references List of references.
+     * @param {function()} complete Complete callback.
+     */
+    _extract: function(object, references, complete) {
+      // Quick way out; return here when nothing has to be exracted.
+      if(0 === references.length) {
+        return complete();
+      }
+
+      // Extract top-level from references.
+      references = this._flatten(references);
+
+      // Resolve each top-level reference.
+      var parts = Object.keys(references);
+      var pending = parts.length;
+      parts.forEach(bind(this, function(attr) {
+        var prop = object[attr];
+
+        // This should be an object.
+        if(prop instanceof Object) {
+          if('KinveyRef' === prop._type) {// Case 1: prop is a reference.
+            // Copy by value to avoid modifying the original response.
+            prop = merge(prop);
+
+            // Save reference, if resolved successfully.
+            if(null != prop._obj) {
+              // Save reference, and flatten object.
+              var db = this.collection === prop._collection ? this : new Database(prop._collection);
+              db.put('query', null, prop._obj, {
+                resolve: references[attr],
+                success: function() {// Flatten reference.
+                  delete prop._obj;
+                  !--pending && complete();
+                },
+                error: function() {// Flatten reference.
+                  delete prop._obj;
+                  !--pending && complete();
+                }
+              });
+            }
+            else {// Reference was invalid, unset and continue.
+              delete prop._obj;
+              !--pending && complete();
+            }
+          }
+          else if(prop instanceof Array) {// Case 2: prop is an array
+            var mPending = prop.length;
+            prop.forEach(bind(this, function(member, index) {
+              // As a trick, define member as object value so we can use
+              // the current function to extract the reference.
+              this._extract({ _: member }, references[attr].concat('_'), function() {
+                !--mPending && !--pending && complete();
+              });
+            }));
+          }
+          else {// Case 3: prop is an object.
+            this._extract(prop, references[attr], function() {
+              !--pending && complete();
+            });
+          }
+          return;
+        }
+
+        // Case 4: prop is scalar or undefined.
+        !--pending && complete();
+      }));
+    },
+
+    /**
+     * Formats references in two levels.
+     * 
+     * @private
+     * @example _flatten(['foo', 'foo.bar', 'foo.baz']) => { foo: ['bar', 'baz'] }
+     * @param {Array} references References.
+     * @returns {Object} Flattened references.
+     */
+    _flatten: function(references) {
+      var result = {};// Copy by value.
+      references.forEach(function(prop) {
+        var segments = prop.split('.');
+        var top = segments.shift();
+
+        // Create and append child (if any) to parent.
+        result[top] || (result[top] = []);
+        segments[0] && result[top].push(segments.join('.'));
+      });
+      return result;
+    },
+
+    /**
+     * Resolves object references.
+     * 
+     * @private
+     * @param {Object} object
+     * @param {Array} references List of references.
+     * @param {function()} complete Complete callback.
+     */
+    _resolve: function(object, references, complete) {
+      // Quick way out; return here when nothing has to be resolved.
+      if(0 === references.length) {
+        return complete();
+      }
+
+      // Extract top-level from references.
+      references = this._flatten(references);
+
+      // Resolve each top-level reference.
+      var parts = Object.keys(references);
+      var pending = parts.length;
+      parts.forEach(bind(this, function(attr) {
+        var prop = object[attr];
+
+        // This should be an object.
+        if(prop instanceof Object) {
+          if('KinveyRef' === prop._type) {// Case 1: prop is a reference.
+            // Query reference, and pass second-level references.
+            var db = this.collection === prop._collection ? this : new Database(prop._collection);
+            db.query(prop._id, {
+              resolve: references[attr],
+              success: function(result) {// Extend reference with actual object.
+                prop._obj = result;
+                !--pending && complete();
+              },
+              error: function() {// Extend reference with null object.
+                prop._obj = null;
+                !--pending && complete();
+              }
+            });
+          }
+          else if(prop instanceof Array) {// Case 2: prop is an array.
+            var mPending = prop.length;
+            prop.forEach(bind(this, function(member, index) {
+              // As a trick, define member as object value so we can use
+              // the current function to resolve the reference.
+              var el = { x: member };
+              this._resolve(el, references[attr].concat('x'), function() {
+                // Extract member from object, and extend reference with actual
+                // object.
+                prop[index] = el.x;
+                !--mPending && !--pending && complete();
+              });
+            }));
+          }
+          else {// Case 3: prop is an object.
+            this._resolve(prop, references[attr], function() {
+              !--pending && complete();
+            });
+          }
+          return;
+        }
+
+        // Case 4: prop is scalar or undefined.
+        !--pending && complete();
+      }));
     },
 
     // IndexedDB convenience methods.

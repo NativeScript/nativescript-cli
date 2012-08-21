@@ -198,7 +198,7 @@
         // step.
         if(info.network && this._shouldUpdateCache(options.policy)) {
           var fn = function() { options.complete(); };
-          this.db.put(operation, arg, response, { success: fn, error: fn });
+          this.db.put(operation, arg, response, merge(options, { success: fn, error: fn }));
         }
 
         // Trigger complete callback on final pass.

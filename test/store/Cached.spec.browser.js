@@ -208,6 +208,111 @@ describe('Kinvey.Store.Cached', function() {
     });
   });
 
+  // Kinvey.Store.Cached#query
+  describe('#query [relational]', function() {
+    // Housekeeping: create mocks.
+    beforeEach(function(done) {
+      this.object1 = {
+        _id: 'foo',
+        fake: {
+          _type: 'KinveyRef',
+          _collection: COLLECTION_UNDER_TEST,
+          _id: 'fake'
+        },
+        ref: {
+          _type: 'KinveyRef',
+          _collection: COLLECTION_UNDER_TEST,
+          _id: 'bar'
+        }
+      };
+      var object2 = this.object2 = {
+        _id: 'bar',
+        test: true
+      };
+
+      // Save both.
+      var store = this.store;
+      store.save(this.object1, callback(done, {
+        success: function() { },
+        complete: function() {
+          store.save(object2, callback(done, { success: function() { } } ));
+        }
+      }));
+    });
+    afterEach(function(done) {
+      // Remove both.
+      var object2 = this.object2;
+      var store = this.store;
+      store.remove(this.object1, callback(done, {
+        success: function() { },
+        complete: function() {
+          store.remove(object2, callback(done, { success: function() { } } ));
+        }
+      }));
+    });
+
+    // Test suite.
+    it('does not resolve any reference.', function(done) {
+      var expected = null;
+      this.store.query(this.object1._id, callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        success: function(response, info) {
+          response.fake.should.not.have.property('_obj');
+          response.ref.should.not.have.property('_obj');
+          
+          // Compare cached and network.
+          info.cached && (expected = response);
+          info.network && response.should.eql(expected);
+        }
+      }));
+    });
+    it('resolves a non-existant reference.', function(done) {
+      var expected = null;
+      this.store.query(this.object1._id, callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['fake'],
+        success: function(response, info) {
+          (null === response.fake._obj).should.be['true'];
+          response.ref.should.not.have.property('_obj');
+
+          // Compare cached and network.
+          info.cached && (expected = response);
+          info.network && response.should.eql(expected);
+        }
+      }));
+    });
+    it('resolves a property.', function(done) {
+      var expected = null;
+      this.store.query(this.object1._id, callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['ref'],
+        success: function(response, info) {
+          response.fake.should.not.have.property('_obj');
+          (null != response.ref._obj).should.be['true'];
+
+          // Compare cached and network.
+          info.cached && (expected = response);
+          info.network && response.should.eql(expected);
+        }
+      }));
+    });
+    it('resolves multiple references at once.', function(done) {
+      var expected = null;
+      this.store.query(this.object1._id, callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['fake', 'ref'],
+        success: function(response, info) {
+          (null === response.fake._obj).should.be['true'];
+          (null != response.ref._obj).should.be['true'];
+
+          // Compare cached and network.
+          info.cached && (expected = response);
+          info.network && response.should.eql(expected);
+        }
+      }));
+    });
+  });
+
   // Kinvey.Store.Cached#queryWithQuery
   describe('#queryWithQuery', function() {
     // Create mock.
@@ -297,6 +402,115 @@ describe('Kinvey.Store.Cached', function() {
           else {
             info.network.should.be['true'];
           }
+        }
+      }));
+    });
+  });
+
+  // Kinvey.Store.Cached#queryWithQuery
+  describe('#queryWithQuery [relational]', function() {
+    // Housekeeping: create mocks.
+    beforeEach(function(done) {
+      this.object1 = {
+        _id: 'foo',
+        fake: {
+          _type: 'KinveyRef',
+          _collection: COLLECTION_UNDER_TEST,
+          _id: 'fake'
+        },
+        ref: {
+          ref: [{
+          _type: 'KinveyRef',
+          _collection: COLLECTION_UNDER_TEST,
+          _id: 'bar'
+          }]
+        }
+      };
+      var object2 = this.object2 = {
+        _id: 'bar',
+        test: true
+      };
+      var query = this.query = new Kinvey.Query();
+
+      // Save both, and make sure query is in cached.
+      var store = this.store;
+      store.save(this.object1, callback(done, {
+        success: function() { },
+        complete: function() {
+          store.save(object2, callback(done, {
+            success: function() { },
+            complete: function() {
+              store.queryWithQuery(query.toJSON(), callback(done, { success: function() { } }));
+            }
+          }));
+        }
+      }));
+    });
+    afterEach(function(done) {
+      this.store.removeWithQuery(this.query.toJSON(), callback(done, { success: function() { } }));
+    });
+
+    // Test suite.
+    it('does not resolve any reference.', function(done) {
+      var expected = null;
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        success: function(list, info) {
+          list.should.have.length(2);
+          list[0].fake.should.not.have.property('_obj');
+          list[0].ref.ref[0].should.not.have.property('_obj');
+          
+          // Compare cached and network.
+          info.cached && (expected = list[0]);
+          info.network && list[0].should.eql(expected);
+        }
+      }));
+    });
+    it('resolves a non-existant reference.', function(done) {
+      var expected = null;
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['fake'],
+        success: function(list, info) {
+          list.should.have.length(2);
+          (null === list[0].fake._obj).should.be['true'];
+          list[0].ref.ref[0].should.not.have.property('_obj');
+          
+          // Compare cached and network.
+          info.cached && (expected = list[0]);
+          info.network && list[0].should.eql(expected);
+        }
+      }));
+    });
+    it('resolves a property.', function(done) {
+      var expected = null;
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['ref.ref'],
+        success: function(list, info) {
+          list.should.have.length(2);
+          list[0].fake.should.not.have.property('_obj');
+          (null != list[0].ref.ref[0]._obj).should.be['true'];
+          
+          // Compare cached and network.
+          info.cached && (expected = list[0]);
+          info.network && list[0].should.eql(expected);
+        }
+      }));
+    });
+    it('resolves multiple references at once.', function(done) {
+      var expected = null;
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.BOTH,
+        resolve: ['fake', 'ref.ref'],
+        success: function(list, info) {
+          list.should.have.length(2);
+          (null === list[0].fake._obj).should.be['true'];
+          (null != list[0].ref.ref[0]._obj).should.be['true'];
+
+          // Compare cached and network.
+          info.cached && (expected = list[0]);
+          info.network && list[0].should.eql(expected);
         }
       }));
     });

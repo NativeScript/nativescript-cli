@@ -187,6 +187,18 @@ describe('Kinvey.Entity', function() {
         }
       }));
     });
+    it('fails on saving a circular reference.', function(done) {
+      this.entity.set('foo', this.entity);
+      this.entity.save(callback(done, {
+        success: function() {
+          done(new Error('Success callback was invoked'));
+        },
+        error: function(error) {
+          error.error.should.equal(Kinvey.Error.OPERATION_DENIED);
+          done();
+        }
+      }));
+    });
   });
 
   // Kinvey.Entity#set
