@@ -331,10 +331,11 @@
      * @return {Object} Parsed attributes.
      */
     _parseAttr: function(attr, prefix) {
+      var result = merge(attr);// Copy by value.
       Object.keys(attr).forEach(bind(this, function(name) {
-        attr[name] = this._parse((prefix ? prefix + '.' : '') + name, attr[name]);
+        result[name] = this._parse((prefix ? prefix + '.' : '') + name, attr[name]);
       }));
-      return attr;
+      return result;
     },
     
     /**

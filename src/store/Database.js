@@ -606,9 +606,6 @@
         // This should be an object.
         if(prop instanceof Object) {
           if('KinveyRef' === prop._type) {// Case 1: prop is a reference.
-            // Copy by value to avoid modifying the original response.
-            prop = merge(prop);
-
             // Save reference, if resolved successfully.
             if(null != prop._obj) {
               // Save reference, and flatten object.
