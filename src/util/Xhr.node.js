@@ -95,6 +95,7 @@
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };
       body && (headers['Content-Type'] = 'application/json; charset=utf-8');
+      Kinvey.masterSecret && (headers['X-Kinvey-Master-Create-User'] = true);
 
       // Execute request.
       this._xhr(method, url, body, merge(options, {

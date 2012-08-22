@@ -137,6 +137,7 @@
       // Make sure we only logout the current user.
       if(!this.isLoggedIn) {
         options.success && options.success({});
+        return;
       }
       this.store.logout({}, merge(options, {
         success: bind(this, function(_, info) {
@@ -189,10 +190,13 @@
      * @param {string} token Token.
      */
     _login: function(token) {
-      Kinvey.setCurrentUser(this);
-      this.isLoggedIn = true;
-      this.token = token;
-      this._saveToDisk();
+      // The master secret does not need a current user.
+      if(null == Kinvey.masterSecret) {
+        Kinvey.setCurrentUser(this);
+        this.isLoggedIn = true;
+        this.token = token;
+        this._saveToDisk();
+      }
     },
 
     /**
@@ -201,10 +205,13 @@
      * @private
      */
     _logout: function() {
-      Kinvey.setCurrentUser(null);
-      this.isLoggedIn = false;
-      this.token = null;
-      this._deleteFromDisk();
+      // The master secret does not need a current user.
+      if(null == Kinvey.masterSecret) {
+        Kinvey.setCurrentUser(null);
+        this.isLoggedIn = false;
+        this.token = null;
+        this._deleteFromDisk();
+      }
     },
 
     /**
