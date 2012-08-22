@@ -798,27 +798,7 @@
     _mutate: function(upgrade, success, error) {
       this._open(null, null, bind(this, function(database) {
         var version = parseInt(database.version || 0, 10) + 1;
-
-        // Earlier versions of the spec defines setVersion for mutation. Later,
-        // this was changed to the onupgradeneeded event. We support both.
-        if(database.setVersion) {// old.
-          var req = database.setVersion(version);
-          req.onsuccess = function() {
-            upgrade(database);
-
-            // @link https://groups.google.com/a/chromium.org/forum/?fromgroups#!topic/chromium-html5/VlWI87JFKMk
-            var txn = req.result;
-            txn.oncomplete = function() {
-              success(database);
-            };
-          };
-          req.onblocked = req.onerror = function() {
-            error(Kinvey.Error.DATABASE_ERROR, req.error || 'Mutation error.');
-          };
-        }
-        else {// According to spec: reopen database with newer version.
-          this._open(version, upgrade, success, error);
-        }
+        this._open(version, upgrade, success, error);
       }), error);
     },
 
@@ -854,8 +834,28 @@
       }
       Database.isIdle = false;
 
-      // If no version is specified, use the latest version.
+      // If we only want to change the version, check for outdated setVersion.
       var req;
+      if(Database.instance && Database.instance.setVersion) {// old.
+        req = Database.instance.setVersion(version);
+        req.onsuccess = function() {
+          upgrade(Database.instance);
+
+          // @link https://groups.google.com/a/chromium.org/forum/?fromgroups#!topic/chromium-html5/VlWI87JFKMk
+          var txn = req.result;
+          txn.oncomplete = function() {
+            // We're done, reset flag.
+            Database.isIdle = true;
+            success(Database.instance);
+          };
+        };
+        req.onblocked = req.onerror = function() {
+          error(Kinvey.Error.DATABASE_ERROR, req.error || 'Mutation error.');
+        };
+        return;
+      }
+
+      // If no version is specified, use the latest version.
       if(null == version) {
         req = indexedDB.open(this.name);
       }
