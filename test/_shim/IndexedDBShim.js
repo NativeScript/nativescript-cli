@@ -6,7 +6,7 @@
 var idbModules = {};
 
 if('undefined' === typeof DEBUG) {
-  DEBUG = true;
+  var DEBUG = true;
 }
 
 if(DEBUG) {

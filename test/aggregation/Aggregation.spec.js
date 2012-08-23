@@ -43,28 +43,28 @@ describe('Kinvey.Aggregation', function() {
     }));
   });
 
-  // Try an average.
-  describe('average', function() {
-    it('calculates an average.', function(done) {
-      this.agg.setInitial({
-        count: 0,
-        total: 0
-      }).setReduce(function(doc, out) {
-        out.count++;
-        out.total += doc.age;
-      }).setFinalize(function(doc, out) {
-        out.average = out.total / out.count;
-        return out;
-      });
-      this.collection.aggregate(this.agg, callback(done, {
-        success: function(response) {
-          response.should.have.length(1);
-          response[0].should.eql({ count: 2, total: 80, average: 40 });
-          done();
-        }
-      }));
-    });
-  });
+//  // Try an average.
+//  describe('average', function() {
+//    it('calculates an average.', function(done) {
+//      this.agg.setInitial({
+//        count: 0,
+//        total: 0
+//      }).setReduce(function(doc, out) {
+//        out.count++;
+//        out.total += doc.age;
+//      }).setFinalize(function(doc, out) {
+//        out.average = out.total / out.count;
+//        return out;
+//      });
+//      this.collection.aggregate(this.agg, callback(done, {
+//        success: function(response) {
+//          response.should.have.length(1);
+//          response[0].should.eql({ count: 2, total: 80, average: 40 });
+//          done();
+//        }
+//      }));
+//    });
+//  });
 
   // Try a count.
   describe('count', function() {

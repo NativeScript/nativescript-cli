@@ -15,14 +15,14 @@
    * 
    * @constant
    */
-  Kinvey.HOST = '<%= pkg.hostname %>';
+  Kinvey.HOST = '@@host';
 
   /**
    * SDK version.
    * 
    * @constant
    */
-  Kinvey.SDK_VERSION = '<%= pkg.version %>';
+  Kinvey.SDK_VERSION = '@@version';
 
   /**
    * Returns current user, or null if not set.

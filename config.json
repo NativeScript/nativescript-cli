@@ -1,0 +1,8 @@
+{
+  "development": {
+    "host": "https://v3yk1n.kinvey.com"
+  },
+  "production": {
+    "host": "https://baas.kinvey.com"
+  }
+}

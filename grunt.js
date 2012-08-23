@@ -3,25 +3,29 @@
  * 
  */
 module.exports = function(grunt) {
-
   // Project configuration.
   grunt.initConfig({
-    // Project meta information.
-    dir: {// directories
+    // Configuration.
+    config: '<json:config.json>',
+    pkg: '<json:package.json>',
+
+    // Build configuration.
+    dir: {// Directories.
       apidoc: 'docs/api',
       dist: 'dist',
       src: 'src',
       test: 'test'
     },
-    pkg: '<json:package.json>',
     sdk: {
-      html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename
-      node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename
-      phonegap: '<%= pkg.name %>-phonegap-<%= pkg.version %>',// phonegap dist filename
-      titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>'// titanium dist filename
+      html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename.
+      node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename.
+      phonegap: '<%= pkg.name %>-phonegap-<%= pkg.version %>',// phonegap dist filename.
+      titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>'// titanium dist filename.
     },
+
+    // Banner.
     meta: {
-      banner: [// sdk will be prefixed with this banner
+      banner: [
         '/*!',
         ' * Copyright (c) <%= grunt.template.today("yyyy") %> Kinvey, Inc. All rights reserved.',
         ' *',
@@ -45,52 +49,59 @@ module.exports = function(grunt) {
       ].join("\n")
     },
 
-    // Specify lint task.
+    // Lint task.
     lint: {
-      beforeconcat: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js', '<%= dir.test %>/**/*.spec.js', '<%= dir.test %>/**/*.spec.browser.js'],
-      afterconcat: [ '<%= dir.dist %>/<%= sdk %>.js' ]
+      dist: '<%= dir.dist %>/**/*[!.min].js',
+      grunt: ['grunt.js', 'lib/**/*.js'],
+      src: '<%= dir.src %>/**/*[!.min].js',
+      test: '<%= dir.test %>/**/*[!.min].js'
     },
-    jshint: {//http://www.jshint.com/options/
+    // @link http://www.jshint.com/options/
+    jshint: {
       options: {
-        curly: true,//require { }
-        eqeqeq: true,//=== instead of ==
-        immed: true,//wrap IIFE in parentheses
-        latedef: true,//variable declared before usage
-        newcap: true,//capitalize class names
-        noarg: true,//forbids arguments.calle(e/r)
-        undef: true,//checks for undefined variables
-
-        eqnull: true,//== allowed for undefined/null checking
-        expr: true,//allow foo && foo()
-
-        browser: true,//browser environment
-        node: true//node environment
+        curly: true,
+        eqeqeq: true,
+        immed: true,
+        newcap: true,
+        noarg: true,
+        undef: true,
+        eqnull: true,
+        expr: true,
+        browser: true,
+        node: true
       },
-      globals: {
-        // Library globals.
-        Kinvey: true,
-        Base: true,
-        bind: true,
-        Database: true,
-        merge: true,
-        Storage: true,
-        Sync: true,
-        Xhr: true,
 
-        // Titanium.
-        Titanium: true,
+      // Task globals.
+      dist: {
+        globals: { Titanium: true }
+      },
+      src: {
+        globals: {
+          Base: true,
+          bind: true,
+          Database: true,
+          Kinvey: true,
+          merge: true,
+          Storage: true,
+          Titanium: true,
+          Xhr: true
+        }
+      },
+      test: {
+        globals: {
+          callback: true,
+          COLLECTION_UNDER_TEST: true,
+          Kinvey: true,
+          MASTER_SECRET: true,
 
-        // Test globals.
-        after: true,
-        afterEach: true,
-        before: true,
-        beforeEach: true,
-        callback: true,
-        describe: true,
-        it: true,
-        MASTER_SECRET: true,
-        mocha: true,
-        COLLECTION_UNDER_TEST: true
+          after: true,
+          afterEach: true,
+          before: true,
+          beforeEach: true,
+          describe: true,
+          it: true,
+          mocha: true
+        }
       }
     },
 
@@ -216,118 +227,48 @@ module.exports = function(grunt) {
       }
     },
 
-    // Specify replace task.
+    // Strip task.
+    strip: {
+      concat: ['<%= dir.dist %>/**/*[!.min].js'],
+      min: ['<%= dir.dist %>/**/*.min.js']
+    },
+
+    // Replace task.
     replace: {
-      html5FirstPass: {//remove IIFE from source files
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.js',
-        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
-      },
-      html5SecondPass: {//remove gaps in newlines caused by firstPass
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.js',
-        find: /\n{3,}/g,
-        replace: '\n\n'
-      },
-      html5ThirdPass: {//remove newline below <banner>
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.js',
-        find: /\n(\(function\(undefined\) \{)/g,
-        replace: '$1'
-      },
-      html5Arg: {
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.min.js',
-        find: /^\(function\(a\)/m,
-        replace: '(function(undefined)'
-      },
-
-      nodeFirstPass: {//remove IIFE from source files
-        src: '<%= dir.dist %>/<%= sdk.node %>.js',
-        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
-      },
-      nodeSecondPass: {//remove gaps in newlines caused by firstPass
-        src: '<%= dir.dist %>/<%= sdk.node %>.js',
-        find: /\n{3,}/g,
-        replace: '\n\n'
-      },
-      nodeThirdPass: {//remove newline below <banner>
-        src: '<%= dir.dist %>/<%= sdk.node %>.js',
-        find: /\n(\(function\(undefined\) \{)/g,
-        replace: '$1'
-      },
-
-      phonegapFirstPass: {//remove IIFE from source files
-        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
-        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
-      },
-      phonegapSecondPass: {//remove gaps in newlines caused by firstPass
-        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
-        find: /\n{3,}/g,
-        replace: '\n\n'
-      },
-      phonegapThirdPass: {//remove newline below <banner>
-        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
-        find: /\n(\(function\(undefined\) \{)/g,
-        replace: '$1'
-      },
-      phonegapArg: {
-        src: '<%= dir.dist %>/<%= sdk.phonegap %>.min.js',
-        find: /^\(function\(a\)/m,
-        replace: '(function(undefined)'
-      },
-
-      titaniumFirstPass: {//remove IIFE from source files
-        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
-        find: /^(\(function\(\) \{)$|^(\}\(\)\)\;)$/gm
-      },
-      titaniumSecondPass: {//remove gaps in newlines caused by firstPass
-        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
-        find: /\n{3,}/g,
-        replace: '\n\n'
-      },
-      titaniumThirdPass: {//remove newline below <banner>
-        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
-        find: /\n(\(function\(undefined\) \{)/g,
-        replace: '$1'
+      all: {
+        src: '<%= dir.dist %>/**/*[!.min].js',
+        dest: '<%= dir.dist %>'
+      }
+    },
+    replacer: {
+      variables: {
+        host: '<%= config.development.host %>',
+        version: '<%= pkg.version %>'
       }
     },
 
-    filter: {
-      html5: {
-        src: '<%= dir.dist %>/<%= sdk.html5 %>.js'
-      },
-      node: {
-        src: '<%= dir.dist %>/<%= sdk.node %>.js'
-      },
-      phonegap: {
-        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js'
-      },
-      titanium: {
-        src: '<%= dir.dist %>/<%= sdk.titanium %>.js'
-      }
-    },
-
-    // Specify Mocha test task.
+    // Mocha task.
     mocha: {
       test: {
         require: ['<%= dir.test %>/spec.js'],
         src: ['<%= dir.test %>/**/*.spec.js']
       }
     },
-    mochaOptions: {
-      timeout: 10000// 10s
-    },
+    mochaOptions: { timeout: 10000 },
 
-    // Specify minification task.
+    // Minification task.
     min: {
       html5: {
-        src: [ '<banner>', '<%= dir.dist %>/<%= sdk.html5 %>.js' ],
+        src: ['<banner>', '<%= dir.dist %>/<%= sdk.html5 %>.js'],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.min.js'
       },
       phonegap: {
-        src: [ '<banner>', '<%= dir.dist %>/<%= sdk.phonegap %>.js' ],
+        src: ['<banner>', '<%= dir.dist %>/<%= sdk.phonegap %>.js'],
         dest: '<%= dir.dist %>/<%= sdk.phonegap %>.min.js'
       }
     },
 
-    // Specify JSDoc task.
+    // JSDoc task.
     jsdoc: {
       core: {
         src: '<%= dir.src %>',
@@ -335,32 +276,49 @@ module.exports = function(grunt) {
       }
     },
 
-    // Specify watch task.
+    // Watch task.
     watch: {
-      files: ['grunt.js', 'lib/grunt/**/*.js', '<%= dir.src %>/**/*.js'],
-      tasks: 'default',
-
+      grunt: {
+        files: ['grunt.js', 'lib/**/*.js'],
+        tasks: 'lint:grunt'
+      },
+      src: {
+        files: '<%= dir.src %>/**/*.js',
+        tasks: 'lint:src'
+      },
       test: {
         files: '<%= dir.test %>/**/*.js',
         tasks: 'test'
       }
     },
 
-    // Specify clean task.
-    clean: {
-      files: ['<%= dir.apidoc %>', '<%= dir.dist %>']
+    // Clean task.
+    clean: { folder: ['<%= dir.dist %>', '<%= dir.apidoc %>'] },
+
+    // Environment overrides.
+    context: {
+      production: {
+        options: {
+          replacer: {
+            variables: { host: '<%= config.production.host %>' }
+          }
+        }
+      }
     }
   });
 
-  // Load task plugins.
+  // Load external tasks.
+  grunt.loadNpmTasks('grunt-context');
+  grunt.loadNpmTasks('grunt-replace');
   grunt.loadTasks('lib/grunt/tasks');
 
-  // Register tasks.
-  grunt.registerTask('default', 'build test minify doc');
+  // Register composite tasks.
+  grunt.registerTask('default', 'lint:grunt build test minify doc');
+  grunt.registerTask('production', 'context:production lint:grunt build minify doc');
 
-  grunt.registerTask('build', 'lint:beforeconcat pack lint:afterconcat');
+  // Sub tasks.
+  grunt.registerTask('build', 'lint:src concat strip:concat replace lint:dist');
+  grunt.registerTask('minify', 'min strip:min');
+  grunt.registerTask('test', 'lint:test mocha');
   grunt.registerTask('doc', 'jsdoc');
-  grunt.registerTask('minify', 'min replace:html5Arg replace:phonegapArg');
-  grunt.registerTask('pack', 'concat replace:html5FirstPass replace:nodeFirstPass replace:phonegapFirstPass replace:titaniumFirstPass replace:html5SecondPass replace:nodeSecondPass replace:phonegapSecondPass replace:titaniumSecondPass replace:html5ThirdPass replace:nodeThirdPass replace:phonegapThirdPass replace:titaniumThirdPass filter');
-  grunt.registerTask('test', 'mocha');
 };

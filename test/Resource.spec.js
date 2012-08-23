@@ -4,8 +4,12 @@
 describe('Kinvey.Resource', function() {
 
   // Housekeeping: define mock.
-  before(function() {
+  before(function(done) {
     this.resource = { name: 'foo.txt', data: 'foobarbaz' };
+    Kinvey.User.create({}, callback(done));
+  });
+  after(function(done) {
+    Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Kinvey.Resource#destroy
