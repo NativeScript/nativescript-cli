@@ -282,8 +282,10 @@ describe('Kinvey.Store.Cached', function() {
       }));
     });
     it('resolves a property.', function(done) {
+      var base = this.object1;
       var expected = null;
-      this.store.query(this.object1._id, callback(done, {
+      var store = this.store;
+      store.query(base._id, callback(done, {
         policy: Kinvey.Store.Cached.BOTH,
         resolve: ['ref'],
         success: function(response, info) {
@@ -293,6 +295,19 @@ describe('Kinvey.Store.Cached', function() {
           // Compare cached and network.
           info.cached && (expected = response);
           info.network && response.should.eql(expected);
+        },
+        complete: function() {
+          // Make sure response is cached correctly (i.e. normalized).
+          store.query(base._id, callback(done, {
+            policy: Kinvey.Store.Cached.CACHE_ONLY,
+            resolve: ['fake'],
+            success: function(response, info) {
+              info.cached.should.be['true'];
+              response.fake.should.have.property('_obj');
+              (null === response.fake._obj).should.be['true'];
+              response.ref.should.not.have.property('_obj');
+            }
+          }));
         }
       }));
     });
