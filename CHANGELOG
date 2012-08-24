@@ -1,5 +1,6 @@
 v0.9.10
 * Upgraded to API version 2.
+* Added KinveyRef support.
 * Added resource API support for Node.js, PhoneGap and Titanium.
 
 v0.9.9 (August 21, 2012)
