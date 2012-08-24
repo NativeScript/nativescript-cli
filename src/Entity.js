@@ -33,6 +33,7 @@
       // Options.
       options || (options = {});
       this.store = Kinvey.Store.factory(options.store, this.collection, options.options);
+      options.map && (this.map = options.map);
 
       // Parse attributes.
       this.attr = attr ? this._parseAttr(attr) : {};
