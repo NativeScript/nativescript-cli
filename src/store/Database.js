@@ -2,7 +2,7 @@
 
   // Grab database implementation.
   var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-  var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+  var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || {};
 
   // Define the Database class.
   var Database = Base.extend({
