@@ -313,10 +313,11 @@ module.exports = function(grunt) {
   grunt.loadTasks('lib/grunt/tasks');
 
   // Register composite tasks.
-  grunt.registerTask('default', 'lint:grunt build test minify doc');
-  grunt.registerTask('production', 'context:production lint:grunt build minify doc');
+  grunt.registerTask('default', 'prepare build test minify');
+  grunt.registerTask('production', 'context:production prepare build minify doc');
 
   // Sub tasks.
+  grunt.registerTask('prepare', 'lint:grunt');
   grunt.registerTask('build', 'lint:src concat strip:concat replace lint:dist');
   grunt.registerTask('minify', 'min strip:min');
   grunt.registerTask('test', 'lint:test mocha');
