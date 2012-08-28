@@ -427,8 +427,13 @@
         }), options.error);
       });
 
-      // Save objects (in parallel).
+      // Quick way out, return if no objects are to be saved.
       var pending = response.length;
+      if(0 === response.length) {
+        return progress();
+      }
+
+      // Save objects (in parallel).
       response.forEach(bind(this, function(object) {
         this.put('query', null, object, merge(options, {
           success: function(response) {

@@ -111,28 +111,31 @@
      * Logs in user given a Facebook oAuth token.
      * 
      * @param {string} token oAuth token.
+     * @param {Object} [attr] User attributes.
      * @param {Object} [options]
      * @param {function(entity, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
      */
-    loginWithFacebook: function(token, options) {
+    loginWithFacebook: function(token, attr, options) {
+      attr || (attr = {});
+      attr._socialIdentity = { facebook: { access_token: token } };
       options || (options = {});
 
       // Login, or create when there is no user with this Facebook identity.
-      var identity = { facebook: { access_token: token } };
-      this._doLogin({ _socialIdentity: identity }, merge(options, {
-        error: function(error, info) {
+      this._doLogin(attr, merge(options, {
+        error: bind(this, function(error, info) {
           // If user could not be found, register.
           if(Kinvey.Error.USER_NOT_FOUND === error.error) {
             // Pass current instance as (private) option to create.
-            return Kinvey.User.create({ _socialIdentity: identity }, merge(options, {
+            this.attr = attr;// Required as we set a specific target below.
+            return Kinvey.User.create(attr, merge(options, {
               _target: this
             }));
           }
 
           // Something else went wrong (invalid token?), error out.
           options.error && options.error(error, info);
-        }
+        })
       }));
     },
 
