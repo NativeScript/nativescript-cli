@@ -2,14 +2,14 @@ v0.9.10
 * Added support for user authentication through Facebook
 * Added support for relational data
 * Added support for Resource API (Node.js, PhoneGap, and Titanium)
-* Upgraded to API version 2.
-* Bug fix: creating users was not possible when using master secret.  
+* Upgraded to API version 2
+* Bug fix: creating users was not possible when using master secret
 
 v0.9.9 (August 21, 2012)
 * Bug fix: in collections, query was not passed as aggregation condition
-* Bug fix: UserCollection did not pass the right options to Collection.
-* Bug fix: Titanium crashed on accessing window variable.
-* Bug fix: in some cases, the logged in user was not saved to disk.
+* Bug fix: UserCollection did not pass the right options to Collection
+* Bug fix: Titanium crashed on accessing window variable
+* Bug fix: in some cases, the logged in user was not saved to disk
 
 v0.9.8 (August 6, 2012)
 * Added support for using regular expression in queries
@@ -25,12 +25,12 @@ v0.9.5 (Jul 10, 2012)
 * Added support for Appcelerator Titanium
 * Added support for Advanced ACLs
 * Unified error handling interface
-* Upgraded to API version 1.
+* Upgraded to API version 1
 * Bug fix: Content-Type header is now only present if there is a request body
-* Bug fix: aggregation requests now always include a finalize property.
+* Bug fix: aggregation requests now always include a finalize property
 
 v0.9.4 (Jun 15, 2012)
-* Bug fix: inheritance when extending Kinvey.Entity did not work properly.
+* Bug fix: inheritance when extending Kinvey.Entity did not work properly
 
 v0.9.3 (Jun 5, 2012)
 * Added support for Android 2.2, 2.3.3, and 3.2

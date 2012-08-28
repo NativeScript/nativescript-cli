@@ -79,21 +79,6 @@ describe('Kinvey.User', function() {
     });
   });
 
-  // Kinvey.User::createWithFacebook
-  describe('::createWithFacebook', function() {
-    it('fails on invalid Facebook token.', function(done) {
-      Kinvey.User.createWithFacebook('fake-token', {}, callback(done, {
-        success: function() {
-          done(new Error('Success callback was invoked.'));
-        },
-        error: function(error) {
-          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
-          done();
-        }
-      }));
-    });
-  });
-
   // Kinvey.User::init
   describe('::init', function() {
     // Destroy the created anonymous user.

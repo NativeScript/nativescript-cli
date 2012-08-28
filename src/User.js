@@ -116,9 +116,24 @@
      * @param {function(error, info)} [options.error] Failure callback.
      */
     loginWithFacebook: function(token, options) {
-      this._doLogin({
-        _socialIdentity: { facebook: { access_token: token } }
-      }, options || {});
+      options || (options = {});
+
+      // Login, or create when there is no user with this Facebook identity.
+      var identity = { facebook: { access_token: token } };
+      this._doLogin({ _socialIdentity: identity }, merge(options, {
+        error: function(error, info) {
+          // If user could not be found, register.
+          if(Kinvey.Error.USER_NOT_FOUND === error.error) {
+            // Pass current instance as (private) option to create.
+            return Kinvey.User.create({ _socialIdentity: identity }, merge(options, {
+              _target: this
+            }));
+          }
+
+          // Something else went wrong (invalid token?), error out.
+          options.error && options.error(error, info);
+        }
+      }));
     },
 
     /**
@@ -297,7 +312,7 @@
       }
 
       // Create a new user.
-      var user = new Kinvey.User(attr);
+      var user = options._target || new Kinvey.User(attr);
       Kinvey.Entity.prototype.save.call(user, merge(options, {
         success: bind(user, function(_, info) {
           // Extract token.
@@ -309,23 +324,6 @@
         })
       }));
       return user;// return the instance
-    },
-
-    /**
-     * Creates the current user, based on a Facebook oAuth token.
-     * 
-     * @param {string} token oAuth token.
-     * @param {Object} attr Attributes.
-     * @param {Object} [options]
-     * @param {function(user)} [options.success] Success callback.
-     * @param {function(error)} [options.error] Failure callback.
-     * @return {Kinvey.User} The user instance (not necessarily persisted yet).
-     */
-    createWithFacebook: function(token, attr, options) {
-      // Add token to attributes, and create user.
-      attr || (attr = {});
-      attr._socialIdentity = { facebook: { access_token: token } };
-      return Kinvey.User.create(attr, options);
     },
 
     /**
