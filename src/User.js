@@ -53,6 +53,16 @@
     },
 
     /**
+     * Returns social identity, or null if not set.
+     * 
+     * @return {Object} Identity.
+     */
+    getIdentity: function() {
+      var identity = this.get('_socialIdentity');
+      return identity || null;
+    },
+
+    /**
      * Returns token, or null if not set.
      * 
      * @return {string} Token.
@@ -92,36 +102,24 @@
      * @param {function(error, info)} [options.error] Failure callback.
      */
     login: function(username, password, options) {
-      options || (options = {});
-
-      // Make sure only one user is active at the time.
-      var currentUser = Kinvey.getCurrentUser();
-      if(null !== currentUser) {
-        currentUser.logout(merge(options, {
-          success: bind(this, function() {
-            this.login(username, password, options);
-          })
-        }));
-        return;
-      }
-
-      // Send request.
-      this.store.login({
+      this._doLogin({
         username: username,
         password: password
-      }, merge(options, {
-        success: bind(this, function(response, info) {
-          // Extract token.
-          var token = response._kmd.authtoken;
-          delete response._kmd.authtoken;
+      }, options || {});
+    },
 
-          // Update attributes. This does not include the users password.
-          this.attr = this._parseAttr(response);
-          this._login(token);
-
-          options.success && options.success(this, info);
-        })
-      }));
+    /**
+     * Logs in user given a Facebook oAuth token.
+     * 
+     * @param {string} token oAuth token.
+     * @param {Object} [options]
+     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
+     */
+    loginWithFacebook: function(token, options) {
+      this._doLogin({
+        _socialIdentity: { facebook: { access_token: token } }
+      }, options || {});
     },
 
     /**
@@ -180,6 +178,41 @@
      */
     _deleteFromDisk: function() {
       Storage.remove(CACHE_TAG());
+    },
+
+    /**
+     * Performs login.
+     * 
+     * @private
+     * @param {Object} attr Attributes.
+     * @param {Object} options Options.
+     */
+    _doLogin: function(attr, options) {
+      // Make sure only one user is active at the time.
+      var currentUser = Kinvey.getCurrentUser();
+      if(null !== currentUser) {
+        currentUser.logout(merge(options, {
+          success: bind(this, function() {
+            this._doLogin(attr, options);
+          })
+        }));
+        return;
+      }
+
+      // Send request.
+      this.store.login(attr, merge(options, {
+        success: bind(this, function(response, info) {
+          // Extract token.
+          var token = response._kmd.authtoken;
+          delete response._kmd.authtoken;
+
+          // Update attributes. This does not include the users password.
+          this.attr = this._parseAttr(response);
+          this._login(token);
+
+          options.success && options.success(this, info);
+        })
+      }));
     },
 
     /**
@@ -277,6 +310,23 @@
         })
       }));
       return user;// return the instance
+    },
+
+    /**
+     * Creates the current user, based on a Facebook oAuth token.
+     * 
+     * @param {string} token oAuth token.
+     * @param {Object} attr Attributes.
+     * @param {Object} [options]
+     * @param {function(user)} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     * @return {Kinvey.User} The user instance (not necessarily persisted yet).
+     */
+    createWithFacebook: function(token, attr, options) {
+      // Add token to attributes, and create user.
+      attr || (attr = {});
+      attr._socialIdentity = { facebook: { access_token: token } };
+      return Kinvey.User.create(attr, options);
     },
 
     /**

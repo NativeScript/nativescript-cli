@@ -79,6 +79,21 @@ describe('Kinvey.User', function() {
     });
   });
 
+  // Kinvey.User::createWithFacebook
+  describe('::createWithFacebook', function() {
+    it('fails on invalid Facebook token.', function(done) {
+      Kinvey.User.createWithFacebook('fake-token', {}, callback(done, {
+        success: function() {
+          done(new Error('Success callback was invoked.'));
+        },
+        error: function(error) {
+          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
+          done();
+        }
+      }));
+    });
+  });
+
   // Kinvey.User::init
   describe('::init', function() {
     // Destroy the created anonymous user.
@@ -159,6 +174,20 @@ describe('Kinvey.User', function() {
     });
   });
 
+  // Kinvey.User#getIdentity
+  describe('.getIdentity', function() {
+    // Create mock.
+    before(function() {
+      this.identity = { facebook: { id: 'id', name: 'name' } };
+      this.user = new Kinvey.User({ _socialIdentity: this.identity });
+    });
+
+    // Test suite.
+    it('returns the Facebook identity.', function() {
+      this.user.getIdentity().should.eql(this.identity);
+    });
+  });
+
   // Kinvey.User#load
   describe('.load', function() {
     // Create mock.
@@ -206,6 +235,21 @@ describe('Kinvey.User', function() {
           (response.isLoggedIn).should.be['true'];
           (null !== response.getToken()).should.be['true'];
 
+          done();
+        }
+      }));
+    });
+  });
+
+  // Kinvey.User#loginWithFacebook
+  describe('.loginWithFacebook', function() {
+    it('fails on authenticating a user with invalid Facebook token.', function(done) {
+      new Kinvey.User().loginWithFacebook('fake-token', callback(done, {
+        success: function() {
+          done(new Error('Success callback was invoked.'));
+        },
+        error: function(error) {
+          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
           done();
         }
       }));
