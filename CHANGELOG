@@ -2,6 +2,7 @@ v0.9.10
 * Upgraded to API version 2.
 * Added KinveyRef support.
 * Added resource API support for Node.js, PhoneGap and Titanium.
+* Fixed bug in Node.js where creating users failed with master secret.  
 
 v0.9.9 (August 21, 2012)
 * Fixed bug where query was not passed to aggregation.
