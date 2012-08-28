@@ -58,8 +58,7 @@
      * @return {Object} Identity.
      */
     getIdentity: function() {
-      var identity = this.get('_socialIdentity');
-      return identity || null;
+      return this.get('_socialIdentity');
     },
 
     /**

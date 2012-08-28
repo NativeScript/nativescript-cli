@@ -1,44 +1,45 @@
 v0.9.10
+* Added support for user authentication through Facebook
+* Added support for relational data
+* Added support for Resource API (Node.js, PhoneGap, and Titanium)
 * Upgraded to API version 2.
-* Added KinveyRef support.
-* Added resource API support for Node.js, PhoneGap and Titanium.
-* Fixed bug in Node.js where creating users failed with master secret.  
+* Bug fix: creating users was not possible when using master secret.  
 
 v0.9.9 (August 21, 2012)
-* Fixed bug where query was not passed to aggregation.
-* Fixed bug where UserCollection#constructor passed a query instead of options object to Collection.
-* Fixed bug where Titanium crashed on accessing window variable.
-* Fixed bug where logged in user was not saved to disk.
+* Bug fix: in collections, query was not passed as aggregation condition
+* Bug fix: UserCollection did not pass the right options to Collection.
+* Bug fix: Titanium crashed on accessing window variable.
+* Bug fix: in some cases, the logged in user was not saved to disk.
 
 v0.9.8 (August 6, 2012)
-* Added regex support in queries.
-* Fixed IndexedDB regression bug (Chrome 21).
+* Added support for using regular expression in queries
+* Bug fix: fixed IndexedDB regression bug (Chrome 21)
 
 v0.9.7 (August 1, 2012 - deprecated)
-* Added caching and offline usage.
+* Added support for caching and offline usage
 
 v0.9.6 (Jul 18, 2012)
-* Added device information header for PhoneGap.
+* Added device information header for PhoneGap
 
 v0.9.5 (Jul 10, 2012)
-* Added build for iOS and Android apps powered by the Appcelerator Titanium Platform.
-* Added support for Advanced ACLs.
-* Added unified error code handling for client-, and server-side errors.
+* Added support for Appcelerator Titanium
+* Added support for Advanced ACLs
+* Unified error handling interface
 * Upgraded to API version 1.
-* Content-Type header now indicates body is present.
-* _group always passes finalize attribute in body.
+* Bug fix: Content-Type header is now only present if there is a request body
+* Bug fix: aggregation requests now always include a finalize property.
 
 v0.9.4 (Jun 15, 2012)
-* Fixed bug where Kinvey.Entity inheritance didn't work properly.
+* Bug fix: inheritance when extending Kinvey.Entity did not work properly.
 
 v0.9.3 (Jun 5, 2012)
-* Added Android 2.2, 2.3.3 & 3.2 support.
+* Added support for Android 2.2, 2.3.3, and 3.2
 
 v0.9.2 (May 18, 2012)
-* Added Node.JS 0.4.X support.
-* Added aggregation support.
-* Added master secret support for Node.JS.
-* Fixed bug in Node.JS where current user was destroyed upon server restart.
+* Added support for aggregation
+* Added support for Node.js 0.4
+* Added support for using the master secret with Node.js
+* Bug fix: current user was destroyed upon server restart (Node.js)
 
 v0.9.1 (Apr 26, 2012)
-* Initial version.
+* Initial release
