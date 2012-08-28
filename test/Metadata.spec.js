@@ -81,8 +81,8 @@ describe('Kinvey.Metadata', function() {
       this.metadata.setGloballyWritable(true);
       this.metadata.hasWritePermissions().should.be['true'];
     });
-    it('returns false when the current user has no write permissions.', function() {
-      this.metadata.hasWritePermissions().should.be['false'];
+    it('returns true when the entity has no owner.', function() {
+      this.metadata.hasWritePermissions().should.be['true'];
     });
   });
 
@@ -127,7 +127,7 @@ describe('Kinvey.Metadata', function() {
       this.metadata.isOwner().should.be['true'];
     });
     it('returns false when the current user is not the owner.', function() {
-      this.metadata = new Kinvey.Metadata({ creator: 'foo' });
+      this.metadata = new Kinvey.Metadata({ _acl: { creator: 'foo' } });
       this.metadata.isOwner().should.be['false'];
     });
   });

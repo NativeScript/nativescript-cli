@@ -349,7 +349,9 @@
     _save: function(value, options) {
       if(value instanceof Object) {
         if(value instanceof Kinvey.Entity) {// Case 1: value is a reference.
-          return value.save(options);
+          // Only save when authorized, otherwise just return. Note any writable
+          // children are not saved if the parent is not writable.
+          return value.getMetadata().hasWritePermissions() ? value.save(options) : options.success(value); 
         }
         if(value instanceof Array) {// Case 2: value is an array.
           // Save every element in the array (serially), and update in place.

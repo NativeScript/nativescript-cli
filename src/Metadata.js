@@ -64,16 +64,17 @@
      * is only useful when the class is created with a predefined
      * ACL.
      * 
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isOwner: function() {
       var owner = this.acl.creator;
       var currentUser = Kinvey.getCurrentUser();
 
-      if(owner && currentUser) {
-        return owner === currentUser.getId();
+      // If owner is undefined, assume entity is just created.
+      if(owner) {
+        return !!currentUser && owner === currentUser.getId();
       }
-      return false;
+      return true;
     },
 
     /**
