@@ -2,6 +2,7 @@ v0.9.10
 * Added support for user authentication through Facebook
 * Added support for relational data
 * Added support for Resource API (Node.js, PhoneGap, and Titanium)
+* Added support for caching and offline usage in PhoneGap
 * Upgraded to API version 2
 * Bug fix: creating users was not possible when using master secret
 

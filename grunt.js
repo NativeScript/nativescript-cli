@@ -188,9 +188,13 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
-          '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/Store.phonegap.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
+          '<%= dir.src %>/store/Database.js',
+          '<%= dir.src %>/store/Cached.js',
+          '<%= dir.src %>/store/Offline.js',
+          '<%= dir.src %>/store/Sync.js',
 
           '<%= dir.src %>/outro.txt'
         ],
