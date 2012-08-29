@@ -1,4 +1,4 @@
-v0.9.10
+v0.9.10 (August 29, 2012)
 * Added support for user authentication through Facebook
 * Added support for relational data
 * Added support for Resource API (Node.js, PhoneGap, and Titanium)
