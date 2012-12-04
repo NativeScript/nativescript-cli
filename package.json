@@ -1,6 +1,6 @@
 {
   "name": "kinvey",
-  "version": "0.9.10",
+  "version": "0.9.11",
   "private": true,
   "description": "Kinvey JavaScript Library",
   "dependencies": { },
@@ -17,7 +17,7 @@
   "engines": {
     "node": ">=0.4"
   },
-  "main": "./dist/kinvey-nodejs-0.9.10.js",
+  "main": "./dist/kinvey-nodejs-0.9.11.js",
   "scripts": {
     "test": "grunt test",
     "test-fallback": "mocha --require test/spec.js --timeout 10000 test/*.spec.js test/**/*.spec.js"
