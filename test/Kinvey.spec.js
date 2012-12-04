@@ -19,17 +19,17 @@ describe('Kinvey', function() {
 
   // Kinvey#ping
   describe('.ping', function() {
-    // Destroy the created implicit user.
-    afterEach(function(done) {
-      Kinvey.masterSecret = null;// unset
-      var user = Kinvey.getCurrentUser();
-      user ? user.destroy(callback(done)) : done();
+    // Housekeeping.
+    afterEach(function() {
+      // Unset the master secret.
+      delete Kinvey.masterSecret;
     });
 
-    it('pings the Kinvey service.', function(done) {
+    // Test suite.
+    it('pings the Kinvey service using the app secret.', function(done) {
       Kinvey.ping(callback(done, {
         success: function(response) {
-          (null !== Kinvey.getCurrentUser()).should.be['true'];
+          (null === Kinvey.getCurrentUser()).should.be['true'];
           response.should.have.property('kinvey');
           response.should.have.property('version');
           done();
@@ -37,7 +37,7 @@ describe('Kinvey', function() {
       }));
     });
     it('pings the Kinvey service using the master secret.', function(done) {
-      Kinvey.masterSecret = MASTER_SECRET;// set property directly
+      Kinvey.masterSecret = MASTER_SECRET;// Set property directly.
       Kinvey.ping(callback(done, {
         success: function(response) {
           (null === Kinvey.getCurrentUser()).should.be['true'];

@@ -354,6 +354,19 @@
     },
 
     /**
+     * Resets password for a user.
+     * 
+     * @param {string} username User name.
+     * @param {Object} [options]
+     * @param {function()} [options.success] Success callback.
+     * @param {function(error)} [options.error] Failure callback.
+     */
+    resetPassword: function(username, options) {
+      var store = new Kinvey.Store.Rpc();
+      store.resetPassword(username, options);
+    },
+
+    /**
      * Restores user stored locally on the device. This method is called by
      * Kinvey.init(), and should not be called anywhere else.
      * 

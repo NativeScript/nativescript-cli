@@ -19,15 +19,16 @@
      * @private
      * @return {Object} Authorization.
      */
-    var getAuth = function() {
+    var getAuth = function(forceAppc) {
       // Use master secret if specified.
-      if(null !== Kinvey.masterSecret) {
+      if(null !== Kinvey.masterSecret) {// undefined or null
         return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.masterSecret);
       }
 
-      // Use Session Auth if there is a current user.
+      // Use Session Auth if there is a current user, and application credentials
+      // are not forced.
       var user = Kinvey.getCurrentUser();
-      if(null !== user) {
+      if(!forceAppc && null !== user) {
         return 'Kinvey ' + user.getToken();
       }
 
@@ -73,7 +74,7 @@
 
       // For now, include authorization in this adapter. Ideally, it should
       // have some external interface.
-      if(null === Kinvey.getCurrentUser() && Kinvey.Store.AppData.USER_API !== this.api && null === Kinvey.masterSecret) {
+      if(null === Kinvey.getCurrentUser() && Kinvey.Store.AppData.USER_API !== this.api && null == Kinvey.masterSecret && !options.appc) {
         return Kinvey.User.create({}, merge(options, {
           success: bind(this, function() {
             this._send(method, url, body, options);
@@ -87,7 +88,7 @@
       // Headers.
       var headers = {
         Accept: 'application/json, text/javascript',
-        Authorization: this._getAuth(),
+        Authorization: this._getAuth(options.appc),
         'X-Kinvey-API-Version': Kinvey.API_VERSION,
         'X-Kinvey-Device-Information': this._getDeviceInfo()
       };

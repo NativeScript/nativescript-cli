@@ -130,6 +130,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
           '<%= dir.src %>/store/Store.browser.js',
+          '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Database.js',
           '<%= dir.src %>/store/Cached.js',
@@ -161,6 +162,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
           '<%= dir.src %>/store/Store.browser.js',
+          '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Database.js',
           '<%= dir.src %>/store/Cached.js',
@@ -193,6 +195,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
           '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
 
@@ -223,6 +226,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
           '<%= dir.src %>/store/Store.phonegap.js',
+          '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
           '<%= dir.src %>/store/Database.js',
@@ -256,6 +260,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
           '<%= dir.src %>/store/Store.js',
+          '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
 

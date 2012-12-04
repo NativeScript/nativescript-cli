@@ -87,6 +87,9 @@
      */
     query: function(id, options) {
       options || (options = {});
+      
+      // Force use of application credentials if pinging.
+      null === id && (options.appc = true);
 
       var url = this._getUrl({ id: id, resolve: options.resolve });
       this._send('GET', url, null, options);

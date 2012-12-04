@@ -1,3 +1,7 @@
+v0.9.11
+* Added support for email verification and password reset
+* Added support for pinging Kinvey without creating implicit user
+
 v0.9.10 (August 29, 2012)
 * Added support for user authentication through Facebook
 * Added support for relational data
