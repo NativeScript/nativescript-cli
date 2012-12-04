@@ -14,9 +14,6 @@
     NO_NETWORK: 'NoNetwork',
 
     /** @constant */
-    OPERATION_DENIED: 'OperationDenied',
-
-    /** @constant */
     REQUEST_FAILED: 'RequestFailed',
 
     /** @constant */
@@ -49,9 +46,6 @@
 
     /** @constant */
     USER_ALREADY_EXISTS: 'UserAlreadyExists',
-
-    /** @constant */
-    USER_UNAVAILABLE: 'UserUnavailable',
 
     /** @constant */
     DUPLICATE_END_USERS: 'DuplicateEndUsers',
@@ -109,9 +103,24 @@
 
     /** @constant */
     INPUT_VALIDATION_FAILED: 'InputValidationFailed',
-    
+
     /** @constant */
-    BLruntimeError: 'BLruntimeError'
+    BL_RUNTIME_ERROR: 'BLRuntimeError',
+
+    /** @constant */
+    BL_SYNTAX_ERROR: 'BLSyntaxError',
+
+    /** @constant */
+    BL_TIMEOUT_ERROR: 'BLTimeoutError',
+
+    /** @constant */
+    BL_VIOLATION_ERROR: 'BLViolationError',
+
+    /** @constant */
+    BL_INTERNAL_ERROR: 'BLInternalError',
+
+    /** @constant */
+    STALE_REQUEST: 'StaleRequest'
   };
 
 }());

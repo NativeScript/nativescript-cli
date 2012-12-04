@@ -30,7 +30,7 @@
      */
     clear: function(options) {
       options && options.error && options.error({
-        code: Kinvey.Error.OPERATION_DENIED,
+        code: Kinvey.Error.BAD_REQUEST,
         description: 'This operation is not allowed',
         debug: ''
       });

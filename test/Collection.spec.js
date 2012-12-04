@@ -2,7 +2,7 @@
  * Kinvey.Collection test suite.
  */
 describe('Kinvey.Collection', function() {
-  // Destroy the created anonymous user.
+  // Destroy the created implicit user.
   after(function(done) {
     Kinvey.getCurrentUser().destroy(callback(done));
   });

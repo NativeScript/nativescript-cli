@@ -61,7 +61,7 @@ describe('Kinvey.User', function() {
         }
       }));
     });*/
-    it('creates an anonymous current user.', function(done) {
+    it('creates an implicit current user.', function(done) {
       var user = this.user = Kinvey.User.create({}, callback(done, {
         success: function(response) {
           response.should.equal(user);
@@ -81,7 +81,7 @@ describe('Kinvey.User', function() {
 
   // Kinvey.User::init
   describe('::init', function() {
-    // Destroy the created anonymous user.
+    // Destroy the created implicit user.
     afterEach(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
     });
@@ -118,7 +118,7 @@ describe('Kinvey.User', function() {
         }
       }));
     });
-    it('creates an anonymous user.', function(done) {
+    it('creates an implicit user.', function(done) {
       // Create spy.
       var create = Kinvey.User.create;
       Kinvey.User.create = function() {

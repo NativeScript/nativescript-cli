@@ -42,6 +42,15 @@
     },
 
     /**
+     * Returns the entity owner, or null if not set.
+     * 
+     * @return {string} user User id.
+     */
+    creator: function() {
+      return this.acl.creator || null;
+    },
+
+    /**
      * Returns all readers.
      * 
      * @return {Array} List of readers.

@@ -2,7 +2,7 @@
  * Kinvey.Entity test suite.
  */
 describe('Kinvey.Entity', function() {
-  // Destroy the created anonymous user.
+  // Destroy the created implicit user.
   after(function(done) {
     Kinvey.getCurrentUser().destroy(callback(done));
   });
@@ -194,7 +194,7 @@ describe('Kinvey.Entity', function() {
           done(new Error('Success callback was invoked'));
         },
         error: function(error) {
-          error.error.should.equal(Kinvey.Error.OPERATION_DENIED);
+          error.error.should.equal(Kinvey.Error.BAD_REQUEST);
           done();
         }
       }));

@@ -144,7 +144,7 @@
       if(this._pending && options._ref) {
         this._pending = false;// Reset.
         options.error({
-          error: Kinvey.Error.OPERATION_DENIED,
+          error: Kinvey.Error.BAD_REQUEST,
           message: 'Circular reference detected, aborting save',
           debug: ''
         }, {});

@@ -17,6 +17,7 @@ module.exports = function(grunt) {
       test: 'test'
     },
     sdk: {
+      appcloud: '<%= pkg.name %>-app-cloud-<%= pkg.version %>',// App Cloud dist filename.'
       html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename.
       node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename.
       phonegap: '<%= pkg.name %>-phonegap-<%= pkg.version %>',// phonegap dist filename.
@@ -108,6 +109,37 @@ module.exports = function(grunt) {
 
     // Specify concatenation task.
     concat: {
+      appcloud: {
+        src: [
+          '<banner>',
+          '<%= dir.src %>/intro.txt',
+          '<%= dir.src %>/util/Storage.js',
+          '<%= dir.src %>/util/Xhr.AppCloud.js',
+
+          '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/Error.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/User.js',
+          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.browser.js',
+          '<%= dir.src %>/store/AppData.js',
+          '<%= dir.src %>/store/Database.js',
+          '<%= dir.src %>/store/Cached.js',
+          '<%= dir.src %>/store/Offline.js',
+          '<%= dir.src %>/store/Sync.js',
+
+          '<%= dir.src %>/outro.txt'
+        ],
+        dest: '<%= dir.dist %>/<%= sdk.appcloud %>.js'
+      },
       html5: {
         src: [
           '<banner>',
@@ -171,6 +203,7 @@ module.exports = function(grunt) {
       phonegap: {
         src: [
           '<banner>',
+
           '<%= dir.src %>/intro.txt',
           '<%= dir.src %>/util/Storage.js',
           '<%= dir.src %>/util/Xhr.js',
@@ -263,6 +296,10 @@ module.exports = function(grunt) {
 
     // Minification task.
     min: {
+      appcloud: {
+        src: ['<banner>', '<%= dir.dist %>/<%= sdk.appcloud %>.js'],
+        dest: '<%= dir.dist %>/<%= sdk.appcloud %>.min.js'
+      },
       html5: {
         src: ['<banner>', '<%= dir.dist %>/<%= sdk.html5 %>.js'],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.min.js'
@@ -275,9 +312,25 @@ module.exports = function(grunt) {
 
     // JSDoc task.
     jsdoc: {
-      core: {
-        src: '<%= dir.src %>',
-        dest: '<%= dir.apidoc %>'
+      appcloud: {
+        src: '<%= dir.dist %>/<%= sdk.appcloud %>.js',
+        dest: '<%= dir.apidoc %>/appcloud'
+      },
+      html5: {
+        src: '<%= dir.dist %>/<%= sdk.html5 %>.js',
+        dest: '<%= dir.apidoc %>/html5'
+      },
+      node: {
+        src: '<%= dir.dist %>/<%= sdk.node %>.js',
+        dest: '<%= dir.apidoc %>/node'
+      },
+      phonegap: {
+        src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
+        dest: '<%= dir.apidoc %>/phonegap'
+      },
+      titanium: {
+        src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
+        dest: '<%= dir.apidoc %>/titanium'
       }
     },
 
@@ -320,6 +373,7 @@ module.exports = function(grunt) {
   // Register composite tasks.
   grunt.registerTask('default', 'prepare build test minify');
   grunt.registerTask('production', 'context:production prepare build minify doc');
+  grunt.registerTask('sandbox', 'prepare build minify');
 
   // Sub tasks.
   grunt.registerTask('prepare', 'lint:grunt');

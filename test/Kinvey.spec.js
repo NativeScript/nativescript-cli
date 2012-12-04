@@ -19,7 +19,7 @@ describe('Kinvey', function() {
 
   // Kinvey#ping
   describe('.ping', function() {
-    // Destroy the created anonymous user.
+    // Destroy the created implicit user.
     afterEach(function(done) {
       Kinvey.masterSecret = null;// unset
       var user = Kinvey.getCurrentUser();

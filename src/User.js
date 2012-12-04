@@ -172,7 +172,7 @@
       options || (options = {});
       if(!this.isLoggedIn) {
         options.error && options.error({
-          code: Kinvey.Error.OPERATION_DENIED,
+          code: Kinvey.Error.BAD_REQUEST,
           description: 'This operation is not allowed',
           debug: 'Cannot save a user which is not logged in.'
         }, {});
@@ -331,7 +331,7 @@
 
     /**
      * Initializes a current user. Returns the current user, otherwise creates
-     * an anonymous user. This method is called internally when doing a network
+     * an implicit user. This method is called internally when doing a network
      * request. Manually invoking this function is however allowed.
      * 
      * @param {Object} [options]
@@ -349,7 +349,7 @@
         return user;
       }
 
-      // No cached user available, create anonymous user.
+      // No cached user available, create implicit user.
       return Kinvey.User.create({}, options);
     },
 
