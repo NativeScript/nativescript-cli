@@ -49,6 +49,18 @@
     },
 
     /**
+     * Verifies e-mail for a user.
+     * 
+     * @param {string} username User name.
+     * @param {Object} [options] Options.
+     */
+    verifyEmail: function(username, options) {
+      // Force use of application credentials by adding appc option.
+      var url = this._getUrl([username, 'user-email-verification-initiate']);
+      this._send('POST', url, null, merge(options, { appc: true }));
+    },
+
+    /**
      * Constructs URL.
      * 
      * @private

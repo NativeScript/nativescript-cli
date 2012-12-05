@@ -167,7 +167,29 @@ describe('Kinvey.User', function() {
       }));
     });
   });
-  
+
+  // Kinvey.User::verifyEmail
+  describe('::verifyEmail', function() {
+    // Housekeeping: maintain a current user.
+    before(function(done) {
+      Kinvey.User.create({}, callback(done));
+    });
+    after(function(done) {
+      Kinvey.getCurrentUser().destroy(callback(done));
+    });
+
+    // Test suite.
+    it('verifies a users email address.', function(done) {
+      var username = Kinvey.getCurrentUser().getUsername();
+      Kinvey.User.verifyEmail(username, callback(done, {
+        success: function(_, info) {
+          info.network.should.be['true'];
+          done();
+        }
+      }));
+    });
+  });
+ 
   // Kinvey.User#destroy
   describe('.destroy', function() {
     // Create mock.
