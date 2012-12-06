@@ -65,6 +65,17 @@ describe('Kinvey.Collection', function() {
         }
       }));
     });
+    it('counts the number of entities with no match.', function(done) {
+      var collection = this.collection;
+      collection.setQuery(new Kinvey.Query().on('bar').equal('baz'))
+      collection.count(callback(done, {
+        success: function(count) {
+          count.should.equal(0);
+          collection.setQuery(null);// Clear query.
+          done();
+        }
+      }));
+    });
   });
 
   // Kinvey.Collection#fetch

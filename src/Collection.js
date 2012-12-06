@@ -103,7 +103,9 @@
 
       this.store.aggregate(aggregation.toJSON(), merge(options, {
         success: function(response, info) {
-          options.success && options.success(response[0].count, info);
+          // Aggregation can return an empty array, when the count is 0.
+          var count = response[0] ? response[0].count : 0;
+          options.success && options.success(count, info);
         }
       }));
     },

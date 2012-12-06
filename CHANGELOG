@@ -1,7 +1,10 @@
 v0.9.11
+* Added JS SDK fingerprinting
 * Added support for email verification and password reset
 * Added support for pinging Kinvey without creating implicit user
 * Bug fix: complex equal queries were not parsed correctly
+* Bug fix: count on empty collection now returns 0 instead of an error
+* Bug fix: an invalid file name now causes an exception to be thrown
 
 v0.9.10 (August 29, 2012)
 * Added support for user authentication through Facebook
