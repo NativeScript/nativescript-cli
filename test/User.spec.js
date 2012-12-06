@@ -184,6 +184,7 @@ describe('Kinvey.User', function() {
       Kinvey.User.verifyEmail(username, callback(done, {
         success: function(_, info) {
           info.network.should.be['true'];
+          Kinvey.getCurrentUser().isVerified().should.be['false'];
           done();
         }
       }));

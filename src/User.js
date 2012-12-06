@@ -80,6 +80,20 @@
     },
 
     /**
+     * Returns whether the user email address was verified.
+     * 
+     * @return {boolean}
+     */
+    isVerified: function() {
+      // Obtain email verification status from metadata object.
+      var email = this.getMetadata().kmd.emailVerification;
+      if(email) {
+        return 'confirmed' === email.status;
+      }
+      return false;
+    },
+
+    /**
      * Logs in user.
      * 
      * @example <code> 
