@@ -327,7 +327,7 @@ module.exports = function(grunt) {
       },
       node: {
         src: '<%= dir.dist %>/<%= sdk.node %>.js',
-        dest: '<%= dir.apidoc %>/node'
+        dest: '<%= dir.apidoc %>/nodejs'
       },
       phonegap: {
         src: '<%= dir.dist %>/<%= sdk.phonegap %>.js',
