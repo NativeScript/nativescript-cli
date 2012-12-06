@@ -43,9 +43,9 @@
      * @return {string} Device information.
      */
     var getDeviceInfo = function() {
-      // Example: "Titanium mobileweb 2.0.1.GA2 XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXX".
+      // Example: "js-titanium/@@version mobileweb 2.0.1.GA2 XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXX".
       return [
-        'Titanium',
+        'js-titanium/@@version',
         Titanium.Platform.osname,
         Titanium.Platform.version,
         Titanium.App.getGUID()// device ID.

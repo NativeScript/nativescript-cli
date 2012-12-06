@@ -49,10 +49,10 @@
      * @return {string} Device information.
      */
     var getDeviceInfo = function() {
-      // Example: "linux node v0.6.13 0".
+      // Example: "js-node/@@version linux-node v0.6.13 0".
       return [
-        process.platform,
-        process.title,
+        'js-node/@@version',
+        process.platform + '-' + process.title,
         process.version,
         0// always set device ID to 0.
       ].map(function(value) {

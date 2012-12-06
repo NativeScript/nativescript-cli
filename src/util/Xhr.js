@@ -58,10 +58,10 @@
       var browser = rChrome.exec(ua) || rSafari.exec(ua) || rFirefox.exec(ua) || rOpera.exec(ua) || rIE.exec(ua) || [ ];
 
       // Build device information.
-      // Example: "linux chrome 18 0".
+      // Example: "js/@@version linux-chrome 18 0".
       return [
-        window.cordova ? 'phonegap' : navigator.platform,
-        browser[1] || navigator.appName,
+        (window.cordova ? 'js-phonegap' : 'js') + '/@@version',
+        navigator.platform + '-' + (browser[1] || navigator.appName),
         browser[2] || 0,
         0 // always set device ID to 0.
       ].map(function(value) {

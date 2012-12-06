@@ -58,9 +58,9 @@
       var browser = rChrome.exec(ua) || rSafari.exec(ua) || rFirefox.exec(ua) || rOpera.exec(ua) || rIE.exec(ua) || [ ];
 
       // Build device information.
-      // Example: "appcloud chrome 18 0".
+      // Example: "js-appcloud/@@version chrome 18 0".
       return [
-        'appcloud',
+        'js-appcloud/@@version',
         browser[1] || navigator.appName,
         browser[2] || 0,
         0 // always set device ID to 0.
