@@ -10,6 +10,10 @@ describe('Kinvey.Query', function() {
       surname: 'Smith',
       age: 50,
       hobbies: [ 'HTML', 'CSS', 'JavaScript' ],
+      parents: {
+        mother: 'Alice',
+        father: 'Bob'
+      },
       _geoloc: [ -71.084, 42.363 ]// Hey, that's our office!
     }, COLLECTION_UNDER_TEST);
     var simple = this.simple = new Kinvey.Entity({
@@ -105,6 +109,28 @@ describe('Kinvey.Query', function() {
     it('performs an equal query.', function(done) {
       var complex = this.complex;
       this.query.on('name').equal('John');
+      this.collection.fetch(callback(done, {
+        success: function(list) {
+          list.length.should.equal(1);
+          list[0].should.eql(complex);
+          done();
+        }
+      }));
+    });
+    it('performs a complex equal query (array).', function(done) {
+      var complex = this.complex;
+      this.query.on('hobbies').equal([ 'HTML', 'CSS', 'JavaScript' ]);
+      this.collection.fetch(callback(done, {
+        success: function(list) {
+          list.length.should.equal(1);
+          list[0].should.eql(complex);
+          done();
+        }
+      }));
+    });
+    it('performs a complex equal query (object).', function(done) {
+      var complex = this.complex;
+      this.query.on('parents').equal({ mother: 'Alice', father: 'Bob' });
       this.collection.fetch(callback(done, {
         success: function(list) {
           list.length.should.equal(1);

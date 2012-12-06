@@ -33,7 +33,8 @@
         // Basic operators.
         // @see http://www.mongodb.org/display/DOCS/Advanced+Queries
         case Kinvey.Query.EQUAL:
-          this._set(field, value);
+          this.query || (this.query = {});
+          this.query[field] = value;
           break;
         case Kinvey.Query.EXIST:
           this._set(field, { $exists: value });
@@ -174,16 +175,12 @@
     },
 
     /**
-     * Helper function to add expression to field.
+     * Helper function to apply complex expression on field.
      * 
      * @private
      */
     _set: function(field, expression) {
       this.query || (this.query = {});
-      if(!(expression instanceof Object)) {// simple condition
-        this.query[field] = expression;
-        return;
-      }
 
       // Complex condition.
       this.query[field] instanceof Object || (this.query[field] = {});
