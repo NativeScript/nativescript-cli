@@ -61,11 +61,11 @@ describe('Kinvey.Metadata', function() {
   // Kinvey.Metadata#hasWritePermissions
   describe('.hasWritePermissions', function() {
     before(function(done) {
-      this.user = Kinvey.User.create({}, callback(done, {}));
+      this.user = Kinvey.User.create({}, callback(done));
     });
     after(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
-   });
+    });
 
     // Test suite.
     it('returns true when the current user is the owner.', function() {

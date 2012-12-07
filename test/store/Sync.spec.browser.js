@@ -381,7 +381,7 @@ describe('Kinvey.Sync', function() {
           Kinvey.getCurrentUser().logout(callback(done));
         }
       }));
-    })
+    });
     beforeEach(function() {
       Kinvey.Sync.offline();
     });

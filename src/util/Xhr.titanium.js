@@ -21,7 +21,7 @@
      */
     var getAuth = function(forceAppc) {
       // Use master secret if specified.
-      if(null !== Kinvey.masterSecret) {// undefined or null
+      if(null != Kinvey.masterSecret) {// undefined or null
         return 'Basic ' + this._base64(Kinvey.appKey + ':' + Kinvey.masterSecret);
       }
 
