@@ -1,5 +1,8 @@
 (function() {
 
+  // User context used to perform synchronization with.
+  var context = null;
+
   /**
    * Kinvey Sync namespace definition. This namespace manages the data
    * synchronization between local and remote backend.
@@ -63,8 +66,28 @@
      */
     online: function() {
       if(!Kinvey.Sync.isOnline) {
-        Kinvey.Sync.isOnline = true;
-        Kinvey.Sync.application();
+        // If a user context was specified, login prior to synchronization.
+        if(null != context) {
+          var user = new Kinvey.User();
+          user.login(context.username, context.password, {
+            success: function() {
+              Kinvey.Sync.isOnline = true;
+              Kinvey.Sync.syncWith(null);// Reset.
+              Kinvey.Sync.application();
+            },
+            error: function(e, info) {
+              // Failed to login the user. Do not trigger synchronization,
+              // invoke the sychronization error handler instead.
+              Kinvey.Sync.isOnline = true;
+              Kinvey.Sync.syncWith(null);// Reset.
+              Kinvey.Sync.options.error(e, info);
+            }
+          });
+        }
+        else {// No user context specified, continue with synchronization.
+          Kinvey.Sync.isOnline = true;
+          Kinvey.Sync.application();
+        }
       }
     },
 
@@ -113,6 +136,16 @@
         description: 'There is no active network connection.',
         debug: 'Synchronization requires an active network connection.'
       });
+    },
+
+    /**
+     * Sets user context to perform synchronization with.
+     * 
+     * @param {string} username User name, or null to reset the context.
+     * @param {string} [password] User password.
+     */
+    syncWith: function(username, password) {
+      context = null != username ? { username: username, password: password } : null;
     },
 
     // Built-in conflict resolution handlers.

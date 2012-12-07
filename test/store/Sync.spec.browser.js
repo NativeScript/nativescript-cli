@@ -2,15 +2,11 @@
  * Kinvey.Sync test suite.
  */
 describe('Kinvey.Sync', function() {
-
   // Housekeeping.
   before(function() {
     this.store = Kinvey.Store.factory(Kinvey.Store.OFFLINE, COLLECTION_UNDER_TEST);
     this.appdata = this.store.appdata;
     this.db = this.store.db;
-  });
-  after(function(done) {
-    Kinvey.getCurrentUser().destroy(callback(done));
   });
 
   // Reset application state.
@@ -75,6 +71,9 @@ describe('Kinvey.Sync', function() {
         }
       }));
     });
+    after(function(done) {
+      Kinvey.getCurrentUser().destroy(callback(done));
+    });
 
     // Test suite.
     it('synchronizes the entire application.', function(done) {
@@ -121,6 +120,9 @@ describe('Kinvey.Sync', function() {
     afterEach(function(done) {
       this.store.remove(this.object, callback(done, { success: function() { } }));
     });
+    after(function(done) {
+      Kinvey.getCurrentUser().destroy(callback(done));
+    });
 
     // Test suite.
     it('synchronizes a specific collection.', function(done) {
@@ -159,6 +161,9 @@ describe('Kinvey.Sync', function() {
         conflict: Kinvey.Sync.clientAlwaysWins,
         success: function() { }
       }));
+    });
+    after(function(done) {
+      Kinvey.getCurrentUser().destroy(callback(done));
     });
 
     // Test suite.
@@ -364,4 +369,58 @@ describe('Kinvey.Sync', function() {
     });
   });
 
+  // Kinvey.Sync#syncWith
+  describe('.syncWith', function() {
+    // Housekeeping: work in offline mode.
+    before(function(done) {
+      var self = this;
+      this.password = 'secret';
+      Kinvey.User.create({ password: this.password }, callback(done, {
+        success: function(user) {
+          self.username = user.getUsername();
+          Kinvey.getCurrentUser().logout(callback(done));
+        }
+      }));
+    })
+    beforeEach(function() {
+      Kinvey.Sync.offline();
+    });
+    after(function(done) {
+      var user = new Kinvey.User();
+      user.login(this.username, this.password, callback(done, {
+        success: function(user) {
+          user.destroy(callback(done));
+        }
+      }));
+    });
+
+    // Test suite.
+    it('synchronizes with a specific user context.', function(done) {
+      var username = this.username;
+      Kinvey.Sync.syncWith(username, this.password);
+      Kinvey.Sync.configure(callback(done, {
+        success: function() {
+          Kinvey.getCurrentUser().getUsername().should.equal(username);
+          Kinvey.Sync.isOnline.should.be['true'];
+          done();
+        }
+      }));
+      Kinvey.Sync.online();
+    });
+    it('throws an error when synchronizing with invalid user context.', function(done) {
+      Kinvey.Sync.syncWith('username', 'password');// Non-existent user.
+      Kinvey.Sync.configure(callback(done, {
+        success: function() {
+          done(new Error('Success callback was invoked.'));
+        },
+        error: function(error, info) {
+          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
+          (null === Kinvey.getCurrentUser()).should.be['true'];
+          Kinvey.Sync.isOnline.should.be['true'];
+          done();
+        }
+      }));
+      Kinvey.Sync.online();
+    });
+  });
 });
