@@ -153,7 +153,8 @@
       options.error || (options.error = this.options.error);
 
       // Add Content-Length header.
-      options.headers['Content-Length'] = body ? body.length : 0;
+      // @link http://nodejs.org/api/buffer.html#buffer_class_method_buffer_bytelength_string_encoding
+      options.headers['Content-Length'] = body ? Buffer.byteLength(body, 'utf8') : 0;
 
       // Create request.
       var path = nodeUrl.parse(url);
