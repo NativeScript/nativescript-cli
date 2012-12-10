@@ -123,6 +123,24 @@
     },
 
     /**
+     * Returns number of pending synchronization.
+     * 
+     * @param {Object} [options] Options.
+     * @param {function(count)} options.success Success callback.
+     * @param {function(error)} options.error Failure callback.
+     * @param {string} options.collection Collection to count.
+     */
+    count: function(options) {
+      // Explicitly set handlers to avoid calling the Kinvey.Sync default ones.
+      options || (options = {});
+      options.success || (options.success = function() { });
+      options.error || (options.error = function() { });
+
+      // Invoke synchronizer count.
+      new Synchronizer(options).count(options.collection || null);
+    },
+
+    /**
      * Synchronizes object.
      * 
      * @param {string} collection Collection name.
@@ -315,6 +333,33 @@
       });
     },
 
+    /**
+     * Returns number of pending transactions.
+     * 
+     * @param {string} collection Collection name, or null for all collections.
+     */
+    count: function(collection) {
+      // Retrieve pending transactions.
+      new Database(collection || Database.TRANSACTION_STORE).getTransactions({
+        success: bind(this, function(transactions) {
+          var count = 0;
+          if(collection) {// Return count for a single collection?
+            var partial = transactions[collection];
+            count = partial ? Object.keys(partial).length : 0;
+          }
+          else {// Aggregate counts of all collections.
+            Object.keys(transactions).forEach(function(collection) {
+              count += Object.keys(transactions[collection]).length;
+            });
+          }
+
+          // Terminate.
+          this.success(count);
+        }),
+        error: this.error
+      });
+    },
+    
     /**
      * Synchronizes an object.
      * 

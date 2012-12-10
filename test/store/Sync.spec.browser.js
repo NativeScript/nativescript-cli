@@ -96,7 +96,7 @@ describe('Kinvey.Sync', function() {
                   done();
                 }
               }));
-              
+
               // Trigger synchronization.
               Kinvey.Sync.online();
             }
@@ -144,6 +144,55 @@ describe('Kinvey.Sync', function() {
               }));
             }
           }));
+        }
+      }));
+    });
+  });
+
+  // Kinvey.Sync#count
+  describe('.count', function() {
+    // Housekeeping: create mock.
+    beforeEach(function(done) {
+      Kinvey.Sync.offline();
+
+      // Enqueue a delete.
+      var entity = new Kinvey.Entity({ _id: 'foo' }, COLLECTION_UNDER_TEST, { store: 'offline' });
+      entity.destroy(callback(done, { success: function() { } }));
+    });
+    afterEach(function(done) {
+      // Destroy implicit user.
+      Kinvey.Sync.configure(callback(done, {
+        success: function() {
+          Kinvey.getCurrentUser().destroy(callback(done));
+        }
+      }));
+      Kinvey.Sync.online();
+    });
+
+    // Test suite.
+    it('counts the number of entities pending synchronization.', function(done) {
+      Kinvey.Sync.count(callback(done, {
+        success: function(count) {
+          count.should.equal(1);
+          done();
+        }
+      }));
+    });
+    it('counts the number of entities pending synchronization for a collection.', function(done) {
+      Kinvey.Sync.count(callback(done, {
+        collection: COLLECTION_UNDER_TEST,
+        success: function(count) {
+          count.should.equal(1);
+          done();
+        }
+      }));
+    });
+    it('counts the number of entities pending synchronization for a non-existent collection.', function(done) {
+      Kinvey.Sync.count(callback(done, {
+        collection: 'foo',
+        success: function(count) {
+          count.should.equal(0);
+          done();
         }
       }));
     });
