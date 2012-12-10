@@ -166,13 +166,13 @@
      * @return {string} URL.
      */
     _getUrl: function(parts) {
-      var url = '/' + this.api + '/' + Kinvey.appKey + '/';
+      var url = '/' + this.api + '/' + this._encode(Kinvey.appKey) + '/';
 
       // Only the AppData API has explicit collections.
       if(Kinvey.Store.AppData.APPDATA_API === this.api && null != this.collection) {
-        url += this.collection + '/';
+        url += this._encode(this.collection) + '/';
       }
-      parts.id && (url += parts.id);
+      parts.id && (url += this._encode(parts.id));
 
       // Build query string.
       var param = [];
@@ -188,7 +188,7 @@
 
       // Resolve references.
       if(parts.resolve) {
-        param.push('resolve=' + parts.resolve.join(','));
+        param.push('resolve=' + parts.resolve.map(this._encode).join(','));
       }
 
       // Android < 4.0 caches all requests aggressively. For now, work around

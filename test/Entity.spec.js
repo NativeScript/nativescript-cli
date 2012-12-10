@@ -139,6 +139,18 @@ describe('Kinvey.Entity', function() {
         }
       }));
     });
+    it('saves a new entity with a predefined id with reserved characters.', function(done) {
+      var entity = this.entity;
+      var id = '~!@#?=$%^&*()€áç<>,./\\';
+      entity.setId(id);
+      entity.save(callback(done, {
+        success: function(response) {
+          response.should.equal(entity);// Kinvey.Entity
+          response.getId().should.equal(id);
+          done();
+        }
+      }));
+    });
     it('updates an existing entity.', function(done) {
       var entity = this.entity;
       entity.set('baz', 'quux');
