@@ -10,6 +10,39 @@ describe('Kinvey.Store.Cached', function() {
     Kinvey.getCurrentUser().destroy(callback(done));
   });
 
+  // Kinvey.Store.Cached::clear
+  describe('::clear', function() {
+    // Housekeeping: create mock.
+    beforeEach(function(done) {
+      this.object = { _id: 'foo' };
+      this.store.save(this.object, callback(done, { success: function() { } }));
+    });
+    afterEach(function(done) {
+      this.store.remove(this.object, callback(done, { success: function() { } }));
+    });
+
+    // Test suite.
+    it('clears the entire cache.', function(done) {
+      var store = this.store;
+      var object = this.object;
+      Kinvey.Store.Cached.clear(callback(done, {
+        success: function() {
+          // Object should no longer be cached.
+          store.query(object._id, callback(done, {
+            policy: Kinvey.Store.Cached.CACHE_ONLY,
+            success: function() {
+              done(new Error('Success callback was invoked'));
+            },
+            error: function(error, info) {
+              error.error.should.equal(Kinvey.Error.ENTITY_NOT_FOUND);
+              info.cached.should.be['true'];
+            }
+          }));
+        }
+      }));
+    });
+  });
+
   // Kinvey.Store.Cached#aggregate
   describe('.aggregate', function() {
     // Create mock.

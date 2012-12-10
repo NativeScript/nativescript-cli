@@ -388,7 +388,16 @@
      * 
      * @constant
      */
-    BOTH: 'both'
+    BOTH: 'both',
+
+    /**
+     * Clears the entire cache.
+     * 
+     * @param {Object} [options] Options.
+     */
+    clear: function(options) {
+      new Database(null).clear(options);
+    }
   });
 
 }());

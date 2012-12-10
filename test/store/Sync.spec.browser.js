@@ -154,10 +154,7 @@ describe('Kinvey.Sync', function() {
     // Housekeeping: create mock.
     beforeEach(function(done) {
       Kinvey.Sync.offline();
-
-      // Enqueue a delete.
-      var entity = new Kinvey.Entity({ _id: 'foo' }, COLLECTION_UNDER_TEST, { store: 'offline' });
-      entity.destroy(callback(done, { success: function() { } }));
+      this.store.remove({ _id: 'foo' }, callback(done, { success: function() { } }));
     });
     afterEach(function(done) {
       // Destroy implicit user.

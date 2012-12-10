@@ -273,6 +273,26 @@
     // Data management.
 
     /**
+     * Clears the entire database.
+     * 
+     * @param {Object} [options]
+     */
+    clear: function(options) {
+      options = this._options(options);
+
+      // Delete all collections through a mutation operation.
+      this._mutate(function(db) {
+        var store;
+        while(null !== (store = db.objectStoreNames.item(0))) {
+          db.deleteObjectStore(store);
+        }
+     }, function() {
+       // Success callback should be called without arguments.
+       options.success();
+     }, options.error);
+    },
+
+    /**
      * Retrieves multiple objects at once.
      * 
      * @param {Array} list List of object ids.
