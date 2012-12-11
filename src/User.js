@@ -400,15 +400,13 @@
      * @private
      */
     _restore: function() {
-      // Return if there already is a current user. Safety check.
-      if(null !== Kinvey.getCurrentUser()) {
-        return;
-      }
-
       // Retrieve and restore user from storage.
       var data = Storage.get(CACHE_TAG());
       if(null !== data && null != data.token && null != data.user) {
         new Kinvey.User(data.user)._login(data.token);
+      }
+      else {// No user, reset.
+        Kinvey.setCurrentUser(null);
       }
     }
   });
