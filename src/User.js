@@ -299,7 +299,7 @@
     _saveToDisk: function() {
       Storage.set(CACHE_TAG(), {
         token: this.token,
-        user: this.toJSON()
+        user: this.toJSON(true)
       });
     }
   }, {

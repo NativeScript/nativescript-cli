@@ -478,7 +478,7 @@ describe('Kinvey.Store.Cached', function() {
         _id: 'bar',
         test: true
       };
-      var query = this.query = new Kinvey.Query();
+      var query = this.query = new Kinvey.Query().on('_kmd.lmt').sort();
 
       // Save both, and make sure query is in cached.
       var store = this.store;
@@ -503,7 +503,7 @@ describe('Kinvey.Store.Cached', function() {
       var expected = null;
       this.store.queryWithQuery(this.query.toJSON(), callback(done, {
         policy: Kinvey.Store.Cached.BOTH,
-        success: function(list, info) {
+        success: function(list, info) {console.log(list);
           list.should.have.length(2);
           list[0].fake.should.not.have.property('_obj');
           list[0].ref.ref[0].should.not.have.property('_obj');

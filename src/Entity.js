@@ -53,7 +53,7 @@
      */
     destroy: function(options) {
       options || (options = {});
-      this.store.remove(this.toJSON(), merge(options, {
+      this.store.remove(this.toJSON(true), merge(options, {
         success: bind(this, function(_, info) {
           options.success && options.success(this, info);
         })
@@ -147,7 +147,7 @@
       // Save references first, then save original.
       this._saveReferences(merge(options, {
         success: bind(this, function(outAttr) {
-          this.store.save(this.toJSON(), merge(options, {
+          this.store.save(this.toJSON(true), merge(options, {
             success: bind(this, function(response, info) {
               // Replace flat references with real objects. outAttr is an
               // array containing fields to replace with the replacement object.
@@ -224,22 +224,19 @@
     /**
      * Returns JSON representation. Used by JSON#stringify.
      * 
-     * @param {string} key Empty string if parent object, otherwise the field name.
+     * @param {boolean} [doNotFlatten] If false, returns entity using reference syntax.
      * @returns {Object} JSON representation.
      */
-    toJSON: function(key) {
-      // Top-level?
-      if('' === key || 'undefined' === typeof key) {
-        var result = this.attr;
+    toJSON: function(doNotFlatten) {
+      if(true === doNotFlatten) {
+        // stringify and then parse again, so all attributes are actually plain
+        // JSON. Otherwise, references will still be Kinvey.Entity-s.
+        var result = JSON.parse(JSON.stringify(this.attr));
         this.metadata && (result._acl = this.metadata.toJSON()._acl);
-
-        // Since the entity may hold references, we want to convert those to
-        // pure JSON too. The best way to do that is to stringify and parse,
-        // as stringify will call toJSON() on child entities.
-        return JSON.parse(JSON.stringify(result));
+        return result;
       }
 
-      // Nested, return as reference.
+      // Flatten entity by returning it in reference syntax.
       return {
         _type: 'KinveyRef',
         _collection: this.collection,
