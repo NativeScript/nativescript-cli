@@ -16,25 +16,19 @@ describe('Kinvey.User', function() {
 
   // Kinvey.User::create
   describe('::create', function() {
-    // Each test below creates a user, cleanup after.
+    // Housekeeping: destroy created user.
     afterEach(function(done) {
       this.user.destroy(callback(done));
     });
 
     // Test suite.
-    it('creates the current user.', function(done) {
-      var user = this.user = Kinvey.User.create({
-//        username: 'foo',
-        password: 'bar',
-        attribute: 'value'
-      }, callback(done, {
+    it('creates an active user.', function(done) {
+      var user = this.user = Kinvey.User.create({ password: 'secret' }, callback(done, {
         success: function(response) {
-          response.should.equal(user);// Kinvey.User
-//          (response.getUsername()).should.equal('foo');
-          (null === response.get(response.ATTR_PASSWORD)).should.be['false'];
-          (response.get('attribute')).should.equal('value');
+          response.should.equal(user);
+          response.get(response.ATTR_PASSWORD).should.equal('secret');
 
-          // Test current user.
+          // Test active user.
           Kinvey.getCurrentUser().should.equal(response);
           response.isLoggedIn.should.be['true'];
           (null !== response.getToken()).should.be['true'];
@@ -43,32 +37,14 @@ describe('Kinvey.User', function() {
         }
       }));
     });
-/*    it('creates the current user with auto-generated password.', function(done) {
-      var user = this.user = Kinvey.User.create({
-        username: 'foo'
-      }, callback(done, {
-        success: function(response) {
-          response.should.equal(user);
-          (response.getUsername()).should.equal('foo');
-          (null === response.get(response.ATTR_PASSWORD)).should.be['false'];
-
-          // Test current user.
-          Kinvey.getCurrentUser().should.equal(response);
-          (response.isLoggedIn).should.be['true'];
-          (null !== response.getToken()).should.be['true'];
-
-          done();
-        }
-      }));
-    });*/
-    it('creates an implicit current user.', function(done) {
+    it('creates an implicit user.', function(done) {
       var user = this.user = Kinvey.User.create({}, callback(done, {
         success: function(response) {
           response.should.equal(user);
           (null !== response.getUsername()).should.be['true'];
-          (null === response.get(response.ATTR_PASSWORD)).should.be['false'];
+          (null !== response.get(response.ATTR_PASSWORD)).should.be['true'];
 
-          // Test current user.
+          // Test active user.
           Kinvey.getCurrentUser().should.equal(response);
           (response.isLoggedIn).should.be['true'];
           (null !== response.getToken()).should.be['true'];
@@ -81,20 +57,20 @@ describe('Kinvey.User', function() {
 
   // Kinvey.User::init
   describe('::init', function() {
-    // Destroy the created implicit user.
+    // Housekeeping: destroy created user.
     afterEach(function(done) {
       Kinvey.getCurrentUser().destroy(callback(done));
     });
 
-    it('returns the current user.', function(done) {
-      // Create a current user.
+    // Test suite.
+    it('returns the active user.', function(done) {
       Kinvey.User.create({}, callback(done, {
         success: function(user) {
           Kinvey.User.init(callback(done, {
             success: function(response) {
               response.should.equal(user);
 
-              // Test current user.
+              // Test active user.
               Kinvey.getCurrentUser().should.equal(response);
               (response.isLoggedIn).should.be['true'];
 
@@ -112,7 +88,7 @@ describe('Kinvey.User', function() {
 
           // Restore should recreate the user from cache.
           Kinvey.User._restore();
-          Kinvey.getCurrentUser().should.eql(user);
+          Kinvey.getCurrentUser().attr.should.eql(user.attr);
 
           done();
         }
@@ -328,13 +304,34 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
-    it('Updates an existing user.', function(done) {
+    it('updates an existing user.', function(done) {
       var user = this.user;
+      var token = user.getToken();
       user.set('key', 'value');
       user.save(callback(done, {
         success: function(response) {
           response.should.equal(user);
-          (response.get('key')).should.equal('value');
+          response.get('key').should.equal('value');
+
+          // Token should be refreshed.
+          response.getToken().should.not.equal(token);
+
+          done();
+        }
+      }));
+    });
+    it('changes the users password.', function(done) {
+      var user = this.user;
+      var token = user.getToken();
+      user.setPassword('secret');
+      user.save(callback(done, {
+        success: function(response) {
+          response.should.equal(user);
+          (null === response.get('password')).should.be['true'];
+
+          // Token should be refreshed.
+          response.getToken().should.not.equal(token);
+          
           done();
         }
       }));

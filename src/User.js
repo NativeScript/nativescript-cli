@@ -196,10 +196,23 @@
       // Parent method will always update.
       Kinvey.Entity.prototype.save.call(this, merge(options, {
         success: bind(this, function(_, info) {
-          this._saveToDisk();// Refresh cache.
+          // Extract token.
+          var token = this.attr._kmd.authtoken;
+          delete this.attr._kmd.authtoken;
+          this._login(token);// Refresh.
+
           options.success && options.success(this, info);
         })
       }));
+    },
+
+    /**
+     * Sets a new password.
+     * 
+     * @param {string} password New password.
+     */
+    setPassword: function(password) {
+      this.set(this.ATTR_PASSWORD, password);
     },
 
     /**
@@ -238,7 +251,7 @@
           delete response._kmd.authtoken;
 
           // Update attributes. This does not include the users password.
-          this.attr = this._parseAttr(response);
+          this.attr = response;
           this._login(token);
 
           options.success && options.success(this, info);
@@ -317,30 +330,36 @@
     create: function(attr, options) {
       options || (options = {});
 
+      // Create the new user.
+      var user = options._target || new Kinvey.User(attr);
+
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();
       if(null !== currentUser) {
         currentUser.logout(merge(options, {
           success: function() {
-            Kinvey.User.create(attr, options);
+            // Try again. Use the already instantiated user as target.
+            Kinvey.User.create(attr, merge(options, {
+              _target: user
+            }));
           }
         }));
-        return;
+      }
+      else {// Save the instantiated user.
+        Kinvey.Entity.prototype.save.call(user, merge(options, {
+          success: bind(user, function(_, info) {
+            // Extract token.
+            var token = this.attr._kmd.authtoken;
+            delete this.attr._kmd.authtoken;
+            this._login(token);
+  
+            options.success && options.success(this, info);
+          })
+        }));
       }
 
-      // Create a new user.
-      var user = options._target || new Kinvey.User(attr);
-      Kinvey.Entity.prototype.save.call(user, merge(options, {
-        success: bind(user, function(_, info) {
-          // Extract token.
-          var token = this.attr._kmd.authtoken;
-          delete this.attr._kmd.authtoken;
-          this._login(token);
-
-          options.success && options.success(this, info);
-        })
-      }));
-      return user;// return the instance
+      // Return the user instance.
+      return user;
     },
 
     /**

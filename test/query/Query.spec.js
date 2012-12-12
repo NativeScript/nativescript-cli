@@ -55,8 +55,8 @@ describe('Kinvey.Query', function() {
       this.query.on('hobbies').all([ 'HTML', 'CSS', 'JavaScript' ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -65,7 +65,7 @@ describe('Kinvey.Query', function() {
       this.query.on('hobbies').all([ 'HTML', 'CSS', 'PHP' ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -86,8 +86,8 @@ describe('Kinvey.Query', function() {
       this.query.and(new Kinvey.Query().on('age').lessThan(75));
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -97,7 +97,7 @@ describe('Kinvey.Query', function() {
       this.query.and(new Kinvey.Query().on('age').lessThan(25));
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -111,8 +111,8 @@ describe('Kinvey.Query', function() {
       this.query.on('name').equal('John');
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -122,8 +122,8 @@ describe('Kinvey.Query', function() {
       this.query.on('hobbies').equal([ 'HTML', 'CSS', 'JavaScript' ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -133,8 +133,8 @@ describe('Kinvey.Query', function() {
       this.query.on('parents').equal({ mother: 'Alice', father: 'Bob' });
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -148,8 +148,8 @@ describe('Kinvey.Query', function() {
       this.query.on('name').exist(true);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -159,8 +159,8 @@ describe('Kinvey.Query', function() {
       this.query.on('name').exist(false);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(simple);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(simple.toJSON());
           done();
         }
       }));
@@ -174,8 +174,8 @@ describe('Kinvey.Query', function() {
       this.query.on('age').greaterThan(25);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -189,8 +189,8 @@ describe('Kinvey.Query', function() {
       this.query.on('age').greaterThanEqual(50);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -204,8 +204,8 @@ describe('Kinvey.Query', function() {
       this.query.on('hobbies').in_([ 'HTML', 'CSS' ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -225,8 +225,8 @@ describe('Kinvey.Query', function() {
       this.query.on('age').lessThan(100);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -240,8 +240,8 @@ describe('Kinvey.Query', function() {
       this.query.on('age').lessThanEqual(50);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -255,8 +255,8 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').nearSphere([ -71, 42 ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -266,8 +266,8 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').nearSphere([ -71, 42 ], 100);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -276,7 +276,7 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').nearSphere([ -71, 42 ], 1);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -296,8 +296,8 @@ describe('Kinvey.Query', function() {
       this.query.on('surname').notEqual('Brown');
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -311,8 +311,8 @@ describe('Kinvey.Query', function() {
       this.query.on('surname').notIn([ 'Brown', 'Lee' ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -343,8 +343,8 @@ describe('Kinvey.Query', function() {
       this.query.or(new Kinvey.Query().on('age').lessThan(25));
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -354,7 +354,7 @@ describe('Kinvey.Query', function() {
       this.query.or(new Kinvey.Query().on('age').lessThan(25));
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -391,7 +391,7 @@ describe('Kinvey.Query', function() {
       this.query.setLimit(1);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
+          list.should.have.length(1);
           done();
         }
       }));
@@ -404,7 +404,7 @@ describe('Kinvey.Query', function() {
       this.query.setSkip(2);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -420,9 +420,9 @@ describe('Kinvey.Query', function() {
       this.query.on('surname').sort(Kinvey.Query.ASC);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(2);
-          list[0].should.eql(simple);
-          list[1].should.eql(complex);
+          list.should.have.length(2);
+          list[0].toJSON().should.eql(simple.toJSON());
+          list[1].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -434,9 +434,9 @@ describe('Kinvey.Query', function() {
       this.query.on('surname').sort(Kinvey.Query.DESC);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(2);
-          list[0].should.eql(complex);
-          list[1].should.eql(simple);
+          list.should.have.length(2);
+          list[0].toJSON().should.eql(complex.toJSON());
+          list[1].toJSON().should.eql(simple.toJSON());
           done();
         }
       }));
@@ -450,8 +450,8 @@ describe('Kinvey.Query', function() {
       this.query.on('hobbies').size(3);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -465,8 +465,8 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').withinBox([ [ -72, 41 ], [ -70, 43 ] ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -475,7 +475,7 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').withinBox([ [ -74, 39 ], [ -72, 41 ] ]);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -496,8 +496,8 @@ describe('Kinvey.Query', function() {
       // miles
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -507,7 +507,7 @@ describe('Kinvey.Query', function() {
       // mile
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));
@@ -549,8 +549,8 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').withinPolygon(massachusetts);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(1);
-          list[0].should.eql(complex);
+          list.should.have.length(1);
+          list[0].toJSON().should.eql(complex.toJSON());
           done();
         }
       }));
@@ -619,7 +619,7 @@ describe('Kinvey.Query', function() {
       this.query.on('_geoloc').withinPolygon(texas);
       this.collection.fetch(callback(done, {
         success: function(list) {
-          list.length.should.equal(0);
+          list.should.have.length(0);
           done();
         }
       }));

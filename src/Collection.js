@@ -127,6 +127,9 @@
           response.forEach(bind(this, function(attr) {
             // Maintain collection store type and configuration.
             var opts = { store: this.store.name, options: this.store.options };
+
+            // Resolve references, and create the new entity.
+            attr = Kinvey.Entity._resolve(this.entity.prototype.map, attr, options.resolve, opts);
             this.list.push(new this.entity(attr, this.name, opts));
           }));
           options.success && options.success(this.list, info);

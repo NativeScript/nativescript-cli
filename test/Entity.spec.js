@@ -42,7 +42,7 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#load
   describe('.load', function() {
-    // Create mock.
+    // Housekeeping: create mock.
     beforeEach(function(done) {
       this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
       this.entity.save(callback(done));
@@ -56,8 +56,8 @@ describe('Kinvey.Entity', function() {
       var entity = this.entity;
       new Kinvey.Entity({}, COLLECTION_UNDER_TEST).load(entity.getId(), callback(done, {
         success: function(response) {
-          response.should.eql(entity);// Kinvey.Entity
-          (response.getId()).should.equal(entity.getId());
+          response.getId().should.equal(entity.getId());
+          response.attr.should.eql(entity.attr);
           done();
         }
       }));
@@ -66,49 +66,51 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#load
   describe('.load [relational]', function() {
-    // Housekeeping: create mock.
+    // Housekeeping: create and save mock with a reference.
     beforeEach(function(done) {
-      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
-      this.entity.set('bar', {
-        _type: 'KinveyRef',
-        _collection: COLLECTION_UNDER_TEST,
-        _id: 'bar',
-        _obj: { _id: 'bar', bar: true }
-      });
+      this.reference = new Kinvey.Entity({ bar: true }, COLLECTION_UNDER_TEST);
+      this.entity = new Kinvey.Entity({ foo: this.reference }, COLLECTION_UNDER_TEST);
       this.entity.save(callback(done));
     });
     afterEach(function(done) {
-      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done));
+      var reference = this.reference;
+      this.entity.destroy(callback(done, {
+        success: function() {
+          reference.destroy(callback(done));
+        }
+      }));
     });
 
     // Test suite.
-    it('leaves non-resolved references as is.', function(done) {
+    it('does not resolve a reference.', function(done) {
+      var reference = this.reference;
       this.entity.load(this.entity.getId(), callback(done, {
         success: function(entity) {
-          entity.get('bar').should.eql({
+          entity.get('foo').should.eql({
             _type: 'KinveyRef',
             _collection: COLLECTION_UNDER_TEST,
-            _id: 'bar'
+            _id: reference.getId()
           });
           done();
         }
       }));
-    });
+    });/*
     it('resolves a reference.', function(done) {
+      var reference = this.reference;
       this.entity.load(this.entity.getId(), callback(done, {
-        resolve: ['bar'],
+        resolve: ['foo'],
         success: function(entity) {
-          entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
-          entity.get('bar').get('bar').should.be['true'];
+          entity.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+          entity.get('foo').attr.should.eql(reference.attr);
           done();
         }
       }));
-    });
+    });*/
   });
 
   // Kinvey.Entity#save
   describe('.save', function() {
-    // Create mock.
+    // Housekeeping: create mock.
     beforeEach(function() {
       this.entity = new Kinvey.Entity({ key: 'value' }, COLLECTION_UNDER_TEST);
     });
@@ -170,18 +172,18 @@ describe('Kinvey.Entity', function() {
 
   // Kinvey.Entity#save
   describe('.save [relational]', function() {
-    // Housekeeping: create mock.
+    // Housekeeping: create mock with a reference.
     beforeEach(function() {
-      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
-      this.entity.set('bar', {
-        _type: 'KinveyRef',
-        _collection: COLLECTION_UNDER_TEST,
-        _id: 'bar',
-        _obj: { _id: 'bar', bar: true }
-      });
+      this.reference = new Kinvey.Entity({ bar: true }, COLLECTION_UNDER_TEST);
+      this.entity = new Kinvey.Entity({ foo: this.reference }, COLLECTION_UNDER_TEST);
     });
     afterEach(function(done) {
-      new Kinvey.Collection(COLLECTION_UNDER_TEST).clear(callback(done));
+      var reference = this.reference;
+      this.entity.destroy(callback(done, {
+        success: function() {
+          reference.destroy(callback(done));
+        }
+      }));
     });
 
     // Test suite.
@@ -193,87 +195,124 @@ describe('Kinvey.Entity', function() {
           response.should.equal(entity);
 
           // Reference should have been saved too.
-          (null !== entity.get('bar').getMetadata().lastModified).should.be['true'];
+          entity.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+          (null !== entity.get('foo').getMetadata().lastModified).should.be['true'];
 
           done();
         }
       }));
     });
-    it('fails on saving a circular reference.', function(done) {
-      this.entity.set('foo', this.entity);
+    it('saves a circular relational structure.', function(done) {
+      this.reference.set('foo', this.entity);
       this.entity.save(callback(done, {
-        success: function() {
-          done(new Error('Success callback was invoked'));
-        },
-        error: function(error) {
-          error.error.should.equal(Kinvey.Error.BAD_REQUEST);
+        success: function(response) {
+          (null !== response.getId()).should.be['true'];
+          (null !== response.get('foo').getId()).should.be['true'];
+
+          // Circular reference should point to response itself.
+          response.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+          response.get('foo').get('foo').should.equal(response);
+
           done();
         }
       }));
     });
   });
 
-  // Kinvey.Entity#set
-  describe('.set [relational]', function() {
-    // Housekeeping: create mock and reference mock.
-    beforeEach(function() {
-      this.entity = new Kinvey.Entity({}, COLLECTION_UNDER_TEST);
-      this.ref = {
+  // Kinvey.Entity#_resolve
+  describe('._resolve', function() {
+    // Housekeeping: create resolved and unresolved objects.
+    before(function() {
+      this.resolved = {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'foo',
+        _obj: { _id: 'foo', foo: true }
+      };
+      this.unresolved = {
+        _type: 'KinveyRef',
+        _collection: COLLECTION_UNDER_TEST,
+        _id: 'bar'
+      };
+      this.nested = {
         _type: 'KinveyRef',
         _collection: COLLECTION_UNDER_TEST,
         _id: 'bar',
-        _obj: { _id: 'bar', bar: true }
+        _obj: { _id: 'bar', foo: this.resolved }
       };
     });
 
     // Test suite.
-    it('parses a relational property.', function() {
-      this.entity.set('bar', this.ref);
+    it('resolves a reference.', function() {
+      var entity = { foo: this.resolved };
 
-      // Test relation.
-      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar').get('bar').should.be['true'];
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo']);
+      attr.foo.should.be.an['instanceof'](Kinvey.Entity);
     });
-    it('parses a nested relational property.', function() {
-      this.entity.set('bar', { baz: this.ref });
+    it('resolves a non-reference.', function() {
+      var entity = { foo: this.resolved };
 
-      // Test relation.
-      this.entity.get('bar').baz.should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar').baz.get('bar').should.be['true'];
+      var attr = Kinvey.Entity._resolve({}, entity, ['bar']);
+      attr.foo.should.eql(this.resolved);
+      (null == attr.bar).should.be['true'];
     });
-    it('parses a relational array member.', function() {
-      this.entity.set('bar', [ this.ref ]);
+    it('maps a resolved reference.', function() {
+      var ClassDef = Kinvey.Entity.extend();
+      var entity = { foo: this.resolved };
 
-      // Test relation.
-      this.entity.get('bar')[0].should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar')[0].get('bar').should.be['true'];
+      var attr = Kinvey.Entity._resolve({ foo: ClassDef }, entity, ['foo']);
+      attr.foo.should.be.an['instanceof'](ClassDef);
     });
 
-    it('parses a mapped relational property.', function() {
-      // Create and map class definition.
-      var MyEntity = Kinvey.Entity.extend({});
-      this.entity.map.bar = MyEntity;
-      this.entity.set('bar', this.ref);
+    it('resolves a child reference.', function() {
+      var entity = { foo: { bar: this.resolved } };
 
-      // Test relation.
-      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar').should.be.an['instanceof'](MyEntity);
-      this.entity.get('bar').get('bar').should.be['true'];
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo.bar']);
+      attr.foo.bar.should.be.an['instanceof'](Kinvey.Entity);
     });
-    it('parses nested relational properties.', function() {
-      // Append reference to itself.
-      this.ref._obj.bar = {
-        _type: 'KinveyRef',
-        _collection: COLLECTION_UNDER_TEST,
-        _id: 'baz',
-        _obj: { _id: 'baz', baz: true }
-      };
-      this.entity.set('bar', this.ref);
+    it('resolves an array member reference.', function() {
+      var entity = { foo: [ 'bar', this.resolved, 'baz' ] };
 
-      // Test relation.
-      this.entity.get('bar').should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar').get('bar').should.be.an['instanceof'](Kinvey.Entity);
-      this.entity.get('bar').get('bar').get('baz').should.be['true'];
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo']);
+      attr.foo[1].should.be.an['instanceof'](Kinvey.Entity);
+    });
+    it('does not resolve a array member child reference.', function() {
+      var entity = { foo: [ 'bar', { baz: this.resolved }, 'qux' ] };
+
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo']);
+      attr.foo[1].baz.should.eql(this.resolved);
+    });
+
+    it('leaves a non-resolved reference as is.', function() {
+      var entity = { foo: this.unresolved };
+
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo']);
+      attr.foo.should.eql(this.unresolved);
+    });
+
+    it('resolves a reference with nested reference.', function() {
+      var entity = { foo: this.nested };
+
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo']);
+      attr.foo.should.be.an['instanceof'](Kinvey.Entity);
+      attr.foo.get('foo').should.equal(this.resolved);
+    });
+    it('resolves a nested reference.', function() {
+      var entity = { foo: this.nested };
+
+      var attr = Kinvey.Entity._resolve({}, entity, ['foo.foo']);
+      attr.foo.should.be.an['instanceof'](Kinvey.Entity);
+      attr.foo.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+    });
+
+    it('maps a nested reference.', function() {
+      var ClassDef = Kinvey.Entity.extend();
+      var entity = { foo: this.nested };
+
+      var attr = Kinvey.Entity._resolve({ foo: ClassDef }, entity, ['foo.foo']);
+      attr.foo.should.be.an['instanceof'](ClassDef);
+      attr.foo.get('foo').should.be.an['instanceof'](Kinvey.Entity);
+      attr.foo.get('foo').should.not.be.an['instanceof'](ClassDef);
     });
   });
 
