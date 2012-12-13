@@ -127,11 +127,16 @@
         txn.oncomplete = bind(this, function() {
           if(req.result) {// Resolve references before returning.
             var pending = response.length;
-            response.forEach(function(object) {
-              this._resolve(object, options.resolve, function() {
-                !--pending && options.success(response, { cached: true });
-              });
-            }, this);
+            if(0 !== pending) {// Items found.
+              response.forEach(function(object) {
+                this._resolve(object, options.resolve, function() {
+                  !--pending && options.success(response, { cached: true });
+                });
+              }, this);
+            }
+            else {// No items found, return directly.
+              options.success(response, { cached: true });
+            }
           }
           else {
             options.error(Kinvey.Error.DATABASE_ERROR, 'Query is not in database.');
