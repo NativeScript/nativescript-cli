@@ -309,34 +309,40 @@
 
           // Second case: doc is an array. Only immediate references are saved.
           else if(doc instanceof Array) {
-            // Define function to check and save a member in the array.
+            // Instead of calling a function for every member, filter array so
+            // only references remain.
+            var refs = [];
+            for(var i in doc) {
+              if(doc[i] instanceof Kinvey.Entity) {
+                refs.push({ index: i, doc: doc[i] });
+              }
+            }
+
+            // Define function to save the found references in the array.
             var saveArrayReference = function(i) {
               // If there is more to check, do that first.
-              if(i < doc.length) {
-                var member = doc[i];
-                if(member instanceof Kinvey.Entity) {
-                  // If entity is already saved, it is referenced circularly.
-                  // In that case, add it to outAttr directly and skip saving
-                  // it again.
-                  if(-1 !== saved.indexOf(member.__objectId)) {
-                    outAttr.push({ attr: attr, obj: member });
-                    return saveArrayReference(++i);// Proceed.
-                  }
+              if(i < refs.length) {
+                var index = refs[i].index;
+                var member = refs[i].doc;
 
-                  // Save member.
-                  saved.push(member.__objectId);
-                  member.save(merge(options, {
-                    success: function(obj) {
-                      outAttr.push({ attr: attr + '.' + i, obj: obj });
-                      saveArrayReference(++i);// Proceed.
-                    },
-                    error: options.error,
-                    __obj: saved// Pass tracking.
-                  }));
+                // If entity is already saved, it is referenced circularly.
+                // In that case, add it to outAttr directly and skip saving
+                // it again.
+                if(-1 !== saved.indexOf(member.__objectId)) {
+                  outAttr.push({ attr: attr + '.' + index, obj: member });
+                  return saveArrayReference(++i);// Proceed.
                 }
-                else {
-                  saveArrayReference(++i);// Proceed.
-                }
+
+                // Save member.
+                saved.push(member.__objectId);
+                member.save(merge(options, {
+                  success: function(obj) {
+                    outAttr.push({ attr: attr + '.' + index, obj: obj });
+                    saveArrayReference(++i);// Proceed.
+                  },
+                  error: options.error,
+                  __obj: saved// Pass tracking.
+                }));
               }
 
               // Otherwise, array is traversed.
