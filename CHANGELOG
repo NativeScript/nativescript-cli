@@ -1,7 +1,9 @@
 v0.9.12
+* Added support for Trigger.IO.
 * Added support for clearing the entire cache.
 * Added support for setting the user context for synchronization.
 * Added support for retrieving the number of entities modified offline.
+* Stability and performance improvements regarding relational data.
 * Bug fix: URL components are now properly encoded.
 
 v0.9.11 (December 6, 2012)

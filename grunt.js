@@ -21,7 +21,8 @@ module.exports = function(grunt) {
       html5: '<%= pkg.name %>-js-<%= pkg.version %>',// HTML5 dist filename.
       node: '<%= pkg.name %>-nodejs-<%= pkg.version %>',// node dist filename.
       phonegap: '<%= pkg.name %>-phonegap-<%= pkg.version %>',// phonegap dist filename.
-      titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>'// titanium dist filename.
+      titanium: '<%= pkg.name %>-titanium-<%= pkg.version %>',// titanium dist filename.
+      triggerio: '<%= pkg.name %>-triggerio-<%= pkg.version %>'// Trigger.io dist filename.
     },
 
     // Banner.
@@ -267,6 +268,38 @@ module.exports = function(grunt) {
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.titanium %>.js'
+      },
+      triggerio: {
+        src: [
+          '<banner>',
+          '<%= dir.src %>/intro.txt',
+          '<%= dir.src %>/util/Storage.js',
+          '<%= dir.src %>/util/Xhr.TriggerIO.js',
+
+          '<%= dir.src %>/Kinvey.js',
+          '<%= dir.src %>/Error.js',
+          '<%= dir.src %>/Entity.js',
+          '<%= dir.src %>/Collection.js',
+          '<%= dir.src %>/User.js',
+          '<%= dir.src %>/UserCollection.js',
+          '<%= dir.src %>/Metadata.js',
+
+          '<%= dir.src %>/query/Query.js',
+          '<%= dir.src %>/query/MongoBuilder.js',
+          '<%= dir.src %>/aggregation/Aggregation.js',
+          '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/store/Store.browser.js',
+          '<%= dir.src %>/store/Rpc.js',
+          '<%= dir.src %>/store/AppData.js',
+          '<%= dir.src %>/store/Database.js',
+          '<%= dir.src %>/store/Cached.js',
+          '<%= dir.src %>/store/Offline.js',
+          '<%= dir.src %>/store/Sync.js',
+
+          '<%= dir.src %>/outro.txt'
+        ],
+        dest: '<%= dir.dist %>/<%= sdk.triggerio %>.js'
       }
     },
 
@@ -312,6 +345,10 @@ module.exports = function(grunt) {
       phonegap: {
         src: ['<banner>', '<%= dir.dist %>/<%= sdk.phonegap %>.js'],
         dest: '<%= dir.dist %>/<%= sdk.phonegap %>.min.js'
+      },
+      triggerio: {
+        src: ['<banner>', '<%= dir.dist %>/<%= sdk.triggerio %>.js'],
+        dest: '<%= dir.dist %>/<%= sdk.triggerio %>.min.js'
       }
     },
 
@@ -336,6 +373,10 @@ module.exports = function(grunt) {
       titanium: {
         src: '<%= dir.dist %>/<%= sdk.titanium %>.js',
         dest: '<%= dir.apidoc %>/titanium'
+      },
+      triggerio: {
+        src: '<%= dir.dist %>/<%= sdk.triggerio %>.js',
+        dest: '<%= dir.apidoc %>/triggerio'
       }
     },
 
