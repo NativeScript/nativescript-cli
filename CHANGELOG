@@ -1,4 +1,5 @@
 v0.9.12
+* Added support for setting entity permissions for user groups.
 * Added support for Trigger.IO.
 * Added support for clearing the entire cache.
 * Added support for setting the user context for synchronization.

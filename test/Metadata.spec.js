@@ -10,7 +10,7 @@ describe('Kinvey.Metadata', function() {
   describe('.constructor', function() {
     it('accepts a predefined metadata.', function() {
       var metadata = { _acl: { creator: 'foo' } };
-      new Kinvey.Metadata(metadata).toJSON()._acl.should.eql(metadata._acl);
+      new Kinvey.Metadata(metadata).toJSON()._acl.should.equal(metadata._acl);
     });
   });
 
@@ -20,19 +20,41 @@ describe('Kinvey.Metadata', function() {
     it('adds a reader.', function() {
       this.metadata.addReader('foo');
       this.metadata.getReaders().should.eql(['foo']);
-      this.metadata.toJSON()._acl.should.eql({ r: ['foo'] });
+      this.metadata.toJSON()._acl.should.have.property('r');
     });
     it('adds two readers.', function() {
       this.metadata.addReader('foo');
       this.metadata.addReader('bar');
       this.metadata.getReaders().should.eql(['foo', 'bar']);
-      this.metadata.toJSON()._acl.should.eql({ r: ['foo', 'bar'] });
+      this.metadata.toJSON()._acl.should.have.property('r');
     });
     it('adds the same reader twice.', function() {
       this.metadata.addReader('foo');
       this.metadata.addReader('foo');
       this.metadata.getReaders().should.eql(['foo']);
-      this.metadata.toJSON()._acl.should.eql({ r: ['foo'] });
+      this.metadata.toJSON()._acl.should.have.property('r');
+    });
+  });
+
+  // Kinvey.Metadata#addReaderGroup
+  describe('.addReaderGroup', function() {
+    // Test suite.
+    it('adds a reader group.', function() {
+      this.metadata.addReaderGroup('foo');
+      this.metadata.getReaderGroups().should.eql(['foo']);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
+    });
+    it('adds two reader groups.', function() {
+      this.metadata.addReaderGroup('foo');
+      this.metadata.addReaderGroup('bar');
+      this.metadata.getReaderGroups().should.eql(['foo', 'bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
+    });
+    it('adds the same group twice.', function() {
+      this.metadata.addReaderGroup('foo');
+      this.metadata.addReaderGroup('foo');
+      this.metadata.getReaderGroups().should.eql(['foo']);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
     });
   });
 
@@ -42,19 +64,41 @@ describe('Kinvey.Metadata', function() {
     it('adds a writer.', function() {
       this.metadata.addWriter('foo');
       this.metadata.getWriters().should.eql(['foo']);
-      this.metadata.toJSON()._acl.should.eql({ w: ['foo'] });
+      this.metadata.toJSON()._acl.should.have.property('w');
     });
     it('adds two writers.', function() {
       this.metadata.addWriter('foo');
       this.metadata.addWriter('bar');
       this.metadata.getWriters().should.eql(['foo', 'bar']);
-      this.metadata.toJSON()._acl.should.eql({ w: ['foo', 'bar'] });
+      this.metadata.toJSON()._acl.should.have.property('w');
     });
     it('adds the same writer twice.', function() {
       this.metadata.addWriter('foo');
       this.metadata.addWriter('foo');
       this.metadata.getWriters().should.eql(['foo']);
-      this.metadata.toJSON()._acl.should.eql({ w: ['foo'] });
+      this.metadata.toJSON()._acl.should.have.property('w');
+    });
+  });
+
+  // Kinvey.Metadata#addWriterGroup
+  describe('.addWriterGroup', function() {
+    // Test suite.
+    it('adds a writer group.', function() {
+      this.metadata.addWriterGroup('foo');
+      this.metadata.getWriterGroups().should.eql(['foo']);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
+    });
+    it('adds two writer groups.', function() {
+      this.metadata.addWriterGroup('foo');
+      this.metadata.addWriterGroup('bar');
+      this.metadata.getWriterGroups().should.eql(['foo', 'bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
+    });
+    it('adds the same group twice.', function() {
+      this.metadata.addWriterGroup('foo');
+      this.metadata.addWriterGroup('foo');
+      this.metadata.getWriterGroups().should.eql(['foo']);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
     });
   });
 
@@ -152,19 +196,46 @@ describe('Kinvey.Metadata', function() {
     it('removes a reader.', function() {
       this.metadata.removeReader('foo');
       this.metadata.getReaders().should.eql(['bar']);
-      this.metadata.toJSON()._acl.should.eql({ r: ['bar'] });
+      this.metadata.toJSON()._acl.should.have.property('r');
     });
     it('removes two readers.', function() {
       this.metadata.removeReader('foo');
       this.metadata.removeReader('bar');
       this.metadata.getReaders().should.eql([]);
-      this.metadata.toJSON()._acl.should.eql({ r: [] });
+      this.metadata.toJSON()._acl.should.have.property('r');
     });
     it('removes the same reader twice.', function() {
       this.metadata.removeReader('foo');
       this.metadata.removeReader('foo');
       this.metadata.getReaders().should.eql(['bar']);
-      this.metadata.toJSON()._acl.should.eql({ r: ['bar'] });
+      this.metadata.toJSON()._acl.should.have.property('r');
+    });
+  });
+
+  // Kinvey.Metadata#removeReaderGroup
+  describe('.removeReaderGroup', function() {
+    beforeEach(function() {
+      this.metadata.addReaderGroup('foo');
+      this.metadata.addReaderGroup('bar');
+    });
+
+    // Test suite.
+    it('removes a reader group.', function() {
+      this.metadata.removeReaderGroup('foo');
+      this.metadata.getReaderGroups().should.eql(['bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
+    });
+    it('removes two reader groups.', function() {
+      this.metadata.removeReaderGroup('foo');
+      this.metadata.removeReaderGroup('bar');
+      this.metadata.getReaderGroups().should.eql([]);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
+    });
+    it('removes the same reader group twice.', function() {
+      this.metadata.removeReaderGroup('foo');
+      this.metadata.removeReaderGroup('foo');
+      this.metadata.getReaderGroups().should.eql(['bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('r');
     });
   });
 
@@ -179,19 +250,46 @@ describe('Kinvey.Metadata', function() {
     it('removes a writer.', function() {
       this.metadata.removeWriter('foo');
       this.metadata.getWriters().should.eql(['bar']);
-      this.metadata.toJSON()._acl.should.eql({ w: ['bar'] });
+      this.metadata.toJSON()._acl.should.have.property('w');
     });
     it('removes two writers.', function() {
       this.metadata.removeWriter('foo');
       this.metadata.removeWriter('bar');
       this.metadata.getWriters().should.eql([]);
-      this.metadata.toJSON()._acl.should.eql({ w: [] });
+      this.metadata.toJSON()._acl.should.have.property('w');
     });
     it('removes the same writer twice.', function() {
       this.metadata.removeWriter('foo');
       this.metadata.removeWriter('foo');
       this.metadata.getWriters().should.eql(['bar']);
-      this.metadata.toJSON()._acl.should.eql({ w: ['bar'] });
+      this.metadata.toJSON()._acl.should.have.property('w');
+    });
+  });
+
+  // Kinvey.Metadata#removeWriterGroup
+  describe('.removeWriterGroup', function() {
+    beforeEach(function() {
+      this.metadata.addWriterGroup('foo');
+      this.metadata.addWriterGroup('bar');
+    });
+
+    // Test suite.
+    it('removes a writer group.', function() {
+      this.metadata.removeWriterGroup('foo');
+      this.metadata.getWriterGroups().should.eql(['bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
+    });
+    it('removes two writer groups.', function() {
+      this.metadata.removeWriterGroup('foo');
+      this.metadata.removeWriterGroup('bar');
+      this.metadata.getWriterGroups().should.eql([]);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
+    });
+    it('removes the same writer group twice.', function() {
+      this.metadata.removeWriterGroup('foo');
+      this.metadata.removeWriterGroup('foo');
+      this.metadata.getWriterGroups().should.eql(['bar']);
+      this.metadata.toJSON()._acl.groups.should.have.property('w');
     });
   });
 
@@ -200,11 +298,11 @@ describe('Kinvey.Metadata', function() {
     // Test suite.
     it('marks the item as globally readable.', function() {
       this.metadata.setGloballyReadable(true);
-      this.metadata.toJSON()._acl.should.eql({ gr: true });
+      this.metadata.toJSON()._acl.gr.should.be['true'];
     });
     it('marks the item as not globally readable.', function() {
       this.metadata.setGloballyReadable(false);
-      this.metadata.toJSON()._acl.should.eql({ gr: false });
+      this.metadata.toJSON()._acl.gr.should.be['false'];
     });
   });
 
@@ -213,11 +311,11 @@ describe('Kinvey.Metadata', function() {
     // Test suite.
     it('marks the item as globally writable.', function() {
       this.metadata.setGloballyWritable(true);
-      this.metadata.toJSON()._acl.should.eql({ gw: true });
+      this.metadata.toJSON()._acl.gw.should.be['true'];
     });
     it('marks the item as not globally writable.', function() {
       this.metadata.setGloballyWritable(false);
-      this.metadata.toJSON()._acl.should.eql({ gw: false });
+      this.metadata.toJSON()._acl.gw.should.be['false'];
     });
   });
 

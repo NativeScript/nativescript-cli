@@ -12,6 +12,7 @@
     constructor: function(attr) {
       attr || (attr = {});
       this.acl = attr._acl || {};
+      this.acl.groups || (this.acl.groups = {});
       this.kmd = attr._kmd || {};
     },
 
@@ -30,6 +31,18 @@
     },
 
     /**
+     * Adds item read permissions for group.
+     * 
+     * @param {string} group Group id.
+     */
+    addReaderGroup: function(group) {
+      this.acl.groups.r || (this.acl.groups.r = []);
+      if(-1 === this.acl.groups.r.indexOf(group)) {
+        this.acl.groups.r.push(group);
+      }
+    },
+
+    /**
      * Adds item write permissions for user.
      * 
      * @param {string} user User id.
@@ -38,6 +51,18 @@
       this.acl.w || (this.acl.w = []);
       if(-1 === this.acl.w.indexOf(user)) {
         this.acl.w.push(user);
+      }
+    },
+
+    /**
+     * Adds item write permission for user group.
+     * 
+     * @param {string} group Group id.
+     */
+    addWriterGroup: function(group) {
+      this.acl.groups.w || (this.acl.groups.w = []);
+      if(-1 === this.acl.groups.w.indexOf(group)) {
+        this.acl.groups.w.push(group);
       }
     },
 
@@ -51,12 +76,30 @@
     },
 
     /**
+     * Returns all reader groups.
+     * 
+     * @return {Array} List of groups.
+     */
+    getReaderGroups: function() {
+      return this.acl.groups.r || [];
+    },
+
+    /**
      * Returns all readers.
      * 
      * @return {Array} List of readers.
      */
     getReaders: function() {
       return this.acl.r || [];
+    },
+
+    /**
+     * Returns all writer groups.
+     * 
+     * @return {Array} List of groups.
+     */
+    getWriterGroups: function() {
+      return this.acl.groups.w || [];
     },
 
     /**
@@ -145,6 +188,20 @@
     },
 
     /**
+     * Removes item read permissions for group.
+     * 
+     * @param {string} group Group id.
+     */
+    removeReaderGroup: function(group) {
+      if(this.acl.groups.r) {
+        var index = this.acl.groups.r.indexOf(group);
+        if(-1 !== index) {
+          this.acl.groups.r.splice(index, 1);
+        }
+      }
+    },
+
+    /**
      * Removes item write permissions for user.
      * 
      * @param {string} user User id.
@@ -154,6 +211,20 @@
         var index = this.acl.w.indexOf(user);
         if(-1 !== index) {
           this.acl.w.splice(index, 1);
+        }
+      }
+    },
+
+    /**
+     * Removes item write permissions for group.
+     * 
+     * @param {string} group Group id.
+     */
+    removeWriterGroup: function(group) {
+      if(this.acl.groups.w) {
+        var index = this.acl.groups.w.indexOf(group);
+        if(-1 !== index) {
+          this.acl.groups.w.splice(index, 1);
         }
       }
     },
