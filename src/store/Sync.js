@@ -297,9 +297,9 @@
           });
 
           // Synchronizing each collection (in parallel).
-          collections.forEach(bind(this, function(collection) {
+          collections.forEach(function(collection) {
             this._collection(collection, transactions[collection], handler(collection));
-          }));
+          }, this);
         }),
         error: this.error
       });
@@ -445,18 +445,18 @@
 
         // Classify each transaction (in parallel). First, handle objects
         // available both in the store and database.
-        remote.forEach(bind(this, function(object) {
+        remote.forEach(function(object) {
           var id = object._id;
           this._object(collection, transactions[id], cached[id], object, handler(id));
 
           // Housekeeping, remove from cached to not loop it again below.
           delete cached[id];
-        }));
+        }, this);
 
         // Next, handle objects only available in the database.
-        Object.keys(cached).forEach(bind(this, function(id) {
+        Object.keys(cached).forEach(function(id) {
           this._object(collection, transactions[id], cached[id], null, handler(id));
-        }));
+        }, this);
       }), function() {// An error occurred. Mark all transactions as cancelled.
         complete([], [], data.objects);
       });
@@ -660,9 +660,9 @@
       };
 
       // Commit each transaction (in parallel).
-      objects.forEach(bind(this, function(object) {
+      objects.forEach(function(object) {
         this._commitObject(object, data, handler);
-      }));
+      }, this);
     },
 
     /**

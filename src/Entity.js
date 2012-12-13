@@ -271,11 +271,11 @@
 
       // To check for references, check each and every attribute.
       var stack = [];
-      Object.keys(this.attr).forEach(bind(this, function(attr) {
+      Object.keys(this.attr).forEach(function(attr) {
         if(this.attr[attr] instanceof Object) {
           stack.push({ attr: attr, doc: this.attr[attr] });
         }
-      }));
+      }, this);
 
       // Define function to check a single item in the stack. If a reference
       // is found, save it (asynchronously).

@@ -503,7 +503,7 @@ describe('Kinvey.Store.Cached', function() {
       var expected = null;
       this.store.queryWithQuery(this.query.toJSON(), callback(done, {
         policy: Kinvey.Store.Cached.BOTH,
-        success: function(list, info) {console.log(list);
+        success: function(list, info) {
           list.should.have.length(2);
           list[0].fake.should.not.have.property('_obj');
           list[0].ref.ref[0].should.not.have.property('_obj');

@@ -74,13 +74,10 @@
           // If result is null, return a not found error.
           var result = req.result;
           if(result) {
-            // Resolve references, if desired.
-            if(options.resolve && options.resolve.length) {
-              return this._resolve(result, options.resolve, function() {
-                options.success(result, { cached: true });
-              });
-            }
-            options.success(result, { cached: true });
+            // Resolve references before returning.
+            this._resolve(result, options.resolve, function() {
+              options.success(result, { cached: true });
+            });
           }
           else {
             options.error(Kinvey.Error.ENTITY_NOT_FOUND, 'This entity could not be found.');
@@ -128,20 +125,13 @@
 
         // Handle transaction status.
         txn.oncomplete = bind(this, function() {
-          if(req.result) {
-            // Resolve references, if desired.
-            if(options.resolve && options.resolve.length) {
-              // Solve references for each object in response.
-              var pending = response.length;
-              response.forEach(bind(this, function(object) {
-                this._resolve(object, options.resolve, function() {
-                  !--pending && options.success(response, { cached: true });
-                });
-              }));
-            }
-            else {
-              options.success(response, { cached: true });
-            }
+          if(req.result) {// Resolve references before returning.
+            var pending = response.length;
+            response.forEach(function(object) {
+              this._resolve(object, options.resolve, function() {
+                !--pending && options.success(response, { cached: true });
+              });
+            }, this);
           }
           else {
             options.error(Kinvey.Error.DATABASE_ERROR, 'Query is not in database.');
@@ -454,17 +444,17 @@
       }
 
       // Save objects (in parallel).
-      response.forEach(bind(this, function(object) {
+      response.forEach(function(object, i) {
         this.put('query', null, object, merge(options, {
           success: function(response) {
-            result.push(response._id);
+            result[i] = response._id;// Insert in order.
             !--pending && progress();
           },
           error: function() {
             !--pending && progress();
           }
         }));
-      }));
+      }, this);
     },
 
     /**
@@ -625,7 +615,7 @@
       // Resolve each top-level reference.
       var parts = Object.keys(references);
       var pending = parts.length;
-      parts.forEach(bind(this, function(attr) {
+      parts.forEach(function(attr) {
         var prop = object[attr];
 
         // This should be an object.
@@ -654,13 +644,13 @@
           }
           else if(prop instanceof Array) {// Case 2: prop is an array
             var mPending = prop.length;
-            prop.forEach(bind(this, function(member, index) {
+            prop.forEach(function(member, index) {
               // As a trick, define member as object value so we can use
               // the current function to extract the reference.
               this._extract({ _: member }, references[attr].concat('_'), function() {
                 !--mPending && !--pending && complete();
               });
-            }));
+            }, this);
           }
           else {// Case 3: prop is an object.
             this._extract(prop, references[attr], function() {
@@ -672,7 +662,7 @@
 
         // Case 4: prop is scalar or undefined.
         !--pending && complete();
-      }));
+      }, this);
     },
 
     /**
@@ -701,66 +691,114 @@
      * 
      * @private
      * @param {Object} object
-     * @param {Array} references List of references.
+     * @param {Array} resolve Fields to resolve.
+     * @param {function(response)} complete Complete callback.
+     */
+    _resolve: function(object, resolve, complete) {
+      resolve = resolve ? resolve.slice(0) : [];// Copy by value.
+
+      // Define function to resolve all desired references.
+      var resolveSingleReference = bind(this, function() {
+        if(resolve[0]) {// If there is more to be resolved, do that first.
+          var segments = resolve.shift().split('.');
+          this._resolveSingleSegment(segments, object, resolveSingleReference);
+        }
+        else {// All desired references are resolved.
+          complete(object);
+        }
+      });
+      resolveSingleReference();// Trigger.
+    },
+
+    /**
+     * Resolves a single reference in a document.
+     * 
+     * @private
+     * @param {Array} segments Field path to be resolved.
+     * @param {Object} doc Document to search in.
      * @param {function()} complete Complete callback.
      */
-    _resolve: function(object, references, complete) {
-      // Quick way out; return here when nothing has to be resolved.
-      if(0 === references.length) {
-        return complete();
-      }
+    _resolveSingleSegment: function(segments, doc, complete) {
+      // If the path is not fully traversed, do that first.
+      if(segments[0]) {
+        var field = segments.shift();
 
-      // Extract top-level from references.
-      references = this._flatten(references);
+        // Check and resolve top-level reference. Otherwise: descent deeper.
+        if(doc.hasOwnProperty(field) && null != doc[field]) {
+          // First case: field is a (unresolved) reference.
+          if('KinveyRef' === doc[field]._type && null != doc[field]._collection && null != doc[field]._id) {
+            if('undefined' === typeof doc[field]._obj) {// Unresolved reference.
+              // Query for reference.
+              var db = this.collection === doc[field]._collection ? this : new Database(doc[field]._collection);
+              db.query(doc[field]._id, {
+                resolve: [segments.join('.')],// Relative to reference.
+                success: function(response) {
+                  doc[field]._obj = response;
+                  complete();// Proceed.
+                },
+                error: function() {// Reference could not be resolved.
+                  doc[field]._obj = null;
+                  complete();// Proceed.
+                }
+              });
+              return;// Terminate, proceed after query() completes.
+            }
 
-      // Resolve each top-level reference.
-      var parts = Object.keys(references);
-      var pending = parts.length;
-      parts.forEach(bind(this, function(attr) {
-        var prop = object[attr];
+            // Already resolved reference, descent into.
+            if(null !== doc[field]._obj) {// Resolved reference, descent into.
+              this._resolveSingleSegment(segments, doc[field]._obj, complete);
+            }
+            else {// Resolved reference is null, dead-end.
+              complete();
+            }
+          }
 
-        // This should be an object.
-        if(prop instanceof Object) {
-          if('KinveyRef' === prop._type) {// Case 1: prop is a reference.
-            // Query reference, and pass second-level references.
-            var db = this.collection === prop._collection ? this : new Database(prop._collection);
-            db.query(prop._id, {
-              resolve: references[attr],
-              success: function(result) {// Extend reference with actual object.
-                prop._obj = result;
-                !--pending && complete();
-              },
-              error: function() {// Extend reference with null object.
-                prop._obj = null;
-                !--pending && complete();
+          // Second case: field is an array. Only immediate members are resolved.
+          else if(doc[field] instanceof Array) {
+            // Define function to resolve a member in the aray.
+            var resolveArrayReference = bind(this, function(i) {
+              // If there is more to resolve, do that first.
+              if(i < doc[field].length) {
+                var member = doc[field][i];
+                if(null != member && 'KinveyRef' === member._type && null != member._collection && null != member._id && 'undefined' === typeof member._obj) {
+                  // Unresolved reference found, resolve.
+                  var db = this.collection === member._collection ? this : new Database(member._collection);
+                  db.query(member._id, {
+                    success: function(response) {
+                      doc[field][i]._obj = response;
+                      resolveArrayReference(++i);// Proceed.
+                    },
+                    error: function() {// Reference could not be resolved.
+                      doc[field][i]._obj = null;
+                      resolveArrayReference(++i);// Proceed.
+                    }
+                  });
+                }
+                else {// Not a reference.
+                  resolveArrayReference(++i);// Proceed.
+                }
+              }
+
+              // Otherwise, array is traversed.
+              else {
+                complete();// Proceed.
               }
             });
+            return resolveArrayReference(0);// Trigger.
           }
-          else if(prop instanceof Array) {// Case 2: prop is an array.
-            var mPending = prop.length;
-            prop.forEach(bind(this, function(member, index) {
-              // As a trick, define member as object value so we can use
-              // the current function to resolve the reference.
-              var el = { x: member };
-              this._resolve(el, references[attr].concat('x'), function() {
-                // Extract member from object, and extend reference with actual
-                // object.
-                prop[index] = el.x;
-                !--mPending && !--pending && complete();
-              });
-            }));
-          }
-          else {// Case 3: prop is an object.
-            this._resolve(prop, references[attr], function() {
-              !--pending && complete();
-            });
-          }
-          return;
-        }
 
-        // Case 4: prop is scalar or undefined.
-        !--pending && complete();
-      }));
+          // Third and last case: field is a scalar or plain object. Descent.
+          else {
+            this._resolveSingleSegment(segments, doc[field], complete);
+          }
+        }
+        else {// doc does not have field, skip reference.
+          complete();
+        }
+      }
+      else {// Path is fully traversed, all work has been done.
+        complete();
+      }
     },
 
     // IndexedDB convenience methods.
@@ -958,14 +996,14 @@
         // Create missing stores.
         if(0 !== missingStores.length) {
           this._mutate(bind(this, function(db) {
-            missingStores.forEach(bind(this, function(store) {
+            missingStores.forEach(function(store) {
               // Since another process may already have created the store
               // concurrently, check again whether the store exists.
               if(!db.objectStoreNames.contains(store)) {
                 var schema = this._getSchema(store);
                 db.createObjectStore(schema.name, schema.options);
               }
-            }));
+            }, this);
           }), function(db) {// Return a transaction.
             success(db.transaction(stores, mode));
           }, error);
