@@ -113,11 +113,10 @@
             var store = txn.objectStore(this.collection);
 
             // Retrieve objects.
-            result.response.forEach(function(id) {
+            result.response.forEach(function(id, i) {
               var req = store.get(id);
               req.onsuccess = function() {
-                // Only add to response if object is found.
-                req.result && response.push(req.result);
+                response[i] = req.result;// Insert in order.
               };
             });
           }
@@ -125,7 +124,13 @@
 
         // Handle transaction status.
         txn.oncomplete = bind(this, function() {
-          if(req.result) {// Resolve references before returning.
+          if(req.result) {
+            // Remove undefined (non-existant objects) array members.
+            response = response.filter(function(value) {
+              return 'undefined' !== typeof value;
+            });
+
+            // Resolve references before returning.
             var pending = response.length;
             if(0 !== pending) {// Items found.
               response.forEach(function(object) {
@@ -472,8 +477,8 @@
     _putSave: function(object, options) {
       // Extract references from object, if specified.
       if(options.resolve && options.resolve.length) {
-        this._extract(object, options.resolve, bind(this, function() {
-          this.save(object, merge(options, { silent: true }));
+        this._saveReferences(object, options.resolve, bind(this, function(response) {
+          this.save(response, merge(options, { resolve: [], silent: true }));
         }));
         return;
       }
@@ -601,97 +606,6 @@
     // Reference resolve methods.
 
     /**
-     * Extract and saves references from object attributes.
-     * 
-     * @private
-     * @param {Object} object Attributes.
-     * @param {Array} references List of references.
-     * @param {function()} complete Complete callback.
-     */
-    _extract: function(object, references, complete) {
-      // Quick way out; return here when nothing has to be exracted.
-      if(0 === references.length) {
-        return complete();
-      }
-
-      // Extract top-level from references.
-      references = this._flatten(references);
-
-      // Resolve each top-level reference.
-      var parts = Object.keys(references);
-      var pending = parts.length;
-      parts.forEach(function(attr) {
-        var prop = object[attr];
-
-        // This should be an object.
-        if(prop instanceof Object) {
-          if('KinveyRef' === prop._type) {// Case 1: prop is a reference.
-            // Save reference, if resolved successfully.
-            if(null != prop._obj) {
-              // Save reference, and flatten object.
-              var db = this.collection === prop._collection ? this : new Database(prop._collection);
-              db.put('query', null, prop._obj, {
-                resolve: references[attr],
-                success: function() {// Flatten reference.
-                  delete prop._obj;
-                  !--pending && complete();
-                },
-                error: function() {// Flatten reference.
-                  delete prop._obj;
-                  !--pending && complete();
-                }
-              });
-            }
-            else {// Reference was invalid, unset and continue.
-              delete prop._obj;
-              !--pending && complete();
-            }
-          }
-          else if(prop instanceof Array) {// Case 2: prop is an array
-            var mPending = prop.length;
-            prop.forEach(function(member, index) {
-              // As a trick, define member as object value so we can use
-              // the current function to extract the reference.
-              this._extract({ _: member }, references[attr].concat('_'), function() {
-                !--mPending && !--pending && complete();
-              });
-            }, this);
-          }
-          else {// Case 3: prop is an object.
-            this._extract(prop, references[attr], function() {
-              !--pending && complete();
-            });
-          }
-          return;
-        }
-
-        // Case 4: prop is scalar or undefined.
-        !--pending && complete();
-      }, this);
-    },
-
-    /**
-     * Formats references in two levels.
-     * 
-     * @private
-     * @example _flatten(['foo', 'foo.bar', 'foo.baz']) => { foo: ['bar', 'baz'] }
-     * @param {Array} references References.
-     * @returns {Object} Flattened references.
-     */
-    _flatten: function(references) {
-      var result = {};// Copy by value.
-      references.forEach(function(prop) {
-        var segments = prop.split('.');
-        var top = segments.shift();
-
-        // Create and append child (if any) to parent.
-        result[top] || (result[top] = []);
-        segments[0] && result[top].push(segments.join('.'));
-      });
-      return result;
-    },
-
-    /**
      * Resolves object references.
      * 
      * @private
@@ -804,6 +718,84 @@
       else {// Path is fully traversed, all work has been done.
         complete();
       }
+    },
+
+    /**
+     * Extract and saves references from object attributes.
+     * 
+     * @private
+     * @param {Object} object Attributes.
+     * @param {Array} references List of references.
+     * @param {function(response)} complete Complete callback.
+     */
+    _saveReferences: function(object, references, complete) {
+      // Because references could be nested, first search for all references
+      // and store them in a stack.
+      var stack = [];
+
+      // If there are references to resolve, do that first.
+      while(references[0]) {
+        var segments = references.shift().split('.');
+        var doc = object;
+
+        // Descent into doc.
+        while(segments[0]) {
+          var field = segments.shift();
+
+          if(doc.hasOwnProperty(field) && null != doc[field]) {
+            // First case: field is a embedded document.
+            if('KinveyRef' === doc[field]._type && null != doc[field]._collection && null != doc[field]._id && null != doc[field]._obj) {
+              if(-1 === stack.indexOf(doc[field])) {// Add to stack (once).
+                stack.push(doc[field]);
+              }
+
+              // Descent into document.
+              doc = doc[field]._obj;
+            }
+
+            // Second case: field is an array. Only save immediate members.
+            else if(doc[field] instanceof Array) {
+              for(var i in doc[field]) {
+                var member = doc[field][i];
+                if(null != member && 'KinveyRef' === member._type && null != member._collection && null != member._id && null != member._obj) {
+                  stack.push(doc[field][i]);// Add to stack.
+                }
+              }
+            }
+            
+            // Third case: field is a plain object.
+            else if(doc[field] instanceof Object) {
+              doc = doc[field];// Descent into doc.
+            }
+          }
+        }
+      }
+
+      // All references are now in stack. Save them by starting with the last
+      // item. This will ensure nested references are saved first, so we can
+      // remove the _obj property afterwards.
+      var save = bind(this, function(i) {
+        if(i >= 0) {// If the stack is not empty yet, save.
+          var item = stack[i];
+
+          // Save item.
+          var db = this.collection === item._collection ? this : new Database(item._collection);
+          db.put('query', null, item._obj, {
+            success: function() {
+              delete item._obj;// Delete embedded document.
+              save(--i);
+            },
+            error: function() {// Delete embedded document.
+              delete item._obj;
+              save(--i);
+            }
+          });
+        }
+        else {// Stack is empty, return object without embedded references.
+          complete(object);
+        }
+      });
+      save(stack.length - 1);// Trigger.
     },
 
     // IndexedDB convenience methods.

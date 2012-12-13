@@ -367,7 +367,7 @@ describe('Kinvey.Store.Cached', function() {
     before(function(done) {
       var first = this.first = { _id: 'first', foo: true };
       var second = this.second = { _id: 'second', foo: false };
-      var query = this.query = new Kinvey.Query();
+      var query = this.query = new Kinvey.Query().on('_kmd.lmt').sort();
 
       // Make sure query is in cached.
       var store = this.store;
