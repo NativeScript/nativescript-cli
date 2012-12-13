@@ -36,6 +36,7 @@
 
       // Options.
       options || (options = {});
+      options.map && (this.map = options.map);
       this.store = Kinvey.Store.factory(options.store, this.collection, options.options);
 
       // Assign object id.
@@ -295,16 +296,22 @@
               return saveSingleReference();// Proceed.
             }
 
-            // Save doc.
+            // Save doc if user has permission to do so.
             saved.push(doc.__objectId);
-            doc.save(merge(options, {
-              success: function(obj) {
-                outAttr.push({ attr: attr, obj: obj });
-                saveSingleReference();// Proceed.
-              },
-              error: options.error,
-              __obj: saved// Pass tracking.
-            }));
+            if(doc.getMetadata().hasWritePermissions()) {
+              doc.save(merge(options, {
+                success: function(obj) {
+                  outAttr.push({ attr: attr, obj: obj });
+                  saveSingleReference();// Proceed.
+                },
+                error: options.error,
+                __obj: saved// Pass tracking.
+              }));
+            }
+            else {// Proceed without saving.
+              outAttr.push({ attr: attr, obj: doc });
+              saveSingleReference();// Proceed.
+            }
           }
 
           // Second case: doc is an array. Only immediate references are saved.
@@ -333,16 +340,22 @@
                   return saveArrayReference(++i);// Proceed.
                 }
 
-                // Save member.
+                // Save member if user has permission to do so.
                 saved.push(member.__objectId);
-                member.save(merge(options, {
-                  success: function(obj) {
-                    outAttr.push({ attr: attr + '.' + index, obj: obj });
-                    saveArrayReference(++i);// Proceed.
-                  },
-                  error: options.error,
-                  __obj: saved// Pass tracking.
-                }));
+                if(member.getMetadata().hasWritePermissions()) {
+                  member.save(merge(options, {
+                    success: function(obj) {
+                      outAttr.push({ attr: attr + '.' + index, obj: obj });
+                      saveArrayReference(++i);// Proceed.
+                    },
+                    error: options.error,
+                    __obj: saved// Pass tracking.
+                  }));
+                }
+                else {// Proceed without saving.
+                  outAttr.push({ attr: attr + '.' + index, obj: member });
+                  saveArrayReference(++i);// Proceed.
+                }
               }
 
               // Otherwise, array is traversed.
