@@ -283,7 +283,7 @@
       // Delete all collections through a mutation operation.
       this._mutate(function(db) {
         var store;
-        while(null !== (store = db.objectStoreNames.item(0))) {
+        while(null != (store = db.objectStoreNames.item(0))) {
           db.deleteObjectStore(store);
         }
      }, function() {
