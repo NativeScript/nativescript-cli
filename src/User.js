@@ -297,9 +297,11 @@
      * @private
      */
     _saveToDisk: function() {
+      var attr = this.toJSON(true);
+      delete attr.password;// Never save password.
       Storage.set(CACHE_TAG(), {
         token: this.token,
-        user: this.toJSON(true)
+        user: attr
       });
     }
   }, {

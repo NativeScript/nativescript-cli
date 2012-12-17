@@ -88,7 +88,8 @@ describe('Kinvey.User', function() {
 
           // Restore should recreate the user from cache.
           Kinvey.User._restore();
-          Kinvey.getCurrentUser().attr.should.eql(user.attr);
+          Kinvey.getCurrentUser().getId().should.eql(user.attr._id);
+          (null === Kinvey.getCurrentUser().get('password')).should.be['true'];
 
           done();
         }
