@@ -61,6 +61,39 @@
     };
 
     /**
+     * Parses response body.
+     * 
+     * @param {Array} buffers List of buffers.
+     * @return {Buffer|string} Buffer if binary response, string otherwise.
+     */
+    var parse = function(buffers) {
+      // Join buffers. Node.js < 0.8 does not support Buffer.concat.
+      var buffer = Buffer.concat ? Buffer.concat(buffers) : (function(buffers) {
+        // Calculate total buffer length.
+        var length = 0;
+        buffers.forEach(function(buffer) {
+          length += buffer.length;
+        });
+
+        // Copy all buffers into one final buffer.
+        var result = new Buffer(length);
+        var pos = 0;
+        buffers.forEach(function(buffer) {
+          buffer.copy(result, pos);
+          pos += buffer.length;
+        });
+        return result;
+      }(buffers));
+
+      // If data stream is binary, return buffer. Otherwise, return string.
+      var str = buffer.toString();
+      if(buffer.length === Buffer.byteLength(str)) {// binary === utf8
+        return str;
+      }
+      return buffer;
+    };
+
+    /**
      * Sends a request against Kinvey.
      * 
      * @private
@@ -154,7 +187,11 @@
 
       // Add Content-Length header.
       // @link http://nodejs.org/api/buffer.html#buffer_class_method_buffer_bytelength_string_encoding
-      options.headers['Content-Length'] = body ? Buffer.byteLength(body, 'utf8') : 0;
+      var length = 0;
+      if(body) {
+        length = body instanceof Buffer ? body.length : Buffer.byteLength(body);
+      }
+      options.headers['Content-Length'] = length;
 
       // Create request.
       var path = nodeUrl.parse(url);
@@ -165,27 +202,28 @@
         port: path.port,
         method: method,
         headers: options.headers
-      }, function(response) {
+      }, bind(this, function(response) {
         // Capture data stream.
-        var data = '';
+        var data = [];
         response.on('data', function(chunk) {
-          data += chunk;
+          data.push(new Buffer(chunk));
         });
 
         // Handle response when it completes.
         // @link https://github.com/joyent/node/issues/728
-        var onComplete = function() {
+        var onComplete = bind(this, function() {
           // Success implicates status 2xx (Successful), or 304 (Not Modified).
+          var result = this._parse(data);
           if(2 === parseInt(response.statusCode / 100, 10) || 304 === response.statusCode) {
-            options.success(data, { network: true });
+            options.success(result, { network: true });
           }
           else {
-            options.error(data, { network: true });
+            options.error(result, { network: true });
           }
-        };
+        });
         response.on('close', onComplete);
         response.on('end', onComplete);
-      });
+      }));
 
       // Define request error handler.
       request.on('error', function(error) {
@@ -202,6 +240,7 @@
       this._base64 = base64;
       this._getAuth = getAuth;
       this._getDeviceInfo = getDeviceInfo;
+      this._parse = parse;
       this._send = send;
       this._xhr = xhr;
       return this;
