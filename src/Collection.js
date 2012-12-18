@@ -148,6 +148,19 @@
         throw new Error('Query must be an instanceof Kinvey.Query');
       }
       this.query = query || new Kinvey.Query();
+    },
+
+    /**
+     * Returns JSON representation. Used by JSON#stringify.
+     * 
+     * @returns {Array} JSON representation.
+     */
+    toJSON: function() {
+      var result = [];
+      this.list.forEach(function(entity) {
+        result.push(entity.toJSON(true));
+      });
+      return result;
     }
   });
 

@@ -63,6 +63,7 @@
     /**
      * Parses response body.
      * 
+     * @private
      * @param {Array} buffers List of buffers.
      * @return {Buffer|string} Buffer if binary response, string otherwise.
      */
