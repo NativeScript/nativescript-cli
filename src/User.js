@@ -127,7 +127,7 @@
      * @param {string} token oAuth token.
      * @param {Object} [attr] User attributes.
      * @param {Object} [options]
-     * @param {function(entity, info)} [options.success] Success callback.
+     * @param {function(user, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
      */
     loginWithFacebook: function(token, attr, options) {
@@ -140,14 +140,96 @@
         error: bind(this, function(error, info) {
           // If user could not be found, register.
           if(Kinvey.Error.USER_NOT_FOUND === error.error) {
-            // Pass current instance as (private) option to create.
-            this.attr = attr;// Required as we set a specific target below.
-            return Kinvey.User.create(attr, merge(options, {
-              _target: this
-            }));
+            // Pass current instance to render result in.
+            return Kinvey.User.create(attr, merge(options, { __target: this }));
           }
 
           // Something else went wrong (invalid token?), error out.
+          options.error && options.error(error, info);
+        })
+      }));
+    },
+
+    /**
+     * Logs in user given a Twitter access token.
+     * 
+     * @param {Object} tokens
+     * @param {string} tokens.access_token oAuth access token.
+     * @param {string} tokens.access_token_secret oAuth access token secret.
+     * @param {string} [tokens.consumer_key] Twitter application key.
+     * @param {string} [tokens.consumer_secret] Twitter application secret.
+     * @param {Object} [attr] User attributes.
+     * @param {Object} [options]
+     * @param {function(user, info)} [options.success] Success callback.
+     * @param {function(error, info)} [options.error] Failure callback.
+     */
+    loginWithTwitter: function(tokens, attr, options) {
+      tokens || (tokens = {});
+      attr || (attr = {});
+      attr._socialIdentity = { twitter: tokens };
+      options || (options = {});
+
+      // Determine to use BL to access Twitter application credentials.
+      if(tokens.consumer_key && tokens.consumer_key) {// Keys provided.
+        // Login, or create when there is no user with this Twitter identity.
+        this._doLogin(attr, merge(options, {
+          error: bind(this, function(error, info) {
+            // If user could not be found, register.
+            if(Kinvey.Error.USER_NOT_FOUND === error.error) {
+              // Pass current instance to render result in.
+              return Kinvey.User.create(attr, merge(options, { __target: this }));
+            }
+
+            // Something else went wrong (invalid token?), error out.
+            options.error && options.error(error, info);
+          })
+        }));
+        return;// Terminate.
+      }
+
+      // Keys not provided, use BL API workaround.
+      // Make sure only one user is active at the time.
+      var currentUser = Kinvey.getCurrentUser();
+      if(null !== currentUser) {
+        currentUser.logout(merge(options, {
+          success: bind(this, function() {
+            this.loginWithTwitter(tokens, attr, options);
+          })
+        }));
+        return;
+      }
+
+      Kinvey.OAuth.Twitter.login(attr, merge(options, {
+        success: bind(this, function(response, info) {
+          // Extract token.
+          var token = response._kmd.authtoken;
+          delete response._kmd.authtoken;
+
+          // Update attributes. This does not include the users password.
+          this.attr = response;
+          this._login(token);
+
+          options.success && options.success(this, info);
+        }),
+        error: bind(this, function(error, info) {
+          // If user could not be found, register.
+          if(Kinvey.Error.USER_NOT_FOUND === error.error) {
+            return Kinvey.OAuth.Twitter.create(attr, merge(options, {
+              success: bind(this, function(response, info) {
+                // Extract token.
+                var token = response._kmd.authtoken;
+                delete response._kmd.authtoken;
+
+                // Update attributes. This does not include the users password.
+                this.attr = response;
+                this._login(token);
+
+                options.success && options.success(this, info);
+              })
+            }));
+          }
+
+          // Something else went wrong (invalid tokens?), error out.
           options.error && options.error(error, info);
         })
       }));
@@ -333,7 +415,8 @@
       options || (options = {});
 
       // Create the new user.
-      var user = options._target || new Kinvey.User(attr);
+      var user = options.__target || new Kinvey.User();
+      user.attr = attr;// Set attributes.
 
       // Make sure only one user is active at the time.
       var currentUser = Kinvey.getCurrentUser();

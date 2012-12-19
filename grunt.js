@@ -170,6 +170,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
 
+          '<%= dir.src %>/util/Twitter.js',
+
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.html5 %>.js'
