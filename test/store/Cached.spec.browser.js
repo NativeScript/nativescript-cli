@@ -104,6 +104,16 @@ describe('Kinvey.Store.Cached', function() {
         }
       }));
     });
+    it('performs an aggregation using policy CACHE_FIRST_NO_REFRESH', function(done) {
+      var expected = this.response;
+      this.store.aggregate(this.aggregation.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.CACHE_FIRST_NO_REFRESH,
+        success: function(response, info) {
+          response.should.eql(expected);
+          info.cached.should.be['true'];
+        }
+      }));
+    });
     it('performs an aggregation using policy NETWORK_FIRST.', function(done) {
       var expected = this.response;
       this.store.aggregate(this.aggregation.toJSON(), callback(done, {
@@ -174,6 +184,17 @@ describe('Kinvey.Store.Cached', function() {
       var object = this.object;
       this.store.query(object._id, callback(done, {
         policy: Kinvey.Store.Cached.CACHE_FIRST,
+        success: function(response, info) {
+          response._id.should.equal(object._id);
+          response.foo.should.equal('bar');
+          info.cached.should.be['true'];
+        }
+      }));
+    });
+    it('loads an object using policy CACHE_FIRST_NO_REFRESH.', function(done) {
+      var object = this.object;
+      this.store.query(object._id, callback(done, {
+        policy: Kinvey.Store.Cached.CACHE_FIRST_NO_REFRESH,
         success: function(response, info) {
           response._id.should.equal(object._id);
           response.foo.should.equal('bar');
@@ -413,6 +434,17 @@ describe('Kinvey.Store.Cached', function() {
     it('queries the store using policy CACHE_FIRST', function(done) {
       this.store.queryWithQuery(this.query.toJSON(), callback(done, {
         policy: Kinvey.Store.Cached.CACHE_FIRST,
+        success: function(response, info) {
+          response.should.have.length(2);
+          response[0]._id.should.equal('first');
+          response[1]._id.should.equal('second');
+          info.cached.should.be['true'];
+        }
+      }));
+    });
+    it('queries the store using policy CACHE_FIRST_NO_REFRESH', function(done) {
+      this.store.queryWithQuery(this.query.toJSON(), callback(done, {
+        policy: Kinvey.Store.Cached.CACHE_FIRST_NO_REFRESH,
         success: function(response, info) {
           response.should.have.length(2);
           response[0]._id.should.equal('first');

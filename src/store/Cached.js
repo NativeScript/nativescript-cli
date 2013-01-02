@@ -269,7 +269,7 @@
      * @return {boolean}
      */
     _shouldCallFallback: function(policy) {
-      var accepted = [Kinvey.Store.Cached.NETWORK_FIRST];
+      var accepted = [Kinvey.Store.Cached.CACHE_FIRST_NO_REFRESH, Kinvey.Store.Cached.NETWORK_FIRST];
       return this._shouldCallBoth(policy) || -1 !== accepted.indexOf(policy);
     },
 
@@ -375,6 +375,14 @@
      * @constant
      */
     CACHE_FIRST: 'cachefirst',
+
+    /**
+     * Cache First No Refresh policy. Pull from cache if available, otherwise
+     * network. Does not update cache in the background.
+     * 
+     * @constant
+     */
+    CACHE_FIRST_NO_REFRESH: 'cachefirst-norefresh',
 
     /**
      * Network first policy. Pull from network if available, otherwise cache.
