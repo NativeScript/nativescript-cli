@@ -93,7 +93,8 @@
     requestToken: function(provider, options) {
       options || (options = {});
       this._send('POST', this._getUrl(provider, 'requestToken'), JSON.stringify({
-        redirect: options.redirect || document.location.toString()
+        redirect: options.redirect || document.location.toString(),
+        state: options.state || null
       }), options);
     },
 
@@ -113,7 +114,9 @@
       var popup = window.open('about:blank', 'KinveyOAuth', options.popup);
 
       // Step 1: obtain a request token.
+      var state = Math.random().toString(36).substr(2, 12);// CSRF protection.
       this.requestToken(provider, merge(options, {
+        state: state,
         success: bind(this, function(tokens) {
           // Step 2: redirect pop-up to OAuth provider.
           popup.location.href = tokens.url;
@@ -143,13 +146,24 @@
               window.clearTimeout(timer);// Stop waiting.
 
               // Save location.
-              var url = popup.location.search.substring(1) + '&' + popup.location.hash.substring(1);
+              var response = this._tokenize(
+                popup.location.search.substring(1) + '&' + popup.location.hash.substring(1)
+              );
               popup.close();// Close pop-up.
 
               // Step 3: process token.
-              this.processToken(provider, this._tokenize(url), merge(options, {
-                oauth_token_secret: tokens.oauth_token_secret// OAuth1.0a.
-              }));
+              if(response.state && response.state !== state) {// Validate state.
+                options.error && options.error({
+                  error: Kinvey.Error.RESPONSE_PROBLEM,
+                  description: 'The state parameter did not match the expected state.',
+                  debug: 'This error could be the result of a cross-site-request-forgery attack.'
+                });
+              }
+              else {
+                this.processToken(provider, response, merge(options, {
+                  oauth_token_secret: tokens.oauth_token_secret// OAuth1.0a.
+                }));
+              }
             }
 
             // Update elapsed time.

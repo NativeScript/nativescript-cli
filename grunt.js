@@ -138,6 +138,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
 
+          '<%= dir.src %>/util/OAuth.js',
+
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.appcloud %>.js'
@@ -237,6 +239,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
 
+          '<%= dir.src %>/util/OAuth.js',
+
           '<%= dir.src %>/outro.txt'
         ],
         dest: '<%= dir.dist %>/<%= sdk.phonegap %>.js'
@@ -266,6 +270,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
+
+          '<%= dir.src %>/util/OAuth.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -298,6 +304,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Cached.js',
           '<%= dir.src %>/store/Offline.js',
           '<%= dir.src %>/store/Sync.js',
+
+          '<%= dir.src %>/util/OAuth.js',
 
           '<%= dir.src %>/outro.txt'
         ],

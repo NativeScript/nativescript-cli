@@ -1,4 +1,5 @@
 v0.9.13
+* Added support for logging in with Google+, LinkedIn, and Twitter.
 * Bug fix: Node.js Buffer object could not be used with Resource API.
 
 v0.9.12 (December 14, 2012)
