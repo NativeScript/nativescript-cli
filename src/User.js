@@ -124,16 +124,24 @@
     /**
      * Logs in user given a Facebook OAuth 2.0 token.
      * 
-     * @param {string} token OAuth access token.
+     * @param {Object} tokens
+     * @param {string} access_token OAuth access token.
+     * @param {integer} expires_in Expiration interval.
      * @param {Object} [attr] User attributes.
      * @param {Object} [options]
      * @param {function(user, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
+     * @throws {Error} On incomplete tokens.
      */
-    loginWithFacebook: function(token, attr, options) {
+    loginWithFacebook: function(tokens, attr, options) {
+      tokens || (tokens = {});
+      if(!(tokens.access_token && tokens.expires_in)) {
+        throw new Error('Missing required token: access_token and/or expires_in');
+      }
+
       // Merge token with user attributes.
       attr || (attr = {});
-      attr._socialIdentity = { facebook: { access_token: token } };
+      attr._socialIdentity = { facebook: tokens };
 
       // Login or register.
       this._loginWithProvider(attr, options || {});
@@ -142,16 +150,24 @@
     /**
      * Logs in user given a Google+ OAuth 2.0 token.
      * 
-     * @param {string} token OAuth access token.
+     * @param {Object} tokens
+     * @param {string} access_token OAuth access token.
+     * @param {integer} expires_in Expiration interval.
      * @param {Object} [attr] User attributes.
      * @param {Object} [options]
      * @param {function(user, info)} [options.success] Success callback.
      * @param {function(error, info)} [options.error] Failure callback.
+     * @throws {Error} On incomplete tokens.
      */
-    loginWithGoogle: function(token, attr, options) {
+    loginWithGoogle: function(tokens, attr, options) {
+      tokens || (tokens = {});
+      if(!(tokens.access_token && tokens.expires_in)) {
+        throw new Error('Missing required token: access_token and/or expires_in');
+      }
+
       // Merge tokens with user attributes.
       attr || (attr = {});
-      attr._socialIdentity = { google: { access_token: token } };
+      attr._socialIdentity = { google: tokens };
 
       // Login, or register.
       this._loginWithProvider(attr, options || {});
@@ -163,8 +179,8 @@
      * @param {Object} tokens
      * @param {string} tokens.access_token OAuth access token.
      * @param {string} tokens.access_token_secret OAuth access token secret.
-     * @param {string} tokens.consumer_key Twitter application key.
-     * @param {string} tokens.consumer_secret Twitter application secret.
+     * @param {string} [tokens.consumer_key] LinkedIn application key.
+     * @param {string} [tokens.consumer_secret] LinkedIn application secret.
      * @param {Object} [attr] User attributes.
      * @param {Object} [options]
      * @param {function(user, info)} [options.success] Success callback.
@@ -172,16 +188,19 @@
      * @throws {Error} On incomplete tokens.
      */
     loginWithLinkedIn: function(tokens, attr, options) {
-      if(!(tokens.access_token && tokens.access_token_secret && tokens.consumer_key && tokens.consumer_secret)) {
-        throw new Error('Missing required token: access_token, access_token_secret, consumer_key, and/or consumer_secret.');
+      tokens || (tokens = {});
+      if(!(tokens.access_token && tokens.access_token_secret)) {
+        throw new Error('Missing required token: access_token and/or access_token_secret');
       }
 
       // Merge tokens with user attributes.
       attr || (attr = {});
       attr._socialIdentity = { linkedIn: tokens };
 
-      // Login, or register.
-      this._loginWithProvider(attr, options || {});
+      // Login, or register. Set flag whether protocol is OAuth1.0a.
+      this._loginWithProvider(attr, merge(options, {
+        oauth1: tokens.consumer_key && tokens.consumer_secret ? null : 'linkedIn'
+      }));
     },
 
     /**
@@ -199,8 +218,9 @@
      * @throws {Error} On incomplete tokens.
      */
     loginWithTwitter: function(tokens, attr, options) {
-      if(!(tokens.access_token && tokens.access_token_secret && tokens.consumer_key && tokens.consumer_secret)) {
-        throw new Error('Missing required token: access_token, access_token_secret, consumer_key, and/or consumer_secret.');
+      tokens || (tokens = {});
+      if(!(tokens.access_token && tokens.access_token_secret)) {
+        throw new Error('Missing required token: access_token and/or access_token_secret');
       }
 
       // Merge tokens with user attributes.
@@ -208,7 +228,9 @@
       attr._socialIdentity = { twitter: tokens };
 
       // Login, or register.
-      this._loginWithProvider(attr, options || {});
+      this._loginWithProvider(attr, merge(options, {
+        oauth1: tokens.consumer_key && tokens.consumer_secret ? null : 'twitter'
+      }));
     },
 
     /**

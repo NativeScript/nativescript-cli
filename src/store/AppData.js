@@ -64,6 +64,12 @@
      * @param {Object} [options] Options.
      */
     login: function(object, options) {
+      // OAuth1.0a hook to allow login without providing app key and secret.
+      if(options.oauth1 && Kinvey.OAuth) {
+        return Kinvey.OAuth.login(options.oauth1, object, options);
+      }
+
+      // Regular login.
       var url = this._getUrl({ id: 'login' });
       this._send('POST', url, JSON.stringify(object), options);
     },
@@ -137,7 +143,12 @@
      * @param {Object} [options] Options.
      */
     save: function(object, options) {
-      // Create the object if nonexistent, update otherwise.
+      // OAuth1.0a hook to allow login without providing app key and secret.
+      if(options.oauth1 && Kinvey.Store.AppData.USER_API === this.api && Kinvey.OAuth) {
+        return Kinvey.OAuth.create(options.oauth1, object, options);
+      }
+
+      // Regular save, create the object if nonexistent, update otherwise.
       var method = object._id ? 'PUT' : 'POST';
 
       var url = this._getUrl({ id: object._id });

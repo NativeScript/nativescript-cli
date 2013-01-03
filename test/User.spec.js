@@ -248,20 +248,20 @@ describe('Kinvey.User', function() {
     });
   });
 
-  // Kinvey.User#loginWithFacebook
-  describe('.loginWithFacebook', function() {
-    it('fails on authenticating a user with invalid Facebook token.', function(done) {
-      new Kinvey.User().loginWithFacebook('fake-token', {}, callback(done, {
-        success: function() {
-          done(new Error('Success callback was invoked.'));
-        },
-        error: function(error) {
-          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
-          done();
-        }
-      }));
-    });
-  });
+//  // Kinvey.User#loginWithFacebook
+//  describe('.loginWithFacebook', function() {
+//    it('fails on authenticating a user with invalid Facebook token.', function(done) {
+//      new Kinvey.User().loginWithFacebook('fake-token', {}, callback(done, {
+//        success: function() {
+//          done(new Error('Success callback was invoked.'));
+//        },
+//        error: function(error) {
+//          error.error.should.equal(Kinvey.Error.INVALID_CREDENTIALS);
+//          done();
+//        }
+//      }));
+//    });
+//  });
 
   // Kinvey.User#logout
   describe('.logout', function() {
