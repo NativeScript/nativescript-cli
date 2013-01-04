@@ -139,6 +139,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Sync.js',
 
           '<%= dir.src %>/util/OAuth.js',
+          '<%= dir.src %>/util/OAuth.browser.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -173,6 +174,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Sync.js',
 
           '<%= dir.src %>/util/OAuth.js',
+          '<%= dir.src %>/util/OAuth.browser.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -203,6 +205,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
           '<%= dir.src %>/store/Blob.js',
+
+          '<%= dir.src %>/util/OAuth.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -240,6 +244,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Sync.js',
 
           '<%= dir.src %>/util/OAuth.js',
+          '<%= dir.src %>/util/OAuth.browser.js',
 
           '<%= dir.src %>/outro.txt'
         ],
@@ -306,6 +311,7 @@ module.exports = function(grunt) {
           '<%= dir.src %>/store/Sync.js',
 
           '<%= dir.src %>/util/OAuth.js',
+          '<%= dir.src %>/util/OAuth.browser.js',
 
           '<%= dir.src %>/outro.txt'
         ],
