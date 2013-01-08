@@ -28,6 +28,7 @@
      * @param {function(error)} options.error Failure callback.
      */
     accessToken: function(provider, response, options) {
+      response || (response = {});
       options || (options = {});
 
       // Handle both OAuth1.0a and OAuth 2.0 protocols.

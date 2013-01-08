@@ -1,10 +1,11 @@
-v0.9.13
+v0.9.13 (January 8, 2013)
 * Added support for logging in with Google+, LinkedIn, and Twitter.
+* Added support for caching policy cachefirst-norefresh.
 * Bug fix: Node.js Buffer object could not be used with Resource API.
 
 v0.9.12 (December 14, 2012)
 * Added support for setting entity permissions for user groups.
-* Added support for Trigger.IO.
+* Added support for Trigger.io.
 * Added support for clearing the entire cache.
 * Added support for setting the user context for synchronization.
 * Added support for retrieving the number of entities modified offline.
