@@ -1,3 +1,8 @@
+v0.9.14
+* Bug fix: Implemented network timeout option for all browsers and platforms.
+* Bug fix: Fixed concurrency issue when using offline storage intensively.
+* Bug fix: Titanium always reported the same error on network failure.
+
 v0.9.13 (January 8, 2013)
 * Added support for logging in with Google+, LinkedIn, and Twitter.
 * Added support for caching policy cachefirst-norefresh.
