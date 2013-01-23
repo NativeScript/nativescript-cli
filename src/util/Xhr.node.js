@@ -183,6 +183,7 @@
     var xhr = function(method, url, body, options) {
       options || (options = {});
       options.headers || (options.headers = {});
+      'undefined' !== typeof options.timeout || (options.timeout = this.options.timeout);
       options.success || (options.success = this.options.success);
       options.error || (options.error = this.options.error);
 
@@ -226,9 +227,30 @@
         response.on('end', onComplete);
       }));
 
+      // Define timeout error handler.
+      if(request.socket) {// Node.js 0.4.x sets the socket immediately.
+        request.socket.setTimeout(options.timeout);
+        request.socket.on('timeout', function() {
+          // Abort the request, and invoke error handler manually.
+          request.abort();
+          options.error('timeout', { network: true });
+        });
+      }
+      else {// Newer versions of Node.js use an event-based approach.
+        request.on('socket', function(socket) {
+          socket.setTimeout(options.timeout);
+          socket.on('timeout', function() {
+            // Abort the request, and set event to timeout explicitly.
+            request.eventType = 'timeout';
+            request.abort();
+          });
+        });
+      }
+
       // Define request error handler.
       request.on('error', function(error) {
-        options.error(error.error, { network: true });
+        // request.eventType is populated on timeout.
+        options.error(request.eventType || error.error, { network: true });
       });
 
       // Fire request.

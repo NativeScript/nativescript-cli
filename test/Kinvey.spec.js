@@ -47,6 +47,19 @@ describe('Kinvey', function() {
         }
       }));
     });
+    it('should timeout when the timeout option is set to 1ms.', function(done) {
+      Kinvey.ping(callback(done, {
+        timeout: 1,
+        success: function() {
+          done(new Error("Success callback was invoked."));
+        },
+        error: function(e) {
+          e.error.should.equal(Kinvey.Error.REQUEST_FAILED);
+          e.description.should.equal('The request timed out');
+          done();
+        }
+      }));
+    });
   });
 
 });

@@ -2,6 +2,9 @@
 
   /*globals btoa*/
 
+  // Not all browsers support the timeout natively yet.
+  var supportsTimeout = XMLHttpRequest.prototype.hasOwnProperty('timeout');
+
   // Define the Xhr mixin.
   var Xhr = (function() {
     /**
@@ -184,6 +187,7 @@
       // Handle response when it completes.
       request.onload = function() {
         // Success implicates status 2xx (Successful), or 304 (Not Modified).
+        request.timer && clearTimeout(request.timer);// Stop timer.
         if(2 === parseInt(this.status / 100, 10) || 304 === this.status) {
           options.success(this.responseText, { network: true });
         }
@@ -194,11 +198,22 @@
 
       // Define request error handler.
       request.onabort = request.onerror = request.ontimeout = function(event) {
-        options.error(event.type, { network: true });
+        // request.eventType is populated on patched timeout.
+        request.timer && clearTimeout(request.timer);// Stop timer.
+        options.error(request.eventType || event.type, { network: true });
       };
 
       // Fire request.
       request.send(body);
+
+      // Patch timeout if not supported natively.
+      if(!supportsTimeout && 'function' === typeof setTimeout && 'function' === typeof clearTimeout) {
+        request.timer = setTimeout(function() {
+          // Abort the request, and set event to timeout explicitly.
+          request.eventType = 'timeout';
+          request.abort();
+        }, request.timeout);
+      }
     };
 
     // Attach to context.
