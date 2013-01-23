@@ -880,15 +880,17 @@
         fnSuccess(db);
       });
 
+      // Concurrency control, allow only one request at the time, queue others.
+      if(!Database.isIdle) {
+        return Database.queue.push(arguments);
+      }
+
       // Reuse if possible.
       if(null != Database.instance && (null == version || Database.instance.version === version)) {
         return success(Database.instance);
       }
 
-      // Concurrency control, allow only one request at the time, queue others.
-      if(!Database.isIdle) {
-        return Database.queue.push(arguments);
-      }
+      // No reuse, we need to do more complicated stuff in a blocking manner.
       Database.isIdle = false;
 
       // If we only want to change the version, check for outdated setVersion.
