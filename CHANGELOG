@@ -1,4 +1,4 @@
-v0.9.14
+v0.9.14 (January 25, 2013)
 * Bug fix: Implemented network timeout option for all browsers and platforms.
 * Bug fix: Fixed concurrency issue when using offline storage intensively.
 * Bug fix: Titanium always reported the same error on network failure.
