@@ -37,6 +37,18 @@
     },
 
     /**
+     * Executes a custom command.
+     * 
+     * @param {string} id The endpoint.
+     * @param {Object} args Command arguments,.
+     * @param {Object} [options] Options.
+     */
+    execute: function(id, args, options) {
+      var url = this._getUrl([ 'custom', id ]);
+      this._send('POST', url, JSON.stringify(args), options);
+    },
+    
+    /**
      * Resets password for a user.
      * 
      * @param {string} username User name.

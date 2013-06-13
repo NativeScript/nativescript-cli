@@ -130,6 +130,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
+          '<%= dir.src %>/Command.js',
+          
           '<%= dir.src %>/store/Store.browser.js',
           '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
@@ -164,6 +166,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/Command.js',
 
           '<%= dir.src %>/store/Store.browser.js',
           '<%= dir.src %>/store/Rpc.js',
@@ -201,6 +205,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
+          '<%= dir.src %>/Command.js',
+
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
@@ -233,6 +239,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/Command.js',
 
           '<%= dir.src %>/store/Store.phonegap.js',
           '<%= dir.src %>/store/Rpc.js',
@@ -270,6 +278,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
 
+          '<%= dir.src %>/Command.js',
+
           '<%= dir.src %>/store/Store.js',
           '<%= dir.src %>/store/Rpc.js',
           '<%= dir.src %>/store/AppData.js',
@@ -300,6 +310,8 @@ module.exports = function(grunt) {
           '<%= dir.src %>/query/MongoBuilder.js',
           '<%= dir.src %>/aggregation/Aggregation.js',
           '<%= dir.src %>/aggregation/MongoBuilder.js',
+
+          '<%= dir.src %>/Command.js',
 
           '<%= dir.src %>/store/Store.browser.js',
           '<%= dir.src %>/store/Rpc.js',
