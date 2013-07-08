@@ -19,7 +19,7 @@
   "dependencies": {
     "backbone"              : "~1.0",
     "backbone-associations" : "~0.5",
-    "IndexedDBShim"         : "git://github.com/axemclion/IndexedDBShim.git",
+    "IndexedDBShim"         : "git://github.com/axemclion/IndexedDBShim.git#f46388a6ce88177ae97873f17a761c109d3e2395",
     "jquery-browser"        : "~2.0",
     "promiscuous"           : "~0.3",
     "sift"                  : "~0.0.12",
