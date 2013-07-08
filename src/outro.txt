@@ -1,1 +1,21 @@
+    // Return the copy.
+    return Kinvey;
+  };
+
+  // Exports.
+  // --------
+
+  // The top-level namespace, which is a copy of the library namespace.
+  // Exported for the server, as AMD module, and for the browser.
+  var Kinvey = kinveyFn();
+  if('object' === typeof module && 'object' === typeof module.exports) {
+  	module.exports = Kinvey;
+  }
+  else if('function' === typeof define && define.amd) {
+    define('kinvey', [], function() { return Kinvey; });
+  }
+  else {
+  	root.Kinvey = Kinvey;
+  }
+
 }.call(this));

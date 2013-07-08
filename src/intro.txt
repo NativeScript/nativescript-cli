@@ -1,72 +1,83 @@
-(function(undefined) {
+/*!
+ * Copyright (c) <%= grunt.template.today('yyyy') %> <%= pkg.author %> All rights reserved.
+ *
+ * Licensed to Kinvey, Inc. under one or more contributor
+ * license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership.  Kinvey, Inc. licenses this file to you under the
+ * Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License.  You
+ * may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+// Wrap in [IIFE](https://www.wikipedia.org/wiki/Immediately-invoked_function_expression).
+(function() {
 
-  // Save reference to global object (window in browser, global on server).
+  // Setup.
+  // ------
+
+  // Establish the root object; `window` in the browser, `global` on the
+  // server.
   var root = this;
 
-  /**
-   * Top-level namespace. Exported for browser and CommonJS.
-   * 
-   * @name Kinvey
-   * @namespace
-   */
-  var Kinvey;
-  if('undefined' !== typeof exports) {
-    Kinvey = exports;
+  // Disable debug mode unless declared already.
+  if('undefined' === typeof KINVEY_DEBUG) {
+    /**
+     * Debug mode. This is a global variable, which can be set anywhere,
+     * anytime. Not available in the minified version of the library.
+     *
+     * @global
+     * @type {boolean}
+     * @default
+     */
+    KINVEY_DEBUG = false;
   }
-  else {
-    Kinvey = root.Kinvey = {};
-  }
 
-  // Define a base class for all Kinvey classes. Provides a property method for
-  // class inheritance. This method is available to all child definitions.
-  var Base = Object.defineProperty(function() { }, 'extend', {
-    value: function(prototype, properties) {
-      // Create class definition
-      var constructor = prototype && prototype.hasOwnProperty('constructor') ? prototype.constructor : this;
-      var def = function() {
-        constructor.apply(this, arguments);
-      };
-
-      // Set prototype by merging child prototype into parents.
-      def.prototype = (function(parent, child) {
-        Object.getOwnPropertyNames(child).forEach(function(property) {
-          Object.defineProperty(parent, property, Object.getOwnPropertyDescriptor(child, property));
-        });
-        return parent;
-      }(Object.create(this.prototype), prototype || {}));
-
-      // Set static properties.
-      if(properties) {
-        for(var prop in properties) {
-          if(properties.hasOwnProperty(prop)) {
-            def[prop] = properties[prop];
-          }
-        }
-      }
-
-      // Add extend to definition.
-      Object.defineProperty(def, 'extend', Object.getOwnPropertyDescriptor(this, 'extend'));
-
-      // Return definition.
-      return def;
+  // Lightweight wrapper for `console.log` for easy debugging.
+  // http://paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
+  var log = function() {
+    log.history = log.history || [];// Store logs to an array for reference.
+    log.history.push(arguments);
+    if(root.console) {
+      root.console.log.call(root.console, Array.prototype.slice.call(arguments));
     }
-  });
-
-  // Convenient method for binding context to anonymous functions.
-  var bind = function(thisArg, fn) {
-    fn || (fn = function() { });
-    return fn.bind ? fn.bind(thisArg) : function() {
-      return fn.apply(thisArg, arguments);
-    };
   };
 
-  // Merges multiple source objects into one newly created object.
-  var merge = function(/*sources*/) {
-    var target = {};
-    Array.prototype.slice.call(arguments, 0).forEach(function(source) {
-      for(var prop in source) {
-        target[prop] = source[prop];
+  // Define a function which returns a fresh copy of the library. Copies are
+  // fully isolated from each other, making it very easy to communicate with
+  // different apps within the same JavaScript-context.
+  var kinveyFn = function() {
+    /**
+     * The library namespace. Contains all library functionality. Invoke as a
+     * function (e.g. `Kinvey()`) to obtain a fresh copy of the library.
+     *
+     * @exports Kinvey
+     */
+    var Kinvey = function(options) {
+      // Debug.
+      if(KINVEY_DEBUG) {
+        log('Obtaining a fresh copy of the library.', arguments);
       }
-    });
-    return target;
-  };
+
+      // Create a fresh copy of the library.
+      var Kinvey = kinveyFn();
+
+      // Initialize the library if `options` are provided. If not, the
+      // application should call `Kinvey.init` on the return value.
+      if(null != options) {
+        Kinvey.init(options);
+      }
+
+      // Return the copy.
+      return Kinvey;
+    };
+
+    // From here, all library functionality will be appended to `Kinvey`.
