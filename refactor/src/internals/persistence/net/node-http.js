@@ -1,0 +1,126 @@
+// `Kinvey.Persistence.Net` adapter for [Node.js](http://nodejs.org/).
+var NodeHttp = {
+  /**
+   * The Node.js url module.
+   *
+   * @type {Object}
+   */
+  url: require('url'),
+
+  /**
+   * @augments {Kinvey.Persistence.net.base64}
+   */
+  base64: function(value) {
+    return new Buffer(value, 'utf-8').toString('base64');
+  },
+
+  /**
+   * @augments {Kinvey.Persistence.Net.encode}
+   */
+  encode: encodeURIComponent,
+
+  /**
+   * @augments {Kinvey.Persistence.Net.request}
+   */
+  request: function(method, url, body, headers, options) {
+    // Cast arguments.
+    body    = body    || null;
+    headers = headers || {};
+    options = options || {};
+
+    // Prepare the response.
+    var deferred = Kinvey.Defer.deferred();
+
+    // Append the required Content-Length header.
+    var length = 0;
+    if(body instanceof Buffer) {
+      length = body.length;
+    }
+    else if(null != body) {
+      body   = JSON.stringify(body);// Convert to string.
+      length = Buffer.byteLength(body);
+    }
+    headers['Content-Length'] = length;
+
+    // Create the request.
+    var path    = NodeHttp.url.parse(url);
+    var adapter = require('https:' === path.protocol ? 'https' : 'http');
+    var request = adapter.request({
+      host    : path.hostname,
+      path    : path.pathname + (path.search ? path.search : ''),
+      port    : path.port,
+      method  : method,
+      headers : headers
+    }, function(response) {
+      // Listen for data.
+      var data = [];
+      response.on('data', function(chunk) {
+        data.push(new Buffer(chunk));
+      });
+
+      // Listen for request completion.
+      response.on('end', function() {
+        // Debug.
+        if(KINVEY_DEBUG) {
+          log('The network request completed.', response);
+        }
+
+        // Parse response.
+        var responseData = Buffer.concat(data);
+
+        // Success implicates 2xx (Successful), or 304 (Not Modified).
+        var status = response.statusCode;
+        if(2 === parseInt(status / 100, 10) || 304 === status) {
+          // Unless `options.file`, convert the response to a string.
+          if(!options.file) {
+            responseData = responseData.toString() || null;
+          }
+          deferred.resolve(responseData);
+        }
+        else {// Failure.
+          deferred.reject(responseData.toString() || null);
+        }
+      });
+    });
+
+    // Apply timeout.
+    var timedOut = false;
+    if(0 < options.timeout) {
+      request.on('socket', function(socket) {
+        socket.setTimeout(options.timeout);
+        socket.on('timeout', function() {
+          timedOut = true;
+          request.abort();
+        });
+      });
+    }
+
+    // Listen for request errors.
+    request.on('error', function(msg) {// Client-side error.
+      // Debug.
+      if(KINVEY_DEBUG) {
+        log('The network request failed.', msg);
+      }
+
+      // Reject the promise.
+      deferred.reject(timedOut ? 'timeout' : msg);
+    });
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      log('Initiating a network request.', method, path, body, headers, options);
+    }
+
+    // Initiate request.
+    if(null != body) {
+      request.write(body);
+    }
+    request.end();
+
+    // Return the promise.
+    return deferred.promise;
+  }
+};
+
+// Use Node.js adapter.
+Kinvey.Persistence.Net.use(NodeHttp);

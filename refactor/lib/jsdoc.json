@@ -1,0 +1,11 @@
+{
+  "templates": {
+    "default": {
+      "outputSourceFiles": false
+    }
+  },
+  "plugins": [ "plugins/markdown" ],
+  "markdown": {
+    "tags": [ "exceptions" ]
+  }
+}

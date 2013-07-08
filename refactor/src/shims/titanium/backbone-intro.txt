@@ -1,0 +1,2 @@
+// Provide integration with Backbone (used by Titanium Alloy) if available. 
+if('undefined' !== typeof Backbone) {

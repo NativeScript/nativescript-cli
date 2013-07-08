@@ -1,0 +1,17 @@
+// Wrap dependencies in an IIFE so they are exported onto the root object only.
+(function(define, module) {
+  var window = this;
+  var setTimeout = function(fn) {
+    return window.setTimeout(fn, 0);
+  };
+  var exports = window.__KinveySocialAdapter = window;
+  var originalRequire = require;
+  require = function(module) {
+    if(0 === module.indexOf('jsOAuth')) {
+      return exports;
+    }
+    else if(null != originalRequire) {
+      return originalRequire.apply(this, arguments);
+    }
+  };
+  var File = function() { };
