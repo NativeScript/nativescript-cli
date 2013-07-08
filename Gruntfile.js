@@ -47,7 +47,7 @@ module.exports = function(grunt) {
     jshint: {
       options: grunt.file.readJSON('lib/.jshintrc'),
       metadata: {
-        options : { quotmark: 'double' },// Overrides.
+        options : { maxlen: 120, quotmark: 'double' },// Overrides.
         src     : [ 'config.json', 'package.json', 'lib/.jshintrc', 'lib/jsdoc.json' ]
       },
       gruntfile: {

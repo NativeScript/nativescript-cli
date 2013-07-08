@@ -1,7 +1,7 @@
 # Changelog
 
 ## 1.0.2
-* Bugfix: IndexedDBShim was broken due to "use strict", reverted to previous version.
+* Bugfix: IndexedDBShim was broken due to "use strict", downgraded version.
 
 ## 1.0.1 (2013-07-03)
 * #2461: add PhoneGap shim.
