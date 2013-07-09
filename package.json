@@ -1,7 +1,7 @@
 {
   "name": "kinvey",
   "description": "Kinvey JavaScript Library",
-  "version": "1.0.1",
+  "version": "1.0.2-snapshot",
   "homepage": "http://www.kinvey.com",
   "author": "Kinvey, Inc.",
   "bugs": {

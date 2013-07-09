@@ -28,7 +28,7 @@ var TiHttp = {
     var deferred = Kinvey.Defer.deferred();
 
     // Create the request.
-    var request = options.xhr = new Titanium.Network.HTTPClient();
+    var request = options.xhr = Titanium.Network.createHTTPClient();
     request.open(method, url);
 
     // Apply options.
