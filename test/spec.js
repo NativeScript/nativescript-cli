@@ -80,9 +80,17 @@ var Common = global.Common = {
 // Initialize the library prior to testing. After each test, reset credentials
 // in case the test altered them.
 before(function() {
-  return Kinvey.init({
+  var promise = Kinvey.init({
     appKey    : config.test.appKey,
     appSecret : config.test.appSecret
+  });
+  return promise.then(null, function(error) {
+    // Do not fail if the active user was deleted via the console.
+    if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+      Kinvey.setActiveUser(null);// Reset.
+      return null;
+    }
+    return Kinvey.Defer.reject(error);
   });
 });
 afterEach(function() {
