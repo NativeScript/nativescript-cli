@@ -27,7 +27,7 @@ describe('Kinvey.File', function() {
   // Housekeeping: define the expiration time.
   before(function() {
     this.ttl      = 365 * 24 * 60 * 60;// One year.
-    this.ttlRange = 2;// Difference between server- and client-side expiresAt.
+    this.ttlRange = 30;// Max difference between server and client expiresAt.
   });
   beforeEach(function() {
     this.expiresAt = parseInt(new Date().getTime() / 1000, 10) + this.ttl;

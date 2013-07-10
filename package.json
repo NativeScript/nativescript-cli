@@ -1,7 +1,7 @@
 {
   "name": "kinvey",
   "description": "Kinvey JavaScript Library",
-  "version": "1.0.2-snapshot",
+  "version": "1.0.2",
   "homepage": "http://www.kinvey.com",
   "author": "Kinvey, Inc.",
   "bugs": {
@@ -53,6 +53,6 @@
   "private": true,
   "repository": {
     "type" : "svn",
-    "url"  : "https://subversion.assembla.com/svn/kinvey/js-library/branches/refactor"
+    "url"  : "https://subversion.assembla.com/svn/kinvey/js-library/trunk"
   }
 }

@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.0.2
+## 1.0.2 (2013-07-10)
 * Bugfix: IndexedDBShim was broken due to "use strict", downgraded version.
+* Bugfix: Network requests on Titanium were instantiated incorrectly. 
 
 ## 1.0.1 (2013-07-03)
 * #2461: add PhoneGap shim.
