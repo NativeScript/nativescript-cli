@@ -105,7 +105,7 @@ var Xhr = {
           // Convert the binary response to a string.
           if(response instanceof root.ArrayBuffer) {
             var buffer  = '';
-            var bufView = new Uint8Array(response);
+            var bufView = new root.Uint8Array(response);
             for(var i = 0; i < response.byteLength; i += 1) {
               buffer += String.fromCharCode(bufView[i]);
             }

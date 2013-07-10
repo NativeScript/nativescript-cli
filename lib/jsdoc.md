@@ -45,7 +45,6 @@ Kinvey supports open source software. The following MIT Licensed software is use
 
 * [Backbone.js](http://backbonejs.org/)
 * [Backbone-associations](https://github.com/dhruvaray/backbone-associations)
-* [IndexedDBShim](https://github.com/axemclion/IndexedDBShim)
 * [jQuery](http://jquery.com/)
 * [jsOAuth](https://github.com/bytespider/jsOAuth)
 * [promiscuous](https://github.com/RubenVerborgh/promiscuous/)

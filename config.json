@@ -11,12 +11,12 @@
         "node_modules/backbone-associations/backbone-associations-min.js"
       ],
       "externals": [
-        "node_modules/IndexedDBShim/dist/IndexedDBShim.min.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
+        "src/internals/persistence/local/websql.js",
         "src/internals/persistence/local/indexeddb.js",
         "src/internals/social/html5.js",
         "src/internals/storage/local-storage.js",
@@ -35,12 +35,12 @@
     "html5": {
       "dependencies": [ ],
       "externals": [
-        "node_modules/IndexedDBShim/dist/IndexedDBShim.min.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
+        "src/internals/persistence/local/websql.js",
         "src/internals/persistence/local/indexeddb.js",
         "src/internals/persistence/net/xhr.js",
         "src/internals/social/html5.js",
@@ -59,13 +59,12 @@
     "phonegap": {
       "dependencies": [ ],
       "externals": [
-        "node_modules/IndexedDBShim/dist/IndexedDBShim.min.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
-        "src/internals/persistence/local/indexeddb.js",
+        "src/internals/persistence/local/websql.js",
         "src/internals/persistence/net/xhr.js",
         "src/internals/storage/local-storage.js",
         "src/shims/phonegap/phonegap.js"
@@ -75,7 +74,6 @@
       "dependencies" : [ ],
       "externals"    : [
         "src/shims/titanium/intro.txt",
-        "node_modules/IndexedDBShim/dist/IndexedDBShim.min.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/jsOAuth/dist/jsOAuth-1.3.6.min.js",
@@ -84,6 +82,7 @@
       ],
       "internals"    : [
         "src/internals/deferreds/promiscuous.js",
+        "src/internals/persistence/local/websql.js",
         "src/internals/persistence/local/indexeddb.js",
         "src/internals/social/html5.js",
         "src/shims/titanium/backbone-intro.txt",

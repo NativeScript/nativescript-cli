@@ -334,9 +334,6 @@ var IDBAdapter = {
 
     // Handle the `success` event.
     request.onsuccess = function() {
-      // Unset the database handle since the IndexedDBShim cannot fire all
-      // `versionchange` events needed.
-      IDBAdapter.db = null;
       deferred.resolve(null);
     };
 
