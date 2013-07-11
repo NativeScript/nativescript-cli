@@ -66,7 +66,7 @@ var WebSqlAdapter = {
 
     // If there is a database handle, re-use it.
     if(null === WebSqlAdapter.db) {
-      WebSqlAdapter.db = root.openDatabase(WebSqlAdapter.dbName(), '1.0', '', WebSqlAdapter.size);
+      WebSqlAdapter.db = root.openDatabase(WebSqlAdapter.dbName(), 1, '', WebSqlAdapter.size);
     }
 
     // Prepare the response.
