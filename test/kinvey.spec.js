@@ -216,6 +216,18 @@ describe('Kinvey', function() {
         return expect(promise).to.be.fulfilled;
       });
     });
+
+    // Test suite.
+    it('should support the response wrapper.', function() {
+      Kinvey.appKey = this.randomID(); // Force failure.
+      var promise = Kinvey.ping({ trace: true });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('requestId');
+      });
+    });
   });
 
   // Kinvey.getActiveUser.

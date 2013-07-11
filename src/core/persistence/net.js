@@ -147,6 +147,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       return Kinvey.Defer.reject(error);
     }
 
+    // Cast arguments.
+    options.trace = options.trace || (KINVEY_DEBUG && false !== options.trace);
+
     // Build, escape, and join URL segments.
     // Format: <API_ENDPOINT>/<namespace>[/<Kinvey.appKey>][/<collection>][/<id>]
     var segments = [ request.namespace, Kinvey.appKey, request.collection, request.id];
@@ -217,6 +220,10 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     if(options.skipBL) {
       headers['X-Kinvey-Skip-Business-Logic'] = true;
     }
+    if(options.trace) {
+      headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
+      headers['X-Kinvey-ResponseWrapper']             = true;
+    }
 
     // Debug.
     if(KINVEY_DEBUG) {
@@ -248,11 +255,25 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
         options
       ).then(function(response) {
         // Parse the response.
-        return JSON.parse(response);
+        response = JSON.parse(response);
+
+        // Debug.
+        if(KINVEY_DEBUG && options.trace && isObject(response)) {
+          log('Obtained the request ID.', response.headers['X-Kinvey-Request-Id']);
+        }
+
+        return options.trace && isObject(response) ? response.result : response;
       }, function(response) {
         // Parse the response.
+        var requestId = null;
         try {
           response = JSON.parse(response);
+
+          // If `options.trace`, extract result and headers from the response.
+          if(options.trace) {
+            requestId = response.headers['X-Kinvey-Request-Id'];
+            response  = response.result;
+          }
         }
         catch(e) { }
 
@@ -263,6 +284,16 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
             description : response.description || '',
             debug       : response.debug       || ''
           };
+
+          // If `options.trace`, add the `requestId`.
+          if(options.trace) {
+            response.requestId = requestId;
+
+            // Debug.
+            if(KINVEY_DEBUG) {
+              log('Obtained the request ID.', requestId);
+            }
+          }
         }
         else {// Client-side error.
           var dict = {// Dictionary for common errors.

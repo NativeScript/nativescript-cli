@@ -123,22 +123,24 @@ var use = function(nsInterface) {
 
 /**
  * @typedef {Object} Options
- * @property {function} [error]     Failure callback.
- * @property {Array}    [exclude]   List of relational fields not to save. Use
- *             in conjunction with `save` or `update`.
- * @property {boolean}  [fallback]  Fallback to the network if the request
+ * @property {function} [error]        Failure callback.
+ * @property {Array}    [exclude]      List of relational fields not to save.
+ *             Use in conjunction with `save` or `update`.
+ * @property {boolean}  [fallback]     Fallback to the network if the request
  *             failed locally. Use in conjunction with `offline`.
  * @property {boolean}  [fileTls=true] Use the https protocol to communicate
  *             with GCS.
- * @property {integer}  [fileTtl]   A custom expiration time (in seconds).
- * @property {boolean}  [nocache]   Use cache busting.
- * @property {boolean}  [offline]   Initiate the request locally.
- * @property {boolean}  [refresh]   Persist the response locally.
- * @property {Object}   [relations] Map of relational fields to collections.
- * @property {boolean}  [skipBL]    Skip Business Logic. Use in conjunction
+ * @property {integer}  [fileTtl]      A custom expiration time (in seconds).
+ * @property {boolean}  [nocache]      Use cache busting.
+ * @property {boolean}  [offline]      Initiate the request locally.
+ * @property {boolean}  [refresh]      Persist the response locally.
+ * @property {Object}   [relations]    Map of relational fields to collections.
+ * @property {boolean}  [skipBL]       Skip Business Logic. Use in conjunction
  *             with Master Secret.
- * @property {function} [success]   Success callback.
- * @property {integer}  [timeout]   The request timeout (ms).
+ * @property {function} [success]      Success callback.
+ * @property {integer}  [timeout]      The request timeout (ms).
+ * @property {boolean}  [trace=false]  Add the request id to the error object
+ *             for easy request tracking (in case of contacting support).
  */
 
 // Define the `Storage` namespace, used to store application state.
