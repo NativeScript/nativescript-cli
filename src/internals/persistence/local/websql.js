@@ -56,7 +56,7 @@ var WebSqlAdapter = {
       });
       return Kinvey.Defer.reject(error);
     }
-    var escapedCollection = '\'' + collection + '\'';
+    var escapedCollection = '"' + collection + '"';
     var isMaster          = 'sqlite_master' === collection;
     var isMulti           = isArray(query);
 
@@ -73,8 +73,8 @@ var WebSqlAdapter = {
     var deferred = Kinvey.Defer.deferred();
 
     // Obtain a transaction handle.
-    var responses = [];
-    WebSqlAdapter.db[write ? 'transaction' : 'readTransaction'](function(tx) {
+    var writeTxn = write || !isFunction(WebSqlAdapter.db.readTransaction);
+    WebSqlAdapter.db[writeTxn ? 'transaction' : 'readTransaction'](function(tx) {
       // If `write`, create the collection if it does not exist yet.
       if(write && !isMaster) {
         tx.executeSql(
@@ -84,6 +84,8 @@ var WebSqlAdapter = {
       }
 
       // Execute the queries.
+      var pending   = query.length;
+      var responses = [];
       query.forEach(function(parts) {
         var sql = parts[0].replace('#{collection}', escapedCollection);
 
@@ -109,6 +111,14 @@ var WebSqlAdapter = {
           if(KINVEY_DEBUG) {
             log('Executed the query.', sql, parts[1], response);
           }
+
+          // When all queries are processed, resolve.
+          // NOTE Some implementations fire the `txn` success callback at the
+          // wrong time, so manually maintain a `pending` counter.
+          pending -= 1;
+          if(0 === pending) {
+            deferred.resolve(isMulti ? responses : responses.shift());
+          }
         });
       });
     }, function(err) {
@@ -117,22 +127,22 @@ var WebSqlAdapter = {
         log('Failed to execute the query.', err);
       }
 
+      // NOTE Some implementations return the error message as only argument.
+      err = isString(err) ? err : err.message;
+
       // Translate the error in case the collection does not exist.
-      if(-1 !== err.message.indexOf('no such table')) {
+      if(-1 !== err.indexOf('no such table')) {
         error = clientError(Kinvey.Error.COLLECTION_NOT_FOUND, {
           description : 'This collection not found for this app backend',
           debug       : { collection: collection }
         });
       }
       else {// Other errors.
-        error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: err.message });
+        error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: err });
       }
 
       // Return the rejection.
       deferred.reject(error);
-    }, function() {
-      // Return the response.
-      deferred.resolve(isMulti ? responses : responses.shift());
     });
 
     // Return the promise.
@@ -219,6 +229,8 @@ var WebSqlAdapter = {
 
       // Return the response.
       return promise.then(function(response) {
+        // NOTE Some implementations do not return a `rowCount`.
+        response.rowCount = null != response.rowCount ? response.rowCount : documents.length;
         return { count: response.rowCount, documents: documents };
       });
     });
@@ -254,6 +266,9 @@ var WebSqlAdapter = {
       // Extract the response.
       var count     = response[1].rowCount;
       var documents = response[0].result;
+
+      // NOTE Some implementations do not return a `rowCount`.
+      count = null != count ? count : response[0].result.length;
 
       // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
       if(0 === count) {
