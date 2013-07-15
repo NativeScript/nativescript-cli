@@ -49,10 +49,11 @@ var WebSqlAdapter = {
   transaction: function(collection, query, parameters, write/*, options*/) {
     // Validate preconditions.
     var error;
-    if(null == collection || !/^[a-zA-Z0-9\-]{1,128}/.test(collection)) {
+    if(!isString(collection) || !/^[a-zA-Z0-9\-]{1,128}/.test(collection)) {
       error = clientError(Kinvey.Error.INVALID_IDENTIFIER, {
         description : 'The collection name has an invalid format.',
-        debug       : 'The collection name may only contain alphanumeric characters and dashes.'
+        debug       : 'The collection name must be a string containing only ' +
+         'alphanumeric characters and dashes, "' + collection + '" given.'
       });
       return Kinvey.Defer.reject(error);
     }

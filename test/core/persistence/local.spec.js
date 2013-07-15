@@ -33,6 +33,18 @@ describe('Kinvey.Persistence.Local', function() {
     });
 
     // Test suite.
+    it('should fail on invalid collection name.', function() {
+      var promise = Kinvey.Persistence.Local.create({
+        collection : true,
+        data       : { field: this.randomID() }
+      });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', 'InvalidIdentifier');
+      });
+    });
     it('should batch create a list of documents.', function() {
       var documents = [
         { field: this.randomID() },
@@ -154,6 +166,18 @@ describe('Kinvey.Persistence.Local', function() {
     // Fetches.
     describe('when fetching', function() {
       // Test suite.
+      it('should fail on invalid collection name.', function() {
+        var promise = Kinvey.Persistence.Local.read({
+          collection : true,
+          id         : this.doc1._id
+        });
+        return promise.then(function() {
+          // We should not reach this code branch.
+          return expect(promise).to.be.rejected;
+        }, function(error) {
+          expect(error).to.have.property('name', 'InvalidIdentifier');
+        });
+      });
       it('should return a document.', function() {
         var promise = Kinvey.Persistence.Local.read({
           collection : this.collection,
@@ -249,6 +273,18 @@ describe('Kinvey.Persistence.Local', function() {
       });
 
       // Test suite.
+      it('should fail on invalid collection name.', function() {
+        var promise = Kinvey.Persistence.Local.read({
+          collection : true,
+          id         : '_count'
+        });
+        return promise.then(function() {
+          // We should not reach this code branch.
+          return expect(promise).to.be.rejected;
+        }, function(error) {
+          expect(error).to.have.property('name', 'InvalidIdentifier');
+        });
+      });
       it('should count the number of documents.', function() {
         var promise = Kinvey.Persistence.Local.read({
           collection : this.collection,
@@ -309,6 +345,19 @@ describe('Kinvey.Persistence.Local', function() {
       });
 
       // Test suite.
+      it('should fail on invalid collection name.', function() {
+        var promise = Kinvey.Persistence.Local.read({
+          collection : true,
+          id         : '_group',
+          data       : this.agg.toJSON()
+        });
+        return promise.then(function() {
+          // We should not reach this code branch.
+          return expect(promise).to.be.rejected;
+        }, function(error) {
+          expect(error).to.have.property('name', 'InvalidIdentifier');
+        });
+      });
       it('should accept an empty aggregation.', function() {
         var promise = Kinvey.Persistence.Local.create({
           collection : this.collection,
@@ -434,6 +483,19 @@ describe('Kinvey.Persistence.Local', function() {
     });
 
     // Test suite.
+    it('should fail on invalid collection name.', function() {
+      var promise = Kinvey.Persistence.Local.update({
+        collection : true,
+        id         : '_group',
+        data       : { _id: this.randomID() }
+      });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', 'InvalidIdentifier');
+      });
+    });
     it('should update a document.', function() {
       var document = { _id: this.randomID(), field: this.randomID() };
       var promise  = Kinvey.Persistence.Local.update({
@@ -473,6 +535,18 @@ describe('Kinvey.Persistence.Local', function() {
     });
 
     // Test suite.
+    it('should fail on invalid collection name.', function() {
+      var promise = Kinvey.Persistence.Local.destroy({
+        collection : true,
+        id         : this.doc1._id
+      });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', 'InvalidIdentifier');
+      });
+    });
     it('should delete a document.', function() {
       var promise = Kinvey.Persistence.Local.destroy({
         collection : this.collection,

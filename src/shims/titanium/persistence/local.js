@@ -31,10 +31,11 @@ var TiDatabaseAdapter = {
    */
   execute: function(collection, query, parameters, options) {
     // Validate preconditions.
-    if(!/^[a-zA-Z0-9\-]{1,128}/.test(collection)) {
+    if(!isString(collection) || !/^[a-zA-Z0-9\-]{1,128}/.test(collection)) {
       var error = clientError(Kinvey.Error.INVALID_IDENTIFIER, {
         description : 'The collection name has an invalid format.',
-        debug       : 'The collection name may only contain alphanumeric characters and dashes.'
+        debug       : 'The collection name must be a string containing only ' +
+         'alphanumeric characters and dashes, "' + collection + '" given.'
       });
       return Kinvey.Defer.reject(error);
     }

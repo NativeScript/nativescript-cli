@@ -214,9 +214,14 @@ var KinveyReference = /** @lends KinveyReference */{
               return Kinvey.Defer.resolve(member);
             }
 
+            // To allow storing of users with references locally, use
+            // `Kinvey.DataStore` if the operation does not need to notify
+            // the synchronization functionality.
+            var saveUsingDataStore = options.offline && false === options.track;
+
             // Forward to the `Kinvey.User` or `Kinvey.DataStore` namespace.
             var promise;
-            if(USERS === collection) {
+            if(USERS === collection && !saveUsingDataStore) {
               // If the referenced user is new, create with `state` set to false.
               var isNew = null == member._id;
               options.state = isNew && '' !== property ? options.state || false : options.state;

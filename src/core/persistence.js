@@ -133,12 +133,12 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     // Use net. If `options.refresh`, persist the response locally.
     var promise = Kinvey.Persistence.Net.read(request, options);
     if(request.local.res && options.refresh) {
-      // Debug.
-      if(KINVEY_DEBUG) {
-        log('Persisting the response locally.');
-      }
-
       return promise.then(function(response) {
+        // Debug.
+        if(KINVEY_DEBUG) {
+          log('Persisting the response locally.');
+        }
+
         // Add support for references.
         var promise;
         if(options.relations) {

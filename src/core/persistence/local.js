@@ -45,7 +45,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       if(options.offline && false !== options.track) {
         // Debug.
         if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', response);
+          log('Notifying the synchronization functionality.', collection, response);
         }
 
         return Sync.notify(collection, response, options).then(function() {
@@ -142,7 +142,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       if(options.offline && false !== options.track) {
         // Debug.
         if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', response);
+          log('Notifying the synchronization functionality.', collection, response);
         }
 
         return Sync.notify(collection, response, options).then(function() {
@@ -187,7 +187,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       if(options.offline && false !== options.track) {
         // Debug.
         if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', response);
+          log('Notifying the synchronization functionality.', collection, response);
         }
 
         return Sync.notify(collection, response.documents, options).then(function() {

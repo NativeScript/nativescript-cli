@@ -5,6 +5,7 @@
 * #2467: replace IndexedDBShim by WebSQL adapter.
 * Enhancement: `Kinvey.getActiveUser()` now throws if the active user is not restored yet.
 * Bugfix: Setting the active user did not take concurrency into account. 
+* Bugfix: Saving a user with references was not possible in offline mode.
 
 ## 1.0.2 (2013-07-10)
 * Bugfix: IndexedDBShim was broken due to "use strict", downgraded version.
@@ -12,7 +13,7 @@
 
 ## 1.0.1 (2013-07-03)
 * #2461: add PhoneGap shim.
-* #2462: active user details not available when offline.
+* #2462: active user details not available in offline mode.
 
 ## 1.0.0 (2013-07-01)
 * #2259: add Titanium shim.
