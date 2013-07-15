@@ -71,51 +71,63 @@ var USERS       = 'user';
 // The active user.
 var activeUser = null;
 
+// Status flag indicating whether the active user is ready to be used.
+var activeUserReady = false;
+
 /**
  * Restores the active user (if any) from disk.
  *
  * @returns {Promise} The active user, or `null` if there is no active user.
  */
 var restoreActiveUser = function() {
-  // Retrieve the authtoken from storage.
+  // Retrieve the authtoken from storage. If there is an authtoken, restore the
+  // active user from disk.
   var promise = Storage.get('activeUser');
-
-  // If there is an authtoken, restore the active user from disk.
   return promise.then(function(user) {
-    if(null != user) {
+    // If there is no active user, set to `null`.
+    if(null == user) {
+      return Kinvey.setActiveUser(null);
+    }
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      log('Restoring the active user.');
+    }
+
+    // Set the active user to a near-empty user with only the authtoken set.
+    var previous = Kinvey.setActiveUser({ _id: user[0], _kmd: { authtoken: user[1] } });
+
+    // Retrieve the user. The `Kinvey.User.me` method will also update the
+    // active user. If `INVALID_CREDENTIALS`, reset the active user.
+    return Kinvey.User.me().then(null, function(error) {
       // Debug.
       if(KINVEY_DEBUG) {
-        log('Restoring the active user.');
+        log('Failed to restore the active user.', error);
       }
 
-      // Set the active user to a near-empty user with only the authtoken set.
-      var previous = Kinvey.setActiveUser({ _id: user[0], _kmd: { authtoken: user[1] } });
-
-      // Retrieve the user. The `Kinvey.User.me` method will also update the
-      // active user. If `INVALID_CREDENTIALS`, reset the active user.
-      return Kinvey.User.me().then(null, function(error) {
-        // Debug.
-        if(KINVEY_DEBUG) {
-          log('Failed to restore the active user.', error);
-        }
-
-        // Reset the active user.
-        if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
-          Kinvey.setActiveUser(previous);
-        }
-        return Kinvey.Defer.reject(error);
-      });
-    }
-    return Kinvey.getActiveUser();
+      // Reset the active user.
+      if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+        Kinvey.setActiveUser(previous);
+      }
+      return Kinvey.Defer.reject(error);
+    });
   });
 };
 
 /**
  * Returns the active user.
  *
+ * @throws {Error} `Kinvey.getActiveUser` can only be called after the promise
+     returned by `Kinvey.init` fulfills or rejects.
  * @returns {?Object} The active user, or `null` if there is no active user.
  */
 Kinvey.getActiveUser = function() {
+  // Validate preconditions.
+  if(false === activeUserReady) {
+    throw new Kinvey.Error('Kinvey.getActiveUser can only be called after the ' +
+     'promise returned by Kinvey.init fulfills or rejects.');
+  }
+
   return activeUser;
 };
 
@@ -134,8 +146,14 @@ Kinvey.setActiveUser = function(user) {
   }
 
   // Validate arguments.
-  if(null != user && !(null != user._kmd && null != user._kmd.authtoken)) {
-    throw new Kinvey.Error('user argument must contain: _kmd.authtoken.');
+  if(null != user && !(null != user._id && null != user._kmd && null != user._kmd.authtoken)) {
+    throw new Kinvey.Error('user argument must contain: _id, _kmd.authtoken.');
+  }
+
+  // At this point, the active user is ready to be used (even though the
+  // user data is not retrieved yet).
+  if(false === activeUserReady) {
+    activeUserReady = true;
   }
 
   var result = Kinvey.getActiveUser();// Previous.
@@ -180,6 +198,9 @@ Kinvey.init = function(options) {
   if(null == options.appSecret && null == options.masterSecret) {
     throw new Kinvey.Error('options argument must contain: appSecret and/or masterSecret.');
   }
+
+  // The active user is not ready yet.
+  activeUserReady = false;
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;

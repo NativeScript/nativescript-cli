@@ -3,6 +3,8 @@
 ## 1.0.3
 * #2415: add RequestID to error object.
 * #2467: replace IndexedDBShim by WebSQL adapter.
+* Enhancement: `Kinvey.getActiveUser()` now throws if the active user is not restored yet.
+* Bugfix: Setting the active user did not take concurrency into account. 
 
 ## 1.0.2 (2013-07-10)
 * Bugfix: IndexedDBShim was broken due to "use strict", downgraded version.

@@ -65,7 +65,7 @@ describe('Kinvey.User', function() {
     });
     it('should logout the active user prior to creating a new one.', function() {
       // Mock the active user.
-      Kinvey.setActiveUser({ _kmd: { authtoken: this.randomID() } });
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
       var promise = Kinvey.User.signup();
       return promise.then(function() {
@@ -192,7 +192,7 @@ describe('Kinvey.User', function() {
       return expect(promise).to.be.fulfilled;
     });
     it('should fail when the active user is invalid.', function() {
-      Kinvey.setActiveUser({ _kmd: { authtoken: this.randomID() } });
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
       var promise = Kinvey.User.logout();
       return promise.then(function() {
@@ -206,7 +206,7 @@ describe('Kinvey.User', function() {
       });
     });
     it('should succeed when the active user is invalid and the `force` flag was set.', function() {
-      Kinvey.setActiveUser({ _kmd: { authtoken: this.randomID() } });
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
       var promise = Kinvey.User.logout({ force: true });
       return promise.then(function() {

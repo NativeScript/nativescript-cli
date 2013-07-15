@@ -24,6 +24,17 @@ describe('Kinvey', function() {
 
   // Kinvey.init.
   describe('the init method', function() {
+    // Housekeeping: define mock user.
+    before(function() {
+      this.mock = {
+        _id  : this.randomID(),
+        _kmd : { authtoken: this.randomID() }
+      };
+    });
+    after(function() {// Cleanup.
+      delete this.mock;
+    });
+
     // Housekeeping: clear the active user.
     afterEach(function() {
       Kinvey.setActiveUser(null);
@@ -66,7 +77,7 @@ describe('Kinvey', function() {
       return expect(promise).to.be.fulfilled;
     });
     it('should fail if the active user cannot be restored.', function() {
-      Kinvey.setActiveUser({ _kmd: { authtoken: this.randomID() } });
+      Kinvey.setActiveUser(this.mock);
       var promise = Kinvey.init(config.test);
       return promise.then(function() {
         // We should not reach this code branch.
@@ -81,7 +92,7 @@ describe('Kinvey', function() {
       return Kinvey.init(options);
     }));
     it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
-      Kinvey.setActiveUser({ _kmd: { authtoken: this.randomID() } });// Fake user.
+      Kinvey.setActiveUser(this.mock);
       options.appKey    = config.test.appKey;
       options.appSecret = config.test.appSecret;
       return Kinvey.init(options);
@@ -267,7 +278,7 @@ describe('Kinvey', function() {
       }).to.Throw('_kmd.authtoken');
     });
     it('should set the active user.', function() {
-      var mock = { _kmd: { authtoken: this.randomID() } };
+      var mock = { _id: this.randomID(), _kmd: { authtoken: this.randomID() } };
       Kinvey.setActiveUser(mock);
       expect(Kinvey.getActiveUser()).to.deep.equal(mock);
     });
