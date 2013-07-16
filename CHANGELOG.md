@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.4
+* Enhancement: Added compatibility with Google Closure Compiler.
+
 ## 1.0.3 (2013-07-15)
 * #2415: add RequestID to error object.
 * #2467: replace IndexedDBShim by WebSQL adapter.

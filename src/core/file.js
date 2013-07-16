@@ -1,3 +1,5 @@
+/* jshint sub: true */
+
 // Files.
 // ------
 
@@ -331,7 +333,7 @@ Kinvey.File = /** @lends Kinvey.File */{
     data.mimeType = data.mimeType || file.mimeType || file.type || 'application/octet-stream';
 
     // Apply options.
-    if(options.public) {
+    if(options['public']) {
       data._public = true;
     }
     options.contentType = data.mimeType;
