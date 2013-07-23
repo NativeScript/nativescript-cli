@@ -63,7 +63,7 @@ var BackboneAjax = {
       if(2 === parseInt(status / 100, 10) || 304 === status) {
         // If `options.file`, convert the response to `Blob` object.
         var response = request.responseText;
-        if(options.file && null != response) {
+        if(options.file && null != response && null != root.ArrayBuffer) {
           // jQuery does not provide a nice way to set the responseType to blob,
           // so convert the response to binary manually.
 // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
@@ -94,7 +94,10 @@ var BackboneAjax = {
     }
 
     // Initiate the request.
-    if(isObject(body) && !(body instanceof root.ArrayBuffer || body instanceof root.Blob)) {
+    if(isObject(body) && !(
+     (null != root.ArrayBuffer && body instanceof root.ArrayBuffer) ||
+     (null != root.Blob        && body instanceof root.Blob)
+    )) {
       body = JSON.stringify(body);
     }
     var xhr = options.xhr = Backbone.ajax({

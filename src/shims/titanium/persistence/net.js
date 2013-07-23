@@ -81,7 +81,7 @@ var TiHttp = {
         var response = !isMobileWeb && options.file ? request.responseData : request.responseText;
 
         // Get binary response data on Titanium mobileweb.
-        if(isMobileWeb && options.file && null != response) {
+        if(isMobileWeb && options.file && null != response && null != root.ArrayBuffer) {
           var buffer  = new root.ArrayBuffer(response.length);
           var bufView = new root.Uint8Array(buffer);
           for(var i = 0, length = response.length; i < length; i += 1) {

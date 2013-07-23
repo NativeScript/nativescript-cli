@@ -176,9 +176,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       }
     }
 
-    // If `options.nocache`, add a cache busting query string. This is useful
-    // for Android < 4.0 which caches all requests aggressively.
-    if(options.nocache) {
+    // Unless `options.nocache` is false, add a cache busting query string.
+    // This is useful for Android < 4.0 which caches all requests aggressively.
+    if(false !== options.nocache) {
       flags._ = Math.random().toString(36).substr(2);
     }
 

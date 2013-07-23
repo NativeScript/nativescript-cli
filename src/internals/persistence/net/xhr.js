@@ -91,19 +91,25 @@ var Xhr = {
         log('The network request completed.', request);
       }
 
+      // Extract the response.
+      var responseData = request.response || null;
+      if('undefined' === typeof request.response) {
+        responseData = request.responseText || null;
+      }
+
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = request.status;
       if(2 === parseInt(status / 100, 10) || 304 === status) {
-        deferred.resolve(request.response || null);
+        deferred.resolve(responseData);
       }
       else {// Failure.
         var type     = null !== timer ? 'timeout' : event.type;
-        var response = 0 !== status ? request.response : type;
+        var response = 0 !== status ? responseData : type;
 
         // If `options.file`, parse the response to obtain the error.
         if(options.file && 0 !== status) {
           // Convert the binary response to a string.
-          if(response instanceof root.ArrayBuffer) {
+          if(null != root.ArrayBuffer && response instanceof root.ArrayBuffer) {
             var buffer  = '';
             var bufView = new root.Uint8Array(response);
             for(var i = 0; i < response.byteLength; i += 1) {
@@ -111,7 +117,7 @@ var Xhr = {
             }
             deferred.reject(buffer);
           }
-          else if(response instanceof root.Blob) {
+          else if(null != root.Blob && response instanceof root.Blob) {
             var reader = new root.FileReader();
             reader.onload = function(event) {
               deferred.reject(event.target.result);
@@ -131,7 +137,10 @@ var Xhr = {
     }
 
     // Initiate the request.
-    if(isObject(body) && !(body instanceof root.ArrayBuffer || body instanceof root.Blob)) {
+    if(isObject(body) && !(
+     (null != root.ArrayBuffer && body instanceof root.ArrayBuffer) ||
+     (null != root.Blob        && body instanceof root.Blob)
+    )) {
       body = JSON.stringify(body);
     }
     request.send(body);

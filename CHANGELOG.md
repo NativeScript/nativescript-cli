@@ -3,6 +3,7 @@
 ## 1.0.4
 * Enhancement: Added compatibility with Google Closure Compiler.
 * Enhancement: Querying for nearby locations now uses `$nearSphere` (was: `$near`).
+* Bugfix: Android < 4 was not supported properly.
 * Bugfix: Popup management for social login did not work in Firefox.
 
 ## 1.0.3 (2013-07-15)

@@ -1,6 +1,38 @@
 // Metadata.
 // ---------
 
+// Patch JavaScript implementations lacking ISO-8601 date support.
+// http://jsfiddle.net/mplungjan/QkasD/
+var fromISO = function(dateString) {
+  var date = Date.parse(dateString);
+  if(date) {
+    return new Date(date);
+  }
+
+  // Patch here.
+  var regex = /^(\d{4}\-\d\d\-\d\d([tT][\d:\.]*)?)([zZ]|([+\-])(\d\d):?(\d\d))?$/;
+  var match = dateString.match(regex);
+  if(null != match[1]) {
+    var day = match[1].split(/\D/).map(function(segment) {
+      return root.parseInt(segment, 10) || 0;
+    });
+    day[1] -= 1;// Months range 0–11.
+    day = new Date(Date.UTC.apply(Date, day));
+
+    // Adjust for timezone.
+    if(null != match[5]) {
+      var timezone = root.parseInt(match[5], 10) / 100 * 60;
+      timezone += (null != match[6] ? root.parseInt(match[6], 10) : 0);
+      timezone *= ('+' === match[4]) ? -1 : 1;
+      if(timezone) {
+        day.setUTCMinutes(day.getUTCMinutes() * timezone);
+      }
+    }
+    return day;
+  }
+  return NaN;// Invalid.
+};
+
 // Wrapper for accessing the `_acl` and `_kmd` properties of a document
 // (i.e. entity and users).
 
@@ -56,7 +88,7 @@ Kinvey.Metadata.prototype = /** @lends Kinvey.Metadata# */{
    */
   getCreatedAt: function() {
     if(null != this._document._kmd && null != this._document._kmd.ect) {
-      return new Date(this._document._kmd.ect);
+      return fromISO(this._document._kmd.ect);
     }
     return null;
   },
@@ -80,7 +112,7 @@ Kinvey.Metadata.prototype = /** @lends Kinvey.Metadata# */{
    */
   getLastModified: function() {
     if(null != this._document._kmd && null != this._document._kmd.lmt) {
-      return new Date(this._document._kmd.lmt);
+      return fromISO(this._document._kmd.lmt);
     }
     return null;
   },
