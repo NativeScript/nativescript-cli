@@ -117,6 +117,11 @@ var SocialAdapter = {
    * @returns {Promise} The response and tokens.
    */
   requestToken: function(provider, options) {
+    // Popup blockers only allow opening a dialog at this moment. The popup
+    // location will be updated later.
+    var blank = 'about:blank';
+    var popup = root.open(blank, 'KinveyOAuth2');
+
     // Open the login dialog. This step consists of getting the dialog url,
     // after which the dialog is opened.
     var redirect = options.redirect || root.location.toString();
@@ -129,18 +134,30 @@ var SocialAdapter = {
       // Obtain the tokens from the login dialog.
       var deferred = Kinvey.Defer.deferred();
 
-      // Open the dialog. Once the popup returns to the redirect url, we can
-      // access it.
-      var popup = root.open(response.url, 'KinveyOAuth2');
+      // Set the popup location.
+      if(null != popup) {
+        popup.location = response.url;
+      }
 
       // Popup management.
       var elapsed  = 0;// Time elapsed since opening the popup.
-      var interval = 100;//100 ms.
+      var interval = 100;// ms.
       var timer    = root.setInterval(function() {
         var error;
 
+        // The popup was blocked.
+        if(null == popup) {
+          root.clearTimeout(timer);// Stop listening.
+
+          // Return the response.
+          error = clientError(Kinvey.Error.SOCIAL_ERROR, {
+            debug: 'The popup was blocked.'
+          });
+          deferred.reject(error);
+        }
+
         // The popup closed unexpectedly.
-        if(null == popup.location) {
+        else if(popup.closed) {
           root.clearTimeout(timer);// Stop listening.
 
           // Return the response.
@@ -157,25 +174,37 @@ var SocialAdapter = {
 
           // Return the response.
           error = clientError(Kinvey.Error.SOCIAL_ERROR, {
-            debug: 'The user waited too long to reply to the authorization request.'
+            debug: 'The authorization request timed out.'
           });
           deferred.reject(error);
         }
 
-        // If `popup.location.host`, the popup was redirected back.
-        else if(popup.location.host) {
-          root.clearTimeout(timer);// Stop listening.
-          popup.close();
-
-          // Extract tokens from the url.
-          var location    = popup.location;
-          var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
-          var tokens      = SocialAdapter.tokenize(tokenString);
-          if(null != response.oauth_token_secret) {// OAuth 1.0a.
-            tokens.oauth_token_secret = response.oauth_token_secret;
+        // The popup is still active, check its location.
+        else {
+          // Firefox will throw an exception when `popup.location.host` has
+          // a different origin.
+          var host = false;
+          try {
+            host = blank !== popup.location.toString();
           }
+          catch(e) { }
 
-          deferred.resolve(tokens);
+          // Continue if the popup was redirected back to our domain.
+          if(host) {
+            root.clearTimeout(timer);// Stop listening.
+
+            // Extract tokens from the url.
+            var location    = popup.location;
+            var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
+            var tokens      = SocialAdapter.tokenize(tokenString);
+            if(null != response.oauth_token_secret) {// OAuth 1.0a.
+              tokens.oauth_token_secret = response.oauth_token_secret;
+            }
+            deferred.resolve(tokens);
+
+            // Close the popup.
+            popup.close();
+          }
         }
 
         // Update elapsed time.

@@ -66,16 +66,16 @@ var login = function(doc, request, response, modules) {
   }
 
   // Add consumer key and secret to request body.
-  request.body._socialIdentity[provider].consumer_key = doc.consumer_key;
+  request.body._socialIdentity[provider].consumer_key    = doc.consumer_key;
   request.body._socialIdentity[provider].consumer_secret = doc.consumer_secret;
 
   // Forward request to the login endpoint.
   modules.request.post({
     uri: 'https://' + encodeURIComponent(request.headers.host) + '/user/' + encodeURIComponent(request.username) + '/login',
     headers: {
-      Authorization: request.headers.authorization,// Application credentials.
+      Authorization          : request.headers.authorization,// Application credentials.
       'Content-Type'         : 'application/json',
-      'X-Kinvey-API-Version' : 2
+      'X-Kinvey-API-Version' : request.headers['x-kinvey-api-version']
     },
     json: request.body
   }, function(err, res) {
@@ -89,7 +89,6 @@ var login = function(doc, request, response, modules) {
       response.complete(550);
     }
     else {// Forward response.
-      response.headers = res.headers;
       response.body = res.body;
       response.complete(res.status);
     }
@@ -167,9 +166,9 @@ var requestOAuth2Token = function(doc, request, response, modules) {
   var provider = doc._id;
   if(!request.body.redirect) {
     response.body = {
-      error: 'IncompleteRequestBody',
-      description: 'The request body is either missing or incomplete.',
-      debug: 'Missing required attributes: redirect'
+      error       : 'IncompleteRequestBody',
+      description : 'The request body is either missing or incomplete.',
+      debug       : 'Missing required attributes: redirect'
     };
     return response.complete(400);
   }
