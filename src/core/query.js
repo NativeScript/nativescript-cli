@@ -397,7 +397,7 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
     coord[1] = parseFloat(coord[1]);
 
     // `$nearSphere` and `$maxDistance` are separate filters.
-    var result = this._addFilter(field, '$near', [ coord[0], coord[1] ]);
+    var result = this._addFilter(field, '$nearSphere', [ coord[0], coord[1] ]);
     if(null != maxDistance) {
       this._addFilter(field, '$maxDistance', maxDistance);
     }

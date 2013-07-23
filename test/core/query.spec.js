@@ -615,13 +615,13 @@ describe('Kinvey.Query', function() {
       var coord = [ -1, 1 ];
       this.query.near(this.field, coord);
       expect(this.filter()).to.have.property(this.field);
-      expect(this.filter()[this.field]).to.deep.equal({ $near: coord });
+      expect(this.filter()[this.field]).to.deep.equal({ $nearSphere: coord });
     });
     it('should add a near filter, with `maxDistance`.', function() {
       var maxDistance = 10;
       this.query.near(this.field, [ -1, 1 ], maxDistance);
       expect(this.filter()).to.have.property(this.field);
-      expect(this.filter()[this.field]).to.contain.keys(['$near', '$maxDistance']);
+      expect(this.filter()[this.field]).to.contain.keys(['$nearSphere', '$maxDistance']);
       expect(this.filter()[this.field].$maxDistance).to.equal(maxDistance);
     });
     it('should return the query.', function() {

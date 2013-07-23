@@ -2,6 +2,7 @@
 
 ## 1.0.4
 * Enhancement: Added compatibility with Google Closure Compiler.
+* Enhancement: Querying for nearby locations now uses `$nearSphere` (was: `$near`).
 
 ## 1.0.3 (2013-07-15)
 * #2415: add RequestID to error object.
