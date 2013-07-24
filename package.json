@@ -1,27 +1,24 @@
 {
-  "name": "kinvey",
-  "description": "Kinvey JavaScript Library",
-  "version": "1.0.4-snapshot",
-  "homepage": "http://www.kinvey.com",
-  "author": "Kinvey, Inc.",
-  "bugs": {
-    "email": "support@kinvey.com"
-  },
-  "licenses": [
-    {
-      "type": "Apache",
-      "url": "https://www.apache.org/licenses/LICENSE-2.0"
-    }
-  ],
-  "engines": {
-    "node": ">=0.8"
+  "name"        : "kinvey",
+  "version"     : "1.0.4-snapshot",
+  "description" : "Kinvey JavaScript Library",
+  "homepage"    : "http://www.kinvey.com",
+  "bugs"        : { "email": "support@kinvey.com" },
+  "licenses"    : [{
+    "type" : "Apache-2.0",
+    "url"  : "http://www.apache.org/licenses/LICENSE-2.0"
+  }],
+  "author"      : "Kinvey, Inc.",
+  "repository"  : {
+    "type" : "svn",
+    "url"  : "https://subversion.assembla.com/svn/kinvey/js-library"
   },
   "dependencies": {
     "backbone"              : "~1.0",
     "backbone-associations" : "~0.5",
     "jquery-browser"        : "~2.0",
     "promiscuous"           : "~0.3",
-    "sift"                  : "~0.0.12",
+    "sift"                  : "~0.0",
     "uglify-js"             : "~2.3",
     "zepto"                 : "~0.0"
   },
@@ -49,9 +46,6 @@
     "sinon"                 : "~1.7",
     "sinon-chai"            : "~2.4"
   },
-  "private": true,
-  "repository": {
-    "type" : "svn",
-    "url"  : "https://subversion.assembla.com/svn/kinvey/js-library/trunk"
-  }
+  "engines" : { "node": ">=0.8" },
+  "private" : true
 }
