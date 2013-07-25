@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.4
+## 1.0.4 (2013-07-25)
 * Enhancement: Added compatibility with Google Closure Compiler.
 * Enhancement: Querying for nearby locations now uses `$nearSphere` (was: `$near`).
 * Bugfix: Android < 4 was not supported properly.
