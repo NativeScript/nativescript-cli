@@ -51,7 +51,7 @@ var tiPlatformConnect = function(provider, options) {
     // Failed to obtain the access tokens, reject the promise.
     var error = clientError(Kinvey.Error.SOCIAL_ERROR, {
       description : event.error,
-      debug       : event.data || ''
+      debug       : event
     });
     deferred.reject(error);
   });
@@ -123,9 +123,7 @@ var TiSocialAdapter = {
       }
 
       // On failure, reject with the error.
-      var error = clientError(Kinvey.Error.SOCIAL_ERROR, {
-        debug: event.data.status + ': ' + event.error
-      });
+      var error = clientError(Kinvey.Error.SOCIAL_ERROR, { debug: event });
       deferred.reject(error);
     };
     TiFacebook.addEventListener('login', listener);
