@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.0.5
+* Bugfix: Improved offline support for Titanium running on older devices.
 * Bugfix: Upon failure, social login for Titanium would throw a `TypeError`.
 
 ## 1.0.4 (2013-07-25)

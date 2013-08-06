@@ -66,7 +66,7 @@ var TiDatabaseAdapter = {
     // an error object.
     try {
       var db = Titanium.Database.open(TiDatabaseAdapter.dbName());
-      db.execute('BEGIN');// Start a transaction.
+      db.execute('BEGIN TRANSACTION');// Start a transaction.
 
       // Create the collection if it does not exist yet.
       db.execute(
@@ -113,7 +113,7 @@ var TiDatabaseAdapter = {
       });
 
       // Commit the transaction.
-      db.execute('COMMIT');
+      db.execute('COMMIT TRANSACTION');
 
       // Close the database.
       db.close();
