@@ -318,20 +318,16 @@ var Sync = /** @lends Sync */{
       return composite.document;
     });
 
-    // Build the request.
-    var request = {
-      namespace  : USERS === collection ? USERS : DATA_STORE,
-      collection : USERS === collection ? null  : collection,
-      auth       : Auth.Default
-    };
-
     // Save documents on net.
     var error    = [];// Track errors of individual update operations.
     var promises = documents.map(function(document) {
-      // Update the request parameters and save the document.
-      request.id   = document._id;
-      request.data = document;
-      return Kinvey.Persistence.Net.update(request, options).then(null, function() {
+      return Kinvey.Persistence.Net.update({
+        namespace  : USERS === collection ? USERS : DATA_STORE,
+        collection : USERS === collection ? null  : collection,
+        id         : document._id,
+        data       : document,
+        auth       : Auth.Default
+      }, options).then(null, function() {
         // Rejection should not break the entire synchronization. Instead,
         // append the document id to `error`, and resolve.
         error.push(document._id);
@@ -339,11 +335,13 @@ var Sync = /** @lends Sync */{
       });
     });
     return Kinvey.Defer.all(promises).then(function(responses) {
-      // `responses` is an `Array` of documents. Update the request parameters
-      // and batch save all documents.
-      request.id   = null;
-      request.data = responses;
-      return Kinvey.Persistence.Local.create(request, options);
+      // `responses` is an `Array` of documents. Batch save all documents.
+      return Kinvey.Persistence.Local.create({
+        namespace  : USERS === collection ? USERS : DATA_STORE,
+        collection : USERS === collection ? null  : collection,
+        data       : responses,
+        auth       : Auth.Default
+      }, options);
     }).then(function(response) {
       // Build the final response.
       return {

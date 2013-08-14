@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.0.5
+* Bugfix: Synchronizing multiple documents concurrently resulted in data corruption.
 * Bugfix: Improved offline support for Titanium running on older devices.
 * Bugfix: Upon failure, social login for Titanium would throw a `TypeError`.
 
