@@ -73,6 +73,12 @@ Kinvey.User = /** @lends Kinvey.User */{
     }
     options = options || {};
 
+    // Validate arguments.
+    if(null == usernameOrData.username && null == usernameOrData.password &&
+     null == usernameOrData._socialIdentity) {
+      throw new Kinvey.Error('Argument must contain: username and password, or _socialIdentity.');
+    }
+
     // Logout the current active user first, then proceed with logging in
     // with the specified credentials.
     return Kinvey.User.logout({ force: true, silent: true }).then(function() {

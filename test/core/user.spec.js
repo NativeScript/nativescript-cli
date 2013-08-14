@@ -120,6 +120,12 @@ describe('Kinvey.User', function() {
     });
 
     // Test suite.
+    it('should throw on invalid arguments.', function() {
+      var _this = this;
+      expect(function() {
+        Kinvey.User.login({ foo: _this.randomID() });
+      }).to.Throw('_socialIdentity');
+    });
     it('should login a user.', function() {
       var _this = this;
       var promise = Kinvey.User.login(this.data.username, this.data.password).then(function(user) {

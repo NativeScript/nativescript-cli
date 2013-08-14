@@ -150,7 +150,10 @@ describe('Kinvey.Sync', function() {
 
       // Test suite.
       it('should login prior to initiating synchronization.', function() {
-        var user    = { };// Invalid credentials, but that’s OK.
+        var user = {// Invalid credentials, but that’s OK.
+          username: this.randomID(),
+          password: this.randomID()
+        };
         var promise = Kinvey.Sync.execute({ user: user });
         return promise.then(function() {
           // We should not reach this code branch.
@@ -164,7 +167,10 @@ describe('Kinvey.Sync', function() {
         return Kinvey.Sync.execute(options);
       }));
       it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
-        options.user = { };
+        options.user = {// Invalid credentials, but that’s OK.
+          username: this.randomID(),
+          password: this.randomID()
+        };
         return Kinvey.Sync.execute(options);
       }));
     });
