@@ -234,17 +234,17 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-Content-Type'] = options.contentType;
     }
     if(options.skipBL) {
-      headers['X-Kinvey-Skip-Business-Logic'] = true;
+      headers['X-Kinvey-Skip-Business-Logic'] = 'true';
     }
     if(options.trace) {
       headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
-      headers['X-Kinvey-ResponseWrapper']             = true;
+      headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
 
     // Debug.
     if(KINVEY_DEBUG) {
-      headers['X-Kinvey-Trace-Request']               = true;
-      headers['X-Kinvey-Force-Debug-Log-Credentials'] = true;
+      headers['X-Kinvey-Trace-Request']               = 'true';
+      headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
     }
 
     // Authorization.

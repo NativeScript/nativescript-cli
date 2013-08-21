@@ -195,7 +195,7 @@ Summary:
    * grunt-jsbeautifier-0.1 [MIT] - used for building the library.
    * grunt-jsdoc-0.4 [MIT] - used for generating API documentation.
    * grunt-karma-0.4 [MIT] - used for testing.
-   * grunt-mocha-0.3 [MIT] - used for testing.
+   * grunt-mocha-0.4 [MIT] - used for testing.
    * grunt-shell-0.3 [MIT] - used for building the library.
    * grunt-simple-mocha-0.3 [MIT] - used for testing.
    * jquery-browser-2.0 [MIT] - used as testing environment.

@@ -122,9 +122,9 @@
       "host"     : "v3yk1n.kinvey.com"
 	},
     "test": {
-      "appKey"       : "kid_PV2asbJZWM",
-      "appSecret"    : "d3f03a91f02f4ae7b9d7442e37304f35",
-      "masterSecret" : "114eec4ac23f457eacbad64cb7f89983"
+      "appKey"       : "kid_PTsIpH9WF5",
+      "appSecret"    : "c0be7de6e91a49a4ba6b0d35da68f3d2",
+      "masterSecret" : "41db729981ba404fa2273b6b3e6dfd30"
 	}
   },
   "production" : {

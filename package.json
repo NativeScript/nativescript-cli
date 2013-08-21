@@ -37,7 +37,7 @@
     "grunt-jsbeautifier"    : "~0.1",
     "grunt-jsdoc"           : "~0.4",
     "grunt-karma"           : "~0.4",
-    "grunt-mocha"           : "~0.3",
+    "grunt-mocha"           : "~0.4",
     "grunt-shell"           : "~0.3",
     "grunt-simple-mocha"    : "git://github.com/gregrperkins/grunt-simple-mocha.git",
     "mocha"                 : "~1.12",

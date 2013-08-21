@@ -2,9 +2,12 @@
 
 ## 1.0.5
 * Enhancement: `Kinvey.User.login` now throws if given invalid arguments.
-* Bugfix: Synchronizing multiple documents concurrently resulted in data corruption.
+* Enhancement: TLS version (if available) is now forced on Titanium iOS.
+* Bugfix: Headers were incorrectly set on Titanium iOS with debug mode enabled.
 * Bugfix: Improved offline support for Titanium running on older devices.
+* Bugfix: Synchronizing multiple documents concurrently resulted in data corruption.
 * Bugfix: Upon failure, social login for Titanium would throw a `TypeError`.
+* Bugfix: Using files on Titanium Mobile Web failed due to GCS disallowing the X-Titanium-Id header.
 
 ## 1.0.4 (2013-07-25)
 * Enhancement: Added compatibility with Google Closure Compiler.

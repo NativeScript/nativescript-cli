@@ -47,6 +47,11 @@ var TiHttp = {
     var request = options.xhr = Titanium.Network.createHTTPClient();
     request.open(method, url);
 
+    // Set the TLS version (iOS only).
+    if(isFunction(request.setTlsVersion) && Titanium.Network.TLS_VERSION_1_2) {
+      request.setTlsVersion(Titanium.Network.TLS_VERSION_1_2);
+    }
+
     // Apply options.
     if(0 < options.timeout) {
       request.timeout = options.timeout;
@@ -129,9 +134,13 @@ var TiHttp = {
     // Patch Titanium mobileweb.
     if(isMobileWeb) {
       // Prevent Titanium from appending an incorrect Content-Type header.
+      // Also, GCS does not CORS allow the X-Titanium-Id header.
       var setHeader = request._xhr.setRequestHeader;
       request._xhr.setRequestHeader = function(name) {
-        return 'Content-Type' === name ? null : setHeader.apply(request._xhr, arguments);
+        if('Content-Type' === name || 'X-Titanium-Id' === name) {
+          return null;
+        }
+        return setHeader.apply(request._xhr, arguments);
       };
 
       // Prevent Titanium from URL encoding blobs.

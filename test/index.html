@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <title>Test Suite</title>
-    <link rel="stylesheet" href="./../node_modules/grunt-mocha/node_modules/mocha/mocha.css" type="text/css" charset="utf-8" />
+    <link rel="stylesheet" href="./../node_modules/mocha/mocha.css" type="text/css" charset="utf-8" />
   </head>
   <body>
     <!-- Required for browser reporter. -->
     <div id="mocha"></div>
 
     <!-- Mocha. -->
-    <script src="./../node_modules/grunt-mocha/node_modules/mocha/mocha.js"></script>
+    <script src="./../node_modules/mocha/mocha.js"></script>
     <script src="./../node_modules/mocha-as-promised/mocha-as-promised.js"></script>
     <script>
     // This will be overridden by mocha-helper if ran with grunt.
@@ -63,7 +63,7 @@
     <!-- Run Mocha. -->
     <script>
     // Run tests if standalone.
-    if(0 > navigator.userAgent.indexOf('PhantomJS')) {
+    if(-1 === navigator.userAgent.indexOf('PhantomJS')) {
       mocha.run();
     }
     </script>

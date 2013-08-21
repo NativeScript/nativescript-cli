@@ -177,7 +177,8 @@ describe('Kinvey.Backbone.User', function() {
       this.model.on('error', spy);
 
       var _this   = this;
-      var promise = this.jQueryToKinveyPromise(this.model.login({}));
+      var data    = { username: this.randomID(), password: this.randomID() };
+      var promise = this.jQueryToKinveyPromise(this.model.login(data));
       return promise.then(function() {
         // We should not reach this code branch.
         return expect(promise).to.be.rejected;
