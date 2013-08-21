@@ -212,13 +212,14 @@ module.exports = function(grunt) {
     },
     mocha: {// Client-side (headless).
       options: {
-        log              : true,// Enable console.log pass-through.
-        reporter         : 'Spec',// Should match simplemocha.options.reporter.
-        run              : true,
-        timeout          : '<%= simplemocha.options.timeout %>',
-        '--ssl-protocol' : 'any'// Required by staging.
+        log                     : true,// Enable console.log pass-through.
+        reporter                : 'Spec',// Matches simplemocha.options.reporter.
+        run                     : true,
+        timeout                 : '<%= simplemocha.options.timeout %>',
+        '--local-storage-quota' : 10 * 1024,// 10mb, to avoid quota-related errors.
+        '--ssl-protocol'        : 'any'// Required by staging.
       },
-      all: { src: 'test/index.html' }
+      all: 'test/index.html'
     },
     karma: {// Client-side (browser).
       options: {
