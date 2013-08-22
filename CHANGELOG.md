@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.0-snapshot
+* #2602: Removed the creation of implicit users.
+
 ## 1.0.5 (2013-08-22)
 * Enhancement: `Kinvey.User.login` now throws if given invalid arguments.
 * Enhancement: TLS version (if available) is now forced on Titanium iOS.

@@ -126,12 +126,6 @@ describe('Kinvey', function() {
     });
 
     // Test suite.
-    it('it should not create an implicit user.', function() {
-      var promise = Kinvey.ping().then(function() {
-        expect(Kinvey.getActiveUser()).to.be['null'];
-      });
-      return expect(promise).to.be.fulfilled;
-    });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
       return Kinvey.ping(options);
     }));

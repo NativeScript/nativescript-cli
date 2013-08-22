@@ -475,7 +475,7 @@ Kinvey.User = /** @lends Kinvey.User */{
       namespace : USERS,
       id        : data._id,
       data      : data,
-      auth      : Auth.UserDefault,
+      auth      : Auth.Default,
       local     : { res: true }
     }, options).then(function(user) {
       // Re-add the social identities’ access tokens.
@@ -643,7 +643,7 @@ Kinvey.User = /** @lends Kinvey.User */{
       namespace : USERS,
       id        : id,
       flags     : options.hard ? { hard: true } : {},
-      auth      : Auth.UserDefault,
+      auth      : Auth.Default,
       local     : { res: true }
     }, options).then(function(response) {
       // If we just deleted the active user, unset it here.

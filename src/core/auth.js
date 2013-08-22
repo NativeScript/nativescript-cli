@@ -17,13 +17,10 @@
 // Authentication.
 // ---------------
 
-// Access to the Kinvey service is authenticated through (implicit) user
-// credentials, Master Secret, or App Secret. A combination of these is often
-// accepted, but not always. Therefore, an extensive set of all possible
-// combinations is gathered here and presented as authentication policies.
-
-// The promise to handle concurrent requests when the active user is `null`.
-var implicitUserPromise = null;
+// Access to the Kinvey service is authenticated through user credentials,
+// Master Secret, or App Secret. A combination of these is often (but not
+// always) accepted. Therefore, an extensive set of all possible combinations
+// is gathered here and presented as authentication policies.
 
 /**
  * @private
@@ -87,50 +84,17 @@ var Auth = /** @lends Auth */{
   },
 
   /**
-   * Authenticate through (1) user credentials, or (2) Master Secret. If both
-   * fail, an implicit user is created and (1) is attempted.
+   * Authenticate through (1) user credentials, or (2) Master Secret.
    *
    * @returns {Promise}
    */
   Default: function() {
-    return Auth.UserDefault().then(null, function() {
-      // Debug.
-      if(KINVEY_DEBUG) {
-        log('Creating an implicit user.');
-      }
-
-      // A race condition occurs when the active user is `null`, and multiple
-      // requests are fired simultaneously. Normally, this would result in the
-      // creation of multiple implicit users. The flow below ensures only one
-      // implicit user can be created at the time, deferring any concurrent
-      // requests until after the implicit user is created and ready for usage.
-
-      // Debug.
-      if(KINVEY_DEBUG && null !== implicitUserPromise) {
-        log('An implicit user is already being created by another process, waiting.');
-      }
-
-      // If there is no implicit user being created right now, obtain the lock.
-      if(null === implicitUserPromise) {
-        // Create an implicit user.
-        implicitUserPromise = Kinvey.User.create().then(function(user) {
-          // Debug.
-          if(KINVEY_DEBUG) {
-            log('Created the implicit user.', user);
-          }
-
-          // Release the lock and return the response.
-          implicitUserPromise = null;
-          return user;
-        }, function(error) {
-          // Release the lock and forward the error.
-          implicitUserPromise = null;
-          return Kinvey.Defer.reject(error);
-        });
-      }
-
-      // Authenticate using the implicit user.
-      return implicitUserPromise.then(Auth.Session);
+    return Auth.Session().then(null, function(error) {
+      return Auth.Master().then(null, function() {
+        // Most likely, the developer did not create a user. Return a useful
+        // error.
+        return Kinvey.Defer.reject(error);
+      });
     });
   },
 
@@ -201,14 +165,5 @@ var Auth = /** @lends Auth */{
 
     // Return the response.
     return promise;
-  },
-
-  /**
-   * Authenticate through (1) user credentials, or (2) Master Secret.
-   *
-   * @returns {Promise}
-   */
-  UserDefault: function() {
-    return Auth.Session().then(null, Auth.Master);
   }
 };

@@ -432,8 +432,9 @@ ClientError[Kinvey.Error.MISSING_MASTER_CREDENTIALS] = {
  */
 ClientError[Kinvey.Error.NO_ACTIVE_USER] = {
   name        : Kinvey.Error.NO_ACTIVE_USER,
-  description : 'No active user.',
-  debug       : 'Try creating a user or logging in first.'
+  description : 'You need to be logged in to execute this request.',
+  debug       : 'Try creating a user using `Kinvey.User.signup`, or login an ' +
+                'existing user using `Kinvey.User.login`.'
 };
 
 /**
