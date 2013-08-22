@@ -1,6 +1,6 @@
 {
   "name"        : "kinvey",
-  "version"     : "1.0.5-snapshot",
+  "version"     : "1.0.5",
   "description" : "Kinvey JavaScript Library",
   "homepage"    : "http://www.kinvey.com",
   "bugs"        : { "email": "support@kinvey.com" },
@@ -12,6 +12,10 @@
   "repository"  : {
     "type" : "svn",
     "url"  : "https://subversion.assembla.com/svn/kinvey/js-library"
+  },
+  "scripts"     : {
+    "start" : "grunt server",
+    "test"  : "grunt build test"
   },
   "dependencies": {
     "backbone"              : "~1.0",
@@ -39,7 +43,7 @@
     "grunt-karma"           : "~0.4",
     "grunt-mocha"           : "~0.4",
     "grunt-shell"           : "~0.3",
-    "grunt-simple-mocha"    : "git://github.com/gregrperkins/grunt-simple-mocha.git",
+    "grunt-simple-mocha"    : "~0.4",
     "mocha"                 : "~1.12",
     "mocha-as-promised"     : "~1.4",
     "promises-aplus-tests"  : "~1.3",

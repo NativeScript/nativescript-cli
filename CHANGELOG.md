@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.5
+## 1.0.5 (2013-08-22)
 * Enhancement: `Kinvey.User.login` now throws if given invalid arguments.
 * Enhancement: TLS version (if available) is now forced on Titanium iOS.
 * Bugfix: Headers were incorrectly set on Titanium iOS with debug mode enabled.
