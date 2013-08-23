@@ -319,6 +319,13 @@ Kinvey.Error.NOT_IMPLEMENTED_ERROR = 'NotImplementedError';
 
 // #### Client.
 /**
+ * @memberOf Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.ALREADY_LOGGED_IN = 'AlreadyLoggedIn';
+
+/**
  * @memberof Kinvey.Error
  * @constant
  * @default
@@ -383,6 +390,20 @@ Kinvey.Error.SYNC_ERROR = 'SyncError';
 
 // All client-side errors are fully declared below.
 var ClientError = {};
+
+/**
+ * Already logged in error.
+ *
+ * @constant
+ * @type {Object}
+ * @default
+ */
+ClientError[Kinvey.Error.ALREADY_LOGGED_IN] = {
+  name        : Kinvey.Error.ALREADY_LOGGED_IN,
+  description : 'You are already logged in with another user.',
+  debug       : 'If you want to switch users, logout the active user first ' +
+                'using `Kinvey.User.logout`, then try again.'
+};
 
 /**
  * Database error.

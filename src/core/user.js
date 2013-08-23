@@ -64,6 +64,12 @@ Kinvey.User = /** @lends Kinvey.User */{
       log('Logging in an existing user.', arguments);
     }
 
+    // Validate preconditions.
+    if(null !== Kinvey.getActiveUser()) {
+      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
+      return Kinvey.Defer.reject(error);
+    }
+
     // Cast arguments.
     if(isObject(usernameOrData)) {
       options = 'undefined' !== typeof options ? options : password;
@@ -79,35 +85,31 @@ Kinvey.User = /** @lends Kinvey.User */{
       throw new Kinvey.Error('Argument must contain: username and password, or _socialIdentity.');
     }
 
-    // Logout the current active user first, then proceed with logging in
-    // with the specified credentials.
-    return Kinvey.User.logout({ force: true, silent: true }).then(function() {
-      // Prepare the response.
-      var promise = Kinvey.Persistence.create({
-        namespace  : USERS,
-        collection : options._provider ? null : 'login',
-        data       : usernameOrData,
-        flags      : options._provider ? { provider: options._provider } : {},
-        auth       : Auth.App,
-        local      : { res: true }
-      }, options).then(function(user) {
-        // Set and return the active user.
-        Kinvey.setActiveUser(user);
-        return user;
-      });
-
-      // Debug.
-      if(KINVEY_DEBUG) {
-        promise.then(function(response) {
-          log('Logged in the user.', response);
-        }, function(error) {
-          log('Failed to login the user.', error);
-        });
-      }
-
-      // Return the response.
-      return wrapCallbacks(promise, options);
+    // Login with the specified credentials.
+    var promise = Kinvey.Persistence.create({
+      namespace  : USERS,
+      collection : options._provider ? null : 'login',
+      data       : usernameOrData,
+      flags      : options._provider ? { provider: options._provider } : {},
+      auth       : Auth.App,
+      local      : { res: true }
+    }, options).then(function(user) {
+      // Set and return the active user.
+      Kinvey.setActiveUser(user);
+      return user;
     });
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      promise.then(function(response) {
+        log('Logged in the user.', response);
+      }, function(error) {
+        log('Failed to login the user.', error);
+      });
+    }
+
+    // Return the response.
+    return wrapCallbacks(promise, options);
   },
 
   /**
@@ -375,8 +377,8 @@ Kinvey.User = /** @lends Kinvey.User */{
    *
    * @param {Object} [data] User data.
    * @param {Options} [options] Options.
-   * @param {boolean} [options.state=true] Save created user as the
-   *          active user.
+   * @param {boolean} [options.state=true] Save the created user as the active
+   *          user.
    * @returns {Promise} The new user.
    */
   create: function(data, options) {
@@ -388,42 +390,36 @@ Kinvey.User = /** @lends Kinvey.User */{
     // Cast arguments.
     options = options || {};
 
-    // If `options.state`, logout the active user.
-    var promise;
-    if(false !== options.state) {
-      promise = Kinvey.User.logout({ force: true, silent: true });
-    }
-    else {
-      promise = Kinvey.Defer.resolve(null);
+    // If `options.state`, validate preconditions.
+    if(false !== options.state && null !== Kinvey.getActiveUser()) {
+      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
+      return Kinvey.Defer.reject(error);
     }
 
     // Create the new user.
-    return promise.then(function() {
-      // Prepare the response.
-      var promise = Kinvey.Persistence.create({
-        namespace : USERS,
-        data      : data || {},
-        auth      : Auth.App
-      }, options).then(function(user) {
-        // If `options.state`, set the active user.
-        if(false !== options.state) {
-          Kinvey.setActiveUser(user);
-        }
-        return user;
-      });
-
-      // Debug.
-      if(KINVEY_DEBUG) {
-        promise.then(function(response) {
-          log('Created the new user.', response);
-        }, function(error) {
-          log('Failed to create the new user.', error);
-        });
+    var promise = Kinvey.Persistence.create({
+      namespace : USERS,
+      data      : data || {},
+      auth      : Auth.App
+    }, options).then(function(user) {
+      // If `options.state`, set the active user.
+      if(false !== options.state) {
+        Kinvey.setActiveUser(user);
       }
-
-      // Return the response.
-      return wrapCallbacks(promise, options);
+      return user;
     });
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      promise.then(function(response) {
+        log('Created the new user.', response);
+      }, function(error) {
+        log('Failed to create the new user.', error);
+      });
+    }
+
+    // Return the response.
+    return wrapCallbacks(promise, options);
   },
 
   /**

@@ -163,6 +163,22 @@ describe('Kinvey.Sync', function() {
           expect(Kinvey.User.login).to.be.calledWith(user);
         });
       });
+      it('should fail when there is already an active user.', function() {
+        // Mock the active user.
+        Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
+
+        var user = {// Invalid credentials, but that’s OK.
+          username: this.randomID(),
+          password: this.randomID()
+        };
+        var promise = Kinvey.Sync.execute({ user: user });
+        return promise.then(function() {
+          // We should not reach this code branch.
+          return expect(promise).to.be.rejected;
+        }, function(error) {
+          expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        });
+      });
       it('should support both deferreds and callbacks on success.', Common.success(function(options) {
         return Kinvey.Sync.execute(options);
       }));

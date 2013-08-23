@@ -33,9 +33,7 @@ describe('Kinvey.User', function() {
     afterEach(function() {
       var user = Kinvey.getActiveUser();
       if(null !== user) {
-        return Kinvey.User.destroy(user._id, { hard: true }).then(function() {
-          Kinvey.setActiveUser(null);// Reset.
-        });
+        return Kinvey.User.destroy(user._id, { hard: true });
       }
     });
 
@@ -79,13 +77,17 @@ describe('Kinvey.User', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
-    it('should logout the active user prior to creating a new one.', function() {
+    it('should fail when there is already an active user.', function() {
       // Mock the active user.
       Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
       var promise = Kinvey.User.signup();
       return promise.then(function() {
-        expect(Kinvey.User.logout).to.be.calledOnce;
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        Kinvey.setActiveUser(null);// Reset.
       });
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
@@ -147,11 +149,17 @@ describe('Kinvey.User', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
-    it('should logout the active user prior to logging in another one.', function() {
-      var promise = Kinvey.User.login(this.data.username, this.data.password).then(function() {
-        expect(Kinvey.User.logout).to.be.calledOnce;
+    it('should fail when there is already an active user.', function() {
+      // Mock the active user.
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
+
+      var promise = Kinvey.User.login(this.data.username, this.data.password);
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
       });
-      return expect(promise).to.be.fulfilled;
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
       return Kinvey.User.login(this.data.username, this.data.password, options);
@@ -354,11 +362,18 @@ describe('Kinvey.User', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
-    it('should logout the active user prior to creating a new one.', function() {
-      var promise = Kinvey.User.create().then(function() {
-        expect(Kinvey.User.logout).to.be.calledOnce;
+    it('should fail when there is already an active user.', function() {
+      // Mock the active user.
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
+
+      var promise = Kinvey.User.create();
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        Kinvey.setActiveUser(null);// Reset.
       });
-      return expect(promise).to.be.fulfilled;
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
       return Kinvey.User.create({}, options);
