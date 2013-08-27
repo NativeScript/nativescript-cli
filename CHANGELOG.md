@@ -1,7 +1,8 @@
 # Changelog
 
 ## 1.1.0-snapshot
-* #2602: Removed the creation of implicit users.
+* #2602: Removed implicit users.
+* Enhancement: Added `refresh` flag to `Kinvey.init` to control refreshing the active user data.
 
 ## 1.0.5 (2013-08-22)
 * Enhancement: `Kinvey.User.login` now throws if given invalid arguments.

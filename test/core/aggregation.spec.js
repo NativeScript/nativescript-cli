@@ -292,7 +292,7 @@ describe('Kinvey.Group', function() {
         expect(aggregation.toJSON().reduce).to.contain('out.result += doc');
       });
       it('should return an aggregation.', function() {
-        var result = Kinvey.Group.count();
+        var result = Kinvey.Group.sum(this.field);
         expect(result).to.be.an.instanceOf(Kinvey.Group);
       });
     });

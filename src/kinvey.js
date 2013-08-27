@@ -93,9 +93,10 @@ var activeUserReady = false;
 /**
  * Restores the active user (if any) from disk.
  *
+ * @param {Object} options Options.
  * @returns {Promise} The active user, or `null` if there is no active user.
  */
-var restoreActiveUser = function() {
+var restoreActiveUser = function(options) {
   // Retrieve the authtoken from storage. If there is an authtoken, restore the
   // active user from disk.
   var promise = Storage.get('activeUser');
@@ -110,8 +111,13 @@ var restoreActiveUser = function() {
       log('Restoring the active user.');
     }
 
-    // Set the active user to a near-empty user with only the authtoken set.
+    // Set the active user to a near-empty user with only id and authtoken set.
     var previous = Kinvey.setActiveUser({ _id: user[0], _kmd: { authtoken: user[1] } });
+
+    // If not `options.refresh`, return here.
+    if(false === options.refresh) {
+      return Kinvey.getActiveUser();
+    }
 
     // Retrieve the user. The `Kinvey.User.me` method will also update the
     // active user. If `INVALID_CREDENTIALS`, reset the active user.
@@ -190,12 +196,13 @@ Kinvey.setActiveUser = function(user) {
 /**
  * Initializes the library for use with Kinvey services.
  *
- * @param {Options} options Options.
- * @param {string}  options.appKey        App Key.
- * @param {string} [options.appSecret]    App Secret.
- * @param {string} [options.masterSecret] Master Secret. **Never use the
+ * @param {Options}  options Options.
+ * @param {string}   options.appKey        App Key.
+ * @param {string}  [options.appSecret]    App Secret.
+ * @param {string}  [options.masterSecret] Master Secret. **Never use the
  *          Master Secret in client-side code.**
- * @param {Object} [options.sync]         Synchronization options.
+ * @param {boolean} [options.refresh=true] Refresh the active user (if any).
+ * @param {Object}  [options.sync]         Synchronization options.
  * @throws {Kinvey.Error} `options` must contain: `appSecret` or
  *                          `masterSecret`.
  * @returns {Promise} The active user.
@@ -224,7 +231,9 @@ Kinvey.init = function(options) {
   Kinvey.masterSecret = null != options.masterSecret ? options.masterSecret : null;
 
   // Initialize the synchronization namespace and restore the active user.
-  var promise = Kinvey.Sync.init(options.sync).then(restoreActiveUser);
+  var promise = Kinvey.Sync.init(options.sync).then(function() {
+    return restoreActiveUser(options);
+  });
   return wrapCallbacks(promise, options);
 };
 

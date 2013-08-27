@@ -84,10 +84,27 @@ describe('Kinvey', function() {
     });
     it('should restore the active user.', function() {
       Kinvey.setActiveUser(this.user);
-      var _this = this;
+      var _this   = this;
       var promise = Kinvey.init(config.test).then(function(user) {
         // User should equal the active user, except for `password`.
         expect(user).to.have.property('_id', _this.user._id);
+        expect(user).to.have.deep.property('_kmd.authtoken');
+        expect(user).to.have.property('username');
+        expect(user).not.to.have.property('password');
+      });
+      return expect(promise).to.be.fulfilled;
+    });
+    it('should restore the active user, but not refresh it if not `options.refresh`.', function() {
+      Kinvey.setActiveUser(this.user);
+      var _this   = this;
+      var promise = Kinvey.init({
+        appKey    : config.test.appKey,
+        appSecret : config.test.appSecret,
+        refresh   : false
+      }).then(function(user) {
+        expect(user).to.have.property('_id', _this.user._id);
+        expect(user).to.have.deep.property('_kmd.authtoken');
+        expect(user).not.to.have.property('username');
         expect(user).not.to.have.property('password');
       });
       return expect(promise).to.be.fulfilled;
