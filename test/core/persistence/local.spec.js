@@ -88,6 +88,7 @@ describe('Kinvey.Persistence.Local', function() {
         data       : document
       }).then(function(response) {
         expect(response).to.have.property('_id');
+        expect(response._id).to.match(/^[a-f0-9]{24}$/);// 24-char hex.
         expect(response).to.have.property('field', document.field);
       });
       return expect(promise).to.be.fulfilled;

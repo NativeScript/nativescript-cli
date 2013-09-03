@@ -141,7 +141,7 @@ var TiDatabaseAdapter = {
    */
   objectID: function(length) {
     length = length || 24;
-    var chars  = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var chars  = 'abcdef0123456789';
     var result = '';
     for(var i = 0, j = chars.length; i < length; i += 1) {
       var pos = Math.floor(Math.random() * j);

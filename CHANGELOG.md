@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.1-snapshot
+* Enhancement: Locally generated document IDs now are strings of 24 hex characters.
+
 ## 1.1.0 (2013-08-29)
 * #2602: Removed implicit users.
 * Enhancement: Added `refresh` flag to `Kinvey.init` to control refreshing the active user data.
