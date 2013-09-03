@@ -383,14 +383,6 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
       log('Counting the number of documents pending synchronization.', arguments);
     }
 
-    // Validate preconditions.
-    if(!Kinvey.Sync.isOnline()) {
-      var error = clientError(Kinvey.Error.SYNC_ERROR, {
-        debug: 'Sync is not enabled, or the application resides in offline mode.'
-      });
-      return Kinvey.Defer.reject(error);
-    }
-
     // Cast arguments.
     options = options || {};
 

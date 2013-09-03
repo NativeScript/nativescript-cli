@@ -2,6 +2,7 @@
 
 ## 1.1.1-snapshot
 * Enhancement: Locally generated document IDs now are strings of 24 hex characters.
+* Bugfix: `Kinvey.Sync.count` would fail in offline mode.
 
 ## 1.1.0 (2013-08-29)
 * #2602: Removed implicit users.
@@ -46,7 +47,7 @@
 * Enhancement: Added HTML5 shim.
 * Enhancement: RequireJS module name is now kinvey (was: Kinvey).
 * Bugfix: Error-handling using callbacks was broken because promises trap exceptions.
-* Bugfix: Kinvey.User.login arguments were parsed incorrectly.
+* Bugfix: `Kinvey.User.login` arguments were parsed incorrectly.
 
 ## 1.0.0-beta (2013-05-17)
 * Initial beta release.
