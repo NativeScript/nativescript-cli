@@ -3,6 +3,7 @@
 ## 1.1.1-snapshot
 * Enhancement: Locally generated document IDs now are strings of 24 hex characters.
 * Bugfix: `Kinvey.Sync.count` would fail in offline mode.
+* Bugfix: Upgrading an offline database would cause deadlock in Internet Explorer 10.
 
 ## 1.1.0 (2013-08-29)
 * #2602: Removed implicit users.

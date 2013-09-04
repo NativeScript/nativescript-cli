@@ -140,7 +140,8 @@ var IDBAdapter = {
     var request;
     if(null !== IDBAdapter.db) {// Re-open.
       var version = IDBAdapter.db.version + 1;
-      request = IDBAdapter.impl.open(IDBAdapter.db.name, version);
+      IDBAdapter.db.close();// Required by IE10.
+      request = IDBAdapter.impl.open(IDBAdapter.dbName(), version);
     }
     else {// Open the current version.
       // Validate preconditions.
@@ -170,8 +171,10 @@ var IDBAdapter = {
       // upgrade operation, the `versionchange` event is fired. Then, close the
       // database to allow the external upgrade to proceed.
       IDBAdapter.db.onversionchange = function() {// Reset.
-        IDBAdapter.db.close();
-        IDBAdapter.db = null;
+        if(null !== IDBAdapter.db) {
+          IDBAdapter.db.close();
+          IDBAdapter.db = null;
+        }
       };
 
       // Try to obtain the collection handle by recursing. Append the handlers
@@ -345,6 +348,12 @@ var IDBAdapter = {
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
+
+    // Close the database first, required by IE10.
+    if(null !== IDBAdapter.db) {
+      IDBAdapter.db.close();
+      IDBAdapter.db = null;
+    }
 
     // Delete the entire database.
     var request = IDBAdapter.impl.deleteDatabase(IDBAdapter.dbName());
