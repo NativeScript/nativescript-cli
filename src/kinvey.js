@@ -119,9 +119,25 @@ var restoreActiveUser = function(options) {
       return Kinvey.getActiveUser();
     }
 
+    // Remove callbacks from `options` to avoid multiple calls.
+    var fnSuccess = options.success;
+    var fnError   = options.error;
+    delete options.success;
+    delete options.error;
+
     // Retrieve the user. The `Kinvey.User.me` method will also update the
     // active user. If `INVALID_CREDENTIALS`, reset the active user.
-    return Kinvey.User.me().then(null, function(error) {
+    return Kinvey.User.me(options).then(function(response) {
+      // Debug.
+      if(KINVEY_DEBUG) {
+        log('Restored the active user.', response);
+      }
+
+      // Restore the options and return the response.
+      options.success = fnSuccess;
+      options.error   = fnError;
+      return response;
+    }, function(error) {
       // Debug.
       if(KINVEY_DEBUG) {
         log('Failed to restore the active user.', error);
@@ -131,6 +147,10 @@ var restoreActiveUser = function(options) {
       if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
         Kinvey.setActiveUser(previous);
       }
+
+      // Restore the options and return the response.
+      options.success = fnSuccess;
+      options.error   = fnError;
       return Kinvey.Defer.reject(error);
     });
   });
