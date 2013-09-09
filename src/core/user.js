@@ -202,7 +202,9 @@ Kinvey.User = /** @lends Kinvey.User */{
       // does not contain `_kmd.authtoken`. Therefore, extract it from the
       // stale copy.
       user._kmd = user._kmd || {};
-      user._kmd.authtoken = Kinvey.getActiveUser()._kmd.authtoken;
+      if(null == user._kmd.authtoken) {
+        user._kmd.authtoken = Kinvey.getActiveUser()._kmd.authtoken;
+      }
 
       // Set and return the active user.
       Kinvey.setActiveUser(user);

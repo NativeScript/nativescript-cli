@@ -269,6 +269,7 @@ describe('Kinvey.User', function() {
         expect(response).to.have.property('username', _this.user.username);
         expect(response).not.to.have.property('password');
         expect(response).to.have.deep.property('_kmd.authtoken');
+        expect(response._kmd.authtoken).not.to.equal(_this.user._kmd.authtoken);
         expect(response).to.deep.equal(Kinvey.getActiveUser());
       });
       return expect(promise).to.be.fulfilled;
