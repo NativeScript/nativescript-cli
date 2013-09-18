@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-/* globals angular: true, Backbone: true, Ember: true, jQuery: true, ko: true, Titanium: true */
+/* globals angular: true, Backbone: true, Ember: true, forge: true, jQuery: true */
+/* globals ko: true, Titanium: true */
 
 // Device information.
 // -------------------
@@ -66,6 +67,10 @@ var deviceInformation = function() {
       manufacturer = Titanium.Platform.getManufacturer();
     }
     id = Titanium.Platform.getId();
+  }
+  else if('undefined' !== typeof forge) {// Trigger.io
+    libraries.push('triggerio/' + (forge.config.platform_version || ''));
+    id = forge.config.uuid;
   }
   else if('undefined' !== typeof process) {// Node.js
     platform     = process.title;
