@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1-snapshot
+## 1.1.1 (2013-09-20)
 * Enhancement: Added Trigger.io device information.
 * Enhancement: Locally generated document IDs now are strings of 24 hex characters.
 * Bugfix: `Kinvey.Sync.count` would fail in offline mode.
