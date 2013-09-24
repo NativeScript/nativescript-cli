@@ -67,7 +67,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     // Validate preconditions.
     if(null !== Kinvey.getActiveUser()) {
       var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -395,7 +395,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     // If `options.state`, validate preconditions.
     if(false !== options.state && null !== Kinvey.getActiveUser()) {
       var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Create the new user.

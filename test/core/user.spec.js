@@ -81,13 +81,16 @@ describe('Kinvey.User', function() {
       // Mock the active user.
       Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
-      var promise = Kinvey.User.signup();
+      var spy = sinon.spy();
+      var promise = Kinvey.User.signup(null, { error: spy });
       return promise.then(function() {
         // We should not reach this code branch.
         return expect(promise).to.be.rejected;
       }, function(error) {
-        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
         Kinvey.setActiveUser(null);// Reset.
+        
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        expect(spy).to.be.calledOnce;
       });
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
@@ -153,12 +156,14 @@ describe('Kinvey.User', function() {
       // Mock the active user.
       Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
-      var promise = Kinvey.User.login(this.data.username, this.data.password);
+      var spy = sinon.spy();
+      var promise = Kinvey.User.login(this.data.username, this.data.password, { error: spy });
       return promise.then(function() {
         // We should not reach this code branch.
         return expect(promise).to.be.rejected;
       }, function(error) {
         expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        expect(spy).to.be.calledOnce;
       });
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
@@ -367,13 +372,15 @@ describe('Kinvey.User', function() {
       // Mock the active user.
       Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
-      var promise = Kinvey.User.create();
+      var spy = sinon.spy();
+      var promise = Kinvey.User.create(null, { error: spy });
       return promise.then(function() {
         // We should not reach this code branch.
         return expect(promise).to.be.rejected;
       }, function(error) {
-        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
         Kinvey.setActiveUser(null);// Reset.
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        expect(spy).to.be.calledOnce;
       });
     });
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {

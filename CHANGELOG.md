@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2-snapshot
+* Bugfix: `Kinvey.User.signup`, `login`, and `create` did not trigger error callback on `Kinvey.Error.ALREADY_LOGGED_IN` error.
+
 ## 1.1.1 (2013-09-20)
 * Enhancement: Added Trigger.io device information.
 * Enhancement: Locally generated document IDs now are strings of 24 hex characters.
