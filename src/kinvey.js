@@ -77,6 +77,7 @@ Kinvey.masterSecret = null;
 // The namespaces of the Kinvey service.
 var DATA_STORE  = 'appdata';
 var FILES       = 'blob';
+var PUSH        = 'push';
 var RPC         = 'rpc';
 var USERS       = 'user';
 /*var USER_GROUPS = 'group';*/

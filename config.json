@@ -67,7 +67,9 @@
         "src/internals/persistence/local/websql.js",
         "src/internals/persistence/net/xhr.js",
         "src/internals/storage/local-storage.js",
-        "src/shims/phonegap/phonegap.js"
+        "src/shims/phonegap/phonegap.js",
+        "src/shims/phonegap/error.js",
+        "src/shims/phonegap/push.js"
       ]
     },
     "titanium": {
