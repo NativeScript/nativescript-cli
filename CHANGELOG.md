@@ -1,6 +1,7 @@
 # Changelog
 
-## 1.1.2-snapshot
+## 1.1.2 (2013-10-08)
+* #2464: Added PhoneGap Push support.
 * Bugfix: `Kinvey.User.signup`, `login`, and `create` did not trigger error callback on `Kinvey.Error.ALREADY_LOGGED_IN` error.
 
 ## 1.1.1 (2013-09-20)
@@ -34,11 +35,11 @@
 * #2467: replace IndexedDBShim by WebSQL adapter.
 * Enhancement: `Kinvey.getActiveUser` now throws if the active user is not restored yet.
 * Bugfix: Saving a user with references was not possible in offline mode.
-* Bugfix: Setting the active user did not take concurrency into account. 
+* Bugfix: Setting the active user did not take concurrency into account.
 
 ## 1.0.2 (2013-07-10)
 * Bugfix: IndexedDBShim was broken due to "use strict", downgraded version.
-* Bugfix: Network requests on Titanium were instantiated incorrectly. 
+* Bugfix: Network requests on Titanium were instantiated incorrectly.
 
 ## 1.0.1 (2013-07-03)
 * #2461: add PhoneGap shim.

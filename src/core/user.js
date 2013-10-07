@@ -64,12 +64,6 @@ Kinvey.User = /** @lends Kinvey.User */{
       log('Logging in an existing user.', arguments);
     }
 
-    // Validate preconditions.
-    if(null !== Kinvey.getActiveUser()) {
-      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
     // Cast arguments.
     if(isObject(usernameOrData)) {
       options = 'undefined' !== typeof options ? options : password;
@@ -83,6 +77,12 @@ Kinvey.User = /** @lends Kinvey.User */{
     if(null == usernameOrData.username && null == usernameOrData.password &&
      null == usernameOrData._socialIdentity) {
       throw new Kinvey.Error('Argument must contain: username and password, or _socialIdentity.');
+    }
+
+    // Validate preconditions.
+    if(null !== Kinvey.getActiveUser()) {
+      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Login with the specified credentials.

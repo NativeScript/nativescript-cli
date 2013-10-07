@@ -483,8 +483,8 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
       }
 
       // Return the response.
-      promise.then(null, options.error);
-      return promise;
+      delete options.success;
+      return wrapCallbacks(promise, options);
     }
 
     // Prepare the response.
