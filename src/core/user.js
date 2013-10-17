@@ -144,7 +144,8 @@ Kinvey.User = /** @lends Kinvey.User */{
         auth       : Auth.Session
       }, options).then(null, function(error) {
         // If `options.force`, clear the active user on `INVALID_CREDENTIALS`.
-        if(options.force && Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+        if(options.force && (Kinvey.Error.INVALID_CREDENTIALS === error.name ||
+         Kinvey.Error.EMAIL_VERIFICATION_REQUIRED === error.name)) {
           // Debug.
           if(KINVEY_DEBUG) {
             log('The user credentials are invalid. Returning success because of the force flag.');

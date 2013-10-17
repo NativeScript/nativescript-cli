@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.3-snapshot
+* Bugfix: `force` flag of `Kinvey.User.logout` did not work with `Kinvey.Error.EMAIL_VERIFICATION_REQUIRED`.
+
 ## 1.1.2 (2013-10-08)
 * #2464: Added PhoneGap Push support.
 * Bugfix: `Kinvey.User.signup`, `login`, and `create` did not trigger error callback on `Kinvey.Error.ALREADY_LOGGED_IN` error.

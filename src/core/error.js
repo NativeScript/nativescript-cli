@@ -119,6 +119,13 @@ Kinvey.Error.USER_UNAVAILABLE = 'UserUnavailable';
  * @constant
  * @default
  */
+Kinvey.Error.EMAIL_VERIFICATION_REQUIRED = 'EmailVerificationRequired';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
 Kinvey.Error.DUPLICATE_END_USERS = 'DuplicateEndUsers';
 
 /**
