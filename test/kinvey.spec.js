@@ -65,11 +65,14 @@ describe('Kinvey', function() {
         Kinvey.init({ appSecret: true });
       }).to.Throw('appKey');
     });
-    it('should throw on invalid arguments: options.appSecret and/or options.masterSecret.', function() {
-      expect(function() {
-        Kinvey.init({ appKey: true });
-      }).to.Throw('Secret');
-    });
+    it(
+      'should throw on invalid arguments: options.appSecret and/or options.masterSecret.',
+      function() {
+        expect(function() {
+          Kinvey.init({ appKey: true });
+        }).to.Throw('Secret');
+      }
+    );
     it('should save the app credentials.', function() {
       Kinvey.init({ appKey: config.test.appKey, appSecret: config.test.appSecret });
       expect(Kinvey.appKey).to.equal(config.test.appKey);

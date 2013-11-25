@@ -654,8 +654,9 @@ describe('Kinvey.Backbone.User', function() {
 
     // Test suite.
     it('should permanently delete a user if the `hard` flag was set.', function() {
-      var _this = this;
-      var promise = this.jQueryToKinveyPromise(this.model.destroy({ hard: true })).then(function(response) {
+      var _this          = this;
+      var destroyPromise = this.model.destroy({ hard: true });
+      var promise = this.jQueryToKinveyPromise(destroyPromise).then(function(response) {
         expect(response[0]).to.be['null'];
 
         // Try and restore the user.

@@ -324,10 +324,23 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
         return Kinvey.Defer.reject(response);
       });
 
-      // Add a descriptive message to `InvalidCredentials` error so the user
-      // knows what’s going on.
+      // Handle certain errors.
       return response.then(null, function(error) {
-        if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+        if(Kinvey.Error.USER_LOCKED_DOWN === error.name) {
+          // Clear user credentials.
+          Kinvey.setActiveUser(null);
+
+          // Clear the cache, and return the original error.
+          if('undefined' !== typeof Database) {
+            var fn = function() {
+              Kinvey.Defer.reject(error);
+            };
+            return Kinvey.Sync.destruct().then(fn, fn);
+          }
+        }
+        else if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+          // Add a descriptive message to `InvalidCredentials` error so the user
+          // knows what’s going on.
           error.debug += ' It is possible the tokens used to execute the ' +
            'request are expired. In that case, please run ' +
            '`Kinvey.User.logout({ force: true })`, and then log back in ' +

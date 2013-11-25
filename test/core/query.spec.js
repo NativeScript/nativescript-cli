@@ -598,12 +598,15 @@ describe('Kinvey.Query', function() {
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).to.have.property('$options', 's');
       });
-      it('should not set the dotMatchesAll flag if `options.dotMatchesAll` is `false`.', function() {
-        this.query.matches(this.field, this.randomID(), { dotMatchesAll: false });
+      it(
+        'should not set the dotMatchesAll flag if `options.dotMatchesAll` is `false`.',
+        function() {
+          this.query.matches(this.field, this.randomID(), { dotMatchesAll: false });
 
-        expect(this.filter()).to.have.property(this.field);
-        expect(this.filter()[this.field]).not.to.have.property('$options');
-      });
+          expect(this.filter()).to.have.property(this.field);
+          expect(this.filter()[this.field]).not.to.have.property('$options');
+        }
+      );
       it('should set multiple flags.', function() {
         var value = /foo/im;
         this.query.matches(this.field, value, {

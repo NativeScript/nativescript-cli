@@ -119,13 +119,6 @@ Kinvey.Error.USER_UNAVAILABLE = 'UserUnavailable';
  * @constant
  * @default
  */
-Kinvey.Error.EMAIL_VERIFICATION_REQUIRED = 'EmailVerificationRequired';
-
-/**
- * @memberof Kinvey.Error
- * @constant
- * @default
- */
 Kinvey.Error.DUPLICATE_END_USERS = 'DuplicateEndUsers';
 
 /**
@@ -323,6 +316,83 @@ Kinvey.Error.DATA_LINK_PARSE_ERROR = 'DataLinkParseError';
  * @default
  */
 Kinvey.Error.NOT_IMPLEMENTED_ERROR = 'NotImplementedError';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.EMAIL_VERIFICATION_REQUIRED = 'EmailVerificationRequired';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.SORT_LIMIT_EXCEEDED = 'SortLimitExceeded';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.INVALID_SHORT_URL = 'InvalidShortURL';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.INVALID_OR_MISSING_NONCE = 'InvalidOrMissingNonce';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.MISSING_CONFIGURATION = 'MissingConfiguration';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.ENDPOINT_DOES_NOT_EXIST = 'EndpointDoesNotExist';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.DISALLOWED_QUERY_SYNTAX = 'DisallowedQuerySyntax';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.MALFORMED_AUTHENTICATION_HEADER = 'MalformedAuthenticationHeader';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.APP_ARCHIVED = 'AppArchived';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.BL_NOT_SUPPORTED_FOR_ROUTE = 'BLNotSupportedForRoute';
+
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.USER_LOCKED_DOWN = 'UserLockedDown';
 
 // #### Client.
 /**

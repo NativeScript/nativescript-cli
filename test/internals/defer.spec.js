@@ -88,14 +88,14 @@ describe('Kinvey.Defer', function() {
 
   // Run Promises/A+ test suite (server only).
   // https://github.com/promises-aplus/promises-tests
-  describe('Promises/A+ Tests', function () {
-    if('undefined' !== typeof module && 'undefined' !== typeof require) {// Node.js.
-      // Normalize adapter.
-      // https://github.com/RubenVerborgh/promiscuous/blob/master/test/adapter.js
-      var adapter = {
+  if('undefined' !== typeof module && 'undefined' !== typeof require) {// Node.js.
+    describe('Promises/A+ Tests', function () {
+      require('promises-aplus-tests').mocha({
+        // Normalize adapter.
+        // https://github.com/RubenVerborgh/promiscuous/blob/master/test/adapter.js
         fulfilled : Kinvey.Defer.resolve,
         rejected  : Kinvey.Defer.reject,
-        pending   : function () {
+        pending   : function() {
           var deferred = Kinvey.Defer.deferred();
           return {
             promise : deferred.promise,
@@ -103,12 +103,8 @@ describe('Kinvey.Defer', function() {
             reject  : deferred.reject
           };
         }
-      };
-      require('promises-aplus-tests').mocha(adapter);
-    }
-    else {// Browser.
-      it('should be run server-side.');
-    }
-  });
+      });
+    });
+  }
 
 });

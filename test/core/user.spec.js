@@ -88,7 +88,7 @@ describe('Kinvey.User', function() {
         return expect(promise).to.be.rejected;
       }, function(error) {
         Kinvey.setActiveUser(null);// Reset.
-        
+
         expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
         expect(spy).to.be.calledOnce;
       });
@@ -617,24 +617,30 @@ describe('Kinvey.User', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
-    it('should use User Discovery, with filter:username, if the `discover` flag was true.', function() {
-      var _this = this;
-      var query = new Kinvey.Query().equalTo('username', this.data.username);
-      var promise = Kinvey.User.find(query, { discover: true }).then(function(users) {
-        expect(users).to.be.an('array');
-        expect(users).to.have.length.of(1);
+    it(
+      'should use User Discovery, with filter:username, if the `discover` flag was true.',
+      function() {
+        var _this = this;
+        var query = new Kinvey.Query().equalTo('username', this.data.username);
+        var promise = Kinvey.User.find(query, { discover: true }).then(function(users) {
+          expect(users).to.be.an('array');
+          expect(users).to.have.length.of(1);
 
-        // Inspect array.
-        expect(users[0]).to.have.keys(['_id', 'username']);
-        expect(users[0]).to.have.property('_id', _this.data._id);
-      });
-      return expect(promise).to.be.fulfilled;
-    });
-    it('should use User Discovery, with filter:email, if the `discover` flag was true.', function() {
-      var query = new Kinvey.Query().equalTo('email', this.randomID());
-      var promise = Kinvey.User.find(query, { discover: true });
-      return expect(promise).to.become([]);
-    });
+          // Inspect array.
+          expect(users[0]).to.have.keys(['_id', 'username']);
+          expect(users[0]).to.have.property('_id', _this.data._id);
+        });
+        return expect(promise).to.be.fulfilled;
+      }
+    );
+    it(
+      'should use User Discovery, with filter:email, if the `discover` flag was true.',
+      function() {
+        var query = new Kinvey.Query().equalTo('email', this.randomID());
+        var promise = Kinvey.User.find(query, { discover: true });
+        return expect(promise).to.become([]);
+      }
+    );
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
       return Kinvey.User.find(null, options);
     }));
@@ -832,7 +838,9 @@ describe('Kinvey.User', function() {
       return expect(promise).to.become(1);
     });
     it('should count the number of documents, regardless of sort.', function() {
-      var query = new Kinvey.Query().equalTo('username', this.user.username).ascending(this.randomID());
+      var query   = new Kinvey.Query();
+      query.equalTo('username', this.user.username);
+      query.ascending(this.randomID());
       var promise = Kinvey.User.count(query);
       return expect(promise).to.become(1);
     });

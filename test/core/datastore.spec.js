@@ -31,14 +31,16 @@ describe('Kinvey.DataStore', function() {
   describe('the find method', function() {
     // Housekeeping: create two documents.
     before(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc = doc;
       });
     });
     before(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc2 = doc;
       });
     });
@@ -182,8 +184,9 @@ describe('Kinvey.DataStore', function() {
   describe('the get method', function() {
     // Housekeeping: create a document.
     before(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc = doc;
       });
     });
@@ -266,8 +269,9 @@ describe('Kinvey.DataStore', function() {
   describe('the update method', function() {
     // Housekeeping: create a document.
     before(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc = doc;
       });
     });
@@ -321,14 +325,16 @@ describe('Kinvey.DataStore', function() {
   describe('the clean method', function() {
     // Housekeeping: create two documents.
     beforeEach(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc = doc;
       });
     });
     beforeEach(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc2 = doc;
       });
     });
@@ -409,8 +415,9 @@ describe('Kinvey.DataStore', function() {
   describe('the destroy method', function() {
     // Housekeeping: create a document.
     beforeEach(function() {
-      var _this = this;
-      return Kinvey.DataStore.save(this.collection, { attribute: this.randomID() }).then(function(doc) {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { attribute: this.randomID() });
+      return promise.then(function(doc) {
         _this.doc = doc;
       });
     });
@@ -435,10 +442,13 @@ describe('Kinvey.DataStore', function() {
         expect(error).to.have.property('name', Kinvey.Error.ENTITY_NOT_FOUND);
       });
     });
-    it('should succeed when the document does not exist, and the `silent` flag was set.', function() {
-      var promise = Kinvey.DataStore.destroy(this.collection, this.randomID(), { silent: true });
-      return expect(promise).to.eventually.have.property('count', 0);
-    });
+    it(
+      'should succeed when the document does not exist, and the `silent` flag was set.',
+      function() {
+        var promise = Kinvey.DataStore.destroy(this.collection, this.randomID(), { silent: true });
+        return expect(promise).to.eventually.have.property('count', 0);
+      }
+    );
     it('should support both deferreds and callbacks on success.', Common.success(function(options) {
       return Kinvey.DataStore.destroy(this.collection, this.doc._id, options);
     }));

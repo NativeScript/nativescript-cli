@@ -215,8 +215,9 @@ describe('Kinvey.Persistence.Local', function() {
         });
       });
       it('should return all documents.', function() {
-        var _this = this;
-        var promise = Kinvey.Persistence.Local.read({ collection: this.collection }).then(function(response) {
+        var _this   = this;
+        var promise = Kinvey.Persistence.Local.read({ collection: this.collection });
+        promise = promise.then(function(response) {
           expect(response).to.be.an('array');
           expect(response).to.have.length(2);
 

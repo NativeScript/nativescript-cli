@@ -332,7 +332,9 @@ describe('Kinvey.Backbone.Model', function() {
     it('should support the `attrs` option.', function() {
       var value = this.randomID();
       this.model.set('field', this.randomID());
-      var promise = this.jQueryToKinveyPromise(this.model.save({}, { attrs: { anotherField: value } }));
+
+      var savePromise = this.model.save({}, { attrs: { anotherField: value } });
+      var promise     = this.jQueryToKinveyPromise(savePromise);
       return promise.then(function(response) {
         expect(response[0]).to.have.property('anotherField', value);
         expect(response[0]).not.to.have.property('field');
@@ -525,12 +527,15 @@ describe('Kinvey.Backbone.Model', function() {
       var promise = this.jQueryToKinveyPromise(this.model.destroy({ silent: true }));
       return expect(promise).to.be.rejected;
     });
-    it('should succeed when the document does not exist, and the `silentFail` flag was set.', function() {
-      this.model.set(this.model.idAttribute, this.randomID());
+    it(
+      'should succeed when the document does not exist, and the `silentFail` flag was set.',
+      function() {
+        this.model.set(this.model.idAttribute, this.randomID());
 
-      var promise = this.jQueryToKinveyPromise(this.model.destroy({ silentFail: true }));
-      return expect(promise).to.be.fulfilled;
-    });
+        var promise = this.jQueryToKinveyPromise(this.model.destroy({ silentFail: true }));
+        return expect(promise).to.be.fulfilled;
+      }
+    );
 
     ('undefined' === typeof Titanium) && it('should support `ajax` options.', function() {
       // Test the `beforeSend` and `timeout` options.

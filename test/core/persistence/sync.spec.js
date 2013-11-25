@@ -179,16 +179,22 @@ describe('Kinvey.Sync', function() {
           expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
         });
       });
-      it('should support both deferreds and callbacks on success.', Common.success(function(options) {
-        return Kinvey.Sync.execute(options);
-      }));
-      it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
-        options.user = {// Invalid credentials, but that’s OK.
-          username: this.randomID(),
-          password: this.randomID()
-        };
-        return Kinvey.Sync.execute(options);
-      }));
+      it(
+        'should support both deferreds and callbacks on success.',
+        Common.success(function(options) {
+          return Kinvey.Sync.execute(options);
+        })
+      );
+      it(
+        'should support both deferreds and callbacks on failure.',
+        Common.failure(function(options) {
+          options.user = {// Invalid credentials, but that’s OK.
+            username: this.randomID(),
+            password: this.randomID()
+          };
+          return Kinvey.Sync.execute(options);
+        })
+      );
     });
 
     // No documents pending synchronization.
