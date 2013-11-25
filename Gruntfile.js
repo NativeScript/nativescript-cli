@@ -27,7 +27,7 @@ module.exports = function(grunt) {
   grunt.log.subhead('Environment: ' + env + ', build: ' + build);
 
   // Adapt config file to the current environment.
-  var config = grunt.file.readJSON('config.json');
+  var config = require('./config.json');
   grunt.util._.extend(config, config[env]);
 
   // Load external tasks.
@@ -41,6 +41,7 @@ module.exports = function(grunt) {
     'grunt-contrib-uglify',
     'grunt-contrib-watch',
     'grunt-jsdoc',
+    'grunt-jsonlint',
     'grunt-karma',
     'grunt-mocha',
     'grunt-shell',
@@ -57,66 +58,18 @@ module.exports = function(grunt) {
 
     // Metadata.
     config : config,
-    pkg    : grunt.file.readJSON('package.json'),
+    pkg    : require('./package.json'),
 
-    // Validation.
+    // Code audits.
+    jsonlint: {
+      all: { src: [ '.jshintrc', 'config.json', 'package.json', 'lib/jsdoc.json' ] }
+    },
     jshint: {
-      options: grunt.file.readJSON('lib/.jshintrc'),
-      metadata: {
-        options : { maxlen: 120, quotmark: 'double' },// Overrides.
-        src     : [ 'config.json', 'package.json', 'lib/.jshintrc', 'lib/jsdoc.json' ]
-      },
-      gruntfile: {
-        options: {// Overrides.
-          camelcase : false,
-          node      : true
-        },
-        src: 'Gruntfile.js'
-      },
-      src: {
-        options: {// Overrides.
-          globals : { KINVEY_DEBUG: true },
-          undef   : false,// Variables are declared ..
-          unused  : false// .. cross-file prior to concat.
-        },
-        src: 'src/**/*.js'
-      },
-      tests: {
-        options: {// Overrides.
-          expr    : true,// Allow `expect` syntax.
-          globals : {
-            // Test utilities.
-            after      : true,
-            afterEach  : true,
-            before     : true,
-            beforeEach : true,
-            chai       : true,
-            Common     : true,
-            config     : true,
-            describe   : true,
-            expect     : true,
-            it         : true,
-            sinon      : true,
-
-            // Libraries.
-            Backbone   : true,
-            Kinvey     : true,
-            Titanium   : true
-          },
-          maxlen  : 120
-        },
-        src: [ 'lib/karma.conf.js', 'lib/titanium.*.js', 'test/**/*.js' ]
-      },
-      dist: {
-        options: {// Overrides.
-          browser : true,// Browsers.
-          globals : { define: true, KINVEY_DEBUG : true },
-          indent  : false,// Disable indentation and ..
-          maxlen  : false,// .. line-length checking.
-          node    : true// Node.js.
-        },
-        src: 'dist/<%= env %>/dist.js'
-      }
+      options   : { jshintrc: true },
+      gruntfile : { src: 'Gruntfile.js' },
+      src       : { src: 'src/**/*.js' },
+      test      : { src: 'test/**/*.js' },
+      dist      : { src: 'dist/<%= env %>/dist.js' }
     },
 
     // Concatenation & minification.
@@ -179,9 +132,11 @@ module.exports = function(grunt) {
     },
     jsbeautifier: {
       options: {
-        indent_size              : 2,
-        brace_style              : 'end-expand',// End braces on own line.
-        space_before_conditional : false
+        js: {
+          braceStyle             : 'end-expand',// End braces on own line.
+          indentSize             : 2,
+          spaceBeforeConditional : false
+        }
       },
       files: 'dist/<%= env %>/dist.js'
     },
@@ -206,9 +161,7 @@ module.exports = function(grunt) {
         reporter : 'spec',
         timeout  : 30000
       },
-      all: {
-        src: [ 'test/spec.js', 'test/**/*.spec.js' ]
-      }
+      all: { src: [ 'test/spec.js', 'test/**/*.spec.js' ] }
     },
     mocha: {// Client-side (headless).
       options: {
@@ -360,11 +313,12 @@ module.exports = function(grunt) {
   // ----------------
 
   // Default task.
-  grunt.registerTask('default', ['cleanup', 'jshint', 'build', 'test', 'publish']);
-  grunt.registerTask('sandbox', ['cleanup', 'jshint', 'build', 'publish']);
-  grunt.registerTask('deploy',  ['clean:publish', 'jshint', 'shell:deploy']);
+  grunt.registerTask('default', ['cleanup', 'audit', 'build', 'test', 'publish']);
+  grunt.registerTask('sandbox', ['cleanup', 'audit', 'build', 'publish']);
+  grunt.registerTask('deploy',  ['clean:publish', 'audit', 'shell:deploy']);
 
   // Main tasks.
+  grunt.registerTask('audit', [ 'jsonlint', 'jshint' ]);
   grunt.registerTask('build', [
     'concat:dist', 'jsbeautifier', 'uglify', 'jshint:dist', 'externals',
     'concat:dependencies', 'concat:build', 'concat:pack', 'copy:intermediate'

@@ -18,6 +18,27 @@
       timeout : 30000,
       ui      : 'bdd'
     });
+
+    // `Function.prototype.bind` polyfill (PhantomJS).
+    Function.prototype.bind = Function.prototype.bind || function(_this) {
+      var self = this;
+      if('function' !== typeof this) {
+        // Closest thing possible to the ECMAScript 5 internal IsCallable function.
+        throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable.');
+      }
+
+      var args  = Array.prototype.slice.call(arguments, 1);
+      var noop  = function() { };
+      var bound = function() {
+        args = args.concat(Array.prototype.slice.call(arguments));
+        return self.apply(this instanceof noop && _this ? this : _this, args);
+      };
+
+      // Bind.
+      noop.prototype  = this.prototype;
+      bound.prototype = new noop();
+      return bound;
+    };
     </script>
 
     <!-- External libraries. -->
