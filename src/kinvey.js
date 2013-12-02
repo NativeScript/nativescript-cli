@@ -251,6 +251,9 @@ Kinvey.init = function(options) {
   Kinvey.appSecret    = null != options.appSecret    ? options.appSecret    : null;
   Kinvey.masterSecret = null != options.masterSecret ? options.masterSecret : null;
 
+  // Set the encryption key.
+  Kinvey.encryptionKey = null != options.encryptionKey ? options.encryptionKey : null;
+
   // Initialize the synchronization namespace and restore the active user.
   var promise = Kinvey.Sync.init(options.sync).then(function() {
     return restoreActiveUser(options);

@@ -53,6 +53,15 @@ var WebSqlAdapter = {
   size: 5 * 1024 * 1024,
 
   /**
+   * Opens a database.
+   *
+   * @returns {Database}
+   */
+  open: function() {
+    return root.openDatabase(WebSqlAdapter.dbName(), 1, '', WebSqlAdapter.size);
+  },
+
+  /**
    * Executes a series of queries within a transaction.
    *
    * @param {string}   collection    The collection.
@@ -83,7 +92,7 @@ var WebSqlAdapter = {
 
     // If there is a database handle, re-use it.
     if(null === WebSqlAdapter.db) {
-      WebSqlAdapter.db = root.openDatabase(WebSqlAdapter.dbName(), 1, '', WebSqlAdapter.size);
+      WebSqlAdapter.db = WebSqlAdapter.open();
     }
 
     // Prepare the response.

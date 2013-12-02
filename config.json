@@ -72,6 +72,24 @@
         "src/shims/phonegap/push.js"
       ]
     },
+    "phonegap-crypto": {
+      "dependencies": [ ],
+      "externals": [
+        "node_modules/promiscuous/dist/promiscuous-browser.js",
+        "node_modules/sift/sift.min.js"
+      ],
+      "internals": [
+        "src/internals/deferreds/promiscuous.js",
+        "src/internals/persistence/local/websql.js",
+        "src/internals/persistence/net/xhr.js",
+        "src/internals/storage/local-storage.js",
+        "src/shims/phonegap/phonegap.js",
+        "src/shims/phonegap/error.js",
+        "src/shims/phonegap/push.js",
+        "src/shims/phonegap/crypto/sqlcipher.js",
+        "src/shims/phonegap/crypto/storage.js"
+      ]
+    },
     "titanium": {
       "dependencies" : [ ],
       "externals"    : [

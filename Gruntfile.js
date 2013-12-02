@@ -332,6 +332,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test:html5',    ['client-tests']);
   grunt.registerTask('test:nodejs',   ['server-tests']);
   grunt.registerTask('test:phonegap', []);
+  grunt.registerTask('test:phonegap-crypto', []);
   grunt.registerTask('test:titanium', ['server:titanium']);
   grunt.registerTask('browser-tests', ['karma:continuous']);
 
@@ -353,5 +354,6 @@ module.exports = function(grunt) {
   grunt.registerTask('externals:html5',    []);
   grunt.registerTask('externals:nodejs',   []);
   grunt.registerTask('externals:phonegap', []);
+  grunt.registerTask('externals:phonegap-crypto', []);
   grunt.registerTask('externals:titanium', ['shell:tiplatformconnect']);
 };

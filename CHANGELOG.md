@@ -2,6 +2,7 @@
 
 ## 1.1.3-snapshot
 * #2765: Clear cache and state when user is locked down.
+* #2768: Added PhoneGap encryption to credentials and offline storage. 
 * Bugfix: `force` flag of `Kinvey.User.logout` did not work with `Kinvey.Error.EMAIL_VERIFICATION_REQUIRED`.
 
 ## 1.1.2 (2013-10-08)
