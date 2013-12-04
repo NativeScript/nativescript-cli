@@ -15,22 +15,32 @@
  */
 
 // Patch `WebSqlAdapter` to use SQLCipher over WebSQL.
-if('undefined' !== typeof root.sqlitePlugin) {
-  /**
-   * Opens a database.
-   *
-   * @returns {Database}
-   */
-  WebSqlAdapter.open = function() {
-    // Validate preconditions.
-    if(null == Kinvey.encryptionKey) {
-      throw new Kinvey.Error('Kinvey.encryptionKey must not be null.');
-    }
+var originalOpen = WebSqlAdapter.open;
 
-    // Open the database.
-    return root.sqlitePlugin.openDatabase({
-      name : WebSqlAdapter.dbName(),
-      key  : Kinvey.encryptionKey
-    });
-  };
-}
+/**
+ * Opens a database.
+ *
+ * @returns {Database}
+ */
+WebSqlAdapter.open = function() {
+  // Use original if SQLCipher is not available.
+  if('undefined' === typeof root.sqlitePlugin) {
+    originalOpen.apply(WebSqlAdapter, arguments);
+  }
+
+  // Debug.
+  if(KINVEY_DEBUG) {
+    log('Enabled encrypted data storage.');
+  }
+
+  // Validate preconditions.
+  if(null == Kinvey.encryptionKey) {
+    throw new Kinvey.Error('Kinvey.encryptionKey must not be null.');
+  }
+
+  // Open the database.
+  return root.sqlitePlugin.openDatabase({
+    name : WebSqlAdapter.dbName(),
+    key  : Kinvey.encryptionKey
+  });
+};

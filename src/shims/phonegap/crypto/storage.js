@@ -56,8 +56,19 @@ if('undefined' !== typeof root.Keychain) {
     _save: function(key, value) {
       // Save the item on our turn.
       storagePromise = storagePromise.then(function() {
+        // Escape stringified value.
+        value = JSON.stringify(value);
+        value = value.replace(/[\\]/g, '\\\\')
+                     .replace(/[\"]/g, '\\\"')
+                     .replace(/[\/]/g, '\\/')
+                     .replace(/[\b]/g, '\\b')
+                     .replace(/[\f]/g, '\\f')
+                     .replace(/[\n]/g, '\\n')
+                     .replace(/[\r]/g, '\\r')
+                     .replace(/[\t]/g, '\\t');
+
         var deferred = Kinvey.Defer();
-        kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, JSON.stringify(value));
+        kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
         return deferred.promise;
       });
       return storagePromise;

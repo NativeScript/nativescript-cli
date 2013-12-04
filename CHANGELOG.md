@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.4-snapshot
+* Enhancement: Improved PhoneGap encryption methods.
+
 ## 1.1.3 (2013-12-02)
 * #2765: Clear cache and state when user is locked down.
 * #2768: Added PhoneGap encryption to credentials and offline storage. 
