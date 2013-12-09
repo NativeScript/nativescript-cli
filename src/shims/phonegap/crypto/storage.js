@@ -15,63 +15,97 @@
  */
 
 // `Storage` adapter for the [iOS Keychain Plugin](https://github.com/shazron/KeychainPlugin).
-if('undefined' !== typeof root.Keychain) {
-  // The keychain instance.
-  var kc = new root.Keychain();
-  var kcServiceName = '<%= pkg.name %>';
 
-  // Use the keychain adapter.
-  Storage.use({
-    /**
-     * @augments {Storage._destroy}
-     */
-    _destroy: function(key) {
-      // Remove the item on our turn.
-      storagePromise = storagePromise.then(function() {
-        var deferred = Kinvey.Defer();
-        kc.removeForKey(deferred.resolve, deferred.reject, key, kcServiceName);
-        return deferred.promise;
-      });
-      return storagePromise;
-    },
+// The keychain instance.
+var kc = null;
+var kcServiceName = '<%= pkg.name %>';
 
-    /**
-     * @augments {Storage._get}
-     */
-    _get: function(key) {
-      // Retrieve the item on our turn.
-      storagePromise = storagePromise.then(function() {
-        var deferred = Kinvey.Defer();
-        kc.getForKey(function(value) {
-          deferred.resolve(value ? JSON.parse(value) : null);
-        }, deferred.reject, key, kcServiceName);
-        return deferred.promise;
-      });
-      return storagePromise;
-    },
+/**
+ * @augments {Storage._destroy}
+ */
+var originalLocalStorageDestroy = localStorageAdapter._destroy;
+localStorageAdapter._destroy = function(key) {
+  // Use original if Keychain is not available.
+  if('undefined' === typeof root.Keychain ||
+   'ios' !== root.device.platform.toLowerCase()) {
+    return originalLocalStorageDestroy.apply(localStorageAdapter, arguments);
+  }
 
-    /**
-     * @augments {Storage._save}
-     */
-    _save: function(key, value) {
-      // Save the item on our turn.
-      storagePromise = storagePromise.then(function() {
-        // Escape stringified value.
-        value = JSON.stringify(value);
-        value = value.replace(/[\\]/g, '\\\\')
-                     .replace(/[\"]/g, '\\\"')
-                     .replace(/[\/]/g, '\\/')
-                     .replace(/[\b]/g, '\\b')
-                     .replace(/[\f]/g, '\\f')
-                     .replace(/[\n]/g, '\\n')
-                     .replace(/[\r]/g, '\\r')
-                     .replace(/[\t]/g, '\\t');
+  // Initialize the keychain.
+  if(null == kc) {
+    kc = new root.Keychain();
+  }
 
-        var deferred = Kinvey.Defer();
-        kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
-        return deferred.promise;
-      });
-      return storagePromise;
-    }
+  // Remove the item on our turn.
+  storagePromise = storagePromise.then(function() {
+    var deferred = Kinvey.Defer.deferred();
+    kc.removeForKey(deferred.resolve, deferred.reject, key, kcServiceName);
+    return deferred.promise;
   });
-}
+  return storagePromise;
+};
+
+/**
+ * @augments {Storage._get}
+ */
+var localStorageAdapterGet = localStorageAdapter._get;
+localStorageAdapter._get = function(key) {
+  // Use original if Keychain is not available.
+  if('undefined' === typeof root.Keychain ||
+   'ios' !== root.device.platform.toLowerCase()) {
+    return localStorageAdapterGet.apply(localStorageAdapter, arguments);
+  }
+
+  // Initialize the keychain.
+  if(null == kc) {
+    kc = new root.Keychain();
+  }
+
+  // Retrieve the item on our turn.
+  storagePromise = storagePromise.then(function() {
+    var deferred = Kinvey.Defer.deferred();
+    kc.getForKey(function(value) {
+      deferred.resolve(value ? JSON.parse(value) : null);
+    }, function() {// Plugin fails on `null`-values, workaround here.
+      deferred.resolve(null);
+    }, key, kcServiceName);
+    return deferred.promise;
+  });
+  return storagePromise;
+};
+
+/**
+ * @augments {Storage._save}
+ */
+var localStorageAdapterSave = localStorageAdapter._save;
+localStorageAdapter._save = function(key, value) {
+  // Use original if Keychain is not available.
+  if('undefined' === typeof root.Keychain ||
+   'ios' !== root.device.platform.toLowerCase()) {
+    return localStorageAdapterSave.apply(localStorageAdapter, arguments);
+  }
+
+  // Initialize the keychain.
+  if(null == kc) {
+    kc = new root.Keychain();
+  }
+
+  // Save the item on our turn.
+  storagePromise = storagePromise.then(function() {
+    // Escape stringified value.
+    value = JSON.stringify(value);
+    value = value.replace(/[\\]/g, '\\\\')
+                 .replace(/[\"]/g, '\\\"')
+                 .replace(/[\/]/g, '\\/')
+                 .replace(/[\b]/g, '\\b')
+                 .replace(/[\f]/g, '\\f')
+                 .replace(/[\n]/g, '\\n')
+                 .replace(/[\r]/g, '\\r')
+                 .replace(/[\t]/g, '\\t');
+
+      var deferred = Kinvey.Defer.deferred();
+      kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
+      return deferred.promise;
+    });
+    return storagePromise;
+};

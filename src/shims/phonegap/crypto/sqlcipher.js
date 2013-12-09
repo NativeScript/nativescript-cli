@@ -23,19 +23,14 @@ var originalOpen = WebSqlAdapter.open;
  * @returns {Database}
  */
 WebSqlAdapter.open = function() {
-  // Use original if SQLCipher is not available.
-  if('undefined' === typeof root.sqlitePlugin) {
+  // Use original if SQLCipher is not available, or not desired.
+  if('undefined' === typeof root.sqlitePlugin || null == Kinvey.encryptionKey) {
     originalOpen.apply(WebSqlAdapter, arguments);
   }
 
   // Debug.
   if(KINVEY_DEBUG) {
     log('Enabled encrypted data storage.');
-  }
-
-  // Validate preconditions.
-  if(null == Kinvey.encryptionKey) {
-    throw new Kinvey.Error('Kinvey.encryptionKey must not be null.');
   }
 
   // Open the database.
