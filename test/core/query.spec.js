@@ -504,96 +504,98 @@ describe('Kinvey.Query', function() {
   });
 
   describe('the matches method', function() {
+    it('should throw on unanchored expression.', function() {
+      var _this = this;
+      expect(function() {
+        _this.query.matches(_this.field, _this.randomID());
+      }).to.Throw('anchored');
+    });
     it('should add a match filter by string', function() {
-      var value = this.randomID();
+      var value = '^' + this.randomID();
       this.query.matches(this.field, value);
 
       expect(this.filter()).to.have.property(this.field);
       expect(this.filter()[this.field]).to.deep.equal({ $regex: value });
     });
     it('should add a match filter by RegExp literal.', function() {
-      var value = /foo/;
+      var value = /^foo/;
       this.query.matches(this.field, value);
 
       expect(this.filter()).to.have.property(this.field);
       expect(this.filter()[this.field]).to.deep.equal({ $regex: value.source });
     });
     it('should add a match filter by RegExp object.', function() {
-      var value = new RegExp('foo');
+      var value = new RegExp('^foo');
       this.query.matches(this.field, value);
 
       expect(this.filter()).to.have.property(this.field);
       expect(this.filter()[this.field]).to.deep.equal({ $regex: value.source });
     });
     it('should respect any existing filters on the same field.', function() {
-      this.query.matches(this.field, this.randomID());
+      this.query.matches(this.field, '^' + this.randomID());
       this.query.greaterThan(this.field, this.randomID());
       expect(this.filter()).to.have.property(this.field);
       expect(this.filter()[this.field]).to.contain.keys([ '$gt' ]);
     });
     it('should return the query.', function() {
-      var value = this.query.matches(this.field, /foo/);
+      var value = this.query.matches(this.field, /^foo/);
       expect(value).to.equal(this.query);
     });
 
     describe('with options', function() {
       // Test suite.
-      it('should set the ignoreCase flag if part of the RegExp.', function() {
-        var value = /foo/i;
-        this.query.matches(this.field, value);
-
-        expect(this.filter()).to.have.property(this.field);
-        expect(this.filter()[this.field]).to.have.property('$options', 'i');
-      });
-      it('should set the ignoreCase flag if `options.ignoreCase`.', function() {
-        var value = /foo/;
-        this.query.matches(this.field, value, { ignoreCase: true });
-
-        expect(this.filter()).to.have.property(this.field);
-        expect(this.filter()[this.field]).to.have.property('$options', 'i');
+      it('should throw if the ignoreCase flag is part of the RegExp.', function() {
+        var value = /^foo/i;
+        var _this = this;
+        expect(function() {
+          _this.query.matches(_this.field, value);
+        }).to.Throw('ignoreCase');
       });
       it('should unset the ignoreCase flag if `options.ignoreCase` is `false`.', function() {
-        var value = /foo/i;
+        var value = /^foo/i;
         this.query.matches(this.field, value, { ignoreCase: false });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).not.to.have.property('$options');
       });
       it('should set the multiline flag if part of the RegExp.', function() {
-        var value = /foo/m;
+        var value = /^foo/m;
         this.query.matches(this.field, value);
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).to.have.property('$options', 'm');
       });
       it('should set the multiline flag if `options.multiline`.', function() {
-        var value = /foo/;
+        var value = /^foo/;
         this.query.matches(this.field, value, { multiline: true });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).to.have.property('$options', 'm');
       });
       it('should unset the multiline flag if `options.multiline` is `false`.', function() {
-        var value = /foo/m;
+        var value = /^foo/m;
         this.query.matches(this.field, value, { multiline: false });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).not.to.have.property('$options');
       });
       it('should set the extended flag if `options.extended`.', function() {
-        this.query.matches(this.field, this.randomID(), { extended: true });
+        var value = '^' + this.randomID();
+        this.query.matches(this.field, value, { extended: true });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).to.have.property('$options', 'x');
       });
       it('should not set the multiline flag if `options.extended` is `false`.', function() {
-        this.query.matches(this.field, this.randomID(), { extended: false });
+        var value = '^' + this.randomID();
+        this.query.matches(this.field, value, { extended: false });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).not.to.have.property('$options');
       });
       it('should set the dotMatchesAll flag if `options.dotMatchesAll`.', function() {
-        this.query.matches(this.field, this.randomID(), { dotMatchesAll: true });
+        var value = '^' + this.randomID();
+        this.query.matches(this.field, value, { dotMatchesAll: true });
 
         expect(this.filter()).to.have.property(this.field);
         expect(this.filter()[this.field]).to.have.property('$options', 's');
@@ -601,14 +603,15 @@ describe('Kinvey.Query', function() {
       it(
         'should not set the dotMatchesAll flag if `options.dotMatchesAll` is `false`.',
         function() {
-          this.query.matches(this.field, this.randomID(), { dotMatchesAll: false });
+          var value = '^' + this.randomID();
+          this.query.matches(this.field, value, { dotMatchesAll: false });
 
           expect(this.filter()).to.have.property(this.field);
           expect(this.filter()[this.field]).not.to.have.property('$options');
         }
       );
       it('should set multiple flags.', function() {
-        var value = /foo/im;
+        var value = /^foo/im;
         this.query.matches(this.field, value, {
           ignoreCase    : false,
           extended      : true,

@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.1.4-snapshot
+* #2847: Removed support for case-insensitive and unanchored regexp.
 * Enhancement: Improved PhoneGap encryption methods.
 
 ## 1.1.3 (2013-12-02)

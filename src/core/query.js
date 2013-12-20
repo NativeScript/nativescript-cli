@@ -353,7 +353,7 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
    * @param {string} field Field.
    * @param {RegExp|string} regExp Regular expression.
    * @param {Object} [options] Options.
-   * @param {boolean} [options.ignoreCase=inherit] Toggles case insensitivity.
+   * @param {boolean} [options.ignoreCase=inherit] Toggles case-insensitivity.
    * @param {boolean} [options.multiline=inherit] Toggles multiline matching.
    * @param {boolean} [options.extended=false] Toggles extended capability.
    * @param {boolean} [options.dotMatchesAll=false] Toggles dot matches all.
@@ -364,13 +364,18 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
     if(!isRegExp(regExp)) {
       regExp = new RegExp(regExp);
     }
+    options = options || {};
+
+    // Validate arguments.
+    if((regExp.ignoreCase || options.ignoreCase) && false !== options.ignoreCase) {
+      throw new Error('ignoreCase flag is not supported.');
+    }
+    if(0 !== regExp.source.indexOf('^')) {
+      throw new Error('regExp must be an anchored expression.');
+    }
 
     // Flags.
-    options = options || {};
     var flags = [];
-    if((regExp.ignoreCase || options.ignoreCase) && false !== options.ignoreCase) {
-      flags.push('i');
-    }
     if((regExp.multiline || options.multiline) && false !== options.multiline) {
       flags.push('m');
     }
