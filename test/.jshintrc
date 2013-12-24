@@ -35,6 +35,7 @@
     "Common"     : true,
     "config"     : true,
 
+    "angular"    : true,
     "Backbone"   : true,
     "Kinvey"     : true
   }

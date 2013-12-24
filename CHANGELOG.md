@@ -1,12 +1,14 @@
 # Changelog
 
 ## 1.1.4-snapshot
-* #2847: Removed support for case-insensitive and unanchored regexp.
+* #2911: add Angular.js shim.
+* #2847: remove support for case-insensitive and unanchored regexp.
 * Enhancement: Improved PhoneGap encryption methods.
+* Enhancement: Updated promiscuous dependency.
 
 ## 1.1.3 (2013-12-02)
 * #2765: Clear cache and state when user is locked down.
-* #2768: Added PhoneGap encryption to credentials and offline storage. 
+* #2768: Added PhoneGap encryption to credentials and offline storage.
 * Bugfix: `force` flag of `Kinvey.User.logout` did not work with `Kinvey.Error.EMAIL_VERIFICATION_REQUIRED`.
 
 ## 1.1.2 (2013-10-08)

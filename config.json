@@ -3,6 +3,25 @@
   "browsers"   : [ "Chrome", "Firefox" ],
 
   "build": {
+    "angular": {
+      "dependencies": [
+        "node_modules/angular/lib/angular.min.js"
+      ],
+      "externals": [
+        "node_modules/sift/sift.min.js"
+      ],
+      "internals": [
+        "src/internals/persistence/local/websql.js",
+        "src/internals/persistence/local/indexeddb.js",
+        "src/internals/social/html5.js",
+        "src/shims/angular/angular.js",
+        "src/shims/angular/intro.txt",
+        "src/shims/angular/defer.js",
+        "src/shims/angular/persistence/net.js",
+        "src/shims/angular/outro.txt",
+        "src/internals/storage/local-storage.js"
+      ]
+    },
     "backbone": {
       "dependencies": [
         "node_modules/jquery-browser/lib/jquery.js",
@@ -51,6 +70,7 @@
       "dependencies" : [ ],
       "externals"    : [ ],
       "internals"    : [
+        "src/shims/nodejs/nodejs.js",
         "src/internals/deferreds/promiscuous-node.js",
         "src/internals/persistence/net/node-http.js",
         "src/internals/storage/memory.js"

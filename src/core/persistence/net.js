@@ -271,7 +271,10 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
         options
       ).then(function(response) {
         // Parse the response.
-        response = JSON.parse(response);
+        try {
+          response = JSON.parse(response);
+        }
+        catch(e) { }
 
         // Debug.
         if(KINVEY_DEBUG && options.trace && isObject(response)) {
@@ -281,17 +284,17 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
         return options.trace && isObject(response) ? response.result : response;
       }, function(response) {
         // Parse the response.
-        var requestId = null;
         try {
           response = JSON.parse(response);
-
-          // If `options.trace`, extract result and headers from the response.
-          if(options.trace) {
-            requestId = response.headers['X-Kinvey-Request-Id'];
-            response  = response.result;
-          }
         }
         catch(e) { }
+
+        // If `options.trace`, extract result and headers from the response.
+        var requestId = null;
+        if(options.trace) {
+          requestId = response.headers['X-Kinvey-Request-Id'];
+          response  = response.result;
+        }
 
         // Format the response as client-side error object.
         if(null != response && null != response.error) {// Server-side error.

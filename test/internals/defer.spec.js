@@ -93,16 +93,9 @@ describe('Kinvey.Defer', function() {
       require('promises-aplus-tests').mocha({
         // Normalize adapter.
         // https://github.com/RubenVerborgh/promiscuous/blob/master/test/adapter.js
-        fulfilled : Kinvey.Defer.resolve,
-        rejected  : Kinvey.Defer.reject,
-        pending   : function() {
-          var deferred = Kinvey.Defer.deferred();
-          return {
-            promise : deferred.promise,
-            fulfill : deferred.resolve,
-            reject  : deferred.reject
-          };
-        }
+        resolved : Kinvey.Defer.resolve,
+        rejected : Kinvey.Defer.reject,
+        deferred : Kinvey.Defer.deferred
       });
     });
   }

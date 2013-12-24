@@ -328,6 +328,7 @@ module.exports = function(grunt) {
 
   // Test tasks (build-dependent).
   grunt.registerTask('test',          ['test:' + build]);
+  grunt.registerTask('test:angular',  []);
   grunt.registerTask('test:backbone', ['client-tests']);
   grunt.registerTask('test:html5',    ['client-tests']);
   grunt.registerTask('test:nodejs',   ['server-tests']);
@@ -350,6 +351,7 @@ module.exports = function(grunt) {
 
   // Task to compile external libaries.
   grunt.registerTask('externals',          ['shell:promiscuous', 'externals:' + build]);
+  grunt.registerTask('externals:angular',  []);
   grunt.registerTask('externals:backbone', []);
   grunt.registerTask('externals:html5',    []);
   grunt.registerTask('externals:nodejs',   []);

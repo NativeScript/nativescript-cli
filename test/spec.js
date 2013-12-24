@@ -25,6 +25,14 @@ if('undefined' !== typeof __karma__) {
   window.mocha.timeout(30000);
 }
 
+// Angular.
+if('undefined' !== typeof angular) {
+  angular.module('angularTestSuite', ['kinvey']).run(function($kinvey) {
+    global.Kinvey = $kinvey;
+  });
+  angular.bootstrap(document, ['angularTestSuite']);
+}
+
 // Server: load modules.
 if('undefined' !== typeof require && 'undefined' === typeof Titanium) {
   // Patch mocha.

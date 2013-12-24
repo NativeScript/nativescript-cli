@@ -14,5 +14,8 @@
  * limitations under the License.
  */
 
-// Additional namespaces of the Kinvey service.
-var PUSH = 'push';
+// Deferreds.
+// ----------
+
+// Use Angular’s `$q`.
+Kinvey.Defer.use({ deferred: $q.defer });

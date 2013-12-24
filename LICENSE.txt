@@ -203,8 +203,8 @@ Summary:
    * jsOAuth-1.3               [MIT]   - used for social integration on Titanium.
    * mocha-1.14                [MIT]   - used for testing.
    * mocha-as-promised-1.4     [WTFPL] - used for testing.
-   * promiscuous-0.3           [MIT]   - used for promises.
-   * promises-aplus-tests-1.3  [WTFPL] - used for testing.
+   * promiscuous-0.4           [MIT]   - used for promises.
+   * promises-aplus-tests-2.0  [WTFPL] - used for testing.
    * sift-0.0                  [MIT]   - used for offline querying.
    * sinon-1.7                 [BSD-3-Clause] - used for testing.
    * sinon-chai-2.4            [WTFPL] - used for testing.

@@ -103,9 +103,9 @@ localStorageAdapter._save = function(key, value) {
                  .replace(/[\r]/g, '\\r')
                  .replace(/[\t]/g, '\\t');
 
-      var deferred = Kinvey.Defer.deferred();
-      kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
-      return deferred.promise;
-    });
-    return storagePromise;
+    var deferred = Kinvey.Defer.deferred();
+    kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
+    return deferred.promise;
+  });
+  return storagePromise;
 };

@@ -39,7 +39,10 @@ describe('Kinvey.Persistence.Net', function() {
 
     it('should issue a successful GET request.', function() {
       var promise = Kinvey.Persistence.Net.request('GET', this.url).then(function(value) {
-        value = JSON.parse(value);
+        try {
+          value = JSON.parse(value);
+        }
+        catch(e) { }
         expect(value).to.be.an('object');
         expect(value).to.have.property('kinvey');
         expect(value).to.have.property('version');

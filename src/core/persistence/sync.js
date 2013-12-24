@@ -176,11 +176,12 @@ var Sync = /** @lends Sync */{
     }).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
+        var metadata = { id: id, timestamp: documents[id] };
         return Sync._document(
           collection,
-          { id: id, timestamp: documents[id] }, // The document metadata.
-          response.local[id] || null,           // The local document.
-          response.net[id]   || null,           // The net document.
+          metadata,                   // The document metadata.
+          response.local[id] || null, // The local document.
+          response.net[id]   || null, // The net document.
           options
         ).then(null, function(response) {
           // Rejection occurs when a conflict could not be resolved. Append the

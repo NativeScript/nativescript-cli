@@ -14,5 +14,9 @@
  * limitations under the License.
  */
 
-// Additional namespaces of the Kinvey service.
-var PUSH = 'push';
+// `setImmediate` is not available in Node.js <= 0.8.
+if('function' !== typeof setImmediate) {
+  /*jshint -W020*/
+  setImmediate = process.nextTick;
+  /*jshint +W020*/
+}
