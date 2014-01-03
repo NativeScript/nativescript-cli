@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Kinvey, Inc.
+ * Copyright 2014 Kinvey, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -328,7 +328,7 @@ module.exports = function(grunt) {
 
   // Test tasks (build-dependent).
   grunt.registerTask('test',          ['test:' + build]);
-  grunt.registerTask('test:angular',  []);
+  grunt.registerTask('test:angular',  ['client-tests']);
   grunt.registerTask('test:backbone', ['client-tests']);
   grunt.registerTask('test:html5',    ['client-tests']);
   grunt.registerTask('test:nodejs',   ['server-tests']);
