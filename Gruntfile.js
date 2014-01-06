@@ -328,7 +328,11 @@ module.exports = function(grunt) {
 
   // Test tasks (build-dependent).
   grunt.registerTask('test',          ['test:' + build]);
-  grunt.registerTask('test:angular',  ['client-tests']);
+
+  // Requires Angular.js >=1.2.3.
+  // @see https://github.com/angular/angular.js/pull/4514
+  grunt.registerTask('test:angular',  [/*'client-tests'*/]);
+
   grunt.registerTask('test:backbone', ['client-tests']);
   grunt.registerTask('test:html5',    ['client-tests']);
   grunt.registerTask('test:nodejs',   ['server-tests']);
