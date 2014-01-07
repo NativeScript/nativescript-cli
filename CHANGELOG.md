@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.4-snapshot
+## 1.1.4 (2014-01-07)
 * #2911: add Angular.js shim.
 * #2847: remove support for case-insensitive and unanchored regexp.
 * Enhancement: Improved PhoneGap encryption methods.
