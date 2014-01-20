@@ -30,19 +30,6 @@ describe('Kinvey.References', function() {
     }
   }());
 
-  // Housekeeping: enable local persistence.
-  if(hasLocalAdapter) {
-    before(function() {
-      return Kinvey.Sync.init({ enable: true });
-    });
-    after(function() {// Reset.
-      return Kinvey.Sync.init({ enable: false });
-    });
-    after(function() {
-      return Kinvey.Sync.execute();
-    });
-  }
-
   // Housekeeping: manage the active user.
   before(function() {
     Kinvey.setActiveUser(this.user);
@@ -55,6 +42,19 @@ describe('Kinvey.References', function() {
   var suite = function(test, options) {
     // Test suite.
     describe(test, function() {
+      // Housekeeping: enable local persistence.
+      if(null != options && options.offline) {
+        before(function() {
+          return Kinvey.Sync.init({ enable: true });
+        });
+        after(function() {// Reset.
+          return Kinvey.Sync.init({ enable: false });
+        });
+        after(function() {
+          return Kinvey.Sync.execute();
+        });
+      }
+
       // Housekeeping: reset options.
       beforeEach(function() {// Provide a fresh copy of the options.
         this.options = options ? JSON.parse(JSON.stringify(options)) : {};

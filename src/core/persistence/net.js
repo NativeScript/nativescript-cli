@@ -41,6 +41,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       log('Initiating a create request.', arguments);
     }
 
+    // Strip maxAge metadata.
+    request.data = maxAge.removeMetadata(request.data);
+
     // Initiate the network request.
     request.method = 'POST';
     return Kinvey.Persistence.Net._request(request, options);
@@ -104,6 +107,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     if(KINVEY_DEBUG) {
       log('Initiating an update request.', arguments);
     }
+
+    // Strip maxAge metadata.
+    request.data = maxAge.removeMetadata(request.data);
 
     // Initiate the network request.
     request.method = 'PUT';

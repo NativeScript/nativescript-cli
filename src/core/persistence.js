@@ -34,6 +34,81 @@ var persistenceOptions = function(options) {
   return options;
 };
 
+// Define a namespace to control local data expiration through a maxAge mechanism.
+var maxAge = {
+  /**
+   * Adds maxAge metadata entries.
+   *
+   * @param {Array|Object} data List of objects.
+   * @param {integer} [maxAge] maximum age (seconds).
+   * @returns {Array|Object} Mutated list of objects.
+   */
+  addMetadata: function(data, maxAge) {
+    var lastRefreshedAt = new Date().toISOString();
+    var multi           = isArray(data);
+
+    var response = multi ? data : [ data ];
+    response = response.map(function(item) {
+      if(null != item) {
+        item._kmd                 = item._kmd || { };
+        item._kmd.lastRefreshedAt = lastRefreshedAt;
+        if(null != maxAge) {
+          item._kmd.maxAge = maxAge;
+        }
+      }
+      return item;
+    });
+    return multi ? response : response[0];
+  },
+
+  /**
+   * Removes maxAge metadata entries.
+   *
+   * @param {Array|Object} data List of objects.
+   * @returns {Array|Object} Mutated list of objects.
+   */
+  removeMetadata: function(data) {
+    var multi    = isArray(data);
+    var response = multi ? data : [ data ];
+    response = response.map(function(item) {
+      if(null != item && null != item._kmd) {
+        delete item._kmd.lastRefreshedAt;
+        delete item._kmd.maxAge;
+      }
+      return item;
+    });
+    return multi ? response : response[0];
+  },
+
+  /**
+   * Returns data maxAge status.
+   *
+   * @param {Array|Object} data List of objects.
+   * @param {integer} [maxAge] Maximum age (optional).
+   * @returns {boolean} Status.
+   */
+  status: function(data, maxAge) {
+    var response = isArray(data) ? data : [ data ];
+
+    var length = response.length;
+    var now    = new Date();
+    for(var i = 0; i < length; i += 1) {
+      var item = data[i];
+      if(null != item && null != item._kmd && null != item._kmd.lastRefreshedAt) {
+        var itemMaxAge      = (maxAge || item._kmd.maxAge) * 1000;// Milliseconds.
+        var lastRefreshedAt = fromISO(item._kmd.lastRefreshedAt);
+        var threshold       = new Date(lastRefreshedAt.getTime() + itemMaxAge);
+
+        // Verify time.
+        if(now > threshold) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+};
+
 /**
  * @private
  * @memberof! <global>

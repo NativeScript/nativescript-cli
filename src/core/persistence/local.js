@@ -53,6 +53,9 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       return Database.group(collection, request.data, options);
     }
 
+    // Add maxAge metadata.
+    request.data = maxAge.addMetadata(request.data, options.maxAge);
+
     // (Batch) save.
     var method  = isArray(request.data) ? 'batch' : 'save';
     var promise = Database[method](collection, request.data, options);
@@ -123,6 +126,12 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       promise = Database.get(collection, request.id, options);
     }
     return promise.then(function(response) {
+      // Force refresh is maxAge of response data was exceeded.
+      if(false === maxAge.status(response) && Kinvey.Sync.isOnline()) {
+        options.offline = false;// Force using network.
+        return Kinvey.Persistence.read(request, options);
+      }
+
       // Add support for references.
       if(options.relations) {
         return KinveyReference.get(response, options);
@@ -149,6 +158,9 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
 
     // Normalize “collections” of the user namespace.
     var collection = USERS === request.namespace ? USERS : request.collection;
+
+    // Add maxAge metadata.
+    request.data = maxAge.addMetadata(request.data, options.maxAge);
 
     // All update operations change application data, and are therefore subject
     // to synchronization.
