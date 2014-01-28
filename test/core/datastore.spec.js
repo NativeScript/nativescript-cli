@@ -622,4 +622,82 @@ describe('Kinvey.DataStore', function() {
     }));
   });
 
+  // maxAge.
+  describe('the maxAge option', function() {
+    // Housekeeping: enable sync.
+    before(function() {
+      return Kinvey.Sync.init({ enable: true });
+    });
+    after(function() {
+      return Kinvey.Sync.init({ enable: false });
+    });
+
+    // Housekeeping: ensure app is online.
+    beforeEach(function() {
+      return Kinvey.Sync.online({ sync: false });
+    });
+
+    // Housekeeping: delete the created document (if any).
+    afterEach(function() {
+      return Kinvey.DataStore.clean(this.collection);
+    });
+
+    // Tests.
+    it('should be set when saving.', function() {
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: 3600 });
+      return promise.then(function(response) {
+        expect(response).to.have.deep.property('_kmd.lastRefreshedAt');
+        expect(response).to.have.deep.property('_kmd.maxAge');
+      });
+    });
+    it('should use local persistence if not expired.', function() {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: 3600 });
+      return promise.then(function(netResponse) {
+        promise = Kinvey.DataStore.get(_this.collection, netResponse._id, { offline: true });
+        return promise.then(function(localResponse) {
+          expect(netResponse).to.deep.equal(localResponse);
+        });
+      });
+    });
+    it('should use network persistence if expired.', function() {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: -1 });
+      return promise.then(function(netResponse) {
+        promise = Kinvey.DataStore.get(_this.collection, netResponse._id, { offline: true });
+        return promise.then(function(localResponse) {
+          // Document should have been refreshed.
+          expect(netResponse._kmd.lastRefreshedAt).not.to.equal(localResponse._kmd.lastRefreshedAt);
+        });
+      });
+    });
+    it('should use local persistence if expired but offline.', function() {
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: -1 });
+      return promise.then(function(netResponse) {
+        return Kinvey.Sync.offline().then(function() {
+          promise = Kinvey.DataStore.get(_this.collection, netResponse._id, { offline: true });
+          return promise.then(function(localResponse) {
+            // Document should not have been refreshed.
+            expect(netResponse._kmd.lastRefreshedAt).to.equal(localResponse._kmd.lastRefreshedAt);
+          });
+        });
+      });
+    });
+    it('should update local persistence if expired.', function() {
+      var maxAge  = 3600;
+      var _this   = this;
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: -1 });
+      return promise.then(function(netResponse) {
+        promise = Kinvey.DataStore.get(_this.collection, netResponse._id, {
+          maxAge  : maxAge,
+          offline : true
+        });
+        return promise.then(function(localResponse) {
+          expect(localResponse).to.have.deep.property('_kmd.maxAge', maxAge);
+          expect(netResponse._kmd.lastRefreshedAt).not.to.equal(localResponse._kmd.lastRefreshedAt);
+        });
+      });
+    });
+  });
 });

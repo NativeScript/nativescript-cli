@@ -101,6 +101,23 @@ describe('Kinvey.Persistence.Local', function() {
       });
       return expect(promise).to.become(document);
     });
+    it('should support the maxAge option.', function() {
+      var document = { field: this.randomID() };
+      var maxAge   = 3600;
+      var promise  = Kinvey.Persistence.Local.update({
+        collection : this.collection,
+        data       : document
+      }, { maxAge: maxAge });
+      return promise.then(function(response) {
+        expect(response).to.have.deep.property('_kmd.lastRefreshedAt');
+        expect(response).to.have.deep.property('_kmd.maxAge', maxAge);
+
+        // Test lastRefreshAt value.
+        var date            = new Date().getTime();
+        var lastRefreshedAt = new Date(response._kmd.lastRefreshedAt).getTime();
+        expect(lastRefreshedAt).to.be.within(date - 1000, date + 1000);// 2s range.
+      });
+    });
   });
 
   // Kinvey.Persistence.Local.read.
@@ -528,6 +545,22 @@ describe('Kinvey.Persistence.Local', function() {
         data       : { _id: this.randomID() }
       });
       return expect(promise).to.be.fulfilled;
+    });
+    it('should support the maxAge option.', function() {
+      var maxAge  = 3600;
+      var promise = Kinvey.Persistence.Local.update({
+        collection : this.collection,
+        data       : { _id: this.randomID() }
+      }, { maxAge: maxAge });
+      return promise.then(function(response) {
+        expect(response).to.have.deep.property('_kmd.lastRefreshedAt');
+        expect(response).to.have.deep.property('_kmd.maxAge', maxAge);
+
+        // Test lastRefreshAt value.
+        var date            = new Date().getTime();
+        var lastRefreshedAt = new Date(response._kmd.lastRefreshedAt).getTime();
+        expect(lastRefreshedAt).to.be.within(date - 1000, date + 1000);// 2s range.
+      });
     });
   });
 

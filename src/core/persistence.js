@@ -91,13 +91,13 @@ var maxAge = {
     var response = isArray(data) ? data : [ data ];
 
     var length = response.length;
-    var now    = new Date();
+    var now    = new Date().getTime();
     for(var i = 0; i < length; i += 1) {
-      var item = data[i];
+      var item = response[i];
       if(null != item && null != item._kmd && null != item._kmd.lastRefreshedAt) {
         var itemMaxAge      = (maxAge || item._kmd.maxAge) * 1000;// Milliseconds.
-        var lastRefreshedAt = fromISO(item._kmd.lastRefreshedAt);
-        var threshold       = new Date(lastRefreshedAt.getTime() + itemMaxAge);
+        var lastRefreshedAt = fromISO(item._kmd.lastRefreshedAt).getTime();
+        var threshold       = lastRefreshedAt + itemMaxAge;
 
         // Verify time.
         if(now > threshold) {

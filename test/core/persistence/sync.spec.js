@@ -380,8 +380,12 @@ describe('Kinvey.Sync', function() {
           return promise.then(function(response) {
             expect(response).to.be.an('array');
             expect(response).to.have.length(2);
-            expect(response[0]).to.deep.equal(response[1]);
             expect(response[0]).to.have.property('field', value);
+
+            // Remove _kmd.lastRefreshedAt since these differ.
+            delete response[0]._kmd.lastRefreshedAt;
+            delete response[1]._kmd.lastRefreshedAt;
+            expect(response[0]).to.deep.equal(response[1]);
           });
         });
         it('should not synchronize the document if `options.conflict` rejects.', function() {
