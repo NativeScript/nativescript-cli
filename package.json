@@ -22,7 +22,7 @@
     "backbone"              : "~1.0",
     "backbone-associations" : "~0.5",
     "jquery-browser"        : "~1.10",
-    "promiscuous"           : "~0.4",
+    "promiscuous"           : "~0.6",
     "sift"                  : "~0.0",
     "uglify-js"             : "~2.4",
     "zepto"                 : "~0.0"

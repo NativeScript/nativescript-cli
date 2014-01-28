@@ -15,6 +15,15 @@
  */
 
 // Use `promiscuous` as `Kinvey.Defer` adapter.
-if('undefined' !== typeof root.promiscuous) {
-  Kinvey.Defer.use(root.promiscuous);
+if('undefined' !== typeof root.Promise) {
+  Kinvey.Defer.use({
+    deferred: function() {
+      var deferred = { };
+      deferred.promise = new root.Promise(function(resolve, reject) {
+        deferred.resolve = resolve;
+        deferred.reject  = reject;
+      });
+      return deferred;
+    }
+  });
 }

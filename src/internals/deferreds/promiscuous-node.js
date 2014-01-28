@@ -15,5 +15,14 @@
  */
 
 // Use promiscuous as `Kinvey.Defer` adapter.
-var promiscuous = require('promiscuous');
-Kinvey.Defer.use(promiscuous);
+var Promise = require('promiscuous');
+Kinvey.Defer.use({
+  deferred: function() {
+    var deferred = { };
+    deferred.promise = new Promise(function(resolve, reject) {
+      deferred.resolve = resolve;
+      deferred.reject  = reject;
+    });
+    return deferred;
+  }
+});

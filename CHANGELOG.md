@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.5
+* Enhancement: Updated promiscuous dependency.
+
 ## 1.1.4 (2014-01-07)
 * #2911: add Angular.js shim.
 * #2847: remove support for case-insensitive and unanchored regexp.
