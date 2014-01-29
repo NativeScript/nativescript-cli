@@ -17,6 +17,28 @@
 // Utils.
 // ------
 
+// Helper function to get and set a nested property in a document.
+var nested = function(document, dotProperty, value) {
+  if(!dotProperty) {// Top-level document.
+    document = 'undefined' === typeof value ? document : value;
+    return document;
+  }
+
+  var obj   = document;
+  var parts = dotProperty.split('.');
+
+  // Traverse the document until the nested property is located.
+  var current;
+  while((current = parts.shift()) && null != obj && obj.hasOwnProperty(current)) {
+    if(0 === parts.length) {// Return the (new) property value.
+      obj[current] = 'undefined' === typeof value ? obj[current] : value;
+      return obj[current];
+    }
+    obj = obj[current];// Continue traversing.
+  }
+  return null;// Property not found.
+};
+
 // Use the fastest possible means to execute a task in a future turn of the
 // event loop. Borrowed from [q](http://documentup.com/kriskowal/q/).
 var nextTick;

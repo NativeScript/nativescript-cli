@@ -1,12 +1,13 @@
 # Changelog
 
-## 1.1.5
+## 1.1.5 (2014-01-29)
+* #2985: add TTL support to caching & offline saving.
 * #3062: offline sorting now supports sorting by nested properties.
 * Enhancement: Updated promiscuous dependency.
 
 ## 1.1.4 (2014-01-07)
-* #2911: add Angular.js shim.
 * #2847: remove support for case-insensitive and unanchored regexp.
+* #2911: add Angular.js shim.
 * Enhancement: Improved PhoneGap encryption methods.
 * Enhancement: Updated promiscuous dependency.
 
