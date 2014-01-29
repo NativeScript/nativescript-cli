@@ -127,15 +127,33 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
     }
     return promise.then(function(response) {
       // Force refresh is maxAge of response data was exceeded.
-      if(false === maxAge.status(response) && Kinvey.Sync.isOnline()) {
+      var status = maxAge.status(response);
+      if(false === status && Kinvey.Sync.isOnline()) {
         options.offline = false;// Force using network.
         return Kinvey.Persistence.read(request, options);
       }
 
       // Add support for references.
       if(options.relations) {
-        return KinveyReference.get(response, options);
+        return KinveyReference.get(response, options).then(function(response) {
+          // Refresh in the background if required.
+          if(true === status.refresh && Kinvey.Sync.isOnline()) {
+            options.offline = false;// Force using network.
+            Kinvey.Persistence.read(request, options);
+          }
+
+          // Return the response.
+          return response;
+        });
       }
+
+      // Refresh in the background if required.
+      if(true === status.refresh && Kinvey.Sync.isOnline()) {
+        options.offline = false;// Force using network.
+        Kinvey.Persistence.read(request, options);
+      }
+
+      // Return the response.
       return response;
     });
   },

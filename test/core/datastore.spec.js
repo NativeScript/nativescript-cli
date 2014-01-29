@@ -710,5 +710,26 @@ describe('Kinvey.DataStore', function() {
         });
       });
     });
+    it('should refresh in the background if maxAge is over 90% expired.', function() {
+      // NOTE This test times out on failure.
+      var maxAge = 10;
+      var _this  = this;
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: maxAge });
+      return promise.then(function(netResponse) {
+        var deferred = Kinvey.Defer.deferred();
+
+        // Background request should have been made to network.
+        var stub = sinon.stub(Kinvey.Persistence.Net, 'read', function() {
+          deferred.resolve();
+          stub.restore();
+        });
+        setTimeout(function() {
+          var promise = Kinvey.DataStore.get(_this.collection, netResponse._id, { offline: true });
+          promise.then(null, deferred.reject);
+        }, maxAge * 950);// 95% (ms).
+
+        return deferred.promise;
+      });
+    });
   });
 });

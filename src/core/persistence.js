@@ -85,27 +85,34 @@ var maxAge = {
    *
    * @param {Array|Object} data List of objects.
    * @param {integer} [maxAge] Maximum age (optional).
-   * @returns {boolean} Status.
+   * @returns {boolean|Object} Status, or object if refresh is needed.
    */
   status: function(data, maxAge) {
-    var response = isArray(data) ? data : [ data ];
+    var needsRefresh = false;
+    var response     = isArray(data) ? data : [ data ];
 
     var length = response.length;
     var now    = new Date().getTime();
     for(var i = 0; i < length; i += 1) {
       var item = response[i];
       if(null != item && null != item._kmd && null != item._kmd.lastRefreshedAt) {
-        var itemMaxAge      = (maxAge || item._kmd.maxAge) * 1000;// Milliseconds.
-        var lastRefreshedAt = fromISO(item._kmd.lastRefreshedAt).getTime();
-        var threshold       = lastRefreshedAt + itemMaxAge;
+        var itemMaxAge       = (maxAge || item._kmd.maxAge) * 1000;// Milliseconds.
+        var lastRefreshedAt  = fromISO(item._kmd.lastRefreshedAt).getTime();
+        var threshold        = lastRefreshedAt + itemMaxAge;
 
         // Verify time.
         if(now > threshold) {
           return false;
         }
+
+        // Verify whether refresh is required.
+        var refreshThreshold = lastRefreshedAt + itemMaxAge * 0.9;// 90%
+        if(now > refreshThreshold) {
+          needsRefresh = true;
+        }
       }
     }
-    return true;
+    return needsRefresh ? { refresh: true } : true;
   }
 };
 
