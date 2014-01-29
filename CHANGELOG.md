@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.1.6-snapshot
+
 ## 1.1.5 (2014-01-29)
 * #2985: add TTL support to caching & offline saving.
 * #3062: offline sorting now supports sorting by nested properties.

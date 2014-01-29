@@ -169,6 +169,7 @@ var use = function(nsInterface) {
  * @property {boolean}  [fileTls=true] Use the https protocol to communicate
  *             with GCS.
  * @property {integer}  [fileTtl]      A custom expiration time (in seconds).
+ * @property {integer}  [maxAge]       Cache maxAge (in seconds).
  * @property {boolean}  [nocache=true] Use cache busting.
  * @property {boolean}  [offline]      Initiate the request locally.
  * @property {boolean}  [refresh]      Persist the response locally.
