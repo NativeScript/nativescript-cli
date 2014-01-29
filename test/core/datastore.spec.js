@@ -622,8 +622,19 @@ describe('Kinvey.DataStore', function() {
     }));
   });
 
+  // If there is no adapter, skip the test suite.
+  var localDescribe = (function() {
+    try {
+      Kinvey.Persistence.Local.read({ id: '_count' });
+      return describe;
+    }
+    catch(e) {
+      return describe.skip;
+    }
+  }());
+
   // maxAge.
-  describe('the maxAge option', function() {
+  localDescribe('the maxAge option', function() {
     // Housekeeping: enable sync.
     before(function() {
       return Kinvey.Sync.init({ enable: true });
