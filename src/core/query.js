@@ -741,26 +741,29 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
     }
 
     // Sorting.
-    // NOTE Sorting on dot-separated (nested) fields is not supported.
     var _this = this;
     response = response.sort(function(a, b) {
       for(var field in _this._sort) {
         if(_this._sort.hasOwnProperty(field)) {
+          // Find field in objects.
+          var aField = nested(a, field);
+          var bField = nested(b, field);
+
           // Elements which do not contain the field should always be sorted
           // lower.
-          if('undefined' !== typeof a[field] && 'undefined' === typeof b[field]) {
+          if(null != aField && null == bField) {
             return -1;
           }
-          if('undefined' !== typeof b[field] && 'undefined' === typeof a[field]) {
+          if(null != bField && null == aField) {
             return 1;
           }
 
           // Sort on the current field. The modifier adjusts the sorting order
           // (ascending (-1), or descending(1)). If the fields are equal,
           // continue sorting based on the next field (if any).
-          if(a[field] !== b[field]) {
+          if(aField !== bField) {
             var modifier = _this._sort[field];// 1 or -1.
-            return (a[field] < b[field] ? -1 : 1) * modifier;
+            return (aField < bField ? -1 : 1) * modifier;
           }
         }
       }

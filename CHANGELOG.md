@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.1.5
+* #3062: offline sorting now supports sorting by nested properties.
 * Enhancement: Updated promiscuous dependency.
 
 ## 1.1.4 (2014-01-07)

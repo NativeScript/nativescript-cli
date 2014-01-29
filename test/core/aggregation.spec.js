@@ -100,10 +100,10 @@ describe('Kinvey.Group', function() {
     // Housekeeping: generate data.
     beforeEach(function() {
       this.response = [
-        { a: 1, b: 'b', c: 2.5 },
-        { a: 1, b: 'b', c: 5 },
-        { a: 2, b: 'a', c: 1 },
-        { a: 0, b: 'c', c: 7.25 },
+        { a: 1, b: 'b', c: 2.5,  d: { e: 1 } },
+        { a: 1, b: 'b', c: 5,    d: { e: 4 } },
+        { a: 2, b: 'a', c: 1,    d: { e: 3 } },
+        { a: 0, b: 'c', c: 7.25, d: { e: 2 } },
         { b: 'd', c: 0 }
       ];
       this.raw = JSON.parse(JSON.stringify(this.response));// Deep copy.
@@ -140,6 +140,15 @@ describe('Kinvey.Group', function() {
         var result = this.aggregation.postProcess(this.response);
         expect(result).to.deep.equal(expected);
       });
+      it('should sort, nested.field:ascending.', function() {
+        var expected = [
+          this.raw[0], this.raw[3], this.raw[2], this.raw[1], this.raw[4]
+        ];
+
+        this.query.ascending('d.e');
+        var result = this.aggregation.postProcess(this.response);
+        expect(result).to.deep.equal(expected);
+      });
       it('should sort, field:descending.', function() {
         var expected = [
           this.raw[2], this.raw[0], this.raw[1], this.raw[3], this.raw[4]
@@ -149,12 +158,30 @@ describe('Kinvey.Group', function() {
         var result = this.aggregation.postProcess(this.response);
         expect(result).to.deep.equal(expected);
       });
+      it('should sort, nested.field:descending.', function() {
+        var expected = [
+          this.raw[1], this.raw[2], this.raw[3], this.raw[0], this.raw[4]
+        ];
+
+        this.query.descending('d.e');
+        var result = this.aggregation.postProcess(this.response);
+        expect(result).to.deep.equal(expected);
+      });
       it('should sort, field:ascending-field:descending.', function() {
         var expected = [
           this.raw[2], this.raw[1], this.raw[0], this.raw[3], this.raw[4]
         ];
 
         this.query.ascending('b').descending('c');
+        var result = this.aggregation.postProcess(this.response);
+        expect(result).to.deep.equal(expected);
+      });
+      it('should sort, field:ascending-nested.field:descending.', function() {
+        var expected = [
+          this.raw[2], this.raw[1], this.raw[0], this.raw[3], this.raw[4]
+        ];
+
+        this.query.ascending('b').descending('d.e');
         var result = this.aggregation.postProcess(this.response);
         expect(result).to.deep.equal(expected);
       });
