@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.1.6-snapshot
+* Fixed bug where documents created offline did not sync.
 
 ## 1.1.5 (2014-01-29)
 * #2985: add TTL support to caching & offline saving.

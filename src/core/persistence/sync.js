@@ -124,7 +124,7 @@ var Sync = /** @lends Sync */{
           metadata.size += 1;
         }
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
-        metadata.documents[document._id] = timestamp;
+        metadata.documents[document._id] = timestamp || null;
       });
 
       // Return the new metadata.
