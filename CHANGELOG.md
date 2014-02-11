@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.6-snapshot
+## 1.1.6 (2014-02-11)
 * Fixed bug where documents created offline did not sync.
 
 ## 1.1.5 (2014-01-29)
