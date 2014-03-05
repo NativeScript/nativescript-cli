@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.7-snapshot
+## 1.1.7 (2014-03-05)
 * #3165: add support for field selection.
 
 ## 1.1.6 (2014-02-11)
