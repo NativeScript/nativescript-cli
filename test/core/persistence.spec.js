@@ -173,13 +173,21 @@ describe('Kinvey.Persistence', function() {
         expect(Kinvey.Persistence.Local.create).to.be.calledOnce;
       });
     });
+    it('should not update local persistence if field selection was used.', function() {
+      var fields  = [ this.randomID() ];
+      var promise = Kinvey.Persistence.read(this.request, { refresh: true, fields: fields });
+      return promise.then(function() {
+        expect(Kinvey.Persistence.Net.read).to.be.calledOnce;
+        expect(Kinvey.Persistence.Local.create).not.to.be.called;
+      });
+    });
     it('should not update local persistence if the response is not cacheable.', function() {
       delete this.request.local.res;
 
       var promise = Kinvey.Persistence.read(this.request, { refresh: true });
       return promise.then(function() {
         expect(Kinvey.Persistence.Net.read).to.be.calledOnce;
-        expect(Kinvey.Persistence.Local.read).not.to.be.called;
+        expect(Kinvey.Persistence.Local.create).not.to.be.called;
       });
     });
 

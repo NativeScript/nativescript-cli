@@ -66,6 +66,11 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     request.flags = request.flags || {};
     options       = options || {};
 
+    // Add support for field selection.
+    if(isArray(options.fields)) {
+      request.flags.fields = options.fields.join(',');
+    }
+
     // Add support for file references.
     if(null != request.collection) {
       if(false !== options.fileTls) {
@@ -187,6 +192,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     if(request.query) {// Add query fragments.
       var query = request.query.toJSON();
       flags.query = query.filter;
+      if(!isEmpty(query.fields)) {
+        flags.fields = query.fields.join(',');
+      }
       if(null !== query.limit) {
         flags.limit = query.limit;
       }

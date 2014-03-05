@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.7-snapshot
+* #3165: add support for field selection.
+
 ## 1.1.6 (2014-02-11)
 * Fixed bug where documents created offline did not sync.
 

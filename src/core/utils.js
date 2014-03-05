@@ -166,6 +166,7 @@ var use = function(nsInterface) {
  *             Use in conjunction with `save` or `update`.
  * @property {boolean}  [fallback]     Fallback to the network if the request
  *             failed locally. Use in conjunction with `offline`.
+ * @property {Array}    [fields]       Fields to select.
  * @property {boolean}  [fileTls=true] Use the https protocol to communicate
  *             with GCS.
  * @property {integer}  [fileTtl]      A custom expiration time (in seconds).

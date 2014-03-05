@@ -1,6 +1,6 @@
 {
   "name"        : "kinvey",
-  "version"     : "1.1.6",
+  "version"     : "1.1.7-snapshot",
   "description" : "Kinvey JavaScript Library",
   "homepage"    : "http://www.kinvey.com",
   "bugs"        : { "email": "support@kinvey.com" },
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "angular"               : "~1.2",
-    "backbone"              : "~1.0",
+    "backbone"              : "~1.1",
     "backbone-associations" : "~0.5",
     "jquery-browser"        : "~1.10",
     "promiscuous"           : "~0.6",

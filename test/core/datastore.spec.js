@@ -73,6 +73,33 @@ describe('Kinvey.DataStore', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
+    it('should return all documents, with field selection through a query.', function() {
+      var query = new Kinvey.Query().fields([ '_id' ]);
+      var promise = Kinvey.DataStore.find(this.collection, query).then(function(docs) {
+        expect(docs).to.be.an('array');
+        expect(docs).not.to.be.empty;
+
+        // Inspect array.
+        docs.forEach(function(doc) {
+          expect(doc).to.have.property('_id');
+          expect(doc).not.to.have.property('attribute');
+        });
+      });
+      return expect(promise).to.be.fulfilled;
+    });
+    it('should return all documents, with field selection through options.', function() {
+      var promise = Kinvey.DataStore.find(this.collection, null, { fields: [ '_id' ] });
+      return promise.then(function(docs) {
+        expect(docs).to.be.an('array');
+        expect(docs).not.to.be.empty;
+
+        // Inspect array.
+        docs.forEach(function(doc) {
+          expect(doc).to.have.property('_id');
+          expect(doc).not.to.have.property('attribute');
+        });
+      });
+    });
     it('should return all documents, with filter:attribute.', function() {
       var _this = this;
       var query = new Kinvey.Query().equalTo('attribute', this.doc.attribute);

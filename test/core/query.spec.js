@@ -22,7 +22,7 @@ describe('Kinvey.Query', function() {
   // Housekeeping: allow easy access to query properties.
   before(function() {
     var _this = this;
-    ['filter', 'sort', 'limit', 'skip'].forEach(function(name) {
+    ['fields', 'filter', 'sort', 'limit', 'skip'].forEach(function(name) {
       _this[name] = function() {
         return _this.query.toJSON()[name];
       };
@@ -30,7 +30,7 @@ describe('Kinvey.Query', function() {
   });
   after(function() {// Cleanup.
     var _this = this;
-    ['filter', 'sort', 'limit', 'skip'].forEach(function(name) {
+    ['fields', 'filter', 'sort', 'limit', 'skip'].forEach(function(name) {
       delete _this[name];
     });
   });
@@ -50,6 +50,11 @@ describe('Kinvey.Query', function() {
     // Test suite.
     it('should return a new query.', function() {
       expect(new Kinvey.Query()).to.be.an.instanceOf(Kinvey.Query);
+    });
+    it('should preseed fields if `options.fields` was set.', function() {
+      var fields = [ this.randomID(), this.randomID() ];
+      var query  = new Kinvey.Query({ fields: fields });
+      expect(query.toJSON().fields).to.deep.equal(fields);
     });
     it('should preseed filter if `options.filter` was set.', function() {
       var filter = { attribute: this.randomID() };
@@ -723,6 +728,30 @@ describe('Kinvey.Query', function() {
     });
     it('should return the query.', function() {
       var value = this.query.size(this.field, 10);
+      expect(value).to.equal(this.query);
+    });
+  });
+
+  // Kinvey.Query#fields.
+  describe('the fields method', function() {
+    // Test suite.
+    it('should throw on invalid arguments: fields.', function() {
+      var _this = this;
+      expect(function() {
+        _this.query.fields({});
+      }).to.Throw('type');
+    });
+    it('should set the fields.', function() {
+      var fields = [ this.randomID(), this.randomID() ];
+      this.query.fields(fields);
+      expect(this.fields()).to.deep.equal(fields);
+    });
+    it('should reset the fields.', function() {
+      this.query.fields([]);
+      expect(this.fields()).to.be.empty;
+    });
+    it('should return the query.', function() {
+      var value = this.query.fields([ this.randomID() ]);
       expect(value).to.equal(this.query);
     });
   });

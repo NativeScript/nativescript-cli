@@ -228,9 +228,12 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
       log('Using net persistence.');
     }
 
-    // Use net. If `options.refresh`, persist the response locally.
+    // Use net.
     var promise = Kinvey.Persistence.Net.read(request, options);
-    if(request.local.res && options.refresh) {
+
+    // If `options.refresh`, and field selection was *not* used, persist the response locally.
+    var fieldSelection = options.fields || (request.query && !isEmpty(request.query._fields));
+    if(request.local.res && options.refresh && !fieldSelection) {
       return promise.then(function(response) {
         // Debug.
         if(KINVEY_DEBUG) {

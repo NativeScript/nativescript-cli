@@ -37,6 +37,14 @@ Kinvey.Query = function(options) {
   options = options || {};
 
   /**
+   * Fields to select.
+   *
+   * @private
+   * @type {Array}
+   */
+  this._fields = options.fields || [];
+
+  /**
    * The MongoDB query.
    *
    * @private
@@ -518,6 +526,32 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
   // Modifiers.
 
   /**
+   * Sets the fields to select.
+   *
+   * @param {Array} fields Fields to select.
+   * @throws {Kinvey.Error} `fields` must be of type: `Array`.
+   * @returns {Kinvey.Query} The query.
+   */
+  fields: function(fields) {
+    // Cast arguments.
+    fields = fields || [ ];
+
+    // Validate arguments.
+    if(!isArray(fields)) {
+      throw new Kinvey.Error('fields argument must be of type: Array.');
+    }
+
+    // Set fields on the top-level query.
+    if(null !== this._parent) {
+      this._parent.fields(fields);
+    }
+    else {
+      this._fields = fields;
+    }
+    return this;
+  },
+
+  /**
    * Sets the number of documents to select.
    *
    * @param {number} [limit] Limit.
@@ -647,6 +681,7 @@ Kinvey.Query.prototype = /** @lends Kinvey.Query# */{
 
     // Return set of parameters.
     return {
+      fields : this._fields,
       filter : this._filter,
       sort   : this._sort,
       skip   : this._skip,
