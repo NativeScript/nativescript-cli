@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.8-snapshot
+* #2859: add `Kinvey.User.loginWithProvider` and `Kinvey.User.signupWithProvider` methods.
+
 ## 1.1.7 (2014-03-05)
 * #3165: add support for field selection.
 

@@ -102,6 +102,52 @@ describe('Kinvey.User', function() {
     }));
   });
 
+  // Kinvey.User.signupWithProvider.
+  describe('the signupWithProvider method', function() {
+    afterEach(function() {
+      if(Kinvey.User.signup.restore) {// Restore.
+        Kinvey.User.signup.restore();
+      }
+      Kinvey.setActiveUser(null);// Cleanup.
+    });
+
+    // Tests.
+    it('should forward to the signup method.', function() {
+      var stub = sinon.stub(Kinvey.User, 'signup', function() {
+        return Kinvey.Defer.resolve();
+      });
+      var promise = Kinvey.User.signupWithProvider(this.randomID(), { });
+      return promise.then(function() {
+        expect(stub).to.be.calledOnce;
+      });
+    });
+    it('should fail when there is already an active user.', function() {
+      // Mock the active user.
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
+
+      var spy = sinon.spy();
+      var promise = Kinvey.User.signupWithProvider(this.randomID(), { }, { error: spy });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        expect(spy).to.be.calledOnce;
+      });
+    });
+    it('should support both deferreds and callbacks on success.', Common.success(function(options) {
+      sinon.stub(Kinvey.User, 'signup', function() {
+        options.success(null);
+        return Kinvey.Defer.resolve(null);
+      });
+      return Kinvey.User.signupWithProvider(this.randomID(), { }, options);
+    }));
+    it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });// Force failure.
+      return Kinvey.User.signupWithProvider(this.randomID(), { }, options);
+    }));
+  });
+
   // Kinvey.User.login.
   describe('the login method', function() {
     // Housekeeping: create test user.
@@ -171,6 +217,51 @@ describe('Kinvey.User', function() {
     }));
     it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
       return Kinvey.User.login(this.randomID(), this.randomID(), options);
+    }));
+  });
+
+  // Kinvey.User.loginWithProvider.
+  describe('the loginWithProvider method', function() {
+    afterEach(function() {
+      if(Kinvey.User.login.restore) {// Restore.
+        Kinvey.User.login.restore();
+      }
+      Kinvey.setActiveUser(null);// Cleanup.
+    });
+
+    // Tests.
+    it('should forward to the login method.', function() {
+      var stub = sinon.stub(Kinvey.User, 'login', function() {
+        return Kinvey.Defer.resolve();
+      });
+      var promise = Kinvey.User.loginWithProvider(this.randomID(), { });
+      return promise.then(function() {
+        expect(stub).to.be.calledOnce;
+      });
+    });
+    it('should fail when there is already an active user.', function() {
+      // Mock the active user.
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
+
+      var spy = sinon.spy();
+      var promise = Kinvey.User.loginWithProvider(this.randomID(), { }, { error: spy });
+      return promise.then(function() {
+        // We should not reach this code branch.
+        return expect(promise).to.be.rejected;
+      }, function(error) {
+        expect(error).to.have.property('name', Kinvey.Error.ALREADY_LOGGED_IN);
+        expect(spy).to.be.calledOnce;
+      });
+    });
+    it('should support both deferreds and callbacks on success.', Common.success(function(options) {
+      sinon.stub(Kinvey.User, 'login', function() {
+        options.success(null);
+        return Kinvey.Defer.resolve(null);
+      });
+      return Kinvey.User.loginWithProvider(this.randomID(), { }, options);
+    }));
+    it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
+      return Kinvey.User.loginWithProvider(this.randomID(), { }, options);
     }));
   });
 

@@ -48,6 +48,28 @@ Kinvey.User = /** @lends Kinvey.User */{
   },
 
   /**
+   * Signs up a new user through a provider.
+   *
+   * @param {string} provider  Provider.
+   * @param {Object} tokens    Tokens.
+   * @param {Object} [options] Options.
+   * @returns {Promise} The active user.
+   */
+  signupWithProvider: function(provider, tokens, options) {
+    // Debug.
+    if(KINVEY_DEBUG) {
+      log('Signing up a new user with a provider.', arguments);
+    }
+
+    // Parse tokens.
+    var data = { _socialIdentity: { } };
+    data._socialIdentity[provider] = tokens;
+
+    // Forward to `Kinvey.User.signup`.
+    return Kinvey.User.signup(data, options);
+  },
+
+  /**
    * Logs in an existing user.
    * NOTE If `options._provider`, this method should trigger a BL script.
    *
@@ -113,10 +135,32 @@ Kinvey.User = /** @lends Kinvey.User */{
   },
 
   /**
+   * Logs in an existing user through a provider.
+   *
+   * @param {string} provider  Provider.
+   * @param {Object} tokens    Tokens.
+   * @param {Object} [options] Options.
+   * @returns {Promise} The active user.
+   */
+  loginWithProvider: function(provider, tokens, options) {
+    // Debug.
+    if(KINVEY_DEBUG) {
+      log('Logging in with a provider.', arguments);
+    }
+
+    // Parse tokens.
+    var data = { _socialIdentity: { } };
+    data._socialIdentity[provider] = tokens;
+
+    // Forward to `Kinvey.User.login`.
+    return Kinvey.User.login(data, options);
+  },
+
+  /**
    * Logs out the active user.
    *
    * @param {Options} [options] Options.
-   * @param {boolean] [options.force=false] Reset the active user even if an
+   * @param {boolean} [options.force=false] Reset the active user even if an
    *          `InvalidCredentials` error is returned.
    * @param {boolean} [options.silent=false] Succeed when there is no active
    *          user.
