@@ -143,7 +143,7 @@ describe('Kinvey.User', function() {
       return Kinvey.User.signupWithProvider(this.randomID(), { }, options);
     }));
     it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
-      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });// Force failure.
+      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });// Fail.
       return Kinvey.User.signupWithProvider(this.randomID(), { }, options);
     }));
   });

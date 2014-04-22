@@ -2,6 +2,8 @@
 
 ## 1.1.8-snapshot
 * #2859: add `Kinvey.User.loginWithProvider` and `Kinvey.User.signupWithProvider` methods.
+* Bugfix: `maxAge` on query-level now overrides the document `maxAge`.
+* Enhancement: Adjusted offline storage limit to 5MB as calculated by Safari.
 
 ## 1.1.7 (2014-03-05)
 * #3165: add support for field selection.

@@ -127,7 +127,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
     }
     return promise.then(function(response) {
       // Force refresh is maxAge of response data was exceeded.
-      var status = maxAge.status(response);
+      var status = maxAge.status(response, options.maxAge);
       if(false === status && Kinvey.Sync.isOnline()) {
         options.offline = false;// Force using network.
         return Kinvey.Persistence.read(request, options);
