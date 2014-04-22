@@ -714,26 +714,26 @@ describe('Kinvey.DataStore', function() {
       var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: -1 });
       return promise.then(function(netResponse) {
         return Kinvey.Sync.offline().then(function() {
-          promise = Kinvey.DataStore.get(_this.collection, netResponse._id, { offline: true });
-          return promise.then(function(localResponse) {
+          return Kinvey.DataStore.get(_this.collection, netResponse._id, {
+            offline: true
+          }).then(function(localResponse) {
             // Document should not have been refreshed.
             expect(netResponse._kmd.lastRefreshedAt).to.equal(localResponse._kmd.lastRefreshedAt);
           });
         });
       });
     });
-    it('should update local persistence if expired.', function() {
-      var maxAge  = 3600;
+    it('should use local persistence if expired but maxAge overriden by query.', function() {
+      var maxAge  = -1;
       var _this   = this;
-      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: -1 });
+      var promise = Kinvey.DataStore.save(this.collection, { }, { maxAge: maxAge });
       return promise.then(function(netResponse) {
-        promise = Kinvey.DataStore.get(_this.collection, netResponse._id, {
-          maxAge  : maxAge,
+        return Kinvey.DataStore.get(_this.collection, netResponse._id, {
+          maxAge  : 3600,
           offline : true
-        });
-        return promise.then(function(localResponse) {
+        }).then(function(localResponse) {
           expect(localResponse).to.have.deep.property('_kmd.maxAge', maxAge);
-          expect(netResponse._kmd.lastRefreshedAt).not.to.equal(localResponse._kmd.lastRefreshedAt);
+          expect(netResponse._kmd.lastRefreshedAt).to.equal(localResponse._kmd.lastRefreshedAt);
         });
       });
     });
