@@ -73,7 +73,7 @@ var AngularHTTP = {
      (null != root.ArrayBuffer && body instanceof root.ArrayBuffer) ||
      (null != root.Blob        && body instanceof root.Blob)
     )) {
-      body = JSON.stringify(body);
+      body = null != angular.toJson ? angular.toJson(body) : JSON.stringify(body)
     }
 
     return $http({
