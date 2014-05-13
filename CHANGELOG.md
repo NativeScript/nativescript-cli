@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.8-snapshot
+## 1.1.8 (2014-05-14)
 * #2859: add `Kinvey.User.loginWithProvider` and `Kinvey.User.signupWithProvider` methods.
 * #3223: use `angular.toJson` instead of `JSON.stringify` so properties starting with `$` are excluded.
 * Bugfix: `maxAge` on query-level now overrides the document `maxAge`.
