@@ -1,0 +1,3 @@
+[submodule "lib/common"]
+	path = lib/common
+	url = /c/work/mobile-cli-lib.git
