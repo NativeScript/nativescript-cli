@@ -26,12 +26,8 @@ scratch/
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/watcherTasks.xml
-
+.idea/
 test-reports.xml
 
 npm-debug.log
 node_modules
-resources/App_Resources
-resources/Cordova
-resources/ItemTemplates
-resources/ProjectTemplates

@@ -1,4 +1,5 @@
-global._ = require("underscore");
-global.$injector = require("./common/lib/yok").injector;
+require("./common/bootstrap");
 
 $injector.require("nativescript-cli", "./nativescript-cli");
+
+$injector.requireCommand("create", "./commands/create-project-command");
