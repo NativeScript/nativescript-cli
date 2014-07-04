@@ -1,9 +1,11 @@
 ///<reference path="../.d.ts"/>
 
 export class CreateProjectCommand implements ICommand {
+	constructor(private $projectService: IProjectService) { }
+
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-
+			this.$projectService.createProject(args[0], args[1], JSON.parse(args[2])).wait();
 		}).future<void>()();
 	}
 }

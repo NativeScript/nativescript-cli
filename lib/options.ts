@@ -8,6 +8,8 @@ var knownOpts:any = {
 		"log" : String,
 		"verbose" : Boolean,
 		"path" : String,
+		"copy-from": String,
+		"link-to": String,
 		"version": Boolean,
 		"help": Boolean
 	},
