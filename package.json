@@ -23,11 +23,15 @@
   	],
 	"dependencies": {
 		"fibers": "https://github.com/icenium/node-fibers/tarball/master",
+		"filesize": "2.0.3",
+		"progress-stream": "0.5.0",
 		"log4js": "0.6.9",
+		"osenv": "0.1.0",
 		"tabtab": "https://github.com/tailsu/node-tabtab/tarball/master",
 		"underscore": "1.5.2",
 		"unzip": "0.1.9",
-		"yargs": "1.2.2"
+		"yargs": "1.2.2",
+		"npm": "1.4.10"
 	},
 	"analyze": true,
 	"devDependencies": {
