@@ -1,37 +1,48 @@
+///<reference path="../.d.ts"/>
+
 import path = require("path");
 import options = require("./../options");
 
 export class ProjectService implements IProjectService {
-	private static DEFAULT_ID = "com.tns.helloNativeScript";
-	private static DEFAULT_NAME = "HelloNativeScript";
+	private static DEFAULT_ID = "com.telerik.tns.Cuteness";
+	private static DEFAULT_NAME = "Cuteness";
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
-		private $fs: IFileSystem) { }
+		private $fs: IFileSystem,
+		private $cutenessService: ICutenessService) { }
 
-	public createProject(projectId: string, projectName: string, projectConfig?: IProjectConfig): IFuture<void> {
+	public createProject(projectDir: string, projectId: string, projectName: string, projectConfig?: IProjectConfig): IFuture<void> {
 		return(() => {
-			var projectDir = path.resolve(options.path || ".");
+			if(!projectDir) {
+				this.$errors.fail("At least the project directory must be provided to create new project");
+			}
+
+			projectDir = projectDir || path.resolve(options.path || ".");
 
 			projectId = projectId || ProjectService.DEFAULT_ID;
 			projectName = projectName || ProjectService.DEFAULT_NAME;
-			projectConfig = projectConfig || {};
+			projectConfig = projectConfig;
 
-			projectConfig.customAppPath = path.resolve(this.getCustomAppPath());
+			var customAppPath = this.getCustomAppPath();
+			if(customAppPath) {
+				projectConfig.customAppPath = path.resolve(customAppPath);
+			}
 
-			this.$logger.trace("Creating a new NativeScript project with name %s and id at location", projectName, projectId, projectDir);
-
-			if(this.$fs.exists(projectDir).wait() && !this.isEmptyDir(projectDir)) {
+			if(this.$fs.exists(projectDir).wait() && !this.isEmptyDir(projectDir).wait()) {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
 
-			if(projectConfig.customAppPath) {
+			this.$logger.trace("Creating a new NativeScript project with name %s and id at location", projectName, projectId, projectDir);
 
+			if(projectConfig.customAppPath) {
+				// TODO:
 			} else {
-				// No custom app - use hello-world application
-				this.$logger.trace("Using NativeScript hello-world application");
+				// No custom app - use Cuteness application
+				this.$logger.trace("Using NativeScript Cuteness application");
+				var cutenessAppPath = this.$cutenessService.cutenessAppPath.wait();
 			}
-		}).future<void>();
+		}).future<void>()();
 	}
 
 	private getCustomAppPath(): string {
@@ -40,9 +51,10 @@ export class ProjectService implements IProjectService {
 			if(customAppPath.indexOf("http") >= 0) {
 				this.$errors.fail("Only local paths for custom app assets are supported.");
 			}
-		}
-		if(customAppPath.substr(0, 1) === '~') {
-			customAppPath = path.join(process.env.HOME, customAppPath.substr(1));
+
+			if(customAppPath.substr(0, 1) === '~') {
+				customAppPath = path.join(process.env.HOME, customAppPath.substr(1));
+			}
 		}
 
 		return customAppPath;
@@ -55,3 +67,4 @@ export class ProjectService implements IProjectService {
 		}).future<boolean>()();
 	}
 }
+$injector.register("projectService", ProjectService);
