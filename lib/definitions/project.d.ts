@@ -1,11 +1,7 @@
 interface IProjectService {
-	createProject(projectDir: string, projectId: string, projectName: string, projectConfig?: IProjectConfig): IFuture<void>;
-}
-
-interface IProjectConfig {
-	customAppPath: string;
+	createProject(projectName: string, projectId: string): IFuture<void>;
 }
 
 interface ICutenessService {
-	cutenessAppPath: IFuture<string>;
+	cutenessPath: IFuture<string>;
 }
