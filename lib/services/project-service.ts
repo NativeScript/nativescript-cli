@@ -12,7 +12,7 @@ export class ProjectService implements IProjectService {
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $cutenessService: ICutenessService) { }
+		private $projectTemplatesService: IProjectTemplatesService) { }
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
@@ -52,9 +52,9 @@ export class ProjectService implements IProjectService {
 			} else {
 				// No custom app - use Cuteness application
 				this.$logger.trace("Using NativeScript Cuteness application");
-				var cutenessPath = this.$cutenessService.cutenessPath.wait();
+				var defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
 				this.$logger.trace("Copying Cuteness application into %s", appDirectory);
-				appPath = cutenessPath;
+				appPath = defaultTemplatePath;
 			}
 
 			this.createProjectCore(projectDir, appPath, false).wait();

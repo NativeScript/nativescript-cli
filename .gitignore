@@ -23,9 +23,6 @@ pids
 logs
 results
 scratch/
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/watcherTasks.xml
 .idea/
 test-reports.xml
 
