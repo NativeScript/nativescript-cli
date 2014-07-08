@@ -3,6 +3,7 @@
 import path = require("path");
 import options = require("./../options");
 import shell = require("shelljs");
+import osenv = require("osenv");
 
 export class ProjectService implements IProjectService {
 	private static DEFAULT_ID = "com.telerik.tns.Cuteness";
@@ -93,7 +94,7 @@ export class ProjectService implements IProjectService {
 			}
 
 			if(customAppPath.substr(0, 1) === '~') {
-				customAppPath = path.join(process.env.HOME, customAppPath.substr(1));
+				customAppPath = path.join(osenv.home(), customAppPath.substr(1));
 			}
 		}
 

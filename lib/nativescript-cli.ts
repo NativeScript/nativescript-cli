@@ -10,11 +10,10 @@ require("./options");
 import errors = require("./common/errors");
 errors.installUncaughtExceptionListener();
 
-$injector.register("config", {});
+$injector.register("config", {"CI_LOGGER": false});
 
 var fiber = Fiber(() => {
 	var commandDispatcher = $injector.resolve("commandDispatcher");
-	commandDispatcher.setConfiguration({"CI_LOGGER": false});
 
 	if (process.argv[2] === "completion") {
 		commandDispatcher.completeCommand();
