@@ -1,9 +1,11 @@
 {
-	"name": "nativescript-cli",
+	"name": "nativescript",
+	"preferGlobal": true,
 	"version": "0.1.0",
 	"author": "Telerik <support@telerik.com>",
 	"description": "Command-line interface for building NativeScript projects",
 	"bin": {
+		"tns": "./bin/nativescript.js",
 		"nativescript": "./bin/nativescript.js"
 	},
 	"main": "./lib/nativescript-cli.js",
@@ -16,11 +18,9 @@
 	},
 	"keywords": [
 		"nativescript",
-		"appbuilder",
 		"telerik",
 		"mobile"
   	],
-	"license": "Apache2.0",
 	"dependencies": {
 		"fibers": "https://github.com/icenium/node-fibers/tarball/master",
 		"log4js": "0.6.9",

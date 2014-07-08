@@ -14,7 +14,6 @@ module.exports = function(grunt) {
 	grunt.initConfig({
 		copyPackageTo: "\\\\telerik.com\\Resources\\BlackDragon\\Builds\\nativescript-cli",
 
-		deploymentEnvironment: process.env["DeploymentEnvironment"] || "local",
 		jobName: process.env["JOB_NAME"] || "local",
 		buildNumber: process.env["BUILD_NUMBER"] || "non-ci",
 		dateString: now.substr(0, now.indexOf("T")),
@@ -84,11 +83,11 @@ module.exports = function(grunt) {
 		copy: {
 			package_to_drop_folder: {
 				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/<%= deploymentEnvironment %>/<%= dateString %> #<%= buildNumber %>/"
+				dest: "<%= copyPackageTo %>/<%= jobName %>/<%= dateString %> #<%= buildNumber %>/"
 			},
 			package_to_qa_drop_folder: {
 				src: "*.tgz",
-				dest: "<%= copyPackageTo %>/<%= jobName %>/<%= deploymentEnvironment %>/nativescript.tgz"
+				dest: "<%= copyPackageTo %>/<%= jobName %>/nativescript.tgz"
 			}
 		},
 
@@ -121,10 +120,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("pack", [
 		"clean",
 		"ts:release_build",
-		"shell:prepare_resources",
 
-		"shell:apply_deployment_environment",
-		"shell:ci_unit_tests",
+		//"shell:ci_unit_tests",
 
 		"set_package_version",
 		"shell:build_package",
