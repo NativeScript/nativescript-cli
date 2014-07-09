@@ -6,7 +6,7 @@ import shell = require("shelljs");
 import osenv = require("osenv");
 
 export class ProjectService implements IProjectService {
-	private static DEFAULT_ID = "com.telerik.tns.Cuteness";
+	private static DEFAULT_ID = "com.telerik.tns.HelloWorld";
 	private static DEFAULT_NAME = "HelloNativescript";
 	private static APP_FOLDER_NAME = "app";
 
@@ -51,10 +51,10 @@ export class ProjectService implements IProjectService {
 				this.$logger.trace("Copying custom app into %s", appDirectory);
 				appPath = customAppPath;
 			} else {
-				// No custom app - use Cuteness application
-				this.$logger.trace("Using NativeScript Cuteness application");
+				// No custom app - use nativescript hello world application
+				this.$logger.trace("Using NativeScript hello world application");
 				var defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
-				this.$logger.trace("Copying Cuteness application into %s", appDirectory);
+				this.$logger.trace("Copying Nativescript hello world application into %s", appDirectory);
 				appPath = defaultTemplatePath;
 			}
 

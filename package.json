@@ -30,7 +30,9 @@
 		"tabtab": "https://github.com/tailsu/node-tabtab/tarball/master",
 		"underscore": "1.5.2",
 		"unzip": "0.1.9",
-		"yargs": "1.2.2"
+		"yargs": "1.2.2",
+		"npm": "1.5.0-alpha-1",
+		"tarball-extract": "0.0.2"
 	},
 	"analyze": true,
 	"devDependencies": {
