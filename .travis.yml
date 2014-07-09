@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+  - "0.10"
+before_install:
+  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+  - git submodule update --init --recursive
+  - npm install -g grunt-cli
+install:
+  - npm install
+  - grunt pack --no-color
+script:
+  - exit 0
+git:
+  submodules: false

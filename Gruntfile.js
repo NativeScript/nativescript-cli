@@ -10,12 +10,15 @@ function shallowCopy(obj) {
 	return result;
 }
 
+var travis = process.env["TRAVIS"];
+var buildNumber = process.env["TRAVIS_BUILD_NUMBER"] || process.env["BUILD_NUMBER"] || "non-ci";
+
 module.exports = function(grunt) {
 	grunt.initConfig({
-		copyPackageTo: "\\\\telerik.com\\Resources\\BlackDragon\\Builds\\nativescript-cli",
+		copyPackageTo: process.env["CopyPackageTo"] || process.env["HOME"] || ".",
 
-		jobName: process.env["JOB_NAME"] || "local",
-		buildNumber: process.env["BUILD_NUMBER"] || "non-ci",
+		jobName: travis ? "travis" : (process.env["JOB_NAME"] || "local"),
+		buildNumber: buildNumber,
 		dateString: now.substr(0, now.indexOf("T")),
 
 		pkg: grunt.file.readJSON("package.json"),
@@ -104,7 +107,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask("set_package_version", function(version) {
 		var fs = require("fs");
-		var buildVersion = version !== undefined ? version : process.env["BUILD_NUMBER"];
+		var buildVersion = version !== undefined ? version : buildNumber;
 		if (process.env["BUILD_CAUSE_GHPRBCAUSE"]) {
 			buildVersion = "PR" + buildVersion;
 		}
