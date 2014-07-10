@@ -1,14 +1,31 @@
 language: node_js
 node_js:
-  - "0.10"
+- "0.10"
 before_install:
-  - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-  - git submodule update --init --recursive
-  - npm install -g grunt-cli
+- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
+- npm install -g grunt-cli
 install:
-  - npm install
-  - grunt pack --no-color
+- npm install
+- grunt pack --no-color
 script:
-  - exit 0
+- true
 git:
   submodules: false
+deploy:
+- provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: eUmm52zfs68StxqUkPWuuNa85vBrlYmjuRw4FR8kZSyBWKkCySU8xuZVRpxLdqE3VRAsORsP2Ggf4UKqDM4BtTNl0lZGLeyT2OuL/9AB1r/IqzylLI2xAmibboLktFL4BQL8uqWnBkyYHSC0Ufv7C8poXdbyubLrSMuP9hRBy/0=
+  file: travis/nativescript.tgz
+  on:
+    repo: NativeScript/nativescript-cli
+    branch: build
+- provider: npm
+  email: tailsu@gmail.com
+  api_key:
+    secure: bkQQ08amb+PvPHzDOsv7fH4mYSvEI4ow2FNbf5QpiptSW6qLukFJHn6SbaioIYpIq+UsP73X3V5t/QY0F9RaKGfT5GNyoT5BVaTwxBE0uTVXICFtMi/sgeN/uzQYNnLCTbkMzbJ2uYVacAWzJm//padv++RIS0ao9AIWEao90QA=
+  on:
+    tags: true
+    repo: NativeScript/nativescript-cli
+    all_branches: true

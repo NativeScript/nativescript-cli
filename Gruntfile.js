@@ -15,7 +15,7 @@ var buildNumber = process.env["TRAVIS_BUILD_NUMBER"] || process.env["BUILD_NUMBE
 
 module.exports = function(grunt) {
 	grunt.initConfig({
-		copyPackageTo: process.env["CopyPackageTo"] || process.env["HOME"] || ".",
+		copyPackageTo: process.env["CopyPackageTo"] || ".",
 
 		jobName: travis ? "travis" : (process.env["JOB_NAME"] || "local"),
 		buildNumber: buildNumber,
