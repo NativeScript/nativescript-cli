@@ -15,6 +15,13 @@ export class ProjectService implements IProjectService {
 		private $fs: IFileSystem,
 		private $projectTemplatesService: IProjectTemplatesService) { }
 
+	public get projectData(): IProjectData {
+		return {
+			projectDir: "",
+			platformsDir: ""
+		};
+	}
+
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
 			var projectDir = path.resolve(options.path || ".");
@@ -60,6 +67,18 @@ export class ProjectService implements IProjectService {
 
 			this.createProjectCore(projectDir, appPath, false).wait();
 		}).future<void>()();
+	}
+
+	public createAndroidProject(projectName: string): Future<any> {
+		return (() => {
+
+		}).future<any>()();
+	}
+
+	public createiOSProject(projectName: string): Future<any> {
+		return (() => {
+
+		}).future<any>()();
 	}
 
 	private createProjectCore(projectDir: string, appPath: string, symlink?: boolean): IFuture<void> {
