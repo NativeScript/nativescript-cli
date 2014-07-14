@@ -1,8 +1,8 @@
 interface IPlatformService {
-    addPlatforms(platforms: string[]): Future<any>;
+    addPlatforms(platforms: string[]): IFuture<any>;
 }
 
 interface IPlatformCapabilities {
-    targetedOS: string[];
+    targetedOS?: string[];
     frameworkUrl: string;
 }
