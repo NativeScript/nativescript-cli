@@ -212,10 +212,8 @@ class AndroidProjectService implements IAndroidProjectService {
 			shell.cp("-r", path.join(this.frameworkDir, "libs"), projectDir);
 			shell.cp("-r", path.join(this.frameworkDir, "res"), projectDir);
 
-			shell.cp("-f", path.join(this.frameworkDir, ".classpath"), projectDir);
 			shell.cp("-f", path.join(this.frameworkDir, ".project"), projectDir);
 			shell.cp("-f", path.join(this.frameworkDir, "AndroidManifest.xml"), projectDir);
-			shell.cp("-f", path.join(this.frameworkDir, "project.properties"), projectDir);
 
 			// Interpolate the activity name and package
 			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, 'res', 'values', 'strings.xml'));
@@ -226,7 +224,17 @@ class AndroidProjectService implements IAndroidProjectService {
 			// Copy app into assets
 			shell.cp("-r", path.join(projectData.projectDir, ProjectService.APP_FOLDER_NAME), path.join(projectDir, "assets"));
 
+			this.runAndroidUpdate(projectDir, targetApi).wait();
+
+			this.$logger.out("Project successfully created.");
+
 		}).future<any>()();
+	}
+
+	private runAndroidUpdate(projectPath: string, targetApi): IFuture<void> {
+		return (() => {
+			this.$childProcess.exec("android update project --subprojects --path " + projectPath + " --target " +  targetApi).wait();
+		}).future<void>()();
 	}
 
 	private validatePackageName(packageName: string): boolean {
