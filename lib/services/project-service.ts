@@ -192,11 +192,13 @@ class AndroidProjectService implements IAndroidProjectService {
 			var packageName = projectData.projectId;
 			var packageAsPath = packageName.replace(/\./g, path.sep);
 
-			var targetApi = this.getTargetApi();
+			var targetApi = this.getTarget();
 			var manifestFile = path.join(this.frameworkDir, "AndroidManifest.xml");
 
 			this.validatePackageName(packageName);
 			this.validateProjectName(projectData.projectName);
+
+			this.checkRequirements().wait();
 
 		}).future<any>()();
 	}
@@ -234,7 +236,7 @@ class AndroidProjectService implements IAndroidProjectService {
 		return path.join(__dirname, "../../framework", "android");
 	}
 
-	private getTargetApi(): string {
+	private getTarget(): string {
 		var projectPropertiesFilePath = path.join(this.frameworkDir, "project.properties");
 		if(this.$fs.exists(projectPropertiesFilePath).wait()) {
 			var target = shell.grep(/target=android-[\d+]/, projectPropertiesFilePath);
@@ -246,10 +248,54 @@ class AndroidProjectService implements IAndroidProjectService {
 
 	private checkAnt(): IFuture<boolean> {
 		return (() => {
+			try {
+				this.$childProcess.exec("ant -version").wait();
+			} catch(error) {
+				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.")
+			}
 			return true;
 		}).future<boolean>()();
 	}
-}
+
+	private checkJava(): IFuture<boolean> {
+		return (() => {
+			try {
+				this.$childProcess.exec("java -version").wait();
+			} catch(error) {
+				this.$errors.fail("%s\n Failed to run 'java', make sure your java environment is set up.\n Including JDK and JRE.\n Your JAVA_HOME variable is %s", error, process.env.JAVA_HOME);
+			}
+			return true;
+		}).future<boolean>()();
+	}
+
+	private checkAndroid(): IFuture<boolean> {
+		return (() => {
+			var validTarget = this.getTarget();
+			try {
+				var output = this.$childProcess.exec('android list targets').wait();
+			} catch(error) {
+				if (error.match(/command\snot\sfound/)) {
+					this.$errors.fail("The command \"android\" failed. Make sure you have the latest Android SDK installed, and the \"android\" command (inside the tools/ folder) is added to your path.");
+				} else {
+					this.$errors.fail("An error occurred while listing Android targets");
+				}
+			}
+
+			if (!output.match(validTarget)) {
+				this.$errors.fail("Please install Android target %s the Android newest SDK). Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
+					validTarget.split('-')[1]);
+			}
+
+			return true;
+		}).future<boolean>()();
+	}
+
+	private checkRequirements(): IFuture<boolean> {
+		return (() => {
+			return this.checkAnt().wait() && this.checkAndroid().wait() && this.checkJava().wait();
+		}).future<boolean>()();
+	}
+ }
 $injector.register("androidProjectService", AndroidProjectService);
 
 class iOSProjectService implements  IiOSProjectService {
