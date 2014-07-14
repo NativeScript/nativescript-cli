@@ -182,18 +182,51 @@ $injector.register("projectService", ProjectService);
 
 class AndroidProjectService implements IAndroidProjectService {
 	constructor(private $fs: IFileSystem,
-		private $childProcess: IChildProcess) { }
+		private $childProcess: IChildProcess,
+		private $errors: IErrors,
+		private $logger: ILogger) { }
 
 	public createProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
 			var safeActivityName = projectData.projectName.replace(/\W/g, '');
-			var packageAsPath = projectData.projectId.replace(/\./g, path.sep);
+			var packageName = projectData.projectId;
+			var packageAsPath = packageName.replace(/\./g, path.sep);
 
 			var targetApi = this.getTargetApi();
 			var manifestFile = path.join(this.frameworkDir, "AndroidManifest.xml");
-			console.log(projectData);
+
+			this.validatePackageName(packageName);
+			this.validateProjectName(projectData.projectName);
 
 		}).future<any>()();
+	}
+
+	private validatePackageName(packageName: string): boolean {
+		//Make the package conform to Java package types
+		//Enforce underscore limitation
+		if (!/^[a-zA-Z]+(\.[a-zA-Z0-9][a-zA-Z0-9_]*)+$/.test(packageName)) {
+			this.$errors.fail("Package name must look like: com.company.Name");
+		}
+
+		//Class is a reserved word
+		if(/\b[Cc]lass\b/.test(packageName)) {
+			this.$errors.fail("class is a reserved word");
+		}
+
+		return true;
+	}
+
+	private validateProjectName(projectName: string): boolean {
+		if (projectName === '') {
+			this.$errors.fail("Project name cannot be empty");
+		}
+
+		//Classes in Java don't begin with numbers
+		if (/^[0-9]/.test(projectName)) {
+			this.$errors.fail("Project name must not begin with a number");
+		}
+
+		return true;
 	}
 
 	private get frameworkDir(): string {
