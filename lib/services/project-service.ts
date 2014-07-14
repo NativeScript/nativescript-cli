@@ -8,7 +8,7 @@ import osenv = require("osenv");
 export class ProjectService implements IProjectService {
 	private static DEFAULT_PROJECT_ID = "com.telerik.tns.HelloWorld";
 	private static DEFAULT_PROJECT_NAME = "HelloNativescript";
-	private static APP_FOLDER_NAME = "app";
+	public static APP_FOLDER_NAME = "app";
 	private static PROJECT_FRAMEWORK_DIR = "framework";
 
 	private cachedProjectDir: string = "";
@@ -188,17 +188,43 @@ class AndroidProjectService implements IAndroidProjectService {
 
 	public createProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
-			var safeActivityName = projectData.projectName.replace(/\W/g, '');
 			var packageName = projectData.projectId;
-			var packageAsPath = packageName.replace(/\./g, path.sep);
+			var projectDir = path.join(projectData.projectDir, "platforms", "android");
 
 			var targetApi = this.getTarget();
-			var manifestFile = path.join(this.frameworkDir, "AndroidManifest.xml");
 
 			this.validatePackageName(packageName);
 			this.validateProjectName(projectData.projectName);
 
 			this.checkRequirements().wait();
+
+			// Log the values for project
+			this.$logger.trace("Creating NativeScript project for the Android platform");
+			this.$logger.trace("Path: %s", projectData.projectDir);
+			this.$logger.trace("Package: %s", projectData.projectId);
+			this.$logger.trace("Name: %s", projectData.projectName);
+			this.$logger.trace("Android target: %s", targetApi);
+
+			this.$logger.out("Copying template files...");
+
+			shell.cp("-r", path.join(this.frameworkDir, "assets"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "gen"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "libs"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "res"), projectDir);
+
+			shell.cp("-f", path.join(this.frameworkDir, ".classpath"), projectDir);
+			shell.cp("-f", path.join(this.frameworkDir, ".project"), projectDir);
+			shell.cp("-f", path.join(this.frameworkDir, "AndroidManifest.xml"), projectDir);
+			shell.cp("-f", path.join(this.frameworkDir, "project.properties"), projectDir);
+
+			// Interpolate the activity name and package
+			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, 'res', 'values', 'strings.xml'));
+			shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, path.join(projectDir, 'res', 'values', 'strings.xml'));
+			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, '.project'));
+			shell.sed('-i', /__PACKAGE__/, packageName, path.join(projectDir, "AndroidManifest.xml"));
+
+			// Copy app into assets
+			shell.cp("-r", path.join(projectData.projectDir, ProjectService.APP_FOLDER_NAME), path.join(projectDir, "assets"));
 
 		}).future<any>()();
 	}
