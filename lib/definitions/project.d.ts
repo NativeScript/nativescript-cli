@@ -2,7 +2,7 @@ interface IProjectService {
 	createProject(projectName: string, projectId: string): IFuture<void>;
 	createPlatformSpecificProject(platform: string): IFuture<void>;
 	ensureProject(): void;
-    projectData: IProjectData;
+	projectData: IProjectData;
 }
 
 interface IAndroidProjectService {
@@ -14,8 +14,8 @@ interface IiOSProjectService {
 }
 
 interface IProjectData {
-    projectDir: string;
-    platformsDir: string;
+	projectDir: string;
+	platformsDir: string;
 	projectFilePath: string;
 	projectId?: string;
 	projectName?: string;
