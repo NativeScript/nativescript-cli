@@ -1,7 +1,7 @@
 interface IProjectService {
 	createProject(projectName: string, projectId: string): IFuture<void>;
 	createPlatformSpecificProject(platform: string): IFuture<void>;
-	prepareProject(platform: string): IFuture<void>;
+	prepareProject(platform: string, platforms: string[]): IFuture<void>;
 	buildProject(platform: string): IFuture<void>;
 	ensureProject(): void;
 	projectData: IProjectData;
@@ -9,7 +9,6 @@ interface IProjectService {
 
 interface IAndroidProjectService {
 	createProject(projectData: IProjectData): IFuture<void>;
-	prepareProject(projectData: IProjectData): IFuture<void>;
 	buildProject(projectData: IProjectData): IFuture<void>;
 }
 

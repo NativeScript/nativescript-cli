@@ -1,13 +1,10 @@
 ///<reference path="../.d.ts"/>
 
 import path = require("path");
+import util = require("util");
 import helpers = require("./../common/helpers");
 
 export class PlatformService implements IPlatformService {
-	constructor(private $errors: IErrors,
-		private $fs: IFileSystem,
-		private $projectService: IProjectService) { }
-
 	private platformCapabilities: { [key: string]: IPlatformCapabilities } = {
 		ios: {
 			targetedOS: ['darwin']
@@ -15,6 +12,14 @@ export class PlatformService implements IPlatformService {
 		android: {
 		}
 	};
+
+	private platformNames = [];
+
+	constructor(private $errors: IErrors,
+				private $fs: IFileSystem,
+				private $projectService: IProjectService) {
+		this.platformNames = Object.keys(this.platformCapabilities);
+	}
 
 	public getCapabilities(platform: string): IPlatformCapabilities {
 		return this.platformCapabilities[platform];
@@ -66,14 +71,14 @@ export class PlatformService implements IPlatformService {
 			}
 
 			var subDirs = this.$fs.readDirectory(this.$projectService.projectData.platformsDir).wait();
-			return _.filter(subDirs, p => { return Object.keys(this.platformCapabilities).indexOf(p) > -1; });
+			return _.filter(subDirs, p => { return this.platformNames.indexOf(p) > -1; });
 		}).future<string[]>()();
 	}
 
 	public getAvailablePlatforms(): IFuture<string[]> {
 		return (() => {
 			var installedPlatforms = this.getInstalledPlatforms().wait();
-			return _.filter(_.keys(this.platformCapabilities), p => {
+			return _.filter(this.platformNames, p => {
 				return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p); // Only those not already installed
 			});
 		}).future<string[]>()();
@@ -89,7 +94,7 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			this.validatePlatform(platform);
 
-			this.$projectService.prepareProject(platform).wait();
+			this.$projectService.prepareProject(platform, this.platformNames).wait();
 		}).future<void>()();
 	}
 
@@ -101,7 +106,7 @@ export class PlatformService implements IPlatformService {
 
 	private validatePlatform(platform): void {
 		if (!this.isValidPlatform(platform)) {
-			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(_.keys(this.platformCapabilities)));
+			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.platformNames));
 		}
 
 		if (!this.isPlatformSupportedForOS(platform)) {

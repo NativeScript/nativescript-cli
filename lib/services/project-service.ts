@@ -4,6 +4,8 @@ import path = require("path");
 import options = require("./../options");
 import shell = require("shelljs");
 import osenv = require("osenv");
+import util = require("util");
+import helpers = require("./../common/helpers");
 
 export class ProjectService implements IProjectService {
 	private static DEFAULT_PROJECT_ID = "com.telerik.tns.HelloWorld";
@@ -149,10 +151,35 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	public prepareProject(platform: string): IFuture<void> {
+	public prepareProject(platform: string, platforms: string[]): IFuture<void> {
 		return (() => {
-			this.executePlatformSpecificAction(platform, "prepareProject").wait();
+			var assetsDirectoryPath = path.join(this.projectData.platformsDir, platform, "assets");
+			shell.cp("-r",path.join(this.projectData.projectDir, ProjectService.APP_FOLDER_NAME), assetsDirectoryPath);
+
+			var files = helpers.enumerateFilesInDirectorySync(path.join(assetsDirectoryPath, ProjectService.APP_FOLDER_NAME));
+			var pattern = util.format("%s%s%s", path.sep, ProjectService.APP_FOLDER_NAME ,path.sep);
+			_.each(files, fileName => {
+				if(ProjectService.shouldExcludeFile(platform, platforms, fileName.split(pattern)[1])) {
+					this.$fs.deleteFile(fileName).wait();
+				}
+			});
 		}).future<void>()();
+	}
+
+	private static shouldExcludeFile(platform: string, platforms: string[], fileName: string): boolean {
+		var platformInfo = ProjectService.parsePlatformSpecificFileName(fileName, platforms);
+		return platformInfo && platformInfo.platform !== platform;
+	}
+
+	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
+		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms.join("|"));
+		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
+		if (parsed) {
+			return {
+				platform: parsed[2]
+			};
+		}
+		return undefined;
 	}
 
 	public buildProject(platform: string): IFuture<void> {
@@ -257,14 +284,6 @@ class AndroidProjectService implements IAndroidProjectService {
 			this.$logger.out("Project successfully created.");
 
 		}).future<any>()();
-	}
-
-	public prepareProject(projectData: IProjectData): IFuture<void> {
-		return (() => {
-			var projectDir = path.join(projectData.projectDir, "platforms", "android");
-			// Copy app into assets
-			shell.cp("-r", path.join(projectData.projectDir, ProjectService.APP_FOLDER_NAME), path.join(projectDir, "assets"));
-		}).future<void>()();
 	}
 
 	public buildProject(projectData: IProjectData): IFuture<void> {
