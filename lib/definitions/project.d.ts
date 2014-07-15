@@ -10,6 +10,7 @@ interface IProjectService {
 interface IAndroidProjectService {
 	createProject(projectData: IProjectData): IFuture<void>;
 	prepareProject(projectData: IProjectData): IFuture<void>;
+	buildProject(projectData: IProjectData): IFuture<void>;
 }
 
 interface IiOSProjectService {
@@ -26,4 +27,5 @@ interface IProjectData {
 
 interface IProjectTemplatesService {
 	defaultTemplatePath: IFuture<string>;
+	androidFrameworkPath: IFuture<string>;
 }
