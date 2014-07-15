@@ -1,12 +1,12 @@
 ///<reference path="../.d.ts"/>
 
-export class RunCommand implements ICommand {
+export class PrepareCommand implements ICommand {
 	constructor(private $platformService: IPlatformService) { }
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$platformService.runPlatform(args[0]).wait();
+			this.$platformService.preparePlatform(args[0]).wait();
 		}).future<void>()();
 	}
 }
-$injector.registerCommand("run", RunCommand);
+$injector.registerCommand("prepare", PrepareCommand);

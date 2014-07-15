@@ -7,13 +7,9 @@ interface IProjectService {
 	projectData: IProjectData;
 }
 
-interface IAndroidProjectService {
+interface IPlatformProjectService {
 	createProject(projectData: IProjectData): IFuture<void>;
 	buildProject(projectData: IProjectData): IFuture<void>;
-}
-
-interface IiOSProjectService {
-	createProject(projectData: IProjectData): IFuture<void>;
 }
 
 interface IProjectData {

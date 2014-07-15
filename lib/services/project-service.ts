@@ -13,21 +13,21 @@ export class ProjectService implements IProjectService {
 	public static APP_FOLDER_NAME = "app";
 	public static PROJECT_FRAMEWORK_DIR = "framework";
 
-	private cachedProjectDir: string = "";
+	private cachedProjectDir: string = null;
 	public projectData: IProjectData = null;
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $projectTemplatesService: IProjectTemplatesService,
-		private $androidProjectService: IAndroidProjectService,
-		private $iOSProjectService: IiOSProjectService,
+		private $androidProjectService: IPlatformProjectService,
+		private $iOSProjectService: IPlatformProjectService,
 		private $config) {
 		this.projectData = this.getProjectData().wait();
 	}
 
 	private get projectDir(): string {
-		if(this.cachedProjectDir !== "") {
+		if(this.cachedProjectDir) {
 			return this.cachedProjectDir;
 		}
 
@@ -190,14 +190,17 @@ export class ProjectService implements IProjectService {
 
 	private executePlatformSpecificAction(platform, functionName: string): IFuture<void> {
 		return (() => {
+			var projectService = null;
 			switch (platform) {
 				case "android":
-					this.executeFunctionByName(functionName, this.$androidProjectService, [this.projectData]).wait();
+					projectService = this.$androidProjectService;
 					break;
 				case "ios":
-					this.executeFunctionByName(functionName, this.$iOSProjectService, [this.projectData]).wait();
+					projectService = this.$iOSProjectService;
 					break;
 			}
+
+			this.executeFunctionByName(functionName, projectService, [this.projectData]).wait();
 		}).future<void>()();
 	}
 
@@ -235,24 +238,25 @@ export class ProjectService implements IProjectService {
 }
 $injector.register("projectService", ProjectService);
 
-class AndroidProjectService implements IAndroidProjectService {
-	private cachedFrameworkDir: string = "";
+class AndroidProjectService implements IPlatformProjectService {
+	private cachedFrameworkDir: string = null;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $childProcess: IChildProcess,
-		private $projectTemplatesService: IProjectTemplatesService) { }
+		private $projectTemplatesService: IProjectTemplatesService,
+		private $propertiesParser: IPropertiesParser) { }
 
 	public createProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
 			var packageName = projectData.projectId;
 			var projectDir = path.join(projectData.projectDir, "platforms", "android");
 
-			var targetApi = this.getTarget().wait();
-
 			this.validatePackageName(packageName);
 			this.validateProjectName(projectData.projectName);
+
+			var targetApi = this.getTarget().wait();
 
 			this.checkRequirements().wait();
 
@@ -274,8 +278,9 @@ class AndroidProjectService implements IAndroidProjectService {
 			shell.cp("-f", path.join(this.frameworkDir.wait(), "AndroidManifest.xml"), projectDir);
 
 			// Interpolate the activity name and package
-			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, 'res', 'values', 'strings.xml'));
-			shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, path.join(projectDir, 'res', 'values', 'strings.xml'));
+			var stringsFilePath = path.join(projectDir, 'res', 'values', 'strings.xml');
+			shell.sed('-i', /__NAME__/, projectData.projectName, stringsFilePath);
+			shell.sed('-i', /__TITLE_ACTIVITY__/, projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, '.project'));
 			shell.sed('-i', /__PACKAGE__/, packageName, path.join(projectDir, "AndroidManifest.xml"));
 
@@ -292,7 +297,7 @@ class AndroidProjectService implements IAndroidProjectService {
 		}).future<void>()();
 	}
 
-	private runAndroidUpdate(projectPath: string, targetApi): IFuture<void> {
+	private runAndroidUpdate(projectPath: string, targetApi: string): IFuture<void> {
 		return (() => {
 			this.$childProcess.exec("android update project --subprojects --path " + projectPath + " --target " +  targetApi).wait();
 		}).future<void>()();
@@ -324,7 +329,7 @@ class AndroidProjectService implements IAndroidProjectService {
 
 	private get frameworkDir(): IFuture<string> {
 		return(() => {
-			if(this.cachedFrameworkDir === "") {
+			if(!this.cachedFrameworkDir) {
 				var androidFrameworkPath = this.$projectTemplatesService.androidFrameworkPath.wait();
 				this.cachedFrameworkDir = path.join(androidFrameworkPath, ProjectService.PROJECT_FRAMEWORK_DIR);
 			}
@@ -337,9 +342,10 @@ class AndroidProjectService implements IAndroidProjectService {
 	private getTarget(): IFuture<string> {
 		return (() => {
 			var projectPropertiesFilePath = path.join(this.frameworkDir.wait(), "project.properties");
+
 			if (this.$fs.exists(projectPropertiesFilePath).wait()) {
-				var target = shell.grep(/target=android-[\d+]/, projectPropertiesFilePath);
-				return target.split('=')[1].replace('\n', '').replace('\r', '').replace(' ', ''); // Target should be in following format: target=android-XX
+				var properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
+				return properties.get("target");
 			}
 
 			return "";
@@ -398,11 +404,17 @@ class AndroidProjectService implements IAndroidProjectService {
  }
 $injector.register("androidProjectService", AndroidProjectService);
 
-class iOSProjectService implements  IiOSProjectService {
+class iOSProjectService implements  IPlatformProjectService {
 	public createProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
 
 		}).future<any>()();
+	}
+
+	public buildProject(projectData: IProjectData): IFuture<void> {
+		return (() => {
+
+		}).future<void>()();
 	}
 }
 $injector.register("iOSProjectService", iOSProjectService);

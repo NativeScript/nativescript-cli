@@ -26,7 +26,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return this.downloadNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME);
 	}
 
-	private downloadNpmPackage(packageName): IFuture<string> {
+	private downloadNpmPackage(packageName: string): IFuture<string> {
 		return (() => {
 			try {
 				this.$npm.load().wait();

@@ -31,7 +31,8 @@
 		"underscore": "1.5.2",
 		"unzip": "0.1.9",
 		"yargs": "1.2.2",
-		"npm": "1.4.10"
+		"npm": "1.4.10",
+		"properties-parser": "0.2.3"
 	},
 	"analyze": true,
 	"devDependencies": {

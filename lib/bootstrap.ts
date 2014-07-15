@@ -9,10 +9,11 @@ $injector.require("projectTemplatesService", "./services/project-templates-servi
 $injector.require("platformService", "./services/platform-service");
 
 $injector.requireCommand("create", "./commands/create-project-command");
-$injector.requireCommand("platform|*list", "./commands/platform-command");
-$injector.requireCommand("platform|add", "./commands/platform-command");
+$injector.requireCommand("platform|*list", "./commands/list-platforms-command");
+$injector.requireCommand("platform|add", "./commands/add-platform-command");
 $injector.requireCommand("run", "./commands/run-command");
-$injector.requireCommand("prepare", "./commands/run-command");
-$injector.requireCommand("build", "./commands/run-command");
+$injector.requireCommand("prepare", "./commands/prepare-command");
+$injector.requireCommand("build", "./commands/build-command");
 
 $injector.require("npm", "./node-package-manager");
+$injector.require("propertiesParser", "./properties-parser");

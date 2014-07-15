@@ -34,9 +34,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			var platformsDir = this.$projectService.projectData.platformsDir;
-			if(!this.$fs.exists(platformsDir).wait()) {
-				this.$fs.createDirectory(platformsDir).wait();
-			}
+			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
 			_.each(platforms, platform => {
 				this.addPlatform(platform.toLowerCase()).wait();
@@ -104,7 +102,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private validatePlatform(platform): void {
+	private validatePlatform(platform: string): void {
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.platformNames));
 		}
