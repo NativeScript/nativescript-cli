@@ -9,5 +9,4 @@ interface IPlatformService {
 
 interface IPlatformCapabilities {
 	targetedOS?: string[];
-	frameworkUrl: string;
 }

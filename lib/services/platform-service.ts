@@ -10,11 +10,9 @@ export class PlatformService implements IPlatformService {
 
 	private platformCapabilities: { [key: string]: IPlatformCapabilities } = {
 		ios: {
-			targetedOS: ['darwin'],
-			frameworkUrl: ""
+			targetedOS: ['darwin']
 		},
 		android: {
-			frameworkUrl: ""
 		}
 	};
 
