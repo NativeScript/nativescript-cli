@@ -1,12 +1,15 @@
 interface IProjectService {
 	createProject(projectName: string, projectId: string): IFuture<void>;
 	createPlatformSpecificProject(platform: string): IFuture<void>;
+	prepareProject(platform: string): IFuture<void>;
+	buildProject(platform: string): IFuture<void>;
 	ensureProject(): void;
 	projectData: IProjectData;
 }
 
 interface IAndroidProjectService {
 	createProject(projectData: IProjectData): IFuture<void>;
+	prepareProject(projectData: IProjectData): IFuture<void>;
 }
 
 interface IiOSProjectService {

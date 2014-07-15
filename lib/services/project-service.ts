@@ -145,16 +145,44 @@ export class ProjectService implements IProjectService {
 
 	public createPlatformSpecificProject(platform: string): IFuture<void> {
 		return(() => {
+			this.executePlatformSpecificAction(platform, "createProject").wait();
+		}).future<void>()();
+	}
+
+	public prepareProject(platform: string): IFuture<void> {
+		return (() => {
+			this.executePlatformSpecificAction(platform, "prepareProject").wait();
+		}).future<void>()();
+	}
+
+	public buildProject(platform: string): IFuture<void> {
+		return (() => {
+			this.executePlatformSpecificAction(platform, "buildProject").wait();
+		}).future<void>()();
+	}
+
+	private executePlatformSpecificAction(platform, functionName: string): IFuture<void> {
+		return (() => {
 			switch (platform) {
 				case "android":
-					// TODO: set default values for project name and project id
-					this.$androidProjectService.createProject(this.projectData).wait();
+					this.executeFunctionByName(functionName, this.$androidProjectService, [this.projectData]).wait();
 					break;
 				case "ios":
-					this.$iOSProjectService.createProject(this.projectData).wait();
+					this.executeFunctionByName(functionName, this.$iOSProjectService, [this.projectData]).wait();
 					break;
 			}
 		}).future<void>()();
+	}
+
+	private executeFunctionByName(functionName, context , args: any[] ): IFuture<any> {
+		return (() => {
+			var namespaces = functionName.split(".");
+			var func = namespaces.pop();
+			for (var i = 0; i < namespaces.length; i++) {
+				context = context[namespaces[i]];
+			}
+			return context[func].apply(context, args).wait();
+		}).future<any>()();
 	}
 
 	private getCustomAppPath(): string {
@@ -221,14 +249,19 @@ class AndroidProjectService implements IAndroidProjectService {
 			shell.sed('-i', /__NAME__/, projectData.projectName, path.join(projectDir, '.project'));
 			shell.sed('-i', /__PACKAGE__/, packageName, path.join(projectDir, "AndroidManifest.xml"));
 
-			// Copy app into assets
-			shell.cp("-r", path.join(projectData.projectDir, ProjectService.APP_FOLDER_NAME), path.join(projectDir, "assets"));
-
 			this.runAndroidUpdate(projectDir, targetApi).wait();
 
 			this.$logger.out("Project successfully created.");
 
 		}).future<any>()();
+	}
+
+	public prepareProject(projectData: IProjectData): IFuture<void> {
+		return (() => {
+			var projectDir = path.join(projectData.projectDir, "platforms", "android");
+			// Copy app into assets
+			shell.cp("-r", path.join(projectData.projectDir, ProjectService.APP_FOLDER_NAME), path.join(projectDir, "assets"));
+		}).future<void>()();
 	}
 
 	private runAndroidUpdate(projectPath: string, targetApi): IFuture<void> {
@@ -237,7 +270,7 @@ class AndroidProjectService implements IAndroidProjectService {
 		}).future<void>()();
 	}
 
-	private validatePackageName(packageName: string): boolean {
+	private validatePackageName(packageName: string): void {
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
 		if (!/^[a-zA-Z]+(\.[a-zA-Z0-9][a-zA-Z0-9_]*)+$/.test(packageName)) {
@@ -248,11 +281,9 @@ class AndroidProjectService implements IAndroidProjectService {
 		if(/\b[Cc]lass\b/.test(packageName)) {
 			this.$errors.fail("class is a reserved word");
 		}
-
-		return true;
 	}
 
-	private validateProjectName(projectName: string): boolean {
+	private validateProjectName(projectName: string): void {
 		if (projectName === '') {
 			this.$errors.fail("Project name cannot be empty");
 		}
@@ -261,8 +292,6 @@ class AndroidProjectService implements IAndroidProjectService {
 		if (/^[0-9]/.test(projectName)) {
 			this.$errors.fail("Project name must not begin with a number");
 		}
-
-		return true;
 	}
 
 	private get frameworkDir(): string {

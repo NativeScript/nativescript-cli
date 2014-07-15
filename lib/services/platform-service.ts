@@ -22,7 +22,7 @@ export class PlatformService implements IPlatformService {
 		return this.platformCapabilities[platform];
 	}
 
-	public addPlatforms(platforms: string[]): IFuture<any> {
+	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			this.$projectService.ensureProject();
 
@@ -39,7 +39,26 @@ export class PlatformService implements IPlatformService {
 				this.addPlatform(platform.toLowerCase()).wait();
 			});
 
-		}).future<any>()();
+		}).future<void>()();
+	}
+
+	private addPlatform(platform: string): IFuture<void> {
+		return(() => {
+			platform = platform.split("@")[0];
+			var platformPath = path.join(this.$projectService.projectData.platformsDir, platform);
+
+			// TODO: Check for version compatability if the platform is in format platform@version. This should be done in PR for semanting versioning
+
+			this.validatePlatform(platform);
+
+			if (this.$fs.exists(platformPath).wait()) {
+				this.$errors.fail("Platform %s already added", platform);
+			}
+
+			// Copy platform specific files in platforms dir
+			this.$projectService.createPlatformSpecificProject(platform).wait();
+
+		}).future<void>()();
 	}
 
 	public getInstalledPlatforms(): IFuture<string[]> {
@@ -62,29 +81,34 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	private addPlatform(platform: string): IFuture<void> {
-		return(() => {
-			platform = platform.split("@")[0];
-			var platformPath = path.join(this.$projectService.projectData.platformsDir, platform);
-
-			// TODO: Check for version compatability if the platform is in format platform@version. This should be done in PR for semanting versioning
-
-			if (!this.isValidPlatform(platform)) {
-				this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(_.keys(this.platformCapabilities)));
-			}
-
-			if (!this.isPlatformSupportedForOS(platform)) {
-				this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
-			}
-
-			if (this.$fs.exists(platformPath).wait()) {
-				this.$errors.fail("Platform %s already added", platform);
-			}
-
-			// Copy platform specific files in platforms dir
-			this.$projectService.createPlatformSpecificProject(platform).wait();
+	public runPlatform(platform: string): IFuture<void> {
+		return (() => {
 
 		}).future<void>()();
+	}
+
+	public preparePlatform(platform: string): IFuture<void> {
+		return (() => {
+			this.validatePlatform(platform);
+
+			this.$projectService.prepareProject(platform).wait();
+		}).future<void>()();
+	}
+
+	public buildPlatform(platform: string): IFuture<void> {
+		return (() => {
+			this.$projectService.buildProject(platform);
+		}).future<void>()();
+	}
+
+	private validatePlatform(platform): void {
+		if (!this.isValidPlatform(platform)) {
+			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(_.keys(this.platformCapabilities)));
+		}
+
+		if (!this.isPlatformSupportedForOS(platform)) {
+			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
+		}
 	}
 
 	private isValidPlatform(platform: string) {
