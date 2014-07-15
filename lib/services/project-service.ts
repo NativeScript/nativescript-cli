@@ -54,17 +54,21 @@ export class ProjectService implements IProjectService {
 
 	private getProjectData(): IFuture<IProjectData> {
 		return(() => {
-			var projectFilePath = path.join(this.projectDir, this.$config.PROJECT_FILE_NAME);
-			var projectData:IProjectData = {
-				projectDir: this.projectDir,
-				platformsDir: path.join(this.projectDir, "platforms"),
-				projectFilePath: path.join(this.projectDir, this.$config.PROJECT_FILE_NAME)
-			};
+			var projectData: IProjectData = null;
 
-			if (this.$fs.exists(projectFilePath).wait()) {
-				var fileContent = this.$fs.readJson(projectFilePath).wait();
-				projectData.projectId = fileContent.id;
-				projectData.projectName = path.basename(this.projectDir);
+			if(this.projectDir) {
+				projectData = {
+					projectDir: this.projectDir,
+					platformsDir: path.join(this.projectDir, "platforms"),
+					projectFilePath: path.join(this.projectDir, this.$config.PROJECT_FILE_NAME)
+				};
+				var projectFilePath = path.join(this.projectDir, this.$config.PROJECT_FILE_NAME);
+
+				if (this.$fs.exists(projectFilePath).wait()) {
+					var fileContent = this.$fs.readJson(projectFilePath).wait();
+					projectData.projectId = fileContent.id;
+					projectData.projectName = path.basename(this.projectDir);
+				}
 			}
 
 			return projectData;
@@ -239,7 +243,7 @@ export class ProjectService implements IProjectService {
 $injector.register("projectService", ProjectService);
 
 class AndroidProjectService implements IPlatformProjectService {
-	private cachedFrameworkDir: string = null;
+	private frameworkDir: string = null;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -250,15 +254,17 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public createProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
+			this.frameworkDir = this.getFrameworkDir(projectData).wait();
+
 			var packageName = projectData.projectId;
 			var projectDir = path.join(projectData.projectDir, "platforms", "android");
 
 			this.validatePackageName(packageName);
 			this.validateProjectName(projectData.projectName);
 
-			var targetApi = this.getTarget().wait();
-
 			this.checkRequirements().wait();
+
+			var targetApi = this.getTarget().wait();
 
 			// Log the values for project
 			this.$logger.trace("Creating NativeScript project for the Android platform");
@@ -269,13 +275,15 @@ class AndroidProjectService implements IPlatformProjectService {
 
 			this.$logger.out("Copying template files...");
 
-			shell.cp("-r", path.join(this.frameworkDir.wait(), "assets"), projectDir);
-			shell.cp("-r", path.join(this.frameworkDir.wait(), "gen"), projectDir);
-			shell.cp("-r", path.join(this.frameworkDir.wait(), "libs"), projectDir);
-			shell.cp("-r", path.join(this.frameworkDir.wait(), "res"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "assets"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "gen"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "libs"), projectDir);
+			shell.cp("-r", path.join(this.frameworkDir, "res"), projectDir);
 
-			shell.cp("-f", path.join(this.frameworkDir.wait(), ".project"), projectDir);
-			shell.cp("-f", path.join(this.frameworkDir.wait(), "AndroidManifest.xml"), projectDir);
+			shell.cp("-f", path.join(this.frameworkDir, ".project"), projectDir);
+			shell.cp("-f", path.join(this.frameworkDir, "AndroidManifest.xml"), projectDir);
+
+			this.$fs.deleteDirectory(path.join(projectData.platformsDir, "android", "node_modules")).wait();
 
 			// Interpolate the activity name and package
 			var stringsFilePath = path.join(projectDir, 'res', 'values', 'strings.xml');
@@ -327,21 +335,16 @@ class AndroidProjectService implements IPlatformProjectService {
 		}
 	}
 
-	private get frameworkDir(): IFuture<string> {
+	private getFrameworkDir(projectData: IProjectData): IFuture<string> {
 		return(() => {
-			if(!this.cachedFrameworkDir) {
-				var androidFrameworkPath = this.$projectTemplatesService.androidFrameworkPath.wait();
-				this.cachedFrameworkDir = path.join(androidFrameworkPath, ProjectService.PROJECT_FRAMEWORK_DIR);
-			}
-
-			return this.cachedFrameworkDir;
-
+			var androidFrameworkPath = this.$projectTemplatesService.getAndroidFrameworkPath(path.join(projectData.platformsDir, "android")).wait();
+			return path.join(androidFrameworkPath, "framework");
 		}).future<string>()();
 	}
 
 	private getTarget(): IFuture<string> {
 		return (() => {
-			var projectPropertiesFilePath = path.join(this.frameworkDir.wait(), "project.properties");
+			var projectPropertiesFilePath = path.join(this.frameworkDir, "project.properties");
 
 			if (this.$fs.exists(projectPropertiesFilePath).wait()) {
 				var properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();

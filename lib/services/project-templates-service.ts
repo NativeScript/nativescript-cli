@@ -22,21 +22,23 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		return this.downloadNpmPackage(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
 
-	public get androidFrameworkPath(): IFuture<string> {
-		return this.downloadNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME);
+	public getAndroidFrameworkPath(where?: string): IFuture<string> {
+		return this.downloadNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME, where);
 	}
 
-	private downloadNpmPackage(packageName: string): IFuture<string> {
+	private downloadNpmPackage(packageName: string, where?: string): IFuture<string> {
 		return (() => {
 			try {
 				this.$npm.load().wait();
-				this.$npm.install(npm.cache, packageName).wait();
+				var location = where || npm.cache;
+				this.$npm.install(location, packageName).wait();
 			} catch (error) {
 				this.$logger.debug(error);
 				this.$errors.fail(ProjectTemplatesService.NPM_LOAD_FAILED);
 			}
 
-			return path.join(npm.cache, "node_modules", packageName);
+			return path.join(location, "node_modules", packageName);
+
 		}).future<string>()();
 	}
 }
