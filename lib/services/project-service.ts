@@ -161,7 +161,7 @@ export class ProjectService implements IProjectService {
 			shell.cp("-r",path.join(this.projectData.projectDir, ProjectService.APP_FOLDER_NAME), assetsDirectoryPath);
 
 			var files = helpers.enumerateFilesInDirectorySync(path.join(assetsDirectoryPath, ProjectService.APP_FOLDER_NAME));
-			var pattern = util.format("%s%s%s", path.sep, ProjectService.APP_FOLDER_NAME ,path.sep);
+			var pattern = util.format("%s%s%s", path.sep, ProjectService.APP_FOLDER_NAME, path.sep);
 			_.each(files, fileName => {
 				if(ProjectService.shouldExcludeFile(platform, platforms, fileName.split(pattern)[1])) {
 					this.$fs.deleteFile(fileName).wait();
@@ -194,17 +194,17 @@ export class ProjectService implements IProjectService {
 
 	private executePlatformSpecificAction(platform, functionName: string): IFuture<void> {
 		return (() => {
-			var projectService = null;
+			var platformProjectService = null;
 			switch (platform) {
 				case "android":
-					projectService = this.$androidProjectService;
+					platformProjectService = this.$androidProjectService;
 					break;
 				case "ios":
-					projectService = this.$iOSProjectService;
+					platformProjectService = this.$iOSProjectService;
 					break;
 			}
 
-			this.executeFunctionByName(functionName, projectService, [this.projectData]).wait();
+			this.executeFunctionByName(functionName, platformProjectService, [this.projectData]).wait();
 		}).future<void>()();
 	}
 
@@ -257,6 +257,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.frameworkDir = this.getFrameworkDir(projectData).wait();
 
 			var packageName = projectData.projectId;
+			var packageAsPath = packageName.replace(/\./g, path.sep);
 			var projectDir = path.join(projectData.projectDir, "platforms", "android");
 
 			this.validatePackageName(packageName);
@@ -268,7 +269,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
 			// Log the values for project
 			this.$logger.trace("Creating NativeScript project for the Android platform");
-			this.$logger.trace("Path: %s", projectData.projectDir);
+			this.$logger.trace("Path: %s", projectDir);
 			this.$logger.trace("Package: %s", projectData.projectId);
 			this.$logger.trace("Name: %s", projectData.projectName);
 			this.$logger.trace("Android target: %s", targetApi);
@@ -282,6 +283,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 			shell.cp("-f", path.join(this.frameworkDir, ".project"), projectDir);
 			shell.cp("-f", path.join(this.frameworkDir, "AndroidManifest.xml"), projectDir);
+
+			// Create src folder
+			var activityDir = path.join(projectDir, 'src', packageAsPath);
+			this.$fs.createDirectory(activityDir).wait();
 
 			this.$fs.deleteDirectory(path.join(projectData.platformsDir, "android", "node_modules")).wait();
 
@@ -301,8 +306,38 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public buildProject(projectData: IProjectData): IFuture<void> {
 		return (() => {
+			var projectRoot = path.join(projectData.platformsDir, "android");
+			var buildConfiguration = options.release || "--debug";
+			var args = this.getAntArgs(buildConfiguration, projectRoot);
+
+			switch(buildConfiguration) {
+				case "--debug":
+					args[0] = "debug";
+					break;
+				case "--release":
+					args[0] = "release";
+					break;
+				default:
+					this.$errors.fail("Build option %s not recognized", buildConfiguration);
+			}
+
+			this.spawn('ant', args);
 
 		}).future<void>()();
+	}
+
+	private spawn(command: string, args: string[], options?: any): void {
+		if(helpers.isWindows()) {
+			args.unshift('/s', '/c', command);
+			command = 'cmd';
+		}
+
+		this.$childProcess.spawn(command, args, {cwd: options, stdio: 'inherit'});
+	}
+
+	private getAntArgs(configuration: string, projectRoot: string): string[] {
+		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
+		return args;
 	}
 
 	private runAndroidUpdate(projectPath: string, targetApi: string): IFuture<void> {

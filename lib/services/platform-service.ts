@@ -98,7 +98,9 @@ export class PlatformService implements IPlatformService {
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
-			this.$projectService.buildProject(platform);
+			this.validatePlatform(platform);
+
+			this.$projectService.buildProject(platform).wait();
 		}).future<void>()();
 	}
 
