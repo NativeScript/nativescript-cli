@@ -11,6 +11,7 @@ export class ProjectService implements IProjectService {
 	private static DEFAULT_PROJECT_ID = "com.telerik.tns.HelloWorld";
 	private static DEFAULT_PROJECT_NAME = "HelloNativescript";
 	public static APP_FOLDER_NAME = "app";
+	private static APP_RESOURCES_FOLDER_NAME = "App_Resources";
 	public static PROJECT_FRAMEWORK_DIR = "framework";
 
 	public projectData: IProjectData = null;
@@ -130,32 +131,41 @@ export class ProjectService implements IProjectService {
 		}).future<void>()();
 	}
 
-	public prepareProject(platform: string, platforms: string[]): IFuture<void> {
+	public prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void> {
 		return (() => {
+			var platform = normalizedPlatformName.toLowerCase();
 			var assetsDirectoryPath = path.join(this.projectData.platformsDir, platform, "assets");
-			shell.cp("-r",path.join(this.projectData.projectDir, ProjectService.APP_FOLDER_NAME), assetsDirectoryPath);
+			var appResourcesDirectoryPath = path.join(assetsDirectoryPath, ProjectService.APP_FOLDER_NAME, ProjectService.APP_RESOURCES_FOLDER_NAME);
+			shell.cp("-r", path.join(this.projectData.projectDir, ProjectService.APP_FOLDER_NAME), assetsDirectoryPath);
+
+			if(this.$fs.exists(appResourcesDirectoryPath).wait()) {
+				shell.cp("-r", path.join(appResourcesDirectoryPath, normalizedPlatformName, "*"), path.join(this.projectData.platformsDir, platform, "res"));
+				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
+			}
 
 			var files = helpers.enumerateFilesInDirectorySync(path.join(assetsDirectoryPath, ProjectService.APP_FOLDER_NAME));
-			var pattern = util.format("%s%s%s", path.sep, ProjectService.APP_FOLDER_NAME, path.sep);
+			var platformsAsString = platforms.join("|");
+
 			_.each(files, fileName => {
-				if(ProjectService.shouldExcludeFile(platform, platforms, fileName.split(pattern)[1])) {
+				var platformInfo = ProjectService.parsePlatformSpecificFileName(path.basename(fileName), platformsAsString);
+				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
+				if(shouldExcludeFile) {
 					this.$fs.deleteFile(fileName).wait();
+				} else if(platformInfo && platformInfo.onDeviceName) {
+					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
 				}
 			});
+
 		}).future<void>()();
 	}
 
-	private static shouldExcludeFile(platform: string, platforms: string[], fileName: string): boolean {
-		var platformInfo = ProjectService.parsePlatformSpecificFileName(fileName, platforms);
-		return platformInfo && platformInfo.platform !== platform;
-	}
-
-	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
-		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms.join("|"));
+	private static parsePlatformSpecificFileName(fileName: string, platforms: string): any {
+		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms);
 		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
 		if (parsed) {
 			return {
-				platform: parsed[2]
+				platform: parsed[2],
+				onDeviceName: parsed[1] + parsed[3]
 			};
 		}
 		return undefined;

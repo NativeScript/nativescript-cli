@@ -1,7 +1,7 @@
 interface IProjectService {
 	createProject(projectName: string, projectId: string): IFuture<void>;
 	createPlatformSpecificProject(platform: string): IFuture<void>;
-	prepareProject(platform: string, platforms: string[]): IFuture<void>;
+	prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void>;
 	buildProject(platform: string): IFuture<void>;
 	ensureProject(): void;
 	projectData: IProjectData;

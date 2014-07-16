@@ -90,14 +90,17 @@ export class PlatformService implements IPlatformService {
 
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
+			platform = platform.toLowerCase();
 			this.validatePlatform(platform);
+			var normalizedPlatformName = this.normalizePlatformName(platform);
 
-			this.$projectService.prepareProject(platform, this.platformNames).wait();
+			this.$projectService.prepareProject(normalizedPlatformName, this.platformNames).wait();
 		}).future<void>()();
 	}
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
+			platform = platform.toLocaleLowerCase();
 			this.validatePlatform(platform);
 
 			this.$projectService.buildProject(platform).wait();
@@ -127,6 +130,17 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
+	}
+
+	private normalizePlatformName(platform: string): string {
+		switch(platform) {
+			case "android":
+				return "Android";
+			case "ios":
+				return "iOS";
+		}
+
+		return undefined;
 	}
 }
 $injector.register("platformService", PlatformService);
