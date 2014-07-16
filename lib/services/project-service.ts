@@ -13,7 +13,6 @@ export class ProjectService implements IProjectService {
 	public static APP_FOLDER_NAME = "app";
 	public static PROJECT_FRAMEWORK_DIR = "framework";
 
-	private cachedProjectDir: string = null;
 	public projectData: IProjectData = null;
 
 	constructor(private $logger: ILogger,
@@ -22,52 +21,28 @@ export class ProjectService implements IProjectService {
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $androidProjectService: IPlatformProjectService,
 		private $iOSProjectService: IPlatformProjectService,
+		private $projectHelper: IProjectHelper,
 		private $config) {
 		this.projectData = this.getProjectData().wait();
-	}
-
-	private get projectDir(): string {
-		if(this.cachedProjectDir) {
-			return this.cachedProjectDir;
-		}
-
-		var projectDir = path.resolve(options.path || ".");
-		while (true) {
-			this.$logger.trace("Looking for project in '%s'", projectDir);
-
-			if (this.$fs.exists(path.join(projectDir, this.$config.PROJECT_FILE_NAME)).wait()) {
-				this.$logger.debug("Project directory is '%s'.", projectDir);
-				this.cachedProjectDir = projectDir;
-				break;
-			}
-
-			var dir = path.dirname(projectDir);
-			if (dir === projectDir) {
-				this.$logger.debug("No project found at or above '%s'.", path.resolve("."));
-				break;
-			}
-			projectDir = dir;
-		}
-
-		return this.cachedProjectDir;
 	}
 
 	private getProjectData(): IFuture<IProjectData> {
 		return(() => {
 			var projectData: IProjectData = null;
+			var projectDir = this.$projectHelper.projectDir;
 
-			if(this.projectDir) {
+			if(projectDir) {
 				projectData = {
-					projectDir: this.projectDir,
-					platformsDir: path.join(this.projectDir, "platforms"),
-					projectFilePath: path.join(this.projectDir, this.$config.PROJECT_FILE_NAME)
+					projectDir: projectDir,
+					platformsDir: path.join(projectDir, "platforms"),
+					projectFilePath: path.join(projectDir, this.$config.PROJECT_FILE_NAME)
 				};
-				var projectFilePath = path.join(this.projectDir, this.$config.PROJECT_FILE_NAME);
+				var projectFilePath = path.join(projectDir, this.$config.PROJECT_FILE_NAME);
 
 				if (this.$fs.exists(projectFilePath).wait()) {
 					var fileContent = this.$fs.readJson(projectFilePath).wait();
 					projectData.projectId = fileContent.id;
-					projectData.projectName = path.basename(this.projectDir);
+					projectData.projectName = path.basename(projectDir);
 				}
 			}
 
