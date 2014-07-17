@@ -10,6 +10,7 @@ var knownOpts:any = {
 		"path" : String,
 		"copy-from": String,
 		"link-to": String,
+		"release": String,
 		"version": Boolean,
 		"help": Boolean
 	},

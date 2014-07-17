@@ -12,25 +12,33 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	private static NPM_DEFAULT_TEMPLATE_NAME = "tns-template-hello-world";
 	private static NPM_LOAD_FAILED = "Failed to retrieve nativescript hello world application. Please try again a little bit later.";
 
+	private static NPM_ANDROID_BRIDGE_NAME = "tns-android";
+
 	public constructor(private $errors: IErrors,
 		private $logger: ILogger,
 		private $npm: INodePackageManager) { }
 
 	public get defaultTemplatePath(): IFuture<string> {
-		return this.getDefaultTemplatePath();
+		return this.installNpmPackage(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
 
-	private getDefaultTemplatePath(): IFuture<string> {
+	public installAndroidFramework(where?: string): IFuture<string> {
+		return this.installNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME, where);
+	}
+
+	private installNpmPackage(packageName: string, where?: string): IFuture<string> {
 		return (() => {
 			try {
 				this.$npm.load().wait();
-				this.$npm.install(npm.cache, ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME).wait();
+				var location = where || npm.cache;
+				this.$npm.install(location, packageName).wait();
 			} catch (error) {
 				this.$logger.debug(error);
 				this.$errors.fail(ProjectTemplatesService.NPM_LOAD_FAILED);
 			}
 
-			return path.join(npm.cache, "node_modules", ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
+			return path.join(location, "node_modules", packageName);
+
 		}).future<string>()();
 	}
 }
