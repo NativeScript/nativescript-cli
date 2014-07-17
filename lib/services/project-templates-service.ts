@@ -19,14 +19,14 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		private $npm: INodePackageManager) { }
 
 	public get defaultTemplatePath(): IFuture<string> {
-		return this.downloadNpmPackage(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
+		return this.installNpmPackage(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
 
-	public getAndroidFrameworkPath(where?: string): IFuture<string> {
-		return this.downloadNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME, where);
+	public installAndroidFramework(where?: string): IFuture<string> {
+		return this.installNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME, where);
 	}
 
-	private downloadNpmPackage(packageName: string, where?: string): IFuture<string> {
+	private installNpmPackage(packageName: string, where?: string): IFuture<string> {
 		return (() => {
 			try {
 				this.$npm.load().wait();

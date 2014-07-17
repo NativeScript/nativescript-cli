@@ -22,5 +22,5 @@ interface IProjectData {
 
 interface IProjectTemplatesService {
 	defaultTemplatePath: IFuture<string>;
-	getAndroidFrameworkPath(whereToInstall: string): IFuture<string>
+	installAndroidFramework(whereToInstall: string): IFuture<string>
 }

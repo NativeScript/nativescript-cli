@@ -8,12 +8,12 @@ $injector.require("iOSProjectService", "./services/project-service");
 $injector.require("projectTemplatesService", "./services/project-templates-service");
 $injector.require("platformService", "./services/platform-service");
 
-$injector.requireCommand("create", "./commands/create-project-command");
-$injector.requireCommand("platform|*list", "./commands/list-platforms-command");
-$injector.requireCommand("platform|add", "./commands/add-platform-command");
-$injector.requireCommand("run", "./commands/run-command");
-$injector.requireCommand("prepare", "./commands/prepare-command");
-$injector.requireCommand("build", "./commands/build-command");
+$injector.requireCommand("create", "./commands/create-project");
+$injector.requireCommand("platform|*list", "./commands/list-platforms");
+$injector.requireCommand("platform|add", "./commands/add-platform");
+$injector.requireCommand("run", "./commands/run");
+$injector.requireCommand("prepare", "./commands/prepare");
+$injector.requireCommand("build", "./commands/build");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("propertiesParser", "./properties-parser");

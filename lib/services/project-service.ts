@@ -357,7 +357,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private getFrameworkDir(projectData: IProjectData): IFuture<string> {
 		return(() => {
-			var androidFrameworkPath = this.$projectTemplatesService.getAndroidFrameworkPath(path.join(projectData.platformsDir, "android")).wait();
+			var androidFrameworkPath = this.$projectTemplatesService.installAndroidFramework(path.join(projectData.platformsDir, "android")).wait();
 			return path.join(androidFrameworkPath, "framework");
 		}).future<string>()();
 	}

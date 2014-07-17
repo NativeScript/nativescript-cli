@@ -27,11 +27,11 @@ export class PlatformService implements IPlatformService {
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			this.$projectService.ensureProject();
-
 			if(!platforms || platforms.length === 0) {
 				this.$errors.fail("No platform specified. Please specify a platform to add");
 			}
+
+			this.$projectService.ensureProject();
 
 			var platformsDir = this.$projectService.projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
@@ -46,11 +46,12 @@ export class PlatformService implements IPlatformService {
 	private addPlatform(platform: string): IFuture<void> {
 		return(() => {
 			platform = platform.split("@")[0];
+
+			this.validatePlatform(platform);
+
 			var platformPath = path.join(this.$projectService.projectData.platformsDir, platform);
 
 			// TODO: Check for version compatability if the platform is in format platform@version. This should be done in PR for semanting versioning
-
-			this.validatePlatform(platform);
 
 			if (this.$fs.exists(platformPath).wait()) {
 				this.$errors.fail("Platform %s already added", platform);
