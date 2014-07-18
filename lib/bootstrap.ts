@@ -2,6 +2,7 @@ require("./common/bootstrap");
 
 $injector.require("nativescript-cli", "./nativescript-cli");
 
+$injector.require("projectData", "./services/project-service");
 $injector.require("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/project-service");
 $injector.require("iOSProjectService", "./services/project-service");

@@ -4,12 +4,11 @@ interface IProjectService {
 	prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void>;
 	buildProject(platform: string): IFuture<void>;
 	ensureProject(): void;
-	projectData: IProjectData;
 }
 
 interface IPlatformProjectService {
-	createProject(projectData: IProjectData): IFuture<void>;
-	buildProject(projectData: IProjectData): IFuture<void>;
+	createProject(): IFuture<void>;
+	buildProject(): IFuture<void>;
 }
 
 interface IProjectData {

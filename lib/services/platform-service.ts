@@ -16,8 +16,9 @@ export class PlatformService implements IPlatformService {
 	private platformNames = [];
 
 	constructor(private $errors: IErrors,
-				private $fs: IFileSystem,
-				private $projectService: IProjectService) {
+		private $fs: IFileSystem,
+		private $projectService: IProjectService,
+		private $projectData: IProjectData) {
 		this.platformNames = Object.keys(this.platformCapabilities);
 	}
 
@@ -33,7 +34,7 @@ export class PlatformService implements IPlatformService {
 
 			this.$projectService.ensureProject();
 
-			var platformsDir = this.$projectService.projectData.platformsDir;
+			var platformsDir = this.$projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
 			_.each(platforms, platform => {
@@ -49,7 +50,7 @@ export class PlatformService implements IPlatformService {
 
 			this.validatePlatform(platform);
 
-			var platformPath = path.join(this.$projectService.projectData.platformsDir, platform);
+			var platformPath = path.join(this.$projectData.platformsDir, platform);
 
 			// TODO: Check for version compatability if the platform is in format platform@version. This should be done in PR for semanting versioning
 
@@ -65,11 +66,11 @@ export class PlatformService implements IPlatformService {
 
 	public getInstalledPlatforms(): IFuture<string[]> {
 		return(() => {
-			if(!this.$fs.exists(this.$projectService.projectData.platformsDir).wait()) {
+			if(!this.$fs.exists(this.$projectData.platformsDir).wait()) {
 				return [];
 			}
 
-			var subDirs = this.$fs.readDirectory(this.$projectService.projectData.platformsDir).wait();
+			var subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
 			return _.filter(subDirs, p => { return this.platformNames.indexOf(p) > -1; });
 		}).future<string[]>()();
 	}
