@@ -440,7 +440,7 @@ $injector.register("androidProjectService", AndroidProjectService);
 
 class IOSProjectService implements  IPlatformSpecificProjectService {
 	public validate(): void {
-
+		
 	}
 
 	public checkRequirements(): IFuture<void> {

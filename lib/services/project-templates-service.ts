@@ -16,10 +16,5 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	public get defaultTemplatePath(): IFuture<string> {
 		return this.$npm.downloadNpmPackage(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
-
-	/* public installAndroidFramework(where?: string): IFuture<string> {
-		return this.installNpmPackage(ProjectTemplatesService.NPM_ANDROID_BRIDGE_NAME, where);
-	} */
-
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);
