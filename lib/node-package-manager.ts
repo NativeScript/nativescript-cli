@@ -3,8 +3,14 @@
 import npm = require("npm");
 import Future = require("fibers/future");
 import shell = require("shelljs");
+import path = require("path");
 
 export class NodePackageManager implements INodePackageManager {
+	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
+
+	constructor(private $logger: ILogger,
+		private $errors: IErrors) { }
+
 	public get cache(): string {
 		return npm.cache;
 	}
@@ -31,6 +37,31 @@ export class NodePackageManager implements INodePackageManager {
 			}
 		});
 		return future;
+	}
+
+	public tryExecuteAction(action: any, args?: any[]): IFuture<void> {
+		return (() => {
+			try {
+				this.load().wait(); // It's obligatory to execute load before whatever npm function
+				action(args);
+			} catch(error) {
+				this.$logger.debug(error);
+				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
+			}
+		}).future<void>()();
+	}
+
+	public downloadNpmPackage(packageName: string, pathToSave?: string): IFuture<string> {
+		return (() => {
+			var action = (packageName: string) => {
+				this.install(pathToSave || npm.cache, packageName).wait();
+			};
+
+			this.tryExecuteAction(action, [packageName]).wait();
+
+			return path.join(pathToSave || npm.cache, "node_modules", packageName);
+
+		}).future<string>()();
 	}
 }
 $injector.register("npm", NodePackageManager);

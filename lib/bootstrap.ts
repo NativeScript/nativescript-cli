@@ -6,8 +6,12 @@ $injector.require("projectData", "./services/project-service");
 $injector.require("projectService", "./services/project-service");
 $injector.require("androidProjectService", "./services/project-service");
 $injector.require("iOSProjectService", "./services/project-service");
+
 $injector.require("projectTemplatesService", "./services/project-templates-service");
+
+$injector.require("platformsData", "./services/platform-service");
 $injector.require("platformService", "./services/platform-service");
+$injector.require("platformProjectService", "./services/platform-service");
 
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");

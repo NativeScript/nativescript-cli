@@ -4,26 +4,43 @@ import path = require("path");
 import util = require("util");
 import helpers = require("./../common/helpers");
 
-export class PlatformService implements IPlatformService {
-	private platformCapabilities: { [key: string]: IPlatformCapabilities } = {
+class PlatformsData implements IPlatformsData {
+	private platformsData: { [key: string]: IPlatformData } = {
 		ios: {
+			frameworkPackageName: "tns-ios",
+			platformProjectService: $injector.resolve("iOSProjectService"),
+			projectRoot: "",
 			targetedOS: ['darwin']
 		},
 		android: {
+			frameworkPackageName: "tns-android",
+			platformProjectService: $injector.resolve("androidProjectService"),
+			projectRoot: ""
 		}
 	};
 
-	private platformNames = [];
+	constructor($projectData: IProjectData) {
+		this.platformsData["ios"].projectRoot = "";
+		this.platformsData["android"].projectRoot = path.join($projectData.platformsDir, "android");
+	}
 
+	public get platformsNames() {
+		return Object.keys(this.platformsData);
+	}
+
+	public getPlatformData(platform): IPlatformData {
+		return this.platformsData[platform];
+	}
+}
+$injector.register("platformsData", PlatformsData);
+
+export class PlatformService implements IPlatformService {
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $projectService: IProjectService,
-		private $projectData: IProjectData) {
-		this.platformNames = Object.keys(this.platformCapabilities);
-	}
-
-	public getCapabilities(platform: string): IPlatformCapabilities {
-		return this.platformCapabilities[platform];
+		private $platformProjectService: IPlatformProjectService,
+		private $projectData: IProjectData,
+		private $platformsData: IPlatformsData) {
 	}
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
@@ -59,7 +76,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// Copy platform specific files in platforms dir
-			this.$projectService.createPlatformSpecificProject(platform).wait();
+			this.$platformProjectService.createProject(platform).wait();
 
 		}).future<void>()();
 	}
@@ -71,14 +88,14 @@ export class PlatformService implements IPlatformService {
 			}
 
 			var subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
-			return _.filter(subDirs, p => { return this.platformNames.indexOf(p) > -1; });
+			return _.filter(subDirs, p => { return this.$platformsData.platformsNames.indexOf(p) > -1; });
 		}).future<string[]>()();
 	}
 
 	public getAvailablePlatforms(): IFuture<string[]> {
 		return (() => {
 			var installedPlatforms = this.getInstalledPlatforms().wait();
-			return _.filter(this.platformNames, p => {
+			return _.filter(this.$platformsData.platformsNames, p => {
 				return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p); // Only those not already installed
 			});
 		}).future<string[]>()();
@@ -96,7 +113,7 @@ export class PlatformService implements IPlatformService {
 			this.validatePlatform(platform);
 			var normalizedPlatformName = this.normalizePlatformName(platform);
 
-			this.$projectService.prepareProject(normalizedPlatformName, this.platformNames).wait();
+			//this.$projectService.prepareProject(normalizedPlatformName, this.platformNames).wait();
 		}).future<void>()();
 	}
 
@@ -105,13 +122,13 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLocaleLowerCase();
 			this.validatePlatform(platform);
 
-			this.$projectService.buildProject(platform).wait();
+			this.$platformProjectService.buildProject(platform).wait();
 		}).future<void>()();
 	}
 
 	private validatePlatform(platform: string): void {
 		if (!this.isValidPlatform(platform)) {
-			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.platformNames));
+			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
 
 		if (!this.isPlatformSupportedForOS(platform)) {
@@ -120,12 +137,11 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private isValidPlatform(platform: string) {
-		return this.platformCapabilities[platform];
+		return this.$platformsData.getPlatformData(platform);
 	}
 
 	private isPlatformSupportedForOS(platform: string): boolean {
-		var platformCapabilities = this.getCapabilities(platform);
-		var targetedOS = platformCapabilities.targetedOS;
+		var targetedOS = this.$platformsData.getPlatformData(platform).targetedOS;
 
 		if(!targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0) {
 			return true;
