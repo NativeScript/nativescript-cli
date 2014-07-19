@@ -236,28 +236,10 @@ class PlatformProjectService implements IPlatformProjectService {
 
 	public buildProject(platform: string): IFuture<void> {
 		return (() => {
-			this.executePlatformSpecificAction(platform, "buildProject").wait();
+			var platformData = this.$platformsData.getPlatformData(platform);
+			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
+			this.$logger.out("Project successfully built");
 		}).future<void>()();
-	}
-
-	private executePlatformSpecificAction(platform, functionName: string): IFuture<void> {
-		return (() => {
-			var platformProjectService = null;
-
-
-			this.executeFunctionByName(functionName, platformProjectService).wait();
-		}).future<void>()();
-	}
-
-	private executeFunctionByName(functionName, context): IFuture<any> {
-		return (() => {
-			var namespaces = functionName.split(".");
-			var func = namespaces.pop();
-			for (var i = 0; i < namespaces.length; i++) {
-				context = context[namespaces[i]];
-			}
-			return context[func].apply(context).wait();
-		}).future<any>()();
 	}
 }
 $injector.register("platformProjectService", PlatformProjectService);
@@ -323,9 +305,8 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 		this.runAndroidUpdate(projectRoot, targetApi).wait();
 	}
 
-	public buildProject(): IFuture<void> {
+	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			var projectRoot = path.join(this.$projectData.platformsDir, "android");
 			var buildConfiguration = options.release || "--debug";
 			var args = this.getAntArgs(buildConfiguration, projectRoot);
 
@@ -440,7 +421,7 @@ $injector.register("androidProjectService", AndroidProjectService);
 
 class IOSProjectService implements  IPlatformSpecificProjectService {
 	public validate(): void {
-		
+
 	}
 
 	public checkRequirements(): IFuture<void> {

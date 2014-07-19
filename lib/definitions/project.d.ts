@@ -26,4 +26,5 @@ interface IPlatformSpecificProjectService {
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
 	interpolateData(projectRoot: string): void;
 	executePlatformSpecificAction(projectRoot: string, frameworkDir: string): void;
+	buildProject(projectRoot: string): IFuture<void>;
 }
