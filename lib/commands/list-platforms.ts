@@ -11,7 +11,8 @@ export class ListPlatformsCommand implements ICommand {
 			this.$logger.out("Available platforms: %s", helpers.formatListOfNames(availablePlatforms));
 
 			var installedPlatforms = this.$platformService.getInstalledPlatforms().wait();
-			this.$logger.out("Installed platforms %s", helpers.formatListOfNames(installedPlatforms));
+			var message = installedPlatforms.length > 0 ? helpers.formatListOfNames(installedPlatforms) : "No installed platforms found";
+			this.$logger.out("Installed platforms: %s",  message);
 		}).future<void>()();
 	}
 }

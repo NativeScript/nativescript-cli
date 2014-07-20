@@ -6,11 +6,10 @@ Usage:
 General commands:
 	help <command>                  Shows additional information about the commands in this list.
 
-	create                          Creates a new NativeScript project with given project name and packageName.
+	create                          Creates a new NativeScript project with given project name and application identifier.
 	platform add                    Creates a new platform specific project.
 	platform list                   Lists all available and all installed platforms.
-	prepare                         Copies files for specified platforms, or all platforms, so that the project
-									is ready to build in each SDK.
+	prepare                         Copies files for specified platform, so that the project is ready to build in platform specific SDK.
 	build                           Builds the project for the selected target platform and produces an application package.
 	run                             This is shorthand for prepare and build.
 
@@ -33,17 +32,22 @@ Lists the available commands or shows information about the selected command.
 --[create]--
 
 Usage:
-	$ tns create <App name> [--path <Directory>] [--appid <App ID>]
+	$ tns create <App name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]
 
 Creates a new NativeScript project.
 <App name> is the name of project. It should conform to platform package type limitations. For example classes in Java
 don't begin with numbers.
 
 Options:
+	--path - Specifies the directory where you want to create the project, if different from the current directory.
+            The directory must be empty.
 	--appid - Sets the application identifier for your project. The application identifier must consist of at least three
               alphanumeric strings, separated by a dot (.). Each string must start with a letter.
               The application identifier corresponds to the Bundle ID for iOS apps and to the package identifier for Android apps.
               If not specified, the application identifier is set to com.telerik.<App name>.
+	--copy-from - Specifies the directory where your javascript files are located. If not set,
+                  the default hello world template is used.
+
 --[/]--
 
 --[platform]--
@@ -88,7 +92,7 @@ Platform-specific usage:
 	$ tns prepare android
 	$ tns prepare ios
 
-Copies files for specified platforms, or all platforms, so that the project is ready to build in each SDK.
+Copies files for specified platform, so that the project is ready to build in each SDK.
 
 --[/]--
 
@@ -97,10 +101,11 @@ Copies files for specified platforms, or all platforms, so that the project is r
 Usage:
 	$ tns build [<platform>]
 
-Builds the project for specified platforms, or all platforms. This generates platform-specific code within the project's
-platforms subdirectory. You can optionally limit the scope of each build to specific platforms:
+Platform-specific usage:
 	$ tns build android
 	$ tns build ios
+
+Builds the project for specified platform. This generates platform-specific code within the project's platforms subdirectory.
 
 --[/]--
 

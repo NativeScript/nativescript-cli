@@ -49,8 +49,6 @@ export class PlatformService implements IPlatformService {
 				this.$errors.fail("No platform specified. Please specify a platform to add");
 			}
 
-			this.$projectService.ensureProject();
-
 			var platformsDir = this.$projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
@@ -65,7 +63,7 @@ export class PlatformService implements IPlatformService {
 		return(() => {
 			platform = platform.split("@")[0];
 
-			this.validatePlatform(platform);
+			this.validatePlatform(platform, true);
 
 			var platformPath = path.join(this.$projectData.platformsDir, platform);
 
@@ -110,7 +108,9 @@ export class PlatformService implements IPlatformService {
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
+
 			this.validatePlatform(platform);
+
 			var normalizedPlatformName = this.normalizePlatformName(platform);
 
 			this.$platformProjectService.prepareProject(normalizedPlatformName, this.$platformsData.platformsNames).wait();
@@ -119,20 +119,26 @@ export class PlatformService implements IPlatformService {
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLocaleLowerCase();
+			platform = platform.toLowerCase();
 			this.validatePlatform(platform);
 
 			this.$platformProjectService.buildProject(platform).wait();
 		}).future<void>()();
 	}
 
-	private validatePlatform(platform: string): void {
+	private validatePlatform(platform: string, skipIsPlatformInstalledCheck?: boolean): void {
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
 
 		if (!this.isPlatformSupportedForOS(platform)) {
 			this.$errors.fail("Applications for platform %s can not be built on this OS - %s", platform, process.platform);
+		}
+
+		if(!skipIsPlatformInstalledCheck) {
+			if (!this.isPlatformInstalled(platform).wait()) {
+				this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
+			}
 		}
 	}
 
@@ -148,6 +154,12 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
+	}
+
+	private isPlatformInstalled(platform: string): IFuture<boolean> {
+		return (() => {
+			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
+		}).future<boolean>()();
 	}
 
 	private normalizePlatformName(platform: string): string {

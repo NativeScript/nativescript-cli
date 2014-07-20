@@ -1,6 +1,5 @@
 interface IProjectService {
 	createProject(projectName: string, projectId: string): IFuture<void>;
-	ensureProject(): void;
 }
 
 interface IProjectData {
