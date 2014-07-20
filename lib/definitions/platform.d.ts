@@ -11,6 +11,7 @@ interface IPlatformData {
 	frameworkPackageName: string;
 	platformProjectService: IPlatformSpecificProjectService;
 	projectRoot: string;
+	normalizedPlatformName: string;
 	targetedOS?: string[];
 }
 

@@ -9,12 +9,14 @@ class PlatformsData implements IPlatformsData {
 		ios: {
 			frameworkPackageName: "tns-ios",
 			platformProjectService: $injector.resolve("iOSProjectService"),
+			normalizedPlatformName: "iOS",
 			projectRoot: "",
 			targetedOS: ['darwin']
 		},
 		android: {
 			frameworkPackageName: "tns-android",
 			platformProjectService: $injector.resolve("androidProjectService"),
+			normalizedPlatformName: "Android",
 			projectRoot: ""
 		}
 	};
@@ -111,9 +113,9 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.validatePlatform(platform);
-			var normalizedPlatformName = this.normalizePlatformName(platform);
 
-			this.$platformProjectService.prepareProject(normalizedPlatformName, this.$platformsData.platformsNames).wait();
+			this.$platformProjectService.prepareProject(this.$platformsData.getPlatformData(platform).normalizedPlatformName,
+				this.$platformsData.platformsNames).wait();
 		}).future<void>()();
 	}
 
@@ -148,17 +150,6 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
-	}
-
-	private normalizePlatformName(platform: string): string {
-		switch(platform) {
-			case "android":
-				return "Android";
-			case "ios":
-				return "iOS";
-		}
-
-		return undefined;
 	}
 }
 $injector.register("platformService", PlatformService);
