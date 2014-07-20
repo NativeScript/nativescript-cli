@@ -15,6 +15,7 @@ class ProjectData implements IProjectData {
 	public projectName: string;
 
 	constructor(private $fs: IFileSystem,
+		private $errors: IErrors,
 		private $projectHelper: IProjectHelper,
 		private $config) {
 		this.initializeProjectData().wait();
@@ -23,7 +24,7 @@ class ProjectData implements IProjectData {
 	private initializeProjectData(): IFuture<void> {
 		return(() => {
 			var projectDir = this.$projectHelper.projectDir;
-
+			// If no project found, projectDir should be null
 			if(projectDir) {
 				this.projectDir = projectDir;
 				this.projectName = path.basename(projectDir);
@@ -34,15 +35,15 @@ class ProjectData implements IProjectData {
 					var fileContent = this.$fs.readJson(this.projectFilePath).wait();
 					this.projectId = fileContent.id;
 				}
+			} else {
+				this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", process.cwd());
 			}
-
 		}).future<void>()();
 	}
 }
 $injector.register("projectData", ProjectData);
 
 export class ProjectService implements IProjectService {
-	private static DEFAULT_PROJECT_ID = "com.telerik.tns.HelloWorld";
 	private static DEFAULT_PROJECT_NAME = "HelloNativescript";
 	public static APP_FOLDER_NAME = "app";
 
@@ -50,15 +51,15 @@ export class ProjectService implements IProjectService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $projectTemplatesService: IProjectTemplatesService,
-		private $projectData: IProjectData,
+		private $projectHelper: IProjectHelper,
 		private $config) { }
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
 			var projectDir = path.resolve(options.path || ".");
 
-			projectId = projectId || ProjectService.DEFAULT_PROJECT_ID;
 			projectName = projectName || ProjectService.DEFAULT_PROJECT_NAME;
+			projectId =  options.appid || this.$projectHelper.generateDefaultAppId(projectName);
 
 			projectDir = path.join(projectDir, projectName);
 			this.$fs.createDirectory(projectDir).wait();
@@ -82,9 +83,13 @@ export class ProjectService implements IProjectService {
 
 				// Make sure that the source app/ is not a direct ancestor of a target app/
 				var relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
-				var doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] == "..";
-				if(!doesRelativePathGoUpAtLeastOneDir) {
-					this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
+				// path.relative returns second argument if the paths are located on different disks
+				// so in this case we don't need to make the check for direct ancestor
+				if(relativePathFromSourceToTarget !== appDirectory) {
+					var doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
+					if (!doesRelativePathGoUpAtLeastOneDir) {
+						this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
+					}
 				}
 				this.$logger.trace("Copying custom app into %s", appDirectory);
 				appPath = customAppPath;
@@ -97,6 +102,8 @@ export class ProjectService implements IProjectService {
 			}
 
 			this.createProjectCore(projectDir, appPath,  projectId, false).wait();
+
+			this.$logger.out("Project %s was successfully created", projectName);
 		}).future<void>()();
 	}
 
@@ -140,12 +147,6 @@ export class ProjectService implements IProjectService {
 		}
 
 		return customAppPath;
-	}
-
- 	public ensureProject() {
-		if (this.$projectData.projectDir === "" || !this.$fs.exists(this.$projectData.projectFilePath).wait()) {
-			this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", process.cwd());
-		}
 	}
 }
 $injector.register("projectService", ProjectService);

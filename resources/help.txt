@@ -1,0 +1,111 @@
+--[]--
+
+Usage:
+	$ tns <command> [command parameters] [--command <options>]
+
+General commands:
+	help <command>                  Shows additional information about the commands in this list.
+
+	create                          Creates a new NativeScript project with given project name and application identifier.
+	platform add                    Creates a new platform specific project.
+	platform list                   Lists all available and all installed platforms.
+	prepare                         Copies files for specified platform, so that the project is ready to build in platform specific SDK.
+	build                           Builds the project for the selected target platform and produces an application package.
+	run                             This is shorthand for prepare and build.
+
+General options:
+	--help              Prints help about the selected command.
+	--path <Directory>  Specifies the directory that contains the project. If not set, the project is searched for
+						in the current directory and all directories above it.
+	--version           Prints the client version.
+--[/]--
+
+--[help]--
+
+Usage:
+	$ tns help [<Command>]
+Lists the available commands or shows information about the selected command.
+<Command> is any of the available commands as listed by $ tns help.
+
+--[/]--
+
+--[create]--
+
+Usage:
+	$ tns create <App name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]
+
+Creates a new NativeScript project.
+<App name> is the name of project. It should conform to platform package type limitations. For example classes in Java
+don't begin with numbers.
+
+Options:
+	--path - Specifies the directory where you want to create the project, if different from the current directory.
+            The directory must be empty.
+	--appid - Sets the application identifier for your project. The application identifier must consist of at least three
+              alphanumeric strings, separated by a dot (.). Each string must start with a letter.
+              The application identifier corresponds to the Bundle ID for iOS apps and to the package identifier for Android apps.
+              If not specified, the application identifier is set to com.telerik.<App name>.
+	--copy-from - Specifies the directory where your javascript files are located. If not set,
+                  the default hello world template is used.
+
+--[/]--
+
+--[platform]--
+
+Usage:
+	$ tns platform <Command>
+
+<Command> is a related command that extends the platform command. You can run the following related commands:
+	list - Lists all available and installed platforms.
+	add - Creates a new platform specific project
+
+--[/]--
+
+--[platform|list]--
+
+Usage:
+	$ tns platform
+
+Lists all available and currently installed platforms.
+
+--[/]--
+
+--[platform|add]--
+
+Usage:
+	$ tns platform add <platform>
+
+Platform-specific usage:
+	$ tns platform add android
+	$ tns platform add ios
+
+Creates a new platform specific project. In this version of Telerik NativeScript you can create only ios and android projects.
+You can create Android projects on windows and Mac machine. You can create ios projects only on Mac machine.
+--[/]--
+
+--[prepare]--
+
+Usage:
+	$ tns prepare [<platform>]
+
+Platform-specific usage:
+	$ tns prepare android
+	$ tns prepare ios
+
+Copies files for specified platform, so that the project is ready to build in each SDK.
+
+--[/]--
+
+--[build]--
+
+Usage:
+	$ tns build [<platform>]
+
+Platform-specific usage:
+	$ tns build android
+	$ tns build ios
+
+Builds the project for specified platform. This generates platform-specific code within the project's platforms subdirectory.
+
+--[/]--
+
