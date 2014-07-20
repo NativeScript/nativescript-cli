@@ -18,6 +18,7 @@ interface IProjectTemplatesService {
 interface IPlatformProjectService {
 	createProject(platform: string): IFuture<void>;
 	buildProject(platform: string): IFuture<void>;
+	prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void>;
 }
 
 interface IPlatformSpecificProjectService {

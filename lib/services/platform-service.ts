@@ -113,7 +113,7 @@ export class PlatformService implements IPlatformService {
 			this.validatePlatform(platform);
 			var normalizedPlatformName = this.normalizePlatformName(platform);
 
-			//this.$projectService.prepareProject(normalizedPlatformName, this.platformNames).wait();
+			this.$platformProjectService.prepareProject(normalizedPlatformName, this.$platformsData.platformsNames).wait();
 		}).future<void>()();
 	}
 
