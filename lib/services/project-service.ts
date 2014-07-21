@@ -290,13 +290,15 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 		}).future<any>()();
 	}
 
-	public interpolateData(projectRoot: string): void {
-		// Interpolate the activity name and package
-		var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
-		shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
-		shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
-		shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
-		shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, path.join(projectRoot, "AndroidManifest.xml"));
+	public interpolateData(projectRoot: string): IFuture<void> {
+		return (() => {
+			// Interpolate the activity name and package
+			var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
+			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
+			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
+			shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
+			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, path.join(projectRoot, "AndroidManifest.xml"));
+		}).future<void>()();
 	}
 
 	public executePlatformSpecificAction(projectRoot: string, frameworkDir: string) {
@@ -420,32 +422,80 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 $injector.register("androidProjectService", AndroidProjectService);
 
 class IOSProjectService implements  IPlatformSpecificProjectService {
-	public validate(): void {
+	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 
-	}
+	constructor(private $childProcess: IChildProcess,
+		private $projectData: IProjectData,
+		private $fs: IFileSystem,
+		private $errors: IErrors) { }
+
+	public validate(): void { }
 
 	public checkRequirements(): IFuture<void> {
 		return (() => {
+			try {
+				this.$childProcess.exec("which xcodebuild").wait();
+			} catch(error) {
+				this.$errors.fail("The command 'which xcodebuild' failed. Make sure you have the Xcode installed");
+			}
 		}).future<void>()();
 	}
 
-	public interpolateData(): void {
-
-	}
-
-	public executePlatformSpecificAction(): void {
-
-	}
-
-	public createProject(): IFuture<void> {
+	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
+			this.replaceFileName("-Info.plist", projectRoot).wait();
+			this.replaceFileName("-Prefix.pch", projectRoot).wait();
+			this.replaceFileName(".xcodeproj", this.$projectData.platformsDir).wait();
 
-		}).future<any>()();
+			/* this.$fs.rename(path.join(this.$projectData.platformsDir, IOSProjectService.PROJECT_NAME_PLACEHOLDER + ".xcodeproj"),
+				path.join(this.$projectData.platformsDir, this.$projectData.projectName + ".xcodeproj")).wait(); */
+
+			var pbxprojFilePath = path.join(this.$projectData.platformsDir, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
+			this.replaceFileContent(pbxprojFilePath).wait();
+		}).future<void>()();
 	}
 
-	public buildProject(): IFuture<void> {
+	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
+			shell.cp("-r", path.join(frameworkDir, "*"), this.$projectData.platformsDir);
+			this.$fs.rename(path.join(this.$projectData.platformsDir, IOSProjectService.PROJECT_NAME_PLACEHOLDER), projectRoot).wait();
+		}).future<void>()();
+	}
 
+	public buildProject(projectRoot: string): IFuture<void> {
+		return (() => {
+			var args = [
+				"-project", path.join(this.$projectData.platformsDir, "ios", this.$projectData.projectName + ".xcodeproj"),
+				"-target", this.$projectData.projectName,
+				"-configuration", options.release || "Debug",
+				"-sdk", "iphonesimulator",
+				"build",
+				"ARCHS=\"armv7 armv7s arm64\"",
+				"VALID_ARCHS=\"armv7 armv7s arm64\"",
+				"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build") + ""
+			];
+			this.$childProcess.spawn("xcodebuild", args, {cwd: options, stdio: 'inherit'});
+		}).future<void>()();
+	}
+
+	public executePlatformSpecificAction(projectRoot: string, frameworkDir: string): void {
+
+	}
+
+	private replaceFileContent(file: string): IFuture<void> {
+		return (() => {
+			var fileContent = this.$fs.readText(file).wait();
+			var replacedContent = helpers.stringReplaceAll(fileContent, IOSProjectService.PROJECT_NAME_PLACEHOLDER, this.$projectData.projectName);
+			this.$fs.writeFile(file, replacedContent).wait();
+		}).future<void>()();
+	}
+
+	private replaceFileName(fileNamePart: string, projectRoot: string): IFuture<void> {
+		return (() => {
+			var oldFileName = IOSProjectService.PROJECT_NAME_PLACEHOLDER + fileNamePart;
+			var newFileName = this.$projectData.projectName + fileNamePart;
+
+			this.$fs.rename(path.join(projectRoot, oldFileName), path.join(projectRoot, newFileName)).wait();
 		}).future<void>()();
 	}
 }
