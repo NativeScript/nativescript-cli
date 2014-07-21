@@ -22,7 +22,7 @@ class PlatformsData implements IPlatformsData {
 	};
 
 	constructor($projectData: IProjectData) {
-		this.platformsData["ios"].projectRoot = "";
+		this.platformsData["ios"].projectRoot = path.join($projectData.platformsDir, "ios", $projectData.projectName);
 		this.platformsData["android"].projectRoot = path.join($projectData.platformsDir, "android");
 	}
 
