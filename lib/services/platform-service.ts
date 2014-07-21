@@ -8,22 +8,28 @@ class PlatformsData implements IPlatformsData {
 	private platformsData: { [key: string]: IPlatformData } = {
 		ios: {
 			frameworkPackageName: "tns-ios",
-			platformProjectService: $injector.resolve("iOSProjectService"),
+			platformProjectService: null,
 			normalizedPlatformName: "iOS",
 			projectRoot: "",
 			targetedOS: ['darwin']
 		},
 		android: {
 			frameworkPackageName: "tns-android",
-			platformProjectService: $injector.resolve("androidProjectService"),
+			platformProjectService: null,
 			normalizedPlatformName: "Android",
 			projectRoot: ""
 		}
 	};
 
-	constructor($projectData: IProjectData) {
+	constructor($projectData: IProjectData,
+		$androidProjectService: IPlatformSpecificProjectService,
+		$iOSProjectService: IPlatformSpecificProjectService) {
+
 		this.platformsData["ios"].projectRoot = "";
+		this.platformsData["ios"].platformProjectService = $iOSProjectService;
+
 		this.platformsData["android"].projectRoot = path.join($projectData.platformsDir, "android");
+		this.platformsData["android"].platformProjectService = $androidProjectService;
 	}
 
 	public get platformsNames() {
@@ -90,7 +96,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			var subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
-			return _.filter(subDirs, p => { return this.$platformsData.platformsNames.indexOf(p) > -1; });
+			return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
 		}).future<string[]>()();
 	}
 

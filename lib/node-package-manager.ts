@@ -39,11 +39,11 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	public tryExecuteAction(action: any, args?: any[]): IFuture<void> {
+	private tryExecuteAction(action: (...args: any[]) => void, ...args: any[]): IFuture<void> {
 		return (() => {
 			try {
 				this.load().wait(); // It's obligatory to execute load before whatever npm function
-				action(args);
+				action.apply(null, args);
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
@@ -51,13 +51,13 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<void>()();
 	}
 
-	public downloadNpmPackage(packageName: string, pathToSave?: string): IFuture<string> {
+	public installSafe(packageName: string, pathToSave?: string): IFuture<string> {
 		return (() => {
 			var action = (packageName: string) => {
 				this.install(pathToSave || npm.cache, packageName).wait();
 			};
 
-			this.tryExecuteAction(action, [packageName]).wait();
+			this.tryExecuteAction(action, packageName).wait();
 
 			return path.join(pathToSave || npm.cache, "node_modules", packageName);
 

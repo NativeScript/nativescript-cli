@@ -22,10 +22,9 @@ interface IPlatformProjectService {
 }
 
 interface IPlatformSpecificProjectService {
-	validate(): void;
-	checkRequirements(): IFuture<void>;
+	validate(): IFuture<void>;
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
 	interpolateData(projectRoot: string): void;
-	executePlatformSpecificAction(projectRoot: string, frameworkDir: string): void;
+	executePlatformSpecificAction(projectRoot: string): void;
 	buildProject(projectRoot: string): IFuture<void>;
 }
