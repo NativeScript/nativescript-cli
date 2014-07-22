@@ -14,7 +14,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	public constructor(private $npm: INodePackageManager) { }
 
 	public get defaultTemplatePath(): IFuture<string> {
-		return this.$npm.installSafe(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
+		return this.$npm.install(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);

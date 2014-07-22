@@ -27,7 +27,7 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	public install(where: string, what: string): IFuture<any> {
+	private installCore(where: string, what: string): IFuture<any> {
 		var future = new Future<any>();
 		npm.commands["install"](where, what, (err, data) => {
 			if(err) {
@@ -51,10 +51,10 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<void>()();
 	}
 
-	public installSafe(packageName: string, pathToSave?: string): IFuture<string> {
+	public install(packageName: string, pathToSave?: string): IFuture<string> {
 		return (() => {
 			var action = (packageName: string) => {
-				this.install(pathToSave || npm.cache, packageName).wait();
+				this.installCore(pathToSave || npm.cache, packageName).wait();
 			};
 
 			this.tryExecuteAction(action, packageName).wait();

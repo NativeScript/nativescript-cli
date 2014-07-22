@@ -32,7 +32,7 @@ class PlatformProjectService implements IPlatformProjectService {
 			this.$logger.out("Copying template files...");
 
 			// get path to downloaded framework package
-			var frameworkDir = this.$npm.installSafe(this.$platformsData.getPlatformData(platform).frameworkPackageName,
+			var frameworkDir = this.$npm.install(this.$platformsData.getPlatformData(platform).frameworkPackageName,
 				path.join(this.$projectData.platformsDir, platform)).wait();
 			frameworkDir = path.join(frameworkDir, PlatformProjectService.PROJECT_FRAMEWORK_DIR);
 
