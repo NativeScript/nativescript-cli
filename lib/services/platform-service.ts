@@ -103,7 +103,7 @@ export class PlatformService implements IPlatformService {
 			// get path to downloaded framework package
 			var frameworkDir = this.$npm.install(this.$platformsData.getPlatformData(platform).frameworkPackageName,
 				path.join(this.$projectData.platformsDir, platform)).wait();
-			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_DIR);
+			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 
 			platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 

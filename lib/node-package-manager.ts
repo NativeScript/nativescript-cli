@@ -30,12 +30,13 @@ export class NodePackageManager implements INodePackageManager {
 	public install(packageName: string, pathToSave?: string): IFuture<string> {
 		return (() => {
 			var action = (packageName: string) => {
-				this.installCore(pathToSave || npm.cache, packageName).wait();
+				pathToSave = pathToSave || npm.cache;
+				this.installCore(pathToSave, packageName).wait();
 			};
 
 			this.tryExecuteAction(action, packageName).wait();
 
-			return path.join(pathToSave || npm.cache, "node_modules", packageName);
+			return path.join(pathToSave, "node_modules", packageName);
 
 		}).future<string>()();
 	}
