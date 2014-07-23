@@ -1,11 +1,13 @@
 ///<reference path="../.d.ts"/>
 
 import path = require("path");
+import shell = require("shelljs");
 import util = require("util");
+import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 
 class PlatformsData implements IPlatformsData {
-	private platformsData: { [key: string]: IPlatformData } = {
+	private platformsData = {
 		ios: {
 			frameworkPackageName: "tns-ios",
 			platformProjectService: null,
@@ -22,14 +24,14 @@ class PlatformsData implements IPlatformsData {
 	};
 
 	constructor($projectData: IProjectData,
-		$androidProjectService: IPlatformSpecificProjectService,
-		$iOSProjectService: IPlatformSpecificProjectService) {
+		$androidProjectService: IPlatformProjectService,
+		$iOSProjectService: IPlatformProjectService) {
 
-		this.platformsData["ios"].projectRoot = "";
-		this.platformsData["ios"].platformProjectService = $iOSProjectService;
+		this.platformsData.ios.projectRoot = "";
+		this.platformsData.ios.platformProjectService = $iOSProjectService;
 
-		this.platformsData["android"].projectRoot = path.join($projectData.platformsDir, "android");
-		this.platformsData["android"].platformProjectService = $androidProjectService;
+		this.platformsData.android.projectRoot = path.join($projectData.platformsDir, "android");
+		this.platformsData.android.platformProjectService = $androidProjectService;
 	}
 
 	public get platformsNames() {
@@ -45,8 +47,9 @@ $injector.register("platformsData", PlatformsData);
 export class PlatformService implements IPlatformService {
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
+		private $logger: ILogger,
+		private $npm: INodePackageManager,
 		private $projectService: IProjectService,
-		private $platformProjectService: IPlatformProjectService,
 		private $projectData: IProjectData,
 		private $platformsData: IPlatformsData) {
 	}
@@ -84,7 +87,33 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// Copy platform specific files in platforms dir
-			this.$platformProjectService.createProject(platform).wait();
+			var platformData = this.$platformsData.getPlatformData(platform);
+			var platformProjectService = platformData.platformProjectService;
+
+			platformProjectService.validate().wait();
+
+			// Log the values for project
+			this.$logger.trace("Creating NativeScript project for the %s platform", platform);
+			this.$logger.trace("Path: %s", platformData.projectRoot);
+			this.$logger.trace("Package: %s", this.$projectData.projectId);
+			this.$logger.trace("Name: %s", this.$projectData.projectName);
+
+			this.$logger.out("Copying template files...");
+
+			// get path to downloaded framework package
+			var frameworkDir = this.$npm.install(this.$platformsData.getPlatformData(platform).frameworkPackageName,
+				path.join(this.$projectData.platformsDir, platform)).wait();
+			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_DIR);
+
+			platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
+
+			// Need to remove unneeded node_modules folder
+			this.$fs.deleteDirectory(path.join(this.$projectData.platformsDir, platform, "node_modules")).wait();
+
+			platformProjectService.interpolateData(platformData.projectRoot);
+			platformProjectService.afterCreateProject(platformData.projectRoot);
+
+			this.$logger.out("Project successfully created.");
 
 		}).future<void>()();
 	}
@@ -109,19 +138,15 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	public runPlatform(platform: string): IFuture<void> {
-		return (() => {
-
-		}).future<void>()();
-	}
-
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.validatePlatform(platform);
 
-			this.$platformProjectService.prepareProject(this.$platformsData.getPlatformData(platform).normalizedPlatformName,
-				this.$platformsData.platformsNames).wait();
+			var platformData = this.$platformsData.getPlatformData(platform);
+			var platformProjectService = platformData.platformProjectService;
+
+			platformProjectService.prepareProject(platformData.normalizedPlatformName, this.$platformsData.platformsNames).wait();
 		}).future<void>()();
 	}
 
@@ -130,7 +155,15 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLocaleLowerCase();
 			this.validatePlatform(platform);
 
-			this.$platformProjectService.buildProject(platform).wait();
+			var platformData = this.$platformsData.getPlatformData(platform);
+			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
+			this.$logger.out("Project successfully built");
+		}).future<void>()();
+	}
+
+	public runPlatform(platform: string): IFuture<void> {
+		return (() => {
+
 		}).future<void>()();
 	}
 

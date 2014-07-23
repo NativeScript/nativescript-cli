@@ -1,10 +1,12 @@
 ///<reference path="../.d.ts"/>
 import path = require("path");
 import shell = require("shelljs");
+import util = require("util");
 import options = require("./../options");
 import helpers = require("./../common/helpers");
+import constants = require("./../constants");
 
-class AndroidProjectService implements IPlatformSpecificProjectService {
+class AndroidProjectService implements IPlatformProjectService {
 	constructor(private $fs: IFileSystem,
 				private $errors: IErrors,
 				private $logger: ILogger,
@@ -23,26 +25,17 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
-			var packageName = this.$projectData.projectId;
-			var packageAsPath = packageName.replace(/\./g, path.sep);
+			this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
 
-			var validTarget = this.getTarget(frameworkDir).wait();
-			var output = this.$childProcess.exec('android list targets').wait();
-			if (!output.match(validTarget)) {
-				this.$errors.fail("Please install Android target %s the Android newest SDK). Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
-					validTarget.split('-')[1]);
-			}
+			var paths = "assets gen libs res".split(' ').map(p => path.join(frameworkDir, p));
+			shell.cp("-r", paths, projectRoot);
 
-			shell.cp("-r", path.join(frameworkDir, "assets"), projectRoot);
-			shell.cp("-r", path.join(frameworkDir, "gen"), projectRoot);
-			shell.cp("-r", path.join(frameworkDir, "libs"), projectRoot);
-			shell.cp("-r", path.join(frameworkDir, "res"), projectRoot);
-
-			shell.cp("-f", path.join(frameworkDir, ".project"), projectRoot);
-			shell.cp("-f", path.join(frameworkDir, "AndroidManifest.xml"), projectRoot);
-			shell.cp("-f", path.join(frameworkDir, "project.properties"), projectRoot);
+			paths = ".project AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
+			shell.cp("-f", paths, projectRoot);
 
 			// Create src folder
+			var packageName = this.$projectData.projectId;
+			var packageAsPath = packageName.replace(/\./g, path.sep);
 			var activityDir = path.join(projectRoot, 'src', packageAsPath);
 			this.$fs.createDirectory(activityDir).wait();
 
@@ -58,10 +51,37 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 		shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, path.join(projectRoot, "AndroidManifest.xml"));
 	}
 
-	public executePlatformSpecificAction(projectRoot: string) {
+	public afterCreateProject(projectRoot: string) {
 		var targetApi = this.getTarget(projectRoot).wait();
 		this.$logger.trace("Android target: %s", targetApi);
 		this.runAndroidUpdate(projectRoot, targetApi).wait();
+	}
+
+	public prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void> {
+		return (() => {
+			var platform = normalizedPlatformName.toLowerCase();
+			var assetsDirectoryPath = path.join(this.$projectData.platformsDir, platform, "assets");
+			var appResourcesDirectoryPath = path.join(assetsDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+			shell.cp("-r", path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), assetsDirectoryPath);
+
+			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
+				shell.cp("-r", path.join(appResourcesDirectoryPath, normalizedPlatformName, "*"), path.join(this.$projectData.platformsDir, platform, "res"));
+				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
+			}
+
+			var files = helpers.enumerateFilesInDirectorySync(path.join(assetsDirectoryPath, constants.APP_FOLDER_NAME));
+			var platformsAsString = platforms.join("|");
+
+			_.each(files, fileName => {
+				var platformInfo = AndroidProjectService.parsePlatformSpecificFileName(path.basename(fileName), platformsAsString);
+				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
+				if (shouldExcludeFile) {
+					this.$fs.deleteFile(fileName).wait();
+				} else if (platformInfo && platformInfo.onDeviceName) {
+					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
+				}
+			});
+		}).future<void>()();
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
@@ -121,6 +141,15 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 		}
 	}
 
+	private validateAndroidTarget(frameworkDir: string) {
+		var validTarget = this.getTarget(frameworkDir).wait();
+		var output = this.$childProcess.exec('android list targets').wait();
+		if (!output.match(validTarget)) {
+			this.$errors.fail("Please install Android target %s the Android newest SDK). Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
+				validTarget.split('-')[1]);
+		}
+	}
+
 	private getTarget(projectRoot: string): IFuture<string> {
 		return (() => {
 			var projectPropertiesFilePath = path.join(projectRoot, "project.properties");
@@ -166,6 +195,18 @@ class AndroidProjectService implements IPlatformSpecificProjectService {
 				}
 			}
 		}).future<void>()();
+	}
+
+	private static parsePlatformSpecificFileName(fileName: string, platforms: string): any {
+		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms);
+		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
+		if (parsed) {
+			return {
+				platform: parsed[2],
+				onDeviceName: parsed[1] + parsed[3]
+			};
+		}
+		return undefined;
 	}
 }
 $injector.register("androidProjectService", AndroidProjectService);

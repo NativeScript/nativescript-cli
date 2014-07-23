@@ -9,7 +9,7 @@ interface IPlatformService {
 
 interface IPlatformData {
 	frameworkPackageName: string;
-	platformProjectService: IPlatformSpecificProjectService;
+	platformProjectService: IPlatformProjectService;
 	projectRoot: string;
 	normalizedPlatformName: string;
 	targetedOS?: string[];

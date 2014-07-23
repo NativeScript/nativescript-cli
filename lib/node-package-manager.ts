@@ -27,6 +27,19 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
+	public install(packageName: string, pathToSave?: string): IFuture<string> {
+		return (() => {
+			var action = (packageName: string) => {
+				this.installCore(pathToSave || npm.cache, packageName).wait();
+			};
+
+			this.tryExecuteAction(action, packageName).wait();
+
+			return path.join(pathToSave || npm.cache, "node_modules", packageName);
+
+		}).future<string>()();
+	}
+
 	private installCore(where: string, what: string): IFuture<any> {
 		var future = new Future<any>();
 		npm.commands["install"](where, what, (err, data) => {
@@ -49,19 +62,6 @@ export class NodePackageManager implements INodePackageManager {
 				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
 			}
 		}).future<void>()();
-	}
-
-	public install(packageName: string, pathToSave?: string): IFuture<string> {
-		return (() => {
-			var action = (packageName: string) => {
-				this.installCore(pathToSave || npm.cache, packageName).wait();
-			};
-
-			this.tryExecuteAction(action, packageName).wait();
-
-			return path.join(pathToSave || npm.cache, "node_modules", packageName);
-
-		}).future<string>()();
 	}
 }
 $injector.register("npm", NodePackageManager);
