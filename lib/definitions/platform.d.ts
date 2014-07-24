@@ -7,6 +7,16 @@ interface IPlatformService {
 	buildPlatform(platform: string): IFuture<void>;
 }
 
-interface IPlatformCapabilities {
+interface IPlatformData {
+	frameworkPackageName: string;
+	platformProjectService: IPlatformProjectService;
+	projectRoot: string;
+	normalizedPlatformName: string;
 	targetedOS?: string[];
 }
+
+interface IPlatformsData {
+	platformsNames: string[];
+	getPlatformData(platform: string): IPlatformData;
+}
+
