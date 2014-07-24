@@ -7,31 +7,27 @@ import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 
 class PlatformsData implements IPlatformsData {
-	private platformsData = {
-		ios: {
-			frameworkPackageName: "tns-ios",
-			platformProjectService: null,
-			normalizedPlatformName: "iOS",
-			projectRoot: "",
-			targetedOS: ['darwin']
-		},
-		android: {
-			frameworkPackageName: "tns-android",
-			platformProjectService: null,
-			normalizedPlatformName: "Android",
-			projectRoot: ""
-		}
-	};
+	private platformsData = {};
 
 	constructor($projectData: IProjectData,
 		$androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService) {
 
-		this.platformsData.ios.projectRoot = "";
-		this.platformsData.ios.platformProjectService = $iOSProjectService;
-
-		this.platformsData.android.projectRoot = path.join($projectData.platformsDir, "android");
-		this.platformsData.android.platformProjectService = $androidProjectService;
+		this.platformsData = {
+			ios: {
+				frameworkPackageName: "tns-ios",
+				normalizedPlatformName: "iOS",
+				platformProjectService: $iOSProjectService,
+				projectRoot: "",
+				targetedOS: ['darwin']
+			},
+			android: {
+				frameworkPackageName: "tns-android",
+				normalizedPlatformName: "Android",
+				platformProjectService: $androidProjectService,
+				projectRoot: path.join($projectData.platformsDir, "android")
+			}
+		}
 	}
 
 	public get platformsNames() {
@@ -108,7 +104,7 @@ export class PlatformService implements IPlatformService {
 			platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 
 			// Need to remove unneeded node_modules folder
-			this.$fs.deleteDirectory(path.join(this.$projectData.platformsDir, platform, "node_modules")).wait();
+			this.$fs.deleteDirectory(path.join("../", frameworkDir)).wait();
 
 			platformProjectService.interpolateData(platformData.projectRoot);
 			platformProjectService.afterCreateProject(platformData.projectRoot);
