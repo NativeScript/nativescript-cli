@@ -95,7 +95,7 @@ export class ProjectService implements IProjectService {
 				// No custom app - use nativescript hello world application
 				this.$logger.trace("Using NativeScript hello world application");
 				var defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
-				this.$logger.trace("Copying Nativescript hello world application into %s", appDirectory);
+				this.$logger.trace("Copying NativeScript hello world application into %s", appDirectory);
 				appPath = defaultTemplatePath;
 			}
 

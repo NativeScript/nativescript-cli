@@ -1,15 +1,18 @@
 ///<reference path=".d.ts"/>
 
-import npm = require("npm");
 import Future = require("fibers/future");
-import shell = require("shelljs");
+import npm = require("npm");
 import path = require("path");
+import shell = require("shelljs");
+import helpers = require("./common/helpers");
 
 export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
+	private static NPM_REGISTRY_URL = "http://registry.npmjs.org/";
 
 	constructor(private $logger: ILogger,
-		private $errors: IErrors) { }
+		private $errors: IErrors,
+		private $httpClient: Server.IHttpClient) { }
 
 	public get cache(): string {
 		return npm.cache;
@@ -27,14 +30,24 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	public install(packageName: string, pathToSave?: string): IFuture<string> {
+	public install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
 		return (() => {
-			var action = (packageName: string) => {
+			try {
+				this.load().wait(); // It's obligatory to execute load before whatever npm function
 				pathToSave = pathToSave || npm.cache;
-				this.installCore(pathToSave, packageName).wait();
-			};
+				var packageToInstall = packageName;
 
-			this.tryExecuteAction(action, packageName).wait();
+				if(version) {
+					this.validateVersion(packageName, version).wait();
+					packageToInstall = packageName + "@" + version;
+				}
+
+				this.installCore(pathToSave, packageToInstall).wait();
+
+			} catch(error) {
+				this.$logger.debug(error);
+				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
+			}
 
 			return path.join(pathToSave, "node_modules", packageName);
 
@@ -53,14 +66,20 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	private tryExecuteAction(action: (...args: any[]) => void, ...args: any[]): IFuture<void> {
+	private getAvailableVersions(packageName: string): IFuture<string[]> {
 		return (() => {
-			try {
-				this.load().wait(); // It's obligatory to execute load before whatever npm function
-				action.apply(null, args);
-			} catch(error) {
-				this.$logger.debug(error);
-				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
+			var url = NodePackageManager.NPM_REGISTRY_URL + packageName;
+			var response = this.$httpClient.httpRequest(url).wait().body;
+			var json = JSON.parse(response);
+			return _.keys(json.versions);
+		}).future<string[]>()();
+	}
+
+	private validateVersion(packageName: string, version: string): IFuture<void> {
+		return (() => {
+			var versions = this.getAvailableVersions(packageName).wait();
+			if(!_.contains(versions, version)) {
+				this.$errors.fail("Invalid version. Valid versions are: %s", helpers.formatListOfNames(versions, "and"));
 			}
 		}).future<void>()();
 	}

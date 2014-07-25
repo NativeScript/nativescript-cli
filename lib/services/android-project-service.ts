@@ -16,6 +16,15 @@ class AndroidProjectService implements IPlatformProjectService {
 				private $projectData: IProjectData,
 				private $propertiesParser: IPropertiesParser) { }
 
+	public get platformData(): IPlatformData {
+		return {
+			frameworkPackageName: "tns-android",
+			normalizedPlatformName: "Android",
+			platformProjectService: this,
+			projectRoot: path.join(this.$projectData.platformsDir, "android")
+		};
+	}
+
 	public validate(): IFuture<void> {
 		return (() => {
 			this.validatePackageName(this.$projectData.projectId);
@@ -61,54 +70,49 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<void>()();
 	}
 
-	public afterCreateProject(projectRoot: string) {
-		var targetApi = this.getTarget(projectRoot).wait();
-		this.$logger.trace("Android target: %s", targetApi);
-		this.runAndroidUpdate(projectRoot, targetApi).wait();
+	public afterCreateProject(projectRoot: string): IFuture<void> {
+		return (() => {
+			var targetApi = this.getTarget(projectRoot).wait();
+			this.$logger.trace("Android target: %s", targetApi);
+			this.runAndroidUpdate(projectRoot, targetApi).wait();
+		}).future<void>()();
 	}
 
-	public prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void> {
+	public prepareProject(platformData: IPlatformData): IFuture<string> {
 		return (() => {
-			var platform = normalizedPlatformName.toLowerCase();
-			var assetsDirectoryPath = path.join(this.$projectData.platformsDir, platform, "assets");
-			var appResourcesDirectoryPath = path.join(assetsDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
-			shell.cp("-r", path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), assetsDirectoryPath);
+			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			var assetsDirectory = path.join(platformData.projectRoot, "assets");
+			var resDirectory = path.join(platformData.projectRoot, "res");
 
+			shell.cp("-r", appSourceDirectory, assetsDirectory);
+
+			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-r", path.join(appResourcesDirectoryPath, normalizedPlatformName, "*"), path.join(this.$projectData.platformsDir, platform, "res"));
+				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
-			var files = helpers.enumerateFilesInDirectorySync(path.join(assetsDirectoryPath, constants.APP_FOLDER_NAME));
-			var platformsAsString = platforms.join("|");
+			return path.join(assetsDirectory, constants.APP_FOLDER_NAME);
 
-			_.each(files, fileName => {
-				var platformInfo = AndroidProjectService.parsePlatformSpecificFileName(path.basename(fileName), platformsAsString);
-				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
-				if (shouldExcludeFile) {
-					this.$fs.deleteFile(fileName).wait();
-				} else if (platformInfo && platformInfo.onDeviceName) {
-					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
-				}
-			});
-		}).future<void>()();
+		}).future<string>()();
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
 			var args = this.getAntArgs(buildConfiguration, projectRoot);
-			this.spawn('ant', args);
+			this.spawn('ant', args).wait();
 		}).future<void>()();
 	}
 
-	private spawn(command: string, args: string[], options?: any): void {
-		if(helpers.isWindows()) {
+	private spawn(command: string, args: string[]): IFuture<void> {
+		if (helpers.isWindows()) {
 			args.unshift('/s', '/c', command);
 			command = 'cmd';
 		}
 
-		this.$childProcess.spawn(command, args, {cwd: options, stdio: 'inherit'});
+		var child = this.$childProcess.spawn(command, args, {stdio: "inherit"});
+		return this.$fs.futureFromEvent(child, "close");
 	}
 
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
@@ -123,7 +127,7 @@ class AndroidProjectService implements IPlatformProjectService {
 				"--target", targetApi
 			];
 
-			this.spawn("android update project", args);
+			this.spawn("android", ['update', 'project'].concat(args)).wait();
 		}).future<void>()();
 	}
 
@@ -207,18 +211,6 @@ class AndroidProjectService implements IPlatformProjectService {
 				}
 			}
 		}).future<void>()();
-	}
-
-	private static parsePlatformSpecificFileName(fileName: string, platforms: string): any {
-		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms);
-		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
-		if (parsed) {
-			return {
-				platform: parsed[2],
-				onDeviceName: parsed[1] + parsed[3]
-			};
-		}
-		return undefined;
 	}
 }
 $injector.register("androidProjectService", AndroidProjectService);
