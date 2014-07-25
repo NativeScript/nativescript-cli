@@ -5,3 +5,4 @@ interface INodePackageManager {
 }
 
 interface IStaticConfig extends Config.IStaticConfig { }
+

@@ -3,8 +3,10 @@
 import Future = require("fibers/future");
 import npm = require("npm");
 import path = require("path");
+import semver = require("semver");
 import shell = require("shelljs");
 import helpers = require("./common/helpers");
+import constants = require("./constants");
 
 export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
@@ -12,7 +14,8 @@ export class NodePackageManager implements INodePackageManager {
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
-		private $httpClient: Server.IHttpClient) { }
+		private $httpClient: Server.IHttpClient,
+		private $staticConfig: IStaticConfig) { }
 
 	public get cache(): string {
 		return npm.cache;
@@ -43,7 +46,6 @@ export class NodePackageManager implements INodePackageManager {
 				}
 
 				this.installCore(pathToSave, packageToInstall).wait();
-
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
@@ -54,9 +56,18 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<string>()();
 	}
 
-	private installCore(where: string, what: string): IFuture<any> {
-		var future = new Future<any>();
-		npm.commands["install"](where, what, (err, data) => {
+	private installCore(packageName: string, pathToSave: string): IFuture<void> {
+		var currentVersion = this.$staticConfig.version;
+		if(!semver.valid(currentVersion)) {
+			this.$errors.fail("Invalid version.");
+		}
+
+		var incrementedVersion = semver.inc(currentVersion, constants.ReleaseType.MINOR);
+		packageName = packageName + "@" + "<" + incrementedVersion;
+		this.$logger.trace("Installing", packageName);
+
+		var future = new Future<void>();
+		npm.commands["install"](pathToSave, packageName, (err, data) => {
 			if(err) {
 				future.throw(err);
 			} else {
