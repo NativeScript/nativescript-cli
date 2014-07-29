@@ -56,8 +56,6 @@ export class PlatformService implements IPlatformService {
 				this.$errors.fail("No platform specified. Please specify a platform to add");
 			}
 
-			this.$projectService.ensureProject();
-
 			var platformsDir = this.$projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
@@ -137,7 +135,8 @@ export class PlatformService implements IPlatformService {
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			this.validatePlatform(platform);
+
+			this.validatePlatformInstalled(platform);
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 			var platformProjectService = platformData.platformProjectService;
@@ -148,8 +147,8 @@ export class PlatformService implements IPlatformService {
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLocaleLowerCase();
-			this.validatePlatform(platform);
+			platform = platform.toLowerCase();
+			this.validatePlatformInstalled(platform);
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
@@ -173,6 +172,14 @@ export class PlatformService implements IPlatformService {
 		}
 	}
 
+	private validatePlatformInstalled(platform: string): void {
+		this.validatePlatform(platform);
+
+		if (!this.isPlatformInstalled(platform).wait()) {
+			this.$errors.fail("The platform %s is not added to this project. Please use 'tns platform add <platform>'", platform);
+		}
+	}
+
 	private isValidPlatform(platform: string) {
 		return this.$platformsData.getPlatformData(platform);
 	}
@@ -185,6 +192,12 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
+	}
+
+	private isPlatformInstalled(platform: string): IFuture<boolean> {
+		return (() => {
+			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
+		}).future<boolean>()();
 	}
 }
 $injector.register("platformService", PlatformService);
