@@ -1,4 +1,4 @@
 # Ensure that the shebang of our start script can be correctly interpreted
 
-bin/appbuilder.js eol=lf
+bin/nativescript.js eol=lf
 
