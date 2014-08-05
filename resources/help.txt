@@ -109,3 +109,16 @@ Builds the project for specified platform. This generates platform-specific code
 
 --[/]--
 
+--[run]--
+
+Usage:
+    $ tns run [<platform>]
+
+Platform-specific usage:
+    $ tns run android
+    $ tns run ios
+
+This is shorthand for prepare and build.
+
+--[/]--
+

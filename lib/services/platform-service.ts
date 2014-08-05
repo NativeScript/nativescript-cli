@@ -158,7 +158,12 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string): IFuture<void> {
 		return (() => {
+			platform = platform.toLowerCase();
 
+			this.validatePlatformInstalled(platform);
+
+			this.preparePlatform(platform).wait();
+			this.buildPlatform(platform).wait();
 		}).future<void>()();
 	}
 
