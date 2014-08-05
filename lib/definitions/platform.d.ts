@@ -5,6 +5,7 @@ interface IPlatformService {
 	runPlatform(platform: string): IFuture<void>;
 	preparePlatform(platform: string): IFuture<void>;
 	buildPlatform(platform: string): IFuture<void>;
+	removePlatforms(platforms: string[]): IFuture<void>;
 }
 
 interface IPlatformData {
