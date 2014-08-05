@@ -7,6 +7,8 @@ import helpers = require("./../common/helpers");
 import constants = require("./../constants");
 
 class AndroidProjectService implements IPlatformProjectService {
+	private targetApi: string;
+
 	constructor(private $fs: IFileSystem,
 				private $errors: IErrors,
 				private $logger: ILogger,
@@ -42,13 +44,21 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<any>()();
 	}
 
-	public interpolateData(projectRoot: string): void {
-		// Interpolate the activity name and package
-		var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
-		shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
-		shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
-		shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
-		shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, path.join(projectRoot, "AndroidManifest.xml"));
+	public interpolateData(projectRoot: string): IFuture<void> {
+		return (() => {
+			// Interpolate the activity name and package
+			var manifestPath = path.join(projectRoot, "AndroidManifest.xml");
+			var safeActivityName = this.$projectData.projectName.replace(/\W/g, '');
+			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
+			shell.sed('-i', /__ACTIVITY__/, safeActivityName, manifestPath);
+			shell.sed('-i', /__APILEVEL__/, this.getTarget(projectRoot).wait().split('-')[1], manifestPath);
+
+			var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
+			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
+			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
+			shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
+
+		}).future<void>()();
 	}
 
 	public afterCreateProject(projectRoot: string) {
@@ -152,14 +162,16 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private getTarget(projectRoot: string): IFuture<string> {
 		return (() => {
-			var projectPropertiesFilePath = path.join(projectRoot, "project.properties");
+			if(!this.targetApi) {
+				var projectPropertiesFilePath = path.join(projectRoot, "project.properties");
 
-			if (this.$fs.exists(projectPropertiesFilePath).wait()) {
-				var properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
-				return properties.get("target");
+				if (this.$fs.exists(projectPropertiesFilePath).wait()) {
+					var properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
+					this.targetApi = properties.get("target");
+				}
 			}
 
-			return "";
+			return this.targetApi;
 		}).future<string>()();
 	}
 
