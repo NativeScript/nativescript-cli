@@ -7,3 +7,5 @@ interface INodePackageManager {
 interface IPropertiesParser {
 	createEditor(filePath: string): IFuture<any>;
 }
+
+interface IStaticConfig extends Config.IStaticConfig { }

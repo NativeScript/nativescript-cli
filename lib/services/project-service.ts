@@ -18,7 +18,7 @@ class ProjectData implements IProjectData {
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $projectHelper: IProjectHelper,
-		private $config: IConfig) {
+		private $staticConfig: IStaticConfig) {
 		this.initializeProjectData().wait();
 	}
 
@@ -30,7 +30,7 @@ class ProjectData implements IProjectData {
 				this.projectDir = projectDir;
 				this.projectName = path.basename(projectDir);
 				this.platformsDir = path.join(projectDir, "platforms");
-				this.projectFilePath = path.join(projectDir, this.$config.PROJECT_FILE_NAME);
+				this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 
 				if (this.$fs.exists(this.projectFilePath).wait()) {
 					var fileContent = this.$fs.readJson(this.projectFilePath).wait();
@@ -50,7 +50,7 @@ export class ProjectService implements IProjectService {
 		private $fs: IFileSystem,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $projectHelper: IProjectHelper,
-		private $config) { }
+		private $staticConfig: IStaticConfig) { }
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
@@ -128,7 +128,7 @@ export class ProjectService implements IProjectService {
 			this.$fs.createDirectory(path.join(projectDir, "hooks")).wait();
 
 			var projectData = { id: projectId };
-			this.$fs.writeFile(path.join(projectDir, this.$config.PROJECT_FILE_NAME), JSON.stringify(projectData)).wait();
+			this.$fs.writeFile(path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME), JSON.stringify(projectData)).wait();
 		}).future<void>()();
 	}
 
