@@ -54,12 +54,10 @@ export class ProjectService implements IProjectService {
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
-			var projectDir = path.resolve(options.path || ".");
-
 			projectName = projectName || constants.DEFAULT_PROJECT_NAME;
 			projectId =  options.appid || this.$projectHelper.generateDefaultAppId(projectName);
 
-			projectDir = path.join(projectDir, projectName);
+			var projectDir = path.join(path.resolve(options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
 
 			var customAppPath = this.getCustomAppPath();
@@ -99,9 +97,15 @@ export class ProjectService implements IProjectService {
 				appPath = defaultTemplatePath;
 			}
 
-			this.createProjectCore(projectDir, appPath,  projectId, false).wait();
+			try {
+				this.createProjectCore(projectDir, appPath,  projectId, false).wait();
+			} catch(err) {
+				this.$fs.deleteDirectory(projectDir).wait();
+				throw err;
+			}
 
 			this.$logger.out("Project %s was successfully created", projectName);
+
 		}).future<void>()();
 	}
 
