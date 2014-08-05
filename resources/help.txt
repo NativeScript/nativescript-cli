@@ -9,6 +9,7 @@ General commands:
     create                          Creates a new NativeScript project with given project name and application identifier.
     platform add                    Creates a new platform specific project.
     platform list                   Lists all available and all installed platforms.
+    platform remove                 Removes the platform specific project.
     prepare                         Copies files for specified platform, so that the project is ready to build in platform specific SDK.
     build                           Builds the project for the selected target platform and produces an application package.
     run                             This is shorthand for prepare and build.
@@ -81,6 +82,20 @@ Platform-specific usage:
 
 Creates a new platform specific project. In this version of Telerik NativeScript you can create only ios and android projects.
 You can create Android projects on windows and Mac machine. You can create ios projects only on Mac machine.
+
+--[/]--
+
+--[platform|remove]--
+
+Usage:
+    $ tns platform remove <platform>
+
+Platform-specific usage:
+    $ tns platform remove android
+    $ tns platform remove ios
+
+Removes the platform specific project.
+
 --[/]--
 
 --[prepare]--

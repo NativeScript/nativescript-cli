@@ -162,6 +162,22 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public removePlatforms(platforms: string[]): IFuture<void> {
+		return (() => {
+			if(!platforms || platforms.length === 0) {
+				this.$errors.fail("No platform specified. Please specify a platform to remove");
+			}
+
+			_.each(platforms, platform => {
+				this.validatePlatformInstalled(platform);
+
+				var platformDir = path.join(this.$projectData.platformsDir, platform);
+				this.$fs.deleteDirectory(platformDir).wait();
+			});
+
+		}).future<void>()();
+	}
+
 	private validatePlatform(platform: string): void {
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));

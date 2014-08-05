@@ -15,6 +15,7 @@ $injector.require("platformService", "./services/platform-service");
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
+$injector.requireCommand("platform|remove", "./commands/remove-platform");
 $injector.requireCommand("run", "./commands/run");
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build", "./commands/build");
