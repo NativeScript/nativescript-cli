@@ -22,3 +22,4 @@ $injector.requireCommand("build", "./commands/build");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("propertiesParser", "./properties-parser");
+$injector.require("config", "./config");
