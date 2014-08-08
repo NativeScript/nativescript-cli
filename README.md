@@ -10,7 +10,6 @@ The installation of the Telerik NativeScript Command-line Interface requires [No
 #Installation
 To install the nativescript-cli, simply run
 `npm install -g nativescript`
-[![NPM](https://nodei.co/npm/nativescript.png?downloads=true&stars=true)](https://nodei.co/npm/nativescript/)
 
 #Usage
 `$ tns <command> [command parameters] [--command <options>]`
