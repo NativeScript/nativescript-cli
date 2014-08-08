@@ -99,16 +99,27 @@ export class PlatformService implements IPlatformService {
 				path.join(this.$projectData.platformsDir, platform)).wait();
 			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 
-			platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
+			try {
+				this.addPlatformCore(platformData, frameworkDir).wait();
+			} catch(err) {
+				this.$fs.deleteDirectory(platformPath).wait();
+				throw err;
+			}
+
+			this.$logger.out("Project successfully created.");
+
+		}).future<void>()();
+	}
+
+	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<void> {
+		return (() => {
+			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 
 			// Need to remove unneeded node_modules folder
 			this.$fs.deleteDirectory(path.join("../", frameworkDir)).wait();
 
-			platformProjectService.interpolateData(platformData.projectRoot);
-			platformProjectService.afterCreateProject(platformData.projectRoot);
-
-			this.$logger.out("Project successfully created.");
-
+			platformData.platformProjectService.interpolateData(platformData.projectRoot);
+			platformData.platformProjectService.afterCreateProject(platformData.projectRoot);
 		}).future<void>()();
 	}
 
