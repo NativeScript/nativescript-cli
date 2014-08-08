@@ -9,24 +9,12 @@ import helpers = require("./../common/helpers");
 class PlatformsData implements IPlatformsData {
 	private platformsData = {};
 
-	constructor($projectData: IProjectData,
-		$androidProjectService: IPlatformProjectService,
+	constructor($androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService) {
 
 		this.platformsData = {
-			ios: {
-				frameworkPackageName: "tns-ios",
-				normalizedPlatformName: "iOS",
-				platformProjectService: $iOSProjectService,
-				projectRoot: "",
-				targetedOS: ['darwin']
-			},
-			android: {
-				frameworkPackageName: "tns-android",
-				normalizedPlatformName: "Android",
-				platformProjectService: $androidProjectService,
-				projectRoot: path.join($projectData.platformsDir, "android")
-			}
+			ios: $iOSProjectService.platformData,
+			android: $androidProjectService.platformData
 		}
 	}
 
@@ -45,10 +33,8 @@ export class PlatformService implements IPlatformService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npm: INodePackageManager,
-		private $projectService: IProjectService,
 		private $projectData: IProjectData,
-		private $platformsData: IPlatformsData) {
-	}
+		private $platformsData: IPlatformsData) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -68,22 +54,21 @@ export class PlatformService implements IPlatformService {
 
 	private addPlatform(platform: string): IFuture<void> {
 		return(() => {
-			platform = platform.split("@")[0];
+			var parts = platform.split("@");
+			platform = parts[0];
+			var version = parts[1];
 
 			this.validatePlatform(platform);
 
 			var platformPath = path.join(this.$projectData.platformsDir, platform);
-
-			// TODO: Check for version compatability if the platform is in format platform@version. This should be done in PR for semanting versioning
-
 			if (this.$fs.exists(platformPath).wait()) {
 				this.$errors.fail("Platform %s already added", platform);
 			}
 
-			// Copy platform specific files in platforms dir
 			var platformData = this.$platformsData.getPlatformData(platform);
-			var platformProjectService = platformData.platformProjectService;
 
+			// Copy platform specific files in platforms dir
+			var platformProjectService = platformData.platformProjectService;
 			platformProjectService.validate().wait();
 
 			// Log the values for project
@@ -95,8 +80,8 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Copying template files...");
 
 			// get path to downloaded framework package
-			var frameworkDir = this.$npm.install(this.$platformsData.getPlatformData(platform).frameworkPackageName,
-				path.join(this.$projectData.platformsDir, platform)).wait();
+			var frameworkDir = this.$npm.install(platformData.frameworkPackageName,
+				path.join(this.$projectData.platformsDir, platform), version).wait();
 			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 
 			try {
@@ -116,6 +101,7 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 
 			// Need to remove unneeded node_modules folder
+			// One level up is the runtime module and one above is the node_modules folder.
 			this.$fs.deleteDirectory(path.join("../", frameworkDir)).wait();
 
 			platformData.platformProjectService.interpolateData(platformData.projectRoot);
@@ -152,7 +138,19 @@ export class PlatformService implements IPlatformService {
 			var platformData = this.$platformsData.getPlatformData(platform);
 			var platformProjectService = platformData.platformProjectService;
 
-			platformProjectService.prepareProject(platformData.normalizedPlatformName, this.$platformsData.platformsNames).wait();
+			var appFilesLocation = platformProjectService.prepareProject(platformData).wait();
+			var files = helpers.enumerateFilesInDirectorySync(appFilesLocation);
+
+			_.each(files, fileName => {
+				var platformInfo = PlatformService.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
+				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
+				if (shouldExcludeFile) {
+					this.$fs.deleteFile(fileName).wait();
+				} else if (platformInfo && platformInfo.onDeviceName) {
+					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
+				}
+			});
+
 		}).future<void>()();
 	}
 
@@ -230,6 +228,18 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
 		}).future<boolean>()();
+	}
+
+	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
+		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms.join("|"));
+		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
+		if (parsed) {
+			return {
+				platform: parsed[2],
+				onDeviceName: parsed[1] + parsed[3]
+			};
+		}
+		return undefined;
 	}
 }
 $injector.register("platformService", PlatformService);

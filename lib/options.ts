@@ -12,6 +12,7 @@ var knownOpts:any = {
 		"copy-from": String,
 		"link-to": String,
 		"release": String,
+		"device": Boolean,
 		"version": Boolean,
 		"help": Boolean
 	},

@@ -6,3 +6,14 @@ export var DEFAULT_PROJECT_NAME = "HelloNativescript";
 export var APP_RESOURCES_FOLDER_NAME = "App_Resources";
 export var PROJECT_FRAMEWORK_FOLDER_NAME = "framework";
 
+export class ReleaseType {
+	static MAJOR = "major";
+	static PREMAJOR = "premajor";
+	static MINOR = "minor";
+	static PREMINOR = "preminor";
+	static PATCH = "patch";
+	static PREPATCH = "prepatch";
+	static PRERELEASE = "prerelease";
+}
+
+

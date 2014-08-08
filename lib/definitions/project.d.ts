@@ -15,10 +15,11 @@ interface IProjectTemplatesService {
 }
 
 interface IPlatformProjectService {
+	platformData: IPlatformData;
 	validate(): IFuture<void>;
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
-	interpolateData(projectRoot: string): void;
-	afterCreateProject(projectRoot: string): void;
-	prepareProject(normalizedPlatformName: string, platforms: string[]): IFuture<void>;
+	interpolateData(projectRoot: string): IFuture<void>;
+	afterCreateProject(projectRoot: string): IFuture<void>;
+	prepareProject(platformData: IPlatformData): IFuture<string>;
 	buildProject(projectRoot: string): IFuture<void>;
 }
