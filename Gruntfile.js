@@ -29,7 +29,8 @@ module.exports = function(grunt) {
 				module: 'commonjs',
 				sourceMap: true,
 				declaration: false,
-				removeComments: false
+				removeComments: false,
+				noImplicitAny: true
 			},
 
 			devlib: {

@@ -7,7 +7,7 @@ import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 
 class PlatformsData implements IPlatformsData {
-	private platformsData = {};
+	private platformsData : { [index: string]: any } = {};
 
 	constructor($androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService) {
@@ -22,7 +22,7 @@ class PlatformsData implements IPlatformsData {
 		return Object.keys(this.platformsData);
 	}
 
-	public getPlatformData(platform): IPlatformData {
+	public getPlatformData(platform: string): IPlatformData {
 		return this.platformsData[platform];
 	}
 }
