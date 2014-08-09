@@ -45,7 +45,7 @@ export class NodePackageManager implements INodePackageManager {
 					packageToInstall = packageName + "@" + version;
 				}
 
-				this.installCore(pathToSave, packageToInstall).wait();
+				this.installCore(packageToInstall, pathToSave).wait();
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
