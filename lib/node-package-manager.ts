@@ -67,7 +67,7 @@ export class NodePackageManager implements INodePackageManager {
 		this.$logger.trace("Installing", packageName);
 
 		var future = new Future<void>();
-		npm.commands["install"](pathToSave, packageName, (err, data) => {
+		npm.commands["install"](pathToSave, packageName, (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {

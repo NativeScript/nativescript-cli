@@ -1,3 +1,3 @@
 declare module "osenv" {
-	function home();
+	function home(): string;
 }

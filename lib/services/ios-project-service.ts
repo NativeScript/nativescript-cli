@@ -84,7 +84,7 @@ class IOSProjectService implements  IPlatformProjectService {
 				"-configuration", options.release,
 				"build"
 			];
-			var args = [];
+			var args: string[] = [];
 
 			if(options.device) {
 				args = basicArgs.concat([
