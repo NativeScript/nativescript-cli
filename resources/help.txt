@@ -58,7 +58,8 @@ Usage:
 
 <Command> is a related command that extends the platform command. You can run the following related commands:
     list - Lists all available and installed platforms.
-    add - Creates a new platform specific project
+    add - Enables a project with deployment capabilities for the specified platform
+    remove - Removes the deployment capabilities of a project for the specified platform
 
 --[/]--
 
@@ -80,8 +81,9 @@ Platform-specific usage:
     $ tns platform add android
     $ tns platform add ios
 
-Creates a new platform specific project. In this version of Telerik NativeScript you can create only ios and android projects.
-You can create Android projects on windows and Mac machine. You can create ios projects only on Mac machine.
+Creates a new platform specific project. The current version of the Telerik NativeScript has support for
+iOS and Android projects. Android projects can be created on Linux, Windows and Mac machines. iOS projects
+can only be created on a Mac machine.
 
 --[/]--
 
@@ -94,7 +96,7 @@ Platform-specific usage:
     $ tns platform remove android
     $ tns platform remove ios
 
-Removes the platform specific project.
+Removes the deployment capabilities of a project for the specified platform.
 
 --[/]--
 
