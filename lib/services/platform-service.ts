@@ -104,8 +104,8 @@ export class PlatformService implements IPlatformService {
 			// One level up is the runtime module and one above is the node_modules folder.
 			this.$fs.deleteDirectory(path.join("../", frameworkDir)).wait();
 
-			platformData.platformProjectService.interpolateData(platformData.projectRoot);
-			platformData.platformProjectService.afterCreateProject(platformData.projectRoot);
+			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
+			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
 		}).future<void>()();
 	}
 
