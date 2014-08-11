@@ -103,7 +103,7 @@ Android projects can be created on Linux, Windows and Mac machines. iOS projects
 
 `$ tns platform remove ios`
 
-Removes the platform specific project.
+Removes the deployment capabilities of a project for the specified platform.
 
 ##`prepare`<a name="preparecommand"></a>
 
