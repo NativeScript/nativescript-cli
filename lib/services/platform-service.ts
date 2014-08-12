@@ -229,6 +229,15 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public updatePlatforms(platforms: string[]): IFuture<void> {
+		return (() => {
+			if(!platforms || platforms.length === 0) {
+				this.$errors.fail("No platform specified. Please specify a platform to update");
+			}
+
+		}).future<void>()();
+	}
+
 	private validatePlatform(platform: string): void {
 		if(!platform) {
 			this.$errors.fail("No platform specified.")
