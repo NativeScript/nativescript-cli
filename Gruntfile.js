@@ -3,11 +3,11 @@ var util = require("util");
 var now = new Date().toISOString();
 
 function shallowCopy(obj) {
-    var result = {};
-    Object.keys(obj).forEach(function(key) {
-        result[key] = obj[key];
-    });
-    return result;
+	var result = {};
+	Object.keys(obj).forEach(function(key) {
+		result[key] = obj[key];
+	});
+	return result;
 }
 
 var travis = process.env["TRAVIS"];
