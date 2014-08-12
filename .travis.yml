@@ -9,7 +9,7 @@ install:
 - npm install
 - grunt pack --no-color
 script:
-- 'true'
+- npm test
 git:
   submodules: false
 deploy:

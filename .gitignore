@@ -1,3 +1,5 @@
+.DS_Store
+
 *.js
 !/*.js
 !bin/nativescript.js
