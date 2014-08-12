@@ -133,7 +133,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("pack", [
 		"clean",
 		"ts:release_build",
-		"shell:ts_unit_tests",
+		"shell:ci_unit_tests",
 
 		"set_package_version",
 		"shell:build_package",
