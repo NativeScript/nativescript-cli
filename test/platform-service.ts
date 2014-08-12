@@ -17,6 +17,7 @@ testInjector.register('logger', stubs.LoggerStub);
 testInjector.register('npm', stubs.NPMStub);
 testInjector.register('projectData', stubs.ProjectDataStub);
 testInjector.register('platformsData', stubs.PlatformsDataStub);
+testInjector.register('devicesServices', {});
 
 describe('PlatformService', function(){
     describe('#updatePlatforms()', function(){

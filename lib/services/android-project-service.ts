@@ -3,8 +3,8 @@ import path = require("path");
 import shell = require("shelljs");
 import util = require("util");
 import options = require("./../options");
-import helpers = require("./../common/helpers");
 import constants = require("./../constants");
+import hostInfo = require("../common/host-info");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private targetApi: string;
@@ -21,7 +21,12 @@ class AndroidProjectService implements IPlatformProjectService {
 			frameworkPackageName: "tns-android",
 			normalizedPlatformName: "Android",
 			platformProjectService: this,
-			projectRoot: path.join(this.$projectData.platformsDir, "android")
+			projectRoot: path.join(this.$projectData.platformsDir, "android"),
+			buildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
+			validPackageNames: [
+				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
+				util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
+			]
 		};
 	}
 
@@ -84,15 +89,15 @@ class AndroidProjectService implements IPlatformProjectService {
 			var assetsDirectory = path.join(platformData.projectRoot, "assets");
 			var resDirectory = path.join(platformData.projectRoot, "res");
 
-			shell.cp("-r", appSourceDirectory, assetsDirectory);
+			shell.cp("-r", path.join(appSourceDirectory, "*"), assetsDirectory);
 
-			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
 				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
-			return path.join(assetsDirectory, constants.APP_FOLDER_NAME);
+			return assetsDirectory;
 
 		}).future<string>()();
 	}
@@ -106,7 +111,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private spawn(command: string, args: string[]): IFuture<void> {
-		if (helpers.isWindows()) {
+		if (hostInfo.isWindows()) {
 			args.unshift('/s', '/c', command);
 			command = 'cmd';
 		}
@@ -124,7 +129,8 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			var args = [
 				"--path", projectPath,
-				"--target", targetApi
+				"--target", targetApi,
+				"--name", this.$projectData.projectName
 			];
 
 			this.spawn("android", ['update', 'project'].concat(args)).wait();
