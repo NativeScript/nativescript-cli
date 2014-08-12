@@ -2,7 +2,7 @@ nativescript-cli
 ================
 [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)](https://travis-ci.org/NativeScript/nativescript-cli)
 
-Command-line interface for creating and building Telerik NativeScript projects
+Command-line interface for creating and building NativeScript projects
 
 #Prerequisites
 The installation of the Telerik NativeScript Command-line Interface requires [Node.js](http://nodejs.org/)
