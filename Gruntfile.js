@@ -22,6 +22,7 @@ module.exports = function(grunt) {
 		dateString: now.substr(0, now.indexOf("T")),
 
 		pkg: grunt.file.readJSON("package.json"),
+		shellCmdStart: process.platform === "win32" ? "" : "./",
 
 		ts: {
 			options: {
