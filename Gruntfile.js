@@ -113,7 +113,6 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-shell");
 	grunt.loadNpmTasks("grunt-ts");
-    grunt.loadNpmTasks("grunt-simple-mocha");
 
 	grunt.registerTask("set_package_version", function(version) {
 		var fs = require("fs");
