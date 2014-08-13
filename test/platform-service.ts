@@ -29,13 +29,22 @@ describe('PlatformService', function(){
 		it('should fall back to adding platforms if specified platforms not installed', function(){
 			var platformService = testInjector.resolve('platformService');
 			var addPlatformCalled = false;
+			platformService.$projectData.platformsDir = "";
+
+			platformService.isPlatformInstalled = function(platform: string): IFuture<boolean> {
+				return (() => {
+					return false;
+				}).future<boolean>()();
+			}
+
 			platformService.addPlatform = function(platform: string): IFuture<void> {
 				return (() => {
 					addPlatformCalled = true;
 				}).future<void>()();
 			};
+console.log("Platform Service is: %o", platformService.addPlatform);
 
-			platformService.updatePlatforms(["aaa"]).wait();
+			platformService.updatePlatforms(["ios"]).wait();
 
 			addPlatformCalled.should.be.true;
 		});
