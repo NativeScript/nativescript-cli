@@ -235,6 +235,61 @@ export class PlatformService implements IPlatformService {
 				this.$errors.fail("No platform specified. Please specify a platform to update");
 			}
 
+			_.each(platforms, platform => {
+				if (!this.isPlatformInstalled(platform).wait())
+				{
+					this.addPlatform(platform.toLowerCase()).wait();
+				}
+				else
+				{
+					this.updatePlatform(platform.toLowerCase()).wait();
+				}
+			});
+
+		}).future<void>()();
+	}
+
+	private updatePlatform(platform: string): IFuture<void> {
+		return(() => {
+//			var parts = platform.split("@");
+//			platform = parts[0];
+//			var version = parts[1];
+//
+//			this.validatePlatform(platform);
+//
+//			var platformPath = path.join(this.$projectData.platformsDir, platform);
+//			if (this.$fs.exists(platformPath).wait()) {
+//				this.$errors.fail("Platform %s already added", platform);
+//			}
+//
+//			var platformData = this.$platformsData.getPlatformData(platform);
+//
+//			// Copy platform specific files in platforms dir
+//			var platformProjectService = platformData.platformProjectService;
+//			platformProjectService.validate().wait();
+//
+//			// Log the values for project
+//			this.$logger.trace("Creating NativeScript project for the %s platform", platform);
+//			this.$logger.trace("Path: %s", platformData.projectRoot);
+//			this.$logger.trace("Package: %s", this.$projectData.projectId);
+//			this.$logger.trace("Name: %s", this.$projectData.projectName);
+//
+//			this.$logger.out("Copying template files...");
+//
+//			// get path to downloaded framework package
+//			var frameworkDir = this.$npm.install(platformData.frameworkPackageName,
+//				path.join(this.$projectData.platformsDir, platform), version).wait();
+//			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
+//
+//			try {
+//				this.addPlatformCore(platformData, frameworkDir).wait();
+//			} catch(err) {
+//				this.$fs.deleteDirectory(platformPath).wait();
+//				throw err;
+//			}
+//
+//			this.$logger.out("Project successfully created.");
+
 		}).future<void>()();
 	}
 

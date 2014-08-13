@@ -20,11 +20,24 @@ testInjector.register('platformsData', stubs.PlatformsDataStub);
 testInjector.register('devicesServices', {});
 
 describe('PlatformService', function(){
-    describe('#updatePlatforms()', function(){
-        it('should fail when no services provided', function(){
-            var platformService = testInjector.resolve('platformService');
-            (function(){return platformService.updatePlatforms().wait(); }).should.throw();
+	describe('#updatePlatforms()', function(){
+		it('should fail if no services provided and no services exist', function(){
+			var platformService = testInjector.resolve('platformService');
+			(function(){return platformService.updatePlatforms().wait(); }).should.throw();
+		});
 
-        })
-    })
+		it('should fall back to adding platforms if specified platforms not installed', function(){
+			var platformService = testInjector.resolve('platformService');
+			var addPlatformCalled = false;
+			platformService.addPlatform = function(platform: string): IFuture<void> {
+				return (() => {
+					addPlatformCalled = true;
+				}).future<void>()();
+			};
+
+			platformService.updatePlatforms(["aaa"]).wait();
+
+			addPlatformCalled.should.be.true;
+		});
+	})
 });
