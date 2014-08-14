@@ -9,6 +9,7 @@ General commands:
     create                          Creates a new project for native development with NativeScript.
     platform add                    Configures the current project to target the selected platform.
     platform list                   Lists all target platforms for the current project.
+    platform remove                 Removes the platform specific project.
     prepare                         Copies cross-platform content to the subdirectory for the selected target platform. 
                                     This lets you build the project with the SDK for the selected platform.
     build                           Builds the project for the selected target platform and produces an application package.
@@ -63,6 +64,7 @@ You must run the platform command with a related command.
 <Command> is a related command that extends the platform command. You can run the following related commands:
     list - Lists all target platforms for the current project.
     add - Configures the current project to target the selected platform.
+    remove - Removes the deployment capabilities of a project for the specified platform
 
 --[/]--
 
@@ -94,6 +96,19 @@ When you add a target platform, the Telerik NativeScript CLI adds a correspondin
 directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
 --[/]--
 
+--[platform|remove]--
+
+Usage:
+    $ tns platform remove <platform>
+
+Platform-specific usage:
+    $ tns platform remove android
+    $ tns platform remove ios
+
+Removes the deployment capabilities of a project for the specified platform.
+
+--[/]--
+
 --[prepare]--
 
 Usage:
@@ -119,6 +134,19 @@ Platform-specific usage:
 
 Builds the project for the selected target platform. This generates platform-specific code within the platforms subdirectory
 in the project.
+
+--[/]--
+
+--[run]--
+
+Usage:
+    $ tns run [<platform>]
+
+Platform-specific usage:
+    $ tns run android
+    $ tns run ios
+
+This is shorthand for prepare and build.
 
 --[/]--
 
