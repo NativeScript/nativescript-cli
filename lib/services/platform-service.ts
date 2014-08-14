@@ -131,9 +131,8 @@ export class PlatformService implements IPlatformService {
 
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
-
 			this.validatePlatformInstalled(platform);
+			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 			var platformProjectService = platformData.platformProjectService;
@@ -156,8 +155,8 @@ export class PlatformService implements IPlatformService {
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
 			this.validatePlatformInstalled(platform);
+			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
@@ -167,9 +166,8 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
-
 			this.validatePlatformInstalled(platform);
+			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
 			this.buildPlatform(platform).wait();
@@ -193,6 +191,12 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private validatePlatform(platform: string): void {
+		if(!platform) {
+			this.$errors.fail("No platform specified.")
+		}
+
+		platform = platform.toLowerCase();
+
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
 		}
