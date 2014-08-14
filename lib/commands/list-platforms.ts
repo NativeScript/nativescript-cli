@@ -9,7 +9,11 @@ export class ListPlatformsCommand implements ICommand {
 	execute(args: string[]): IFuture<void> {
 		return (() => {
 			var availablePlatforms = this.$platformService.getAvailablePlatforms().wait();
-			this.$logger.out("Available platforms: %s", helpers.formatListOfNames(availablePlatforms));
+			if(availablePlatforms.length > 0) {
+				this.$logger.out("Available platforms: %s", helpers.formatListOfNames(availablePlatforms));
+			} else {
+				this.$logger.out("No available platforms found.");
+			}
 
 			var message = "No installed platforms found.";
 			var installedPlatforms = this.$platformService.getInstalledPlatforms().wait();
