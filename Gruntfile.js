@@ -56,7 +56,10 @@ module.exports = function(grunt) {
 		watch: {
 			devall: {
 				files: ["lib/**/*.ts", 'test/**/*.ts'],
-				tasks: ['ts:devall'],
+				tasks: [
+					'ts:devall',
+					'shell:npm_test'
+				],
 				options: {
 					atBegin: true,
 					interrupt: true
@@ -67,7 +70,8 @@ module.exports = function(grunt) {
 		shell: {
 			options: {
 				stdout: true,
-				stderr: true
+				stderr: true,
+				failOnError: true
 			},
 
 			build_package: {
@@ -81,7 +85,12 @@ module.exports = function(grunt) {
 						})()
 					}
 				}
+			},
+
+			npm_test: {
+				command: "npm test"
 			}
+	
 		},
 
 		copy: {
@@ -124,8 +133,6 @@ module.exports = function(grunt) {
 	grunt.registerTask("pack", [
 		"clean",
 		"ts:release_build",
-
-		//"shell:ci_unit_tests",
 
 		"set_package_version",
 		"shell:build_package",
