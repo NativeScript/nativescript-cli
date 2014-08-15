@@ -232,7 +232,7 @@ export class PlatformService implements IPlatformService {
 	public updatePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			if(!platforms || platforms.length === 0) {
-				this.$errors.fail("No platform specified. Please specify a platform to update");
+				this.$errors.fail("No platforms specified. Please specify a platform to update");
 			}
 
 			_.each(platforms, platform => {
@@ -251,6 +251,13 @@ export class PlatformService implements IPlatformService {
 
 	private updatePlatform(platform: string): IFuture<void> {
 		return(() => {
+
+			this.validatePlatform(platform);
+
+			var platformPath = path.join(this.$projectData.platformsDir, platform);
+			if (!this.$fs.exists(platformPath).wait()) {
+				this.addPlatform(platform).wait();
+			}
 //			var parts = platform.split("@");
 //			platform = parts[0];
 //			var version = parts[1];

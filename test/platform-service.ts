@@ -1,13 +1,13 @@
 /// <reference path=".d.ts" />
 
-import PlatformServiceLib = require('../lib/services/platform-service');
-import NodePackageManagerLib = require('../lib/node-package-manager');
-import ProjectLib = require('../lib/services/project-service');
-import stubs = require('./stubs');
+import PlatformServiceLib = require("../lib/services/platform-service");
+import NodePackageManagerLib = require("../lib/node-package-manager");
+import ProjectLib = require("../lib/services/project-service");
+import stubs = require("./stubs");
 
-import yok = require('../lib/common/yok');
+import yok = require("../lib/common/yok");
 
-require('should');
+require("should");
 
 var testInjector = new yok.Yok();
 testInjector.register('platformService', PlatformServiceLib.PlatformService);
@@ -26,8 +26,8 @@ describe('PlatformService', function(){
 			(function(){return platformService.updatePlatforms().wait(); }).should.throw();
 		});
 
-		it('should fall back to adding platforms if specified platforms not installed', function(){
-			var platformService = testInjector.resolve('platformService');
+		it("should fall back to adding platforms if specified platforms not installed", function(){
+			var platformService = testInjector.resolve("platformService");
 			var addPlatformCalled = false;
 			platformService.$projectData.platformsDir = "";
 
@@ -42,11 +42,52 @@ describe('PlatformService', function(){
 					addPlatformCalled = true;
 				}).future<void>()();
 			};
-console.log("Platform Service is: %o", platformService.addPlatform);
 
 			platformService.updatePlatforms(["ios"]).wait();
 
 			addPlatformCalled.should.be.true;
 		});
-	})
+	});
+
+	describe("#updatePlatform(platform)", function() {
+		it ("should fail if platform null or undefined", function(){
+			var platformService = testInjector.resolve("platformService");
+			(() => { return platformService.updatePlatform(null).wait(); }).should.throw();
+			(() => { return platformService.updatePlatform().wait(); }).should.throw();
+		});
+
+		it ("should fail if platform not supported", function(){
+			var platformService = testInjector.resolve("platformService");
+			(() => { return platformService.updatePlatform("unsupported").wait(); }).should.throw();
+		});
+
+		it("should fall back to adding the platform if not installed", function(){
+			var platformService = testInjector.resolve("platformService");
+			var addPlatformCalled = false;
+			platformService.$projectData.platformsDir = "";
+			platformService.$platformsData.getPlatformData = function(platform: string) {return {};};
+			platformService.$fs.exists = function(platformPath: string): IFuture<boolean> {
+				return (() => {
+					return false;
+				}).future<boolean>()();
+			};
+
+			platformService.isPlatformInstalled = function(platform: string): IFuture<boolean> {
+				return (() => {
+					return false;
+				}).future<boolean>()();
+			}
+
+			platformService.addPlatform = function(platform: string): IFuture<void> {
+				return (() => {
+					addPlatformCalled = true;
+				}).future<void>()();
+			};
+
+			platformService.updatePlatform("android").wait();
+
+			addPlatformCalled.should.be.true;
+		});
+
+	});
 });
