@@ -2,6 +2,7 @@
 
 import path = require("path");
 import shell = require("shelljs");
+import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 import options = require("./../options");
@@ -35,6 +36,11 @@ class IOSProjectService implements  IPlatformProjectService {
 			}
 
 			var xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
+			var splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
+			if(splitedXcodeBuildVersion.length === 3) {
+				xcodeBuildVersion = util.format("%s.%s", splitedXcodeBuildVersion[0], splitedXcodeBuildVersion[1]);
+ 			}
+
 			if(helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
 				this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
 			}
@@ -81,7 +87,7 @@ class IOSProjectService implements  IPlatformProjectService {
 			var basicArgs = [
 				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
 				"-target", this.$projectData.projectName,
-				"-configuration", options.release,
+				"-configuration", options.release ? "Release": "Debug",
 				"build"
 			];
 			var args: string[] = [];
@@ -90,8 +96,8 @@ class IOSProjectService implements  IPlatformProjectService {
 				args = basicArgs.concat([
 					"-xcconfig", path.join(projectRoot, "build.xcconfig"),
 					"-sdk", "iphoneos",
-					"ARCHS=\"armv7 armv7s arm64\"",
-					"VALID_ARCHS=\"armv7 armv7s arm64\"",
+					"ARCHS=\"armv7\"",
+					"VALID_ARCHS=\"armv7\"",
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
 				]);
 			} else {
@@ -103,7 +109,9 @@ class IOSProjectService implements  IPlatformProjectService {
 				]);
 			}
 
-			this.$childProcess.spawn("xcodebuild", args, {cwd: options, stdio: 'inherit'});
+			var childProcess = this.$childProcess.spawn("xcodebuild", args, {cwd: options, stdio: 'inherit'});
+			this.$fs.futureFromEvent(childProcess, "exit").wait();
+
 		}).future<void>()();
 	}
 
