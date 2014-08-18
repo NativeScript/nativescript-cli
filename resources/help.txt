@@ -6,13 +6,15 @@ Usage:
 General commands:
     help <command>                  Shows additional information about the commands in this list.
 
-    create                          Creates a new NativeScript project with given project name and application identifier.
-    platform add                    Creates a new platform specific project.
-    platform list                   Lists all available and all installed platforms.
-    platform remove                 Removes the platform specific project.
-    prepare                         Copies files for specified platform, so that the project is ready to build in platform specific SDK.
+    create                          Creates a new project for native development with NativeScript.
+    platform add                    Configures the current project to target the selected platform.
+    platform list                   Lists all platforms that the project currently targets.
+    platform remove                 Removes the selected platform from the platforms that the project currently targets.
+                                    This operation deletes all platform-specific files and subdirectories from your project.
+    prepare                         Copies cross-platform content to the subdirectory for the selected target platform. 
+                                    This lets you build the project with the SDK for the selected platform and deploy it on device.
     build                           Builds the project for the selected target platform and produces an application package.
-    run                             This is shorthand for prepare and build.
+    run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
 
 General options:
     --help              Prints help about the selected command.
@@ -25,6 +27,7 @@ General options:
 
 Usage:
     $ tns help [<Command>]
+    
 Lists the available commands or shows information about the selected command.
 <Command> is any of the available commands as listed by $ tns help.
 
@@ -35,19 +38,21 @@ Lists the available commands or shows information about the selected command.
 Usage:
     $ tns create <App name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]
 
-Creates a new NativeScript project.
-<App name> is the name of project. It should conform to platform package type limitations. For example classes in Java
-don't begin with numbers.
+Creates a new project for native development with NativeScript.
+<App name> is the name of project. The specified name must meet the requirements of all platforms that you want to target. 
+           For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores. The name must start with a letter.
+           For projects that target iOS, you can use uppercase or lowercase letters, numbers, and hyphens. 
 
 Options:
     --path - Specifies the directory where you want to create the project, if different from the current directory.
             The directory must be empty.
-    --appid - Sets the application identifier for your project. The application identifier must consist of at least three
-              alphanumeric strings, separated by a dot (.). Each string must start with a letter.
-              The application identifier corresponds to the Bundle ID for iOS apps and to the package identifier for Android apps.
+    --appid - Sets the application identifier for your project. The application identifier must be a domain name in reverse and must
+              meet the requirements of all platforms that you want to target.
+              For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores in the strings of the reversed domain name, separated by a dot. Strings must be separated by a dot and must start with a letter. For example: com.nativescript.My_Andro1d_App
+              For projects that target iOS, you can use uppercase or lowercase letters, numbers, and hyphens in the strings of the reversed domain name. Strings must be separated by a dot. For example: com.nativescript.My-i0s-App
               If not specified, the application identifier is set to com.telerik.<App name>.
-    --copy-from - Specifies the directory where your javascript files are located. If not set,
-                  the default hello world template is used.
+    --copy-from - Specifies a directory which contains custom assets that you want to use in your NativeScript project. If not set,
+                  the default hello-world template is used.
 
 --[/]--
 
@@ -56,34 +61,43 @@ Options:
 Usage:
     $ tns platform <Command>
 
+You must run the platform command with a related command.
+
 <Command> is a related command that extends the platform command. You can run the following related commands:
-    list - Lists all available and installed platforms.
-    add - Enables a project with deployment capabilities for the specified platform
-    remove - Removes the deployment capabilities of a project for the specified platform
+    list - Lists all platforms that the project currently targets. You can build and deploy your project only for 
+           the active target platforms.
+    add - Configures the current project to target the selected platform. After adding the target platform, you can 
+          build and deploy your app to it.
+    remove - Removes the selected platform from the platforms that the project currently targets. After removing 
+             the target platform, you can no longer build and deploy your app to it.
+             This operation deletes all platform-specific files and subdirectories from your project.
 
 --[/]--
 
 --[platform|list]--
 
 Usage:
-    $ tns platform
+    $ tns platform list
 
-Lists all available and currently installed platforms.
+Lists all platforms that the project currently targets. You can build and deploy your project only for the active target platforms.
 
 --[/]--
 
 --[platform|add]--
 
 Usage:
-    $ tns platform add <platform>
+    $ tns platform add <Platform>
 
 Platform-specific usage:
     $ tns platform add android
     $ tns platform add ios
 
-Creates a new platform specific project. The current version of the Telerik NativeScript has support for
-iOS and Android projects. Android projects can be created on Linux, Windows and Mac machines. iOS projects
-can only be created on a Mac machine.
+Configures the current project to target the selected platform. When you add a target platform, the Telerik NativeScript CLI adds a corresponding platform-specific subdirectory under the platforms directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
+
+In this version of Telerik NativeScript, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
+On Windows systems, you can target Android. 
+On OS X systems, you can target Android and iOS.
+
 
 --[/]--
 
@@ -96,20 +110,23 @@ Platform-specific usage:
     $ tns platform remove android
     $ tns platform remove ios
 
-Removes the deployment capabilities of a project for the specified platform.
+Removes the selected platform from the platforms that the project currently targets. After removing the target platform, you can no longer build and deploy your app to it.
+
+This operation deletes all platform-specific files and subdirectories from your project.
 
 --[/]--
 
 --[prepare]--
 
 Usage:
-    $ tns prepare [<platform>]
+    $ tns prepare [<Platform>]
 
 Platform-specific usage:
     $ tns prepare android
     $ tns prepare ios
 
-Copies files for specified platform, so that the project is ready to build in each SDK.
+Copies cross-platform content to the subdirectory for the selected target platform. This lets you build the project with 
+the SDK for the selected platform.
 
 --[/]--
 
@@ -122,7 +139,8 @@ Platform-specific usage:
     $ tns build android
     $ tns build ios
 
-Builds the project for specified platform. This generates platform-specific code within the project's platforms subdirectory.
+Builds the project for the selected target platform. This generates platform-specific code within the platform subdirectory
+in the project.
 
 --[/]--
 
@@ -135,7 +153,7 @@ Platform-specific usage:
     $ tns run android
     $ tns run ios
 
-This is shorthand for prepare and build.
+Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
 
 --[/]--
 
