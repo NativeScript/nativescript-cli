@@ -16,7 +16,7 @@ $injector.register("config", {
 	DEBUG: process.env.NATIVESCRIPT_DEBUG,
 	version: require("../package.json").version,
 	helpTextPath: path.join(__dirname, "../resources/help.txt"),
-	client: "tns"
+	client: "nativescript"
 });
 
 var dispatcher = $injector.resolve("dispatcher");

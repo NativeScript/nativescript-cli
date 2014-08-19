@@ -22,6 +22,7 @@ $injector.requireCommand("platform|remove", "./commands/remove-platform");
 $injector.requireCommand("run", "./commands/run");
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build", "./commands/build");
+$injector.requireCommand("deploy", "./commands/deploy");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("config", "./config");

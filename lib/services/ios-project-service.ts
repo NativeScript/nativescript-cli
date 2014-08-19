@@ -23,6 +23,10 @@ class IOSProjectService implements  IPlatformProjectService {
 			normalizedPlatformName: "iOS",
 			platformProjectService: this,
 			projectRoot: path.join(this.$projectData.platformsDir, "ios"),
+			buildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "device"),
+			validPackageNames: [
+				this.$projectData.projectName + ".ipa"
+			],
 			targetedOS: ['darwin']
 		};
 	}
@@ -76,9 +80,10 @@ class IOSProjectService implements  IPlatformProjectService {
 		return (() => {
 			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			var appDestinationDirectory = path.join(platformData.projectRoot, this.$projectData.projectName);
-			shell.cp("-r", appSourceDirectory, appDestinationDirectory);
 
-			return path.join(appDestinationDirectory, constants.APP_FOLDER_NAME);
+			shell.cp("-r", path.join(appSourceDirectory, "*"), appDestinationDirectory);
+
+			return appDestinationDirectory;
 		}).future<string>()();
 	}
 
@@ -87,7 +92,7 @@ class IOSProjectService implements  IPlatformProjectService {
 			var basicArgs = [
 				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
 				"-target", this.$projectData.projectName,
-				"-configuration", options.release ? "Release": "Debug",
+				"-configuration", options.release ? "Release" : "Debug",
 				"build"
 			];
 			var args: string[] = [];
@@ -112,6 +117,18 @@ class IOSProjectService implements  IPlatformProjectService {
 			var childProcess = this.$childProcess.spawn("xcodebuild", args, {cwd: options, stdio: 'inherit'});
 			this.$fs.futureFromEvent(childProcess, "exit").wait();
 
+			var buildOutputPath = path.join(projectRoot, "build", options.device ? "device" : "emulator");
+
+			// Produce ipa file
+			var xcrunArgs = [
+				"-sdk", "iphoneos",
+				"PackageApplication",
+				"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
+				"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
+			];
+
+			var childProcess = this.$childProcess.spawn("xcrun", xcrunArgs, {cwd: options, stdio: 'inherit'});
+			this.$fs.futureFromEvent(childProcess, "exit").wait();
 		}).future<void>()();
 	}
 

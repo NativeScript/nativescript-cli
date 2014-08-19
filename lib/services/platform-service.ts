@@ -5,6 +5,7 @@ import shell = require("shelljs");
 import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
+import options = require("./../options");
 
 class PlatformsData implements IPlatformsData {
 	private platformsData : { [index: string]: any } = {};
@@ -34,7 +35,8 @@ export class PlatformService implements IPlatformService {
 		private $logger: ILogger,
 		private $npm: INodePackageManager,
 		private $projectData: IProjectData,
-		private $platformsData: IPlatformsData) { }
+		private $platformsData: IPlatformsData,
+		private $devicesServices: Mobile.IDevicesServices) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -138,17 +140,9 @@ export class PlatformService implements IPlatformService {
 			var platformProjectService = platformData.platformProjectService;
 
 			var appFilesLocation = platformProjectService.prepareProject(platformData).wait();
-			var files = helpers.enumerateFilesInDirectorySync(appFilesLocation);
 
-			_.each(files, fileName => {
-				var platformInfo = PlatformService.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
-				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
-				if (shouldExcludeFile) {
-					this.$fs.deleteFile(fileName).wait();
-				} else if (platformInfo && platformInfo.onDeviceName) {
-					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
-				}
-			});
+			this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, constants.APP_FOLDER_NAME))).wait();
+			this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, constants.TNS_MODULES_FOLDER_NAME))).wait();
 
 		}).future<void>()();
 	}
@@ -170,7 +164,14 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
+
+			// We need to set device option here
+			var cachedDeviceOption = options.device;
+			options.device = true;
 			this.buildPlatform(platform).wait();
+			options.device = cachedDeviceOption;
+
+			this.deploy(platform).wait();
 		}).future<void>()();
 	}
 
@@ -186,6 +187,44 @@ export class PlatformService implements IPlatformService {
 				var platformDir = path.join(this.$projectData.platformsDir, platform);
 				this.$fs.deleteDirectory(platformDir).wait();
 			});
+
+		}).future<void>()();
+	}
+
+	public deploy(platform: string): IFuture<void> {
+		return (() => {
+			platform = platform.toLowerCase();
+
+			this.validatePlatformInstalled(platform);
+
+			var platformData = this.$platformsData.getPlatformData(platform);
+
+			// Get latest package that is produced from build
+			var candidates = this.$fs.readDirectory(platformData.buildOutputPath).wait();
+			var packages = _.filter(candidates, candidate => {
+				return _.contains(platformData.validPackageNames, candidate);
+			}).map(currentPackage => {
+				currentPackage =  path.join(platformData.buildOutputPath, currentPackage);
+
+				return {
+					pkg: currentPackage,
+					time: this.$fs.getFsStats(currentPackage).wait().mtime
+				};
+			});
+
+			packages = _.sortBy(packages, pkg => pkg.time ).reverse(); // We need to reverse because sortBy always sorts in ascending order
+
+			if(packages.length === 0) {
+				var packageExtName = path.extname(platformData.validPackageNames[0]);
+				this.$errors.fail("No %s found in %s directory", packageExtName, platformData.buildOutputPath)
+			}
+
+			var packageFile = packages[0].pkg;
+			this.$logger.out("Using ", packageFile);
+
+			this.$devicesServices.initialize(platform, options.device).wait();
+			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
+			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
 	}
@@ -244,6 +283,21 @@ export class PlatformService implements IPlatformService {
 			};
 		}
 		return undefined;
+	}
+
+	private processPlatformSpecificFiles( platform: string, files: string[]): IFuture<void> {
+		// Renames the files that have `platform` as substring and removes the files from other platform
+		return (() => {
+			_.each(files, fileName => {
+				var platformInfo = PlatformService.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
+				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
+				if (shouldExcludeFile) {
+					this.$fs.deleteFile(fileName).wait();
+				} else if (platformInfo && platformInfo.onDeviceName) {
+					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
+				}
+			});
+		}).future<void>()();
 	}
 }
 $injector.register("platformService", PlatformService);

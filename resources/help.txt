@@ -14,6 +14,7 @@ General commands:
     prepare                         Copies cross-platform content to the subdirectory for the selected target platform. 
                                     This lets you build the project with the SDK for the selected platform and deploy it on device.
     build                           Builds the project for the selected target platform and produces an application package.
+    deploy                          Deploys the project to a connected device.
     run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
@@ -142,6 +143,18 @@ Platform-specific usage:
 
 Builds the project for the selected target platform. This generates platform-specific code within the platform subdirectory
 in the project.
+
+--[/]--
+
+--[deploy]--
+    Usage:
+        $ tns deploy <Platform> [--device <Device ID>]
+
+Platform-specific usages:
+    $ tns deploy android [--device <Device ID>]
+    $ tns deploy ios [--device <Device ID>]
+
+Deploys the project to a connected device.
 
 --[/]--
 
