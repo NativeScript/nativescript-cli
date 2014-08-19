@@ -10,20 +10,22 @@ class AndroidProjectService implements IPlatformProjectService {
 	private targetApi: string;
 
 	constructor(private $fs: IFileSystem,
-				private $errors: IErrors,
-				private $logger: ILogger,
-				private $childProcess: IChildProcess,
-				private $projectData: IProjectData,
-				private $propertiesParser: IPropertiesParser) { }
+		private $errors: IErrors,
+		private $logger: ILogger,
+		private $childProcess: IChildProcess,
+		private $projectData: IProjectData,
+		private $propertiesParser: IPropertiesParser,
+		private $androidEmulatorServices: Mobile.IEmulatorPlatformServices) { }
 
 	public get platformData(): IPlatformData {
 		return {
 			frameworkPackageName: "tns-android",
 			normalizedPlatformName: "Android",
 			platformProjectService: this,
+			emulatorServices: this.$androidEmulatorServices,
 			projectRoot: path.join(this.$projectData.platformsDir, "android"),
-			buildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
-			validPackageNames: [
+			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
+			validPackageNamesForDevice: [
 				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
 				util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
 			]
