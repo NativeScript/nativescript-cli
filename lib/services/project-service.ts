@@ -54,7 +54,9 @@ export class ProjectService implements IProjectService {
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
-			projectName = projectName || constants.DEFAULT_PROJECT_NAME;
+			if (!projectName) {
+				this.$errors.fail("You must specify <App name> when creating a new project.");
+			}
 			projectId =  options.appid || this.$projectHelper.generateDefaultAppId(projectName);
 
 			var projectDir = path.join(path.resolve(options.path || "."), projectName);
