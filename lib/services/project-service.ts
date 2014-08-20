@@ -49,6 +49,7 @@ export class ProjectService implements IProjectService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $projectTemplatesService: IProjectTemplatesService,
+		private $projectNameValidator: IProjectNameValidator,
 		private $projectHelper: IProjectHelper,
 		private $staticConfig: IStaticConfig) { }
 
@@ -57,7 +58,9 @@ export class ProjectService implements IProjectService {
 			if (!projectName) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
 			}
-			projectId =  options.appid || this.$projectHelper.generateDefaultAppId(projectName);
+			this.$projectNameValidator.validate(projectName);
+
+			projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName);
 
 			var projectDir = path.join(path.resolve(options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
