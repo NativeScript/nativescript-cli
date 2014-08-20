@@ -2,6 +2,7 @@
 "use strict";
 import osenv = require("osenv");
 import path = require("path");
+import util = require("util");
 
 export class PostInstallCommand implements ICommand {
 	private static CALL_PROFILE_SCRIPT =
@@ -11,11 +12,22 @@ export class PostInstallCommand implements ICommand {
 
 	constructor(private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $staticConfig: IStaticConfig) { }
 
 	public disableAnalytics = true;
 
 	public execute(args: string[]): IFuture<void> {
+		return (() => {
+			if(process.platform !== "win32") {
+				this.$fs.chmod(this.$staticConfig.adbFilePath, 755).wait();
+			}
+
+			this.enableAutoCompletion().wait();
+		}).future<void>()();
+	}
+
+	private enableAutoCompletion(): IFuture<void> {
 		return (() => {
 			var scriptsOk = true;
 
