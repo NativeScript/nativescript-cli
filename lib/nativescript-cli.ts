@@ -21,3 +21,4 @@ $injector.register("config", {
 
 var dispatcher = $injector.resolve("dispatcher");
 dispatcher.runMainFiber();
+
