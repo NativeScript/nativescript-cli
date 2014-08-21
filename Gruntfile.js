@@ -1,5 +1,7 @@
 var util = require("util");
 
+var somethingelse = "Something else";
+
 var now = new Date().toISOString();
 
 function shallowCopy(obj) {
