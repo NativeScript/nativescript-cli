@@ -164,14 +164,11 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
-
-			// We need to set device option here
-			var cachedDeviceOption = options.device;
-			options.device = true;
-			this.buildPlatform(platform).wait();
-			options.device = cachedDeviceOption;
-
-			this.deploy(platform).wait();
+			if(options.emulator) {
+				this.deployOnEmulator(platform).wait();
+			} else {
+				this.deployOnDevice(platform).wait();
+			}
 		}).future<void>()();
 	}
 
@@ -191,41 +188,46 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public deploy(platform: string): IFuture<void> {
+	public deployOnDevice(platform: string): IFuture<void> {
 		return (() => {
-			platform = platform.toLowerCase();
-
 			this.validatePlatformInstalled(platform);
+			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 
+			// We need to build for device
+			var cachedDeviceOption = options.device;
+			options.device = true;
+			this.buildPlatform(platform).wait();
+			options.device = cachedDeviceOption;
+
 			// Get latest package that is produced from build
-			var candidates = this.$fs.readDirectory(platformData.buildOutputPath).wait();
-			var packages = _.filter(candidates, candidate => {
-				return _.contains(platformData.validPackageNames, candidate);
-			}).map(currentPackage => {
-				currentPackage =  path.join(platformData.buildOutputPath, currentPackage);
-
-				return {
-					pkg: currentPackage,
-					time: this.$fs.getFsStats(currentPackage).wait().mtime
-				};
-			});
-
-			packages = _.sortBy(packages, pkg => pkg.time ).reverse(); // We need to reverse because sortBy always sorts in ascending order
-
-			if(packages.length === 0) {
-				var packageExtName = path.extname(platformData.validPackageNames[0]);
-				this.$errors.fail("No %s found in %s directory", packageExtName, platformData.buildOutputPath)
-			}
-
-			var packageFile = packages[0].pkg;
+			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
 			this.$devicesServices.initialize(platform, options.device).wait();
 			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
 			this.$devicesServices.execute(action).wait();
 
+		}).future<void>()();
+	}
+
+	public deployOnEmulator(platform: string): IFuture<void> {
+		return (() => {
+			this.validatePlatformInstalled(platform);
+			platform = platform.toLowerCase();
+
+			var platformData = this.$platformsData.getPlatformData(platform);
+			var emulatorServices = platformData.emulatorServices;
+
+			emulatorServices.checkAvailability().wait();
+
+			this.buildPlatform(platform).wait();
+
+			var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+			this.$logger.out("Using ", packageFile);
+
+			emulatorServices.startEmulator(packageFile, options.emulator).wait();
 		}).future<void>()();
 	}
 
@@ -298,6 +300,47 @@ export class PlatformService implements IPlatformService {
 				}
 			});
 		}).future<void>()();
+	}
+
+	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage[]> {
+		return (() => {
+			// Get latest package that is produced from build
+			var candidates = this.$fs.readDirectory(buildOutputPath).wait();
+			var packages = _.filter(candidates, candidate => {
+				return _.contains(validPackageNames, candidate);
+			}).map(currentPackage => {
+					currentPackage = path.join(buildOutputPath, currentPackage);
+
+					return {
+						packageName: currentPackage,
+						time: this.$fs.getFsStats(currentPackage).wait().mtime
+					};
+				});
+
+			return packages;
+		}).future<IApplicationPackage[]>()();
+	}
+
+	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage> {
+		return (() => {
+			var packages = this.getApplicationPackages(buildOutputPath, validPackageNames).wait();
+			if (packages.length === 0) {
+				var packageExtName = path.extname(validPackageNames[0]);
+				this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
+			}
+
+			packages = _.sortBy(packages, pkg => pkg.time).reverse(); // We need to reverse because sortBy always sorts in ascending order
+
+			return packages[0];
+		}).future<IApplicationPackage>()();
+	}
+
+	private getLatestApplicationPackageForDevice(platformData: IPlatformData) {
+		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.validPackageNamesForDevice);
+	}
+
+	private getLatestApplicationPackageForEmulator(platformData: IPlatformData) {
+		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.validPackageNamesForEmulator || platformData.validPackageNamesForDevice);
 	}
 }
 $injector.register("platformService", PlatformService);

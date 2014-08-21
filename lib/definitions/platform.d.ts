@@ -6,16 +6,20 @@ interface IPlatformService {
 	runPlatform(platform: string): IFuture<void>;
 	preparePlatform(platform: string): IFuture<void>;
 	buildPlatform(platform: string): IFuture<void>;
-	deploy(platform: string): IFuture<void>;
+	deployOnDevice(platform: string): IFuture<void>;
+	deployOnEmulator(platform: string): IFuture<void>;
 }
 
 interface IPlatformData {
 	frameworkPackageName: string;
 	platformProjectService: IPlatformProjectService;
+	emulatorServices: Mobile.IEmulatorPlatformServices;
 	projectRoot: string;
 	normalizedPlatformName: string;
-	buildOutputPath: string;
-	validPackageNames: string[];
+	deviceBuildOutputPath: string;
+	emulatorBuildOutputPath?: string;
+	validPackageNamesForDevice: string[];
+	validPackageNamesForEmulator?: string[];
 	targetedOS?: string[];
 }
 

@@ -15,17 +15,23 @@ class IOSProjectService implements  IPlatformProjectService {
 	constructor(private $projectData: IProjectData,
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
-		private $errors: IErrors) { }
+		private $errors: IErrors,
+		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices) { }
 
 	public get platformData(): IPlatformData {
 		return {
 			frameworkPackageName: "tns-ios",
 			normalizedPlatformName: "iOS",
 			platformProjectService: this,
+			emulatorServices: this.$iOSEmulatorServices,
 			projectRoot: path.join(this.$projectData.platformsDir, "ios"),
-			buildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "device"),
-			validPackageNames: [
+			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "device"),
+			emulatorBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "emulator"),
+			validPackageNamesForDevice: [
 				this.$projectData.projectName + ".ipa"
+			],
+			validPackageNamesForEmulator: [
+				this.$projectData.projectName + ".app"
 			],
 			targetedOS: ['darwin']
 		};
@@ -117,18 +123,20 @@ class IOSProjectService implements  IPlatformProjectService {
 			var childProcess = this.$childProcess.spawn("xcodebuild", args, {cwd: options, stdio: 'inherit'});
 			this.$fs.futureFromEvent(childProcess, "exit").wait();
 
-			var buildOutputPath = path.join(projectRoot, "build", options.device ? "device" : "emulator");
+			if(options.device) {
+				var buildOutputPath = path.join(projectRoot, "build", options.device ? "device" : "emulator");
 
-			// Produce ipa file
-			var xcrunArgs = [
-				"-sdk", "iphoneos",
-				"PackageApplication",
-				"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
-				"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
-			];
+				// Produce ipa file
+				var xcrunArgs = [
+					"-sdk", "iphoneos",
+					"PackageApplication",
+					"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
+					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
+				];
 
-			var childProcess = this.$childProcess.spawn("xcrun", xcrunArgs, {cwd: options, stdio: 'inherit'});
-			this.$fs.futureFromEvent(childProcess, "exit").wait();
+				var childProcess = this.$childProcess.spawn("xcrun", xcrunArgs, {cwd: options, stdio: 'inherit'});
+				this.$fs.futureFromEvent(childProcess, "exit").wait();
+			}
 		}).future<void>()();
 	}
 

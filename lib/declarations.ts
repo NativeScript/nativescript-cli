@@ -6,3 +6,8 @@ interface INodePackageManager {
 
 interface IStaticConfig extends Config.IStaticConfig { }
 
+interface IApplicationPackage {
+	packageName: string;
+	time: Date;
+}
+

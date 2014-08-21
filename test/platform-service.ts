@@ -18,6 +18,7 @@ testInjector.register('npm', stubs.NPMStub);
 testInjector.register('projectData', stubs.ProjectDataStub);
 testInjector.register('platformsData', stubs.PlatformsDataStub);
 testInjector.register('devicesServices', {});
+testInjector.register('androidEmulatorServices', {});
 
 describe('PlatformService', function(){
     describe('#updatePlatforms()', function(){

@@ -171,6 +171,12 @@ Runs your project on a connected device. This is shorthand for prepare, build, a
 
 --[/]--
 
+--[emulate]--
+
+Usage:
+    $ tns emulate [<platform>]
+--[/]--
+
 --[feature-usage-tracking]--
 
 Usage:

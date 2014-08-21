@@ -13,6 +13,7 @@ var knownOpts:any = {
 		"link-to": String,
 		"release": String,
 		"device": Boolean,
+		"emulator": Boolean,
 		"version": Boolean,
 		"help": Boolean
 	},
