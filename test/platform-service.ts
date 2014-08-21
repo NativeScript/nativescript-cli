@@ -27,6 +27,7 @@ describe('PlatformService', function(){
 		});
 
 		it("should fall back to adding platforms if specified platforms not installed", function(){
+
 			var platformService = testInjector.resolve("platformService");
 			var addPlatformCalled = false;
 			platformService.$projectData.platformsDir = "";
