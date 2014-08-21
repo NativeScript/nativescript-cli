@@ -90,7 +90,6 @@ module.exports = function(grunt) {
 			npm_test: {
 				command: "npm test"
 			}
-	
 		},
 
 		copy: {
@@ -133,6 +132,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("pack", [
 		"clean",
 		"ts:release_build",
+		"shell:npm_test",
 
 		"set_package_version",
 		"shell:build_package",
