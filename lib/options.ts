@@ -11,7 +11,7 @@ var knownOpts:any = {
 		"appid" : String,
 		"copy-from": String,
 		"link-to": String,
-		"release": String,
+		"release": Boolean,
 		"device": Boolean,
 		"emulator": Boolean,
 		"version": Boolean,

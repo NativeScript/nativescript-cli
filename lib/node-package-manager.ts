@@ -63,7 +63,9 @@ export class NodePackageManager implements INodePackageManager {
 		}
 
 		var incrementedVersion = semver.inc(currentVersion, constants.ReleaseType.MINOR);
-		packageName = packageName + "@" + "<" + incrementedVersion;
+		if(packageName.indexOf("@") < 0) {
+			packageName = packageName + "@<" + incrementedVersion;
+		}
 		this.$logger.trace("Installing", packageName);
 
 		var future = new Future<void>();
