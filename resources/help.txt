@@ -16,6 +16,7 @@ General commands:
     build                           Builds the project for the selected target platform and produces an application package.
     deploy                          Deploys the project to a connected device.
     run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
+    list-devices                    Lists all recognized connected devices.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
 General options:
@@ -175,6 +176,17 @@ Runs your project on a connected device. This is shorthand for prepare, build, a
 
 Usage:
     $ tns emulate [<platform>]
+
+--[/]--
+
+--[list-devices]--
+
+Lists all recognized connected devices with serial number and index, grouped by platform. In this version of the Telerik NativeScript CLI,
+you can connect only iOS and Android devices.
+
+If a connected Android device is not shown in the list, make sure that you have installed the required Android USB drivers on your system
+and that USB debugging is enabled on the device.
+
 --[/]--
 
 --[feature-usage-tracking]--
