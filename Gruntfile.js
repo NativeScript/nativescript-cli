@@ -129,6 +129,18 @@ module.exports = function(grunt) {
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
+	grunt.registerTask("enableScripts", function(enable) {
+		var enableTester = /false/i;
+		var newScriptsAttr = !enableTester.test(enable) ? "scripts" : "skippedScripts";
+		var packageJson = grunt.file.readJSON("package.json");
+		var oldScriptsAttrValue = packageJson.scripts || packageJson.skippedScripts;
+		delete packageJson.scripts;
+		delete packageJson.skippedScripts;
+		packageJson[newScriptsAttr] = oldScriptsAttrValue;
+		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
+	});
+
+
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
 	grunt.registerTask("pack", [
 		"clean",
