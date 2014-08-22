@@ -104,7 +104,7 @@ export class PlatformService implements IPlatformService {
 
 			// Need to remove unneeded node_modules folder
 			// One level up is the runtime module and one above is the node_modules folder.
-			this.$fs.deleteDirectory(path.join("../", frameworkDir)).wait();
+			this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
 
 			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
@@ -141,8 +141,17 @@ export class PlatformService implements IPlatformService {
 
 			var appFilesLocation = platformProjectService.prepareProject(platformData).wait();
 
-			this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, constants.APP_FOLDER_NAME))).wait();
-			this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, constants.TNS_MODULES_FOLDER_NAME))).wait();
+			var appDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			var contents = this.$fs.readDirectory(appDirectoryPath).wait();
+
+			_.each(contents, d => {
+				var fsStat = this.$fs.getFsStats(path.join(appDirectoryPath, d)).wait();
+				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
+					this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, d))).wait();
+				}
+			});
+
+			this.$logger.out("Project successfully prepared");
 
 		}).future<void>()();
 	}
