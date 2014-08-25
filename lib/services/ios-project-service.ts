@@ -61,7 +61,7 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
-			shell.cp("-r", path.join(frameworkDir, "*"), projectRoot);
+			shell.cp("-R", path.join(frameworkDir, "*"), projectRoot);
 		}).future<void>()();
 	}
 
@@ -89,11 +89,11 @@ class IOSProjectService implements  IPlatformProjectService {
 			var appDestinationDirectory = path.join(platformData.projectRoot, this.$projectData.projectName);
 			var resDirectory = path.join(platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
 
-			shell.cp("-r", path.join(appSourceDirectory, "*"), appDestinationDirectory);
+			shell.cp("-Rf", path.join(appSourceDirectory, "*"), appDestinationDirectory);
 
 			var appResourcesDirectoryPath = path.join(appDestinationDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 

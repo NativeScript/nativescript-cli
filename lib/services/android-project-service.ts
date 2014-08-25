@@ -91,11 +91,11 @@ class AndroidProjectService implements IPlatformProjectService {
 			var assetsDirectory = path.join(platformData.projectRoot, "assets");
 			var resDirectory = path.join(platformData.projectRoot, "res");
 
-			shell.cp("-r", path.join(appSourceDirectory, "*"), assetsDirectory);
+			shell.cp("-Rf", path.join(appSourceDirectory, "*"), assetsDirectory);
 
 			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
