@@ -108,7 +108,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
 			var args = this.getAntArgs(buildConfiguration, projectRoot);
-			this.spawn('ant', args).wait();
+			this.spawn('ant',  args).wait();
 		}).future<void>()();
 	}
 
@@ -118,12 +118,24 @@ class AndroidProjectService implements IPlatformProjectService {
 			command = 'cmd';
 		}
 
-		var child = this.$childProcess.spawn(command, args, {stdio: "inherit"});
-		return this.$fs.futureFromEvent(child, "close");
+		return this.$childProcess.superSpawn(command, args, "close", {stdio: "inherit"});
 	}
 
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
-		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
+		var args = [
+			configuration,
+			"-f", path.join(projectRoot, "build.xml")
+		];
+
+		if(options.release) {
+			args = args.concat([
+				"-Dkey.store", options.keyStore,
+				"-Dkey.store.password", options.keyStorePassword,
+				"-Dkey.alias", options.keyAlias,
+				"-Dkey.alias.password", options.keyAliasPassword
+			]);
+		}
+
 		return args;
 	}
 
