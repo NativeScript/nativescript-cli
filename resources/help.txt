@@ -15,6 +15,7 @@ General commands:
                                     This lets you build the project with the SDK for the selected platform and deploy it on device.
     build                           Builds the project for the selected target platform and produces an application package.
     deploy                          Deploys the project to a connected device.
+    emulate                         Deploys the project on emulator.
     run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
     list-devices                    Lists all recognized connected devices.
     feature-usage-tracking          Configures anonymous feature usage tracking.
@@ -176,6 +177,8 @@ Runs your project on a connected device. This is shorthand for prepare, build, a
 
 Usage:
     $ tns emulate [<platform>]
+
+Deploys the project on emulator.
 
 --[/]--
 
