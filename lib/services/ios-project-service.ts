@@ -61,7 +61,7 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
-			shell.cp("-r", path.join(frameworkDir, "*"), projectRoot);
+			shell.cp("-R", path.join(frameworkDir, "*"), projectRoot);
 		}).future<void>()();
 	}
 
@@ -89,11 +89,11 @@ class IOSProjectService implements  IPlatformProjectService {
 			var appDestinationDirectory = path.join(platformData.projectRoot, this.$projectData.projectName);
 			var resDirectory = path.join(platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
 
-			shell.cp("-r", path.join(appSourceDirectory, "*"), appDestinationDirectory);
+			shell.cp("-Rf", path.join(appSourceDirectory, "*"), appDestinationDirectory);
 
 			var appResourcesDirectoryPath = path.join(appDestinationDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
@@ -128,7 +128,7 @@ class IOSProjectService implements  IPlatformProjectService {
 				]);
 			}
 
-			this.spawn("xcodebuild", args, "exit", {cwd: options, stdio: 'inherit'}).wait();
+			this.$childProcess.superSpawn("xcodebuild", args, "exit", {cwd: options, stdio: 'inherit'}).wait();
 
 			if(options.device) {
 				var buildOutputPath = path.join(projectRoot, "build", options.device ? "device" : "emulator");
@@ -141,27 +141,9 @@ class IOSProjectService implements  IPlatformProjectService {
 					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
 				];
 
-				this.spawn("xcrun", xcrunArgs, "exit", {cwd: options, stdio: 'inherit'}).wait();
+				this.$childProcess.superSpawn("xcrun", xcrunArgs, "exit", {cwd: options, stdio: 'inherit'}).wait();
 			}
 		}).future<void>()();
-	}
-
-	private spawn(command: string, args: string[], event: string, options?: any): IFuture<void> { // event should be exit or close
-		var future = new Future<void>();
-		var childProcess = this.$childProcess.spawn(command, args, options);
-		childProcess.once(event, () => {
-			var args = _.toArray(arguments);
-			var statusCode = args[0];
-			var signal = args[1];
-
-			if(statusCode !== 0) {
-				future.throw(util.format("Command %s exited with code %s", command, statusCode));
-			} else {
-				future.return();
-			}
-		});
-
-		return future;
 	}
 
 	private replaceFileContent(file: string): IFuture<void> {

@@ -14,6 +14,10 @@ var knownOpts:any = {
 		"release": Boolean,
 		"device": Boolean,
 		"emulator": Boolean,
+		"keyStore": String,
+		"keyStorePassword": String,
+		"keyAlias": String,
+		"keyAliasPassword": String,
 		"version": Boolean,
 		"help": Boolean
 	},

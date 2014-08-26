@@ -143,13 +143,18 @@ export class PlatformService implements IPlatformService {
 
 			var appDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			var contents = this.$fs.readDirectory(appDirectoryPath).wait();
+			var files: string[] = [];
 
 			_.each(contents, d => {
 				var fsStat = this.$fs.getFsStats(path.join(appDirectoryPath, d)).wait();
 				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
 					this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, d))).wait();
+				} else if(fsStat.isFile()) {
+					files.push(path.join(appFilesLocation,d));
 				}
 			});
+
+			this.processPlatformSpecificFiles(platform, files).wait();
 
 			this.$logger.out("Project successfully prepared");
 
@@ -236,7 +241,9 @@ export class PlatformService implements IPlatformService {
 			var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			emulatorServices.startEmulator(packageFile, options.emulator).wait();
+			var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+
+			emulatorServices.startEmulator(packageFile, {image: options.emulator, stderrFilePath: logFilePath, stdoutFilePath: logFilePath }).wait();
 		}).future<void>()();
 	}
 
