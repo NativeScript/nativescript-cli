@@ -46,7 +46,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
 
 			var paths = "assets gen libs res".split(' ').map(p => path.join(frameworkDir, p));
-			shell.cp("-r", paths, projectRoot);
+			shell.cp("-R", paths, projectRoot);
 
 			paths = ".project AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp("-f", paths, projectRoot);
@@ -91,11 +91,11 @@ class AndroidProjectService implements IPlatformProjectService {
 			var assetsDirectory = path.join(platformData.projectRoot, "assets");
 			var resDirectory = path.join(platformData.projectRoot, "res");
 
-			shell.cp("-r", path.join(appSourceDirectory, "*"), assetsDirectory);
+			shell.cp("-Rf", path.join(appSourceDirectory, "*"), assetsDirectory);
 
 			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-r", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
@@ -118,12 +118,12 @@ class AndroidProjectService implements IPlatformProjectService {
 			command = 'cmd';
 		}
 
-		var child = this.$childProcess.spawn(command, args, {stdio: "inherit"});
-		return this.$fs.futureFromEvent(child, "close");
+		return this.$childProcess.spawnFromEvent(command, args, "close", {stdio: "inherit"});
 	}
 
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
 		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
+
 		return args;
 	}
 
