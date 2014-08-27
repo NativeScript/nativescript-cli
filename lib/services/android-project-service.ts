@@ -112,6 +112,10 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<void>()();
 	}
 
+	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
+		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
+	}
+
 	private spawn(command: string, args: string[]): IFuture<void> {
 		if (hostInfo.isWindows()) {
 			args.unshift('/s', '/c', command);

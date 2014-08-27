@@ -22,4 +22,5 @@ interface IPlatformProjectService {
 	afterCreateProject(projectRoot: string): IFuture<void>;
 	prepareProject(platformData: IPlatformData): IFuture<string>;
 	buildProject(projectRoot: string): IFuture<void>;
+	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
 }

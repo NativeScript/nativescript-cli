@@ -8,20 +8,20 @@ export class ListPlatformsCommand implements ICommand {
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			var availablePlatforms = this.$platformService.getAvailablePlatforms().wait();
-			if(availablePlatforms.length > 0) {
-				this.$logger.out("Available platforms: %s", helpers.formatListOfNames(availablePlatforms));
-			} else {
-				this.$logger.out("No available platforms found.");
-			}
-
-			var message = "No installed platforms found.";
 			var installedPlatforms = this.$platformService.getInstalledPlatforms().wait();
-			if (installedPlatforms.length > 0){
-				message = util.format("Installed platforms: %s", helpers.formatListOfNames(installedPlatforms));
-			}
 
-			this.$logger.out(message);
+			if(installedPlatforms.length > 0) {
+				var preparedPlatforms = this.$platformService.getPreparedPlatforms().wait();
+				if(preparedPlatforms.length > 0) {
+					this.$logger.out("The project is prepared for: ", helpers.formatListOfNames(preparedPlatforms, "and"));
+				} else {
+					this.$logger.out("The project is not prepared for any platform");
+				}
+				this.$logger.out("Installed platforms: ", helpers.formatListOfNames(installedPlatforms, "and"));
+			} else {
+				this.$logger.out("Available platforms for this OS: ", helpers.formatListOfNames(this.$platformService.getAvailablePlatforms().wait(), "and"));
+				this.$logger.out("No installed platforms found. Use $ tns platform add");
+			}
 		}).future<void>()();
 	}
 }
