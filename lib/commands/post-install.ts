@@ -72,7 +72,6 @@ export class PostInstallCommand implements ICommand {
 	private updateShellScriptCore(filePath: string): IFuture<void> {
 		return (() => {
 			this.$childProcess.exec("nativescript completion >> " + filePath).wait();
-			this.$childProcess.exec("tns completion >> " + filePath).wait();
 		}).future<void>()();
 	}
 
