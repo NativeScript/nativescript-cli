@@ -4,13 +4,13 @@ Telerik NativeScript Command-Line Interface
 
 *Create, build, and run native apps for iOS and Android using JavaScript or TypeScript*
 
-The Telerik NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
+The Telerik NativeScript CLI lets you create, build, and deploy Telerik NativeScript-based projects on iOS and Android devices.
 
-* [What is NativeScript](#what-is-nativescript "Quick overview of Telerik NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
+* [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
-* [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the Telerik NativeScript CLI")
-* [Installation](#installation "How to configure and install the Telerik NativeScript CLI")
-* [Quick Start](#quick-start "Get started with the Telerik NativeScript CLI")
+* [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
+* [Installation](#installation "How to configure and install the NativeScript CLI")
+* [Quick Start](#quick-start "Get started with the NativeScript CLI")
 	* [The Commands](#the-commands)
 	* [Create Project](#create-project)
 	* [Add Platforms](#add-platforms)
@@ -27,19 +27,19 @@ The Telerik NativeScript CLI lets you create, build, and deploy NativeScript-bas
 What is NativeScript
 ===
 
-> Telerik NativeScript is currently available as a private preview. To sign up for the NativeScript Insiders program, visit <a href="http://www.telerik.com/nativescript-insiders-signup" target="_blank">http://www.telerik.com/nativescript-insiders-signup</a>.
+> NativeScript is currently available as a private preview. To sign up for the NativeScript Insiders program, visit <a href="http://www.telerik.com/nativescript-insiders-signup" target="_blank">http://www.telerik.com/nativescript-insiders-signup</a>.
 
-Telerik NativeScript is a cross-platform JavaScript framework that lets you develop native iOS and Android apps from a single code base. The framework provides JavaScript access to the native APIs, user interface, and rendering engines of iOS and Android. By using JavaScript or TypeScript, you can create one project that builds into an iOS or Android app with completely native user experience.
+NativeScript is a cross-platform JavaScript framework that lets you develop native iOS and Android apps from a single code base. The framework provides JavaScript access to the native APIs, user interface, and rendering engines of iOS and Android. By using JavaScript or TypeScript, you can create one project that builds into an iOS or Android app with completely native user experience.
 
-To learn more about Telerik NativeScript, you can check the following resources:
+To learn more about NativeScript, you can check the following resources:
 
-* [The Telerik NativeScript web page][4]
+* [The NativeScript web page][4]
 * [NativeScript - a Technical Overview][9]
 * [Development with NativeScript][3]
 * [Announcing NativeScript - cross-platform framework for building native mobile applications][11]
-* [The Telerik NativeScript Documentation Wiki][6]
-* [The Telerik NativeScript API Reference][7]
-* [The Telerik NativeScript FAQ][8]
+* [The NativeScript Documentation Wiki][6]
+* [The NativeScript API Reference][7]
+* [The NativeScript FAQ][8]
 * [On NativeScript for Android][10]
 
 [Back to Top][1]
@@ -47,7 +47,7 @@ To learn more about Telerik NativeScript, you can check the following resources:
 Supported Platforms
 ===
 
-With the Telerik NativeScript CLI, you can target the following mobile platforms.
+With the NativeScript CLI, you can target the following mobile platforms.
 
 * Android 4.2 or a later stable official release
 * iOS 7.0 or later stable official release
@@ -57,7 +57,7 @@ With the Telerik NativeScript CLI, you can target the following mobile platforms
 System Requirements
 ===
 
-You can install and run the Telerik NativeScript CLI on Windows or OS X.
+You can install and run the NativeScript CLI on Windows or OS X.
 
 * [Windows](#widnows)
 * [OS X](#os-x)
@@ -67,11 +67,11 @@ You can install and run the Telerik NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* Node.js 0.10.22 or later
-* (Optional) Chocolatey
-* JDK 6 or later
-* Apache Ant 1.8 or later
-* Android SDK 19 or later
+* [Node.js 0.10.22] or a later stable official release
+* (Optional) [Chocolatey]
+* [JDK 6] or a later stable official release
+* [Apache Ant 1.8] or a later stable official release
+* [Android SDK 19] or a later stable official release
 
 If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
 
@@ -81,7 +81,7 @@ Path to tools directory in the Android SDK installation folder
 Path to platform-tools directory in the Android SDK installation folder
 ```
 
-For example: PATH=...;...;C:\tools\apache-ant-1.9.4\bin;%localappdata%\Android\android-sdk\tools;%localappdata%\Android\android-sdk\platform-tools;
+For example: PATH=...;...;C:\tools\apache-ant-1.9.4\bin;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
 
 If you have installed Chocolatey, you can complete these steps to set up JDK, Apache Ant, and Android SDK.
 
@@ -122,7 +122,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 	Path to platform-tools directory in the Android SDK installation folder
 	```
 
-	For example: PATH=...;...;%localappdata%\Android\android-sdk\tools;%localappdata%\Android\android-sdk\platform-tools
+	For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools
 1. To update the Android SDK to 19 or later, run the following command.
 
 	```Shell
@@ -135,17 +135,18 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* Node.js 0.10.22 or later
+* [Node.js 0.10.22] or a later stable official release
 * For iOS development
-	* iOS 7.0 SDK or later
-	* Xcode 5 or later
-	* Xcode command-line tools
+	* [iOS 7.0 SDK][12] or a later stable official release
+	* [Xcode 5][12] or a later stable official release
+	* [Xcode command-line tools][12]
+	* The [ios-sim] npm package
 * For Android development
-	* JDK 6 or later 
-	* Apache Ant 1.8 or later
-	* Android SDK 19 or later 
+	* [JDK 6] or a later stable official release 
+	* [Apache Ant 1.8] or a later stable official release
+	* [Android SDK 19] or a later stable official release 
 
-If you want to develop for Android, verify that you have added the following paths in `/etc/paths`.
+If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
 
 ```
 Path to the bin subdirectory in the Apache Ant installation directory
@@ -155,9 +156,7 @@ Path to the platform-tools subdirectory in the Android SDK installation director
 
 For example:
 ```
-~/ant/apache-ant-1.9.4/bin
-/Applications/Android Studio.app/sdk/tools
-/Applications/Android Studio.app/sdk/platform-tools
+export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/sdk/tools:/Applications/Android Studio.app/sdk/platform-tools
 ```
 
 [Back to Top][1]
@@ -165,7 +164,7 @@ For example:
 Installation
 ===
 
-The Telerik NativeScript CLI is available for installing as an npm package.
+The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
 
@@ -215,7 +214,15 @@ To create a new hybrid project from the default template, run the following comm
 tns create MyApp
 ```
 
-The Telerik NativeScript creates a new project based on the JavaScript built-in template and sets the application identifier to `com.telerik.myapp`.
+To create a new hybrid project from an existing NativeScript project, run the following command.
+
+```Shell
+tns create MyApp --copy-from <Directory>
+```
+
+Where <Directory> is the complete path to the directory that contains your existing project. You can use any NativeScript project, created with the Telerik AppBuilder clients or the NativeScript CLI.
+
+The NativeScript creates a new project based on the JavaScript built-in template and sets the application identifier to `org.nativescript.myapp`.
 
 The CLI places the project in a new directory in the current directory. The newly created directory has the following structure.
 
@@ -227,32 +234,16 @@ MyApp/
 |-- |-- |-- Android/
 |-- |-- `-- iOS/ 
 |-- |-- tns_modules/
-|-- |-- |-- application/
-|-- |-- |-- camera/
-|-- |-- |-- console/
-|-- |-- |-- file-system/
-|-- |-- |-- globals/
-|-- |-- |-- http/
-|-- |-- |-- image-source/
-|-- |-- |-- local-settings/
-|-- |-- |-- location/
-|-- |-- |-- promises/
-|-- |-- |-- text/
-|-- |-- |-- timer/
-|-- |-- `-- utils/
+|-- |-- `-- .../
 |-- |-- LICENSE
 |-- |-- package.json
 |-- `-- README.md
-|-- hooks/
 |-- platforms/
-|-- tns_modules/
 `-- .tnsproject
 ```
 
-* The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the Telerik NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
-* The `hooks` directory is an empty directory. In a future release of the Telerik NativeScript CLI, in `hooks`, you will be able to store scripts that are automatically executed before and after a specified command.
-* The `platforms` directory is created empty. When you add a target platform to your project, the Telerik NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the Telerik NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.<br/>In the `platforms` directory, you can safely modify configuration files such as `AndroidManifest.xml` and `Info.plist`. 
-* The `tns_modules` is an empty directory. In a future release of the Telerik NativeScript CLI, in `tns_modules`, you will be able to add custom Telerik NativeScript modules to extend the functionality of the basic framework.
+* The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
+* The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.<br/>In the `platforms` directory, you can safely modify configuration files such as `AndroidManifest.xml` and `Info.plist`. 
 
 [Back to Top][1]
 
@@ -304,19 +295,17 @@ For more information about the structure iOS native projects, see [Code Organiza
 * [Development with NativeScript](#development-with-nativescript)
 * [Development in app](#development-in-app)
 * [Development in platforms](#development-in-platforms)
-* [Development in hooks](#development-in-hooks)
-* [Development in tns_modules](#development-in-tns-modules)
 
 ### Development with NativeScript
 
-For more information about working with Telerik NativeScript, see the following resources.
+For more information about working with NativeScript, see the following resources.
 
-* [The Telerik NativeScript Documentation Wiki][6]
-* [The Telerik NativeScript API Reference][7]
+* [The NativeScript Documentation Wiki][6]
+* [The NativeScript API Reference][7]
 
 ### Development in `app`
 
-The `app` directory in the root of the project is the development space for your project. **Place all your common and platform-specific code in this directory.** When you run `prepare <Platform>`, the Telerik NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
+The `app` directory in the root of the project is the development space for your project. **Place all your common and platform-specific code in this directory.** When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
 
 In the `app` directory, you can use **platform-specific files** to provide customized functionality and design for each target platform. To indicate that a file is platform-specific, make sure that the file name is in the following format: `name.ios.extension` or `name.android.extension`. For example: `main.ios.js` or `main.android.js`. 
 
@@ -326,21 +315,13 @@ You can develop shared functionality or design in common files. To indicate that
 
 In `platforms`, you can safely modify files which are part of the native project structure and do not have a corresponding source located in the `app` directory in the root. For example, `AndroidManifest.xml` and `Info.plist`.
 
-**Do not modify files and resources that have a corresponding file in the `app` directory in the root**, such as application scripts, icons, and splash screens. The Telerik NativeScript CLI overrides such files during the `prepare <Platform>` operation with the content from `app`.
-
-### Development in `hooks`
-
-In this version of the Telerik NativeScript CLI, you cannot create and use hooks.
-
-### Development in `tns_modules`
-
-In this version of the Telerik NativeScript CLI, you cannot create and use custom Telerik NativeScript modules to extend the functionality of the framework.
+**Do not modify files and resources that have a corresponding file in the `app` directory in the root**, such as application scripts, icons, and splash screens. The NativeScript CLI overrides such files during the `prepare <Platform>` operation with the content from `app`.
 
 [Back to Top][1]
 
 ## Prepare for Build
 
-When you run `build`, the Telerik NativeScript CLI uses the resources from the platform-specific subdirectory in the `platforms` directory. To populate the platform-specific subdirectory with the correct application assets, you need to run `prepare`.
+When you run `build`, the NativeScript CLI uses the resources from the platform-specific subdirectory in the `platforms` directory. To populate the platform-specific subdirectory with the correct application assets, you need to run `prepare`.
 
 ```Shell
 tns prepare android
@@ -351,7 +332,7 @@ tns prepare ios
 
 Keep in mind that `prepare` overrides changes made to the platform-specific subdirectory in `platforms`. For more information, see [Development in platforms](#development-in-platforms).
 
-> **IMPORTANT:** Always run `prepare <Platform>` before running `build <Platform>`, `deploy <Platform>`, or `emulate <Platform>`. This ensures that the Telerik NativeScript CLI will build an application package with your latest code and resources.
+> **IMPORTANT:** Always run `prepare <Platform>` before running `build <Platform>`, `deploy <Platform>`, or `emulate <Platform>`. This ensures that the NativeScript CLI will build an application package with your latest code and resources.
 
 [Back to Top][1]
 
@@ -364,13 +345,13 @@ tns build android
 tns build ios
 ```
 
-The Telerik NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. 
+The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. 
 
-When you build for Android, the Telerik NativeScript CLI saves the application package as an `APK` in `platforms` &#8594; `android` &#8594; `bin`.
+When you build for Android, the NativeScript CLI saves the application package as an `APK` in `platforms` &#8594; `android` &#8594; `bin`.
 
-When you build for iOS, the Telerik NativeScript CLI saves the application package as an `IPA` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `device`.
+When you build for iOS, if the `--device` flag is not set, the NativeScript CLI builds your project for the native emulator and saves the application package as an `APP` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `emulator`. If the `--device` flag is set, the NativeScript CLI builds your project for device and saves the application package as an `IPA` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `device`.
 
-> **IMPORTANT:** To build your app for iOS, you need to configure a valid pair of certificate and provisioning profile for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
+> **IMPORTANT:** To build your app for iOS device, you need to configure a valid pair of certificate and provisioning profile for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
 [Back to Top][1]
 
@@ -378,13 +359,13 @@ When you build for iOS, the Telerik NativeScript CLI saves the application packa
 
 You can test your work in progress on connected Android or iOS devices.
 
-To verify that the Telerik NativeScript CLI recognizes your connected devices, run the following command.
+To verify that the NativeScript CLI recognizes your connected devices, run the following command.
 
 ```Shell
 tns list-devices
 ```
 
-The Telerik NativeScript CLI lists all connected physical devices and running Android Virtual Devices.
+The NativeScript CLI lists all connected physical devices and running Android Virtual Devices.
 
 After you have listed the available devices, you can deploy your app on all devices from the selected target platform.
 
@@ -394,7 +375,11 @@ tns deploy android
 tns deploy ios
 ```
 
-The Telerik NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. After the build is complete, the Telerik NativeScript CLI downloads and installs the application package on your connected devices. The app does not run automatically on the device. To run the app, tap the app icon.
+The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. After the build is complete, the NativeScript CLI downloads and installs the application package on your connected devices. 
+
+On Android devices, the app runs automatically.
+
+On iOS devices, the app does not run automatically. To run the app, tap the app icon.
 
 > **IMPORTANT:** To deploy your app on iOS devices, you need to configure a valid pair of certificate and provisioning profile for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
@@ -411,22 +396,27 @@ tns emulate ios
 
 This operation calls the SDK for the selected target platform, builds your app locally, launches the native device emulator for the selected target platform, and runs your project on the virtual device.
 
-For Android, the Telerik NativeScript CLI runs your app in the earliest created virtual device or the currently running Android Virtual Device. Before running your app in the Android native emulator, make sure that you have configured at least one virtual device in the Android Virtual Device manager.
+For Android, the NativeScript CLI runs your app in the earliest created virtual device or the currently running Android Virtual Device. Before running your app in the Android native emulator, make sure that you have configured at least one virtual device in the Android Virtual Device manager.
 
-For iOS, the Telerik NativeScript CLI runs your app in the iOS Simulator.
+For iOS, the NativeScript CLI runs your app in the iOS Simulator. Before running your app in the iOS Simulator, make sure that you have installed the [ios-sim] npm package. 
 
 [Back to Top][1]
 
 ## Run Your Project
 
-You can quickly run your app on connected devices, including running Android Virtual Devices.
+You can quickly run your app on connected devices, including all running Android Virtual Devices. The following command is shorthand for `prepare`, `build`, and `deploy`.
 
 ```Shell
 tns run android
 tns run ios
 ```
 
-This operation runs `prepare`, `build`, and `deploy`. 
+You can quickly deploy your app in the native emulators. The following command is shorthand for `prepare`, `build`, and `emulate`.
+
+```Shell
+tns run android --emulator
+tns run ios --emulator
+```
 
 [Back to Top][1]
 
@@ -478,3 +468,10 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [9]: http://developer.telerik.com/featured/nativescript-a-technical-overview/
 [10]: http://developer.telerik.com/featured/nativescript-android/
 [11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
+[12]: https://developer.apple.com/xcode/downloads/
+[Node.js 0.10.22]: http://nodejs.org/download/
+[Chocolatey]: https://chocolatey.org/
+[JDK 6]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
+[Android SDK 19]: http://developer.android.com/sdk/index.html
+[ios-sim]: https://www.npmjs.org/package/ios-sim
