@@ -133,8 +133,6 @@ export class ProjectService implements IProjectService {
 	private createBasicProjectStructure(projectDir: string,  projectId: string): IFuture<void> {
 		return (() => {
 			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
-			this.$fs.createDirectory(path.join(projectDir, "tns_modules")).wait();
-			this.$fs.createDirectory(path.join(projectDir, "hooks")).wait();
 
 			var projectData = { id: projectId };
 			this.$fs.writeFile(path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME), JSON.stringify(projectData)).wait();
