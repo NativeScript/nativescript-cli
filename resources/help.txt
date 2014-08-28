@@ -18,7 +18,8 @@ General commands:
                                     emulator package.
     deploy                          Deploys the project to a connected physical or virtual device.
     emulate                         Deploys the project in the native emulator for the selected target platform.
-    run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
+    run                             Runs your project on a connected device or in the native emulator, if configured. 
+                                    This is shorthand for prepare, build, and deploy.
     list-devices                    Lists all recognized connected physical or virtual device.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
@@ -202,14 +203,22 @@ Platform-specific usage:
     $ nativescript run android [--device <Device ID>] [--emulator]
     $ nativescript run ios [--device <Device ID>] [--emulator]
 
-Runs your project on connected device. This is shorthand for prepare, build, and deploy.
+Runs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
 <Device ID> is the index or name of the target device as listed by $ tns list-devices.
+
+Before building for the Android emulator, verify that you have met the following requirements.
+    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
+        tools
+        platform-tools
+    You have created at least one device with the Android Virtual Device manager.
+
+Before building for the iOS simulator, verify that you have installed the ios-sim npm package.
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
 Options:
     --device - Specifies a connected device on which to run the app.
-    --emulator - Runs the app in the native emulator for the target platform, if configured.
+    --emulator - If set, runs the app in the native emulator for the target platform, if configured.
 
 --[/]--
 
@@ -232,7 +241,7 @@ For Android, this operation runs your project in the earliest created virtual de
         tools
         platform-tools
     You have created at least one device with the Android Virtual Device manager.
-For iOS, this operation runs your project in the iOS Simulator.
+For iOS, this operation runs your project in the iOS Simulator. Before running this command, verify that you have installed the ios-sim npm package.
 
 --[/]--
 
