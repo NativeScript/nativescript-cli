@@ -131,6 +131,12 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
+	public getPreparedPlatforms(): IFuture<string[]> {
+		return (() => {
+			return _.filter(this.$platformsData.platformsNames, p => { return this.isPlatformPrepared(p).wait(); });
+		}).future<string[]>()();
+	}
+
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			this.validatePlatformInstalled(platform);
@@ -289,6 +295,11 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
 		}).future<boolean>()();
+	}
+
+	private isPlatformPrepared(platform: string): IFuture<boolean> {
+		var platformData = this.$platformsData.getPlatformData(platform);
+		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
 	}
 
 	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {

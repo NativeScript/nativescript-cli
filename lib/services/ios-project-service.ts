@@ -146,6 +146,10 @@ class IOSProjectService implements  IPlatformProjectService {
 		}).future<void>()();
 	}
 
+	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
+		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
+	}
+
 	private replaceFileContent(file: string): IFuture<void> {
 		return (() => {
 			var fileContent = this.$fs.readText(file).wait();
