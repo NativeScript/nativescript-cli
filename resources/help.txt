@@ -193,19 +193,23 @@ Before building for iOS device, verify that you have configured a valid pair of 
 --[run]--
 
 Usage:
-    $ tns run <Platform> [--device <Device ID>]
-    $ nativescript run <Platform> [--device <Device ID>]
+    $ tns run <Platform> [--device <Device ID>] [--emulator]
+    $ nativescript run <Platform> [--device <Device ID>] [--emulator]
 
 Platform-specific usage:
-    $ tns run android [--device <Device ID>]
-    $ tns run ios [--device <Device ID>]
-    $ nativescript run android [--device <Device ID>]
-    $ nativescript run ios [--device <Device ID>]
+    $ tns run android [--device <Device ID>] [--emulator]
+    $ tns run ios [--device <Device ID>] [--emulator]
+    $ nativescript run android [--device <Device ID>] [--emulator]
+    $ nativescript run ios [--device <Device ID>] [--emulator]
 
 Runs your project on connected device. This is shorthand for prepare, build, and deploy.
 <Device ID> is the index or name of the target device as listed by $ tns list-devices.
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+
+Options:
+    --device - Specifies a connected device on which to run the app.
+    --emulator - Runs the app in the native emulator for the target platform, if configured.
 
 --[/]--
 
