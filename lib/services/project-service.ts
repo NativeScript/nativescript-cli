@@ -60,7 +60,7 @@ export class ProjectService implements IProjectService {
 			}
 			this.$projectNameValidator.validate(projectName);
 
-			projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName);
+			projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName, "org.nativescript");
 
 			var projectDir = path.join(path.resolve(options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
