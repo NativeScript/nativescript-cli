@@ -220,7 +220,7 @@ To create a new cross-platform project from an existing NativeScript project, ru
 tns create MyApp --copy-from <Directory>
 ```
 
-Where <Directory> is the complete path to the directory that contains your existing project. You can use any NativeScript project, created with the Telerik AppBuilder clients or the NativeScript CLI.
+Where <Directory> is the complete path to the directory that contains your existing project. You can use any NativeScript project, created with the Telerik AppBuilder clients.
 
 The NativeScript creates a new project based on the JavaScript built-in template and sets the application identifier to `org.nativescript.myapp`.
 
