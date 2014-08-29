@@ -208,13 +208,13 @@ Run `tns help` to list all available commands. Run or `tns <Command> --help` to 
 
 ## Create Project
 
-To create a new hybrid project from the default template, run the following command.
+To create a new cross-platform project from the default template, run the following command.
 
 ```Shell
 tns create MyApp
 ```
 
-To create a new hybrid project from an existing NativeScript project, run the following command.
+To create a new cross-platform project from an existing NativeScript project, run the following command.
 
 ```Shell
 tns create MyApp --copy-from <Directory>
