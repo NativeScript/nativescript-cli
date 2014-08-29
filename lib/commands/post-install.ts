@@ -20,7 +20,7 @@ export class PostInstallCommand implements ICommand {
 	public execute(args: string[]): IFuture<void> {
 		return (() => {
 			if(process.platform !== "win32") {
-				this.$fs.chmod(this.$staticConfig.adbFilePath, 755).wait();
+				this.$fs.chmod(this.$staticConfig.adbFilePath, "0777").wait();
 			}
 
 			this.enableAutoCompletion().wait();
