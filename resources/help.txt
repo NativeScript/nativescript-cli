@@ -2,6 +2,7 @@
 
 Usage:
     $ tns <command> [command parameters] [--command <options>]
+    $ nativescript <command> [command parameters] [--command <options>]
 
 General commands:
     help <command>                  Shows additional information about the commands in this list.
@@ -11,13 +12,15 @@ General commands:
     platform list                   Lists all platforms that the project currently targets.
     platform remove                 Removes the selected platform from the platforms that the project currently targets.
                                     This operation deletes all platform-specific files and subdirectories from your project.
-    prepare                         Copies cross-platform content to the subdirectory for the selected target platform. 
+    prepare                         Copies relevant content from the app directory to the subdirectory for the selected target platform. 
                                     This lets you build the project with the SDK for the selected platform and deploy it on device.
-    build                           Builds the project for the selected target platform and produces an application package.
-    deploy                          Deploys the project to a connected device.
-    emulate                         Deploys the project on emulator.
-    run                             Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
-    list-devices                    Lists all recognized connected devices.
+    build                           Builds the project for the selected target platform and produces an application package or an
+                                    emulator package.
+    deploy                          Deploys the project to a connected physical or virtual device.
+    emulate                         Deploys the project in the native emulator for the selected target platform.
+    run                             Runs your project on a connected device or in the native emulator, if configured. 
+                                    This is shorthand for prepare, build, and deploy.
+    list-devices                    Lists all recognized connected physical or virtual device.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
 General options:
@@ -31,6 +34,7 @@ General options:
 
 Usage:
     $ tns help [<Command>]
+    $ nativescript [<Command>]
     
 Lists the available commands or shows information about the selected command.
 <Command> is any of the available commands as listed by $ tns help.
@@ -41,8 +45,9 @@ Lists the available commands or shows information about the selected command.
 
 Usage:
     $ tns create <App name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]
+    $ nativescript create <App name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]
 
-Creates a new project for native development with NativeScript.
+Creates a new project for native development with NativeScript from the default template or from an existing NativeScript project.
 <App name> is the name of project. The specified name must meet the requirements of all platforms that you want to target. 
            For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores. The name must start with a letter.
            For projects that target iOS, you can use uppercase or lowercase letters, numbers, and hyphens. 
@@ -54,9 +59,9 @@ Options:
               meet the requirements of all platforms that you want to target.
               For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores in the strings of the reversed domain name, separated by a dot. Strings must be separated by a dot and must start with a letter. For example: com.nativescript.My_Andro1d_App
               For projects that target iOS, you can use uppercase or lowercase letters, numbers, and hyphens in the strings of the reversed domain name. Strings must be separated by a dot. For example: com.nativescript.My-i0s-App
-              If not specified, the application identifier is set to com.telerik.<App name>.
-    --copy-from - Specifies a directory which contains custom assets that you want to use in your NativeScript project. If not set,
-                  the default hello-world template is used.
+              If not specified, the application identifier is set to org.nativescript.<App name>.
+    --copy-from - Specifies a directory which contains an existing NativeScript project. 
+                  If not set, the Telerik NativeScript CLI creates the project from the default hello-world template.
 
 --[/]--
 
@@ -64,12 +69,13 @@ Options:
 
 Usage:
     $ tns platform <Command>
+    $ nativescript platform <Command>
 
 You must run the platform command with a related command.
 
 <Command> is a related command that extends the platform command. You can run the following related commands:
     list - Lists all platforms that the project currently targets. You can build and deploy your project only for 
-           the active target platforms.
+           these target platforms.
     add - Configures the current project to target the selected platform. After adding the target platform, you can 
           build and deploy your app to it.
     remove - Removes the selected platform from the platforms that the project currently targets. After removing 
@@ -82,8 +88,9 @@ You must run the platform command with a related command.
 
 Usage:
     $ tns platform list
+    $ nativescript platform list
 
-Lists all platforms that the project currently targets. You can build and deploy your project only for the active target platforms.
+Lists all platforms that the project currently targets. You can build and deploy your project only for these target platforms.
 
 --[/]--
 
@@ -91,101 +98,168 @@ Lists all platforms that the project currently targets. You can build and deploy
 
 Usage:
     $ tns platform add <Platform>
+    $ nativescript platform add <Platform>
 
 Platform-specific usage:
     $ tns platform add android
     $ tns platform add ios
+    $ nativescript platform add android
+    $ nativescript platform add ios
 
 Configures the current project to target the selected platform. When you add a target platform, the Telerik NativeScript CLI adds a corresponding platform-specific subdirectory under the platforms directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
 
-In this version of Telerik NativeScript, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
+In this version of the Telerik NativeScript CLI, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
 On Windows systems, you can target Android. 
 On OS X systems, you can target Android and iOS.
-
 
 --[/]--
 
 --[platform|remove]--
 
 Usage:
-    $ tns platform remove <platform>
+    $ tns platform remove <Platform>
+    $ nativescript platform remove <Platform>
 
 Platform-specific usage:
     $ tns platform remove android
     $ tns platform remove ios
+    $ nativescript platform remove android
+    $ nativescript platform remove ios
 
 Removes the selected platform from the platforms that the project currently targets. After removing the target platform, you can no longer build and deploy your app to it.
 
-This operation deletes all platform-specific files and subdirectories from your project.
+This operation deletes the subdirectory for the selected platform from the platforms directory.
 
 --[/]--
 
 --[prepare]--
 
 Usage:
-    $ tns prepare [<Platform>]
+    $ tns prepare <Platform>
+    $ nativescript prepare <Platform>
 
 Platform-specific usage:
     $ tns prepare android
     $ tns prepare ios
+    $ nativescript prepare android
+    $ nativescript prepare ios
 
-Copies cross-platform content to the subdirectory for the selected target platform. This lets you build the project with 
-the SDK for the selected platform.
+Copies common and relevant platform-specific content from the app directory to the subdirectory for the selected target platform
+in the platforms directory. This lets you build the project with the SDK for the selected platform.
 
 --[/]--
 
 --[build]--
 
 Usage:
-    $ tns build [<platform>]
+    $ tns build <Platform> [--device] [--release]
+    $ nativescript build <Platform> [--device] [--release]
 
 Platform-specific usage:
-    $ tns build android
-    $ tns build ios
+    $ tns build android [--release]
+    $ tns build ios [--device] [--release]
+    $ nativescript build android [--release]
+    $ nativescript build ios [--device] [--release]
 
-Builds the project for the selected target platform. This generates platform-specific code within the platform subdirectory
-in the project.
+Builds the project for the selected target platform and produces an application package that you can manually deploy on device or in the native emulator.
+
+Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+
+Options:
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+    --device - This flag is applicable only to iOS. If set, produces an application package that you can deploy on device. 
+               Otherwise, produces a build that you can run only in the native iOS Simulator.
 
 --[/]--
 
 --[deploy]--
-    Usage:
-        $ tns deploy <Platform> [--device <Device ID>]
+
+Usage:
+    $ tns deploy <Platform> [--device <Device ID>]
+    $ nativescript deploy <Platform> [--device <Device ID>]
 
 Platform-specific usages:
     $ tns deploy android [--device <Device ID>]
     $ tns deploy ios [--device <Device ID>]
+    $ nativescript deploy android [--device <Device ID>]
+    $ nativescript deploy ios [--device <Device ID>]
 
-Deploys the project to a connected device.
+Builds and deploys the project to a connected physical or virtual device.
+<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+
+Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
 --[/]--
 
 --[run]--
 
 Usage:
-    $ tns run [<platform>]
+    $ tns run <Platform> [--device <Device ID>] [--emulator]
+    $ nativescript run <Platform> [--device <Device ID>] [--emulator]
 
 Platform-specific usage:
-    $ tns run android
-    $ tns run ios
+    $ tns run android [--device <Device ID>] [--emulator]
+    $ tns run ios [--device <Device ID>] [--emulator]
+    $ nativescript run android [--device <Device ID>] [--emulator]
+    $ nativescript run ios [--device <Device ID>] [--emulator]
 
-Runs your project on a connected device. This is shorthand for prepare, build, and deploy.
+Runs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
+<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+
+Before building for the Android emulator, verify that you have met the following requirements.
+    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
+        tools
+        platform-tools
+    You have created at least one device with the Android Virtual Device manager.
+
+Before building for the iOS simulator, verify that you have installed the ios-sim npm package.
+
+Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+
+Options:
+    --device - Specifies a connected device on which to run the app.
+    --emulator - If set, runs the app in the native emulator for the target platform, if configured.
 
 --[/]--
 
 --[emulate]--
 
 Usage:
-    $ tns emulate [<platform>]
+    $ tns emulate <Platform>
+    $ nativescript emulate <Platform>
 
-Deploys the project on emulator.
+Platform-specific usage:
+    $ tns emulate android
+    $ tns emulate ios
+    $ nativescript emulate android
+    $ nativescript emulate ios
+
+Builds and runs the project in the native emulator for the selected target platform.
+
+For Android, this operation runs your project in the earliest created virtual device or the currently running Android virtual device. Before running this command, verify that you have met the following requirements.
+    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
+        tools
+        platform-tools
+    You have created at least one device with the Android Virtual Device manager.
+For iOS, this operation runs your project in the iOS Simulator. Before running this command, verify that you have installed the ios-sim npm package.
 
 --[/]--
 
 --[list-devices]--
 
-Lists all recognized connected devices with serial number and index, grouped by platform. In this version of the Telerik NativeScript CLI,
-you can connect only iOS and Android devices.
+Usage:
+    $ tns list-devices [<Platform>]
+    $ nativescript list-devices [<Platform>]
+
+Platform-specific usage:
+    $ tns list-devices android
+    $ tns list-devices ios
+    $ nativescript list-devices android
+    $ nativescript list-devices ios
+
+Lists all recognized connected devices with serial number and index, grouped by platform. The Telerik NativeScript CLI recognizes running Android virtual devices as connected devices.
+
+In this version of the Telerik NativeScript CLI, you can connect only iOS and Android devices.
 
 If a connected Android device is not shown in the list, make sure that you have installed the required Android USB drivers on your system
 and that USB debugging is enabled on the device.
@@ -208,4 +282,3 @@ All data gathered is used strictly for improving the product and will never be u
     disable - Disables anonymous usage statistics tracking.
 
 --[/]--
-
