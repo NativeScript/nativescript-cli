@@ -22,9 +22,9 @@ deploy:
     tags: true
     all_branches: true
 - provider: npm
-  email: tailsu@gmail.com
+  email: nativescript@telerik.com
   api_key:
-    secure: NL1DbE1q8tPqIYA4ixZqpvaDeYkPCnMst2/bB/fBcHsR8pqV+QxBCC0LE5GGhIzrFEBcnppsC1jIv9HWOezdNFPcBBF4zVUQzMWlrZSQ3EY1vWAqfKjgHiWRWd3hXu3gNR8SfqRHTn+VcmKhOWA6c9lgez41/BdJSE5Z3WupF+g=
+    secure: KISJen/tS+355itLT6eI5rBAwL9utOLDT1l8z6dJKLdt24l9LvKxhHlYI/WOCVPvNCUQ8cQAqGcVgmD+SmTpoCkBAHMml3C/zGZSwYd6Km1/1Eu0JtodbtLjLaTaPYpU+I7Z2bC6eFdb8hIrFEZhf92oQAyLCgBQJpu3ECjxXgI=  on:
   on:
     tags: true
     all_branches: true
