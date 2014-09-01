@@ -439,6 +439,12 @@ Known Issues
 		```
 
 		Where `<Device ID>` is the index or name of the device as listed by `tns list-devices`.
+* On OS X systems with configured Cisco IronPort, when you run a command, the operation might not release the command line and you might not be able to run other commands until you break the current operation.<br/>If you have enabled feature usage tracking for the NativeScript CLI, but you have not authenticated with Cisco IronPort on your OS X system, the NativeScript CLI might not release the command line after you run a command. To continue working with the NativeScript CLI, you need to break the current operation.<br/>**Workaround:** Authenticate with Cisco IronPort.
+	1. Close the terminal.
+	1. Run Safari.
+	1. Attempt to open a web page.
+	1. Provide your authentication credentials for Cisco IronPort.
+	1. Run the terminal and continue working with the NativeScript CLI.
 
 How to Contribute
 ===
