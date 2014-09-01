@@ -24,7 +24,7 @@ deploy:
 - provider: npm
   email: nativescript@telerik.com
   api_key:
-    secure: KISJen/tS+355itLT6eI5rBAwL9utOLDT1l8z6dJKLdt24l9LvKxhHlYI/WOCVPvNCUQ8cQAqGcVgmD+SmTpoCkBAHMml3C/zGZSwYd6Km1/1Eu0JtodbtLjLaTaPYpU+I7Z2bC6eFdb8hIrFEZhf92oQAyLCgBQJpu3ECjxXgI=  on:
+    secure: KISJen/tS+355itLT6eI5rBAwL9utOLDT1l8z6dJKLdt24l9LvKxhHlYI/WOCVPvNCUQ8cQAqGcVgmD+SmTpoCkBAHMml3C/zGZSwYd6Km1/1Eu0JtodbtLjLaTaPYpU+I7Z2bC6eFdb8hIrFEZhf92oQAyLCgBQJpu3ECjxXgI=
   on:
     tags: true
     all_branches: true
