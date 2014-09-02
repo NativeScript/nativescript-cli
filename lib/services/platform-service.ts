@@ -81,10 +81,20 @@ export class PlatformService implements IPlatformService {
 
 			this.$logger.out("Copying template files...");
 
-			// get path to downloaded framework package
-			var frameworkDir = this.$npm.install(platformData.frameworkPackageName,
-				path.join(this.$projectData.platformsDir, platform), version).wait();
-			frameworkDir = path.join(frameworkDir, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
+			var packageToInstall = "";
+			var npmOptions = {
+				pathToSave: path.join(this.$projectData.platformsDir, platform)
+			};
+
+			if(options.frameworkPath) {
+				packageToInstall = options.frameworkPath;
+			} else {
+				packageToInstall = platformData.frameworkPackageName;
+				npmOptions["version"] = version;
+			}
+
+			var downloadedPackagePath = this.$npm.install(packageToInstall, npmOptions).wait();
+			var frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 
 			try {
 				this.addPlatformCore(platformData, frameworkDir).wait();

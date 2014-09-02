@@ -108,6 +108,9 @@ Platform-specific usage:
 
 Configures the current project to target the selected platform. When you add a target platform, the Telerik NativeScript CLI adds a corresponding platform-specific subdirectory under the platforms directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
 
+Options:
+    --frameworkPath - specifies the path to local runtime. It should be npm package.
+
 In this version of the Telerik NativeScript CLI, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
 On Windows systems, you can target Android. 
 On OS X systems, you can target Android and iOS.
