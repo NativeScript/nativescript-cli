@@ -4,7 +4,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
 		private $staticConfig: IStaticConfig) { }
 
-	public canRequestConsent(): IFuture<boolean> {
+	public canDoRequest(): IFuture<boolean> {
 		return (() => { return true; }).future<boolean>()();
 	}
 
