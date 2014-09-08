@@ -159,7 +159,7 @@
   "staging"    : {
     "kcs": {
       "protocol" : "https",
-      "host"     : "v3yk1n.kinvey.com"
+      "host"     : "v3yk1n-kcs.kinvey.com"
 	},
     "test": {
       "appKey"       : "kid_PTsIpH9WF5",

@@ -26,7 +26,7 @@ var clone = function(object) {
     }
   }
   return result;
-}
+};
 
 /**
  * @private
