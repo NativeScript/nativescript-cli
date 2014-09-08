@@ -17,6 +17,17 @@
 // Relational Data.
 // ----------------
 
+// Returns a shallow clone of the specified object.
+var clone = function(object) {
+  var result = { };
+  for(var key in object) {
+    if(object.hasOwnProperty(key)) {
+      result[key] = object[key];
+    }
+  }
+  return result;
+}
+
 /**
  * @private
  * @namespace KinveyReference
@@ -39,7 +50,7 @@ var KinveyReference = /** @lends KinveyReference */{
     // If a list of documents was passed in, retrieve all relations in parallel.
     if(isArray(document)) {
       var promises = document.map(function(member) {
-        return KinveyReference.get(member, options);
+        return KinveyReference.get(member, clone(options));
       });
       return Kinvey.Defer.all(promises);
     }
@@ -157,7 +168,7 @@ var KinveyReference = /** @lends KinveyReference */{
     // If a list of documents was passed in, retrieve all relations in parallel.
     if(isArray(document)) {
       var promises = document.map(function(member) {
-        return KinveyReference.save(collection, member, options);
+        return KinveyReference.save(collection, member, clone(options));
       });
       return Kinvey.Defer.all(promises);
     }
