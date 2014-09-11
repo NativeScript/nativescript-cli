@@ -5,17 +5,20 @@ import util = require("util");
 import options = require("./../options");
 import constants = require("./../constants");
 import hostInfo = require("../common/host-info");
+import helpers = require("./../common/helpers");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private targetApi: string;
 
-	constructor(private $fs: IFileSystem,
-		private $errors: IErrors,
-		private $logger: ILogger,
+	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $childProcess: IChildProcess,
+		private $errors: IErrors,
+		private $fs: IFileSystem,
+		private $logger: ILogger,
 		private $projectData: IProjectData,
-		private $propertiesParser: IPropertiesParser,
-		private $androidEmulatorServices: Mobile.IEmulatorPlatformServices) { }
+		private $propertiesParser: IPropertiesParser) {
+
+	}
 
 	public get platformData(): IPlatformData {
 		return {
@@ -28,7 +31,8 @@ class AndroidProjectService implements IPlatformProjectService {
 			validPackageNamesForDevice: [
 				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
 				util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
-			]
+			],
+			frameworkFilesExtensions: [".jar", ".dat"]
 		};
 	}
 
@@ -114,6 +118,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
+	}
+
+	public getFrameworkFilesExtensions(): string[] {
+		return [".jar", ".dat"];
 	}
 
 	private spawn(command: string, args: string[]): IFuture<void> {

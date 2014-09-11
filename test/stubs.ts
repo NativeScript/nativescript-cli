@@ -137,7 +137,11 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NPMStub implements INodePackageManager {
-	get cache(): string {
+	getCacheRootPath(): IFuture<string> {
+		return undefined;
+	}
+
+	addToCache(packageName: string): IFuture<void> {
 		return undefined;
 	}
 
@@ -146,6 +150,10 @@ export class NPMStub implements INodePackageManager {
 	}
 
 	install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
+		return undefined;
+	}
+
+	getLatestVersion(packageName: string): IFuture<string> {
 		return undefined;
 	}
 }

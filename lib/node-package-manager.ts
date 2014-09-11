@@ -13,14 +13,29 @@ export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 	private static NPM_REGISTRY_URL = "http://registry.npmjs.org/";
 
+	private versionsCache: IDictionary<string[]>;
+	private isLoaded: boolean;
+
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $httpClient: Server.IHttpClient,
 		private $staticConfig: IStaticConfig,
-		private $fs: IFileSystem) { }
+		private $fs: IFileSystem) {
+		this.versionsCache = {};
+	}
 
-	public get cache(): string {
-		return npm.cache;
+	public getCacheRootPath(): IFuture<string> {
+		return (() => {
+			this.load().wait();
+			return npm.cache;
+		}).future<string>()();
+	}
+
+	public addToCache(packageName: string): IFuture<void> {
+		return (() => {
+			this.load().wait();
+			this.addToCacheCore(packageName).wait();
+		}).future<void>()();
 	}
 
 	public load(config?: any): IFuture<void> {
@@ -39,6 +54,7 @@ export class NodePackageManager implements INodePackageManager {
 		return (() => {
 			try {
 				this.load().wait(); // It's obligatory to execute load before whatever npm function
+
 				var packageToInstall = packageName;
 				var pathToSave = (opts && opts.pathToSave) || npm.cache;
 				var version = (opts && opts.version) || null;
@@ -59,6 +75,14 @@ export class NodePackageManager implements INodePackageManager {
 			var folders = this.$fs.readDirectory(pathToNodeModules).wait();
 			return path.join(pathToNodeModules, folders[0]);
 
+		}).future<string>()();
+	}
+
+	public getLatestVersion(packageName: string): IFuture<string> {
+		return (() => {
+			var versions = this.getAvailableVersions(packageName).wait();
+			versions = _.sortBy(versions, (ver: string) => { return ver; });
+			return versions.reverse()[0];
 		}).future<string>()();
 	}
 
@@ -89,12 +113,28 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
+	private addToCacheCore(packageName: string): IFuture<void> {
+		var future = new Future<void>();
+		npm.commands["cache"].add(packageName, (err: Error, data: any) => {
+			if(err) {
+				future.throw(err);
+			} else {
+				future.return();
+			}
+		});
+		return future;
+	}
+
 	private getAvailableVersions(packageName: string): IFuture<string[]> {
 		return (() => {
-			var url = NodePackageManager.NPM_REGISTRY_URL + packageName;
-			var response = this.$httpClient.httpRequest(url).wait().body;
-			var json = JSON.parse(response);
-			return _.keys(json.versions);
+			if(!this.versionsCache[packageName]) {
+				var url = NodePackageManager.NPM_REGISTRY_URL + packageName;
+				var response = this.$httpClient.httpRequest(url).wait().body;
+				var json = JSON.parse(response);
+				this.versionsCache[packageName] = _.keys(json.versions);
+			}
+
+			return this.versionsCache[packageName];
 		}).future<string[]>()();
 	}
 

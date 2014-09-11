@@ -10,6 +10,12 @@ interface IProjectData {
 	projectId?: string;
 }
 
+interface IProjectDataService {
+	initialize(projectDir: string): void;
+	getValue(propertyName: string): IFuture<any>;
+	setValue(key: string, value: any): IFuture<void>;
+}
+
 interface IProjectTemplatesService {
 	defaultTemplatePath: IFuture<string>;
 }

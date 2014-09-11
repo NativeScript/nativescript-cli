@@ -6,37 +6,18 @@ import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 import options = require("./../options");
-
-class PlatformsData implements IPlatformsData {
-	private platformsData : { [index: string]: any } = {};
-
-	constructor($androidProjectService: IPlatformProjectService,
-		$iOSProjectService: IPlatformProjectService) {
-
-		this.platformsData = {
-			ios: $iOSProjectService.platformData,
-			android: $androidProjectService.platformData
-		}
-	}
-
-	public get platformsNames() {
-		return Object.keys(this.platformsData);
-	}
-
-	public getPlatformData(platform: string): IPlatformData {
-		return this.platformsData[platform];
-	}
-}
-$injector.register("platformsData", PlatformsData);
+import semver = require("semver");
 
 export class PlatformService implements IPlatformService {
-	constructor(private $errors: IErrors,
+	constructor(private $devicesServices: Mobile.IDevicesServices,
+		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $npm: INodePackageManager,
-		private $projectData: IProjectData,
 		private $platformsData: IPlatformsData,
-		private $devicesServices: Mobile.IDevicesServices) { }
+		private $projectData: IProjectData,
+		private $projectDataService: IProjectDataService,
+		private $prompter: IPrompter) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -111,6 +92,7 @@ export class PlatformService implements IPlatformService {
 	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<void> {
 		return (() => {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
+			var installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 
 			// Need to remove unneeded node_modules folder
 			// One level up is the runtime module and one above is the node_modules folder.
@@ -118,6 +100,10 @@ export class PlatformService implements IPlatformService {
 
 			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
+
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			this.$projectDataService.setValue(platformData.frameworkPackageName, {version: installedVersion}).wait();
+
 		}).future<void>()();
 	}
 
@@ -215,6 +201,23 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(platformDir).wait();
 			});
 
+		}).future<void>()();
+	}
+
+	public updatePlatforms(platforms: string[]): IFuture<void> {
+		return (() => {
+			if(!platforms || platforms.length === 0) {
+				this.$errors.fail("No platform specified. Please specify a platform to remove");
+			}
+
+			_.each(platforms, platform => {
+				var parts = platform.split("@");
+				platform = parts[0];
+				var version = parts[1];
+
+				this.validatePlatformInstalled(platform);
+				this.updatePlatform(platform, version).wait();
+			});
 		}).future<void>()();
 	}
 
@@ -378,6 +381,88 @@ export class PlatformService implements IPlatformService {
 
 	private getLatestApplicationPackageForEmulator(platformData: IPlatformData) {
 		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.validPackageNamesForEmulator || platformData.validPackageNamesForDevice);
+	}
+
+	private updatePlatform(platform: string, version: string): IFuture<void> {
+		return (() => {
+			var platformData = this.$platformsData.getPlatformData(platform);
+
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			var data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+			var currentVersion = data && data.version ? data.version : "0.2.0";
+			var newVersion = version || this.$npm.getLatestVersion(platformData.frameworkPackageName).wait();
+
+			if(!semver.valid(newVersion)) {
+				this.$errors.fail("The version %s is not valid. The version should consists from 3 parts seperated by dot.", newVersion);
+			}
+
+			if(semver.gt(currentVersion, newVersion)) { // Downgrade
+				var isUpdateConfirmed = this.$prompter.confirm("You are going to update to lower version. Are you sure?", () => "n").wait();
+				if(isUpdateConfirmed) {
+					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+				}
+			} else if(semver.eq(currentVersion, newVersion)) {
+				this.$errors.fail("Current and new version are the same.");
+			} else {
+				this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+			}
+
+		}).future<void>()();
+	}
+
+	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string): IFuture<void> {
+		return (() => {
+			// Remove old framework files
+			var oldFrameworkFiles =  this.getFrameworkFiles(platformData, currentVersion).wait();
+			_.each(oldFrameworkFiles, file => {
+				this.$fs.deleteFile(path.join(platformData.projectRoot, file)).wait();
+			});
+
+			// Add new framework files
+			var newFrameworkFiles = this.getFrameworkFiles(platformData, newVersion).wait();
+			var cacheDirectoryPath = this.getNpmCacheDirectoryCore(platformData.frameworkPackageName, newVersion).wait();
+			_.each(newFrameworkFiles, file => {
+				shell.cp("-f", path.join(cacheDirectoryPath, file), path.join(platformData.projectRoot, file));
+			});
+
+			// Update .tnsproject file
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			this.$projectDataService.setValue(platformData.frameworkPackageName, {version: newVersion}).wait();
+
+			this.$logger.out("Successfully updated to version ", newVersion);
+
+		}).future<void>()();
+	}
+
+	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<string[]> {
+		return (() => {
+			var npmCacheDirectoryPath = this.getNpmCacheDirectory(platformData.frameworkPackageName, version).wait();
+			var allFiles = helpers.enumerateFilesInDirectorySync(npmCacheDirectoryPath);
+			var filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
+			var relativeToCacheFiles = _.map(filteredFiles, file => file.substr(npmCacheDirectoryPath.length));
+
+			return relativeToCacheFiles;
+
+		}).future<string[]>()();
+	}
+
+	private getNpmCacheDirectory(packageName: string, version: string): IFuture<string> {
+		return (() => {
+			var npmCacheDirectoryPath = this.getNpmCacheDirectoryCore(packageName, version).wait();
+
+			if(!this.$fs.exists(npmCacheDirectoryPath).wait()) {
+				this.$npm.addToCache(util.format("%s@%s", packageName, version)).wait();
+			}
+
+			return npmCacheDirectoryPath;
+		}).future<string>()();
+	}
+
+	private getNpmCacheDirectoryCore(packageName: string, version: string): IFuture<string> {
+		return (() => {
+			var npmCacheRoot = this.$npm.getCacheRootPath().wait();
+			return path.join(npmCacheRoot, packageName, version, "package");
+		}).future<string>()();
 	}
 }
 $injector.register("platformService", PlatformService);

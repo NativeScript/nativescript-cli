@@ -2,6 +2,7 @@
 declare module "semver" {
 	function gt(version1: string, version2: string): boolean;
 	function lt(version1: string, version2: string): boolean;
+	function eq(version1: string, version2: string): boolean;
 	function valid(version: string): boolean;
 	function inc(version: string, release: string): string;
 	function inc(version: string, release: "major"): string;
