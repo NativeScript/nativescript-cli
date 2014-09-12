@@ -34,7 +34,7 @@
     "mkdirp": "0.3.5",
     "mute-stream": "0.0.4",
     "node-uuid": "1.4.1",
-    "npm": "1.4.10",
+    "npm": "1.4.26",
     "osenv": "0.1.0",
     "plistlib": "0.2.1",
     "progress-stream": "0.5.0",
