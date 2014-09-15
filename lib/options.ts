@@ -8,6 +8,7 @@ var knownOpts:any = {
 		"log" : String,
 		"verbose" : Boolean,
 		"path" : String,
+		"frameworkPath": String,
 		"appid" : String,
 		"copy-from": String,
 		"link-to": String,

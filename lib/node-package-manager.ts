@@ -7,6 +7,7 @@ import semver = require("semver");
 import shell = require("shelljs");
 import helpers = require("./common/helpers");
 import constants = require("./constants");
+import options = require("./options");
 
 export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
@@ -15,7 +16,8 @@ export class NodePackageManager implements INodePackageManager {
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $httpClient: Server.IHttpClient,
-		private $staticConfig: IStaticConfig) { }
+		private $staticConfig: IStaticConfig,
+		private $fs: IFileSystem) { }
 
 	public get cache(): string {
 		return npm.cache;
@@ -33,46 +35,54 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	public install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
+	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
 		return (() => {
 			try {
 				this.load().wait(); // It's obligatory to execute load before whatever npm function
-				pathToSave = pathToSave || npm.cache;
 				var packageToInstall = packageName;
+				var pathToSave = (opts && opts.pathToSave) || npm.cache;
+				var version = (opts && opts.version) || null;
+				var isSemanticVersioningDisabled = options.frameworkPath ? true : false; // We need to disable sem versioning for local packages
 
 				if(version) {
 					this.validateVersion(packageName, version).wait();
 					packageToInstall = packageName + "@" + version;
 				}
 
-				this.installCore(packageToInstall, pathToSave).wait();
+				this.installCore(packageToInstall, pathToSave, isSemanticVersioningDisabled).wait();
 			} catch(error) {
 				this.$logger.debug(error);
 				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
 			}
 
-			return path.join(pathToSave, "node_modules", packageName);
+			var pathToNodeModules = path.join(pathToSave, "node_modules");
+			var folders = this.$fs.readDirectory(pathToNodeModules).wait();
+			return path.join(pathToNodeModules, folders[0]);
 
 		}).future<string>()();
 	}
 
-	private installCore(packageName: string, pathToSave: string): IFuture<void> {
+	private installCore(packageName: string, pathToSave: string, isSemanticVersioningDisabled: boolean): IFuture<void> {
 		var currentVersion = this.$staticConfig.version;
 		if(!semver.valid(currentVersion)) {
 			this.$errors.fail("Invalid version.");
 		}
 
-		var incrementedVersion = semver.inc(currentVersion, constants.ReleaseType.MINOR);
-		if(packageName.indexOf("@") < 0) {
-			packageName = packageName + "@<" + incrementedVersion;
+		if(!isSemanticVersioningDisabled) {
+			var incrementedVersion = semver.inc(currentVersion, constants.ReleaseType.MINOR);
+			if(packageName.indexOf("@") < 0) {
+				packageName = packageName + "@<" + incrementedVersion;
+			}
 		}
-		this.$logger.trace("Installing", packageName);
+
+		this.$logger.out("Installing ", packageName);
 
 		var future = new Future<void>();
 		npm.commands["install"](pathToSave, packageName, (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {
+				this.$logger.out("Installed ", packageName);
 				future.return(data);
 			}
 		});
