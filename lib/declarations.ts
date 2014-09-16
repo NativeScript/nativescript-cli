@@ -1,6 +1,7 @@
 interface INodePackageManager {
 	getCacheRootPath(): IFuture<string>;
-	addToCache(packageName: string): IFuture<void>;
+	addToCache(packageName: string, version: string): IFuture<void>;
+	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	load(config?: any): IFuture<void>;
 	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
 	getLatestVersion(packageName: string): IFuture<string>;

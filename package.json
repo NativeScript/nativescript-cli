@@ -55,6 +55,7 @@
   },
   "analyze": true,
   "devDependencies": {
+    "chai": "1.8.x",
     "grunt": "0.4.2",
     "grunt-contrib-clean": "0.5.0",
     "grunt-contrib-copy": "0.5.0",

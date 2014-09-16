@@ -5,7 +5,7 @@ export class CreateProjectCommand implements ICommand {
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$projectService.createProject(args[0], args[1]).wait();
+			this.$projectService.createProject(args[0]).wait();
 		}).future<void>()();
 	}
 }
