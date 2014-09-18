@@ -1,57 +1,21 @@
 ///<reference path="../.d.ts"/>
 
+import constants = require("./../constants");
+import helpers = require("./../common/helpers");
 import options = require("./../options");
 import osenv = require("osenv");
 import path = require("path");
 import shell = require("shelljs");
 import util = require("util");
-import constants = require("./../constants");
-import helpers = require("./../common/helpers");
-
-class ProjectData implements IProjectData {
-	public projectDir: string;
-	public platformsDir: string;
-	public projectFilePath: string;
-	public projectId: string;
-	public projectName: string;
-
-	constructor(private $fs: IFileSystem,
-		private $errors: IErrors,
-		private $projectHelper: IProjectHelper,
-		private $staticConfig: IStaticConfig) {
-		this.initializeProjectData().wait();
-	}
-
-	private initializeProjectData(): IFuture<void> {
-		return(() => {
-			var projectDir = this.$projectHelper.projectDir;
-			// If no project found, projectDir should be null
-			if(projectDir) {
-				this.projectDir = projectDir;
-				this.projectName = path.basename(projectDir);
-				this.platformsDir = path.join(projectDir, "platforms");
-				this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
-
-				if (this.$fs.exists(this.projectFilePath).wait()) {
-					var fileContent = this.$fs.readJson(this.projectFilePath).wait();
-					this.projectId = fileContent.id;
-				}
-			} else {
-				this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", process.cwd());
-			}
-		}).future<void>()();
-	}
-}
-$injector.register("projectData", ProjectData);
 
 export class ProjectService implements IProjectService {
-	constructor(private $logger: ILogger,
-		private $errors: IErrors,
+	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $projectTemplatesService: IProjectTemplatesService,
-		private $projectNameValidator: IProjectNameValidator,
+		private $logger: ILogger,
+		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
-		private $staticConfig: IStaticConfig) { }
+		private $projectNameValidator: IProjectNameValidator,
+		private $projectTemplatesService: IProjectTemplatesService) { }
 
 	public createProject(projectName: string, projectId: string): IFuture<void> {
 		return(() => {
@@ -134,8 +98,8 @@ export class ProjectService implements IProjectService {
 		return (() => {
 			this.$fs.createDirectory(path.join(projectDir, "platforms")).wait();
 
-			var projectData = { id: projectId };
-			this.$fs.writeFile(path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME), JSON.stringify(projectData)).wait();
+			this.$projectDataService.initialize(projectDir);
+			this.$projectDataService.setValue("id", projectId).wait();
 		}).future<void>()();
 	}
 

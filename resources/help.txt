@@ -135,6 +135,15 @@ This operation deletes the subdirectory for the selected platform from the platf
 
 --[/]--
 
+--[platform|update]--
+
+Usage:
+    $ tns platform update <Platform>
+    $ nativescript platform update <Platform>
+
+Update the version of NativeScript runtime used for a specific platform.
+--[/]--
+
 --[prepare]--
 
 Usage:

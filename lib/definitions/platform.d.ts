@@ -4,6 +4,7 @@ interface IPlatformService {
 	getAvailablePlatforms(): IFuture<string[]>;
 	getPreparedPlatforms(): IFuture<string[]>;
 	removePlatforms(platforms: string[]): IFuture<void>;
+	updatePlatforms(platforms: string[]): IFuture<void>;
 	runPlatform(platform: string): IFuture<void>;
 	preparePlatform(platform: string): IFuture<void>;
 	buildPlatform(platform: string): IFuture<void>;
@@ -21,6 +22,7 @@ interface IPlatformData {
 	emulatorBuildOutputPath?: string;
 	validPackageNamesForDevice: string[];
 	validPackageNamesForEmulator?: string[];
+	frameworkFilesExtensions: string[];
 	targetedOS?: string[];
 }
 
