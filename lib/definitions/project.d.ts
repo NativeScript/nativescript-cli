@@ -1,5 +1,5 @@
 interface IProjectService {
-	createProject(projectName: string, projectId: string): IFuture<void>;
+	createProject(projectName: string): IFuture<void>;
 }
 
 interface IProjectData {
