@@ -38,15 +38,23 @@ Contribute to the Code Base
 Before you submit a Pull Request, consider the following guidelines.
 
 * Search <a href="https://github.com/Icenium/icenium-cli/pulls">GitHub</a> for an open or closed Pull Request that relates to your submission.
+* Clone the repository.
+```bash
+    git clone git@github.com:NativeScript/nativescript-cli.git
+```
+* Initialize the submodule.
+```bash
+    git submodule init
+```
+* Fetch data from the submodule.
+```bash
+    git submodule update
+```
 * Make your changes in a new `git` branch. We use the <a href="http://nvie.com/posts/a-successful-git-branching-model/">Gitflow branching model</a> so you will have to branch from our develop branch.
 ```bash
     git checkout -b my-fix-branch develop
 ```
 * Create your patch and include appropriate test cases.
-* Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
-```bash
-    git commit -a
-```
 * Build your changes locally.
 ```bash
     grunt
@@ -54,6 +62,10 @@ Before you submit a Pull Request, consider the following guidelines.
 * Ensure all the tests pass.
 ```bash
     grunt test
+```
+* Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
+```bash
+    git commit -a
 ```
 * Push your branch to GitHub.
 ```bash
