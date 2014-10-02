@@ -31,10 +31,10 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<string>()();
 	}
 
-	public addToCache(packageName: string): IFuture<void> {
+	public addToCache(packageName: string, version: string): IFuture<void> {
 		return (() => {
 			this.load().wait();
-			this.addToCacheCore(packageName).wait();
+			this.addToCacheCore(packageName, version).wait();
 		}).future<void>()();
 	}
 
@@ -113,9 +113,22 @@ export class NodePackageManager implements INodePackageManager {
 		return future;
 	}
 
-	private addToCacheCore(packageName: string): IFuture<void> {
+	private addToCacheCore(packageName: string, version: string): IFuture<void> {
 		var future = new Future<void>();
-		npm.commands["cache"].add(packageName, (err: Error, data: any) => {
+		npm.commands["cache"].add(packageName, version, undefined, (err: Error, data: any) => {
+			if(err) {
+				future.throw(err);
+			} else {
+				future.return();
+			}
+		});
+		return future;
+	}
+
+	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
+		var future = new Future<void>();
+		unpackTarget = unpackTarget || path.join(npm.cache, packageName, version, "package");
+		npm.commands["cache"].unpack(packageName, version, unpackTarget, (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {

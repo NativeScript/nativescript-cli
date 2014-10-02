@@ -38,8 +38,8 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	deleteDirectory(directory: string): IFuture<any> {
-		return undefined;
+	deleteDirectory(directory: string): IFuture<void> {
+		return Future.fromResult();
 	}
 
 	getFileSize(path:string):IFuture<number> {
@@ -51,7 +51,7 @@ export class FileSystemStub implements IFileSystem {
 	}
 
 	createDirectory(path:string):IFuture<void> {
-		return undefined;
+		return Future.fromResult();
 	}
 
 	readDirectory(path:string):IFuture<string[]> {
@@ -105,11 +105,11 @@ export class FileSystemStub implements IFileSystem {
 	}
 
 	isEmptyDir(directoryPath: string): IFuture<boolean> {
-		return undefined;
+		return Future.fromResult(true);
 	}
 
 	ensureDirectoryExists(directoryPath: string): IFuture<void> {
-		return undefined;
+		return Future.fromResult();
 	}
 
 	rename(oldPath: string, newPath: string): IFuture<void> {
@@ -141,7 +141,11 @@ export class NPMStub implements INodePackageManager {
 		return undefined;
 	}
 
-	addToCache(packageName: string): IFuture<void> {
+	addToCache(packageName: string, version: string): IFuture<void> {
+		return undefined;
+	}
+
+	cacheUnpack(packageName: string, version: string): IFuture<void> {
 		return undefined;
 	}
 
@@ -150,20 +154,22 @@ export class NPMStub implements INodePackageManager {
 	}
 
 	install(packageName: string, pathToSave?: string, version?: string): IFuture<string> {
-		return undefined;
+		return Future.fromResult("");
 	}
 
 	getLatestVersion(packageName: string): IFuture<string> {
-		return undefined;
+		return Future.fromResult("");
 	}
 }
 
 export class ProjectDataStub implements IProjectData {
-	public projectDir: string;
-	public platformsDir: string;
-	public projectFilePath: string;
-	public projectId: string;
-	public projectName: string;
+	projectDir: string;
+	projectName: string;
+	get platformsDir(): string {
+		return "";
+	}
+	projectFilePath: string;
+	projectId: string;
 }
 
 export class PlatformsDataStub implements IPlatformsData {
@@ -172,9 +178,81 @@ export class PlatformsDataStub implements IPlatformsData {
 	}
 
 	public getPlatformData(platform: string): IPlatformData {
-		return undefined;
+		return {
+			frameworkPackageName: "",
+			normalizedPlatformName: "",
+			platformProjectService: new PlatformProjectServiceStub(),
+			emulatorServices: undefined,
+			projectRoot: "",
+			deviceBuildOutputPath: "",
+			validPackageNamesForDevice: [],
+			frameworkFilesExtensions: []
+		};
 	}
 }
 
+export class PlatformProjectServiceStub implements IPlatformProjectService {
+	get platformData(): IPlatformData {
+		return {
+			frameworkPackageName: "",
+			normalizedPlatformName: "",
+			platformProjectService: this,
+			emulatorServices: undefined,
+			projectRoot: "",
+			deviceBuildOutputPath: "",
+			validPackageNamesForDevice: [],
+			frameworkFilesExtensions: []
+		};
+	}
+	validate(): IFuture<void> {
+		return Future.fromResult();
+	}
+	createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	interpolateData(projectRoot: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	afterCreateProject(projectRoot: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	prepareProject(platformData: IPlatformData): IFuture<string> {
+		return Future.fromResult("");
+	}
+	buildProject(projectRoot: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
+		return Future.fromResult(false);
+	}
+}
+
+export class ProjectDataService implements IProjectDataService {
+	initialize(projectDir: string): void { }
+
+	getValue(propertyName: string): IFuture<any> {
+		return Future.fromResult({});
+	}
+
+	setValue(key: string, value: any): IFuture<void> {
+		return Future.fromResult();
+	}
+}
+
+export class ProjectHelperStub implements IProjectHelper {
+	get projectDir(): string {
+		return "";
+	}
+
+	generateDefaultAppId(appName: string, baseAppId: string): string {
+		return "org.nativescript";
+	}
+}
+
+export class ProjectTemplatesService implements IProjectTemplatesService {
+	get defaultTemplatePath(): IFuture<string> {
+		return Future.fromResult("");
+	}
+}
 
 

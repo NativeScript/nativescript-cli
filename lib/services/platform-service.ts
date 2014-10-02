@@ -44,6 +44,7 @@ export class PlatformService implements IPlatformService {
 			this.validatePlatform(platform);
 
 			var platformPath = path.join(this.$projectData.platformsDir, platform);
+
 			if (this.$fs.exists(platformPath).wait()) {
 				this.$errors.fail("Platform %s already added", platform);
 			}
@@ -212,7 +213,7 @@ export class PlatformService implements IPlatformService {
 
 			_.each(platforms, platform => {
 				var parts = platform.split("@");
-				platform = parts[0];
+				platform = parts[0].toLowerCase();
 				var version = parts[1];
 
 				this.validatePlatformInstalled(platform);
@@ -451,7 +452,7 @@ export class PlatformService implements IPlatformService {
 			var npmCacheDirectoryPath = this.getNpmCacheDirectoryCore(packageName, version).wait();
 
 			if(!this.$fs.exists(npmCacheDirectoryPath).wait()) {
-				this.$npm.addToCache(util.format("%s@%s", packageName, version)).wait();
+				this.$npm.addToCache(packageName, version).wait();
 			}
 
 			return npmCacheDirectoryPath;

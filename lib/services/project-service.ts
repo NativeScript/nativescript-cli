@@ -17,14 +17,14 @@ export class ProjectService implements IProjectService {
 		private $projectNameValidator: IProjectNameValidator,
 		private $projectTemplatesService: IProjectTemplatesService) { }
 
-	public createProject(projectName: string, projectId: string): IFuture<void> {
+	public createProject(projectName: string): IFuture<void> {
 		return(() => {
 			if (!projectName) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
 			}
 			this.$projectNameValidator.validate(projectName);
 
-			projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName, "org.nativescript");
+			var projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName, "org.nativescript");
 
 			var projectDir = path.join(path.resolve(options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
