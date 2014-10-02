@@ -16,7 +16,11 @@ var knownOpts:any = {
 		"device": Boolean,
 		"emulator": Boolean,
 		"version": Boolean,
-		"help": Boolean
+		"help": Boolean,
+		"keyStorePath": String,
+		"keyStorePassword": String,
+		"keyStoreAlias": String,
+		"keyStoreAliasPassword": String
 	},
 	shorthands = {
 		"v" : "verbose",
