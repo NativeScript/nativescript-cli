@@ -6,7 +6,7 @@ import util = require("util");
 
 export class PostInstallCommand implements ICommand {
 
-	constructor(private $autocompletionService: IAutoCompletionService,
+	constructor(private $autoCompletionService: IAutoCompletionService,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig) { }
 
@@ -18,7 +18,7 @@ export class PostInstallCommand implements ICommand {
 				this.$fs.chmod(this.$staticConfig.adbFilePath, "0777").wait();
 			}
 
-			this.$autocompletionService.enableAutoCompletion().wait();
+			this.$autoCompletionService.enableAutoCompletion().wait();
 		}).future<void>()();
 	}
 }
