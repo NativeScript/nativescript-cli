@@ -1,3 +1,4 @@
 
 var child_process = require("child_process");
-child_process.exec('node bin/nativescript.js dev-post-install');
+var command = process.argv[0] + ' bin/nativescript.js dev-post-install';
+child_process.exec(command);
