@@ -2,6 +2,7 @@
 
 import path = require("path");
 import helpers = require("./common/helpers");
+import commonOptions = require("./common/options");
 import osenv = require("osenv");
 
 var knownOpts:any = {
@@ -27,8 +28,12 @@ var knownOpts:any = {
 		"p" : "path"
 	};
 
+_.extend(knownOpts, commonOptions.knownOpts);
+_.extend(shorthands, commonOptions.shorthands);
+
 var defaultProfileDir = path.join(osenv.home(), ".nativescript-cli");
-var parsed = helpers.getParsedOptions(knownOpts, shorthands, defaultProfileDir);
+var parsed = helpers.getParsedOptions(knownOpts, shorthands);
+parsed["profile-dir"] = parsed["profile-dir"] || defaultProfileDir;
 
 Object.keys(parsed).forEach((opt) => exports[opt] = parsed[opt]);
 

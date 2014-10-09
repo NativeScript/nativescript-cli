@@ -14,6 +14,8 @@ interface INpmInstallOptions {
 
 interface IStaticConfig extends Config.IStaticConfig { }
 
+interface IConfiguration extends Config.IConfig { }
+
 interface IApplicationPackage {
 	packageName: string;
 	time: Date;

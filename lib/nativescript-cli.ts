@@ -3,7 +3,6 @@
 
 import path = require("path");
 
-require("./common/extensions");
 require("./bootstrap");
 require("./options");
 
@@ -12,11 +11,8 @@ errors.installUncaughtExceptionListener();
 
 $injector.register("config", {
 	CI_LOGGER: false,
-	PROJECT_FILE_NAME: ".tnsproject",
 	DEBUG: process.env.NATIVESCRIPT_DEBUG,
-	version: require("../package.json").version,
-	helpTextPath: path.join(__dirname, "../resources/help.txt"),
-	client: "nativescript"
+	TYPESCRIPT_COMPILER_OPTIONS: { }
 });
 
 var dispatcher = $injector.resolve("dispatcher");
