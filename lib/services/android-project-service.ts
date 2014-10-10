@@ -49,10 +49,10 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
 
-			var paths = "assets gen libs res".split(' ').map(p => path.join(frameworkDir, p));
+			var paths = "assets libs res".split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp("-R", paths, projectRoot);
 
-			paths = ".project AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
+			paths = "AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp("-f", paths, projectRoot);
 
 			// Create src folder
