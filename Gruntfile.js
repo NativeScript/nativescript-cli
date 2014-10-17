@@ -125,7 +125,7 @@ module.exports = function(grunt) {
 		var packageJson = grunt.file.readJSON("package.json");
 		var versionParts = packageJson.version.split("-");
 		if (process.env["RELEASE_BUILD"]) {
-			packageJson = versionParts[0];
+			packageJson.version = versionParts[0];
 		} else {
 			versionParts[1] = buildVersion;
 			packageJson.version = versionParts.join("-");
