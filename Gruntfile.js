@@ -124,8 +124,12 @@ module.exports = function(grunt) {
 
 		var packageJson = grunt.file.readJSON("package.json");
 		var versionParts = packageJson.version.split("-");
-		versionParts[1] = buildVersion;
-		packageJson.version = versionParts.join("-");
+		if (process.env["RELEASE_BUILD"]) {
+			packageJson = versionParts[0];
+		} else {
+			versionParts[1] = buildVersion;
+			packageJson.version = versionParts.join("-");
+		}
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
