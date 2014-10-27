@@ -52,7 +52,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			var paths = "assets libs res".split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp("-R", paths, projectRoot);
 
-			paths = "AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
+			paths = ".project AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp("-f", paths, projectRoot);
 
 			// Create src folder
