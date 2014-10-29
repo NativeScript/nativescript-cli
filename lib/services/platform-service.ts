@@ -263,7 +263,7 @@ export class PlatformService implements IPlatformService {
 
 			var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
 
-			emulatorServices.startEmulator(packageFile, {image: options.emulator, stderrFilePath: logFilePath, stdoutFilePath: logFilePath }).wait();
+			emulatorServices.startEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath }).wait();
 		}).future<void>()();
 	}
 
