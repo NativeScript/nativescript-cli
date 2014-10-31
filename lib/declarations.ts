@@ -1,5 +1,5 @@
 interface INodePackageManager {
-	getCacheRootPath(): IFuture<string>;
+	getCacheRootPath(): string;
 	addToCache(packageName: string, version: string): IFuture<void>;
 	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	load(config?: any): IFuture<void>;
@@ -21,3 +21,7 @@ interface IApplicationPackage {
 	time: Date;
 }
 
+interface ILockFile {
+	lock(): IFuture<void>;
+	unlock(): IFuture<void>;
+}

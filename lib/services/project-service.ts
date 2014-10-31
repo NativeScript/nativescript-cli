@@ -43,14 +43,14 @@ export class ProjectService implements IProjectService {
 			var appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
 			var appPath: string = null;
 
-			if(customAppPath) {
+			if (customAppPath) {
 				this.$logger.trace("Using custom app from %s", customAppPath);
 
 				// Make sure that the source app/ is not a direct ancestor of a target app/
 				var relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
 				// path.relative returns second argument if the paths are located on different disks
 				// so in this case we don't need to make the check for direct ancestor
-				if(relativePathFromSourceToTarget !== appDirectory) {
+				if (relativePathFromSourceToTarget !== appDirectory) {
 					var doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
 					if (!doesRelativePathGoUpAtLeastOneDir) {
 						this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
@@ -67,28 +67,29 @@ export class ProjectService implements IProjectService {
 			}
 
 			try {
-				this.createProjectCore(projectDir, appPath,  projectId, false).wait();
-			} catch(err) {
+				this.createProjectCore(projectDir, appPath, projectId).wait();
+			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
 			}
+
 
 			this.$logger.out("Project %s was successfully created", projectName);
 
 		}).future<void>()();
 	}
 
-	private createProjectCore(projectDir: string, appPath: string,  projectId: string, symlink?: boolean): IFuture<void> {
+	private createProjectCore(projectDir: string, appSourcePath: string,  projectId: string): IFuture<void> {
 		return (() => {
-			if(!this.$fs.exists(projectDir).wait()) {
-				this.$fs.createDirectory(projectDir).wait();
-			}
-			if(symlink) {
-				// TODO: Implement support for symlink the app folder instead of copying
+			this.$fs.ensureDirectoryExists(projectDir).wait();
+
+			var appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+			this.$fs.createDirectory(appDestinationPath).wait();
+
+			if(options.symlink) {
+				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
 			} else {
-				var appDir = path.join(projectDir, constants.APP_FOLDER_NAME);
-				this.$fs.createDirectory(appDir).wait();
-				shell.cp('-R', path.join(appPath, "*"), appDir);
+				shell.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
 			}
 			this.createBasicProjectStructure(projectDir,  projectId).wait();
 		}).future<void>()();

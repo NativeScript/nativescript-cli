@@ -91,9 +91,11 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 			var installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 
-			// Need to remove unneeded node_modules folder
-			// One level up is the runtime module and one above is the node_modules folder.
-			this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
+			if(options.frameworkPath && !options.symlink) {
+				// Need to remove unneeded node_modules folder
+				// One level up is the runtime module and one above is the node_modules folder.
+				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
+			}
 
 			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
@@ -405,7 +407,7 @@ export class PlatformService implements IPlatformService {
 
 			// Add new framework files
 			var newFrameworkFiles = this.getFrameworkFiles(platformData, newVersion).wait();
-			var cacheDirectoryPath = this.getNpmCacheDirectoryCore(platformData.frameworkPackageName, newVersion).wait();
+			var cacheDirectoryPath = this.getNpmCacheDirectoryCore(platformData.frameworkPackageName, newVersion);
 			_.each(newFrameworkFiles, file => {
 				shell.cp("-f", path.join(cacheDirectoryPath, file), path.join(platformData.projectRoot, file));
 			});
@@ -433,7 +435,7 @@ export class PlatformService implements IPlatformService {
 
 	private getNpmCacheDirectory(packageName: string, version: string): IFuture<string> {
 		return (() => {
-			var npmCacheDirectoryPath = this.getNpmCacheDirectoryCore(packageName, version).wait();
+			var npmCacheDirectoryPath = this.getNpmCacheDirectoryCore(packageName, version);
 
 			if(!this.$fs.exists(npmCacheDirectoryPath).wait()) {
 				this.$npm.addToCache(packageName, version).wait();
@@ -443,11 +445,8 @@ export class PlatformService implements IPlatformService {
 		}).future<string>()();
 	}
 
-	private getNpmCacheDirectoryCore(packageName: string, version: string): IFuture<string> {
-		return (() => {
-			var npmCacheRoot = this.$npm.getCacheRootPath().wait();
-			return path.join(npmCacheRoot, packageName, version, "package");
-		}).future<string>()();
+	private getNpmCacheDirectoryCore(packageName: string, version: string): string {
+		return path.join(this.$npm.getCacheRootPath(), packageName, version, "package");
 	}
 }
 $injector.register("platformService", PlatformService);

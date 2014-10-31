@@ -33,5 +33,6 @@ $injector.requireCommand("emulate", "./commands/emulate");
 $injector.requireCommand("list-devices", "./commands/list-devices");
 
 $injector.require("npm", "./node-package-manager");
+$injector.require("lockfile", "./lockfile");
 $injector.require("config", "./config");
 $injector.require("optionsService", "./services/options-service");

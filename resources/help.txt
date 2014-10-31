@@ -110,6 +110,7 @@ Configures the current project to target the selected platform. When you add a t
 
 Options:
     --frameworkPath - specifies the path to local runtime. It should be npm package.
+    --symlink - symlink the framework into the project. If this option is used with --frameworkPath, --frameworkPath should specify a path to folder.
 
 In this version of the Telerik NativeScript CLI, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
 On Windows systems, you can target Android. 

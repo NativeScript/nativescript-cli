@@ -77,6 +77,7 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|add", PlatformAddCommandLib.AddPlatformCommand);
 	testInjector.registerCommand("platform|remove", PlatformRemoveCommandLib.RemovePlatformCommand);
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
+	testInjector.register("lockfile", { });
 
 
 	return testInjector;

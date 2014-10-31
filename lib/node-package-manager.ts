@@ -14,28 +14,22 @@ export class NodePackageManager implements INodePackageManager {
 	private static NPM_REGISTRY_URL = "http://registry.npmjs.org/";
 
 	private versionsCache: IDictionary<string[]>;
-	private isLoaded: boolean;
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $httpClient: Server.IHttpClient,
-		private $staticConfig: IStaticConfig,
-		private $fs: IFileSystem) {
+		private $fs: IFileSystem,
+		private $lockfile: ILockFile) {
 		this.versionsCache = {};
+		this.load().wait();
 	}
 
-	public getCacheRootPath(): IFuture<string> {
-		return (() => {
-			this.load().wait();
-			return npm.cache;
-		}).future<string>()();
+	public getCacheRootPath(): string {
+		return npm.cache;
 	}
 
 	public addToCache(packageName: string, version: string): IFuture<void> {
-		return (() => {
-			this.load().wait();
-			this.addToCacheCore(packageName, version).wait();
-		}).future<void>()();
+		return this.addToCacheCore(packageName, version);
 	}
 
 	public load(config?: any): IFuture<void> {
@@ -52,28 +46,20 @@ export class NodePackageManager implements INodePackageManager {
 
 	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
 		return (() => {
-			try {
-				this.load().wait(); // It's obligatory to execute load before whatever npm function
+			this.$lockfile.lock().wait();
 
+			try {
 				var packageToInstall = packageName;
 				var pathToSave = (opts && opts.pathToSave) || npm.cache;
 				var version = (opts && opts.version) || null;
-				var isSemanticVersioningDisabled = options.frameworkPath ? true : false; // We need to disable sem versioning for local packages
 
-				if(version) {
-					this.validateVersion(packageName, version).wait();
-					packageToInstall = packageName + "@" + version;
-				}
-
-				this.installCore(packageToInstall, pathToSave, isSemanticVersioningDisabled).wait();
+				return this.installCore(packageToInstall, pathToSave, version).wait();
 			} catch(error) {
 				this.$logger.debug(error);
-				this.$errors.fail(NodePackageManager.NPM_LOAD_FAILED);
+				this.$errors.fail("%s. Error: %s", NodePackageManager.NPM_LOAD_FAILED, error);
+			} finally {
+				this.$lockfile.unlock().wait();
 			}
-
-			var pathToNodeModules = path.join(pathToSave, "node_modules");
-			var folders = this.$fs.readDirectory(pathToNodeModules).wait();
-			return path.join(pathToNodeModules, folders[0]);
 
 		}).future<string>()();
 	}
@@ -86,20 +72,38 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<string>()();
 	}
 
-	private installCore(packageName: string, pathToSave: string, isSemanticVersioningDisabled: boolean): IFuture<void> {
-		var currentVersion = this.$staticConfig.version;
-		if(!semver.valid(currentVersion)) {
-			this.$errors.fail("Invalid version.");
-		}
+	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
+		return (() => {
+			if (options.frameworkPath) {
+				if (this.$fs.getFsStats(options.frameworkPath).wait().isFile()) {
+					this.npmInstall(packageName, pathToSave, version).wait();
+					var pathToNodeModules = path.join(pathToSave, "node_modules");
+					var folders = this.$fs.readDirectory(pathToNodeModules).wait();
+					return path.join(pathToNodeModules, folders[0]);
+				}
+				return options.frameworkPath;
+			} else {
+				var version = version || this.getLatestVersion(packageName).wait();
+				var packagePath = path.join(npm.cache, packageName, version, "package");
+				if (!this.isPackageCached(packagePath).wait()) {
+					this.addToCacheCore(packageName, version).wait();
+				}
 
-		if(!isSemanticVersioningDisabled) {
-			var incrementedVersion = semver.inc(currentVersion, constants.ReleaseType.MINOR);
-			if(packageName.indexOf("@") < 0) {
-				packageName = packageName + "@<" + incrementedVersion;
+				if(!this.isPackageUnpacked(packagePath).wait()) {
+					this.cacheUnpack(packageName, version).wait();
+				}
+				return packagePath;
 			}
-		}
+		}).future<string>()();
+	}
 
+	private npmInstall(packageName: string, pathToSave: string, version: string): IFuture<void> {
 		this.$logger.out("Installing ", packageName);
+
+		var incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
+		if (!options.frameworkPath && packageName.indexOf("@") < 0) {
+			packageName = packageName + "@<" + incrementedVersion;
+		}
 
 		var future = new Future<void>();
 		npm.commands["install"](pathToSave, packageName, (err: Error, data: any) => {
@@ -111,6 +115,17 @@ export class NodePackageManager implements INodePackageManager {
 			}
 		});
 		return future;
+	}
+
+	private isPackageCached(packagePath: string): IFuture<boolean> {
+		return this.$fs.exists(packagePath);
+	}
+
+	private isPackageUnpacked(packagePath: string): IFuture<boolean> {
+		return (() => {
+			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
+				helpers.enumerateFilesInDirectorySync(packagePath).length > 1;
+		}).future<boolean>()();
 	}
 
 	private addToCacheCore(packageName: string, version: string): IFuture<void> {
@@ -149,15 +164,6 @@ export class NodePackageManager implements INodePackageManager {
 
 			return this.versionsCache[packageName];
 		}).future<string[]>()();
-	}
-
-	private validateVersion(packageName: string, version: string): IFuture<void> {
-		return (() => {
-			var versions = this.getAvailableVersions(packageName).wait();
-			if(!_.contains(versions, version)) {
-				this.$errors.fail("Invalid version. Valid versions are: %s", helpers.formatListOfNames(versions, "and"));
-			}
-		}).future<void>()();
 	}
 }
 $injector.register("npm", NodePackageManager);

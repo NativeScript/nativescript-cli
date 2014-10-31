@@ -47,13 +47,20 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
+			this.$fs.ensureDirectoryExists(projectRoot).wait();
+
 			this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
 
-			var paths = "assets libs res".split(' ').map(p => path.join(frameworkDir, p));
-			shell.cp("-R", paths, projectRoot);
+			if(options.symlink) {
+				this.copy(projectRoot, frameworkDir, "res", "-R").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
 
-			paths = ".project AndroidManifest.xml project.properties".split(' ').map(p => path.join(frameworkDir, p));
-			shell.cp("-f", paths, projectRoot);
+				this.symlinkDirectory("assets", projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
+			} else {
+				this.copy(projectRoot, frameworkDir, "assets libs res", "-R").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+			}
 
 			// Create src folder
 			var packageName = this.$projectData.projectId;
@@ -122,6 +129,13 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public getFrameworkFilesExtensions(): string[] {
 		return [".jar", ".dat"];
+	}
+
+	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): IFuture<void> {
+		return (() => {
+			var paths = files.split(' ').map(p => path.join(frameworkDir, p));
+			shell.cp(cpArg, paths, projectRoot);
+		}).future<void>()();
 	}
 
 	private spawn(command: string, args: string[]): IFuture<void> {
@@ -236,6 +250,24 @@ class AndroidProjectService implements IPlatformProjectService {
 					this.$errors.fail("An error occurred while listing Android targets");
 				}
 			}
+		}).future<void>()();
+	}
+
+	private symlinkDirectory(directoryName: string, projectRoot: string, frameworkDir: string): IFuture<void> {
+		return (() => {
+			this.$fs.createDirectory(path.join(projectRoot, directoryName)).wait();
+			var directoryContent = this.$fs.readDirectory(path.join(frameworkDir, directoryName)).wait();
+
+			_.each(directoryContent, (file: string) => {
+				var sourceFilePath = path.join(frameworkDir, directoryName, file);
+				var destinationFilePath = path.join(projectRoot, directoryName, file);
+				if(this.$fs.getFsStats(sourceFilePath).wait().isFile()) {
+					this.$fs.symlink(sourceFilePath, destinationFilePath).wait();
+				} else {
+					this.$fs.symlink(sourceFilePath, destinationFilePath, "dir").wait();
+				}
+			});
+
 		}).future<void>()();
 	}
 }

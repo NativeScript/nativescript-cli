@@ -43,7 +43,7 @@ class ProjectIntegrationTest {
 			var fs = this.testInjector.resolve("fs");
 
 			var defaultTemplatePackageName = "tns-template-hello-world";
-			var cacheRoot = npm.getCacheRootPath().wait();
+			var cacheRoot = npm.getCacheRootPath();
 			var defaultTemplatePath = path.join(cacheRoot, defaultTemplatePackageName);
 			var latestVersion = npm.getLatestVersion(defaultTemplatePackageName).wait();
 
@@ -109,6 +109,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
 		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
 		this.testInjector.register("config", {});
+		this.testInjector.register("lockfile", stubs.LockFile);
 	}
 }
 
