@@ -255,4 +255,13 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	}
 }
 
-
+export class HooksServiceStub implements IHooksService {
+	initialize(commandName: string): void {
+	}
+	executeBeforeHooks(): IFuture<void> {
+		return (() => { }).future<void>()();
+	}
+	executeAfterHooks(): IFuture<void> {
+		return (() => { }).future<void>()();
+	}
+}

@@ -21,10 +21,6 @@ export class PlatformService implements IPlatformService {
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			if(!platforms || platforms.length === 0) {
-				this.$errors.fail("No platform specified. Please specify a platform to add");
-			}
-
 			var platformsDir = this.$projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
@@ -136,7 +132,6 @@ export class PlatformService implements IPlatformService {
 
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
-			this.validatePlatformInstalled(platform);
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
@@ -166,7 +161,6 @@ export class PlatformService implements IPlatformService {
 
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
-			this.validatePlatformInstalled(platform);
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
@@ -177,7 +171,6 @@ export class PlatformService implements IPlatformService {
 
 	public runPlatform(platform: string): IFuture<void> {
 		return (() => {
-			this.validatePlatformInstalled(platform);
 			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
@@ -191,10 +184,6 @@ export class PlatformService implements IPlatformService {
 
 	public removePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			if(!platforms || platforms.length === 0) {
-				this.$errors.fail("No platform specified. Please specify a platform to remove");
-			}
-
 			_.each(platforms, platform => {
 				this.validatePlatformInstalled(platform);
 
@@ -207,10 +196,6 @@ export class PlatformService implements IPlatformService {
 
 	public updatePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			if(!platforms || platforms.length === 0) {
-				this.$errors.fail("No platform specified. Please specify a platform to remove");
-			}
-
 			_.each(platforms, platform => {
 				var parts = platform.split("@");
 				platform = parts[0].toLowerCase();
@@ -224,7 +209,6 @@ export class PlatformService implements IPlatformService {
 
 	public deployOnDevice(platform: string): IFuture<void> {
 		return (() => {
-			this.validatePlatformInstalled(platform);
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
@@ -267,7 +251,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private validatePlatform(platform: string): void {
+	public validatePlatform(platform: string): void {
 		if(!platform) {
 			this.$errors.fail("No platform specified.")
 		}
@@ -283,7 +267,7 @@ export class PlatformService implements IPlatformService {
 		}
 	}
 
-	private validatePlatformInstalled(platform: string): void {
+	public validatePlatformInstalled(platform: string): void {
 		this.validatePlatform(platform);
 
 		if (!this.isPlatformInstalled(platform).wait()) {

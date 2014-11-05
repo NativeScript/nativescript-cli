@@ -51,14 +51,6 @@ describe('Platform Service Tests', () => {
 
 	describe("add platform unit tests", () => {
 		describe("#add platform()", () => {
-			it("should fail if platform is null or undefined", () => {
-				(() => platformService.addPlatforms(null).wait()).should.throw();
-				(() => platformService.addPlatforms(undefined).wait()).should.throw();
-			});
-			it("should fail if platform not supported", () => {
-				(() => platformService.addPlatforms(["fdhf"]).wait()).should.throw();
-				(() => platformService.addPlatforms(["test"]).wait()).should.throw();
-			});
 			it("should not fail if platform is not normalized", () => {
 				var fs = testInjector.resolve("fs");
 				fs.exists = () => Future.fromResult(false);
@@ -134,13 +126,8 @@ describe('Platform Service Tests', () => {
 	});
 
 	describe("remove platform unit tests", () => {
-		it("should fail if platform null or undefined", () => {
-			(() => platformService.removePlatforms(null).wait()).should.throw();
-			(() => platformService.removePlatforms(undefined).wait()).should.throw();
-		});
 		it("should fail when platforms are not added", () => {
 			testInjector.resolve("fs").exists = () => Future.fromResult(false);
-
 			(() => platformService.removePlatforms(["android"]).wait()).should.throw();
 			(() => platformService.removePlatforms(["ios"]).wait()).should.throw();
 		});
@@ -160,25 +147,8 @@ describe('Platform Service Tests', () => {
 	});
 
 	describe("update Platform", () => {
-
-		describe('#updatePlatforms()', function(){
-			it('should fail when no services provided', () => {
-				(() => platformService.updatePlatforms([]).wait()).should.throw();
-			});
-		});
-
 		describe("#updatePlatform(platform)", () => {
-			it ("should fail if platform null or undefined", () => {
-				(() => platformService.updatePlatforms(null).wait()).should.throw();
-				(() => platformService.updatePlatforms(undefined).wait()).should.throw();
-			});
-
-			it ("should fail if platform not supported", () => {
-				(() => platformService.updatePlatforms(["unsupported"]).wait()).should.throw();
-				(() => platformService.updatePlatforms(["aaa"]).wait()).should.throw();
-			});
-
-			it ("should fail when the versions are the same", () => {
+			it("should fail when the versions are the same", () => {
 				var npm: INodePackageManager = testInjector.resolve("npm");
 				npm.getLatestVersion = () => (() => "0.2.0").future<string>()();
 				npm.getCacheRootPath = () => (() => "").future<string>()();

@@ -21,5 +21,7 @@ export class PostInstallCommand implements ICommand {
 			this.$autoCompletionService.enableAutoCompletion().wait();
 		}).future<void>()();
 	}
+
+	public allowedParameters: ICommandParameter[] = [];
 }
 $injector.registerCommand("dev-post-install", PostInstallCommand);

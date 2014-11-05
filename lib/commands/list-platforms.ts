@@ -24,5 +24,7 @@ export class ListPlatformsCommand implements ICommand {
 			}
 		}).future<void>()();
 	}
+
+	allowedParameters: ICommandParameter[] = [];
 }
 $injector.registerCommand("platform|*list", ListPlatformsCommand);
