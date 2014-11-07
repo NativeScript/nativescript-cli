@@ -10,6 +10,8 @@ interface IPlatformService {
 	buildPlatform(platform: string): IFuture<void>;
 	deployOnDevice(platform: string): IFuture<void>;
 	deployOnEmulator(platform: string): IFuture<void>;
+	validatePlatformInstalled(platform: string): void;
+	validatePlatform(platform: string): void;
 }
 
 interface IPlatformData {

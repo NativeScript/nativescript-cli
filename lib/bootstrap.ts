@@ -18,6 +18,7 @@ $injector.require("analyticsSettingsService", "./services/analytics-settings-ser
 
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
+$injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
