@@ -115,6 +115,10 @@ export class FileSystemStub implements IFileSystem {
 	rename(oldPath: string, newPath: string): IFuture<void> {
 		return undefined;
 	}
+
+	symlink(sourePath: string, destinationPath: string): IFuture<void> {
+		return undefined;
+	}
 }
 
 export class ErrorsStub implements IErrors {
