@@ -4,6 +4,7 @@ import path = require("path");
 import helpers = require("./common/helpers");
 import commonOptions = require("./common/options");
 import osenv = require("osenv");
+import hostInfo = require("./common/host-info");
 
 var knownOpts:any = {
 		"frameworkPath": String,
@@ -23,7 +24,15 @@ var knownOpts:any = {
 _.extend(knownOpts, commonOptions.knownOpts);
 _.extend(shorthands, commonOptions.shorthands);
 
-commonOptions.setProfileDir(".nativescript-cli");
+var defaultProfileDir = "";
+var nativeScriptCacheFolder = ".nativescript-cli";
+if(hostInfo.isWindows()) {
+	defaultProfileDir = path.join(process.env.LocalAppData, nativeScriptCacheFolder);
+} else {
+	defaultProfileDir = path.join(osenv.home(), ".local/share", nativeScriptCacheFolder);
+}
+
+commonOptions.setProfileDir(defaultProfileDir);
 var parsed = helpers.getParsedOptions(knownOpts, shorthands);
 
 Object.keys(parsed).forEach((opt) => exports[opt] = parsed[opt]);
