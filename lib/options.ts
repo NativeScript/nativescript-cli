@@ -23,7 +23,7 @@ var knownOpts:any = {
 _.extend(knownOpts, commonOptions.knownOpts);
 _.extend(shorthands, commonOptions.shorthands);
 
-commonOptions.setProfileDir(".nativescript-cli");
+commonOptions.setProfileDir(path.join(osenv.home(), ".nativescript-cli"));
 var parsed = helpers.getParsedOptions(knownOpts, shorthands);
 
 Object.keys(parsed).forEach((opt) => exports[opt] = parsed[opt]);
