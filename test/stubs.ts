@@ -119,6 +119,14 @@ export class FileSystemStub implements IFileSystem {
 	symlink(sourePath: string, destinationPath: string): IFuture<void> {
 		return undefined;
 	}
+
+	closeStream(stream: any): IFuture<void> {
+		return undefined;
+	}
+
+	setCurrentUserAsOwner(path: string, owner: string): IFuture<void> {
+		return undefined;
+	}
 }
 
 export class ErrorsStub implements IErrors {
