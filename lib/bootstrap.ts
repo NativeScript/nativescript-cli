@@ -34,3 +34,4 @@ $injector.requireCommand("list-devices", "./commands/list-devices");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("config", "./config");
+$injector.require("optionsService", "./services/options-service");
