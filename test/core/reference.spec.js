@@ -74,6 +74,15 @@ describe('Kinvey.References', function() {
         return Kinvey.DataStore.save(this.collection, {
           field: this.randomID()
         }, options).then(function(doc) {
+          _this.doc3 = doc;
+        });
+      });
+      before(function() {
+        var _this = this;
+        return Kinvey.DataStore.save(this.collection, {
+          field: this.randomID(),
+          relation: { _type: 'KinveyRef', _collection: this.collection, _id: this.doc3._id }
+        }, options).then(function(doc) {
           _this.doc = doc;
         });
       });
@@ -82,6 +91,7 @@ describe('Kinvey.References', function() {
         return Kinvey.DataStore.save(this.collection, {
           field     : this.randomID(),
           relation  : { _type: 'KinveyRef', _collection: this.collection, _id: this.doc._id },
+          relations  : [{ _type: 'KinveyRef', _collection: this.collection, _id: this.doc._id }],
           relation2 : [{ _type: 'KinveyRef', _collection: this.collection, _id: this.randomID() }]
         }, options).then(function(doc) {
           _this.doc2 = doc;
@@ -90,6 +100,7 @@ describe('Kinvey.References', function() {
       after(function() {// Cleanup.
         delete this.doc;
         delete this.doc2;
+        delete this.doc3;
       });
 
       // Kinvey.DataStore.find.
@@ -140,15 +151,19 @@ describe('Kinvey.References', function() {
           var promise = Kinvey.DataStore.get(this.collection, this.doc2._id, this.options);
           return promise.then(function(response) {
             expect(response).to.have.property('relation');
-            expect(response.relation).to.deep.equal(_this.doc);
+            expect(response.relation.field).to.equal(_this.doc.field);
           });
         });
-        it('should not resolve a reference if `options.exclude`.', function() {
-          this.options.relations = { relation: this.collection };
-          this.options.exclude   = [ 'relation' ];
+        it('should resolve a reference of a reference inside an array if `options.relations`.', function() {
+          this.options.relations = { relations: this.collection, 'relations.relation': this.collection };
 
+          var _this   = this;
           var promise = Kinvey.DataStore.get(this.collection, this.doc2._id, this.options);
-          return expect(promise).to.become(this.doc2);
+          return promise.then(function(response) {
+            expect(response).to.have.property('relation');
+            expect(response.relations[0].field).to.equal(_this.doc.field);
+            expect(response.relations[0].relation.field).to.equal(_this.doc3.field);
+          });
         });
         it('should retain the reference when it cannot be resolved.', function() {
           this.options.relations = { relation2: this.collection };
