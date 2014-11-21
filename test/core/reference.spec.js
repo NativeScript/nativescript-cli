@@ -118,13 +118,6 @@ describe('Kinvey.References', function() {
             expect(response[0].relation).to.deep.equal(_this.doc);
           });
         });
-        it('should not resolve a reference if `options.exclude`.', function() {
-          this.options.exclude   = ['relation'];
-          this.options.relations = { relation: this.collection };
-
-          var promise = Kinvey.DataStore.find(this.collection, this.query, this.options);
-          return expect(promise).to.become([ this.doc2 ]);
-        });
         it('should retain the reference when it cannot be resolved.', function() {
           this.options.relations = { relation2: this.collection };
 

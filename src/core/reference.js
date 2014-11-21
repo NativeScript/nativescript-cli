@@ -69,59 +69,99 @@ var KinveyReference = /** @lends KinveyReference */{
     delete options.relations;
     delete options.success;
 
-    // Re-order the relations in order of deepness, so the partial responses
-    // propagate properly. Moreover, relations with the same depth can safely
-    // be retrieved in parallel.
-    var properties = [];
+
+
+    // We need to build a relationship mapping object
+    // This is important because we might have to resolve
+    // relationships as objects inside an array of existing
+    // relationships.
+    //
+    // ala: 'month', 'month.days'
+    // with an array of every month as the relationship key
+    var relationMapping = {};
     Object.keys(relations).forEach(function(relation) {
-      var index = relation.split('.').length;
-      properties[index] = (properties[index] || []).concat(relation);
-    });
+      var mapping = relationMapping;
+      var relationSplit = relation.split('.');
+      var relationLength = relationSplit.length;
+      relationSplit.forEach(function(relationStep, index){
+        if(!mapping.keys){
+          mapping.keys = {};
+        }
+        if(!mapping.keys[relationStep]){
+          mapping.keys[relationStep] = {};
+        }
 
-    // Prepare the response.
-    var promise = Kinvey.Defer.resolve(null);
+        mapping = mapping.keys[relationStep];
 
-    // Retrieve all (relational) documents. Starts with the top-level relations.
-    properties.forEach(function(relationalLevel) {
-      promise = promise.then(function() {
-        var promises = relationalLevel.map(function(property) {
-          var reference = nested(document, property);// The reference.
-
-          // Retrieve the relation(s) in parallel.
-          var isArrayRelation = isArray(reference);
-          var promises = (isArrayRelation ? reference : [reference]).map(function(member) {
-            // Do not retrieve if the property is not a reference, or it is
-            // explicitly excluded.
-            if(null == member || 'KinveyRef' !== member._type ||
-              -1 !== options.exclude.indexOf(property)) {
-              return Kinvey.Defer.resolve(member);
-            }
-
-            // Forward to the `Kinvey.User` or `Kinvey.DataStore` namespace.
-            var promise;
-            if(USERS === member._collection) {
-              promise = Kinvey.User.get(member._id, options);
-            }
-            else {
-              promise = Kinvey.DataStore.get(member._collection, member._id, options);
-            }
-
-            // Return the response.
-            return promise.then(null, function() {
-              // If the retrieval failed, retain the reference.
-              return Kinvey.Defer.resolve(member);
-            });
-          });
-
-          // Return the response.
-          return Kinvey.Defer.all(promises).then(function(responses) {
-            // Replace the references in the document with the relations.
-            nested(document, property, isArrayRelation ? responses : responses[0]);
-          });
-        });
-        return Kinvey.Defer.all(promises);
+        if(index === relationLength - 1){
+          mapping.resolve = true;
+        }
       });
     });
+
+
+    //Recursively process relationships
+    var resolveRelationships = function(entity, relationMapping){
+      if(relationMapping.keys){
+        var relationshipPromises = [];
+
+        Object.keys(relationMapping.keys).forEach(function(key){
+          var relationLevel = relationMapping.keys[key];
+          if(relationLevel.resolve){
+            // Retrieve the relation(s) in parallel.
+            var isKeyArray = isArray(entity[key]);
+            var promises = (isKeyArray ? entity[key] : [entity[key]]).map(function(member) {
+              // Do not retrieve if the property is not a reference, or it is
+              // explicitly excluded.
+              if(null == member || 'KinveyRef' !== member._type) {
+                return Kinvey.Defer.resolve(member);
+              }
+
+              // Forward to the `Kinvey.User` or `Kinvey.DataStore` namespace.
+              var promise;
+              if(USERS === member._collection) {
+                promise = Kinvey.User.get(member._id, options);
+              }
+              else {
+                promise = Kinvey.DataStore.get(member._collection, member._id, options);
+              }
+
+              // Return the response.
+              return promise.then(function(resolvedMember){
+                return resolveRelationships(resolvedMember, relationLevel).then(function(){
+                  return resolvedMember;
+                }, function(){
+                  return resolvedMember;
+                });
+              }, function() {
+                // If the retrieval failed, retain the reference.
+                return Kinvey.Defer.resolve(member);
+              });
+            });
+
+
+            relationshipPromises.push(Kinvey.Defer.all(promises).then(function(relationshipEntities){
+              //Once finished we need to update the original entity with our results
+              if(isKeyArray){
+                console.log('IsKeyArray', key);
+                entity[key] = relationshipEntities;
+              }else{
+                console.log('Is not key array', key);
+                entity[key] = relationshipEntities[0];
+              }
+            }));
+          }else{
+            relationshipPromises.push(resolveRelationships(entity[key], relationLevel));
+          }
+        });
+
+        return Kinvey.Defer.all(relationshipPromises);
+      }else{
+        return Kinvey.Defer.resolve();
+      }
+    };
+
+    var promise = resolveRelationships(document, relationMapping);
 
     // All documents are retrieved.
     return promise.then(function() {
@@ -131,9 +171,9 @@ var KinveyReference = /** @lends KinveyReference */{
       }
 
       // Restore the options and return the response.
-      options.error     = error;
+      options.error = error;
       options.relations = relations;
-      options.success   = success;
+      options.success = success;
       return document;
     }, function(reason) {
       // Debug.
@@ -142,11 +182,12 @@ var KinveyReference = /** @lends KinveyReference */{
       }
 
       // Restore the options and return the error.
-      options.error     = error;
+      options.error = error;
       options.relations = relations;
-      options.success   = success;
+      options.success = success;
       return Kinvey.Defer.reject(reason);
     });
+
   },
 
   /**
