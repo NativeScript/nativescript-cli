@@ -50,7 +50,7 @@
     "underscore": "1.5.2",
     "unzip": "0.1.9",
     "watchr": "2.4.11",
-    "xmlhttprequest": "1.6.0",
+    "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "1.2.2"
   },
   "analyze": true,
