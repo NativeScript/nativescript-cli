@@ -30,6 +30,7 @@
     "fibers": "https://github.com/icenium/node-fibers/tarball/master",
     "filesize": "2.0.3",
     "iconv-lite": "0.4.4",
+    "ios-sim-portable": "1.0.0",
     "lockfile": "1.0.0",
     "lodash": "2.4.1",
     "log4js": "0.6.9",
