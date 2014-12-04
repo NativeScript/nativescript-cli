@@ -62,7 +62,22 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
-			shell.cp("-R", path.join(frameworkDir, "*"), projectRoot);
+			if(options.symlink) {
+				this.$fs.ensureDirectoryExists(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
+				var xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
+
+				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), path.join(projectRoot));
+
+				var directoryContent = this.$fs.readDirectory(frameworkDir).wait();
+				var frameworkFiles = _.difference(directoryContent, [IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, xcodeProjectName]);
+				_.each(frameworkFiles, (file: string) => {
+					this.$fs.symlink(path.join(frameworkDir, file), path.join(projectRoot, file)).wait();
+				});
+
+			}  else {
+				shell.cp("-R", path.join(frameworkDir, "*"), projectRoot);
+			}
 		}).future<void>()();
 	}
 

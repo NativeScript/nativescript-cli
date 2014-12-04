@@ -37,6 +37,7 @@ function createTestInjector() {
 	testInjector.register('androidEmulatorServices', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});
+	testInjector.register('lockfile', stubs.LockFile);
 
 	return testInjector;
 }
@@ -151,7 +152,7 @@ describe('Platform Service Tests', () => {
 			it("should fail when the versions are the same", () => {
 				var npm: INodePackageManager = testInjector.resolve("npm");
 				npm.getLatestVersion = () => (() => "0.2.0").future<string>()();
-				npm.getCacheRootPath = () => (() => "").future<string>()();
+				npm.getCacheRootPath = () => "";
 
 				(() => platformService.updatePlatforms(["android"]).wait()).should.throw();
 			});

@@ -1,6 +1,5 @@
 ///<reference path=".d.ts"/>
 "use strict";
-
 import path = require("path");
 
 require("./bootstrap");

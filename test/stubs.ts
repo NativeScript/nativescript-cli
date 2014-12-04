@@ -116,7 +116,7 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
-	symlink(sourePath: string, destinationPath: string): IFuture<void> {
+	symlink(sourcePath: string, destinationPath: string): IFuture<void> {
 		return undefined;
 	}
 
@@ -149,7 +149,7 @@ export class ErrorsStub implements IErrors {
 }
 
 export class NPMStub implements INodePackageManager {
-	getCacheRootPath(): IFuture<string> {
+	getCacheRootPath(): string {
 		return undefined;
 	}
 
@@ -277,3 +277,14 @@ export class HooksServiceStub implements IHooksService {
 		return (() => { }).future<void>()();
 	}
 }
+
+export class LockFile {
+	lock(): IFuture<void> {
+		return (() => {}).future<void>()();
+	}
+
+	unlock(): IFuture<void> {
+	 	return (() => {}).future<void>()();
+	}
+}
+
