@@ -16,6 +16,7 @@
 
 // `Storage` adapter for
 // [localStorage](http://www.w3.org/TR/webstorage/#the-localstorage-attribute).
+var localStorageAdapter = {};
 if('undefined' !== typeof localStorage) {
   // The storage methods are executed in the background. Therefore, implement a
   // queue to force the background processes to execute serially.
@@ -25,7 +26,7 @@ if('undefined' !== typeof localStorage) {
    * @private
    * @namespace
    */
-  var localStorageAdapter = {
+  localStorageAdapter = {
     /**
      * @augments {Storage._destroy}
      */

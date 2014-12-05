@@ -151,9 +151,9 @@
       "host"     : "localhost:7007"
 	},
     "test": {
-      "appKey"       : "kid_eVzMkHDK2f",
-      "appSecret"    : "656fff1883fb4084a038148a5a700198",
-      "masterSecret" : "35035e5b4be0463c801ad52959bde137"
+      "appKey"       : "kid_-kpx2Yw6U",
+      "appSecret"    : "736bfe159c9149f881ecef2269b8b48d",
+      "masterSecret" : "1ed873294e9440de8cf765d644c7eac9"
 	}
   },
   "staging"    : {

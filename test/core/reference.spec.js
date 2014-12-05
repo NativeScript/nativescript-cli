@@ -154,8 +154,11 @@ describe('Kinvey.References', function() {
             expect(response.relation.field).to.equal(_this.doc.field);
           });
         });
-        it('should resolve a reference of a reference inside an array if `options.relations`.', function() {
-          this.options.relations = { relations: this.collection, 'relations.relation': this.collection };
+        it('should resolve a reference of a reference inside an array.', function() {
+          this.options.relations = {
+            relations: this.collection,
+            'relations.relation': this.collection
+          };
 
           var _this   = this;
           var promise = Kinvey.DataStore.get(this.collection, this.doc2._id, this.options);

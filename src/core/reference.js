@@ -140,16 +140,17 @@ var KinveyReference = /** @lends KinveyReference */{
             });
 
 
-            relationshipPromises.push(Kinvey.Defer.all(promises).then(function(relationshipEntities){
-              //Once finished we need to update the original entity with our results
-              if(isKeyArray){
-                console.log('IsKeyArray', key);
-                entity[key] = relationshipEntities;
-              }else{
-                console.log('Is not key array', key);
-                entity[key] = relationshipEntities[0];
-              }
-            }));
+            relationshipPromises.push(
+              Kinvey.Defer.all(promises)
+                .then(function(relationshipEntities){
+                  //Once finished we need to update the original entity with our results
+                  if(isKeyArray){
+                    entity[key] = relationshipEntities;
+                  }else{
+                    entity[key] = relationshipEntities[0];
+                  }
+                })
+            );
           }else{
             relationshipPromises.push(resolveRelationships(entity[key], relationLevel));
           }

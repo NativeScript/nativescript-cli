@@ -1,7 +1,10 @@
 # Changelog
 
-## 1.1.9-snapshot
+## 1.1.10-snapshot
+
+## 1.1.9 (2014-12-05)
 * Bugfix: Clone `options` argument when dealing with references to avoid interference.
+* Bugfix: References support nested references within arrays
 
 ## 1.1.8 (2014-05-14)
 * #2859: add `Kinvey.User.loginWithProvider` and `Kinvey.User.signupWithProvider` methods.
