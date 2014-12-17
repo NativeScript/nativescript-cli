@@ -83,7 +83,7 @@ export class NodePackageManager implements INodePackageManager {
 				}
 				return options.frameworkPath;
 			} else {
-				var version = version || this.getLatestVersion(packageName).wait();
+				var version: string = version || this.getLatestVersion(packageName).wait();
 				var packagePath = path.join(npm.cache, packageName, version, "package");
 				if (!this.isPackageCached(packagePath).wait()) {
 					this.addToCacheCore(packageName, version).wait();

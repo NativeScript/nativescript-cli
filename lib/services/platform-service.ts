@@ -60,7 +60,7 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Copying template files...");
 
 			var packageToInstall = "";
-			var npmOptions = {
+			var npmOptions: IStringDictionary = {
 				pathToSave: path.join(this.$projectData.platformsDir, platform)
 			};
 
