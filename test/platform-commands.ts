@@ -97,9 +97,11 @@ describe('Platform Service Tests', () => {
 		describe("#AddPlatformCommand", () => {
 			it("is not executed when platform is not passed", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -110,9 +112,13 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							if (commandName !== "help") {
+								isCommandExecuted = true;
+							}
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -123,9 +129,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when platform is valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -136,9 +144,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when all platforms are valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -149,9 +159,11 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when at least one platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -164,9 +176,11 @@ describe('Platform Service Tests', () => {
 		describe("#RemovePlatformCommand", () => {
 			it("is not executed when platform is not passed", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -177,9 +191,11 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -190,9 +206,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when platform is valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -203,9 +221,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when all platforms are valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -216,9 +236,11 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when at least one platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -231,9 +253,11 @@ describe('Platform Service Tests', () => {
 		describe("#UpdatePlatformCommand", () => {
 			it("is not executed when platform is not passed", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -244,9 +268,11 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -257,9 +283,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when platform is valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -270,9 +298,11 @@ describe('Platform Service Tests', () => {
 
 			it("is executed when all platforms are valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
@@ -283,9 +313,11 @@ describe('Platform Service Tests', () => {
 
 			it("is not executed when at least one platform is not valid", () => {
 				isCommandExecuted = false;
-				commandsService.executeCommandUnchecked = (): IFuture<boolean> => {
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
 					return (() => {
-						isCommandExecuted = true;
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
 						return false;
 					}).future<boolean>()();
 				}
