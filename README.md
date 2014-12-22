@@ -351,7 +351,7 @@ When you build for Android, the NativeScript CLI saves the application package a
 
 When you build for iOS, if the `--device` flag is not set, the NativeScript CLI builds your project for the native emulator and saves the application package as an `APP` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `emulator`. If the `--device` flag is set, the NativeScript CLI builds your project for device and saves the application package as an `IPA` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `device`.
 
-> **IMPORTANT:** To build your app for iOS device, you need to configure a valid pair of certificate and provisioning profile for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
+> **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
 [Back to Top][1]
 
