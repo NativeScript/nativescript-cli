@@ -18,6 +18,7 @@ var knownOpts:any = {
 		"keyStorePassword": String,
 		"keyStoreAlias": String,
 		"keyStoreAliasPassword": String
+		"debug-brk": Boolean
 	},
 	shorthands = {
 	};

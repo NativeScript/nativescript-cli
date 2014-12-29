@@ -17,7 +17,8 @@ export class PlatformService implements IPlatformService {
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter) { }
+		private $prompter: IPrompter,
+		private $childProcess: IChildProcess) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -219,6 +220,7 @@ export class PlatformService implements IPlatformService {
 			var cachedDeviceOption = options.device;
 			options.device = true;
 			this.buildPlatform(platform).wait();
+			console.log("after build platform");
 			options.device = cachedDeviceOption;
 
 			// Get latest package that is produced from build
@@ -233,7 +235,9 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public deployOnEmulator(platform: string): IFuture<void> {
+		console.log("deploy on emulator...");
 		return (() => {
+			console.log("deploying on ...");
 			this.validatePlatformInstalled(platform);
 			platform = platform.toLowerCase();
 
@@ -243,13 +247,23 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkAvailability().wait();
 
 			this.buildPlatform(platform).wait();
-
+			console.log("after build platform");
 			var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+			var projectName = options["debug-brk"] ? this.$projectData.projectName + "WithInspector" : this.$projectData.projectName;
+			var logFilePath = path.join(platformData.projectRoot, projectName, "emulator.log");
 
 			emulatorServices.startEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath }).wait();
+
+			if (platform === "ios" && options["debug-brk"]) {
+				console.log("Start waiting for inspector...");
+				// var tnsios = require("tns-ios");
+				var downloadedPackagePath = this.$npm.install("tns-ios", ["g"]).wait();
+				var safariPath = path.join(downloadedPackagePath, "WebInspectorUI/Safari/Main.html");
+				console.log("Opening in Safari: " + safariPath);
+				this.$childProcess.exec("open -a Safari " + safariPath).wait();
+			}
 		}).future<void>()();
 	}
 
