@@ -84,7 +84,6 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
-			console.log("interpolate data");
 			this.replaceFileName("-Info.plist", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName("WithInspector-Info.plist", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName("-Prefix.pch", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
@@ -97,10 +96,8 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			console.log("Renaming...");
 			this.$fs.rename(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER),
 				path.join(projectRoot, this.$projectData.projectName)).wait();
-			console.log("Renamed!");
 		}).future<void>()();
 	}
 
@@ -165,7 +162,6 @@ class IOSProjectService implements  IPlatformProjectService {
 					"-v", path.join(buildOutputPath, projectName + ".app"),
 					"-o", path.join(buildOutputPath, projectName + ".ipa")
 				];
-				console.log("Spawning xcrun...");
 				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: options, stdio: 'inherit'}).wait();
 			}
 		}).future<void>()();
@@ -177,7 +173,6 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	private replaceFileContent(file: string): IFuture<void> {
 		return (() => {
-			console.log("replace content");
 			var fileContent = this.$fs.readText(file).wait();
 			var replacedContent = helpers.stringReplaceAll(fileContent, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, this.$projectData.projectName);
 			this.$fs.writeFile(file, replacedContent).wait();
@@ -186,7 +181,6 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	private replaceFileName(fileNamePart: string, fileRootLocation: string): IFuture<void> {
 		return (() => {
-			console.log("replace file name");
 			var oldFileName = IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + fileNamePart;
 			var newFileName = this.$projectData.projectName + fileNamePart;
 
