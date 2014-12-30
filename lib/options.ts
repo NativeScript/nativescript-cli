@@ -17,7 +17,7 @@ var knownOpts:any = {
 		"keyStorePath": String,
 		"keyStorePassword": String,
 		"keyStoreAlias": String,
-		"keyStoreAliasPassword": String
+		"keyStoreAliasPassword": String,
 		"debug-brk": Boolean
 	},
 	shorthands = {
