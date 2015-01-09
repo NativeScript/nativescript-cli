@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 
 export class EmulatorSettingsService implements Mobile.IEmulatorSettingsService {
 	private static REQURED_ANDROID_APILEVEL = 17;
