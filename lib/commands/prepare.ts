@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 
 export class PrepareCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,

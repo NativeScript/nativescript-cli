@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
