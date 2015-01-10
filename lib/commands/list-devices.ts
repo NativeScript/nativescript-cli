@@ -1,4 +1,6 @@
 ///<reference path="../.d.ts"/>
+"use strict";
+
 import helpers = require("./../common/helpers");
 import util = require("util")
 

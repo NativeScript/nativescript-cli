@@ -1,5 +1,4 @@
 ///<reference path="../.d.ts"/>
-
 "use strict";
 
 import options = require("../options");

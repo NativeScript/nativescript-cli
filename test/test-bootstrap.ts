@@ -1,4 +1,4 @@
-global._ = require("underscore");
+global._ = require("lodash");
 global.$injector = require("../lib/common/yok").injector;
 
 $injector.register("analyticsService", {

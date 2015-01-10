@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 
 export class EmulateCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,

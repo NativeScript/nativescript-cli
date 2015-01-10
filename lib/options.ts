@@ -1,4 +1,5 @@
 ///<reference path=".d.ts"/>
+"use strict";
 
 import path = require("path");
 import helpers = require("./common/helpers");
@@ -34,7 +35,7 @@ if(hostInfo.isWindows()) {
 }
 
 commonOptions.setProfileDir(defaultProfileDir);
-var parsed = helpers.getParsedOptions(knownOpts, shorthands);
+var parsed = helpers.getParsedOptions(knownOpts, shorthands, "nativescript");
 
 Object.keys(parsed).forEach((opt) => exports[opt] = parsed[opt]);
 exports.knownOpts = knownOpts;

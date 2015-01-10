@@ -1,4 +1,5 @@
 ///<reference path=".d.ts"/>
+"use strict";
 
 import Future = require("fibers/future");
 import npm = require("npm");

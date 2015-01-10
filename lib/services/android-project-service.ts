@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 import path = require("path");
 import shell = require("shelljs");
 import util = require("util");

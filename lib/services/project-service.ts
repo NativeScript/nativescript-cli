@@ -1,4 +1,5 @@
 ///<reference path="../.d.ts"/>
+"use strict";
 
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");

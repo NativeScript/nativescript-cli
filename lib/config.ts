@@ -1,4 +1,5 @@
 ///<reference path=".d.ts"/>
+"use strict";
 
 import path = require("path");
 import util = require("util");
@@ -20,6 +21,10 @@ export class StaticConfig implements IStaticConfig {
 
 	public get adbFilePath(): string {
 		return path.join(__dirname, util.format("../resources/platform-tools/android/%s/adb", process.platform));
+	}
+
+	public get sevenZipFilePath() {
+		return path.join(__dirname, util.format("../resources/platform-tools/unzip/%s/7za", process.platform));
 	}
 }
 $injector.register("staticConfig", StaticConfig);
