@@ -200,7 +200,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		var validTarget = this.getTarget(frameworkDir).wait();
 		var output = this.$childProcess.exec('android list targets').wait();
 		if (!output.match(validTarget)) {
-			this.$errors.fail("Please install Android target %s the Android newest SDK). Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
+			this.$errors.fail("Please install Android target %s. Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
 				validTarget.split('-')[1]);
 		}
 	}
