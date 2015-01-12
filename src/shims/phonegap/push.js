@@ -64,6 +64,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       id        : 'register-device',
       data      : {
         platform : root.device.platform.toLowerCase(),
+        framework: 'phonegap',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
       },
@@ -122,6 +123,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       id        : 'unregister-device',
       data      : {
         platform : root.device.platform.toLowerCase(),
+        framework: 'phonegap',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
       },
