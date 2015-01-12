@@ -1,6 +1,9 @@
 # Changelog
 
-## 1.1.10-snapshot
+## 1.1.11-snapshot
+
+## 1.1.10 (2015-01-12)
+* Enhancement: Added framework flag to Push for Phonegap so we can change how KCS handles the register/unregister methods.
 
 ## 1.1.9 (2014-12-05)
 * Bugfix: Clone `options` argument when dealing with references to avoid interference.
