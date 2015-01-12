@@ -8,6 +8,7 @@ import osenv = require("osenv");
 import hostInfo = require("./common/host-info");
 
 var knownOpts:any = {
+		"appid": String,
 		"frameworkPath": String,
 		"copy-from": String,
 		"link-to": String,
