@@ -20,7 +20,7 @@ General commands:
     emulate                         Deploys the project in the native emulator for the selected target platform.
     run                             Runs your project on a connected device or in the native emulator, if configured. 
                                     This is shorthand for prepare, build, and deploy.
-    list-devices                    Lists all recognized connected physical or virtual device.
+    device                          Lists all recognized connected physical or virtual device.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
 General options:
@@ -198,7 +198,7 @@ Platform-specific usages:
     $ nativescript deploy ios [--device <Device ID>]
 
 Builds and deploys the project to a connected physical or virtual device.
-<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+<Device ID> is the index or name of the target device as listed by $ tns device.
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
@@ -217,7 +217,7 @@ Platform-specific usage:
     $ nativescript run ios [--device <Device ID>] [--emulator]
 
 Runs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
-<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+<Device ID> is the index or name of the target device as listed by $ tns device.
 
 Before building for the Android emulator, verify that you have met the following requirements.
     You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
@@ -258,17 +258,17 @@ For iOS, this operation runs your project in the iOS Simulator. Before running t
 
 --[/]--
 
---[list-devices]--
+--[device]--
 
 Usage:
-    $ tns list-devices [<Platform>]
-    $ nativescript list-devices [<Platform>]
+    $ tns device [<Platform>]
+    $ nativescript device [<Platform>]
 
 Platform-specific usage:
-    $ tns list-devices android
-    $ tns list-devices ios
-    $ nativescript list-devices android
-    $ nativescript list-devices ios
+    $ tns device android
+    $ tns device ios
+    $ nativescript device android
+    $ nativescript device ios
 
 Lists all recognized connected devices with serial number and index, grouped by platform. The Telerik NativeScript CLI recognizes running Android virtual devices as connected devices.
 
