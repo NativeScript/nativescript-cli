@@ -21,6 +21,7 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices) { }
 
 	public get platformData(): IPlatformData {
+		var projectName = options["debug-brk"] ? this.$projectData.projectName + "WithInspector" : this.$projectData.projectName;
 		return {
 			frameworkPackageName: "tns-ios",
 			normalizedPlatformName: "iOS",
@@ -30,10 +31,10 @@ class IOSProjectService implements  IPlatformProjectService {
 			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "device"),
 			emulatorBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "emulator"),
 			validPackageNamesForDevice: [
-				this.$projectData.projectName + ".ipa"
+				projectName + ".ipa"
 			],
 			validPackageNamesForEmulator: [
-				this.$projectData.projectName + ".app"
+				projectName+ ".app"
 			],
 			frameworkFilesExtensions: [".a", ".h", ".bin"],
 			targetedOS: ['darwin']
@@ -85,6 +86,7 @@ class IOSProjectService implements  IPlatformProjectService {
 	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
 			this.replaceFileName("-Info.plist", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
+			this.replaceFileName("WithInspector-Info.plist", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName("-Prefix.pch", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, projectRoot).wait();
 
@@ -121,9 +123,12 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
+
+			var projectName = options["debug-brk"] ? this.$projectData.projectName + "WithInspector" : this.$projectData.projectName;
+
 			var basicArgs = [
 				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
-				"-target", this.$projectData.projectName,
+				"-target", projectName,
 				"-configuration", options.release ? "Release" : "Debug",
 				"build"
 			];
@@ -155,10 +160,9 @@ class IOSProjectService implements  IPlatformProjectService {
 				var xcrunArgs = [
 					"-sdk", "iphoneos",
 					"PackageApplication",
-					"-v", path.join(buildOutputPath, this.$projectData.projectName + ".app"),
-					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
+					"-v", path.join(buildOutputPath, projectName + ".app"),
+					"-o", path.join(buildOutputPath, projectName + ".ipa")
 				];
-
 				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: options, stdio: 'inherit'}).wait();
 			}
 		}).future<void>()();
