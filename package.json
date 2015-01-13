@@ -27,7 +27,7 @@
     "byline": "4.1.1",
     "colors": "0.6.2",
     "ffi": "https://github.com/icenium/node-ffi/tarball/master",
-    "fibers": "https://github.com/icenium/node-fibers/tarball/master",
+    "fibers": "https://github.com/icenium/node-fibers/tarball/vladimirov/fibers_1_0_5_fixes",
     "filesize": "2.0.3",
     "iconv-lite": "0.4.4",
     "ios-sim-portable": "1.0.0",
