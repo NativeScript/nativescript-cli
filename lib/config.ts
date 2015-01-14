@@ -3,8 +3,9 @@
 
 import path = require("path");
 import util = require("util");
+import staticConfigBaseLibPath = require("./common/static-config-base");
 
-export class StaticConfig implements IStaticConfig {
+export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase implements IStaticConfig {
 	public PROJECT_FILE_NAME = ".tnsproject";
 	public CLIENT_NAME = "NativeScript";
 	public CLIENT_NAME_ALIAS = "tns";
@@ -17,10 +18,6 @@ export class StaticConfig implements IStaticConfig {
 
 	public get helpTextPath(): string {
 		return path.join(__dirname, "../resources/help.txt");
-	}
-
-	public get adbFilePath(): string {
-		return path.join(__dirname, util.format("../resources/platform-tools/android/%s/adb", process.platform));
 	}
 
 	public get sevenZipFilePath() {
