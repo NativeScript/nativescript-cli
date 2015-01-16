@@ -3,12 +3,14 @@
 import path = require("path");
 import shell = require("shelljs");
 import util = require("util");
+import Future = require("fibers/future");
 import options = require("./../options");
 import constants = require("./../constants");
 import hostInfo = require("../common/host-info");
 import helpers = require("./../common/helpers");
 
 class AndroidProjectService implements IPlatformProjectService {
+	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
 	private targetApi: string;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -50,7 +52,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
 
-			this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
+			var newTarget = this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
 
 			if(options.symlink) {
 				this.copy(projectRoot, frameworkDir, "res", "-R").wait();
@@ -61,6 +63,10 @@ class AndroidProjectService implements IPlatformProjectService {
 			} else {
 				this.copy(projectRoot, frameworkDir, "assets libs res", "-R").wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+			}
+
+			if(newTarget) {
+				this.updateTarget(projectRoot, newTarget).wait();
 			}
 
 			// Create src folder
@@ -78,7 +84,6 @@ class AndroidProjectService implements IPlatformProjectService {
 			var manifestPath = path.join(projectRoot, "AndroidManifest.xml");
 			var safeActivityName = this.$projectData.projectName.replace(/\W/g, '');
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
-			shell.sed('-i', /__ACTIVITY__/, safeActivityName, manifestPath);
 			shell.sed('-i', /__APILEVEL__/, this.getTarget(projectRoot).wait().split('-')[1], manifestPath);
 
 			var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
@@ -196,13 +201,58 @@ class AndroidProjectService implements IPlatformProjectService {
 		}
 	}
 
-	private validateAndroidTarget(frameworkDir: string) {
+	private validateAndroidTarget(frameworkDir: string): string {
 		var validTarget = this.getTarget(frameworkDir).wait();
-		var output = this.$childProcess.exec('android list targets').wait();
-		if (!output.match(validTarget)) {
-			this.$errors.fail("Please install Android target %s the Android newest SDK). Make sure you have the latest Android tools installed as well. Run \"android\" from your command-line to install/update any missing SDKs or tools.",
-				validTarget.split('-')[1]);
+		var installedTargets = this.getInstalledTargets().wait();
+		var newTarget: string = undefined;
+		var match = _.contains(installedTargets, validTarget);
+		if (!match) {
+			// adjust to the latest available version
+			newTarget = this.getCompatibleTarget();
+			if (!newTarget) {
+				this.$errors.fail("Please install Android target %s. Make sure you have the latest Android tools installed as well." +
+									" Run \"android\" from your command-line to install/update any missing SDKs or tools.",
+									validTarget.split('-')[1]);
+			}
 		}
+
+		return newTarget;
+	}
+
+	private getCompatibleTarget(): string {
+		var installedTargets = this.getInstalledTargets().wait();
+		var compatibleTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
+		return compatibleTarget;
+	}
+
+	private updateTarget(projectRoot: string, newTarget: string): IFuture<void> {
+		return (() => {
+			var file = path.join(projectRoot, "project.properties");
+			var editor = this.$propertiesParser.createEditor(file).wait();
+			editor.set("target", newTarget);
+			var future = new Future<void>();
+			editor.save((err:any) => {
+				if (err) {
+					future.throw(err);
+				} else {
+					this.targetApi = null; // so that later we can repopulate the cache
+					future.return();
+				}
+			});
+			future.wait();
+		}).future<void>()();
+	}
+
+	private installedTargetsCache: string[] = null;
+	private getInstalledTargets(): IFuture<string[]> {
+		return (() => {
+			if (!this.installedTargetsCache) {
+				this.installedTargetsCache = [];
+				var output = this.$childProcess.exec('android list targets').wait();
+				output.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
+			}
+			return this.installedTargetsCache;
+		}).future<string[]>()();
 	}
 
 	private getTarget(projectRoot: string): IFuture<string> {
