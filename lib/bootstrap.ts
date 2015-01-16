@@ -28,7 +28,6 @@ $injector.requireCommand("run", "./commands/run");
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build", "./commands/build");
 $injector.requireCommand("deploy", "./commands/deploy");
-$injector.requireCommand("dev-post-install", "./commands/post-install");
 $injector.requireCommand("emulate", "./commands/emulate");
 
 $injector.require("npm", "./node-package-manager");
