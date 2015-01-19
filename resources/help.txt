@@ -279,6 +279,27 @@ and that USB debugging is enabled on the device.
 
 --[/]--
 
+--[device|list-applications]--
+
+Usage:
+    $ tns device list-applications
+    $ nativescript device list-applications
+
+Lists all installed applications on device.
+
+--[/]--
+
+--[device|run]--
+
+Usage:
+    $ tns device run <ApplicationId>
+    $ nativescript device run <ApplicationId>
+
+Run the selected application on device.
+<ApplicationId> is the application id as listed from $tns device list-applications
+
+--[/]--
+
 --[feature-usage-tracking]--
 
 Usage:
