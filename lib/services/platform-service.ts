@@ -226,7 +226,7 @@ export class PlatformService implements IPlatformService {
 			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			this.$devicesServices.initialize(platform, options.device).wait();
+			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
 			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
 			this.$devicesServices.execute(action).wait();
 
