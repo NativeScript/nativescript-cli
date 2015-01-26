@@ -39,6 +39,7 @@
     "node-uuid": "1.4.1",
     "npm": "1.4.26",
     "osenv": "0.1.0",
+    "open": "0.0.4",
     "plistlib": "0.2.1",
     "progress-stream": "0.5.0",
     "prompt": "https://github.com/Icenium/prompt/tarball/master",
@@ -53,7 +54,8 @@
     "unzip": "0.1.9",
     "watchr": "2.4.11",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
-    "yargs": "1.2.2"
+    "yargs": "1.2.2",
+    "node-inspector":  "0.7.4"
   },
   "analyze": true,
   "devDependencies": {

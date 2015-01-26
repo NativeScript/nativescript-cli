@@ -20,6 +20,7 @@ General commands:
     emulate                         Deploys the project in the native emulator for the selected target platform.
     run                             Runs your project on a connected device or in the native emulator, if configured. 
                                     This is shorthand for prepare, build, and deploy.
+    debug                           Debugs your project on a connected device or in the native emulator, if configured. 
     device                          Lists all recognized connected physical or virtual device.
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
@@ -218,6 +219,40 @@ Platform-specific usage:
 
 Runs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
 <Device ID> is the index or name of the target device as listed by $ tns device.
+
+Before building for the Android emulator, verify that you have met the following requirements.
+    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
+        tools
+        platform-tools
+    You have created at least one device with the Android Virtual Device manager.
+
+Before building for the iOS simulator, verify that you have installed the ios-sim npm package.
+
+Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+
+Options:
+    --device - Specifies a connected device on which to run the app.
+    --emulator - If set, runs the app in the native emulator for the target platform, if configured.
+
+--[/]--
+
+--[debug]--
+
+Usage:
+    $ tns debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
+    $ nativescript debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
+
+Platform-specific usage:
+    $ tns debug android --get-port
+    $ tns debug android --debug-brk
+    $ tns debug ios --debug-brk --debug-port 12345
+    $ nativescript debug android --debug-brk
+    $ nativescript debug ios --start --debug-port 12345
+
+TODO: add proper help content
+
+Debugs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
+<Device ID> is the index or name of the target device as listed by $ tns list-devices.
 
 Before building for the Android emulator, verify that you have met the following requirements.
     You have added the file paths to the following directories from the Android SDK to your PATH environment variable.

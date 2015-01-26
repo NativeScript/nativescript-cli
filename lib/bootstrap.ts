@@ -25,6 +25,7 @@ $injector.requireCommand("platform|add", "./commands/add-platform");
 $injector.requireCommand("platform|remove", "./commands/remove-platform");
 $injector.requireCommand("platform|update", "./commands/update-platform");
 $injector.requireCommand("run", "./commands/run");
+$injector.requireCommand("debug", "./commands/debug");
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build", "./commands/build");
 $injector.requireCommand("deploy", "./commands/deploy");

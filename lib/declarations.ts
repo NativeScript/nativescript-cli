@@ -25,3 +25,7 @@ interface ILockFile {
 	lock(): IFuture<void>;
 	unlock(): IFuture<void>;
 }
+
+interface IOpener {
+    open(target: string, appname: string): void;
+}
