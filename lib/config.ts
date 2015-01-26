@@ -19,9 +19,5 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public get helpTextPath(): string {
 		return path.join(__dirname, "../resources/help.txt");
 	}
-
-	public get sevenZipFilePath() {
-		return path.join(__dirname, util.format("../resources/platform-tools/unzip/%s/7za", process.platform));
-	}
 }
 $injector.register("staticConfig", StaticConfig);
