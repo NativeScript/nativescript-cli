@@ -31,6 +31,9 @@ class ErrorsNoFailStub implements IErrors {
 	fail(opts: { formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean }, ...args: any[]): void;
 
 	fail(...args: any[]) { throw new Error(); }
+	failWithoutHelp(message: string, ...args: any[]): void {
+		throw new Error();
+	}
 
 	beginCommand(action: () => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
 		return (() => {

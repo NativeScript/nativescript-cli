@@ -40,7 +40,7 @@
     "npm": "1.4.26",
     "osenv": "0.1.0",
     "open": "0.0.4",
-    "plistlib": "0.2.1",
+    "plist": "1.1.0",
     "progress-stream": "0.5.0",
     "prompt": "https://github.com/Icenium/prompt/tarball/master",
     "properties-parser": "0.2.3",
