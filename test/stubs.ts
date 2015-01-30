@@ -143,6 +143,10 @@ export class ErrorsStub implements IErrors {
 		throw args;
 	}
 
+	failWithoutHelp(message: string, ...args: any[]): void {
+		throw new Error();
+	}
+
 	beginCommand(action:() => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
 		throw new Error("not supported");
 	}
