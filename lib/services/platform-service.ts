@@ -289,6 +289,7 @@ export class PlatformService implements IPlatformService {
 			var emulatorServices = platformData.emulatorServices;
 
 			emulatorServices.checkAvailability().wait();
+			emulatorServices.checkDependencies().wait();
 
 			this.buildPlatform(platform).wait();
 
