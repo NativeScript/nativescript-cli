@@ -23,6 +23,7 @@
     "mobile"
   ],
   "dependencies": {
+    "bplist-parser": "0.0.6",
     "bufferpack": "0.0.6",
     "byline": "4.1.1",
     "colors": "0.6.2",
