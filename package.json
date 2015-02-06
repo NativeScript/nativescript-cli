@@ -27,10 +27,10 @@
     "byline": "4.1.1",
     "colors": "0.6.2",
     "ffi": "https://github.com/icenium/node-ffi/tarball/master",
-    "fibers": "https://github.com/icenium/node-fibers/tarball/vladimirov/fibers_1_0_5_fixes",
+    "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.5.1",
     "filesize": "2.0.3",
     "iconv-lite": "0.4.4",
-    "ios-sim-portable": "https://github.com/telerik/ios-sim-portable/tarball/master",
+    "ios-sim-portable": "1.0.2",
     "lockfile": "1.0.0",
     "lodash": "2.4.1",
     "log4js": "0.6.9",
@@ -74,6 +74,6 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=0.10.26 <0.10.34 || >=0.10.35"
+    "node": ">=0.10.26 <0.10.34 || >=0.10.35 <0.11.0"
   }
 }
