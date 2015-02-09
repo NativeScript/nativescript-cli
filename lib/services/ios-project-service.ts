@@ -125,16 +125,17 @@ class IOSProjectService implements  IPlatformProjectService {
 				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
 				"-target", this.$projectData.projectName,
 				"-configuration", options.release ? "Release" : "Debug",
-				"build"
+				"build",
+				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 			];
 			var args: string[] = [];
 
 			if(options.device) {
 				args = basicArgs.concat([
-					"-xcconfig", path.join(projectRoot, "build.xcconfig"),
+					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
 					"-sdk", "iphoneos",
-					"ARCHS=\"armv7\"",
-					"VALID_ARCHS=\"armv7\"",
+					'ARCHS=armv7 arm64',
+					'VALID_ARCHS=armv7 arm64',
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
 				]);
 			} else {
