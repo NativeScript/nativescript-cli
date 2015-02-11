@@ -13,6 +13,7 @@ interface IPlatformService {
 	deployOnEmulator(platform: string): IFuture<void>;
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;
+    addLibrary(platform: string, libraryPath: string): IFuture<void>;
 }
 
 interface IPlatformData {

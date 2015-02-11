@@ -254,6 +254,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
+    addLibrary(projectRoot: string, libraryPath: string): IFuture<void> {
+        return Future.fromResult();
+    }
 }
 
 export class ProjectDataService implements IProjectDataService {

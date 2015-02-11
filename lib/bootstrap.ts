@@ -26,6 +26,7 @@ $injector.requireCommand("platform|*list", "./commands/list-platforms");
 $injector.requireCommand("platform|add", "./commands/add-platform");
 $injector.requireCommand("platform|remove", "./commands/remove-platform");
 $injector.requireCommand("platform|update", "./commands/update-platform");
+$injector.requireCommand("library|add", "./commands/add-library");
 $injector.requireCommand("run|ios", "./commands/run"); 
 $injector.requireCommand("run|android", "./commands/run");
 $injector.requireCommand("debug", "./commands/debug");

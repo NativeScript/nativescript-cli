@@ -169,6 +169,11 @@ class IOSProjectService implements  IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
+    public addLibrary(projectRoot: string, libraryPath: string): IFuture<void> {
+        this.$errors.fail("Implement me!");
+        return Future.fromResult();
+    }
+
 	private replaceFileContent(file: string): IFuture<void> {
 		return (() => {
 			var fileContent = this.$fs.readText(file).wait();
