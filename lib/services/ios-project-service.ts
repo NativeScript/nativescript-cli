@@ -169,7 +169,13 @@ class IOSProjectService implements  IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-    public addLibrary(projectRoot: string, libraryPath: string): IFuture<void> {
+    public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
+        var name = path.basename(libraryPath);
+        var targetPath = path.join(this.$projectData.projectDir, "lib", platformData.normalizedPlatformName, path.basename(name, path.extname(name)));
+        this.$fs.ensureDirectoryExists(targetPath).wait();
+
+        shell.cp("-R", libraryPath, targetPath);
+
         this.$errors.fail("Implement me!");
         return Future.fromResult();
     }

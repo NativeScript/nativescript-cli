@@ -132,7 +132,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
 	}
 
-    public addLibrary(projectRoot: string, libraryPath: string): IFuture<void> {
+    public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
         this.$errors.fail("Implement me!");
         return Future.fromResult();
     }
