@@ -177,7 +177,7 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
-      if (options.emulator) {
+      		if (options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
 				this.deployOnDevice(platform).wait();
@@ -291,12 +291,14 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkAvailability().wait();
 			emulatorServices.checkDependencies().wait();
 
-			this.buildPlatform(platform).wait();
+			if(!options.availableDevices) {
+				this.buildPlatform(platform).wait();
 
-			var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
-			this.$logger.out("Using ", packageFile);
+				var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+				this.$logger.out("Using ", packageFile);
 
-			var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+				var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+			}
 
 			emulatorServices.startEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
 		}).future<void>()();
