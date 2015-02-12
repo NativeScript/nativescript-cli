@@ -1,12 +1,38 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-export class EmulateCommand implements ICommand {
-	constructor(private $platformService: IPlatformService,
-		private $platformCommandParameter: ICommandParameter) { }
+export class EmulateCommandBase {
+	constructor(private $platformService: IPlatformService) { }
 
-	execute(args: string[]): IFuture<void> { return this.$platformService.deployOnEmulator(args[0]); }
-
-	allowedParameters = [this.$platformCommandParameter];
+	executeCore(args: string[]): IFuture<void> {
+		return this.$platformService.deployOnEmulator(args[0]);
+	}
 }
-$injector.registerCommand("emulate", EmulateCommand);
+
+export class EmulateIosCommand extends  EmulateCommandBase implements ICommand {
+	constructor($platformService: IPlatformService,
+		private $platformsData: IPlatformsData) {
+		super($platformService);
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+
+	public execute(args: string[]): IFuture<void> {
+		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+	}
+}
+$injector.registerCommand("emulate|ios", EmulateIosCommand);
+
+export class EmulateAndroidCommand extends EmulateCommandBase implements ICommand {
+	constructor($platformService: IPlatformService,
+		private $platformsData: IPlatformsData) {
+		super($platformService);
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+
+	public execute(args: string[]): IFuture<void> {
+		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+	}
+}
+$injector.registerCommand("emulate|android", EmulateAndroidCommand);

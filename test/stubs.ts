@@ -211,6 +211,10 @@ export class PlatformsDataStub implements IPlatformsData {
 			frameworkFilesExtensions: []
 		};
 	}
+
+	public get availablePlatforms(): any {
+		return undefined;
+	}
 }
 
 export class PlatformProjectServiceStub implements IPlatformProjectService {

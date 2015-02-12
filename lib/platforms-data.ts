@@ -20,5 +20,12 @@ export class PlatformsData implements IPlatformsData {
 	public getPlatformData(platform: string): IPlatformData {
 		return this.platformsData[platform];
 	}
+
+	public get availablePlatforms(): any {
+		return {
+			iOS: "ios",
+			Android: "android"
+		};
+	}
 }
 $injector.register("platformsData", PlatformsData);

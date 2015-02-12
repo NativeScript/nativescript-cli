@@ -63,6 +63,10 @@ class PlatformsData implements IPlatformsData {
 
 		return null;
 	}
+	
+	public get availablePlatforms(): any {
+		return undefined;
+	}
 }
 
 function createTestInjector() {
