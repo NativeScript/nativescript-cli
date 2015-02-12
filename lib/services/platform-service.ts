@@ -178,57 +178,57 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			this.preparePlatform(platform).wait();
-      		if (options.emulator) {
+			if (options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
 				this.deployOnDevice(platform).wait();
 			}
 		}).future<void>()();
-    }
+	}
 
-    public debugPlatform(platform: string): IFuture<void> {
-      platform = platform.toLowerCase();
+	public debugPlatform(platform: string): IFuture<void> {
+		platform = platform.toLowerCase();
 
-      var ret = options.emulator
-        ? this.debugOnEmulator(platform)
-        : this.debugOnDevice(platform);
-        
-      return ret;
-    }
+		var ret = options.emulator
+		? this.debugOnEmulator(platform)
+		: this.debugOnDevice(platform);
 
-    public debugOnEmulator(platform: string): IFuture<void> {
-        return (() => {
+	  return ret;
+	}
 
-            // a bit redundant
-            this.deployOnEmulator(platform).wait();
+	public debugOnEmulator(platform: string): IFuture<void> {
+		return (() => {
 
-            this.debugOnDevice(platform).wait();
-        }).future<void>()();
-    }
+			// a bit redundant
+			this.deployOnEmulator(platform).wait();
 
-    public debugOnDevice(platform: string): IFuture<void> {
-        return (() => {
-            platform = platform.toLowerCase();
+			this.debugOnDevice(platform).wait();
+		}).future<void>()();
+	}
 
-            var packageFile = "";
+	public debugOnDevice(platform: string): IFuture<void> {
+		return (() => {
+			platform = platform.toLowerCase();
 
-            if (options["debug-brk"]) {
-                this.preparePlatform(platform).wait();
+			var packageFile = "";
 
-                var platformData = this.$platformsData.getPlatformData(platform);
+			if (options["debug-brk"]) {
+				this.preparePlatform(platform).wait();
 
-                this.buildPlatform(platform).wait();
+				var platformData = this.$platformsData.getPlatformData(platform);
 
-                packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
-                this.$logger.out("Using ", packageFile);
-            }
+				this.buildPlatform(platform).wait();
 
-            this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-            var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId); };
-            this.$devicesServices.execute(action).wait();
+				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+				this.$logger.out("Using ", packageFile);
+			}
 
-        }).future<void>()();
-    }
+			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
+			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId); };
+			this.$devicesServices.execute(action).wait();
+
+		}).future<void>()();
+	}
 
 	public removePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
