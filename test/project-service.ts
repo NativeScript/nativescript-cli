@@ -18,7 +18,7 @@ import util = require("util");
 import helpers = require("../lib/common/helpers");
 
 var assert = require("chai").assert;
-var options: any = require("./../lib/options");
+var options: any = require("../lib/common/options");
 var mockProjectNameValidator = {
 	validate: () => { return true; }
 };

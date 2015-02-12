@@ -1,7 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import options = require("../options");
+import options = require("../common/options");
 
 export class OptionsService implements IOptionsService {
 	public getKnownOptions(): string[]{

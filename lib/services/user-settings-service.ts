@@ -2,8 +2,8 @@
 "use strict";
 
 import path = require("path");
-import options = require("./../options");
-import userSettingsServiceBaseLib = require("./../common/services/user-settings-service");
+import options = require("../common/options");
+import userSettingsServiceBaseLib = require("../common/services/user-settings-service");
 
 class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem) {

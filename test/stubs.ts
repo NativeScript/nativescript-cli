@@ -151,9 +151,11 @@ export class ErrorsStub implements IErrors {
 		throw new Error("not supported");
 	}
 
-	verifyHeap(message: string): void {
-
+	executeAction(action: Function): any {
+		return action();
 	}
+
+	verifyHeap(message: string): void { }
 }
 
 export class NPMStub implements INodePackageManager {

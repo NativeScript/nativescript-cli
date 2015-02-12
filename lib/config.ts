@@ -5,6 +5,12 @@ import path = require("path");
 import util = require("util");
 import staticConfigBaseLibPath = require("./common/static-config-base");
 
+$injector.register("config", {
+	CI_LOGGER: false,
+	DEBUG: process.env.NATIVESCRIPT_DEBUG,
+	TYPESCRIPT_COMPILER_OPTIONS: { }
+});
+
 export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase implements IStaticConfig {
 	public PROJECT_FILE_NAME = ".tnsproject";
 	public CLIENT_NAME = "NativeScript";

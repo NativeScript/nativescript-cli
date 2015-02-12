@@ -21,7 +21,7 @@ import path = require("path");
 import Future = require("fibers/future");
 
 var assert = require("chai").assert;
-var options: any = require("./../lib/options");
+var options: any = require("../lib/common/options");
 require('should');
 
 function createTestInjector() {

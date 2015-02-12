@@ -1,5 +1,7 @@
 require("./common/bootstrap");
-
+$injector.require("config", "./config");
+require("./options");
+// note: order above is important!
 $injector.require("nativescript-cli", "./nativescript-cli");
 
 $injector.require("projectData", "./project-data");
@@ -33,5 +35,4 @@ $injector.requireCommand("emulate", "./commands/emulate");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("lockfile", "./lockfile");
-$injector.require("config", "./config");
 $injector.require("optionsService", "./services/options-service");
