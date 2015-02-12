@@ -8,6 +8,7 @@ import options = require("../common/options");
 import constants = require("../constants");
 import hostInfo = require("../common/host-info");
 import helpers = require("../common/helpers");
+import fs = require("fs");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
@@ -130,9 +131,39 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
-	}
+    }
+
+    private parseProjectProrperies(projDir: string, destDir: string): void {
+
+        var projProp = path.join(projDir, "project.properties");
+
+        if (!this.$fs.exists(projProp).wait()) {
+            this.$errors.fail("File %s does not exist", projProp);
+        }
+
+        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
+        var thiz = this;
+
+        lines.forEach(function (elem, idx, arr) {
+            var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
+            if (match) {
+                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
+                libRef.adjustedPath = path.join(projDir, libRef.path);
+                thiz.parseProjectProrperies(libRef.adjustedPath, destDir);
+            }
+        });
+
+        this.$logger.info("Copying %s", projDir);
+        shell.cp("-Rf", projDir, destDir);
+    }
 
     public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
+        var name = path.basename(libraryPath);
+        var targetPath = path.join(this.$projectData.projectDir, "lib", platformData.normalizedPlatformName);
+        this.$fs.ensureDirectoryExists(targetPath).wait();
+
+        this.parseProjectProrperies(libraryPath, targetPath);
+
         this.$errors.fail("Implement me!");
         return Future.fromResult();
     }
