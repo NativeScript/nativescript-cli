@@ -6,7 +6,7 @@ import shell = require("shelljs");
 import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
-import options = require("./../options");
+import options = require("./../common/options");
 import semver = require("semver");
 
 export class PlatformService implements IPlatformService {

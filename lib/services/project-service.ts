@@ -2,8 +2,8 @@
 "use strict";
 
 import constants = require("./../constants");
-import helpers = require("./../common/helpers");
-import options = require("./../options");
+import helpers = require("../common/helpers");
+import options = require("../common/options");
 import osenv = require("osenv");
 import path = require("path");
 import shell = require("shelljs");

@@ -8,7 +8,7 @@ import semver = require("semver");
 import shell = require("shelljs");
 import helpers = require("./common/helpers");
 import constants = require("./constants");
-import options = require("./options");
+import options = require("./common/options");
 
 export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";

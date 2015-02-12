@@ -12,7 +12,7 @@ import CommandsServiceLib = require("../lib/common/services/commands-service");
 import path = require("path");
 import Future = require("fibers/future");
 var assert = require("chai").assert;
-var options: any = require("./../lib/options");
+var options: any = require("../lib/common/options");
 var isCommandExecuted = true;
 
 class PlatformData implements IPlatformData {
@@ -45,6 +45,10 @@ class ErrorsNoFailStub implements IErrors {
 
 			return result;
 		}).future<boolean>()();
+	}
+
+	executeAction(action: Function): any {
+		return action();
 	}
 
 	verifyHeap(message: string): void { }

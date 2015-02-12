@@ -4,10 +4,10 @@ import path = require("path");
 import shell = require("shelljs");
 import util = require("util");
 import Future = require("fibers/future");
-import options = require("./../options");
-import constants = require("./../constants");
+import options = require("../common/options");
+import constants = require("../constants");
 import hostInfo = require("../common/host-info");
-import helpers = require("./../common/helpers");
+import helpers = require("../common/helpers");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];

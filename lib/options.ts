@@ -2,7 +2,6 @@
 "use strict";
 
 import path = require("path");
-import helpers = require("./common/helpers");
 import commonOptions = require("./common/options");
 import osenv = require("osenv");
 import hostInfo = require("./common/host-info");
@@ -23,8 +22,8 @@ var knownOpts:any = {
 	shorthands: IStringDictionary = {
 	};
 
-_.extend(knownOpts, commonOptions.knownOpts);
-_.extend(shorthands, commonOptions.shorthands);
+_.extend(commonOptions.knownOpts, knownOpts);
+_.extend(commonOptions.shorthands, shorthands);
 
 var defaultProfileDir = "";
 var nativeScriptCacheFolder = ".nativescript-cli";
@@ -35,15 +34,9 @@ if(hostInfo.isWindows()) {
 }
 
 commonOptions.setProfileDir(defaultProfileDir);
-var parsed = helpers.getParsedOptions(knownOpts, shorthands, "nativescript");
-
-Object.keys(parsed).forEach(opt => {
-	var key = opt;
-	if(shorthands[opt]) {
-		key = shorthands[opt];
-	}
-
-	exports[key] = parsed[opt];
+_(commonOptions.validateArgs("nativescript")).each((val,key) => {
+	key = shorthands[key] || key;
+	commonOptions[key] = val;
 });
 exports.knownOpts = knownOpts;
 

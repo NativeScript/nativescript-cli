@@ -4,7 +4,7 @@
 import Future = require("fibers/future");
 import lockfile = require("lockfile");
 import path = require("path");
-import options = require("./options");
+import options = require("./common/options");
 
 export class LockFile implements ILockFile {
 	private static LOCK_FILENAME = path.join(options["profile-dir"], ".lock");
