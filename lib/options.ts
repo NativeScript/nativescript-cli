@@ -11,7 +11,6 @@ var knownOpts:any = {
 		"copy-from": String,
 		"link-to": String,
 		"release": Boolean,
-		"device": Boolean,
 		"emulator": Boolean,
 		"symlink": Boolean,
 		"keyStorePath": String,
