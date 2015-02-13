@@ -6,9 +6,7 @@ export class BuildCommand implements ICommand {
 		private $platformCommandParameter: ICommandParameter) { }
 
 	execute(args: string[]): IFuture<void> {
-		return (() => {
-			this.$platformService.buildPlatform(args[0]).wait();
-		}).future<void>()();
+		return	this.$platformService.buildPlatform(args[0]);
 	}
 
 	allowedParameters = [this.$platformCommandParameter];
