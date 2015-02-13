@@ -156,10 +156,21 @@ class AndroidProjectService implements IPlatformProjectService {
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
 		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
 		if(configuration === "release") {
-			args = args.concat(["-Dkey.store", options.keyStorePath,
-			"-Dkey.store.password", options.keyStorePassword,
-			"-Dkey.alias", options.keyStoreAlias,
-			"-Dkey.alias.password", options.keyStoreAliasPassword]);
+			if(options.keyStorePath) {
+				args = args.concat(["-Dkey.store", options.keyStorePath]);
+			}
+
+			if(options.keyStorePassword) {
+				args = args.concat(["-Dkey.store.password", options.keyStorePassword]);
+			}
+
+			if(options.keyStoreAlias) {
+				args = args.concat(["-Dkey.alias", options.keyStoreAlias]);
+			}
+
+			if(options.keyStoreAliasPassword) {
+				args = args.concat(["-Dkey.alias.password", options.keyStoreAliasPassword])
+			}
 		}
 
 		return args;
