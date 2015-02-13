@@ -1,4 +1,5 @@
 ///<reference path=".d.ts"/>
+"use strict";
 
 import Future = require("fibers/future");
 import util = require("util");
@@ -156,6 +157,8 @@ export class ErrorsStub implements IErrors {
 	}
 
 	verifyHeap(message: string): void { }
+
+	printCallStack: boolean = false;
 }
 
 export class NPMStub implements INodePackageManager {
