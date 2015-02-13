@@ -19,7 +19,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $projectData: IProjectData,
+        private $projectData: IProjectData,
 		private $propertiesParser: IPropertiesParser) {
 
 	}
@@ -133,6 +133,12 @@ class AndroidProjectService implements IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
     }
 
+    private generateBuildFile(projDir: string, targetSdk: string): void {
+        this.$logger.info("Generate build.xml for %s", projDir);
+        var cmd = util.format("android update project -p %s --target %s --subprojects", projDir, targetSdk);
+        this.$childProcess.exec(cmd).wait();
+    }
+
     private parseProjectProrperies(projDir: string, destDir: string): void {
 
         var projProp = path.join(projDir, "project.properties");
@@ -148,21 +154,46 @@ class AndroidProjectService implements IPlatformProjectService {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
-                libRef.adjustedPath = path.join(projDir, libRef.path);
+                libRef.adjustedPath = thiz.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
                 thiz.parseProjectProrperies(libRef.adjustedPath, destDir);
             }
         });
 
         this.$logger.info("Copying %s", projDir);
         shell.cp("-Rf", projDir, destDir);
+
+        var targetDir = path.join(destDir, path.basename(projDir));
+        // TODO: parametrize targetSdk
+        var targetSdk = "android-17";
+        this.generateBuildFile(targetDir, targetSdk);
+    }
+
+    private updateProjectReferences(projDir: string, libraryPath: string): void {
+        var projProp = path.join(projDir, "project.properties");
+
+        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
+        var thiz = this;
+
+        lines.forEach(function (elem, idx, arr) {
+            var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
+            if (match) {
+                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
+                // TODO: handle path.join of two absolute paths
+                libRef.adjustedPath = path.join(projDir, libRef.path);
+                thiz.parseProjectProrperies(libRef.adjustedPath, "###");
+            }
+        });
     }
 
     public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
         var name = path.basename(libraryPath);
-        var targetPath = path.join(this.$projectData.projectDir, "lib", platformData.normalizedPlatformName);
+        var projDir = this.$projectData.projectDir;
+        var targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
         this.$fs.ensureDirectoryExists(targetPath).wait();
 
         this.parseProjectProrperies(libraryPath, targetPath);
+
+        this.updateProjectReferences(projDir, libraryPath);
 
         this.$errors.fail("Implement me!");
         return Future.fromResult();
