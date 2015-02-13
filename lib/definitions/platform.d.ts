@@ -5,8 +5,8 @@ interface IPlatformService {
 	getPreparedPlatforms(): IFuture<string[]>;
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
-    runPlatform(platform: string): IFuture<void>;
-    debugPlatform(platform: string): IFuture<void>;
+	runPlatform(platform: string): IFuture<void>;
+	debugPlatform(platform: string): IFuture<void>;
 	preparePlatform(platform: string): IFuture<void>;
 	buildPlatform(platform: string): IFuture<void>;
 	deployOnDevice(platform: string): IFuture<void>;
@@ -30,6 +30,7 @@ interface IPlatformData {
 }
 
 interface IPlatformsData {
+	availablePlatforms: any;
 	platformsNames: string[];
 	getPlatformData(platform: string): IPlatformData;
 }

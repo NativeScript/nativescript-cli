@@ -1,16 +1,38 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-export class RunCommand implements ICommand {
-	constructor(private $platformService: IPlatformService,
-		private $platformCommandParameter: ICommandParameter) { }
+export class RunCommandBase {
+	constructor(private $platformService: IPlatformService) { }
 
-	execute(args: string[]): IFuture<void> {
-		return (() => {
-			this.$platformService.runPlatform(args[0]).wait();
-		}).future<void>()();
+	public executeCore(args: string[]): IFuture<void> {
+		return this.$platformService.runPlatform(args[0]);
+	}
+}
+
+export class RunIosCommand extends RunCommandBase implements ICommand {
+	constructor($platformService: IPlatformService,
+		private $platformsData: IPlatformsData) {
+		super($platformService);
 	}
 
-	allowedParameters = [this.$platformCommandParameter];
+	public allowedParameters: ICommandParameter[] = [];
+
+	public execute(args: string[]): IFuture<void> {
+		return this.executeCore([this.$platformsData.availablePlatforms.iOS]);
+	}
 }
-$injector.registerCommand("run", RunCommand);
+$injector.registerCommand("run|ios", RunIosCommand);
+
+export class RunAndroidCommand extends RunCommandBase implements ICommand {
+	constructor($platformService: IPlatformService,
+		private $platformsData: IPlatformsData) {
+		super($platformService);
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+
+	public execute(args: string[]): IFuture<void> {
+		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+	}
+}
+$injector.registerCommand("run|android", RunAndroidCommand);
