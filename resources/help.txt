@@ -12,6 +12,7 @@ General commands:
     platform list                   Lists all platforms that the project currently targets.
     platform remove                 Removes the selected platform from the platforms that the project currently targets.
                                     This operation deletes all platform-specific files and subdirectories from your project.
+    platform update                 Updates the NativeScript runtime for the specified platform.
     prepare                         Copies relevant content from the app directory to the subdirectory for the selected target platform. 
                                     This lets you build the project with the SDK for the selected platform and deploy it on device.
     build                           Builds the project for the selected target platform and produces an application package or an
@@ -22,13 +23,16 @@ General commands:
                                     This is shorthand for prepare, build, and deploy.
     debug                           Debugs your project on a connected device or in the native emulator, if configured. 
     device                          Lists all recognized connected physical or virtual device.
+    device run                      Runs the selected application on a connected device.
+    device list-applications        Lists the installed applications on all connected devices.  
     feature-usage-tracking          Configures anonymous feature usage tracking.
 
 General options:
-    --help              Prints help about the selected command.
+    --help, -h, /?      Prints help about the selected command.
     --path <Directory>  Specifies the directory that contains the project. If not set, the project is searched for
                         in the current directory and all directories above it.
     --version           Prints the client version.
+    --log trace         Prints a detailed diagnostic log for the execution of the current command.
 --[/]--
 
 --[help]--
@@ -62,7 +66,7 @@ Options:
               For projects that target iOS, you can use uppercase or lowercase letters, numbers, and hyphens in the strings of the reversed domain name. Strings must be separated by a dot. For example: com.nativescript.My-i0s-App
               If not specified, the application identifier is set to org.nativescript.<App name>.
     --copy-from - Specifies a directory which contains an existing NativeScript project. 
-                  If not set, the Telerik NativeScript CLI creates the project from the default hello-world template.
+                  If not set, the NativeScript CLI creates the project from the default hello-world template.
 
 --[/]--
 
@@ -78,10 +82,11 @@ You must run the platform command with a related command.
     list - Lists all platforms that the project currently targets. You can build and deploy your project only for 
            these target platforms.
     add - Configures the current project to target the selected platform. After adding the target platform, you can 
-          build and deploy your app to it.
+          build and deploy your app on devices which run on the platform.
     remove - Removes the selected platform from the platforms that the project currently targets. After removing 
-             the target platform, you can no longer build and deploy your app to it.
+             the target platform, you can no longer build and deploy your app on devices which run on the platform.
              This operation deletes all platform-specific files and subdirectories from your project.
+    update - Updates the NativeScript runtime for the specified platform.
 
 --[/]--
 
@@ -98,24 +103,30 @@ Lists all platforms that the project currently targets. You can build and deploy
 --[platform|add]--
 
 Usage:
-    $ tns platform add <Platform>
-    $ nativescript platform add <Platform>
+    $ tns platform add <Platform> [--frameworkPath <File Path>] [--symlink]
+    $ nativescript platform add <Platform> [--frameworkPath <File Path>] [--symlink]
 
 Platform-specific usage:
-    $ tns platform add android
-    $ tns platform add ios
-    $ nativescript platform add android
-    $ nativescript platform add ios
+    $ tns platform add android [--frameworkPath <File Path>] [--symlink]
+    $ tns platform add ios [--frameworkPath <File Path>] [--symlink] 
+    $ nativescript platform add android [--frameworkPath <File Path>] [--symlink]
+    $ nativescript platform add ios [--frameworkPath <File Path>] [--symlink]
 
-Configures the current project to target the selected platform. When you add a target platform, the Telerik NativeScript CLI adds a corresponding platform-specific subdirectory under the platforms directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
+Configures the current project to target the selected platform. When you add a target platform, the NativeScript CLI adds a corresponding platform-specific subdirectory under the platforms directory. This platform-specific directory contains the necessary files to let you build your project for the target platform.
+
+In this version of the NativeScript CLI, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
+On Windows and Linux systems, you can target Android. 
+On OS X systems, you can target Android and iOS.
+
+<File Path> is the complete path to a valid npm package or a directory that contains a NativeScript runtime for the selected platform. 
 
 Options:
-    --frameworkPath - specifies the path to local runtime. It should be npm package.
-    --symlink - symlink the framework into the project. If this option is used with --frameworkPath, --frameworkPath should specify a path to folder.
-
-In this version of the Telerik NativeScript CLI, you can target iOS and Android, based on your system. You need to have your system configured for development with the target platform.
-On Windows systems, you can target Android. 
-On OS X systems, you can target Android and iOS.
+    --frameworkPath - Sets the path to a NativeScript runtime for the specified platform that you want to use instead of the default runtime.
+        If --symlink is specified, <File Path> must point to directory in which the runtime is already extracted. 
+        If --symlink is not specified, <File Path> must point to a valid npm package. 
+    --symlink - Creates a symlink to a NativeScript runtime for the specified platform that you want to use instead of the default runtime.
+        If --frameworkPath is specified, creates a symlink to the specified directory.
+        If --frameworkPath is not specified, creates a symlink to platform runtime installed with your current version of NativeScript.
 
 --[/]--
 
@@ -131,7 +142,7 @@ Platform-specific usage:
     $ nativescript platform remove android
     $ nativescript platform remove ios
 
-Removes the selected platform from the platforms that the project currently targets. After removing the target platform, you can no longer build and deploy your app to it.
+Removes the selected platform from the platforms that the project currently targets. After removing the target platform, you can no longer build and deploy your app on devices which run on the platform.
 
 This operation deletes the subdirectory for the selected platform from the platforms directory.
 
@@ -143,7 +154,13 @@ Usage:
     $ tns platform update <Platform>
     $ nativescript platform update <Platform>
 
-Update the version of NativeScript runtime used for a specific platform.
+Platform-specific usage:
+    $ tns platform update android
+    $ tns platform update ios
+    $ nativescript platform update android
+    $ nativescript platform update ios
+
+Updates the NativeScript runtime for the specified platform.
 --[/]--
 
 --[prepare]--
@@ -164,24 +181,56 @@ in the platforms directory. This lets you build the project with the SDK for the
 --[/]--
 
 --[build]--
-
 Usage:
-    $ tns build <Platform> [--device] [--release]
-    $ nativescript build <Platform> [--device] [--release]
+    $ tns build <Command>
+    $ nativescript build <Command>
 
-Platform-specific usage:
-    $ tns build android [--release]
-    $ tns build ios [--device] [--release]
-    $ nativescript build android [--release]
-    $ nativescript build ios [--device] [--release]
+You must run the create command with a related command.
 
 Builds the project for the selected target platform and produces an application package that you can manually deploy on device or in the native emulator.
+
+<Command> is a related command that sets a target platform for the build command. You can run the following related commands:
+    android - Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
+    ios - Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
+--[/]--
+
+--[build|android]--
+Usage:
+    $ tns build android [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release] 
+    $ nativescript build android [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+
+Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
+
+Options:
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+        When the --keyStore* options are specified, produces a signed release build.
+    --keyStorePath - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStorePassword - Provides the password for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAlias - Provides the alias for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAliasPassword - Provides the password for the alias specified with --keStoreAliasPassword.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+--[/]--
+
+--[build|ios]--
+
+Usage:
+    $ tns build ios [--device] [--release]
+    $ nativescript build ios [--device] [--release]
+
+Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
 Options:
     --release - If set, produces a release build. Otherwise, produces a debug build.
-    --device - This flag is applicable only to iOS. If set, produces an application package that you can deploy on device. 
+    --device - If set, produces an application package that you can deploy on device. 
                Otherwise, produces a build that you can run only in the native iOS Simulator.
 
 --[/]--
@@ -189,53 +238,131 @@ Options:
 --[deploy]--
 
 Usage:
-    $ tns deploy <Platform> [--device <Device ID>]
-    $ nativescript deploy <Platform> [--device <Device ID>]
+    $ tns deploy <Platform> [--device <Device ID>] [--release]
+    $ nativescript deploy <Platform> [--device <Device ID>] [--release]
 
 Platform-specific usages:
-    $ tns deploy android [--device <Device ID>]
-    $ tns deploy ios [--device <Device ID>]
-    $ nativescript deploy android [--device <Device ID>]
-    $ nativescript deploy ios [--device <Device ID>]
+    $ tns deploy android [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ tns deploy ios [--device <Device ID>] [--release]
+    $ nativescript deploy android [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript deploy ios [--device <Device ID>] [--release]
 
 Builds and deploys the project to a connected physical or virtual device.
-<Device ID> is the index or name of the target device as listed by $ tns device.
+<Device ID> is the index or name of the target device as listed by $ tns device
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
+Options for ios:
+    --device - Deploys the project on the specified connected physical or virtual device.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+Options for android:
+    --device - Deploys the project on the specified connected physical or virtual device.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+        When the --keyStore* options are specified, produces a signed release build.
+    --keyStorePath - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStorePassword - Provides the password for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAlias - Provides the alias for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAliasPassword - Provides the password for the alias specified with --keStoreAliasPassword.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
 --[/]--
 
 --[run]--
-
 Usage:
-    $ tns run <Platform> [--device <Device ID>] [--emulator]
-    $ nativescript run <Platform> [--device <Device ID>] [--emulator]
+    $ tns run <Command>
+    $ nativescript run <Command>
 
-Platform-specific usage:
-    $ tns run android [--device <Device ID>] [--emulator]
-    $ tns run ios [--device <Device ID>] [--emulator]
-    $ nativescript run android [--device <Device ID>] [--emulator]
-    $ nativescript run ios [--device <Device ID>] [--emulator]
+You must run the run command with a related command.
 
-Runs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
-<Device ID> is the index or name of the target device as listed by $ tns device.
-
-Before building for the Android emulator, verify that you have met the following requirements.
-    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
-        tools
-        platform-tools
-    You have created at least one device with the Android Virtual Device manager.
-
-Before building for the iOS simulator, verify that you have installed the ios-sim npm package.
-
-Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
-
-Options:
-    --device - Specifies a connected device on which to run the app.
-    --emulator - If set, runs the app in the native emulator for the target platform, if configured.
+<Command> is a related command that sets a target platform for the run command. You can run the following related commands:
+    android - Runs your project on a connected Android device or in a native Android emulator, if configured. 
+    ios - Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 
 --[/]--
 
+--[run|android]--
+Usage:
+    $ tns run android [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ tns run android --emulator [<Emulator Options>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript run android [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript run android --emulator [<Emulator Options>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+
+Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy.
+
+Prerequisites:
+Before running your app in the Android emulator from the Android SDK, verify that your system meets the following requirements.
+    * Verify that you are running the NativeScript CLI on a Windows, OS X or Linux system.
+    * Verify that you have installed the Android SDK.
+    * Verify that you have added the following Android SDK directories to the PATH environment variable:
+        platform-tools
+        tools
+Before running your app in the Genymotion emulator, verify that your system meets the following requirements.
+    * Verify that you have installed Genymotion.
+    * On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.
+    * On OS X systems, verify that you have added the following paths to the PATH environment variable.
+        * /Applications/Genymotion.app/Contents/MacOS/
+        * /Applications/Genymotion Shell.app/Contents/MacOS/
+
+<Device ID> is the index or name of the target device as listed by $ tns device
+<Emulator Options> is any valid combination of options as listed by $ tns help emulate android
+
+Options:
+    --device - Specifies a connected device on which to run the app.
+        You cannot use --device and --emulator simultaneously.
+    --emulator - If set, runs the app in a native emulator for the target platform, if configured.
+        You cannot use --device and --emulator simultaneously.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+        When the --keyStore* options are specified, produces a signed release build.
+    --keyStorePath - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStorePassword - Provides the password for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAlias - Provides the alias for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAliasPassword - Provides the password for the alias specified with --keStoreAliasPassword.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+--[/]--
+
+--[run|ios]--
+Usage:
+    $ tns run ios [--device <Device ID>] [--release]
+    $ tns run ios --emulator [<Emulator Options>] [--release]
+    $ nativescript run ios [--device <Device ID>] [--release]
+    $ nativescript run ios --emulator [<Emulator Options>] [--release]
+
+Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build, and deploy.
+<Device ID> is the index or name of the target device as listed by $ tns device
+<Emulator Options> is any valid combination of options as listed by $ tns help emulate ios
+
+Prerequisites:
+Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+
+Before running the iOS Simulator, verify that you have met the following requirements.
+    You are running the NativeScript CLI on OS X.
+    You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the 
+    NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
+
+<Device ID> is the index or name of the target device as listed by $ tns device
+<Emulator Options> is any valid combination of options as listed by $ tns help emulate android
+
+Options:
+    --device - Specifies a connected device on which to run the app.
+        You cannot use --device and --emulator simultaneously.
+    --emulator - If set, runs the app in a native emulator for the target platform, if configured.
+        You cannot use --device and --emulator simultaneously.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+--[/]--
+    
 --[debug]--
 
 Usage:
@@ -260,8 +387,6 @@ Before building for the Android emulator, verify that you have met the following
         platform-tools
     You have created at least one device with the Android Virtual Device manager.
 
-Before building for the iOS simulator, verify that you have installed the ios-sim npm package.
-
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
 
 Options:
@@ -273,65 +398,186 @@ Options:
 --[emulate]--
 
 Usage:
-    $ tns emulate <Platform>
-    $ nativescript emulate <Platform>
+    $ tns emulate emulate <Command> [--release]
+    $ nativescript emulate <Command> [--release]
 
-Platform-specific usage:
-    $ tns emulate android
-    $ tns emulate ios
-    $ nativescript emulate android
-    $ nativescript emulate ios
+You must run the emulate command with a related command.
 
 Builds and runs the project in the native emulator for the selected target platform.
 
-For Android, this operation runs your project in the earliest created virtual device or the currently running Android virtual device. Before running this command, verify that you have met the following requirements.
-    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
-        tools
-        platform-tools
-    You have created at least one device with the Android Virtual Device manager.
-For iOS, this operation runs your project in the iOS Simulator. Before running this command, verify that you have installed the ios-sim npm package.
+<Command> is a related command that sets a target platform for the emulate command. You can run the following related commands:
+    android - Builds the specified project in the cloud and runs it in the native Android emulator.
+    ios - Builds the specified project in the cloud and runs it in the native iOS Simulator.
 
+Options:
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+
+--[/]--
+
+--[emulate|android]--
+Usage:
+    $ tns emulate android [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ tns emulate android [--avd <Name>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ tns emulate android [--geny <GenyName>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript emulate android [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript emulate android [--avd <Name>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+    $ nativescript emulate android [--geny <GenyName>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]
+
+Builds the specified project and runs it in a native Android emulator.
+If you do not select an Android virtual device (AVD) with the --avd option or a Genymotion
+virtual device with the --geny option, your app runs in the default AVD or a currently running emulator, if any. 
+To list the available AVDs, run $ android list avd
+To list the available Genymotion devices, run $ genyshell -c "devices list"
+
+To test your app on multiple Android virtual devices, run $ tns emulate android --avd <Name> or $ tns emulate android --geny <GenyName>
+for each virtual device.
+
+Prerequisites:
+Before running your app in the Android emulator from the Android SDK, verify that your system meets the following requirements.
+    * Verify that you are running the NativeScript CLI on a Windows, OS X or Linux system.
+    * Verify that you have installed the Android SDK.
+    * Verify that you have added the following Android SDK directories to the PATH environment variable:
+        platform-tools
+        tools
+Before running your app in the Genymotion emulator, verify that your system meets the following requirements.
+    * Verify that you have installed Genymotion.
+    * On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.
+    * On OS X systems, verify that you have added the following paths to the PATH environment variable.
+        * /Applications/Genymotion.app/Contents/MacOS/
+        * /Applications/Genymotion Shell.app/Contents/MacOS/
+
+<Name> is the name of the Android virtual device that you want to use as listed by $ android list avd
+    You can specify only one name at a time.
+<GenyName> is the name of the Genymotion virtual device that you want to use as listed by $ genyshell -c "devices list"
+    You can specify only one name at a time.
+
+Options:
+    --path - Specifies the directory that contains the project. If not specified, the project is searched
+            for in the current directory and all directories above it.
+    --avd - Sets the Android virtual device on which you want to run your app. 
+            You can set only one device at a time. 
+            To list the available Android virtual devices, run $ android list avd
+            You cannot use --avd and --geny simultaneously.
+    --geny - Sets the Genymotion virtual device on which you want to run your app. 
+            You can set only one device at a time.
+            To list the available Genymotion virtual devices, run $ genyshell -c "devices list"
+            You cannot use --avd and --geny simultaneously.      
+    --timeout - Sets the number of seconds that the NativeScript CLI will wait for the virtual device to boot
+            before quitting the operation and releasing the console.
+            If not set, the default timeout is 120 seconds. To wait indefinitely, set 0.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+        When the --keyStore* options are specified, produces a signed release build.
+    --keyStorePath - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStorePassword - Provides the password for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAlias - Provides the alias for the keystore file specified with --keyStorePath.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+    --keyStoreAliasPassword - Provides the password for the alias specified with --keStoreAliasPassword.
+        You can use the --keyStore* options along with --release to produce a signed release build.
+        You need to specify all --keyStore* options.
+--[/]--
+
+--[emulate|ios]--
+Usage:
+    $ tns emulate ios [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]
+    $ nativescript emulate ios [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]
+
+Builds the specified project in the cloud and runs it in the native iOS Simulator.
+
+<Device Name> is the name of the iOS Simulator device on which you want to run your app as listed by $ tns emulate ios --availableDevices
+
+Prerequisites:
+Before running the iOS Simulator, verify that you have met the following requirements.
+    You are running the NativeScript CLI on OS X.
+    You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the 
+    NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
+
+Options:
+    --availableDevices - Lists all available device type identifiers for the current XCode.
+    --release - If set, produces a release build. Otherwise, produces a debug build.
+    --path - Specifies the directory that contains the project. If not specified, the project is searched
+            for in the current directory and all directories above it.
+    --device - Specifies the name of the iOS Simulator device on which you want to run your app. 
+            To list the available iOS Simulator devices, run $ tns emulate ios --availableDevices
+    --timeout - Sets the number of seconds that the NativeScript CLI will wait for the iOS Simulator to start
+            before quitting the operation and releasing the console.
+            The value must be a positive integer. 
+            If not set, the default timeout is 90 seconds. 
 --[/]--
 
 --[device]--
 
 Usage:
-    $ tns device [<Platform>]
-    $ nativescript device [<Platform>]
+    $ tns device [<Platform>] [--timeout  <Milliseconds>]
+    $ nativescript device [<Platform>] [--timeout  <Milliseconds>]
+    $ tns device [<Command>]
+    $ nativescript device [<Command>]
 
 Platform-specific usage:
-    $ tns device android
-    $ tns device ios
-    $ nativescript device android
-    $ nativescript device ios
+    $ tns device android [--timeout  <Milliseconds>]
+    $ tns device ios [--timeout  <Milliseconds>]
+    $ nativescript device android [--timeout  <Milliseconds>]
+    $ nativescript device ios [--timeout  <Milliseconds>]
 
-Lists all recognized connected devices with serial number and index, grouped by platform. The Telerik NativeScript CLI recognizes running Android virtual devices as connected devices.
-
-In this version of the Telerik NativeScript CLI, you can connect only iOS and Android devices.
+Lists all recognized connected devices with serial number and index, grouped by platform. The NativeScript CLI recognizes running Android virtual devices as connected devices.
 
 If a connected Android device is not shown in the list, make sure that you have installed the required Android USB drivers on your system
 and that USB debugging is enabled on the device.
+
+Options:
+   --timeout - Sets the time in milliseconds for the operation to search for connected devices before completing.
+      The operation will continue to wait and listen for newly connected devices and will list them
+      after the specified time expires. If not set, the default value is 4000.
+
+<Command> is a related command that extends the device command. You can run the following related commands:
+    log - Opens the device log stream for a selected connected device.
+    list-applications - Lists the installed applications on all connected Android or iOS devices.
+    run - Runs the selected application on a connected Android or iOS device.
 
 --[/]--
 
 --[device|list-applications]--
 
 Usage:
-    $ tns device list-applications
-    $ nativescript device list-applications
+    $ tns device list-applications [--device <Device ID>]
+    $ nativescript device list-applications [--device <Device ID>]
 
-Lists all installed applications on device.
+Lists the installed applications on all connected Android and iOS devices. 
+
+<Device ID> is the device index or identifier as listed by run $ tns device
+
+Options:
+   --device - If multiple devices are connected, sets the device for which you want to list all currently installed applications.
 
 --[/]--
 
 --[device|run]--
 
 Usage:
-    $ tns device run <ApplicationId>
-    $ nativescript device run <ApplicationId>
+    $ tns device run <ApplicationId> [--device <Device ID>]
+    $ nativescript device run <ApplicationId> [--device <Device ID>]
 
-Run the selected application on device.
-<ApplicationId> is the application id as listed from $tns device list-applications
+Runs the selected application on a connected Android or iOS device.
+You can run this command on one connected device at a time.
+
+Prerequisites:
+Before running your app on an iOS device, verify that your system and app meet the following requirements.
+    * You are running the NativeScript CLI on an OS X system.
+    * You have installed Xcode 5 or later.
+    * You have built your app with the debug build configuration.
+Before running your app on an Android device, verify that your app meets the following requirement.
+    * You have built your app with the debug build configuration.
+
+<Application ID> is the application identifier as listed by $ tns device list-applications
+<Device ID> is the device index or identifier as listed by run $ tns device
+
+Options:
+   --device - If multiple devices are connected, sets the device on which you want to run the app.
+        You can run this command on one connected device at a time.
 
 --[/]--
 
@@ -340,12 +586,12 @@ Run the selected application on device.
 Usage:
     $ tns feature-usage-tracking [<Command>]
 
-Configures anonymous usage statistics tracking for the Telerik NativeScript command-line interface.
+Configures anonymous usage statistics tracking for the NativeScript command-line interface.
 All data gathered is used strictly for improving the product and will never be used to identify or contact you.
 
 <Command> is a related command that extends the feature-usage-tracking command. You can run the following related commands:
     status - Shows the current configuration for anonymous usage tracking for the
-             Telerik NativeScript command-line interface.
+             NativeScript command-line interface.
     enable - Enables anonymous usage statistics tracking. All data gathered is used strictly
              for improving the product and will never be used to identify or contact you.
     disable - Disables anonymous usage statistics tracking.
