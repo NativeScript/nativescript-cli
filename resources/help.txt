@@ -23,6 +23,7 @@ General commands:
                                     This is shorthand for prepare, build, and deploy.
     debug                           Debugs your project on a connected device or in the native emulator, if configured. 
     device                          Lists all recognized connected physical or virtual device.
+    device log                      Opens the log stream for the selected device.
     device run                      Runs the selected application on a connected device.
     device list-applications        Lists the installed applications on all connected devices.  
     feature-usage-tracking          Configures anonymous feature usage tracking.
@@ -537,6 +538,20 @@ Options:
     log - Opens the device log stream for a selected connected device.
     list-applications - Lists the installed applications on all connected Android or iOS devices.
     run - Runs the selected application on a connected Android or iOS device.
+
+--[/]--
+
+--[device|log]--
+Usage:
+    $ tns device log --device <Device ID>
+    $ nativescript device log --device <Device ID>
+
+Opens the device log stream for a selected connected device. 
+
+<Device ID> is the device index or identifier as listed by $ tns device
+
+Options:
+   --device - If multiple devices are connected, sets the device for which you want to stream the log in the console.
 
 --[/]--
 

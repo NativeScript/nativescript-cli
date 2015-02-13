@@ -204,6 +204,7 @@ Run `tns help` to list all available commands. Run or `tns <Command> --help` to 
 * `deploy <Platform> [--device <Device ID>]` deploys an already built application on connected device.
 * `run <Platform> [--device <Device ID>]` executes `prepare`, `build`, and `deploy`.
 * `device` lists connected devices, including any running Android Virtual Devices or Genymotion virtual devices.
+* `device log` opens the log stream for the selected device.
 * `device run` runs a selected application on a connected device.
 * `device list-applications` lists the installed applications on all connected devices.
 * `feature-usage-tracking` configures anonymous feature usage tracking.
