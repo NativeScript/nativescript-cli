@@ -52,8 +52,6 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
 
-			var newTarget = this.validateAndroidTarget(frameworkDir); // We need framework to be installed to validate android target so we can't call this method in validate()
-
 			if(options.symlink) {
 				this.copy(projectRoot, frameworkDir, "res", "-R").wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
@@ -65,6 +63,7 @@ class AndroidProjectService implements IPlatformProjectService {
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
 			}
 
+			var newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
 			if(newTarget) {
 				this.updateTarget(projectRoot, newTarget).wait();
 			}
@@ -212,28 +211,21 @@ class AndroidProjectService implements IPlatformProjectService {
 		}
 	}
 
-	private validateAndroidTarget(frameworkDir: string): string {
-		var validTarget = this.getTarget(frameworkDir).wait();
-		var installedTargets = this.getInstalledTargets().wait();
-		var newTarget: string = undefined;
-		var match = _.contains(installedTargets, validTarget);
-		if (!match) {
+	private getLatestValidAndroidTarget(frameworkDir: string): IFuture<string> {
+		return (() => {
+			var validTarget = this.getTarget(frameworkDir).wait();
+			var installedTargets = this.getInstalledTargets().wait();
+
 			// adjust to the latest available version
-			newTarget = this.getCompatibleTarget();
+			var	newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
 			if (!newTarget) {
 				this.$errors.fail("Please install Android target %s. Make sure you have the latest Android tools installed as well." +
-									" Run \"android\" from your command-line to install/update any missing SDKs or tools.",
-									validTarget.split('-')[1]);
+					" Run \"android\" from your command-line to install/update any missing SDKs or tools.",
+					validTarget.split('-')[1]);
 			}
-		}
 
-		return newTarget;
-	}
-
-	private getCompatibleTarget(): string {
-		var installedTargets = this.getInstalledTargets().wait();
-		var compatibleTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
-		return compatibleTarget;
+			return newTarget;
+		}).future<string>()();
 	}
 
 	private updateTarget(projectRoot: string, newTarget: string): IFuture<void> {
