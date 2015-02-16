@@ -31,6 +31,7 @@
     "ffi": "https://github.com/icenium/node-ffi/tarball/master",
     "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.5.1",
     "filesize": "2.0.3",
+    "gaze": "0.5.1",
     "iconv-lite": "0.4.4",
     "ios-sim-portable": "1.0.2",
     "lockfile": "1.0.0",
