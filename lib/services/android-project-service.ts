@@ -150,7 +150,7 @@ class AndroidProjectService implements IPlatformProjectService {
         var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
         var thiz = this;
 
-        lines.forEach(function (elem, idx, arr) {
+        lines.forEach((elem, idx, arr) => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
@@ -174,15 +174,27 @@ class AndroidProjectService implements IPlatformProjectService {
         var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
         var thiz = this;
 
-        lines.forEach(function (elem, idx, arr) {
+        var maxIdx = 0;
+        var refs: ILibRef[] = [];
+
+        lines.forEach((elem, idx, arr) => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
-                // TODO: handle path.join of two absolute paths
                 libRef.adjustedPath = path.join(projDir, libRef.path);
-                thiz.parseProjectProrperies(libRef.adjustedPath, "###");
+                refs.push(libRef);
+                maxIdx = Math.max(maxIdx, libRef.idx);
             }
         });
+
+        var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
+
+        var libRefExists = _.filter(refs, r => path.normalize(r.path) == path.normalize(relLibDir)).length > 0;
+
+        if (!libRefExists) {
+            var projRef = util.format("\nandroid.library.reference.%d=%s", maxIdx + 1, relLibDir);
+            fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
+        }
     }
 
     public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
@@ -193,7 +205,9 @@ class AndroidProjectService implements IPlatformProjectService {
 
         this.parseProjectProrperies(libraryPath, targetPath);
 
-        this.updateProjectReferences(projDir, libraryPath);
+        var targetLibPath = path.join(targetPath, path.basename(libraryPath));
+
+        this.updateProjectReferences(platformData.projectRoot, targetLibPath);
 
         this.$errors.fail("Implement me!");
         return Future.fromResult();
