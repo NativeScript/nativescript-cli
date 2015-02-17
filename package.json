@@ -58,7 +58,8 @@
     "unzip": "0.1.9",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "1.2.2",
-    "node-inspector":  "0.7.4"
+    "node-inspector":  "0.7.4",
+    "xcode": "https://github.com/fealebenpae/node-xcode/tarball/master"
   },
   "analyze": true,
   "devDependencies": {
