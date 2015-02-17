@@ -113,6 +113,10 @@ export class FileSystemStub implements IFileSystem {
 		return Future.fromResult(true);
 	}
 
+    isRelativePath(path: string): boolean {
+        return true;
+    }
+
 	ensureDirectoryExists(directoryPath: string): IFuture<void> {
 		return Future.fromResult();
 	}
