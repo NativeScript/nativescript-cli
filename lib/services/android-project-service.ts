@@ -119,13 +119,26 @@ class AndroidProjectService implements IPlatformProjectService {
 			return assetsDirectory;
 
 		}).future<string>()();
-	}
+    }
+
+    private generateMetadata(projectRoot: string): void {
+        var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
+        var currPlatformDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
+        var inputDir = path.join(currPlatformDir, "__jars");
+        var outDir = path.join(currPlatformDir, "__metadata");
+        this.$fs.ensureDirectoryExists(outDir).wait();
+        this.spawn('java', ['-jar', metadataGeneratorPath, inputDir, outDir]).wait();
+    }
 
 	public buildProject(projectRoot: string): IFuture<void> {
-		return (() => {
+        return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
-			var args = this.getAntArgs(buildConfiguration, projectRoot);
-			this.spawn('ant', args).wait();
+            var args = this.getAntArgs(buildConfiguration, projectRoot);
+            var args2 = this.getAntArgs(buildConfiguration, projectRoot);
+            this.spawn('ant', args).wait();
+            this.generateMetadata(projectRoot);
+            // build the project again in order to include the newly generated metadata
+            this.spawn('ant', args2).wait();
 		}).future<void>()();
 	}
 
@@ -168,13 +181,12 @@ class AndroidProjectService implements IPlatformProjectService {
         this.generateBuildFile(targetDir, targetSdk);
     }
 
-    private updateProjectReferences(projDir: string, libraryPath: string): void {
+    private getProjectReferences(projDir: string): ILibRef[]{
         var projProp = path.join(projDir, "project.properties");
 
         var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
         var thiz = this;
 
-        var maxIdx = 0;
         var refs: ILibRef[] = [];
 
         lines.forEach((elem, idx, arr) => {
@@ -183,9 +195,15 @@ class AndroidProjectService implements IPlatformProjectService {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
                 libRef.adjustedPath = path.join(projDir, libRef.path);
                 refs.push(libRef);
-                maxIdx = Math.max(maxIdx, libRef.idx);
             }
         });
+
+        return refs;
+    }
+
+    private updateProjectReferences(projDir: string, libraryPath: string): void {
+        var refs = this.getProjectReferences(projDir);
+        var maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0
 
         var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
 
@@ -193,6 +211,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
         if (!libRefExists) {
             var projRef = util.format("\nandroid.library.reference.%d=%s", maxIdx + 1, relLibDir);
+            var projProp = path.join(projDir, "project.properties");
             fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
         }
     }
