@@ -121,12 +121,24 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<string>()();
     }
 
+    private updateMetadata(projectRoot: string): void {
+        var projMetadataDir = path.join(projectRoot, "assets", "metadata");
+        var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, "__metadata");
+        shell.cp("-f", path.join(libsmetadataDir, "*.dat"), projMetadataDir);
+    }
+
     private generateMetadata(projectRoot: string): void {
         var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
-        var currPlatformDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
-        var inputDir = path.join(currPlatformDir, "__jars");
-        var outDir = path.join(currPlatformDir, "__metadata");
+        var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
+        var metadataDirName = "__metadata";
+        var inputDir = libsFolder;
+        var outDir = path.join(libsFolder, metadataDirName);
         this.$fs.ensureDirectoryExists(outDir).wait();
+
+        shell.cp("-f", path.join(__dirname, "../../resources/tools/android-17.jar"), inputDir);
+        shell.cp("-f", path.join(__dirname, "../../resources/tools/support-v4-r13.jar"), inputDir);
+        shell.cp("-f", path.join(projectRoot, "libs/*.jar"), inputDir);
+
         this.spawn('java', ['-jar', metadataGeneratorPath, inputDir, outDir]).wait();
     }
 
@@ -137,6 +149,7 @@ class AndroidProjectService implements IPlatformProjectService {
             var args2 = this.getAntArgs(buildConfiguration, projectRoot);
             this.spawn('ant', args).wait();
             this.generateMetadata(projectRoot);
+            this.updateMetadata(projectRoot);
             // build the project again in order to include the newly generated metadata
             this.spawn('ant', args2).wait();
 		}).future<void>()();
@@ -166,7 +179,7 @@ class AndroidProjectService implements IPlatformProjectService {
         lines.forEach((elem, idx, arr) => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
-                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
+                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
                 libRef.adjustedPath = thiz.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
                 thiz.parseProjectProrperies(libRef.adjustedPath, destDir);
             }
