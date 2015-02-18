@@ -170,7 +170,8 @@ class AndroidProjectService implements IPlatformProjectService {
         var projProp = path.join(projDir, "project.properties");
 
         if (!this.$fs.exists(projProp).wait()) {
-            this.$errors.fail("File %s does not exist", projProp);
+            this.$logger.warn("File %s does not exist", projProp);
+            return;
         }
 
         var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
@@ -237,11 +238,14 @@ class AndroidProjectService implements IPlatformProjectService {
 
         this.parseProjectProrperies(libraryPath, targetPath);
 
+        shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
+        var projectLibsDir = path.join(platformData.projectRoot, "libs");
+        this.$fs.ensureDirectoryExists(projectLibsDir).wait();
+        shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
+
         var targetLibPath = path.join(targetPath, path.basename(libraryPath));
 
         this.updateProjectReferences(platformData.projectRoot, targetLibPath);
-
-        this.$errors.fail("Implement me!");
         return Future.fromResult();
     }
 
