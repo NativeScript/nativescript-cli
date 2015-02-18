@@ -10,8 +10,8 @@
   }],
   "author"      : "Kinvey, Inc.",
   "repository"  : {
-    "type" : "svn",
-    "url"  : "https://subversion.assembla.com/svn/kinvey/js-library"
+    "type" : "git",
+    "url"  : "https://github.com/Kinvey/js-library-dev.git"
   },
   "scripts"     : {
     "start" : "grunt server",
