@@ -135,8 +135,8 @@ class AndroidProjectService implements IPlatformProjectService {
         var outDir = path.join(libsFolder, metadataDirName);
         this.$fs.ensureDirectoryExists(outDir).wait();
 
-        shell.cp("-f", path.join(__dirname, "../../resources/tools/android-17.jar"), inputDir);
-        shell.cp("-f", path.join(__dirname, "../../resources/tools/support-v4-r13.jar"), inputDir);
+        shell.cp("-f", path.join(__dirname, "../../resources/tools/android.jar"), inputDir);
+        shell.cp("-f", path.join(__dirname, "../../resources/tools/android-support-v4.jar"), inputDir);
         shell.cp("-f", path.join(projectRoot, "libs/*.jar"), inputDir);
 
         this.spawn('java', ['-jar', metadataGeneratorPath, inputDir, outDir]).wait();
