@@ -67,11 +67,12 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* [Node.js 0.10.22] or a later stable official release
+* [Node.js 0.10.26] or a later stable official [0.10.x] release
 * (Optional) [Chocolatey]
 * [JDK 6] or a later stable official release
 * [Apache Ant 1.8] or a later stable official release
 * [Android SDK 19] or a later stable official release
+* (Optional) [Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
 
@@ -135,16 +136,16 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* [Node.js 0.10.22] or a later stable official release
+* [Node.js 0.10.26] or a later stable official [0.10.x] release
 * For iOS development
 	* [iOS 7.0 SDK][12] or a later stable official release
 	* [Xcode 5][12] or a later stable official release
 	* [Xcode command-line tools][12]
-	* The [ios-sim] npm package
 * For Android development
 	* [JDK 6] or a later stable official release 
 	* [Apache Ant 1.8] or a later stable official release
 	* [Android SDK 19] or a later stable official release 
+	* (Optional) [Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
 
@@ -196,12 +197,16 @@ Run `tns help` to list all available commands. Run or `tns <Command> --help` to 
 * `platform list` lists the current target platforms for your project.
 * `platform add <Platform>` adds a new target platform to your project.
 * `platform remove <Platform>` removes the selected platform from the target platforms of the project.
+* `platform update <Platform>` updates the NativeScript runtime for the specified platform.
 * `prepare <Platform>` copies cross-platform and selected platform-specific content to the subdirectory for the target platform.
 * `build <Platform>` builds the project for the selected target platform.
 * `emulate <Platform>` builds the project for the selected target platform and runs it in the native emulator, if configured. 
 * `deploy <Platform> [--device <Device ID>]` deploys an already built application on connected device.
 * `run <Platform> [--device <Device ID>]` executes `prepare`, `build`, and `deploy`.
-* `list-devices` lists connected devices, including any running Android Virtual Devices.
+* `device` lists connected devices, including any running Android Virtual Devices or Genymotion virtual devices.
+* `device log` opens the log stream for the selected device.
+* `device run` runs a selected application on a connected device.
+* `device list-applications` lists the installed applications on all connected devices.
 * `feature-usage-tracking` configures anonymous feature usage tracking.
 
 [Back to Top][1]
@@ -362,7 +367,7 @@ You can test your work in progress on connected Android or iOS devices.
 To verify that the NativeScript CLI recognizes your connected devices, run the following command.
 
 ```Shell
-tns list-devices
+tns device
 ```
 
 The NativeScript CLI lists all connected physical devices and running Android Virtual Devices.
@@ -398,7 +403,7 @@ This operation calls the SDK for the selected target platform, builds your app l
 
 For Android, the NativeScript CLI runs your app in the earliest created virtual device or the currently running Android Virtual Device. Before running your app in the Android native emulator, make sure that you have configured at least one virtual device in the Android Virtual Device manager.
 
-For iOS, the NativeScript CLI runs your app in the iOS Simulator. Before running your app in the iOS Simulator, make sure that you have installed the [ios-sim] npm package. 
+For iOS, the NativeScript CLI runs your app in the iOS Simulator. 
 
 [Back to Top][1]
 
@@ -423,22 +428,6 @@ tns run ios --emulator
 Known Issues
 ===
 
-* On OS X systems with Xcode 6, you cannot run your app in the native iOS emulator.
-* You can run your app only in the earliest created Android Virtual Device or the currently running Android Virtual Device.<br/>**Workaround:** Run your app on a selected virtual device from the `deploy` command.
-	1. Run the following command, to start the Android Virtual Device manager.
-
-		```Shell
-		android avd
-		```
-	1. Select the virtual device on which you want to run your app and click **Start**.
-	1. Click **Launch** and wait for the device to load.
-	1. In a new command prompt, run the following command.
-	
-		```Shell
-		tns run android --device <Device ID>
-		```
-
-		Where `<Device ID>` is the index or name of the device as listed by `tns list-devices`.
 * On OS X systems with configured firewall or web proxy, when you run a command, the operation might not release the command line and you might not be able to run other commands until you break the current operation.<br/>If you have enabled feature usage tracking for the NativeScript CLI, but you have not authenticated with the firewall or web proxy on your OS X system, the NativeScript CLI might not release the command line after you run a command. To continue working with the NativeScript CLI, you need to break the current operation by pressing `Ctrl+C`.<br/>**Workaround:** Authenticate with the firewal or web proxy.
 	1. Close the terminal.
 	1. Run Safari.
@@ -475,9 +464,9 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [10]: http://developer.telerik.com/featured/nativescript-android/
 [11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
 [12]: https://developer.apple.com/xcode/downloads/
-[Node.js 0.10.22]: http://nodejs.org/download/
+[Node.js 0.10.26]: http://nodejs.org/download/
 [Chocolatey]: https://chocolatey.org/
 [JDK 6]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
 [Android SDK 19]: http://developer.android.com/sdk/index.html
-[ios-sim]: https://www.npmjs.org/package/ios-sim
+[Genymotion]: https://www.genymotion.com/#!/
