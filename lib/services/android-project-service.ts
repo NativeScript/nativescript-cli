@@ -166,7 +166,7 @@ class AndroidProjectService implements IPlatformProjectService {
         this.$childProcess.exec(cmd).wait();
     }
 
-    private parseProjectProrperies(projDir: string, destDir: string): void {
+    private parseProjectProperties(projDir: string, destDir: string): void {
 
         var projProp = path.join(projDir, "project.properties");
 
@@ -183,7 +183,7 @@ class AndroidProjectService implements IPlatformProjectService {
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
                 libRef.adjustedPath = thiz.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
-                thiz.parseProjectProrperies(libRef.adjustedPath, destDir);
+                thiz.parseProjectProperties(libRef.adjustedPath, destDir);
             }
         });
 
@@ -237,7 +237,7 @@ class AndroidProjectService implements IPlatformProjectService {
         var targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
         this.$fs.ensureDirectoryExists(targetPath).wait();
 
-        this.parseProjectProrperies(libraryPath, targetPath);
+        this.parseProjectProperties(libraryPath, targetPath);
 
         shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
         var projectLibsDir = path.join(platformData.projectRoot, "libs");
