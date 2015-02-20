@@ -9,6 +9,7 @@ import constants = require("../constants");
 import hostInfo = require("../common/host-info");
 import helpers = require("../common/helpers");
 import fs = require("fs");
+import os = require("os");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
@@ -174,7 +175,7 @@ class AndroidProjectService implements IPlatformProjectService {
             return;
         }
 
-        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
+        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split(os.EOL);
         var thiz = this;
 
         lines.forEach((elem, idx, arr) => {
