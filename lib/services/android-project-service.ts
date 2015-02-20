@@ -20,7 +20,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-        private $projectData: IProjectData,
+		private $projectData: IProjectData,
 		private $propertiesParser: IPropertiesParser) {
 
 	}
