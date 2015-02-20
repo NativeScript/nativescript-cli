@@ -217,7 +217,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
     private updateProjectReferences(projDir: string, libraryPath: string): void {
         var refs = this.getProjectReferences(projDir);
-        var maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0
+		var maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0;
 
         var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
 
