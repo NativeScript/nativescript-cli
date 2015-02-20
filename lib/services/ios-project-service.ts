@@ -247,8 +247,9 @@ class IOSProjectService implements  IPlatformProjectService {
             };
             this.$childProcess.exec(util.format("%s/Metadata/MetadataGenerator -s %s -u %s -o %s -cflags=\"-F%s\"", projectRoot, sdkPath, tempHeader, yamlOut, frameworkDir), generatorExecOptions).wait();
 
-            this.$fs.copyFile(path.join(yamlOut, "Metadata-armv7", frameworkName + ".yaml"), path.join(projectRoot, "Metadata", "Metadata-armv7", frameworkName + ".yaml")).wait();
-            this.$fs.copyFile(path.join(yamlOut, "Metadata-arm64", frameworkName + ".yaml"), path.join(projectRoot, "Metadata", "Metadata-arm64", frameworkName + ".yaml")).wait();
+			var metadataFileName = frameworkName + ".yaml";
+			this.$fs.copyFile(path.join(yamlOut, "Metadata-armv7", metadataFileName), path.join(projectRoot, "Metadata", "Metadata-armv7", metadataFileName)).wait();
+			this.$fs.copyFile(path.join(yamlOut, "Metadata-arm64", metadataFileName), path.join(projectRoot, "Metadata", "Metadata-arm64", metadataFileName)).wait();
 
             this.$fs.deleteDirectory(yamlOut).wait();
         }).future<void>()();
