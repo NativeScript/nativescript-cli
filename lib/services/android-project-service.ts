@@ -221,7 +221,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
         var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
 
-        var libRefExists = _.filter(refs, r => path.normalize(r.path) == path.normalize(relLibDir)).length > 0;
+        var libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
 
         if (!libRefExists) {
             var projRef = util.format("\nandroid.library.reference.%d=%s", maxIdx + 1, relLibDir);
