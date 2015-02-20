@@ -175,7 +175,7 @@ class AndroidProjectService implements IPlatformProjectService {
             return;
         }
 
-        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split(os.EOL);
+		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
         lines.forEach((elem, idx, arr) => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
