@@ -224,7 +224,7 @@ class AndroidProjectService implements IPlatformProjectService {
         var libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
 
         if (!libRefExists) {
-            var projRef = util.format("\nandroid.library.reference.%d=%s", maxIdx + 1, relLibDir);
+            var projRef = util.format("%sandroid.library.reference.%d=%s", os.EOL, maxIdx + 1, relLibDir);
             var projProp = path.join(projDir, "project.properties");
             fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
         }
