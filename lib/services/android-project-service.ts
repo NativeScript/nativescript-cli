@@ -176,14 +176,13 @@ class AndroidProjectService implements IPlatformProjectService {
         }
 
         var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split(os.EOL);
-        var thiz = this;
 
         lines.forEach((elem, idx, arr) => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
-                libRef.adjustedPath = thiz.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
-                thiz.parseProjectProperties(libRef.adjustedPath, destDir);
+                libRef.adjustedPath = this.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
+                this.parseProjectProperties(libRef.adjustedPath, destDir);
             }
         });
 
