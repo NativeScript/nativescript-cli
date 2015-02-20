@@ -230,23 +230,24 @@ class AndroidProjectService implements IPlatformProjectService {
         }
     }
 
-    public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
-        var name = path.basename(libraryPath);
-        var projDir = this.$projectData.projectDir;
-        var targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
-        this.$fs.ensureDirectoryExists(targetPath).wait();
+	public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
+		return (() => {
+			var name = path.basename(libraryPath);
+			var projDir = this.$projectData.projectDir;
+			var targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
+			this.$fs.ensureDirectoryExists(targetPath).wait();
 
-        this.parseProjectProperties(libraryPath, targetPath);
+			this.parseProjectProperties(libraryPath, targetPath);
 
-        shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
-        var projectLibsDir = path.join(platformData.projectRoot, "libs");
-        this.$fs.ensureDirectoryExists(projectLibsDir).wait();
-        shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
+			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
+			var projectLibsDir = path.join(platformData.projectRoot, "libs");
+			this.$fs.ensureDirectoryExists(projectLibsDir).wait();
+			shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
 
-        var targetLibPath = path.join(targetPath, path.basename(libraryPath));
+			var targetLibPath = path.join(targetPath, path.basename(libraryPath));
 
-        this.updateProjectReferences(platformData.projectRoot, targetLibPath);
-        return Future.fromResult();
+			this.updateProjectReferences(platformData.projectRoot, targetLibPath);
+		}).future<void>()();
     }
 
 	public getFrameworkFilesExtensions(): string[] {
