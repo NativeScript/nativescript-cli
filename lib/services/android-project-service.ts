@@ -168,7 +168,6 @@ class AndroidProjectService implements IPlatformProjectService {
     }
 
     private parseProjectProperties(projDir: string, destDir: string): void {
-
         var projProp = path.join(projDir, "project.properties");
 
         if (!this.$fs.exists(projProp).wait()) {
