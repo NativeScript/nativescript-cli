@@ -145,7 +145,7 @@ class AndroidProjectService implements IPlatformProjectService {
     }
 
 	public buildProject(projectRoot: string): IFuture<void> {
-        return (() => {
+		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
             var args = this.getAntArgs(buildConfiguration, projectRoot);
             var args2 = this.getAntArgs(buildConfiguration, projectRoot);
