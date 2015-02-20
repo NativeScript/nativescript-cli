@@ -33,10 +33,11 @@ if(hostInfo.isWindows()) {
 }
 
 commonOptions.setProfileDir(defaultProfileDir);
-_(commonOptions.validateArgs("nativescript")).each((val,key) => {
+var errors: IErrors = $injector.resolve("errors");
+_(errors.validateArgs("nativescript", commonOptions.knownOpts, commonOptions.shorthands)).each((val,key) => {
 	key = shorthands[key] || key;
 	commonOptions[key] = val;
-});
+}).value();
 exports.knownOpts = knownOpts;
 
 declare var exports:any;
