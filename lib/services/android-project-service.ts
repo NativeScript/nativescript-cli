@@ -198,7 +198,7 @@ class AndroidProjectService implements IPlatformProjectService {
     private getProjectReferences(projDir: string): ILibRef[]{
         var projProp = path.join(projDir, "project.properties");
 
-        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split("\n");
+        var lines = fs.readFileSync(projProp, { encoding: "utf-8" }).split(os.EOL);
 
         var refs: ILibRef[] = [];
 
