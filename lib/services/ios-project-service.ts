@@ -201,7 +201,7 @@ class IOSProjectService implements  IPlatformProjectService {
                 this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
             }
 
-            var packageType = this.$childProcess.exec(util.format("/usr/libexec/PlistBuddy -c \"Print :CFBundlePackageType\" %s", infoPlistPath)).wait().trim();
+            var packageType = this.$childProcess.exec('/usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" ' + infoPlistPath).wait().trim();
             if (packageType !== "FMWK") {
                 this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
             }
