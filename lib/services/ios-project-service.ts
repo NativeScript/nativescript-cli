@@ -202,7 +202,7 @@ class IOSProjectService implements  IPlatformProjectService {
             }
 
             var packageType = this.$childProcess.exec(util.format("/usr/libexec/PlistBuddy -c \"Print :CFBundlePackageType\" %s", infoPlistPath)).wait().trim();
-            if (packageType != "FMWK") {
+            if (packageType !== "FMWK") {
                 this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
             }
         }).future<void>()();
