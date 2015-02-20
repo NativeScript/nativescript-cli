@@ -245,7 +245,7 @@ class IOSProjectService implements  IPlatformProjectService {
                     DYLD_FALLBACK_LIBRARY_PATH: this.$childProcess.exec("xcode-select -p").wait().trim() + "/Toolchains/XcodeDefault.xctoolchain/usr/lib"
                 }
             };
-            this.$childProcess.exec(util.format("%s/Metadata/MetadataGenerator -s %s -u %s -o %s -cflags=\"-F%s\"", projectRoot, sdkPath, tempHeader, yamlOut, frameworkDir), generatorExecOptions).wait();
+            this.$childProcess.exec(util.format('%s/Metadata/MetadataGenerator -s %s -u %s -o %s -cflags="-F%s"', projectRoot, sdkPath, tempHeader, yamlOut, frameworkDir), generatorExecOptions).wait();
 
 			var metadataFileName = frameworkName + ".yaml";
 			this.$fs.copyFile(path.join(yamlOut, "Metadata-armv7", metadataFileName), path.join(projectRoot, "Metadata", "Metadata-armv7", metadataFileName)).wait();
