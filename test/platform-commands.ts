@@ -54,6 +54,9 @@ class ErrorsNoFailStub implements IErrors {
 	}
 
 	verifyHeap(message: string): void { }
+
+	validateArgs(client: string, knownOpts: any, shorthands: any): any { return null; }
+	validateYargsArguments(parsed: any, knownOpts: any, shorthands: any, clientName?: string): void { }
 }
 
 class PlatformsData implements IPlatformsData {

@@ -25,6 +25,11 @@ export class LoggerStub implements ILogger {
 	prepare(item: any): string {
 		return "";
 	}
+
+	printInfoMessageOnSameLine(message: string): void { }
+	printMsgWithTimeout(message: string, timeout: number): IFuture<void> {
+		return null;
+	}
 }
 
 export class FileSystemStub implements IFileSystem {
@@ -132,6 +137,14 @@ export class FileSystemStub implements IFileSystem {
 	setCurrentUserAsOwner(path: string, owner: string): IFuture<void> {
 		return undefined;
 	}
+
+	enumerateFilesInDirectorySync(directoryPath: string, filterCallback?: (file: string, stat: IFsStats) => boolean): string[] {
+		return [];
+	}
+
+	isRelativePath(path: string): boolean {
+		return false;
+	}
 }
 
 export class ErrorsStub implements IErrors {
@@ -159,6 +172,9 @@ export class ErrorsStub implements IErrors {
 	verifyHeap(message: string): void { }
 
 	printCallStack: boolean = false;
+
+	validateArgs(client: string, knownOpts: any, shorthands: any): any { return null; }
+	validateYargsArguments(parsed: any, knownOpts: any, shorthands: any, clientName?: string): void { }
 }
 
 export class NPMStub implements INodePackageManager {

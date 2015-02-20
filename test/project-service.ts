@@ -60,7 +60,7 @@ class ProjectIntegrationTest {
 
 	public assertProject(tempFolder: string, projectName: string, appId: string): IFuture<void> {
 		return (() => {
-			var fs = this.testInjector.resolve("fs");
+			var fs: IFileSystem = this.testInjector.resolve("fs");
 			var projectDir = path.join(tempFolder, projectName);
 			var appDirectoryPath = path.join(projectDir, "app");
 			var platformsDirectoryPath = path.join(projectDir, "platforms");
@@ -77,8 +77,8 @@ class ProjectIntegrationTest {
 			var expectedAppId = appId;
 			assert.equal(actualAppId, expectedAppId);
 
-			var actualFiles = helpers.enumerateFilesInDirectorySync(options["copy-from"]);
-			var expectedFiles = helpers.enumerateFilesInDirectorySync(appDirectoryPath);
+			var actualFiles = fs.enumerateFilesInDirectorySync(options["copy-from"]);
+			var expectedFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
 
 			assert.equal(actualFiles.length, expectedFiles.length);
 			_.each(actualFiles, file => {

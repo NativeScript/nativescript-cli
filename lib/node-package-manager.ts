@@ -125,7 +125,7 @@ export class NodePackageManager implements INodePackageManager {
 	private isPackageUnpacked(packagePath: string): IFuture<boolean> {
 		return (() => {
 			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
-				helpers.enumerateFilesInDirectorySync(packagePath).length > 1;
+				this.$fs.enumerateFilesInDirectorySync(packagePath).length > 1;
 		}).future<boolean>()();
 	}
 

@@ -149,7 +149,7 @@ export class PlatformService implements IPlatformService {
 			_.each(contents, d => {
 				var fsStat = this.$fs.getFsStats(path.join(appDirectoryPath, d)).wait();
 				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
-					this.processPlatformSpecificFiles(platform, helpers.enumerateFilesInDirectorySync(path.join(appFilesLocation, d))).wait();
+					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(path.join(appFilesLocation, d))).wait();
 				} else if(fsStat.isFile()) {
 					files.push(path.join(appFilesLocation,d));
 				}
@@ -469,7 +469,7 @@ export class PlatformService implements IPlatformService {
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<string[]> {
 		return (() => {
 			var npmCacheDirectoryPath = this.getNpmCacheDirectory(platformData.frameworkPackageName, version).wait();
-			var allFiles = helpers.enumerateFilesInDirectorySync(npmCacheDirectoryPath);
+			var allFiles = this.$fs.enumerateFilesInDirectorySync(npmCacheDirectoryPath);
 			var filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
 			var relativeToCacheFiles = _.map(filteredFiles, file => file.substr(npmCacheDirectoryPath.length));
 
