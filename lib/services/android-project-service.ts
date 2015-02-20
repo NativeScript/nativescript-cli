@@ -133,15 +133,14 @@ class AndroidProjectService implements IPlatformProjectService {
         var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
         var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
 		var metadataDirName = AndroidProjectService.METADATA_DIRNAME;
-        var inputDir = libsFolder;
         var outDir = path.join(libsFolder, metadataDirName);
         this.$fs.ensureDirectoryExists(outDir).wait();
 
-        shell.cp("-f", path.join(__dirname, "../../resources/tools/android.jar"), inputDir);
-        shell.cp("-f", path.join(__dirname, "../../resources/tools/android-support-v4.jar"), inputDir);
-        shell.cp("-f", path.join(projectRoot, "libs/*.jar"), inputDir);
+		shell.cp("-f", path.join(__dirname, "../../resources/tools/android.jar"), libsFolder);
+		shell.cp("-f", path.join(__dirname, "../../resources/tools/android-support-v4.jar"), libsFolder);
+		shell.cp("-f", path.join(projectRoot, "libs/*.jar"), libsFolder);
 
-        this.spawn('java', ['-jar', metadataGeneratorPath, inputDir, outDir]).wait();
+		this.spawn('java', ['-jar', metadataGeneratorPath, libsFolder, outDir]).wait();
     }
 
 	public buildProject(projectRoot: string): IFuture<void> {
