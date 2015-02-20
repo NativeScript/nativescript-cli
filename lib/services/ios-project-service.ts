@@ -212,7 +212,7 @@ class IOSProjectService implements  IPlatformProjectService {
         return (() => {
             var modulemapPath = path.join(libraryPath, "Modules", "module.modulemap");
             if (!this.$fs.exists(modulemapPath).wait()) {
-                this.$errors.failWithoutHelp("The framework at %s does not contain a module.modulemap file.");
+				this.$errors.failWithoutHelp("The framework at %s does not contain a module.modulemap file.", modulemapPath);
             }
 
             var modulemap = this.$fs.readText(modulemapPath).wait();
