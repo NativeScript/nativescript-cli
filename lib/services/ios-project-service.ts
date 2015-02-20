@@ -240,6 +240,9 @@ class IOSProjectService implements  IPlatformProjectService {
 
             this.$logger.info("Generating metadata for %s.framework. This can take a minute.", frameworkName);
             var sdkPath = this.$childProcess.exec("xcrun -sdk iphoneos --show-sdk-path").wait().trim();
+            // MetadataGenerator P/Invokes libclang.dylib, so we need to instruct the Mach-O loader where to find it.
+            // Without this Mono will fail with a DllNotFoundException.
+            // Once the MetadataGenerator is rewritten in C++ and starts linking Clang statically, this will become superfluous.
             var generatorExecOptions = {
                 env: {
                     DYLD_FALLBACK_LIBRARY_PATH: this.$childProcess.exec("xcode-select -p").wait().trim() + "/Toolchains/XcodeDefault.xctoolchain/usr/lib"
