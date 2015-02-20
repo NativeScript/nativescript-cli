@@ -13,6 +13,7 @@ import os = require("os");
 
 class AndroidProjectService implements IPlatformProjectService {
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
+	private static METADATA_DIRNAME = "__metadata";
 	private targetApi: string;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -124,14 +125,14 @@ class AndroidProjectService implements IPlatformProjectService {
 
     private updateMetadata(projectRoot: string): void {
         var projMetadataDir = path.join(projectRoot, "assets", "metadata");
-        var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, "__metadata");
+        var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);
         shell.cp("-f", path.join(libsmetadataDir, "*.dat"), projMetadataDir);
     }
 
     private generateMetadata(projectRoot: string): void {
         var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
         var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
-        var metadataDirName = "__metadata";
+		var metadataDirName = AndroidProjectService.METADATA_DIRNAME;
         var inputDir = libsFolder;
         var outDir = path.join(libsFolder, metadataDirName);
         this.$fs.ensureDirectoryExists(outDir).wait();
