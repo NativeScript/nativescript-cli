@@ -177,7 +177,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
 		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
-        lines.forEach((elem, idx, arr) => {
+        lines.forEach(elem => {
             var match = elem.match(regEx);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
@@ -202,7 +202,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
         var refs: ILibRef[] = [];
 
-        lines.forEach((elem, idx, arr) => {
+        lines.forEach(elem => {
             var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
