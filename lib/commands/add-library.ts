@@ -17,7 +17,7 @@ export class AddLibraryCommand implements ICommand {
     }
 
     canExecute(args: string[]): IFuture<boolean> {
-        if (args.length != 2) {
+        if (args.length !== 2) {
             this.$errors.fail("This command needs two parameters.");
         }
 
