@@ -59,7 +59,7 @@
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "1.2.2",
     "node-inspector":  "0.7.4",
-    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.zip"
+    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz"
   },
   "analyze": true,
   "devDependencies": {
