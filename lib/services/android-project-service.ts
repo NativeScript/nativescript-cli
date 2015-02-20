@@ -202,8 +202,9 @@ class AndroidProjectService implements IPlatformProjectService {
 
         var refs: ILibRef[] = [];
 
+		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
         lines.forEach(elem => {
-            var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
+            var match = elem.match(regEx);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
                 libRef.adjustedPath = path.join(projDir, libRef.path);
