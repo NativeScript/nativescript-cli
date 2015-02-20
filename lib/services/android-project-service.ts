@@ -148,12 +148,12 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
             var args = this.getAntArgs(buildConfiguration, projectRoot);
-            var args2 = this.getAntArgs(buildConfiguration, projectRoot);
+			var argsSaved = this.getAntArgs(buildConfiguration, projectRoot);
             this.spawn('ant', args).wait();
             this.generateMetadata(projectRoot);
             this.updateMetadata(projectRoot);
             // build the project again in order to include the newly generated metadata
-            this.spawn('ant', args2).wait();
+			this.spawn('ant', argsSaved).wait();
 		}).future<void>()();
 	}
 
