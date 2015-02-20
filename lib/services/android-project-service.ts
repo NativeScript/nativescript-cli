@@ -177,8 +177,9 @@ class AndroidProjectService implements IPlatformProjectService {
 
 		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
+		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
         lines.forEach((elem, idx, arr) => {
-            var match = elem.match(/android\.library\.reference\.(\d+)=(.*)/);
+            var match = elem.match(regEx);
             if (match) {
                 var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
                 libRef.adjustedPath = this.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
