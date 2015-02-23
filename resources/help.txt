@@ -174,6 +174,23 @@ in the platforms directory. This lets you build the project with the SDK for the
 
 --[/]--
 
+--[library|add]--
+
+Usage
+    $ tns library add <Platform> <Library path>
+    $ nativescript library add <Platform> <Library path>
+
+Platform-specific usage:
+    $ tns library add android <Library path>
+    $ tns library add ios <Library path>
+    $ nativescript library add android <Library path>
+    $ nativescript library add ios <Library path>
+
+Copies the native library at <Library path> to the current project and adds it to the native build for the selected platform.
+The NativeScript runtime will expose the APIs available in the native library in your application.
+
+--[/]--
+
 --[build]--
 Usage:
     $ tns build <Command>
