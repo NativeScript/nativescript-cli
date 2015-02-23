@@ -286,7 +286,10 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkDependencies().wait();
 
 			if(!options.availableDevices) {
+				var cachedEmulatorOption = options.emulator;
+				options.emulator = true;
 				this.buildPlatform(platform).wait();
+				options.emulator = cachedEmulatorOption;
 
 				var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
