@@ -198,6 +198,7 @@ Run `tns help` to list all available commands. Run or `tns <Command> --help` to 
 * `platform add <Platform>` adds a new target platform to your project.
 * `platform remove <Platform>` removes the selected platform from the target platforms of the project.
 * `platform update <Platform>` updates the NativeScript runtime for the specified platform.
+* `library add <Platform>` adds a locally stored native library to the current project.
 * `prepare <Platform>` copies cross-platform and selected platform-specific content to the subdirectory for the target platform.
 * `build <Platform>` builds the project for the selected target platform.
 * `emulate <Platform>` builds the project for the selected target platform and runs it in the native emulator, if configured. 
