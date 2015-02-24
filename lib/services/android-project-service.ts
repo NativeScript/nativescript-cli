@@ -170,7 +170,7 @@ class AndroidProjectService implements IPlatformProjectService {
         var projProp = path.join(projDir, "project.properties");
 
         if (!this.$fs.exists(projProp).wait()) {
-            this.$logger.warn("File %s does not exist", projProp);
+            this.$logger.warn("Warning: File %s does not exist", projProp);
             return;
         }
 
