@@ -49,7 +49,7 @@
     "prompt": "https://github.com/Icenium/prompt/tarball/master",
     "properties-parser": "0.2.3",
     "ref": "https://github.com/icenium/ref/tarball/master",
-    "ref-struct": "0.0.5",
+    "ref-struct": "https://github.com/telerik/ref-struct/tarball/master",
     "rimraf": "2.2.6",
     "semver": "3.0.1",
     "shelljs": "0.3.0",
@@ -77,6 +77,6 @@
   },
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=0.10.26 <0.10.34 || >=0.10.35 <0.11.0"
+    "node": ">=0.10.26 <0.10.34 || >=0.10.35"
   }
 }
