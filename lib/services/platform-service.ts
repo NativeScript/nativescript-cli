@@ -209,22 +209,21 @@ export class PlatformService implements IPlatformService {
 	public debugOnDevice(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-
+			var platformData = this.$platformsData.getPlatformData(platform);
 			var packageFile = "";
 
 			if (options["debug-brk"]) {
 				this.preparePlatform(platform).wait();
-
-				var platformData = this.$platformsData.getPlatformData(platform);
-
 				this.buildPlatform(platform).wait();
 
 				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
 			}
 
+			var debugOnDeviceSetup = platformData.platformProjectService.getDebugOnDeviceSetup();
+
 			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId); };
+			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId, debugOnDeviceSetup)};
 			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
