@@ -246,7 +246,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 			var targetLibPath = path.join(targetPath, path.basename(libraryPath));
 
-			this.updateProjectReferences(platformData.projectRoot, targetLibPath);
+            var libProjProp = path.join(libraryPath, "project.properties");
+            if (this.$fs.exists(libProjProp).wait()) {
+                this.updateProjectReferences(platformData.projectRoot, targetLibPath);
+            }
 		}).future<void>()();
     }
 
