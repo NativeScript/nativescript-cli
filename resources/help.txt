@@ -421,11 +421,9 @@ Usage:
 Platform-specific usage:
     $ tns debug android --get-port
     $ tns debug android --debug-brk
-    $ tns debug ios --debug-brk --debug-port 12345
+    $ tns debug ios --debug-brk
     $ nativescript debug android --debug-brk
-    $ nativescript debug ios --start --debug-port 12345
-
-TODO: add proper help content
+    $ nativescript debug ios --start
 
 Debugs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
 <Device ID> is the index or name of the target device as listed by $ tns list-devices.
@@ -437,6 +435,7 @@ Before building for the Android emulator, verify that you have met the following
     You have created at least one device with the Android Virtual Device manager.
 
 Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+Connecting to iOS device always uses port 8080, --get-port and --debug-port are not supported.
 
 Options:
     --device - Specifies a connected device on which to run the app.
