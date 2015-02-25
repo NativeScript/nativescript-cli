@@ -160,6 +160,10 @@ class AndroidProjectService implements IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
     }
 
+	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
+		return { };
+	}
+
     private generateBuildFile(projDir: string, targetSdk: string): void {
         this.$logger.info("Generate build.xml for %s", projDir);
         var cmd = util.format("android update project -p %s --target %s --subprojects", projDir, targetSdk);
