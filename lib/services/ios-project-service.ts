@@ -20,7 +20,8 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices) { }
+		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $npm: INodePackageManager) { }
 
 	public get platformData(): IPlatformData {
 		return {
@@ -194,6 +195,15 @@ class IOSProjectService implements  IPlatformProjectService {
             this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
         }).future<void>()();
     }
+
+	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
+		var tnsIosPackage = this.$npm.install("tns-ios").wait();
+		var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
+
+		return {
+			frontEndPath: safariPath
+		}
+	}
 
     private validateDynamicFramework(libraryPath: string): IFuture<void> {
         return (() => {
