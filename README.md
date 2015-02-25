@@ -67,7 +67,7 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* [Node.js 0.10.26] or a later stable official [0.10.x] release
+* [Node.js 0.10.26] or a later stable official release
 * (Optional) [Chocolatey]
 * [JDK 6] or a later stable official release
 * [Apache Ant 1.8] or a later stable official release
@@ -136,11 +136,12 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* [Node.js 0.10.26] or a later stable official [0.10.x] release
+* [Node.js 0.10.26] or a later stable official release
 * For iOS development
 	* [iOS 7.0 SDK][12] or a later stable official release
 	* [Xcode 5][12] or a later stable official release
 	* [Xcode command-line tools][12]
+	* (Optional) [Mono] installed via Homebrew
 * For Android development
 	* [JDK 6] or a later stable official release 
 	* [Apache Ant 1.8] or a later stable official release
@@ -471,3 +472,4 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
 [Android SDK 19]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
+[Mono]: http://www.mono-project.com
