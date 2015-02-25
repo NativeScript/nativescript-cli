@@ -273,6 +273,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
     addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
         return Future.fromResult();
     }
+	getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
+		return null;
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {
