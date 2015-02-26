@@ -74,6 +74,7 @@ export class PlatformService implements IPlatformService {
 
 			var downloadedPackagePath = this.$npm.install(packageToInstall, npmOptions).wait();
 			var frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
+			frameworkDir = path.resolve(frameworkDir);
 
 			try {
 				this.addPlatformCore(platformData, frameworkDir).wait();
@@ -92,7 +93,7 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 			var installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 
-			if(options.frameworkPath && !options.symlink) {
+			if(options.frameworkPath && this.$fs.getFsStats(options.frameworkPath).wait().isFile() && !options.symlink) {
 				// Need to remove unneeded node_modules folder
 				// One level up is the runtime module and one above is the node_modules folder.
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
