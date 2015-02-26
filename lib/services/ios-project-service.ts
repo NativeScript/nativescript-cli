@@ -132,14 +132,7 @@ class IOSProjectService implements  IPlatformProjectService {
 			];
 			var args: string[] = [];
 
-			if(options.emulator) {
-				args = basicArgs.concat([
-					"-sdk", "iphonesimulator",
-					"-arch", "i386",
-					"VALID_ARCHS=\"i386\"",
-					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator")
-				]);
-			} else {
+			if(options.forDevice) {
 				args = basicArgs.concat([
 					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
 					"-sdk", "iphoneos",
@@ -147,11 +140,19 @@ class IOSProjectService implements  IPlatformProjectService {
 					'VALID_ARCHS=armv7 arm64',
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
 				]);
+			} else {
+				args = basicArgs.concat([
+					"-sdk", "iphonesimulator",
+					"-arch", "i386",
+					"VALID_ARCHS=\"i386\"",
+					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator")
+				]);
+
 			}
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: options, stdio: 'inherit'}).wait();
 
-			if(!options.emulator) {
+			if(options.forDevice) {
 				var buildOutputPath = path.join(projectRoot, "build", "device");
 
 				// Produce ipa file

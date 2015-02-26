@@ -218,7 +218,10 @@ export class PlatformService implements IPlatformService {
 
 				var platformData = this.$platformsData.getPlatformData(platform);
 
+				var cachedDeviceOption = options.forDevice;
+				options.forDevice = true;
 				this.buildPlatform(platform).wait();
+				options.forDevice = cachedDeviceOption;
 
 				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
@@ -262,7 +265,10 @@ export class PlatformService implements IPlatformService {
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 
+			var cachedDeviceOption = options.forDevice;
+			options.forDevice = true;
 			this.buildPlatform(platform).wait();
+			options.forDevice = cachedDeviceOption;
 
 			// Get latest package that is produced from build
 			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
@@ -287,10 +293,7 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkDependencies().wait();
 
 			if(!options.availableDevices) {
-				var cachedEmulatorOption = options.emulator;
-				options.emulator = true;
 				this.buildPlatform(platform).wait();
-				options.emulator = cachedEmulatorOption;
 
 				var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
