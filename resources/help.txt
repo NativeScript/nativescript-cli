@@ -278,7 +278,7 @@ Options:
 --[build|ios]--
 
 Usage:
-    $ tns build ios [--device] [--release]
+    $ tns build ios [--forDevice] [--release]
 
 Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
 
@@ -286,7 +286,7 @@ Before building for iOS device, verify that you have configured a valid pair of 
 
 Options:
     --release - If set, produces a release build. Otherwise, produces a debug build.
-    --device - If set, produces an application package that you can deploy on device. 
+    --forDevice - If set, produces an application package that you can deploy on device.
                Otherwise, produces a build that you can run only in the native iOS Simulator.
 
 --[/]--
