@@ -36,127 +36,107 @@ var TiHttp = {
    */
   request: function(method, url, body, headers, options) {
     // Cast arguments.
-    body    = body    || null;
     headers = headers || {};
     options = options || {};
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
+    var xhr;
+
+    // Stringify if not Titanium.Blob.
+    if(isObject(body) && !isFunction(body.getLength)) {
+      body = JSON.stringify(body);
+    }
 
     // Create the request.
-    var request = options.xhr = Titanium.Network.createHTTPClient();
-    request.open(method, url);
+    if(isMobileWeb) {
+      // Use browser XHR on mobile web. Easier binary/header handling.
+      xhr = new XMLHttpRequest();
 
-    // Set the TLS version (iOS only).
-    if(isFunction(request.setTlsVersion) && Titanium.Network.TLS_VERSION_1_2) {
-      request.setTlsVersion(Titanium.Network.TLS_VERSION_1_2);
+      // Getting a file. Binary response.
+      xhr.responseType = options.file ? 'blob' : '';
+
+      if (body instanceof Titanium.Blob) {
+        body = body._data;
+      }
+
+      xhr.ontimeout = function() {
+        deferred.reject('timeout');
+      };
     }
+    else {
+      xhr = Titanium.Network.createHTTPClient();
 
-    // Apply options.
-    if(0 < options.timeout) {
-      request.timeout = options.timeout;
-    }
+      // Set the TLS version (iOS only).
+      if(isFunction(xhr.setTlsVersion) && Titanium.Network.TLS_VERSION_1_2) {
+        xhr.setTlsVersion(Titanium.Network.TLS_VERSION_1_2);
+      }
 
-    // Append request headers.
-    for(var name in headers) {
-      if(headers.hasOwnProperty(name)) {
-        request.setRequestHeader(name, headers[name]);
+      // Prevent Titanium from defaulting Content-Type on file download.
+      // GCS signature is validated with Content-Type header.
+      if(method === 'GET' && options.file) {
+        headers['Content-Type'] = '';
       }
     }
 
-    // For mobile web, setting an explicit mime type is required to obtain
-    // binary data.
-    if(isMobileWeb && options.file) {
-      request._xhr.overrideMimeType('text/plain; charset=x-user-defined');
-    }
-
-    // Timeouts do not invoke the error handler on mobileweb. Patch here.
-    if(isMobileWeb) {
-      var abort = request.abort;
-      request.abort = function() {
-        if(request.DONE > request.readyState) {
-          request.onerror({ type: 'timeout' });
-          request.onerror = function() { };// Avoid multiple invocations.
-        }
-        return abort.apply(request, arguments);
-      };
-    }
+    xhr.timeout = options.timeout || 0;
 
     // Listen for request completion.
-    request.onerror = request.onload = function(event) {
+    xhr.onerror = xhr.onload = function(e) {
       // Debug.
       if(KINVEY_DEBUG) {
-        log('The network request completed.', request);
+        log('The network request completed.', this);
       }
 
       // Titanium does not provide a clear error code on timeout. Patch here.
-      event = event || {};
-      if(isString(event.error) && -1 !== event.error.toLowerCase().indexOf('timed out')) {
-        event.type = 'timeout';
+      e = e || {};
+      if(isString(e.error) && -1 !== e.error.toLowerCase().indexOf('timed out')) {
+        e.type = 'timeout';
       }
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
-      var status = 'timeout' === event.type ? 0 : request.status;
+      var status = 'timeout' === e.type ? 0 : this.status;
       if(2 === parseInt(status / 100, 10) || 304 === status) {
-        // Parse the response.
-        var response = !isMobileWeb && options.file ? request.responseData : request.responseText;
+        var response;
 
-        // Get binary response data on Titanium mobileweb.
-        if(isMobileWeb && options.file && null != response && null != root.ArrayBuffer) {
-          var buffer  = new root.ArrayBuffer(response.length);
-          var bufView = new root.Uint8Array(buffer);
-          for(var i = 0, length = response.length; i < length; i += 1) {
-            bufView[i] = response.charCodeAt(i);
-          }
+        // Mobile web response.
+        if(isMobileWeb) {
+          var isBinary = this.responseType === 'blob';
 
-          // Cast the response to a new Titanium.Blob object.
-// NOTE The `toString` method remains broken. Use `FileReader` if you want to obtain the Data URL.
           response = new Titanium.Blob({
-            data     : bufView,
-            length   : bufView.length,
-            mimeType : options.file
+            data: isBinary ? this.response : this.responseText,
+            length: isBinary ? this.response.size : this.responseText.length,
+            mimeType: this.getResponseHeader('Content-Type')
           });
+        }
+        else {
+          response = options.file ? this.responseData : this.responseText;
         }
 
         // Return the response.
         deferred.resolve(response || null);
       }
-      else {// Failure.
-        deferred.reject(request.responseText || event.type || null);
+      else { // Failure.
+        deferred.reject(this.responseText || e.type || null);
       }
     };
+
+    xhr.open(method, url);
+
+    // Append request headers.
+    for(var name in headers) {
+      if(headers.hasOwnProperty(name)) {
+        xhr.setRequestHeader(name, headers[name]);
+      }
+    }
 
     // Debug.
     if(KINVEY_DEBUG) {
       log('Initiating a network request.', method, url, body, headers, options);
     }
 
-    // Patch Titanium mobileweb.
-    if(isMobileWeb) {
-      // Prevent Titanium from appending an incorrect Content-Type header.
-      // Also, GCS does not CORS allow the X-Titanium-Id header.
-      var setHeader = request._xhr.setRequestHeader;
-      request._xhr.setRequestHeader = function(name) {
-        if('Content-Type' === name || 'X-Titanium-Id' === name) {
-          return null;
-        }
-        return setHeader.apply(request._xhr, arguments);
-      };
-
-      // Prevent Titanium from URL encoding blobs.
-      if(body instanceof Titanium.Blob) {
-        var send = request._xhr.send;
-        request._xhr.send = function() {
-          return send.call(request._xhr, body._data);
-        };
-      }
-    }
-
     // Initiate the request.
-    if(isObject(body) && !isFunction(body.getLength)) {
-      body = JSON.stringify(body);
-    }
-    request.send(body);
+    xhr.send(body);
 
     // Trigger the `request` event on the subject. The subject should be a
     // Backbone model or collection.
@@ -167,7 +147,7 @@ var TiHttp = {
 
       // Trigger the `request` event if the subject has a `trigger` method.
       if(isFunction(subject.trigger)) {
-        subject.trigger('request', subject, request, options);
+        subject.trigger('request', subject, xhr, options);
       }
     }
 
