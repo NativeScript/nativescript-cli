@@ -123,6 +123,10 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<string>()();
     }
 
+	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
+		return { };
+	}
+
     private updateMetadata(projectRoot: string): void {
         var projMetadataDir = path.join(projectRoot, "assets", "metadata");
         var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);

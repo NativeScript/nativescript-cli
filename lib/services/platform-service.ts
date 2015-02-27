@@ -210,13 +210,12 @@ export class PlatformService implements IPlatformService {
 	public debugOnDevice(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-
+			var platformData = this.$platformsData.getPlatformData(platform);
 			var packageFile = "";
+			var platformData = this.$platformsData.getPlatformData(platform);
 
 			if (options["debug-brk"]) {
 				this.preparePlatform(platform).wait();
-
-				var platformData = this.$platformsData.getPlatformData(platform);
 
 				var cachedDeviceOption = options.forDevice;
 				options.forDevice = true;
@@ -227,8 +226,10 @@ export class PlatformService implements IPlatformService {
 				this.$logger.out("Using ", packageFile);
 			}
 
+			var debuggerSetup = platformData.platformProjectService.getDebugOnDeviceSetup();
+
 			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId); };
+			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId, debuggerSetup)};
 			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
