@@ -37,7 +37,7 @@ Contribute to the Code Base
 
 Before you submit a Pull Request, consider the following guidelines.
 
-* Search <a href="https://github.com/Icenium/icenium-cli/pulls">GitHub</a> for an open or closed Pull Request that relates to your submission.
+* Search <a href="https://github.com/NativeScript/nativescript-cli/pulls">GitHub</a> for an open or closed Pull Request that relates to your submission.
 * Clone the repository.
 ```bash
     git clone git@github.com:NativeScript/nativescript-cli.git
@@ -71,7 +71,7 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     git push origin my-fix-branch
 ```
-* In GitHub, send a Pull Request to icenium-cli:master.
+* In GitHub, send a Pull Request to nativescript-cli:master.
 * If we suggest changes, you can modify your branch, rebase, and force a new push to your GitHub repository to update the Pull Request.
 ```bash
     git rebase master -i
