@@ -284,13 +284,13 @@ module.exports = function(grunt) {
       },
       tiplatformconnect: {
         command: [
-          'rm -rf ./jsOAuth ./TiPlatformConnect',
+          'rm -rf ./jsOAuth',
           'git clone git://github.com/bytespider/jsOAuth.git        ./jsOAuth',
-          'git clone git://github.com/k0sukey/TiPlatformConnect.git ./TiPlatformConnect',
           'make --directory ./jsOAuth',
-          './uglify-js/bin/uglifyjs ./TiPlatformConnect/Resources/google.js ' +
-            './TiPlatformConnect/Resources/linkedin.js ./TiPlatformConnect/Resources/twitter.js ' +
-            '-cmo ./TiPlatformConnect/dist.js'
+          './uglify-js/bin/uglifyjs ./kinvey-tiplatformconnect/Resources/google.js ' +
+            './kinvey-tiplatformconnect/Resources/linkedin.js ' +
+            './kinvey-tiplatformconnect/Resources/twitter.js ' +
+            '-cmo ./kinvey-tiplatformconnect/dist.js'
         ].join('&&'),
         options: {
           execOptions : { cwd: 'node_modules' },
