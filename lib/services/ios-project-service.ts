@@ -197,7 +197,17 @@ class IOSProjectService implements  IPlatformProjectService {
     }
 
 	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
-		var tnsIosPackage = this.$npm.install("tns-ios").wait();
+		var tnsIosPackage = "";
+		if(options.frameworkPath) {
+			if(this.$fs.getFsStats(options.frameworkPath).wait().isFile()) {
+				this.$errors.fail("frameworkPath option must be path to directory which contains tns-ios framework");
+			}
+
+			tnsIosPackage = path.resolve(options.frameworkPath);
+		} else {
+			tnsIosPackage = this.$npm.install("tns-ios").wait();
+		}
+
 		var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
 
 		return {
