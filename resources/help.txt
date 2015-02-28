@@ -415,15 +415,12 @@ Options:
 --[debug]--
 
 Usage:
-    $ tns debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
-    $ nativescript debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
+    $ tns debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <Port>]
 
 Platform-specific usage:
     $ tns debug android --get-port
     $ tns debug android --debug-brk
     $ tns debug ios --debug-brk
-    $ nativescript debug android --debug-brk
-    $ nativescript debug ios --start
 
 Debugs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
 <Device ID> is the index or name of the target device as listed by $ tns list-devices.
@@ -446,7 +443,7 @@ Options:
 --[emulate]--
 
 Usage:
-    $ tns emulate emulate <Command> [--release]
+    $ tns emulate <Command> [--release]
 
 You must run the emulate command with a related command.
 
@@ -541,7 +538,7 @@ Before running the iOS Simulator, verify that you have met the following require
     NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
 
 Options:
-    --availableDevices - Lists all available device type identifiers for the current XCode.
+    --availableDevices - Lists all available device type identifiers for the current Xcode.
     --release - If set, produces a release build. Otherwise, produces a debug build.
     --path - Specifies the directory that contains the project. If not specified, the project is searched
             for in the current directory and all directories above it.
@@ -621,7 +618,7 @@ You can run this command on one connected device at a time.
 Prerequisites:
 Before running your app on an iOS device, verify that your system and app meet the following requirements.
     * You are running the NativeScript CLI on an OS X system.
-    * You have installed Xcode 5 or later.
+    * You have installed Xcode 6 or later.
     * You have built your app with the debug build configuration.
 Before running your app on an Android device, verify that your app meets the following requirement.
     * You have built your app with the debug build configuration.
