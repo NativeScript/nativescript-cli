@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.1.11-snapshot
+## 1.1.11 (2015-02-27)
+* Enhancement: Using browser native XHR on Titanium mobile web. The response data type on the Titanium.Blob is now Blob, was UInt8Array.
+* Bugfix(MLIBZ-53): Resolved memory leak in Titanium library on iOS when making an HTTP request.
+* Bugfix(MLIBZ-56): Titanium library architecture error on iOS with TiPlatformConnect's jsOAuth require.
+* Bugfix: Fixed bug where Titanium set Content-Type header on iOS GET requests that caused a GCS signature failure.
 
 ## 1.1.10 (2015-01-12)
 * Enhancement: Added framework flag to Push for Phonegap so we can change how KCS handles the register/unregister methods.
