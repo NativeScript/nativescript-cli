@@ -137,7 +137,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 * OS X Mavericks
 * [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
 * For iOS development
-	* [Xcode 6][12] or a later stable official release
+	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
 	* (Optional for working with third-party libraries) [64-bit Mono][Mono] installed via Homebrew
 * For Android development
