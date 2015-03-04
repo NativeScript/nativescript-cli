@@ -232,8 +232,6 @@ Kinvey.setActiveUser = function(user) {
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
-  console.log(options.toString());
-
   // Debug.
   if(KINVEY_DEBUG) {
     log('Initializing the copy of the library.', arguments);
