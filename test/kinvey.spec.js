@@ -53,10 +53,12 @@ describe('Kinvey', function() {
 
     // Housekeeping: clear the active user.
     afterEach(function() {
-      Kinvey.setActiveUser(null);
-
-      // Reset APIHostName
+      // Reset Kinvey.APIHostName
       Kinvey.APIHostName = config.kcs.protocol + '://' + config.kcs.host;
+      Kinvey.API_ENDPOINT = undefined;
+
+      // Set active user to null
+      Kinvey.setActiveUser(null);
     });
 
     // Test suite.
@@ -128,6 +130,9 @@ describe('Kinvey', function() {
         expect(user).to.have.deep.property('_kmd.authtoken');
         expect(user).to.have.property('username');
         expect(user).not.to.have.property('password');
+      }, function(error) {
+        console.log(Kinvey.APIHostName);
+        console.log(error);
       });
       return expect(promise).to.be.fulfilled;
     });
