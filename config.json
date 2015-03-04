@@ -151,6 +151,7 @@
       "host"     : "localhost:7007"
 	},
     "test": {
+      "apiHostName"  : "http://myapihostname.com/",
       "appKey"       : "kid_-kpx2Yw6U",
       "appSecret"    : "736bfe159c9149f881ecef2269b8b48d",
       "masterSecret" : "1ed873294e9440de8cf765d644c7eac9"
@@ -162,6 +163,7 @@
       "host"     : "v3yk1n-kcs.kinvey.com"
 	},
     "test": {
+      "apiHostName"  : "https://myapihostname.com/",
       "appKey"       : "kid_PTsIpH9WF5",
       "appSecret"    : "c0be7de6e91a49a4ba6b0d35da68f3d2",
       "masterSecret" : "41db729981ba404fa2273b6b3e6dfd30"

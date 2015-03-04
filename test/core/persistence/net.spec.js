@@ -25,7 +25,7 @@ describe('Kinvey.Persistence.Net', function() {
   describe('the request method', function() {
     // Housekeeping: set target URL.
     before(function() {
-      this.url = Kinvey.API_ENDPOINT + '/appdata';
+      this.url = Kinvey.APIHostName + '/appdata';
     });
     after(function() {// Cleanup.
       delete this.url;

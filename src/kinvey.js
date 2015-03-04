@@ -23,11 +23,13 @@
  * @constant
  * @type {string}
  * @default
+ * @deprecated Kinvey.API_ENDPOINT
  */
-Kinvey.API_ENDPOINT = '<%= config.kcs.protocol %>://<%= config.kcs.host %>';
+Kinvey.APIHostName = '<%= config.kcs.protocol %>://<%= config.kcs.host %>';
+Kinvey.API_ENDPOINT = undefined;
 
 /**
- * The Kinvey API version used when communicating with `Kinvey.API_ENDPOINT`.
+ * The Kinvey API version used when communicating with `Kinvey.APIHostName`.
  *
  * @constant
  * @type {string}
@@ -218,6 +220,7 @@ Kinvey.setActiveUser = function(user) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
+ * @param {Options}  options.apiEndpoint   API Endpoint.
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -245,6 +248,10 @@ Kinvey.init = function(options) {
 
   // The active user is not ready yet.
   activeUserReady = false;
+
+  // Set the API endpoint
+  var apiHostName = options.apiHostName || Kinvey.API_ENDPOINT;
+  Kinvey.APIHostName = apiHostName || Kinvey.APIHostName;
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;

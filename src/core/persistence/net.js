@@ -178,14 +178,14 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     options.trace = options.trace || (KINVEY_DEBUG && false !== options.trace);
 
     // Build, escape, and join URL segments.
-    // Format: <API_ENDPOINT>/<namespace>[/<Kinvey.appKey>][/<collection>][/<id>]
+    // Format: <APIHostName>/<namespace>[/<Kinvey.appKey>][/<collection>][/<id>]
     var segments = [ request.namespace, Kinvey.appKey, request.collection, request.id];
     segments = segments.filter(function(value) {
       // Exclude empty optional segment. Note the required namespace cannot be
       // empty at this point (enforced above).
       return null != value;
     }).map(Kinvey.Persistence.Net.encode);
-    var url = [ Kinvey.API_ENDPOINT ].concat(segments).join('/') + '/';
+    var url = [ Kinvey.APIHostName ].concat(segments).join('/') + '/';
 
     // Build query string.
     var flags = request.flags || {};

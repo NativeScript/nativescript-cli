@@ -172,6 +172,9 @@ after(function() {// Cleanup.
 before(function() {
   this.collection = 'test-collection'/*- + this.randomID()*/;
 });
-after(function() {// Cleanup.
+before(function() {
+  return Kinvey.DataStore.clean(this.collection).then(null, function() {});
+});
+after(function() { // Cleanup
   delete this.collection;
 });

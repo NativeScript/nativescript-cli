@@ -54,6 +54,9 @@ describe('Kinvey', function() {
     // Housekeeping: clear the active user.
     afterEach(function() {
       Kinvey.setActiveUser(null);
+
+      // Reset APIHostName
+      Kinvey.APIHostName = config.kcs.protocol + '://' + config.kcs.host;
     });
 
     // Test suite.
@@ -73,6 +76,30 @@ describe('Kinvey', function() {
         }).to.Throw('Secret');
       }
     );
+    it('should save api host name on arguments: options.apiHostName', function() {
+      Kinvey.init({
+        apiHostName: config.test.apiHostName,
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
+    });
+    it('should save API host name with Kinvey.API_ENDPOINT', function() {
+      Kinvey.API_ENDPOINT = config.test.apiHostName;
+      Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
+    });
+    it('should save API host name with Kinvey.APIHostName', function() {
+      Kinvey.APIHostName = config.test.apiHostName;
+      Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
+    });
     it('should save the app credentials.', function() {
       Kinvey.init({ appKey: config.test.appKey, appSecret: config.test.appSecret });
       expect(Kinvey.appKey).to.equal(config.test.appKey);
@@ -80,7 +107,11 @@ describe('Kinvey', function() {
       expect(Kinvey.masterSecret).to.be['null'];
     });
     it('should save the master credentials.', function() {
-      Kinvey.init(config.test);
+      Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret,
+        masterSecret: config.test.masterSecret
+      });
       expect(Kinvey.appKey).to.equal(config.test.appKey);
       expect(Kinvey.appSecret).to.equal(config.test.appSecret);
       expect(Kinvey.masterSecret).to.equal(config.test.masterSecret);
@@ -88,7 +119,10 @@ describe('Kinvey', function() {
     it('should restore the active user.', function() {
       Kinvey.setActiveUser(this.user);
       var _this   = this;
-      var promise = Kinvey.init(config.test).then(function(user) {
+      var promise = Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      }).then(function(user) {
         // User should equal the active user, except for `password`.
         expect(user).to.have.property('_id', _this.user._id);
         expect(user).to.have.deep.property('_kmd.authtoken');
@@ -114,7 +148,10 @@ describe('Kinvey', function() {
     });
     it('should fail if the active user cannot be restored.', function() {
       Kinvey.setActiveUser(this.mock);
-      var promise = Kinvey.init(config.test);
+      var promise = Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
       return promise.then(function() {
         // We should not reach this code branch.
         return expect(promise).to.be.rejected;
