@@ -80,8 +80,7 @@ var Xhr = {
 
     // Append header for compatibility with Android 2.2, 2.3.3, and 3.2.
 // http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
-    var apiHostName = Kinvey.API_ENDPOINT || Kinvey.APIHostName;
-    if(0 === url.indexOf(apiHostName) && 'GET' === method) {
+    if(0 === url.indexOf(Kinvey.APIHostName) && 'GET' === method) {
       var location = root.location;
       if(null != location && null != location.protocol) {
         headers['X-Kinvey-Origin'] = location.protocol + '//' + location.host;

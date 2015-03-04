@@ -54,6 +54,9 @@ describe('Kinvey', function() {
     // Housekeeping: clear the active user.
     afterEach(function() {
       Kinvey.setActiveUser(null);
+
+      // Reset APIHostName
+      Kinvey.APIHostName = config.kcs.protocol + '://' + config.kcs.host;
     });
 
     // Test suite.
@@ -73,18 +76,29 @@ describe('Kinvey', function() {
         }).to.Throw('Secret');
       }
     );
-    it('should save api host name', function() {
+    it('should save api host name on arguments: options.apiHostName', function() {
       Kinvey.init({
         apiHostName: config.test.apiHostName,
         appKey: config.test.appKey,
         appSecret: config.test.appSecret
       });
       expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
-      expect(Kinvey.API_ENDPOINT).to.equal(config.test.apiHostName);
-
-      // Reset APIHostName
-      Kinvey.APIHostName = config.kcs.protocol + '://' + config.kcs.host;
-      Kinvey.API_ENDPOINT = Kinvey.APIHostName;
+    });
+    it('should save API host name with Kinvey.API_ENDPOINT', function() {
+      Kinvey.API_ENDPOINT = config.test.apiHostName;
+      Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
+    });
+    it('should save API host name with Kinvey.APIHostName', function() {
+      Kinvey.APIHostName = config.test.apiHostName;
+      Kinvey.init({
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
     });
     it('should save the app credentials.', function() {
       Kinvey.init({ appKey: config.test.appKey, appSecret: config.test.appSecret });
