@@ -131,7 +131,8 @@ export class NodePackageManager implements INodePackageManager {
 
 	private addToCacheCore(packageName: string, version: string): IFuture<void> {
 		var future = new Future<void>();
-		npm.commands["cache"].add(packageName, version, undefined, (err: Error, data: any) => {
+		// cache.add = function (pkg, ver, where, scrub, cb)
+		npm.commands["cache"].add(packageName, version, undefined, false, (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {
@@ -144,7 +145,8 @@ export class NodePackageManager implements INodePackageManager {
 	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
 		var future = new Future<void>();
 		unpackTarget = unpackTarget || path.join(npm.cache, packageName, version, "package");
-		npm.commands["cache"].unpack(packageName, version, unpackTarget, (err: Error, data: any) => {
+		// function unpack (pkg, ver, unpackTarget, dMode, fMode, uid, gid, cb)
+		npm.commands["cache"].unpack(packageName, version, unpackTarget, null, null, null, null, (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {
