@@ -61,18 +61,19 @@ You can install and run the NativeScript CLI on Windows or OS X.
 
 * [Windows](#widnows)
 * [OS X](#os-x)
+* [Linux](#linux)
 
 ## Windows
 
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* [Node.js 0.10.26] or a later stable official release
-* (Optional) [Chocolatey]
-* [JDK 6] or a later stable official release
-* [Apache Ant 1.8] or a later stable official release
-* [Android SDK 19] or a later stable official release
-* (Optional) [Genymotion]
+* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
+* (Optional) [Chocolatey][Chocolatey]
+* [JDK 7][JDK 7] or a later stable official release
+* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
+* [Android SDK 19][Android SDK 19] or a later stable official release
+* (Optional) [Genymotion][Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
 
@@ -136,19 +137,57 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* [Node.js 0.10.26] or a later stable official release
+* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
 * For iOS development
-	* [iOS 7.0 SDK][12] or a later stable official release
-	* [Xcode 5][12] or a later stable official release
+	* [Xcode 6][12] or a later stable official release
 	* [Xcode command-line tools][12]
-	* (Optional) [Mono] installed via Homebrew
+	* (Optional for working with third-party libraries) [64-bit Mono][Mono] installed via Homebrew
 * For Android development
-	* [JDK 6] or a later stable official release 
-	* [Apache Ant 1.8] or a later stable official release
-	* [Android SDK 19] or a later stable official release 
-	* (Optional) [Genymotion]
+	* [JDK 7][JDK 7] or a later stable official release 
+	* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
+	* [Android SDK 19][Android SDK 19] or a later stable official release 
+	* (Optional) [Genymotion][Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
+
+```
+Path to the bin subdirectory in the Apache Ant installation directory
+Path to the tools subdirectory in the Android SDK installation directory
+Path to the platform-tools subdirectory in the Android SDK installation directory
+```
+
+For example:
+```
+export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/sdk/tools:/Applications/Android Studio.app/sdk/platform-tools
+```
+
+## Linux
+
+> On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
+
+* Ubuntu 14.04 LTS
+* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release<br/>If installed via `sudo apt-get install`, use the `nodejs-legacy` package.
+
+	```Shell
+	sudo apt-get install nodejs-legacy
+	```
+* G++ compiler
+
+	```Shell
+	sudo apt-get install g++
+    ```
+* On 64-bit systems only
+	* The runtime libraries for the ia32/i386 architecture.
+
+		```Shell
+		sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
+		```
+* [JDK 7][JDK 7] or a later stable official release
+* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
+* [Android SDK 19][Android SDK 19] or a later stable official release 
+* (Optional) [Genymotion][Genymotion]
+
+Verify that you have added the following paths in your `PATH`.
 
 ```
 Path to the bin subdirectory in the Apache Ant installation directory
@@ -173,6 +212,8 @@ In the command prompt, run the following command.
 ```Shell
 npm install nativescript -g
 ```
+
+> On OS X and Linux systems, you might need to run this command using sudo.
 
 [Back to Top][1]
 
@@ -468,7 +509,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [12]: https://developer.apple.com/xcode/downloads/
 [Node.js 0.10.26]: http://nodejs.org/download/
 [Chocolatey]: https://chocolatey.org/
-[JDK 6]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[JDK 7]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
 [Android SDK 19]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
