@@ -1,10 +1,10 @@
-Telerik NativeScript Command-Line Interface
+NativeScript Command-Line Interface
 ================
 [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2]
 
 *Create, build, and run native apps for iOS and Android using JavaScript or TypeScript*
 
-The Telerik NativeScript CLI lets you create, build, and deploy Telerik NativeScript-based projects on iOS and Android devices.
+The NativeScript CLI lets you create, build, and deploy NativeScript-based projects on iOS and Android devices.
 
 * [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
@@ -26,8 +26,6 @@ The Telerik NativeScript CLI lets you create, build, and deploy Telerik NativeSc
 
 What is NativeScript
 ===
-
-> NativeScript is currently available as a private preview. To sign up for the NativeScript Insiders program, visit <a href="http://www.telerik.com/nativescript-insiders-signup" target="_blank">http://www.telerik.com/nativescript-insiders-signup</a>.
 
 NativeScript is a cross-platform JavaScript framework that lets you develop native iOS and Android apps from a single code base. The framework provides JavaScript access to the native APIs, user interface, and rendering engines of iOS and Android. By using JavaScript or TypeScript, you can create one project that builds into an iOS or Android app with completely native user experience.
 
