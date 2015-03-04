@@ -141,7 +141,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 * For iOS development
 	* [Xcode 6][12] or a later stable official release
 	* [Xcode command-line tools][12]
-	* (Optional) [Mono][Mono] installed via Homebrew
+	* (Optional for working with third-party libraries) [64-bit Mono][Mono] installed via Homebrew
 * For Android development
 	* [JDK 7][JDK 7] or a later stable official release 
 	* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
