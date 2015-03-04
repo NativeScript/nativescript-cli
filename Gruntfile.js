@@ -253,7 +253,7 @@ module.exports = function(grunt) {
     watch: {
       all: {
         files : ['src/**/*', 'test/**/*'],
-        tasks : ['cleanup', 'jshint', 'build'] //, 'test', 'karma:unit:run']
+        tasks : ['cleanup', 'jshint', 'build', 'test', 'karma:unit:run']
       }
     },
 
