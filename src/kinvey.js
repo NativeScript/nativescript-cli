@@ -220,7 +220,7 @@ Kinvey.setActiveUser = function(user) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
- * @param {Options}  options.apiEndpoint   API Endpoint.
+ * @param {string}  [options.apiHostName]  API Host Name.
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
