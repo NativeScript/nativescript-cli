@@ -2,7 +2,7 @@
 
 ## 1.1.12 (2015-03-04)
 * Deprecated: `Kinvey.API_ENDPOINT`
-* BugFix(MLIBZ-45): Replaced `Kinvey.API_ENDPOINT` with `Kinvey.APIHostName`. Set `Kinvey.APIHostName` with options in `Kinvey.init()`.
+* Improvement(MLIBZ-45): Replaced `Kinvey.API_ENDPOINT` with `Kinvey.APIHostName`. Set `Kinvey.APIHostName` with options in `Kinvey.init()`.
 
 ## 1.1.11 (2015-02-27)
 * Enhancement: Using browser native XHR on Titanium mobile web. The response data type on the Titanium.Blob is now Blob, was UInt8Array.
