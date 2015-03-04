@@ -72,7 +72,7 @@ The workflow for releasing a new version of the library is as follows:
 7. Update the [DevCenter](https://github.com/Kinvey/devcenter).
 8. Update the [Kinvey npm module](https://github.com/Kinvey/kinvey-nodejs).
 9. Optional: update [sample apps](https://github.com/KinveyApps).
-10. Tag the version in SVN.
+10. Tag the version in Git.
 
 ### Version Management
 Updating the library version should follow [Semantic Version 2.0.0](http://semver.org/):
