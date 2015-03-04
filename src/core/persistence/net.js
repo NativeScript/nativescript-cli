@@ -185,7 +185,8 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       // empty at this point (enforced above).
       return null != value;
     }).map(Kinvey.Persistence.Net.encode);
-    var url = [ Kinvey.APIHostName ].concat(segments).join('/') + '/';
+    var apiHostName = Kinvey.API_ENDPOINT || Kinvey.APIHostName;
+    var url = [ apiHostName ].concat(segments).join('/') + '/';
 
     // Build query string.
     var flags = request.flags || {};
