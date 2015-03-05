@@ -24,7 +24,7 @@ General commands:
     emulate                         Deploys the project in the native emulator for the selected target platform.
     run                             Runs your project on a connected device or in the native emulator, if configured. 
                                     This is shorthand for prepare, build, and deploy.
-    debug                           Debugs your project on a connected device or in the native emulator, if configured. 
+    debug                           Debugs your project on a connected device. 
     device                          Lists all recognized connected physical or virtual device.
     device log                      Opens the log stream for the selected device.
     device run                      Runs the selected application on a connected device.
@@ -415,38 +415,45 @@ Options:
 --[debug]--
 
 Usage:
-    $ tns debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
-    $ nativescript debug <Platform> [--device <Device ID>] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
-
+    $ tns debug android [--device <Device ID> | --emulator <Emulator Options> | --geny <Geny Name> ] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
+    $ tns debug ios [--device <Device ID>] [--debug-brk | --start ]
+    
 Platform-specific usage:
     $ tns debug android --get-port
-    $ tns debug android --debug-brk
+    $ tns debug android --debug-brk [--debug-port <port>]
+    $ tns debug android --start [--debug-port <port>]
+    $ tns debug android --stop
     $ tns debug ios --debug-brk
-    $ nativescript debug android --debug-brk
-    $ nativescript debug ios --start
+    $ tns debug ios --start
 
-Debugs your project on a connected device or in the native emulator, if configured. This is shorthand for prepare, build, and deploy.
-<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+Debugs your project on a connected device or in a native emulator.
 
-Before building for the Android emulator, verify that you have met the following requirements.
-    You have added the file paths to the following directories from the Android SDK to your PATH environment variable.
-        tools
-        platform-tools
-    You have created at least one device with the Android Virtual Device manager.
+<Device ID> is the index or name of the target device as listed by $ tns list-devices
+<Port> is an accessible port on the device to which you want to attach the debugging tools.
 
-Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
-Connecting to iOS device always uses port 8080, --get-port and --debug-port are not supported.
+Before debugging on iOS device, verify that you have configured a valid pair of development certificate and provisioning profile on your OS X system.
 
 Options:
     --device - Specifies a connected device on which to run the app.
-    --emulator - If set, runs the app in the native emulator for the target platform, if configured.
+    --emulator - (Android-only) Specifies that you want to debug the app in the native Android emulator from the Android SDK.
+    --geny - (Android-only) Specifies a Genymotion emulator on which you want to debug your app.
+    --debug-brk - Shorthand for prepare, build and deploy. Prepares, builds and deploys the application package on a device or in an emulator,
+        launches the app and loads the debug tools in the browser.
+        For Android, launches the Chrome DevTools of your Chrome browser. You must have Chrome installed on your system.
+        For iOS, launches the developer tools of your Safari browser.
+    --start - Attaches the debug tools to a deployed and running app. Your app must be running on device.
+    --stop - (Android-only) Detaches the debug tools.
+    --get-port - (Android-only) Retrieves the port on which you are debugging your application.
+        On iOS devices, this option is not available because the debug tools always attach to port 8080.
+    --debug-port - (Android-only) Sets a new port on which to attach the debug tools.
+        On iOS devices, this option is not available because the debug tools always attach to port 8080.
 
 --[/]--
 
 --[emulate]--
 
 Usage:
-    $ tns emulate emulate <Command> [--release]
+    $ tns emulate <Command> [--release]
 
 You must run the emulate command with a related command.
 
