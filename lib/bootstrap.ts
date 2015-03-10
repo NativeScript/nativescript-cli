@@ -40,3 +40,4 @@ $injector.requireCommand("emulate|ios", "./commands/emulate");
 $injector.require("npm", "./node-package-manager");
 $injector.require("lockfile", "./lockfile");
 $injector.require("optionsService", "./services/options-service");
+$injector.require("dynamicHelpProvider", "./dynamic-help-provider");

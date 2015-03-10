@@ -358,11 +358,11 @@ Before running your app in the Android emulator from the Android SDK, verify tha
         tools
 Before running your app in the Genymotion emulator, verify that your system meets the following requirements.
     * Verify that you have installed Genymotion.
-    * On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.
-    * On OS X systems, verify that you have added the following paths to the PATH environment variable.
+    <% if(isLinux || isWindows) { %>* On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.<%}%>
+    <% if(isMacOS) { %>* On OS X systems, verify that you have added the following paths to the PATH environment variable.
         * /Applications/Genymotion.app/Contents/MacOS/
         * /Applications/Genymotion Shell.app/Contents/MacOS/
-
+<% } %>
 Options:
     --device - Specifies a connected device on which to run the app.
         You cannot use --device and --emulator simultaneously.
@@ -498,11 +498,11 @@ Before running your app in the Android emulator from the Android SDK, verify tha
         tools
 Before running your app in the Genymotion emulator, verify that your system meets the following requirements.
     * Verify that you have installed Genymotion.
-    * On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.
-    * On OS X systems, verify that you have added the following paths to the PATH environment variable.
+    <% if(isLinux || isWindows) { %>* On Windows and Linux systems, verify that you have added the Genymotion installation directory to the PATH environment variable.<% } %>
+    <% if(isMacOS) { %>* On OS X systems, verify that you have added the following paths to the PATH environment variable.
         * /Applications/Genymotion.app/Contents/MacOS/
         * /Applications/Genymotion Shell.app/Contents/MacOS/
-
+<% } %>
 Options:
     --path - Specifies the directory that contains the project. If not specified, the project is searched
             for in the current directory and all directories above it.
