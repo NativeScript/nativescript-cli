@@ -209,7 +209,6 @@ export class PlatformService implements IPlatformService {
 	public debugOnDevice(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			var platformData = this.$platformsData.getPlatformData(platform);
 			var packageFile = "";
 			var platformData = this.$platformsData.getPlatformData(platform);
 
