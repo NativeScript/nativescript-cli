@@ -178,7 +178,6 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 
-			this.preparePlatform(platform).wait();
 			if (options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
@@ -215,8 +214,6 @@ export class PlatformService implements IPlatformService {
 			var platformData = this.$platformsData.getPlatformData(platform);
 
 			if (options["debug-brk"]) {
-				this.preparePlatform(platform).wait();
-
 				var cachedDeviceOption = options.forDevice;
 				options.forDevice = true;
 				this.buildPlatform(platform).wait();
