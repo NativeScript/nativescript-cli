@@ -561,16 +561,26 @@ Options:
 --[/]--
 
 --[device]--
-
 Usage:
-    $ tns device [<Platform>] [--timeout  <Milliseconds>]
     $ tns device [<Command>]
 
-Platform-specific usage:
-    $ tns device android [--timeout  <Milliseconds>]
-    $ tns device ios [--timeout  <Milliseconds>]
+Lists all recognized connected devices with serial number and index, grouped by platform. In this version of the NativeScript CLI,
+you can connect only iOS and Android devices.
 
-Lists all recognized connected devices with serial number and index, grouped by platform. The NativeScript CLI recognizes running Android virtual devices as connected devices.
+<Command> is a related command that extends the device command. You can run the following related commands:
+    android - Lists all recognized connected Android physical and running Android virtual devices.
+    ios - Lists all recognized connected iOS devices.
+    log - Opens the device log stream for a selected connected device.
+    list-applications - Lists the installed applications on all connected Android <% if(isWindows || isMacOS) { %>or iOS <%}%>devices.
+    run - Runs the selected application on a connected Android <% if(isMacOS) { %>or iOS <%}%>device.
+
+--[/]--
+
+--[device|android]--
+Usage:
+    $ tns device android [--timeout <Milliseconds>]
+
+Lists all recognized connected physical and running virtual devices with serial number and index.
 
 If a connected Android device is not shown in the list, make sure that you have installed the required Android USB drivers on your system
 and that USB debugging is enabled on the device.
@@ -580,10 +590,18 @@ Options:
       The operation will continue to wait and listen for newly connected devices and will list them
       after the specified time expires. If not set, the default value is 4000.
 
-<Command> is a related command that extends the device command. You can run the following related commands:
-    log - Opens the device log stream for a selected connected device.
-    list-applications - Lists the installed applications on all connected Android or iOS devices.
-    run - Runs the selected application on a connected Android or iOS device.
+--[/]--
+
+--[device|ios]--
+Usage:
+    $ tns device ios [--timeout <Milliseconds>]
+
+Lists all recognized connected iOS devices with serial number and index.
+
+Options:
+   --timeout - Sets the time in milliseconds for the operation to search for connected devices before completing.
+      The operation will continue to wait and listen for newly connected devices and will list them
+      after the specified time expires. If not set, the default value is 4000.
 
 --[/]--
 
