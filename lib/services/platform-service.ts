@@ -193,7 +193,7 @@ export class PlatformService implements IPlatformService {
 		? this.debugOnEmulator(platform)
 		: this.debugOnDevice(platform);
 
-	  return ret;
+		return ret;
 	}
 
 	public debugOnEmulator(platform: string): IFuture<void> {
@@ -272,7 +272,13 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Using ", packageFile);
 
 			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
+			var action = (device: Mobile.IDevice): IFuture<void> => {
+				return (() => {
+					device.deploy(packageFile, this.$projectData.projectId).wait();
+					device.runApplication(this.$projectData.projectId).wait();
+
+				}).future<void>()();
+			};
 			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
