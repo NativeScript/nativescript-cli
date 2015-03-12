@@ -320,21 +320,43 @@ var Sync = /** @lends Sync */{
   _document: function(collection, metadata, local, net, options) {
     var error;
 
+    // Check if metadata is provided
+    if (metadata == null) {
+      error = new Kinvey.Error('Missing required metadata for the document in collection ' +
+                               collection + '. This is required to properly sync.');
+      return Kinvey.Defer.reject(error);
+    }
+
+    // Check if metadata has id property.
+    if (metadata.id == null) {
+      error = new Kinvey.Error('Metadata does not have id defined. This is ' +
+                               'required to properly sync the document in collection ' +
+                               collection + '.');
+      return Kinvey.Defer.reject(error);
+    }
+
+    // Check if metadata has timestamp property.
+    if (metadata.timestamp == null) {
+      error = new Kinvey.Error('Metadata does not have timestamp defined. This is ' +
+                               'required to properly sync document id ' +
+                               metadata.id + ' in collection ' + collection + '.');
+      return Kinvey.Defer.reject(error);
+    }
+
     if (net != null) {
       // Check if net has property _kmd
       if (net._kmd == null) {
         error = new Kinvey.Error('The server entity does not have _kmd defined as a property. ' +
-                                 'This is required to properly sync. Entity _id: ' +
-                                 net._id);
+                                 'This is required to properly sync server entity _id ' +
+                                 net._id + ' in collection ' + collection + '.');
         return Kinvey.Defer.reject(error);
       }
 
-      // Check if document has property _kmd.lmt. Thrown error will cause promise to
-      // rejected
+      // Check if net has property _kmd.lmt.
       if (net._kmd.lmt == null) {
         error = new Kinvey.Error('The server entity does not have _kmd.lmt defined as a ' +
-                                 'property. This is required to properly sync. Entity _id: ' +
-                                 net._id);
+                                 'property. This is required to properly sync servery entity ' +
+                                 '_id ' + net._id + ' in collection ' + collection + '.') ;
         return Kinvey.Defer.reject(error);
       }
     }
