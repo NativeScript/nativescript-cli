@@ -198,13 +198,15 @@ Kinvey.User = /** @lends Kinvey.User */{
         }
         return Kinvey.Defer.reject(error);
       }).then(function() {
+        var error;
+
         // Reset the active user, and return the previous active user. Make
         // sure to delete the authtoken.
         var previous = Kinvey.setActiveUser(null);
 
         // Check if previous has property _kmd. Thrown error will cause promise to be
         // rejected
-        if (previos._kmd == null) {
+        if (previous._kmd == null) {
           error = new Kinvey.Error('The previous active user does not have _kmd defined' +
                                    'as a property.');
           throw error;

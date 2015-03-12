@@ -186,8 +186,6 @@ Kinvey.getActiveUser = function() {
  * @throws {Kinvey.Error} user argument must contain: _id, _kmd.authtoken.
  */
 Kinvey.setActiveUser = function(user) {
-  var error;
-
   // Debug.
   if(KINVEY_DEBUG) {
     log('Setting the active user.', arguments);
