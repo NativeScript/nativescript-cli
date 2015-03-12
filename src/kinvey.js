@@ -183,8 +183,11 @@ Kinvey.getActiveUser = function() {
  * @throws {Kinvey.Error} `user` must contain: `_kmd.authtoken`.
  * @returns {?Object} The previous active user, or `null` if there was no
  *            previous active user.
+ * @throws {Kinvey.Error} user argument must contain: _id, _kmd.authtoken.
  */
 Kinvey.setActiveUser = function(user) {
+  var error;
+
   // Debug.
   if(KINVEY_DEBUG) {
     log('Setting the active user.', arguments);

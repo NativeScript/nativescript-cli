@@ -112,6 +112,8 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The promise.
    */
   notify: function(collection, documents, options) {
+    var error;
+
     // Update the metadata for the provided collection in a single transaction.
     return Database.findAndModify(Sync.system, collection, function(metadata) {
       // Cast arguments.
@@ -123,6 +125,15 @@ var Sync = /** @lends Sync */{
         if(!metadata.documents.hasOwnProperty(document._id)) {
           metadata.size += 1;
         }
+
+        // Check if document has property _kmd. Thrown error will cause promise to be
+        // rejected
+        if (document._kmd == null) {
+          error = new Kinvey.Error('The document does not have _kmd defined as a property.' +
+                                   'It is required to sync documents.');
+          throw error;
+        }
+
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
         metadata.documents[document._id] = timestamp || null;
       });
@@ -284,6 +295,16 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The response.
    */
   _document: function(collection, metadata, local, net, options) {
+    var error;
+
+    // Check if net has property _kmd
+    if (net._kmd == null) {
+      error = new Kinvey.Error('The argument `net` does not have _kmd defined as a property.' +
+                               'It is required to compare the local and net versions of the' +
+                               'provided document.');
+      return Kinvey.Defer.reject(error);
+    }
+
     // Resolve if the remote copy does not exist or if both timestamps match.
     // Reject otherwise.
     if(null === net || (null != net._kmd && metadata.timestamp === net._kmd.lmt)) {

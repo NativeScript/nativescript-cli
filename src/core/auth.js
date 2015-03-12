@@ -144,9 +144,18 @@ var Auth = /** @lends Auth */{
    */
   Session: function() {
     // Validate preconditions.
+    var error;
     var user = Kinvey.getActiveUser();
-    if(null === user) {
-      var error = clientError(Kinvey.Error.NO_ACTIVE_USER);
+
+    if (null === user) {
+      error = clientError(Kinvey.Error.NO_ACTIVE_USER);
+      return Kinvey.Defer.reject(error);
+    }
+
+    // Check if user has property _kmd
+    if (user._kmd === null || user._kmd === undefined) {
+      error = new Kinvey.Error('The active user does not have _kmd defined as a property.' +
+                               'It is required to authenticate the user.');
       return Kinvey.Defer.reject(error);
     }
 

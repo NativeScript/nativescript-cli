@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright 2014 Kinvey, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -86,6 +86,8 @@ var maxAge = {
    * @param {Array|Object} data List of objects.
    * @param {integer} [maxAge] Maximum age (optional).
    * @returns {boolean|Object} Status, or object if refresh is needed.
+   * @throws {Kinvey.Error} The item does not have _kmd defined as a property.
+   *                        It is required to get the maxAge status.
    */
   status: function(data, maxAge) {
     var needsRefresh = false;
@@ -95,7 +97,15 @@ var maxAge = {
     var now    = new Date().getTime();
     for(var i = 0; i < length; i += 1) {
       var item = response[i];
-      if(null != item && null != item._kmd && null != item._kmd.lastRefreshedAt) {
+
+      // Check if item has property _kmd
+      if (item._kmd == null) {
+        var error = new Kinvey.Error('The item does not have _kmd defined as a property.' +
+                                     'It is required to get the maxAge status.');
+        throw error;
+      }
+
+      if (null != item && null != item._kmd && null != item._kmd.lastRefreshedAt) {
         var itemMaxAge       = (maxAge || item._kmd.maxAge) * 1000;// Milliseconds.
         var lastRefreshedAt  = fromISO(item._kmd.lastRefreshedAt).getTime();
         var threshold        = lastRefreshedAt + itemMaxAge;
