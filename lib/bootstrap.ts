@@ -41,3 +41,4 @@ $injector.require("npm", "./node-package-manager");
 $injector.require("lockfile", "./lockfile");
 $injector.require("optionsService", "./services/options-service");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
+$injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
