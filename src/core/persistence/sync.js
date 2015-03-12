@@ -134,6 +134,14 @@ var Sync = /** @lends Sync */{
           throw error;
         }
 
+        // Check if document has property _kmd.lmt. Thrown error will cause promise to
+        // rejected
+        if (document._kmd.lmt == null) {
+          error = new Kinvey.Error('The document does not have _kmd.lmt defined as a property.' +
+                                   'It is required to sync documents.');
+          throw error;
+        }
+
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
         metadata.documents[document._id] = timestamp || null;
       });
