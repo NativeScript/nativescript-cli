@@ -230,6 +230,7 @@ Kinvey.setActiveUser = function(user) {
  * @param {Object}  [options.sync]         Synchronization options.
  * @throws {Kinvey.Error} `options` must contain: `appSecret` or
  *                          `masterSecret`.
+ * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.APIHostName
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
@@ -256,7 +257,7 @@ Kinvey.init = function(options) {
 
   // Check if Kinvey.APIHostName uses https protocol
   if (Kinvey.APIHostName.indexOf('https://') !== 0) {
-    throw new Kinvey.Error('Kinvey requires `https` as the protocol when setting' +
+    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
                            ' Kinvey.APIHostName, instead found the protocol ' +
                            Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
                            ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
