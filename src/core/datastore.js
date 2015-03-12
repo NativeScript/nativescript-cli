@@ -168,6 +168,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @returns {Promise} The (new) document.
    */
   update: function(collection, document, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Updating a document.', arguments);
@@ -175,7 +177,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
 
     // Validate arguments.
     if(null == document._id) {
-      throw new Kinvey.Error('document argument must contain: _id');
+      error = new Kinvey.Error('document argument must contain: _id');
+      return Kinvey.Defer.reject(error);
     }
 
     // Cast arguments.
@@ -199,6 +202,10 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
         log('Failed to update the document.', error);
       });
     }
+
+    promise.then(null, function(err) {
+      console.log(err);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);

@@ -92,11 +92,19 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The response.
    */
   execute: function(options) {
+    var error;
+
     // Obtain all the collections that need to be synchronized.
     var query = new Kinvey.Query().greaterThan('size', 0);
     return Database.find(Sync.system, query, options).then(function(response) {
       // Synchronize all the collections in parallel.
       var promises = response.map(function(collection) {
+        // Check collection for property _id
+        if (collection._id == null) {
+          error = new Kinvey.Error('Collection does not have _id property defined.');
+          return Kinvey.Defer.reject(error);
+        }
+
         return Sync._collection(collection._id, collection.documents, options);
       });
       return Kinvey.Defer.all(promises);
@@ -122,6 +130,13 @@ var Sync = /** @lends Sync */{
 
       // Add each document to the metadata ( id => timestamp ).
       documents.forEach(function(document) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (document._id == null) {
+          error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                   'It is required to do proper synchronization.');
+          throw error;
+        }
+
         if(!metadata.documents.hasOwnProperty(document._id)) {
           metadata.size += 1;
         }
@@ -148,6 +163,8 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The response.
    */
   _collection: function(collection, documents, options) {
+    var error;
+
     // Prepare the response.
     var result = { collection: collection, success: [], error: [] };
 
@@ -170,9 +187,23 @@ var Sync = /** @lends Sync */{
       // ( id => document ).
       var response = { local: {}, net: {} };
       responses[0].forEach(function(document) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (document._id == null) {
+          error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                   'It is required to do proper synchronization.');
+          throw error;
+        }
+
         response.local[document._id] = document;
       });
       responses[1].forEach(function(document) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (document._id == null) {
+          error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                   'It is required to do proper synchronization.');
+          throw error;
+        }
+
         response.net[document._id] = document;
       });
       return response;

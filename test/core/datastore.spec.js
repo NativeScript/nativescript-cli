@@ -315,11 +315,10 @@ describe('Kinvey.DataStore', function() {
     });
 
     // Test suite.
-    it('should throw when missing required argument: document._id.', function() {
+    it('should reject when document._id is missing', function() {
       var _this = this;
-      expect(function() {
-        Kinvey.DataStore.update(_this.collection, {});
-      }).to.Throw('_id');
+      var promise = Kinvey.DataStore.update(_this.collection, {});
+      expect(promise).to.be.rejected;
     });
     it('should create a new document when the document does not exist.', function() {
       var doc = { _id: this.randomID() };
