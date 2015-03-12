@@ -203,10 +203,6 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
       });
     }
 
-    promise.then(null, function(err) {
-      console.log(err);
-    });
-
     // Return the response.
     return wrapCallbacks(promise, options);
   },
