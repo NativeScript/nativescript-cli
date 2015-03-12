@@ -82,7 +82,7 @@ var AngularHTTP = {
       method  : method,
       timeout : options.timeout,
       url     : url
-    }).then(function(response) {
+    }).then(function(response, status, headers) {
       // Debug.
       if(KINVEY_DEBUG) {
         log('The network request completed.', response);
@@ -105,6 +105,28 @@ var AngularHTTP = {
           buffer = new root.Blob([bufView], { type: options.file });
         }
         response = buffer;
+      }
+
+      // Check `Content-Type` header for application/json. Thrown error will
+      // cause promise to be rejected.
+      if (response != null && !(response instanceof Blob)) {
+        var responseContentType = headers('Content-Type') || undefined;
+        var error;
+
+        if (responseContentType == null) {
+          error = new Kinvey.Error('Content-Type header missing in response. Please add ' +
+                                   'Content-Type header to response with value ' +
+                                   'application/json.');
+        }
+        else if (responseContentType.indexOf('application/json') === -1) {
+          error = new Kinvey.Error('Response Content-Type header is set to ' +
+                                   responseContentType + '. Expected it to be set ' +
+                                   'to application/json.');
+        }
+
+        if (error) {
+          throw error;
+        }
       }
 
       // Return the response.
