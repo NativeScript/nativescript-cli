@@ -126,22 +126,6 @@ var Sync = /** @lends Sync */{
           metadata.size += 1;
         }
 
-        // Check if document has property _kmd. Thrown error will cause promise to be
-        // rejected
-        if (document._kmd == null) {
-          error = new Kinvey.Error('The document does not have _kmd defined as a property.' +
-                                   'It is required to sync documents.');
-          throw error;
-        }
-
-        // Check if document has property _kmd.lmt. Thrown error will cause promise to
-        // rejected
-        if (document._kmd.lmt == null) {
-          error = new Kinvey.Error('The document does not have _kmd.lmt defined as a property.' +
-                                   'It is required to sync documents.');
-          throw error;
-        }
-
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
         metadata.documents[document._id] = timestamp || null;
       });
@@ -305,12 +289,21 @@ var Sync = /** @lends Sync */{
   _document: function(collection, metadata, local, net, options) {
     var error;
 
-    // Check if net has property _kmd
-    if (net._kmd == null) {
-      error = new Kinvey.Error('The argument `net` does not have _kmd defined as a property.' +
-                               'It is required to compare the local and net versions of the' +
-                               'provided document.');
-      return Kinvey.Defer.reject(error);
+    if (net != null) {
+      // Check if net has property _kmd
+      if (net._kmd == null) {
+        error = new Kinvey.Error('The argument `net` does not have _kmd defined as a property. ' +
+                                 'This is required to properly sync.');
+        return Kinvey.Defer.reject(error);
+      }
+
+      // Check if document has property _kmd.lmt. Thrown error will cause promise to
+      // rejected
+      if (net._kmd.lmt == null) {
+        error = new Kinvey.Error('The argument `net` does not have _kmd.lmt defined as a ' +
+                                 'property. This is required to properly sync.');
+        return Kinvey.Defer.reject(error);
+      }
     }
 
     // Resolve if the remote copy does not exist or if both timestamps match.
