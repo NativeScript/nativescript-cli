@@ -492,6 +492,8 @@ Kinvey.User = /** @lends Kinvey.User */{
    * @returns {Promise} The user.
    */
   update: function(data, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Updating a user.', arguments);
@@ -546,14 +548,30 @@ Kinvey.User = /** @lends Kinvey.User */{
 
       // If we just updated the active user, refresh it.
       var activeUser = Kinvey.getActiveUser();
-      if(null !== activeUser && activeUser._id === user._id) {
-        // Debug.
-        if(KINVEY_DEBUG) {
-          log('Updating the active user because the updated user was the active user.');
+
+      if (null !== activeUser) {
+        // Check activeUser for property _id. Thrown error will reject promise.
+        if (activeUser._id == null) {
+          error = new Kinvey.Error('Active user does not have _id property defined.');
+          throw error;
         }
 
-        Kinvey.setActiveUser(user);
+        // Check user for property _id. Thrown error will reject promise.
+        if (user._id == null) {
+          error = new Kinvey.Error('User does not have _id property defined.');
+          throw error;
+        }
+
+        if (activeUser._id === user._id) {
+            // Debug.
+          if(KINVEY_DEBUG) {
+            log('Updating the active user because the updated user was the active user.');
+          }
+
+          Kinvey.setActiveUser(user);
+        }
       }
+
       return user;
     });
 
@@ -684,6 +702,8 @@ Kinvey.User = /** @lends Kinvey.User */{
    * @returns {Promise} The response.
    */
   destroy: function(id, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Deleting a user.', arguments);
@@ -702,14 +722,24 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options).then(function(response) {
       // If we just deleted the active user, unset it here.
       var activeUser = Kinvey.getActiveUser();
-      if(null !== activeUser && activeUser._id === id) {
-        // Debug.
-        if(KINVEY_DEBUG) {
-          log('Deleting the active user because the deleted user was the active user.');
+
+      if (null !== activeUser) {
+        // Check activeUser for property _id. Thrown error will reject promise.
+        if (activeUser._id == null) {
+          error = new Kinvey.Error('Active user does not have _id property defined.');
+          throw error;
         }
 
-        Kinvey.setActiveUser(null);
+        if (activeUser._id === id) {
+          // Debug.
+          if(KINVEY_DEBUG) {
+            log('Deleting the active user because the deleted user was the active user.');
+          }
+
+          Kinvey.setActiveUser(null);
+        }
       }
+
       return response;
     }, function(error) {
       // If `options.silent`, treat `USER_NOT_FOUND` as success.

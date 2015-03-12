@@ -231,6 +231,8 @@ var WebSqlAdapter = {
    * @augments {Database.clean}
    */
   clean: function(collection, query, options) {
+    var error;
+
     // Deleting should not take the query sort, limit, and skip into account.
     if(null != query) {// Reset.
       query.sort(null).limit(null).skip(0);
@@ -246,6 +248,13 @@ var WebSqlAdapter = {
       // Build the query.
       var infix      = [];
       var parameters = documents.map(function(document) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (document._id == null) {
+          error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                   'Unable to clean database.');
+          throw error;
+        }
+
         infix.push('?');// Add placeholder.
         return document._id;
       });

@@ -89,9 +89,24 @@ Kinvey.Social = /** @lends Kinvey.Social */{
       var activeUser = Kinvey.getActiveUser();
       user._socialIdentity           = user._socialIdentity || {};
       user._socialIdentity[provider] = tokens;
-      if(null !== activeUser && activeUser._id === user._id) {
-        options._provider = provider;// Force tokens to be updated.
-        return Kinvey.User.update(user, options);
+
+      if (null !== activeUser) {
+        // Check activeUser for property _id. Thrown error will reject promise.
+        if (activeUser._id == null) {
+          error = new Kinvey.Error('Active user does not have _id property defined.');
+          throw error;
+        }
+
+        // Check user for property _id. Thrown error will reject promise.
+        if (user._id == null) {
+          error = new Kinvey.Error('User does not have _id property defined.');
+          throw error;
+        }
+
+        if (activeUser._id === user._id) {
+          options._provider = provider;// Force tokens to be updated.
+          return Kinvey.User.update(user, options);
+        }
       }
 
       // Attempt logging in with the tokens.

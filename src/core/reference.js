@@ -102,6 +102,8 @@ var KinveyReference = /** @lends KinveyReference */{
 
     //Recursively process relationships
     var resolveRelationships = function(entity, relationMapping){
+      var error;
+
       if(relationMapping.keys){
         var relationshipPromises = [];
 
@@ -115,6 +117,13 @@ var KinveyReference = /** @lends KinveyReference */{
               // explicitly excluded.
               if(null == member || 'KinveyRef' !== member._type) {
                 return Kinvey.Defer.resolve(member);
+              }
+
+              // Check member for property _id
+              if (member._id == null) {
+                error = new Kinvey.Error('Member does not have _id property defined. ' +
+                                         'It is required to resolve the relationship.');
+                return Kinvey.Defer.reject(error);
               }
 
               // Forward to the `Kinvey.User` or `Kinvey.DataStore` namespace.
