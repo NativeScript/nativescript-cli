@@ -155,7 +155,8 @@ var Auth = /** @lends Auth */{
     // Check if user has property _kmd
     if (user._kmd === null || user._kmd === undefined) {
       error = new Kinvey.Error('The active user does not have _kmd defined as a property.' +
-                               'It is required to authenticate the user.');
+                               'It is required to authenticate the user. User _id: ' +
+                               user._id);
       return Kinvey.Defer.reject(error);
     }
 

@@ -323,16 +323,18 @@ var Sync = /** @lends Sync */{
     if (net != null) {
       // Check if net has property _kmd
       if (net._kmd == null) {
-        error = new Kinvey.Error('The argument `net` does not have _kmd defined as a property. ' +
-                                 'This is required to properly sync.');
+        error = new Kinvey.Error('The server entity does not have _kmd defined as a property. ' +
+                                 'This is required to properly sync. Entity _id: ' +
+                                 net._id);
         return Kinvey.Defer.reject(error);
       }
 
       // Check if document has property _kmd.lmt. Thrown error will cause promise to
       // rejected
       if (net._kmd.lmt == null) {
-        error = new Kinvey.Error('The argument `net` does not have _kmd.lmt defined as a ' +
-                                 'property. This is required to properly sync.');
+        error = new Kinvey.Error('The server entity does not have _kmd.lmt defined as a ' +
+                                 'property. This is required to properly sync. Entity _id: ' +
+                                 net._id);
         return Kinvey.Defer.reject(error);
       }
     }
