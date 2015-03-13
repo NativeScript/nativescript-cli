@@ -335,14 +335,6 @@ var Sync = /** @lends Sync */{
       return Kinvey.Defer.reject(error);
     }
 
-    // Check if metadata has timestamp property.
-    if (metadata.timestamp == null) {
-      error = new Kinvey.Error('Metadata does not have timestamp defined. This is ' +
-                               'required to properly sync document id ' +
-                               metadata.id + ' in collection ' + collection + '.');
-      return Kinvey.Defer.reject(error);
-    }
-
     if (net != null) {
       // Check if net has property _kmd
       if (net._kmd == null) {
