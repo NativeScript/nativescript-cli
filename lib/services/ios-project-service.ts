@@ -20,7 +20,8 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices) { }
+		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $npm: INodePackageManager) { }
 
 	public get platformData(): IPlatformData {
 		return {
@@ -72,7 +73,7 @@ class IOSProjectService implements  IPlatformProjectService {
 				var xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 
 				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), path.join(projectRoot));
+				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), projectRoot);
 
 				var directoryContent = this.$fs.readDirectory(frameworkDir).wait();
 				var frameworkFiles = _.difference(directoryContent, [IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, xcodeProjectName]);
@@ -195,7 +196,44 @@ class IOSProjectService implements  IPlatformProjectService {
             this.$fs.writeFile(pbxProjPath, project.writeSync()).wait();
             this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
         }).future<void>()();
-    }
+	}
+
+	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+		return (() => {
+			var currentXcodeProjectFile = this.buildPathToXcodeProjectFile(currentVersion);
+			var currentXcodeProjectFileContent = this.$fs.readFile(currentXcodeProjectFile).wait();
+
+			var newXcodeProjectFile = this.buildPathToXcodeProjectFile(newVersion);
+			var newXcodeProjectFileContent = this.$fs.readFile(newXcodeProjectFile).wait();
+
+			return currentXcodeProjectFileContent === newXcodeProjectFileContent;
+
+		}).future<boolean>()();
+	}
+
+	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+		return (() => {
+			// Copy old file to options["profile-dir"]
+			var sourceFile = path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName));
+			var destinationFile = path.join(options.profileDir, "xcodeproj");
+			//this.$fs.copyFile(sourceFile, destinationFile).wait();
+			this.$logger.info("Backup file %s at location %s", sourceFile, destinationFile);
+			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName))).wait();
+
+			// Copy xcodeProject file
+			var cachedPackagePath = path.join(this.$npm.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+			shell.cp("-R", path.join(cachedPackagePath, "*"), path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName)));
+			this.$logger.info("Copied from %s at %s.", cachedPackagePath, this.platformData.projectRoot);
+
+
+			var pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
+			this.replaceFileContent(pbxprojFilePath).wait();
+		}).future<void>()();
+	}
+
+	private buildPathToXcodeProjectFile(version: string): string {
+		return path.join(this.$npm.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
+	}
 
     private validateDynamicFramework(libraryPath: string): IFuture<void> {
         return (() => {

@@ -443,19 +443,28 @@ export class PlatformService implements IPlatformService {
 			var currentVersion = data && data.version ? data.version : "0.2.0";
 			var newVersion = version || this.$npm.getLatestVersion(platformData.frameworkPackageName).wait();
 
-			if(!semver.valid(newVersion)) {
-				this.$errors.fail("The version %s is not valid. The version should consists from 3 parts seperated by dot.", newVersion);
-			}
+			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
 
-			if(semver.gt(currentVersion, newVersion)) { // Downgrade
-				var isUpdateConfirmed = this.$prompter.confirm("You are going to update to lower version. Are you sure?", () => "n").wait();
-				if(isUpdateConfirmed) {
+				if(!semver.valid(newVersion)) {
+					this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
+				}
+
+				if(semver.gt(currentVersion, newVersion)) { // Downgrade
+					var isUpdateConfirmed = this.$prompter.confirm("You are going to update to lower version. Are you sure?", () => "n").wait();
+					if(isUpdateConfirmed) {
+						this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+					}
+				} else if(semver.eq(currentVersion, newVersion)) {
+					this.$errors.fail("Current and new version are the same.");
+				} else {
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 				}
-			} else if(semver.eq(currentVersion, newVersion)) {
-				this.$errors.fail("Current and new version are the same.");
 			} else {
-				this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s Are you sure?", options.profileDir), () => "y").wait();
+				if(isUpdateConfirmed) {
+					platformData.platformProjectService.updatePlatform(currentVersion, newVersion).wait();
+					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+				}
 			}
 
 		}).future<void>()();
@@ -480,7 +489,7 @@ export class PlatformService implements IPlatformService {
 
 			// Add new framework files
 			var newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
-			var cacheDirectoryPath = this.getNpmCacheDirectoryCore(platformData.frameworkPackageName, newVersion);
+			var cacheDirectoryPath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
 
 			_.each(newFrameworkData.frameworkFiles, file => {
 				var sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
@@ -507,36 +516,29 @@ export class PlatformService implements IPlatformService {
 
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
-			var npmCacheDirectoryPath = this.getNpmCacheDirectory(platformData.frameworkPackageName, version).wait();
+			var cachedPackagePath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, version);
+			this.ensurePackageIsCached(cachedPackagePath, platformData.frameworkPackageName, version).wait();
 
-			var allFiles = this.$fs.enumerateFilesInDirectorySync(npmCacheDirectoryPath);
+			var allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
 			var filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
 
-			var allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(npmCacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(npmCacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
+			var allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
 			var filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.contains(platformData.frameworkFilesExtensions, path.extname(dir)) || _.contains(platformData.frameworkDirectoriesNames, path.basename(dir))));
 
 			return {
-				frameworkFiles: this.mapFrameworkFiles(npmCacheDirectoryPath, filteredFiles),
-				frameworkDirectories: this.mapFrameworkFiles(npmCacheDirectoryPath, filteredFrameworkDirectories)
+				frameworkFiles: this.mapFrameworkFiles(cachedPackagePath, filteredFiles),
+				frameworkDirectories: this.mapFrameworkFiles(cachedPackagePath, filteredFrameworkDirectories)
 			}
 
 		}).future<any>()();
 	}
 
-	private getNpmCacheDirectory(packageName: string, version: string): IFuture<string> {
+	private ensurePackageIsCached(cachedPackagePath: string, packageName: string, version: string): IFuture<void> {
 		return (() => {
-			var npmCacheDirectoryPath = this.getNpmCacheDirectoryCore(packageName, version);
-
-			if(!this.$fs.exists(npmCacheDirectoryPath).wait()) {
+			if(!this.$fs.exists(cachedPackagePath).wait()) {
 				this.$npm.addToCache(packageName, version).wait();
 			}
-
-			return npmCacheDirectoryPath;
-		}).future<string>()();
-	}
-
-	private getNpmCacheDirectoryCore(packageName: string, version: string): string {
-		return path.join(this.$npm.getCacheRootPath(), packageName, version, "package");
+		}).future<void>()();
 	}
 
 	private mapFrameworkFiles(npmCacheDirectoryPath: string, files: string[]): string[] {

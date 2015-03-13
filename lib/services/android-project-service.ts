@@ -122,6 +122,16 @@ class AndroidProjectService implements IPlatformProjectService {
 		}).future<string>()();
     }
 
+	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+		return (() => {
+			return true;
+		}).future<boolean>()();
+	}
+
+	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+		return (() => { }).future<void>()();
+	}
+
     private updateMetadata(projectRoot: string): void {
         var projMetadataDir = path.join(projectRoot, "assets", "metadata");
         var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);
