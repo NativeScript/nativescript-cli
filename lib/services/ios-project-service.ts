@@ -37,7 +37,9 @@ class IOSProjectService implements  IPlatformProjectService {
 			validPackageNamesForEmulator: [
 				this.$projectData.projectName + ".app"
 			],
-			frameworkFilesExtensions: [".a", ".h", ".bin"],
+			frameworkFilesExtensions: [".a", ".framework", ".bin"],
+			frameworkDirectoriesExtensions: [".framework"],
+			frameworkDirectoriesNames: ["Metadata"],
 			targetedOS: ['darwin']
 		};
 	}

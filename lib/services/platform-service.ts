@@ -464,16 +464,36 @@ export class PlatformService implements IPlatformService {
 	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string): IFuture<void> {
 		return (() => {
 			// Remove old framework files
-			var oldFrameworkFiles =  this.getFrameworkFiles(platformData, currentVersion).wait();
-			_.each(oldFrameworkFiles, file => {
-				this.$fs.deleteFile(path.join(platformData.projectRoot, file)).wait();
+			var oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
+
+			_.each(oldFrameworkData.frameworkFiles, file => {
+				var fileToDelete = path.join(platformData.projectRoot, file);
+				this.$logger.trace("Deleting %s", fileToDelete);
+				this.$fs.deleteFile(fileToDelete).wait();
+			});
+
+			_.each(oldFrameworkData.frameworkDirectories, dir => {
+				var dirToDelete = path.join(platformData.projectRoot, dir);
+				this.$logger.trace("Deleting %s", dirToDelete);
+				this.$fs.deleteDirectory(dirToDelete).wait();
 			});
 
 			// Add new framework files
-			var newFrameworkFiles = this.getFrameworkFiles(platformData, newVersion).wait();
+			var newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
 			var cacheDirectoryPath = this.getNpmCacheDirectoryCore(platformData.frameworkPackageName, newVersion);
-			_.each(newFrameworkFiles, file => {
-				shell.cp("-f", path.join(cacheDirectoryPath, file), path.join(platformData.projectRoot, file));
+
+			_.each(newFrameworkData.frameworkFiles, file => {
+				var sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
+				var destinationFile = path.join(platformData.projectRoot, file);
+				this.$logger.trace("Replacing %s with %s", sourceFile, destinationFile);
+				shell.cp("-f", sourceFile, destinationFile);
+			});
+
+			_.each(newFrameworkData.frameworkDirectories, dir => {
+				var sourceDirectory = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir);
+				var destinationDirectory = path.join(platformData.projectRoot, dir);
+				this.$logger.trace("Copying %s to %s", sourceDirectory, destinationDirectory);
+				shell.cp("-fR", path.join(sourceDirectory, "*"), destinationDirectory);
 			});
 
 			// Update .tnsproject file
@@ -485,16 +505,22 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<string[]> {
+	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
 			var npmCacheDirectoryPath = this.getNpmCacheDirectory(platformData.frameworkPackageName, version).wait();
+
 			var allFiles = this.$fs.enumerateFilesInDirectorySync(npmCacheDirectoryPath);
 			var filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
-			var relativeToCacheFiles = _.map(filteredFiles, file => file.substr(npmCacheDirectoryPath.length));
 
-			return relativeToCacheFiles;
+			var allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(npmCacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(npmCacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
+			var filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.contains(platformData.frameworkFilesExtensions, path.extname(dir)) || _.contains(platformData.frameworkDirectoriesNames, path.basename(dir))));
 
-		}).future<string[]>()();
+			return {
+				frameworkFiles: this.mapFrameworkFiles(npmCacheDirectoryPath, filteredFiles),
+				frameworkDirectories: this.mapFrameworkFiles(npmCacheDirectoryPath, filteredFrameworkDirectories)
+			}
+
+		}).future<any>()();
 	}
 
 	private getNpmCacheDirectory(packageName: string, version: string): IFuture<string> {
@@ -511,6 +537,10 @@ export class PlatformService implements IPlatformService {
 
 	private getNpmCacheDirectoryCore(packageName: string, version: string): string {
 		return path.join(this.$npm.getCacheRootPath(), packageName, version, "package");
+	}
+
+	private mapFrameworkFiles(npmCacheDirectoryPath: string, files: string[]): string[] {
+		return _.map(files, file => file.substr(npmCacheDirectoryPath.length + constants.PROJECT_FRAMEWORK_FOLDER_NAME.length + 1))
 	}
 }
 $injector.register("platformService", PlatformService);
