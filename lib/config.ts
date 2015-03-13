@@ -4,12 +4,21 @@
 import path = require("path");
 import util = require("util");
 import staticConfigBaseLibPath = require("./common/static-config-base");
+import configBaseLib = require("./common/config-base");
 
-$injector.register("config", {
-	CI_LOGGER: false,
-	DEBUG: process.env.NATIVESCRIPT_DEBUG,
-	TYPESCRIPT_COMPILER_OPTIONS: { }
-});
+export class Configuration extends configBaseLib.ConfigBase implements IConfiguration { // User specific config
+	CI_LOGGER = false;
+	DEBUG = false;
+	TYPESCRIPT_COMPILER_OPTIONS = {};
+	USE_PROXY = false;
+
+	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
+	constructor(protected $fs: IFileSystem) {
+		super($fs);
+		_.extend(this, this.loadConfig("config").wait());
+	}
+}
+$injector.register("config", Configuration);
 
 export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase implements IStaticConfig {
 	public PROJECT_FILE_NAME = ".tnsproject";
