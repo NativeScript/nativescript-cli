@@ -311,7 +311,8 @@ export class PlatformService implements IPlatformService {
 			this.$errors.fail("No platform specified.")
 		}
 
-		platform = platform.toLowerCase();
+		var parts = platform.split("@");
+		platform = parts[0].toLowerCase();
 
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));

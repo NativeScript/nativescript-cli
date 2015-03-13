@@ -17,7 +17,7 @@ export class UpdatePlatformCommand implements ICommand {
 				this.$errors.fail("No platform specified. Please specify platforms to update.");
 			}
 
-			_.each(args, arg => this.$platformService.validatePlatformInstalled(arg));
+			_.each(args, arg => this.$platformService.validatePlatformInstalled(arg.split("@")[0]));
 
 			return true;
 		}).future<boolean>()();
