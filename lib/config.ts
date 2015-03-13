@@ -6,7 +6,7 @@ import util = require("util");
 import staticConfigBaseLibPath = require("./common/static-config-base");
 import configBaseLib = require("./common/config-base");
 
-export class Configuration extends configBaseLib.ConfigBase { // User specific config
+export class Configuration extends configBaseLib.ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
 	DEBUG = false;
 	TYPESCRIPT_COMPILER_OPTIONS = {};
