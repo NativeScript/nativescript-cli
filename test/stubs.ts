@@ -201,6 +201,10 @@ export class NPMStub implements INodePackageManager {
 	getLatestVersion(packageName: string): IFuture<string> {
 		return Future.fromResult("");
 	}
+
+	getCachedPackagePath(packageName: string, version: string): string {
+		return "";
+	}
 }
 
 export class ProjectDataStub implements IProjectData {
@@ -275,6 +279,12 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
     }
 	getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
 		return null;
+	}
+	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+		return Future.fromResult(false);
+	}
+	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+		return Future.fromResult();
 	}
 }
 

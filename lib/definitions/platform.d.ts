@@ -27,6 +27,8 @@ interface IPlatformData {
 	validPackageNamesForDevice: string[];
 	validPackageNamesForEmulator?: string[];
 	frameworkFilesExtensions: string[];
+	frameworkDirectoriesExtensions?: string[];
+	frameworkDirectoriesNames?: string[];
 	targetedOS?: string[];
 }
 
