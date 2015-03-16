@@ -216,7 +216,8 @@ class IOSProjectService implements  IPlatformProjectService {
 			// Copy old file to options["profile-dir"]
 			var sourceFile = path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName));
 			var destinationFile = path.join(options.profileDir, "xcodeproj");
-			//this.$fs.copyFile(sourceFile, destinationFile).wait();
+			this.$fs.deleteDirectory(destinationFile).wait();
+			shell.cp("-R", path.join(sourceFile, "*"), destinationFile);
 			this.$logger.info("Backup file %s at location %s", sourceFile, destinationFile);
 			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName))).wait();
 

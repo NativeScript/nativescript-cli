@@ -450,7 +450,7 @@ export class PlatformService implements IPlatformService {
 				}
 
 				if(semver.gt(currentVersion, newVersion)) { // Downgrade
-					var isUpdateConfirmed = this.$prompter.confirm("You are going to update to lower version. Are you sure?", () => "n").wait();
+					var isUpdateConfirmed = this.$prompter.confirm(util.format("You are going to downgrade to android runtime v.%s. Are you sure?", newVersion), () => "n").wait();
 					if(isUpdateConfirmed) {
 						this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 					}
@@ -460,7 +460,7 @@ export class PlatformService implements IPlatformService {
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 				}
 			} else {
-				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s Are you sure?", options.profileDir), () => "y").wait();
+				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s. Are you sure?", options.profileDir), () => "y").wait();
 				if(isUpdateConfirmed) {
 					platformData.platformProjectService.updatePlatform(currentVersion, newVersion).wait();
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
