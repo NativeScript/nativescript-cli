@@ -99,12 +99,6 @@ var Sync = /** @lends Sync */{
     return Database.find(Sync.system, query, options).then(function(response) {
       // Synchronize all the collections in parallel.
       var promises = response.map(function(collection) {
-        // Check collection for property _id
-        if (collection._id == null) {
-          error = new Kinvey.Error('Collection does not have _id property defined.');
-          return Kinvey.Defer.reject(error);
-        }
-
         return Sync._collection(collection._id, collection.documents, options);
       });
       return Kinvey.Defer.all(promises);
