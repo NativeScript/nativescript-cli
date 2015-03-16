@@ -178,7 +178,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     // Validate arguments.
     if(null == document._id) {
       error = new Kinvey.Error('document argument must contain: _id');
-      return Kinvey.Defer.reject(error);
+      throw error;
+      // return Kinvey.Defer.reject(error);
     }
 
     // Cast arguments.
