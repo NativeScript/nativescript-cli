@@ -240,13 +240,37 @@ Kinvey.getAppVersion = function() {
  * @param {string} version App version to use.
  */
 Kinvey.setAppVersion = function(version) {
+  var appVersion = version;
+
   // Debug
   if (KINVEY_DEBUG) {
     log('Setting the app version.', arguments);
   }
 
+  // Set app version using specified major, minor, and patch
+  // provided as arguments.
+  if (arguments.length > 1) {
+    // Get individual parts of app version
+    major = arguments[0];
+    minor = arguments[1];
+    patch = arguments[2];
+
+    // Set app version to major value
+    appVersion = major;
+
+    // Append minor value if it was provided
+    if (minor != null) {
+      appVersion += '.' + minor;
+    }
+
+    // Append patch value if it was provided
+    if (patch != null) {
+      appVersion += '.' + patch;
+    }
+  }
+
   // Set the app version
-  Kinvey.APP_VERSION = version;
+  Kinvey.APP_VERSION = appVersion;
 };
 
 /**
