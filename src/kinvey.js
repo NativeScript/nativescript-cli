@@ -254,6 +254,7 @@ Kinvey.setAppVersion = function(version) {
  *
  * @param {Options}  options Options.
  * @param {string}  [options.apiHostName]  API Host Name.
+ * @param {string}  [options.appVersion]   App Version.
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -285,6 +286,9 @@ Kinvey.init = function(options) {
   // Set the API endpoint
   var apiHostName = options.apiHostName || Kinvey.API_ENDPOINT;
   Kinvey.APIHostName = apiHostName || Kinvey.APIHostName;
+
+  // Set the App Version
+  Kinvey.APP_VERSION = options.appVersion;
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;
