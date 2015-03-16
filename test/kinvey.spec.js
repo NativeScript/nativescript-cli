@@ -78,6 +78,33 @@ describe('Kinvey', function() {
         }).to.Throw('Secret');
       }
     );
+    it('should throw on invalid arguments: options.apiHostName', function() {
+      expect(function() {
+        Kinvey.init({
+          apiHostName: 'http://myapihost.com',
+          appKey: config.test.appKey,
+          appSecret: config.test.appSecret
+        });
+      }).to.Throw('http');
+    });
+    it('should throw on invalid Kinvey.API_ENDPOINT', function() {
+      Kinvey.API_ENDPOINT = 'http://myapihost.com';
+      expect(function() {
+        Kinvey.init({
+          appKey: config.test.appKey,
+          appSecret: config.test.appSecret
+        });
+      }).to.Throw('http');
+    });
+    it('should throw on invalid Kinvey.APIHostName', function() {
+      Kinvey.APIHostName = 'http://myapihost.com';
+      expect(function() {
+        Kinvey.init({
+          appKey: config.test.appKey,
+          appSecret: config.test.appSecret
+        });
+      }).to.Throw('http');
+    });
     it('should save api host name on arguments: options.apiHostName', function() {
       Kinvey.init({
         apiHostName: config.test.apiHostName,

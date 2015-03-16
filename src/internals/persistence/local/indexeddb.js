@@ -249,6 +249,8 @@ var IDBAdapter = {
    * @augments {Database.clean}
    */
   clean: function(collection, query, options) {
+    var error;
+
     // Deleting should not take the query sort, limit, and skip into account.
     if(null != query) {// Reset.
       query.sort(null).limit(null).skip(0);
@@ -270,6 +272,13 @@ var IDBAdapter = {
         // `success` event, bind to the `complete` event.
         var request = store.transaction;
         documents.forEach(function(document) {
+          // Check document for property _id. Thrown error will reject promise.
+          if (document._id == null) {
+            error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                     'Unable to clean database.');
+            throw error;
+          }
+
           store['delete'](document._id);
         });
         request.oncomplete = function() {

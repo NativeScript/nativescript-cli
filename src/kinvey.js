@@ -183,6 +183,7 @@ Kinvey.getActiveUser = function() {
  * @throws {Kinvey.Error} `user` must contain: `_kmd.authtoken`.
  * @returns {?Object} The previous active user, or `null` if there was no
  *            previous active user.
+ * @throws {Kinvey.Error} user argument must contain: _id, _kmd.authtoken.
  */
 Kinvey.setActiveUser = function(user) {
   // Debug.
@@ -220,7 +221,7 @@ Kinvey.setActiveUser = function(user) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
- * @param {string}  [options.apiHostName]  API Host Name.
+ * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -229,6 +230,7 @@ Kinvey.setActiveUser = function(user) {
  * @param {Object}  [options.sync]         Synchronization options.
  * @throws {Kinvey.Error} `options` must contain: `appSecret` or
  *                          `masterSecret`.
+ * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.APIHostName
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
@@ -252,6 +254,14 @@ Kinvey.init = function(options) {
   // Set the API endpoint
   var apiHostName = options.apiHostName || Kinvey.API_ENDPOINT;
   Kinvey.APIHostName = apiHostName || Kinvey.APIHostName;
+
+  // Check if Kinvey.APIHostName uses https protocol
+  if (Kinvey.APIHostName.indexOf('https://') !== 0) {
+    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
+                           ' Kinvey.APIHostName, instead found the protocol ' +
+                           Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
+                           ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
+  }
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;
