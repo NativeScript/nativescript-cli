@@ -15,6 +15,9 @@ $injector.require("projectTemplatesService", "./services/project-templates-servi
 $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");
 
+$injector.require("iOSDebugService", "./services/ios-debug-service");
+$injector.require("androidDebugService", "./services/android-debug-service");
+
 $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.require("analyticsSettingsService", "./services/analytics-settings-service");
 
@@ -29,7 +32,10 @@ $injector.requireCommand("platform|update", "./commands/update-platform");
 $injector.requireCommand("library|add", "./commands/add-library");
 $injector.requireCommand("run|ios", "./commands/run"); 
 $injector.requireCommand("run|android", "./commands/run");
-$injector.requireCommand("debug", "./commands/debug");
+
+$injector.requireCommand("debug|ios", "./commands/debug");
+$injector.requireCommand("debug|android", "./commands/debug");
+
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build|ios", "./commands/build");
 $injector.requireCommand("build|android", "./commands/build");

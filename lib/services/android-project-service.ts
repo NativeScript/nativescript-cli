@@ -140,7 +140,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			return assetsDirectory;
 
 		}).future<string>()();
-    }
+	}
 
 	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
 		return { };
@@ -156,112 +156,112 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => { }).future<void>()();
 	}
 
-    private updateMetadata(projectRoot: string): void {
-        var projMetadataDir = path.join(projectRoot, "assets", "metadata");
-        var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);
-        shell.cp("-f", path.join(libsmetadataDir, "*.dat"), projMetadataDir);
-    }
+	private updateMetadata(projectRoot: string): void {
+		var projMetadataDir = path.join(projectRoot, "assets", "metadata");
+		var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);
+		shell.cp("-f", path.join(libsmetadataDir, "*.dat"), projMetadataDir);
+	}
 
-    private generateMetadata(projectRoot: string): void {
-        var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
-        var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
+	private generateMetadata(projectRoot: string): void {
+		var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
+		var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
 		var metadataDirName = AndroidProjectService.METADATA_DIRNAME;
-        var outDir = path.join(libsFolder, metadataDirName);
-        this.$fs.ensureDirectoryExists(outDir).wait();
+		var outDir = path.join(libsFolder, metadataDirName);
+		this.$fs.ensureDirectoryExists(outDir).wait();
 
 		shell.cp("-f", path.join(__dirname, "../../resources/tools/android.jar"), libsFolder);
 		shell.cp("-f", path.join(__dirname, "../../resources/tools/android-support-v4.jar"), libsFolder);
 		shell.cp("-f", path.join(projectRoot, "libs/*.jar"), libsFolder);
 
 		this.spawn('java', ['-jar', metadataGeneratorPath, libsFolder, outDir]).wait();
-    }
+	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
-            var args = this.getAntArgs(buildConfiguration, projectRoot);
+			var args = this.getAntArgs(buildConfiguration, projectRoot);
 			var argsSaved = this.getAntArgs(buildConfiguration, projectRoot);
-            this.spawn('ant', args).wait();
-            this.generateMetadata(projectRoot);
-            this.updateMetadata(projectRoot);
-            // build the project again in order to include the newly generated metadata
+			this.spawn('ant', args).wait();
+			this.generateMetadata(projectRoot);
+			this.updateMetadata(projectRoot);
+			// build the project again in order to include the newly generated metadata
 			this.spawn('ant', argsSaved).wait();
 		}).future<void>()();
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
-    }
+	}
 
-    private generateBuildFile(projDir: string, targetSdk: string): void {
-        this.$logger.info("Generate build.xml for %s", projDir);
-        var cmd = util.format("android update project -p %s --target %s --subprojects", projDir, targetSdk);
-        this.$childProcess.exec(cmd).wait();
-    }
+	private generateBuildFile(projDir: string, targetSdk: string): void {
+		this.$logger.info("Generate build.xml for %s", projDir);
+		var cmd = util.format("android update project -p %s --target %s --subprojects", projDir, targetSdk);
+		this.$childProcess.exec(cmd).wait();
+	}
 
-    private parseProjectProperties(projDir: string, destDir: string): void {
-        var projProp = path.join(projDir, "project.properties");
+	private parseProjectProperties(projDir: string, destDir: string): void {
+		var projProp = path.join(projDir, "project.properties");
 
-        if (!this.$fs.exists(projProp).wait()) {
-            this.$logger.warn("Warning: File %s does not exist", projProp);
-            return;
-        }
+		if (!this.$fs.exists(projProp).wait()) {
+			this.$logger.warn("Warning: File %s does not exist", projProp);
+			return;
+		}
 
 		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
 		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
-        lines.forEach(elem => {
-            var match = elem.match(regEx);
-            if (match) {
-                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
-                libRef.adjustedPath = this.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
-                this.parseProjectProperties(libRef.adjustedPath, destDir);
-            }
-        });
+		lines.forEach(elem => {
+			var match = elem.match(regEx);
+			if (match) {
+				var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
+				libRef.adjustedPath = this.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
+				this.parseProjectProperties(libRef.adjustedPath, destDir);
+			}
+		});
 
-        this.$logger.info("Copying %s", projDir);
-        shell.cp("-Rf", projDir, destDir);
+		this.$logger.info("Copying %s", projDir);
+		shell.cp("-Rf", projDir, destDir);
 
-        var targetDir = path.join(destDir, path.basename(projDir));
-        // TODO: parametrize targetSdk
-        var targetSdk = "android-17";
-        this.generateBuildFile(targetDir, targetSdk);
-    }
+		var targetDir = path.join(destDir, path.basename(projDir));
+		// TODO: parametrize targetSdk
+		var targetSdk = "android-17";
+		this.generateBuildFile(targetDir, targetSdk);
+	}
 
-    private getProjectReferences(projDir: string): ILibRef[]{
-        var projProp = path.join(projDir, "project.properties");
+	private getProjectReferences(projDir: string): ILibRef[]{
+		var projProp = path.join(projDir, "project.properties");
 
 		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
-        var refs: ILibRef[] = [];
+		var refs: ILibRef[] = [];
 
 		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
-        lines.forEach(elem => {
-            var match = elem.match(regEx);
-            if (match) {
-                var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
-                libRef.adjustedPath = path.join(projDir, libRef.path);
-                refs.push(libRef);
-            }
-        });
+		lines.forEach(elem => {
+			var match = elem.match(regEx);
+			if (match) {
+				var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
+				libRef.adjustedPath = path.join(projDir, libRef.path);
+				refs.push(libRef);
+			}
+		});
 
-        return refs;
-    }
+		return refs;
+	}
 
-    private updateProjectReferences(projDir: string, libraryPath: string): void {
-        var refs = this.getProjectReferences(projDir);
+	private updateProjectReferences(projDir: string, libraryPath: string): void {
+		var refs = this.getProjectReferences(projDir);
 		var maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0;
 
-        var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
+		var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
 
-        var libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
+		var libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
 
-        if (!libRefExists) {
-            var projRef = util.format("%sandroid.library.reference.%d=%s", os.EOL, maxIdx + 1, relLibDir);
-            var projProp = path.join(projDir, "project.properties");
-            fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
-        }
-    }
+		if (!libRefExists) {
+			var projRef = util.format("%sandroid.library.reference.%d=%s", os.EOL, maxIdx + 1, relLibDir);
+			var projProp = path.join(projDir, "project.properties");
+			fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
+		}
+	}
 
 	public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
 		return (() => {
@@ -279,12 +279,12 @@ class AndroidProjectService implements IPlatformProjectService {
 
 			var targetLibPath = path.join(targetPath, path.basename(libraryPath));
 
-            var libProjProp = path.join(libraryPath, "project.properties");
-            if (this.$fs.exists(libProjProp).wait()) {
-                this.updateProjectReferences(platformData.projectRoot, targetLibPath);
-            }
+			var libProjProp = path.join(libraryPath, "project.properties");
+			if (this.$fs.exists(libProjProp).wait()) {
+				this.updateProjectReferences(platformData.projectRoot, targetLibPath);
+			}
 		}).future<void>()();
-    }
+	}
 
 	public getFrameworkFilesExtensions(): string[] {
 		return [".jar", ".dat"];

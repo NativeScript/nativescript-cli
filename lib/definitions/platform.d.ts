@@ -6,7 +6,6 @@ interface IPlatformService {
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
 	runPlatform(platform: string): IFuture<void>;
-	debugPlatform(platform: string): IFuture<void>;
 	preparePlatform(platform: string): IFuture<void>;
 	buildPlatform(platform: string): IFuture<void>;
 	deployOnDevice(platform: string): IFuture<void>;
@@ -14,6 +13,9 @@ interface IPlatformService {
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;
 	addLibrary(platform: string, libraryPath: string): IFuture<void>;
+
+	getLatestApplicationPackageForDevice(platformData: IPlatformData): IFuture<IApplicationPackage>;
+	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IFuture<IApplicationPackage>;
 }
 
 interface IPlatformData {
