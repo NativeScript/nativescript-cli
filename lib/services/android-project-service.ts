@@ -14,6 +14,10 @@ import os = require("os");
 class AndroidProjectService implements IPlatformProjectService {
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
 	private static METADATA_DIRNAME = "__metadata";
+	private static RES_DIRNAME = "res";
+	private static VALUES_DIRNAME = "values";
+	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
+
 	private targetApi: string;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -53,19 +57,20 @@ class AndroidProjectService implements IPlatformProjectService {
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
-
+			var newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
+			var versionNumber = _.last(newTarget.split("-"));
 			if(options.symlink) {
-				this.copy(projectRoot, frameworkDir, "res", "-R").wait();
+				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
 
 				this.symlinkDirectory("assets", projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
 			} else {
-				this.copy(projectRoot, frameworkDir, "assets libs res", "-R").wait();
+				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
+				this.copy(projectRoot, frameworkDir, "assets libs", "-R").wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
 			}
 
-			var newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
 			if(newTarget) {
 				this.updateTarget(projectRoot, newTarget).wait();
 			}
@@ -77,6 +82,21 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.$fs.createDirectory(activityDir).wait();
 
 		}).future<any>()();
+	}
+
+	private copyResValues(projectRoot: string, frameworkDir: string, versionNumber: string): IFuture<void> {
+		return (() => {
+			var resSourceDir = path.join(frameworkDir, AndroidProjectService.RES_DIRNAME);
+			var resDestinationDir = path.join(projectRoot, AndroidProjectService.RES_DIRNAME);
+			this.$fs.createDirectory(resDestinationDir).wait();
+			var versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
+			var directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
+			if(this.$fs.exists(path.join(resSourceDir, versionDirName)).wait()) {
+				directoriesToCopy.push(versionDirName);
+			}
+
+			this.copy(resDestinationDir, resSourceDir, directoriesToCopy.join(" "), "-R").wait();
+		}).future<void>()();
 	}
 
 	public interpolateData(projectRoot: string): IFuture<void> {
