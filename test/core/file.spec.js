@@ -124,17 +124,17 @@ describe('Kinvey.File', function() {
         expect(response._downloadURL).to.match(/^http\:\/\//);
       });
     });
-    // it('should support the ttl option.', function() {
-    //   var _this    = this;
-    //   var promise  = Kinvey.File.download(this.file._id, { ttl: this.ttl });
-    //   return promise.then(function(response) {
-    //     expect(response).to.have.property('_expiresAt');
+    it('should support the ttl option.', function() {
+      var _this    = this;
+      var promise  = Kinvey.File.download(this.file._id, { ttl: this.ttl });
+      return promise.then(function(response) {
+        expect(response).to.have.property('_expiresAt');
 
-    //     // Check expires range.
-    //     var ttl = parseInt(new Date(response._expiresAt).getTime() / 1000, 10);
-    //     expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
-    //   });
-    // });
+        // Check expires range.
+        var ttl = parseInt(new Date(response._expiresAt).getTime() / 1000, 10);
+        expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
+      });
+    });
     it('should fail when the file does not exist.', function() {
       var promise = Kinvey.File.download(this.randomID());
       return promise.then(function() {
@@ -297,22 +297,22 @@ describe('Kinvey.File', function() {
         }
       });
     });
-    // it('should support the ttl option.', function() {
-    //   var _this   = this;
-    //   var promise  = Kinvey.File.find(null, { ttl: this.ttl });
-    //   return promise.then(function(files) {
-    //     expect(files).to.be.an('array');
+    it('should support the ttl option.', function() {
+      var _this   = this;
+      var promise  = Kinvey.File.find(null, { ttl: this.ttl });
+      return promise.then(function(files) {
+        expect(files).to.be.an('array');
 
-    //     // Inspect array.
-    //     for(var i = 0, j = files.length; i < j; i += 1) {
-    //       expect(files[i]).to.have.property('_expiresAt');
+        // Inspect array.
+        for(var i = 0, j = files.length; i < j; i += 1) {
+          expect(files[i]).to.have.property('_expiresAt');
 
-    //       // Check range.
-    //       var ttl = parseInt(new Date(files[i]._expiresAt).getTime() / 1000, 10);
-    //       expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
-    //     }
-    //   });
-    // });
+          // Check range.
+          var ttl = parseInt(new Date(files[i]._expiresAt).getTime() / 1000, 10);
+          expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
+        }
+      });
+    });
     it('should download the actual file resource if the download flag was set.', function() {
       var promise = Kinvey.File.find(null, { download: true });
       return promise.then(function(files) {
@@ -352,17 +352,17 @@ describe('Kinvey.File', function() {
         expect(response._downloadURL).to.match(/^http\:\/\//);
       });
     });
-    // it('should support the ttl option.', function() {
-    //   var _this    = this;
-    //   var promise  = Kinvey.File.stream(this.file._id, { ttl: this.ttl });
-    //   return promise.then(function(response) {
-    //     expect(response).to.have.property('_expiresAt');
+    it('should support the ttl option.', function() {
+      var _this    = this;
+      var promise  = Kinvey.File.stream(this.file._id, { ttl: this.ttl });
+      return promise.then(function(response) {
+        expect(response).to.have.property('_expiresAt');
 
-    //     // Check range.
-    //     var ttl = parseInt(new Date(response._expiresAt).getTime() / 1000, 10);
-    //     expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
-    //   });
-    // });
+        // Check range.
+        var ttl = parseInt(new Date(response._expiresAt).getTime() / 1000, 10);
+        expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
+      });
+    });
     it('should fail when the file does not exist.', function() {
       var promise = Kinvey.File.stream(this.randomID());
       return promise.then(function() {

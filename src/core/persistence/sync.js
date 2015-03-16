@@ -92,8 +92,6 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The response.
    */
   execute: function(options) {
-    var error;
-
     // Obtain all the collections that need to be synchronized.
     var query = new Kinvey.Query().greaterThan('size', 0);
     return Database.find(Sync.system, query, options).then(function(response) {
