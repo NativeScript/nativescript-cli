@@ -23,7 +23,6 @@ class AndroidProjectService implements IPlatformProjectService {
 		private $logger: ILogger,
 		private $projectData: IProjectData,
 		private $propertiesParser: IPropertiesParser) {
-
 	}
 
 	public get platformData(): IPlatformData {
@@ -38,7 +37,7 @@ class AndroidProjectService implements IPlatformProjectService {
 				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
 				util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
 			],
-			frameworkFilesExtensions: [".jar", ".dat"]
+			frameworkFilesExtensions: [".jar", ".dat", ".so"]
 		};
 	}
 
@@ -125,6 +124,16 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
 		return { };
+	}
+
+	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
+		return (() => {
+			return true;
+		}).future<boolean>()();
+	}
+
+	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+		return (() => { }).future<void>()();
 	}
 
     private updateMetadata(projectRoot: string): void {

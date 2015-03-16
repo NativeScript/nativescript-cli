@@ -30,7 +30,14 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public addToCache(packageName: string, version: string): IFuture<void> {
-		return this.addToCacheCore(packageName, version);
+		return (() => {
+			this.addToCacheCore(packageName, version).wait();
+
+			var packagePath = path.join(npm.cache, packageName, version, "package");
+			if(!this.isPackageUnpacked(packagePath).wait()) {
+				this.cacheUnpack(packageName, version).wait();
+			}
+		}).future<void>()();
 	}
 
 	public load(config?: any): IFuture<void> {
@@ -73,6 +80,10 @@ export class NodePackageManager implements INodePackageManager {
 		}).future<string>()();
 	}
 
+	public getCachedPackagePath(packageName: string, version: string): string {
+		return path.join(npm.cache, packageName, version, "package");
+	}
+
 	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
 		return (() => {
 			if (options.frameworkPath) {
@@ -84,8 +95,8 @@ export class NodePackageManager implements INodePackageManager {
 				}
 				return options.frameworkPath;
 			} else {
-				var version: string = version || this.getLatestVersion(packageName).wait();
-				var packagePath = path.join(npm.cache, packageName, version, "package");
+				version = version || this.getLatestVersion(packageName).wait();
+				var packagePath = this.getCachedPackagePath(packageName, version);
 				if (!this.isPackageCached(packagePath).wait()) {
 					this.addToCacheCore(packageName, version).wait();
 				}
