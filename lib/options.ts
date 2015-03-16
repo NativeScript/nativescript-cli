@@ -9,13 +9,10 @@ import hostInfo = require("./common/host-info");
 var knownOpts:any = {
 		"frameworkPath": String,
 		"copy-from": String,
-		"copyFrom": String,
 		"link-to": String,
-		"linkTo": String,
 		"release": Boolean,
 		"emulator": Boolean,
 		"symlink": Boolean,
-		"forDevice": Boolean,
 		"for-device": Boolean,
 		"keyStorePath": String,
 		"keyStorePassword": String,
