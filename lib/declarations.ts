@@ -5,6 +5,7 @@ interface INodePackageManager {
 	load(config?: any): IFuture<void>;
 	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
 	getLatestVersion(packageName: string): IFuture<string>;
+	getCachedPackagePath(packageName: string, version: string): string;
 }
 
 interface INpmInstallOptions {
