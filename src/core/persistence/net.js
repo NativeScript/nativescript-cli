@@ -295,7 +295,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
           log('Obtained the request ID.', response.headers['X-Kinvey-Request-Id']);
         }
 
-        // Check response. Thrown error will reject the promise.
+        // Check response to GET request that we receive a
+        // single entity if one is expected or an array of entities
+        // if they are expected. Thrown error will reject the promise.
         if (request.method === 'GET' &&
             request.collection != null &&
             request.namespace === 'appdata') {
