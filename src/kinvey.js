@@ -46,6 +46,15 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
+/**
+ * The current app version used by the library.
+ *
+ * @constant
+ * @type {string}
+ * @default
+ */
+Kinvey.APP_VERSION = undefined;
+
 // Properties.
 // -----------
 
@@ -214,6 +223,30 @@ Kinvey.setActiveUser = function(user) {
 
   // Return the previous active user.
   return result;
+};
+
+/**
+ * Returns the current app version used on Kinvey.
+ *
+ * @return {string} The current app version.
+ */
+Kinvey.getAppVersion = function() {
+  return Kinvey.APP_VERSION;
+};
+
+/**
+ * Set the app version used on Kinvey.
+ *
+ * @param {string} version App version to use.
+ */
+Kinvey.setAppVersion = function(version) {
+  // Debug
+  if (KINVEY_DEBUG) {
+    log('Setting the app version.', arguments);
+  }
+
+  // Set the app version
+  Kinvey.APP_VERSION = version;
 };
 
 /**
