@@ -89,12 +89,16 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
+			var infoPlistFilePath = path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, util.format("%s-%s", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "Info.plist"));
+			shell.sed('-i', "__CFBundleIdentifier__", this.$projectData.projectId, infoPlistFilePath);
+
 			this.replaceFileName("-Info.plist", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName("-Prefix.pch", path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, projectRoot).wait();
 
 			var pbxprojFilePath = path.join(projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
 			this.replaceFileContent(pbxprojFilePath).wait();
+
 		}).future<void>()();
 	}
 
