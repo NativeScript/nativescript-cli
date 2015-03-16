@@ -237,10 +237,13 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     var headers = {
       Accept                        : 'application/json',
       'X-Kinvey-API-Version'        : Kinvey.API_VERSION,
-      'X-Kinvey-Device-Information' : deviceInformationHeader
+      'X-Kinvey-Device-Information' : deviceInformationHeader,
     };
 
     // Append optional headers.
+    if (options.appVersion != null || Kinvey.APP_VERSION != null) {
+      headers['X-Kinvey-Customer-App-Version'] = options.AppVersion || Kinvey.APP_VERSION;
+    }
     if(null != request.data) {
       headers['Content-Type'] = 'application/json; charset=utf-8';
     }
