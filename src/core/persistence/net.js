@@ -254,6 +254,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
       headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
+    if(null != options.customRequestProperties) {
+      headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestProperties);
+    }
 
     // Debug.
     if(KINVEY_DEBUG) {
