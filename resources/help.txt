@@ -108,13 +108,19 @@ Lists all platforms that the project currently targets. You can build and deploy
 --[platform|add]--
 
 Usage:
-    $ tns platform add <Platform> [--frameworkPath <File Path>] [--symlink]
+    $ tns platform add <Platform>[@<Version>] [--frameworkPath <File Path>] [--symlink]
 
 Platform-specific usage:
     $ tns platform add android [--frameworkPath <File Path>] [--symlink]
-    $ tns platform add ios [--frameworkPath <File Path>] [--symlink] 
+    $ tns platform add android[@<Version>] [--frameworkPath <File Path>] [--symlink]
+    $ tns platform add ios [--frameworkPath <File Path>] [--symlink]
+    $ tns platform add ios[@<Version>] [--frameworkPath <File Path>] [--symlink]
 
 Configures the current project to target the selected platform. 
+
+<Version> is any available version of the respective platform runtime published in npm. If @<Version> is not specified, the NativeScript CLI installs the latest stable runtime for the selected platform.
+To list all available versions for android, run $ npm view tns-android versions. To list only experimental versions for android, run $ npm view tns-android dist-tags.
+To list all available versions for ios, run $ npm view tns-ios versions. To list only experimental versions for ios, run $ npm view tns-ios dist-tags.
 
 <File Path> is the complete path to a valid npm package or a directory that contains a NativeScript runtime for the selected platform. 
 
@@ -152,11 +158,15 @@ This operation deletes the subdirectory for the selected platform from the platf
 --[platform|update]--
 
 Usage:
-    $ tns platform update <Platform>
+    $ tns platform update <Platform>[@<Version>]
 
 Platform-specific usage:
-    $ tns platform update android
-    $ tns platform update ios
+    $ tns platform update android[@<Version>]
+    $ tns platform update ios[@<Version>]
+
+<Version> is any available version of the respective platform runtime published in npm. If @<Version> is not specified, the NativeScript CLI installs the latest stable runtime for the selected platform.
+To list all available versions for android, run $ npm view tns-android versions. To list only experimental versions for android, run $ npm view tns-android dist-tags.
+To list all available versions for ios, run $ npm view tns-ios versions. To list only experimental versions for ios, run $ npm view tns-ios dist-tags.
 
 Updates the NativeScript runtime for the specified platform.
 --[/]--

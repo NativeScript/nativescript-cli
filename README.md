@@ -10,6 +10,8 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 * [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
 * [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
 * [Installation](#installation "How to configure and install the NativeScript CLI")
+	* [Install the NativeScript CLI](#install-the-nativescript-cli)
+	* [Configure Proxy Usage](#configure-proxy-usage)
 * [Quick Start](#quick-start "Get started with the NativeScript CLI")
 	* [The Commands](#the-commands)
 	* [Create Project](#create-project)
@@ -203,6 +205,8 @@ export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/s
 Installation
 ===
 
+## Install the NativeScript CLI
+
 The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
@@ -212,6 +216,18 @@ npm install nativescript -g
 ```
 
 > On OS X and Linux systems, you might need to run this command using sudo.
+
+## Configure Proxy Usage
+
+If you are working with the NativeScript CLI behind a web proxy, you might need to configure your proxy settings.
+
+1. On your file system, locate the directory where the **nativescript** npm package is installed.
+1. In a text editor, open `config` &#8594; `config.json`.
+1. Set `USE_PROXY` to `true`.
+1. Set `PROXY_PORT`.
+1. Set `PROXY_HOSTNAME`.
+
+> Make sure to preserve the quotation marks and commas as in the initial `config.json` file.
 
 [Back to Top][1]
 
@@ -333,6 +349,9 @@ platforms/
 For more information about the structure of Android native projects, see [Android Projects](http://developer.android.com/tools/projects/index.html#ApplicationProjects).
 
 For more information about the structure iOS native projects, see [Code Organization in Xcode Projects](http://akosma.com/2009/07/28/code-organization-in-xcode-projects/).
+
+> **TIP:** The NativeScript team provides experimental support for the latest versions of iOS and Android. You can choose which platform runtime to use in your project by running `tns platform add <platform>@<Version>`<br/>To list all available versions for android, run $ npm view tns-android versions<br/>To list only experimental versions for android, run $ npm view tns-android dist-tags
+To list all available versions for ios, run $ npm view tns-ios versions<br/>To list only experimental versions for ios, run $ npm view tns-ios dist-tags
 
 [Back to Top][1]
 
