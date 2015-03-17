@@ -82,7 +82,8 @@ var AngularHTTP = {
       method  : method,
       timeout : options.timeout,
       url     : url
-    }).then(function(response, status, headers) {
+    }).then(function(response) {
+      var _response = response;
       // Debug.
       if(KINVEY_DEBUG) {
         log('The network request completed.', response);
@@ -110,7 +111,7 @@ var AngularHTTP = {
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
       if (response != null && !(response instanceof Blob)) {
-        var responseContentType = headers('Content-Type') || undefined;
+        var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
         if (responseContentType == null) {
