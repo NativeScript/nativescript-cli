@@ -46,6 +46,15 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
+/**
+ * The current app version used by the library.
+ *
+ * @constant
+ * @type {string}
+ * @default
+ */
+Kinvey.APP_VERSION = undefined;
+
 // Properties.
 // -----------
 
@@ -218,10 +227,64 @@ Kinvey.setActiveUser = function(user) {
 };
 
 /**
+ * Returns the current app version used on Kinvey.
+ *
+ * @return {string} The current app version.
+ */
+Kinvey.getAppVersion = function() {
+  return Kinvey.APP_VERSION;
+};
+
+/**
+ * Set the app version used on Kinvey.
+ *
+ * @param {string} version App version to use.
+ */
+Kinvey.setAppVersion = function(version) {
+  var appVersion = version;
+  var major, minor, patch;
+
+  // Debug
+  if (KINVEY_DEBUG) {
+    log('Setting the app version.', arguments);
+  }
+
+  // Set app version using specified major, minor, and patch
+  // provided as arguments.
+  if (arguments.length > 1) {
+    // Get individual parts of app version
+    major = arguments[0];
+    minor = arguments[1];
+    patch = arguments[2];
+
+    // Set app version to major value
+    appVersion = major;
+
+    // Append minor value if it was provided
+    if (minor != null) {
+      appVersion += '.' + minor;
+    }
+
+    // Append patch value if it was provided
+    if (patch != null) {
+      appVersion += '.' + patch;
+    }
+  }
+
+  // Set the app version
+  Kinvey.APP_VERSION = appVersion;
+};
+
+/**
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
+<<<<<<< HEAD
+ * @param {string}  [options.apiHostName]  API Host Name.
+ * @param {string}  [options.appVersion]   App Version.
+=======
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
+>>>>>>> 1.1.x
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -262,6 +325,9 @@ Kinvey.init = function(options) {
                            Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
                            ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
   }
+
+  // Set the App Version
+  Kinvey.APP_VERSION = options.appVersion;
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;
