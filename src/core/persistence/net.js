@@ -241,6 +241,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     };
 
     // Append optional headers.
+    if (options.appVersion != null || Kinvey.APP_VERSION != null) {
+      headers['X-Kinvey-Customer-App-Version'] = options.AppVersion || Kinvey.APP_VERSION;
+    }
     if(null != request.data) {
       headers['Content-Type'] = 'application/json; charset=utf-8';
     }
