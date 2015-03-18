@@ -17,8 +17,6 @@
   "undef"     : true,
   "unused"    : true,
   "trailing"  : true,
-  "maxlen"    : 100,
-
   "eqnull"    : true,
 
   "node"      : true

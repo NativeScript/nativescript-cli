@@ -17,7 +17,5 @@
   "undef"     : false,
   "unused"    : false,
   "trailing"  : true,
-  "maxlen"    : 100,
-
   "eqnull"    : true
 }
