@@ -237,7 +237,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     var headers = {
       Accept                        : 'application/json',
       'X-Kinvey-API-Version'        : Kinvey.API_VERSION,
-      'X-Kinvey-Device-Information' : deviceInformationHeader,
+      'X-Kinvey-Device-Information' : deviceInformationHeader
     };
 
     // Append optional headers.
