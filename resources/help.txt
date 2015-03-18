@@ -30,6 +30,7 @@ General commands:
     device run                      Runs the selected application on a connected device.
     device list-applications        Lists the installed applications on all connected devices.  
     feature-usage-tracking          Configures anonymous feature usage tracking.
+    autocomplete                    Turn on command line autocompletion for bash and zsh
 
 General options:
     --help, -h, /?      Prints help about the selected command.
@@ -681,5 +682,14 @@ All data gathered is used strictly for improving the product and will never be u
     enable - Enables anonymous usage statistics tracking. All data gathered is used strictly
              for improving the product and will never be used to identify or contact you.
     disable - Disables anonymous usage statistics tracking.
+
+--[/]--
+
+--[autocomplete]--
+
+Turns on command line autocompletion for bash and zsh.
+
+Usage:
+    $ tns autocomplete
 
 --[/]--
