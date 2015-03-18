@@ -113,6 +113,27 @@ var Xhr = {
         responseData = request.responseText || null;
       }
 
+      // Check `Content-Type` header for application/json
+      if (responseData != null && !(responseData instanceof Blob)) {
+        var responseContentType = request.getResponseHeader('Content-Type');
+        var error;
+
+        if (responseContentType == null) {
+          error = new Kinvey.Error('Content-Type header missing in response. Please add ' +
+                                   'Content-Type header to response with value ' +
+                                   'application/json.');
+        }
+        else if (responseContentType.indexOf('application/json') === -1) {
+          error = new Kinvey.Error('Response Content-Type header is set to ' +
+                                   responseContentType + '. Expected it to be set ' +
+                                   'to application/json.');
+        }
+
+        if (error) {
+          return deferred.reject(error);
+        }
+      }
+
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = request.status;
       if(2 === parseInt(status / 100, 10) || 304 === status) {

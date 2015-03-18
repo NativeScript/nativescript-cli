@@ -84,6 +84,8 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
    * @returns {Promise} The response.
    */
   read: function(request, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Initiating a read request.', arguments);
@@ -105,6 +107,13 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       // If there is an active user, attempt to retrieve its details.
       var user = Kinvey.getActiveUser();
       if(null !== user) {
+        // Check user for property _id
+        if (user._id == null) {
+          error = new Kinvey.Error('Active user does not have the _id property defined. ' +
+                                   'Unable to retrieve information about the user.');
+          return Kinvey.Defer.reject(error);
+        }
+
         return Database.get(collection, user._id, options).then(null, function(error) {
           // If `ENTITY_NOT_FOUND`, return all we know about the active user.
           if(error.name === Kinvey.Error.ENTITY_NOT_FOUND) {
@@ -113,7 +122,8 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
           return Kinvey.Defer.reject(error);
         });
       }
-      var error = clientError(Kinvey.Error.NO_ACTIVE_USER);
+
+      error = clientError(Kinvey.Error.NO_ACTIVE_USER);
       return Kinvey.Defer.reject(error);
     }
 

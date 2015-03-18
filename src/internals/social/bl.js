@@ -68,8 +68,17 @@ var tokenize = function(string) {
  * @param {Object} request Kinvey request object.
  * @param {Object} response Kinvey response object.
  * @param {Object} modules Available JavaScript libraries.
+ * @throws {Kinvey.Error} If doc does not have _id property defined
  */
 var login = function(doc, request, response, modules) {
+  var error;
+
+  // Check doc for property _id.
+  if (doc._id == null) {
+    error = new Kinvey.Error('Doc argument does not have _id property defined.');
+    throw error;
+  }
+
   // Validate request body.
   var provider = doc._id;
   if(!(request.body._socialIdentity && request.body._socialIdentity[provider] && request.body._socialIdentity[provider].access_token && request.body._socialIdentity[provider].access_token_secret)) {
@@ -118,8 +127,17 @@ var login = function(doc, request, response, modules) {
  * @param {Object} request Kinvey request object.
  * @param {Object} response Kinvey response object.
  * @param {Object} modules Available JavaScript libraries.
+ * @throws {Kinvey.Error} If doc does not have _id property defined
  */
 var requestOAuth1Token = function(doc, request, response, modules) {
+  var error;
+
+  // Check doc for property _id.
+  if (doc._id == null) {
+    error = new Kinvey.Error('Doc argument does not have _id property defined.');
+    throw error;
+  }
+
   // Validate request body.
   var provider = doc._id;
   if(!request.body.redirect) {
@@ -176,8 +194,17 @@ var requestOAuth1Token = function(doc, request, response, modules) {
  * @param {Object} request Kinvey request object.
  * @param {Object} response Kinvey response object.
  * @param {Object} modules Available JavaScript libraries.
+ * @throws {Kinvey.Error} If doc does not have _id property defined
  */
 var requestOAuth2Token = function(doc, request, response, modules) {
+  var error;
+
+  // Check doc for property _id.
+  if (doc._id == null) {
+    error = new Kinvey.Error('Doc argument does not have _id property defined.');
+    throw error;
+  }
+
   // Validate request body.
   var provider = doc._id;
   if(!request.body.redirect) {
@@ -210,8 +237,17 @@ var requestOAuth2Token = function(doc, request, response, modules) {
  * @param {Object} request Kinvey request object.
  * @param {Object} response Kinvey response object.
  * @param {Object} modules Available JavaScript libraries.
+ * @throws {Kinvey.Error} If doc does not have _id property defined
  */
 var verifyToken = function(doc, request, response, modules) {
+  var error;
+
+  // Check doc for property _id.
+  if (doc._id == null) {
+    error = new Kinvey.Error('Doc argument does not have _id property defined.');
+    throw error;
+  }
+
   // Validate request body.
   var provider = doc._id;
   if(!(request.body.oauth_token && request.body.oauth_token_secret && request.body.oauth_verifier)) {

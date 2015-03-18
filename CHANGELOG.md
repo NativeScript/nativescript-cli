@@ -1,4 +1,9 @@
 # Changelog
+## 1.1.14 (2015-03-17)
+* BugFix(MLIBZ-198): Fixed bug where all Angular requests would fail to due to headers object being null
+
+## 1.1.13 (2015-03-16)
+* Improved error messaging for data-driven exceptions
 
 ## 1.1.12 (2015-03-04)
 * Deprecated: `Kinvey.API_ENDPOINT`

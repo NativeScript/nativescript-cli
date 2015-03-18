@@ -192,6 +192,7 @@ Kinvey.getActiveUser = function() {
  * @throws {Kinvey.Error} `user` must contain: `_kmd.authtoken`.
  * @returns {?Object} The previous active user, or `null` if there was no
  *            previous active user.
+ * @throws {Kinvey.Error} user argument must contain: _id, _kmd.authtoken.
  */
 Kinvey.setActiveUser = function(user) {
   // Debug.
@@ -277,8 +278,12 @@ Kinvey.setAppVersion = function(version) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
+<<<<<<< HEAD
  * @param {string}  [options.apiHostName]  API Host Name.
  * @param {string}  [options.appVersion]   App Version.
+=======
+ * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
+>>>>>>> 1.1.x
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -287,6 +292,7 @@ Kinvey.setAppVersion = function(version) {
  * @param {Object}  [options.sync]         Synchronization options.
  * @throws {Kinvey.Error} `options` must contain: `appSecret` or
  *                          `masterSecret`.
+ * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.APIHostName
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
@@ -310,6 +316,14 @@ Kinvey.init = function(options) {
   // Set the API endpoint
   var apiHostName = options.apiHostName || Kinvey.API_ENDPOINT;
   Kinvey.APIHostName = apiHostName || Kinvey.APIHostName;
+
+  // Check if Kinvey.APIHostName uses https protocol
+  if (Kinvey.APIHostName.indexOf('https://') !== 0) {
+    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
+                           ' Kinvey.APIHostName, instead found the protocol ' +
+                           Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
+                           ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
+  }
 
   // Set the App Version
   Kinvey.APP_VERSION = options.appVersion;

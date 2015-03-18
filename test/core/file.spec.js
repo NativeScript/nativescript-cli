@@ -104,7 +104,7 @@ describe('Kinvey.File', function() {
       var promise = Kinvey.File.download(this.file._id);
       return promise.then(function(response) {
         expect(response).to.contain.keys([
-          '_id', '_data', '_downloadURL', '_expiresAt', 'mimeType', 'size'
+          '_id', '_downloadURL', 'mimeType', 'size'
         ]);
         expect(response.size).to.equal(_this.file.size);
         expect(response.mimeType).to.equal(_this.file.mimeType);
