@@ -242,6 +242,7 @@ Kinvey.getAppVersion = function() {
  */
 Kinvey.setAppVersion = function(version) {
   var appVersion = version;
+  var major, minor, patch;
 
   // Debug
   if (KINVEY_DEBUG) {
