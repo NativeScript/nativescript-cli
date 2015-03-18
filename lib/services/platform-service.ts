@@ -178,7 +178,6 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 
-			this.preparePlatform(platform).wait();
 			if (options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
@@ -194,7 +193,7 @@ export class PlatformService implements IPlatformService {
 		? this.debugOnEmulator(platform)
 		: this.debugOnDevice(platform);
 
-	  return ret;
+		return ret;
 	}
 
 	public debugOnEmulator(platform: string): IFuture<void> {
@@ -210,13 +209,10 @@ export class PlatformService implements IPlatformService {
 	public debugOnDevice(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			var platformData = this.$platformsData.getPlatformData(platform);
 			var packageFile = "";
 			var platformData = this.$platformsData.getPlatformData(platform);
 
 			if (options["debug-brk"]) {
-				this.preparePlatform(platform).wait();
-
 				var cachedDeviceOption = options.forDevice;
 				options.forDevice = true;
 				this.buildPlatform(platform).wait();
@@ -276,7 +272,13 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Using ", packageFile);
 
 			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
+			var action = (device: Mobile.IDevice): IFuture<void> => {
+				return (() => {
+					device.deploy(packageFile, this.$projectData.projectId).wait();
+					device.runApplication(this.$projectData.projectId).wait();
+
+				}).future<void>()();
+			};
 			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
