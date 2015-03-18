@@ -69,7 +69,11 @@ describe('Kinvey.Sync', function() {
 
       // Housekeeping: make sure no synchronization metadata is kept back.
       after(function() {
-        return Kinvey.Sync.execute();
+        return Kinvey.Sync.execute().then(function() {
+          console.log(arguments);
+        }, function(err) {
+          console.log(err);
+        });
       });
 
       // Test suite.
@@ -334,6 +338,7 @@ describe('Kinvey.Sync', function() {
 
           var _this   = this;
           var promise = Kinvey.Sync.execute({ conflict: handler }).then(function(response) {
+            console.log(response);
             expect(response).to.be.an('array');
             expect(response).to.have.length(1);
 
@@ -350,6 +355,7 @@ describe('Kinvey.Sync', function() {
             // We should not reach this code branch.
             return expect(promise).to.be.rejected;
           }, function(error) {
+            console.log(error);
             expect(error).to.have.property('name', Kinvey.Error.ENTITY_NOT_FOUND);
           });
         });

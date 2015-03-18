@@ -134,7 +134,25 @@ var Sync = /** @lends Sync */{
         }
 
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
-        metadata.documents[document._id] = timestamp || null;
+        var appVersion, customRequestProperties;
+
+        if (options.appVersion != null) {
+          appVersion = options.appVersion;
+        } else if (Kinvey.APP_VERSION != null) {
+          appVersion = Kinvey.APP_VERSION;
+        }
+
+        if (options.customRequestProperties != null) {
+          customRequestProperties = options.customRequestProperties;
+        } else if (Kinvey.CUSTOM_REQUEST_PROPERTIES != null) {
+          customRequestProperties = Kinvey.CUSTOM_REQUEST_PROPERTIES;
+        }
+
+        metadata.documents[document._id] = {
+          timestamp: timestamp,
+          appVersion: appVersion,
+          customRequestProperties: customRequestProperties
+        };
       });
 
       // Return the new metadata.
@@ -202,7 +220,13 @@ var Sync = /** @lends Sync */{
     }).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
-        var metadata = { id: id, timestamp: documents[id] };
+        var document = documents[id];
+        var metadata = {
+          id: id,
+          timestamp: document.timestamp,
+          appVersion: document.appVersion,
+          customRequestProperties: document.customRequestProperties
+        };
         return Sync._document(
           collection,
           metadata,                   // The document metadata.
@@ -251,6 +275,7 @@ var Sync = /** @lends Sync */{
         return metadata;
       }, options);
     }).then(function() {
+      //console.log(result);
       // Step 5: return the synchronization result.
       return result;
     });
@@ -266,34 +291,51 @@ var Sync = /** @lends Sync */{
    * @returns {Array} List of document ids.
    */
   _destroy: function(collection, documents, options) {
-    // Cast arguments.
-    documents = documents.map(function(composite) {
-      return composite.id;
+    var promises = documents.map(function(composite) {
+      var id = composite.id;
+      var metadata = composite.metadata;
+      var requestOptions = options || {};
+
+      // Set options.appVersion based on the metadata for the document
+      requestOptions.appVersion = metadata.appVersion != null ? metadata.appVersion : null;
+
+      // Set options.customRequestProperties based on the metadata
+      // for the document
+      requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
+                                               metadata.customRequestProperties : null;
+
+      // Build the request.
+      var request = {
+        namespace  : USERS === collection ? USERS : DATA_STORE,
+        collection : USERS === collection ? null  : collection,
+        id         : id,
+        auth       : Auth.Default
+      };
+
+      // Delete from local and net in parallel. Deletion is an atomic action,
+      // therefore the documents will either all be part of `success` or `error`.
+      var promises = [
+        Kinvey.Persistence.Local.destroy(request, requestOptions),
+        Kinvey.Persistence.Net.destroy(request, requestOptions)
+      ];
+
+      return Kinvey.Defer.all(promises).then(function() {
+        return { success: [id], error: [] };
+      }, function() {
+        return { success: [], error: [id] };
+      });
     });
 
-    // If there are no documents to delete, resolve immediately.
-    if(0 === documents.length) {
-      return Kinvey.Defer.resolve({ success: [], error: [] });
-    }
+    // Return one result for all the delete requests
+    return Kinvey.Defer.all(promises).then(function(responses) {
+      var result = { success: [], error: [] };
 
-    // Build the request.
-    var request = {
-      namespace  : USERS === collection ? USERS : DATA_STORE,
-      collection : USERS === collection ? null  : collection,
-      query      : new Kinvey.Query().contains('_id', documents),
-      auth       : Auth.Default
-    };
+      responses.forEach(function(response) {
+        result.success = result.success.concat(response.success);
+        result.error = result.error.concat(response.error);
+      });
 
-    // Delete from local and net in parallel. Deletion is an atomic action,
-    // therefore the documents will either all be part of `success` or `error`.
-    var promises = [
-      Kinvey.Persistence.Local.destroy(request, options),
-      Kinvey.Persistence.Net.destroy(request, options)
-    ];
-    return Kinvey.Defer.all(promises).then(function() {
-      return { success: documents, error: [] };
-    }, function() {
-      return { success: [], error: documents };
+      return result;
     });
   },
 
@@ -348,7 +390,7 @@ var Sync = /** @lends Sync */{
     // Resolve if the remote copy does not exist or if both timestamps match.
     // Reject otherwise.
     if(null === net || (null != net._kmd && metadata.timestamp === net._kmd.lmt)) {
-      return Kinvey.Defer.resolve({ id: metadata.id, document: local });
+      return Kinvey.Defer.resolve({ id: metadata.id, document: local, metadata: metadata });
     }
 
     // A conflict was detected. Attempt to resolve it by invoking the conflict
@@ -357,12 +399,12 @@ var Sync = /** @lends Sync */{
       // The conflict handler should return a promise which either resolves
       // with the winning document, or gets rejected.
       return options.conflict(collection, local, net).then(function(document) {
-        return { id: metadata.id, document: document };
+        return { id: metadata.id, document: document, metadata: metadata };
       }, function() {
-        return Kinvey.Defer.reject({ id: metadata.id, document: [ local, net ] });
+        return Kinvey.Defer.reject({ id: metadata.id, document: [ local, net ], metadata: metadata });
       });
     }
-    return Kinvey.Defer.reject({ id: metadata.id, document: [ local, net ] });
+    return Kinvey.Defer.reject({ id: metadata.id, document: [ local, net ], metadata: metadata });
   },
 
   /**
@@ -375,14 +417,21 @@ var Sync = /** @lends Sync */{
    * @returns {Array} List of document ids.
    */
   _save: function(collection, documents, options) {
-    // Cast arguments.
-    documents = documents.map(function(composite) {
-      return composite.document;
-    });
-
     // Save documents on net.
     var error    = [];// Track errors of individual update operations.
-    var promises = documents.map(function(document) {
+    var promises = documents.map(function(composite) {
+      var document = composite.document;
+      var metadata = composite.metadata;
+      var options = options || {};
+
+      // Set options.appVersion based on the metadata for the document
+      options.appVersion = metadata.appVersion != null ? metadata.appVersion : null;
+
+      // Set options.customRequestProperties based on the metadata
+      // for the document
+      options.customRequestProperties = metadata.customRequestProperties != null ?
+                                        metadata.customRequestProperties : null;
+
       return Kinvey.Persistence.Net.update({
         namespace  : USERS === collection ? USERS : DATA_STORE,
         collection : USERS === collection ? null  : collection,

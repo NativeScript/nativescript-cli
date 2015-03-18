@@ -19,8 +19,8 @@
   "trailing"  : true,
   "eqnull"    : true,
   "expr"      : true,
-
   "globals"   : {
+    "console"    : true,
     "after"      : true,
     "afterEach"  : true,
     "before"     : true,
@@ -29,11 +29,9 @@
     "expect"     : true,
     "it"         : true,
     "sinon"      : true,
-
     "Common"     : true,
     "config"     : true,
     "setTimeout" : true,
-
     "angular"    : true,
     "Backbone"   : true,
     "Kinvey"     : true

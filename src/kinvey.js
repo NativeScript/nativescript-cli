@@ -46,13 +46,7 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
-/**
- * The current app version used by the library.
- *
- * @constant
- * @type {string}
- * @default
- */
+// App Version is Private. Do NOT Document
 Kinvey.APP_VERSION = undefined;
 
 // Properties.
