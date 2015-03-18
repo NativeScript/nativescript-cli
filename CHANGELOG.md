@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+0.9.3 (2015, March 18)
+==
+
+### Fixed
+
+* [Fixed #312](https://github.com/NativeScript/nativescript-cli/issues/312): `tns platform add ios` does not preserve your app ID, if not default.
+
 0.9.2 (2015, March 17)
 ===
 
