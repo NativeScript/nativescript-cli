@@ -308,7 +308,7 @@ var Sync = /** @lends Sync */{
       var request = {
         namespace  : USERS === collection ? USERS : DATA_STORE,
         collection : USERS === collection ? null  : collection,
-        id         : id,
+        query      : new Kinvey.Query().contains('_id', [id]),
         auth       : Auth.Default
       };
 
