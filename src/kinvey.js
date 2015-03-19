@@ -49,8 +49,8 @@ Kinvey.SDK_VERSION = '<%= pkg.version %>';
 // App Version is private. Do NOT document.
 Kinvey.APP_VERSION = undefined;
 
-// Custom Request Headers is private. Do NOT document.
-Kinvey.CUSTOM_REQUEST_HEADERS = {};
+// Custom Request Properties is private. Do NOT document.
+Kinvey.CUSTOM_REQUEST_PROPERTIES = {};
 
 // Properties.
 // -----------
@@ -309,71 +309,64 @@ Kinvey.setAppVersion = function(version) {
 };
 
 /**
- * Returns the custom request headers sent for all API requests.
+ * Returns the custom request properties sent for all API requests.
  *
- * @return {object} The custom request headers.
+ * @return {object} The custom request properties.
  */
-Kinvey.getCustomRequestHeaders = function() {
-  return Kinvey.CUSTOM_REQUEST_HEADERS;
+Kinvey.getCustomRequestProperties = function() {
+  return Kinvey.CUSTOM_REQUEST_PROPERTIES;
 };
 
 /**
- * Set the custom request headers for the application.
+ * Set the custom request properties for the application.
  *
- * @param {?Array} headers Array of headers to set or `undefined`
- *                         to remove all custom request headers.
+ * @param {?Object} properties Properties to set or `undefined`
+ *                             to remove all custom request properties.
  */
-Kinvey.setCustomRequestHeaders = function(headers) {
-  Kinvey.CUSTOM_REQUEST_HEADERS = {};
-  Kinvey.addCustomRequestHeaders(headers);
+Kinvey.setCustomRequestProperties = function(properties) {
+  Kinvey.CUSTOM_REQUEST_PROPERTIES = {};
+  Kinvey.addCustomRequestProperties(properties);
 };
 
 /**
- * Add the headers to the custom request headers for the
+ * Add the properties to the custom request properties for the
  * application.
  *
- * @param {Array} headers Array of headers to add to cutsom
- *                        request headers.
+ * @param {Object} properties Properties to add to cutsom request properties.
  */
-Kinvey.addCustomRequestHeaders = function(headers) {
-  if (headers != null) {
-    if (!isArray(headers)) {
-      throw new Kinvey.Error('Headers argument must be an array.');
-    }
+Kinvey.addCustomRequestProperties = function(properties) {
+  if (properties != null) {
+    var customRequestProperties = Kinvey.CUSTOM_REQUEST_PROPERTIES || {};
 
-    var customRequestHeaders = Kinvey.CUSTOM_REQUEST_HEADERS || {};
+    Object.keys(properties).map(function(key) {
+      var value = properties[key];
 
-    headers.forEach(function(header) {
-      Object.keys(header).map(function(key) {
-        var value = header[key];
+      if (!isString(value)) {
+        throw new Kinvey.Error('Custom property value for ' + key +
+                               ' must be a string.');
+      }
 
-        if (!isString(value)) {
-          throw new Kinvey.Error('Custom header value for header ' + key +
-                                 ' must be a string.');
-        }
-
-        if (!isEmptyString(value)) {
-          customRequestHeaders[key] = value;
-        }
-      });
+      if (!isEmptyString(value)) {
+        customRequestProperties[key] = value;
+      }
     });
 
-    Kinvey.CUSTOM_REQUEST_HEADERS = customRequestHeaders;
+    Kinvey.CUSTOM_REQUEST_PROPERTIES = customRequestProperties;
   }
 };
 
 /**
- * Add header name and value to custom request headers for the
+ * Add property name and value to custom request properties for the
  * application.
  *
- * @param {string} name Custome request header name.
- * @param {string} value Custom request header value.
+ * @param {string} name Custom request property name.
+ * @param {string} value Custom request property value.
  */
-Kinvey.addCustomRequestHeader = function(name, value) {
-  var header = {
+Kinvey.addCustomRequestProperty = function(name, value) {
+  var property = {
     name: value
   };
-  Kinvey.addCustomRequestHeaders([header]);
+  Kinvey.addCustomRequestProperties(property);
 };
 
 /**

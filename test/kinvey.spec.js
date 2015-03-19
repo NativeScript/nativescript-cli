@@ -216,20 +216,9 @@ describe('Kinvey', function() {
   describe('the app version', function() {
     var version = '1.10.3';
 
-    beforeEach(function() {
-      Kinvey.setAppVersion(config.test.appVersion);
-    });
     // Housekeeping
     afterEach(function() {
-      // Reset Kinvey.APIHostName
-      Kinvey.APIHostName = config.kcs.protocol + '://' + config.kcs.host;
-      Kinvey.API_ENDPOINT = undefined;
-
-      // Reset Kinvey.APP_VERSION
       Kinvey.APP_VERSION = undefined;
-
-      // Set active user to null
-      Kinvey.setActiveUser(null);
     });
 
     it('should save the app version with Kinvey.APP_VERSION', function() {
@@ -241,9 +230,37 @@ describe('Kinvey', function() {
       Kinvey.setAppVersion(version);
       expect(Kinvey.getAppVersion()).to.equal(version);
     });
+
     it('should save the app version with Kinvey.setAppVerison() providing major, minor, and patch strings', function() {
       Kinvey.setAppVersion('1', '10', '3');
       expect(Kinvey.getAppVersion()).to.equal(version);
+    });
+  });
+
+  // Kinvey.CUSTOM_REQUEST_PROPERTIES
+  describe('the custom request properties', function() {
+    var properties = {
+      foo: 'bar'
+    };
+
+    // Housekeeping
+    afterEach(function() {
+      Kinvey.setCustomRequestProperties(undefined);
+    });
+
+    it('should save the custom request properties with Kinvey.CUSTOM_REQUEST_PROPERTIES', function() {
+      Kinvey.CUSTOM_REQUEST_PROPERTIES = properties;
+      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
+    });
+
+    it('should save the custom request properties with Kinvey.setCustomRequestProperties()', function() {
+      Kinvey.setCustomRequestProperties(properties);
+      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
+    });
+
+    it('should save the custom request properties with Kinvey.addCustomRequestProperties()', function() {
+      Kinvey.addCustomRequestProperties(properties);
+      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
     });
   });
 

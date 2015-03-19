@@ -259,21 +259,21 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
 
-    // Get the custom request headers
-    options.customRequestHeaders = options.customRequestHeaders || {};
-    var customRequestHeaders = Kinvey.getCustomRequestHeaders();
-    if (customRequestHeaders != null) {
-      Object.keys(customRequestHeaders).map(function(name) {
-        // If the header is not already set then set it
-        if (!options.customRequestHeaders.hasOwnProperty(name)) {
-          options.customRequestHeaders[name] = customRequestHeaders[name];
+    // Set the custom request properties
+    options.customRequestProperties = options.customRequestProperties || {};
+    var customRequestProperties = Kinvey.getCustomRequestProperties();
+    if (customRequestProperties != null) {
+      Object.keys(customRequestProperties).map(function(name) {
+        // If the property is not already set then set it
+        if (!options.customRequestProperties.hasOwnProperty(name)) {
+          options.customRequestProperties[name] = customRequestProperties[name];
         }
       });
     }
 
     // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
-    // request headers for the request
-    headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestHeaders);
+    // request properties for the request
+    headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestProperties);
 
     // Debug.
     if(KINVEY_DEBUG) {
