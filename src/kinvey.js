@@ -374,6 +374,7 @@ Kinvey.addCustomRequestProperty = function(name, value) {
  *
  * @param {Options}  options Options.
  * @param {string}  [options.appVersion]   App Version.
+ * @param {Object}  [options.customRequestProperties] Custome request properties.
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
@@ -417,7 +418,14 @@ Kinvey.init = function(options) {
   }
 
   // Set the App Version
-  Kinvey.APP_VERSION = options.appVersion;
+  if (options.appVersion != null) {
+    Kinvey.setAppVersion(options.appVersion);
+  }
+
+  // Set the custom request properties
+  if (options.customRequestProperties != null) {
+    Kinvey.setCustomRequestProperties(options.customRequestProperties);
+  }
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;
