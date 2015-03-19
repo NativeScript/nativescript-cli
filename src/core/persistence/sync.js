@@ -136,16 +136,27 @@ var Sync = /** @lends Sync */{
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
         var appVersion, customRequestProperties;
 
+        // Get the app version if one is set
         if (options.appVersion != null) {
           appVersion = options.appVersion;
-        } else if (Kinvey.APP_VERSION != null) {
-          appVersion = Kinvey.APP_VERSION;
+        } else if (Kinvey.getAppVersion() != null) {
+          appVersion = Kinvey.getAppVersion();
         }
 
+        // Get the custom request properties
         if (options.customRequestProperties != null) {
           customRequestProperties = options.customRequestProperties;
-        } else if (Kinvey.CUSTOM_REQUEST_PROPERTIES != null) {
-          customRequestProperties = Kinvey.CUSTOM_REQUEST_PROPERTIES;
+        }
+
+        if (Kinvey.getCustomRequestProperties() != null) {
+          var globalCustomRequestProperties = Kinvey.getCustomRequestProperties();
+
+          Object.keys(globalCustomRequestProperties).map(function(name) {
+            // If the property is not already set then set it
+            if (!customRequestProperties.hasOwnProperty(name)) {
+              customRequestProperties[name] = globalCustomRequestProperties[name];
+            }
+          });
         }
 
         metadata.documents[document._id] = {
