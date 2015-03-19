@@ -292,14 +292,14 @@ Kinvey.setAppVersion = function(version) {
 
       appVersion += '.' + patch;
     }
-  } else if (version != null) {
+  } else if (appVersion != null) {
     // Validate that version is a string
-    if (!isString(version)) {
+    if (!isString(appVersion)) {
       throw new Kinvey.Error('Version must be a string.');
     }
 
     // Validate that version is not an empty string
-    if (isEmptyString(version)) {
+    if (isEmptyString(appVersion)) {
       throw new Kinvey.Error('Not able to set version to an empty string.');
     }
   }
