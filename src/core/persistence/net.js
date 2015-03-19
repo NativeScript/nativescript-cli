@@ -241,8 +241,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     };
 
     // Append optional headers.
-    if (options.appVersion != null || Kinvey.APP_VERSION != null) {
-      headers['X-Kinvey-Customer-App-Version'] = options.AppVersion || Kinvey.APP_VERSION;
+    options.appVersion = options.appVersion || Kinvey.getAppVersion();
+    if (options.appVersion != null) {
+      headers['X-Kinvey-Customer-App-Version'] = options.AppVersion;
     }
     if(null != request.data) {
       headers['Content-Type'] = 'application/json; charset=utf-8';
@@ -257,9 +258,22 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
       headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
-    if(options.customRequestProperties != null) {
-      headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestProperties);
+
+    // Get the custom request headers
+    options.customRequestHeaders = options.customRequestHeaders || {};
+    var customRequestHeaders = Kinvey.getCustomRequestHeaders();
+    if (customRequestHeaders != null) {
+      Object.keys(customRequestHeaders).map(function(name) {
+        // If the header is not already set then set it
+        if (!options.customRequestHeaders.hasOwnProperty(name)) {
+          options.customRequestHeaders[name] = customRequestHeaders[name];
+        }
+      });
     }
+
+    // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
+    // request headers for the request
+    headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestHeaders);
 
     // Debug.
     if(KINVEY_DEBUG) {

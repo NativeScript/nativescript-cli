@@ -46,8 +46,11 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
-// App Version is Private. Do NOT Document
+// App Version is private. Do NOT document.
 Kinvey.APP_VERSION = undefined;
+
+// Custom Request Headers is private. Do NOT document.
+Kinvey.CUSTOM_REQUEST_HEADERS = {};
 
 // Properties.
 // -----------
@@ -221,18 +224,19 @@ Kinvey.setActiveUser = function(user) {
 };
 
 /**
- * Returns the current app version used on Kinvey.
+ * Returns the app version for the application or `undefined`
+ * if a version was not set.
  *
- * @return {string} The current app version.
+ * @return {?string} The app version or `undefined`.
  */
 Kinvey.getAppVersion = function() {
   return Kinvey.APP_VERSION;
 };
 
 /**
- * Set the app version used on Kinvey.
+ * Set the app version for the application.
  *
- * @param {string} version App version to use.
+ * @param {string} version App version for the application
  */
 Kinvey.setAppVersion = function(version) {
   var appVersion = version;
@@ -251,17 +255,52 @@ Kinvey.setAppVersion = function(version) {
     minor = arguments[1];
     patch = arguments[2];
 
+    // Validate that major is a string
+    if (!isString(major)) {
+      throw new Kinvey.Error('Major value of version must be a string.');
+    }
+
     // Set app version to major value
     appVersion = major;
 
     // Append minor value if it was provided
     if (minor != null) {
+      // Validate that minor is a string
+      if (!isString(minor)) {
+        throw new Kinvey.Error('Minor value of version must be a string.');
+      }
+
+      // Validate that minor is not an empty string
+      if (isEmptyString(minor)) {
+        throw new Kinvey.Error('Not able to set minor value of version to an empty string.');
+      }
+
       appVersion += '.' + minor;
     }
 
     // Append patch value if it was provided
     if (patch != null) {
+      // Validate that patch is a string
+      if (!isString(patch)) {
+        throw new Kinvey.Error('Patch value of version must be a string.');
+      }
+
+      // Validate that patch is not an empty string
+      if (isEmptyString(patch)) {
+        throw new Kinvey.Error('Not able to set patch value of version to an empty string.');
+      }
+
       appVersion += '.' + patch;
+    }
+  } else if (version != null) {
+    // Validate that version is a string
+    if (!isString(version)) {
+      throw new Kinvey.Error('Version must be a string.');
+    }
+
+    // Validate that version is not an empty string
+    if (isEmptyString(version)) {
+      throw new Kinvey.Error('Not able to set version to an empty string.');
     }
   }
 
@@ -270,15 +309,79 @@ Kinvey.setAppVersion = function(version) {
 };
 
 /**
+ * Returns the custom request headers sent for all API requests.
+ *
+ * @return {object} The custom request headers.
+ */
+Kinvey.getCustomRequestHeaders = function() {
+  return Kinvey.CUSTOM_REQUEST_HEADERS;
+};
+
+/**
+ * Set the custom request headers for the application.
+ *
+ * @param {?Array} headers Array of headers to set or `undefined`
+ *                         to remove all custom request headers.
+ */
+Kinvey.setCustomRequestHeaders = function(headers) {
+  Kinvey.CUSTOM_REQUEST_HEADERS = {};
+  Kinvey.addCustomRequestHeaders(headers);
+};
+
+/**
+ * Add the headers to the custom request headers for the
+ * application.
+ *
+ * @param {Array} headers Array of headers to add to cutsom
+ *                        request headers.
+ */
+Kinvey.addCustomRequestHeaders = function(headers) {
+  if (headers != null) {
+    if (!isArray(headers)) {
+      throw new Kinvey.Error('Headers argument must be an array.');
+    }
+
+    var customRequestHeaders = Kinvey.CUSTOM_REQUEST_HEADERS || {};
+
+    headers.forEach(function(header) {
+      Object.keys(header).map(function(key) {
+        var value = header[key];
+
+        if (!isString(value)) {
+          throw new Kinvey.Error('Custom header value for header ' + key +
+                                 ' must be a string.');
+        }
+
+        if (!isEmptyString(value)) {
+          customRequestHeaders[key] = value;
+        }
+      });
+    });
+
+    Kinvey.CUSTOM_REQUEST_HEADERS = customRequestHeaders;
+  }
+};
+
+/**
+ * Add header name and value to custom request headers for the
+ * application.
+ *
+ * @param {string} name Custome request header name.
+ * @param {string} value Custom request header value.
+ */
+Kinvey.addCustomRequestHeader = function(name, value) {
+  var header = {
+    name: value
+  };
+  Kinvey.addCustomRequestHeaders([header]);
+};
+
+/**
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
-<<<<<<< HEAD
- * @param {string}  [options.apiHostName]  API Host Name.
  * @param {string}  [options.appVersion]   App Version.
-=======
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
->>>>>>> 1.1.x
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
