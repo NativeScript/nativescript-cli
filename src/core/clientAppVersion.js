@@ -25,9 +25,7 @@
     version: undefined,
     major: undefined,
     minor: undefined,
-    patch: undefined,
-    release: undefined,
-    build: undefined
+    patch: undefined
   };
   var semverRegex = /^v?((\d+)\.(\d+)\.(\d+))(?:-([\dA-Za-z\-]+(?:\.[\dA-Za-z\-]+)*))?(?:\+([\dA-Za-z\-]+(?:\.[\dA-Za-z\-]+)*))?$/;
 
@@ -55,12 +53,6 @@
       if (version.hasOwnProperty('patch') && isNumber(version.patch)) {
         m[4] = (version.patch + '').trim();
       }
-      if (version.hasOwnProperty('release')) {
-        m[5] = (version.release + '').trim();
-      }
-      if (version.hasOwnProperty('build')) {
-        m[6] = (version.build + '').trim();
-      }
     }
 
     // Reset the app version
@@ -72,9 +64,7 @@
       version: m[1],
       major: m[2],
       minor: m[3],
-      patch: m[4],
-      release: m[5],
-      build: m[6]
+      patch: m[4]
     };
 
     return appVersion;
@@ -94,13 +84,6 @@
       str += version.minor || '0';
       str += '.';
       str += version.patch || '0';
-
-      if (null != version.release) {
-        str += '-' + version.release;
-      }
-      if (null != version.build) {
-        str += '+' + version.build;
-      }
     }
 
     return str;
@@ -112,9 +95,7 @@
       version: undefined,
       major: undefined,
       minor: undefined,
-      patch: undefined,
-      release: undefined,
-      build: undefined
+      patch: undefined
     };
 
     return appVersion;
@@ -140,14 +121,6 @@
 
     patchVersion: function() {
       return parseInt(appVersion.patch);
-    },
-
-    releaseVersion: function() {
-      return appVersion.release;
-    },
-
-    buildVersion: function() {
-      return appVersion.build;
     },
 
     setVersion: function(version) {
@@ -183,14 +156,6 @@
       }
 
       appVersion.patch = (patch + '').trim();
-    },
-
-    setReleaseVersion: function(release) {
-      appVersion.release = (release + '').trim();
-    },
-
-    setBuildVersion: function(build) {
-      appVersion.build = (build + '').trim();
     },
 
     toString: function() {
