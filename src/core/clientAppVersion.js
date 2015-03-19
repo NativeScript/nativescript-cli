@@ -21,7 +21,6 @@
 
 (function(root) {
   var appVersion = {
-    semver: undefined,
     version: undefined,
     major: undefined,
     minor: undefined,
@@ -38,9 +37,6 @@
       m = semverRegex.exec(version) || m;
     } else {
       // If version is an object, set the individual values
-      if (version.hasOwnProperty('semver')) {
-        m[0] = (version.semver + '').trim();
-      }
       if (version.hasOwnProperty('version')) {
         m[1] = (version.version + '').trim();
       }
@@ -60,7 +56,6 @@
 
     // Set the values for the app version
     appVersion = {
-      semver: m[0],
       version: m[1],
       major: m[2],
       minor: m[3],
@@ -70,20 +65,20 @@
     return appVersion;
   };
 
-  var stringifyAppVersion = function(version) {
+  var stringifyAppVersion = function(appVersion) {
     var str = '';
 
     // If the version isn't semver style then just
     // use the version
-    if (null != version.version && null == semverRegex.exec(version.version)) {
-      str = version.version;
+    if (null != appVersion.version && null == semverRegex.exec(appVersion.version)) {
+      str = appVersion.version;
     } else {
       // Build the string from the version pieces
-      str += version.major || '0';
+      str += appVersion.major || '0';
       str += '.';
-      str += version.minor || '0';
+      str += appVersion.minor || '0';
       str += '.';
-      str += version.patch || '0';
+      str += appVersion.patch || '0';
     }
 
     return str;
@@ -91,7 +86,6 @@
 
   var resetAppVersion = function() {
     appVersion = {
-      semver: undefined,
       version: undefined,
       major: undefined,
       minor: undefined,
@@ -103,24 +97,8 @@
 
   root.ClientAppVersion = {
 
-    semver: function() {
-      return appVersion.semver;
-    },
-
-    version: function() {
-      return appVersion.version;
-    },
-
-    majorVersion: function() {
-      return parseInt(appVersion.major);
-    },
-
-    minorVersion: function() {
-      return parseInt(appVersion.minor);
-    },
-
-    patchVersion: function() {
-      return parseInt(appVersion.patch);
+    stringVersion: function() {
+      return stringifyAppVersion(appVersion);
     },
 
     setVersion: function(version) {
@@ -156,10 +134,6 @@
       }
 
       appVersion.patch = (patch + '').trim();
-    },
-
-    toString: function() {
-      return stringifyAppVersion(appVersion);
     },
 
     clear: function() {
