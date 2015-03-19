@@ -18,7 +18,6 @@ export class NodePackageManager implements INodePackageManager {
 
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
-		private $httpClient: Server.IHttpClient,
 		private $fs: IFileSystem,
 		private $lockfile: ILockFile) {
 		this.versionsCache = {};
@@ -73,11 +72,20 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public getLatestVersion(packageName: string): IFuture<string> {
-		return (() => {
-			var versions = this.getAvailableVersions(packageName).wait();
-			versions = _.sortBy(versions, (ver: string) => { return ver; });
-			return versions.reverse()[0];
-		}).future<string>()();
+		var future = new Future<string>();
+
+		npm.commands["view"]([packageName, "dist-tags"], [false], (err: any, data: any) => { // [false] - silent
+			if(err) {
+				future.throw(err);
+			} else {
+				var latestVersion = _.first(_.keys(data));
+				this.$logger.trace("Using version %s. ", latestVersion);
+
+				future.return(latestVersion);
+			}
+		});
+
+		return future;
 	}
 
 	public getCachedPackagePath(packageName: string, version: string): string {
@@ -165,19 +173,6 @@ export class NodePackageManager implements INodePackageManager {
 			}
 		});
 		return future;
-	}
-
-	private getAvailableVersions(packageName: string): IFuture<string[]> {
-		return (() => {
-			if(!this.versionsCache[packageName]) {
-				var url = NodePackageManager.NPM_REGISTRY_URL + packageName;
-				var response = this.$httpClient.httpRequest(url).wait().body;
-				var json = JSON.parse(response);
-				this.versionsCache[packageName] = _.keys(json.versions);
-			}
-
-			return this.versionsCache[packageName];
-		}).future<string[]>()();
 	}
 }
 $injector.register("npm", NodePackageManager);

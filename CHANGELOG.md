@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+0.9.4 (2015, March 18)
+==
+
+### Fixed
+
+* [Fixed #348](https://github.com/NativeScript/nativescript-cli/issues/348): `tns platform add ios` downloads the latest experimental version of the ios runtime instead of the latest stable version.
+
 0.9.3 (2015, March 18)
 ==
 
