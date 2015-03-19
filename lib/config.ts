@@ -36,8 +36,10 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 				break;
 			case "win32":
 				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-win.html#system-requirements";
+				break;
 			case "darwin":
 				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-os-x.html#system-requirements";
+				break;
 			default:
 				linkToSysRequirements = "";
 		}
