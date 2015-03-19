@@ -240,25 +240,6 @@ class IOSProjectService implements  IPlatformProjectService {
 		return path.join(this.$npm.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
 	}
 
-	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
-		var tnsIosPackage = "";
-		if(options.frameworkPath) {
-			if(this.$fs.getFsStats(options.frameworkPath).wait().isFile()) {
-				this.$errors.fail("frameworkPath option must be path to directory which contains tns-ios framework");
-			}
-
-			tnsIosPackage = path.resolve(options.frameworkPath);
-		} else {
-			tnsIosPackage = this.$npm.install("tns-ios").wait();
-		}
-
-		var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
-
-		return {
-			frontEndPath: safariPath
-		}
-	}
-
     private validateDynamicFramework(libraryPath: string): IFuture<void> {
         return (() => {
             var infoPlistPath = path.join(libraryPath, "Info.plist");

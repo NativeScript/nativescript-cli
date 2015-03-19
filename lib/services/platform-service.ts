@@ -187,54 +187,6 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public debugPlatform(platform: string): IFuture<void> {
-		platform = platform.toLowerCase();
-
-		var ret = options.emulator
-		? this.debugOnEmulator(platform)
-		: this.debugOnDevice(platform);
-
-	  return ret;
-	}
-
-	public debugOnEmulator(platform: string): IFuture<void> {
-		return (() => {
-
-			// a bit redundant
-			this.deployOnEmulator(platform).wait();
-
-			this.debugOnDevice(platform).wait();
-		}).future<void>()();
-	}
-
-	public debugOnDevice(platform: string): IFuture<void> {
-		return (() => {
-			platform = platform.toLowerCase();
-			var platformData = this.$platformsData.getPlatformData(platform);
-			var packageFile = "";
-			var platformData = this.$platformsData.getPlatformData(platform);
-
-			if (options["debug-brk"]) {
-				this.preparePlatform(platform).wait();
-
-				var cachedDeviceOption = options.forDevice;
-				options.forDevice = true;
-				this.buildPlatform(platform).wait();
-				options.forDevice = cachedDeviceOption;
-
-				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
-				this.$logger.out("Using ", packageFile);
-			}
-
-			var debuggerSetup = platformData.platformProjectService.getDebugOnDeviceSetup();
-
-			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.debug(packageFile, this.$projectData.projectId, debuggerSetup)};
-			this.$devicesServices.execute(action).wait();
-
-		}).future<void>()();
-	}
-
 	public removePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			_.each(platforms, platform => {
@@ -331,16 +283,16 @@ export class PlatformService implements IPlatformService {
 		}
 	}
 
-    public addLibrary(platform: string, libraryPath: string): IFuture<void> {
-        return (() => {
-            if (!this.$fs.exists(libraryPath).wait()) {
-                this.$errors.fail("The path %s does not exist", libraryPath);
-            } else {
-                var platformData = this.$platformsData.getPlatformData(platform);
-                platformData.platformProjectService.addLibrary(platformData, libraryPath).wait();
-            }
-        }).future<void>()();
-    }
+	public addLibrary(platform: string, libraryPath: string): IFuture<void> {
+		return (() => {
+			if (!this.$fs.exists(libraryPath).wait()) {
+				this.$errors.fail("The path %s does not exist", libraryPath);
+			} else {
+				var platformData = this.$platformsData.getPlatformData(platform);
+				platformData.platformProjectService.addLibrary(platformData, libraryPath).wait();
+			}
+		}).future<void>()();
+	}
 
 	private isValidPlatform(platform: string) {
 		return this.$platformsData.getPlatformData(platform);
@@ -427,11 +379,11 @@ export class PlatformService implements IPlatformService {
 		}).future<IApplicationPackage>()();
 	}
 
-	private getLatestApplicationPackageForDevice(platformData: IPlatformData) {
+	public getLatestApplicationPackageForDevice(platformData: IPlatformData) {
 		return this.getLatestApplicationPackage(platformData.deviceBuildOutputPath, platformData.validPackageNamesForDevice);
 	}
 
-	private getLatestApplicationPackageForEmulator(platformData: IPlatformData) {
+	public getLatestApplicationPackageForEmulator(platformData: IPlatformData) {
 		return this.getLatestApplicationPackage(platformData.emulatorBuildOutputPath || platformData.deviceBuildOutputPath, platformData.validPackageNamesForEmulator || platformData.validPackageNamesForDevice);
 	}
 

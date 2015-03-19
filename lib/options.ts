@@ -6,7 +6,7 @@ import commonOptions = require("./common/options");
 import osenv = require("osenv");
 import hostInfo = require("./common/host-info");
 
-var knownOpts:any = {
+var knownOpts: any = {
 		"frameworkPath": String,
 		"copy-from": String,
 		"link-to": String,
@@ -14,6 +14,7 @@ var knownOpts:any = {
 		"emulator": Boolean,
 		"symlink": Boolean,
 		"for-device": Boolean,
+		"client": Boolean,
 		"keyStorePath": String,
 		"keyStorePassword": String,
 		"keyStoreAlias": String,

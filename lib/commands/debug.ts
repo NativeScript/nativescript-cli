@@ -1,18 +1,26 @@
 ﻿///<reference path="../.d.ts"/>
 "use strict";
 
-import helpers = require("./../common/helpers");
-import util = require("util")
+export class DebugPlatformCommand implements ICommand {
+	constructor(private debugService: IDebugService) { }
 
-export class DebugCommand implements ICommand {
-    constructor(private $platformService: IPlatformService,
-        private $platformCommandParameter: ICommandParameter) { }
+	execute(args: string[]): IFuture<void> {
+		return this.debugService.debug();
+	}
 
-    execute(args: string[]): IFuture<void> {
-        return this.$platformService.debugPlatform(args[0]);
-    }
-
-    allowedParameters = [this.$platformCommandParameter];
+	allowedParameters: ICommandParameter[] = [];
 }
-$injector.registerCommand("debug", DebugCommand);
- 
+
+export class DebugIOSCommand extends DebugPlatformCommand {
+	constructor(private $iOSDebugService: IDebugService) {
+		super($iOSDebugService);
+	}
+}
+$injector.registerCommand("debug|ios", DebugIOSCommand);
+
+export class DebugAndroidCommand extends DebugPlatformCommand {
+	constructor(private $androidDebugService: IDebugService) {
+		super($androidDebugService);
+	}
+}
+$injector.registerCommand("debug|android", DebugAndroidCommand);

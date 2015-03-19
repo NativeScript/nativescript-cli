@@ -423,42 +423,65 @@ Options:
     --release - If set, produces a release build. Otherwise, produces a debug build.
 --[/]--
     
---[debug]--
+--[debug|android]--
 
 Usage:
     $ tns debug android [--device <Device ID> | --emulator <Emulator Options> | --geny <Geny Name> ] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]
-    $ tns debug ios [--device <Device ID>] [--debug-brk | --start ]
     
-Platform-specific usage:
+Example usage:
     $ tns debug android --get-port
     $ tns debug android --debug-brk [--debug-port <port>]
     $ tns debug android --start [--debug-port <port>]
     $ tns debug android --stop
-    $ tns debug ios --debug-brk
-    $ tns debug ios --start
 
 Debugs your project on a connected device or in a native emulator.
 
-<Device ID> is the index or name of the target device as listed by $ tns list-devices
+<Device ID> is the index or name of the target device as listed by $ tns list-devices.
 <Port> is an accessible port on the device to which you want to attach the debugging tools.
-
-Before debugging on iOS device, verify that you have configured a valid pair of development certificate and provisioning profile on your OS X system.
 
 Options:
     --device - Specifies a connected device on which to run the app.
-    --emulator - (Android-only) Specifies that you want to debug the app in the native Android emulator from the Android SDK.
-    --geny - (Android-only) Specifies a Genymotion emulator on which you want to debug your app.
+    --emulator - Specifies that you want to debug the app in the native Android emulator from the Android SDK.
+    --geny - Specifies a Genymotion emulator on which you want to debug your app.
     --debug-brk - Shorthand for prepare, build and deploy. Prepares, builds and deploys the application package on a device or in an emulator,
-        launches the app and loads the debug tools in the browser.
-        For Android, launches the Chrome DevTools of your Chrome browser. You must have Chrome installed on your system.
-        For iOS, launches the developer tools of your Safari browser.
+        launches the Chrome DevTools of your Chrome browser. You must have Chrome installed on your system.
     --start - Attaches the debug tools to a deployed and running app. Your app must be running on device.
-    --stop - (Android-only) Detaches the debug tools.
-    --get-port - (Android-only) Retrieves the port on which you are debugging your application.
-        On iOS devices, this option is not available because the debug tools always attach to port 8080.
-    --debug-port - (Android-only) Sets a new port on which to attach the debug tools.
-        On iOS devices, this option is not available because the debug tools always attach to port 8080.
+    --stop - Detaches the debug tools.
+    --get-port - Retrieves the port on which you are debugging your application.
+    --debug-port - Sets a new port on which to attach the debug tools.
 
+--[/]--
+
+--[debug|ios]--
+
+Usage:
+    $ tns debug ios [--debug-brk | --start] [--device <Device ID> | --emulator <Emulator Options>] [--no-client]
+
+Example usage:
+    $ tns debug ios --debug-brk
+    $ tns debug ios --start
+    $ tns debug ios --debug-brk --emulator
+    $ tns debug ios --start --emulator
+	
+Debugs your project on a connected device or in a native emulator.
+
+<Device ID> is the index or name of the target device as listed by $ tns list-devices.
+
+Before debugging on iOS device, verify that you have configured a valid pair of development certificate and provisioning profile on your OS X system.
+Debugging on iOS device will forward the debugging traffic on port 8080 from the device to the local machine.
+
+Debugging on emulator will require an already started emulator and Xcode 6 or later.
+
+Options:
+    --debug-brk - Shorthand for prepare, build and deploy.
+        Prepares, builds and deploys the application package on a device or in an emulator,
+        launches the developer tools of your Safari browser.
+    --start - Attaches the debug tools to a deployed and running app.
+        Your app must be running on device or emulator,
+        launches the developer tools of your Safari browser.
+    --emulator - Debug on already running emulator. Requires "xcrun" from Xcode 6 or later.
+    --no-client - Suppresses the launch of the developer tools in Safari.
+	
 --[/]--
 
 --[emulate]--
