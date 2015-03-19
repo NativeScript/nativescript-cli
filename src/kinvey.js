@@ -46,9 +46,6 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
-// App Version is private. Do NOT document.
-Kinvey.APP_VERSION = undefined;
-
 // Custom Request Properties is private. Do NOT document.
 Kinvey.CUSTOM_REQUEST_PROPERTIES = {};
 
@@ -224,91 +221,6 @@ Kinvey.setActiveUser = function(user) {
 };
 
 /**
- * Returns the app version for the application or `undefined`
- * if a version was not set.
- *
- * @return {?string} The app version or `undefined`.
- */
-Kinvey.getAppVersion = function() {
-  return Kinvey.APP_VERSION;
-};
-
-/**
- * Set the app version for the application.
- *
- * @param {string} version App version for the application
- */
-Kinvey.setAppVersion = function(version) {
-  var appVersion = version;
-  var major, minor, patch;
-
-  // Debug
-  if (KINVEY_DEBUG) {
-    log('Setting the app version.', arguments);
-  }
-
-  // Set app version using specified major, minor, and patch
-  // provided as arguments.
-  if (arguments.length > 1) {
-    // Get individual parts of app version
-    major = arguments[0];
-    minor = arguments[1];
-    patch = arguments[2];
-
-    // Validate that major is a string
-    if (!isString(major)) {
-      throw new Kinvey.Error('Major value of version must be a string.');
-    }
-
-    // Set app version to major value
-    appVersion = major;
-
-    // Append minor value if it was provided
-    if (minor != null) {
-      // Validate that minor is a string
-      if (!isString(minor)) {
-        throw new Kinvey.Error('Minor value of version must be a string.');
-      }
-
-      // Validate that minor is not an empty string
-      if (isEmptyString(minor)) {
-        throw new Kinvey.Error('Not able to set minor value of version to an empty string.');
-      }
-
-      appVersion += '.' + minor;
-    }
-
-    // Append patch value if it was provided
-    if (patch != null) {
-      // Validate that patch is a string
-      if (!isString(patch)) {
-        throw new Kinvey.Error('Patch value of version must be a string.');
-      }
-
-      // Validate that patch is not an empty string
-      if (isEmptyString(patch)) {
-        throw new Kinvey.Error('Not able to set patch value of version to an empty string.');
-      }
-
-      appVersion += '.' + patch;
-    }
-  } else if (appVersion != null) {
-    // Validate that version is a string
-    if (!isString(appVersion)) {
-      throw new Kinvey.Error('Version must be a string.');
-    }
-
-    // Validate that version is not an empty string
-    if (isEmptyString(appVersion)) {
-      throw new Kinvey.Error('Not able to set version to an empty string.');
-    }
-  }
-
-  // Set the app version
-  Kinvey.APP_VERSION = appVersion;
-};
-
-/**
  * Returns the custom request properties sent for all API requests.
  *
  * @return {object} The custom request properties.
@@ -373,8 +285,8 @@ Kinvey.addCustomRequestProperty = function(name, value) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
- * @param {string}  [options.appVersion]   App Version.
- * @param {Object}  [options.customRequestProperties] Custome request properties.
+ * @param {string}  [options.clientAppVersion]   Client App Version.
+ * @param {Object}  [options.customRequestProperties] Customer request properties.
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
@@ -417,9 +329,9 @@ Kinvey.init = function(options) {
                            ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
   }
 
-  // Set the App Version
-  if (options.appVersion != null) {
-    Kinvey.setAppVersion(options.appVersion);
+  // Set the Client App Version
+  if (options.clientAppVersion != null) {
+    Kinvey.ClientAppVersion.setVersion(options.clientAppVersion);
   }
 
   // Set the custom request properties

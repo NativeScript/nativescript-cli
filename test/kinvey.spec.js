@@ -116,13 +116,13 @@ describe('Kinvey', function() {
       });
       expect(Kinvey.APIHostName).to.equal(config.test.apiHostName);
     });
-    it('should save app version on arguments: options.appVersion', function() {
+    it('should save client app version on arguments: options.clientAppVersion', function() {
       Kinvey.init({
-        appVersion: config.test.appVersion,
+        clientAppVersion: config.test.clientAppVersion,
         appKey: config.test.appKey,
         appSecret: config.test.appSecret
       });
-      expect(Kinvey.APP_VERSION).to.equal(config.test.appVersion);
+      expect(Kinvey.ClientAppVersion.toString()).to.equal(config.test.clientAppVersion);
     });
     it('should save API host name with Kinvey.API_ENDPOINT', function() {
       Kinvey.API_ENDPOINT = config.test.apiHostName;
@@ -210,31 +210,6 @@ describe('Kinvey', function() {
       options.appSecret = config.test.appSecret;
       return Kinvey.init(options);
     }));
-  });
-
-  //Kinvey.APP_VERSION
-  describe('the app version', function() {
-    var version = '1.10.3';
-
-    // Housekeeping
-    afterEach(function() {
-      Kinvey.APP_VERSION = undefined;
-    });
-
-    it('should save the app version with Kinvey.APP_VERSION', function() {
-      Kinvey.APP_VERSION = version;
-      expect(Kinvey.getAppVersion()).to.equal(version);
-    });
-
-    it('should save the app version with Kinvey.setAppVerison() providing just a version string', function() {
-      Kinvey.setAppVersion(version);
-      expect(Kinvey.getAppVersion()).to.equal(version);
-    });
-
-    it('should save the app version with Kinvey.setAppVerison() providing major, minor, and patch strings', function() {
-      Kinvey.setAppVersion('1', '10', '3');
-      expect(Kinvey.getAppVersion()).to.equal(version);
-    });
   });
 
   // Kinvey.CUSTOM_REQUEST_PROPERTIES

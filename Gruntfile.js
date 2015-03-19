@@ -92,6 +92,7 @@ module.exports = function(grunt) {
           'src/core/defer.js',
           'src/core/auth.js',
           'src/core/device.js',
+          'src/core/clientAppVersion.js',
 
           // Features.
           'src/core/acl.js',
@@ -253,7 +254,7 @@ module.exports = function(grunt) {
     watch: {
       all: {
         files : ['src/**/*', 'test/**/*'],
-        tasks : ['cleanup', 'jshint', 'build', 'test', 'karma:unit:run']
+        tasks : ['cleanup', 'jshint', 'build']//, 'test', 'karma:unit:run']
       }
     },
 

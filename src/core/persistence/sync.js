@@ -134,13 +134,13 @@ var Sync = /** @lends Sync */{
         }
 
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
-        var appVersion, customRequestProperties;
+        var clientAppVersion, customRequestProperties;
 
         // Get the app version if one is set
-        if (options.appVersion != null) {
-          appVersion = options.appVersion;
-        } else if (Kinvey.getAppVersion() != null) {
-          appVersion = Kinvey.getAppVersion();
+        if (options.clientAppVersion != null) {
+          clientAppVersion = options.clientAppVersion;
+        } else if (Kinvey.ClientAppVersion.toString() != null) {
+          clientAppVersion = Kinvey.ClientAppVersion.toString();
         }
 
         // Get the custom request properties
@@ -161,7 +161,7 @@ var Sync = /** @lends Sync */{
 
         metadata.documents[document._id] = {
           timestamp: timestamp,
-          appVersion: appVersion,
+          clientAppVersion: clientAppVersion,
           customRequestProperties: customRequestProperties
         };
       });
@@ -235,7 +235,7 @@ var Sync = /** @lends Sync */{
         var metadata = {
           id: id,
           timestamp: document.timestamp,
-          appVersion: document.appVersion,
+          clientAppVersion: document.clientAppVersion,
           customRequestProperties: document.customRequestProperties
         };
         return Sync._document(
@@ -307,8 +307,8 @@ var Sync = /** @lends Sync */{
       var metadata = composite.metadata;
       var requestOptions = options || {};
 
-      // Set options.appVersion based on the metadata for the document
-      requestOptions.appVersion = metadata.appVersion != null ? metadata.appVersion : null;
+      // Set options.clientAppVersion based on the metadata for the document
+      requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
       // Set options.customRequestProperties based on the metadata
       // for the document
@@ -436,7 +436,7 @@ var Sync = /** @lends Sync */{
       var options = options || {};
 
       // Set options.appVersion based on the metadata for the document
-      options.appVersion = metadata.appVersion != null ? metadata.appVersion : null;
+      options.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
       // Set options.customRequestProperties based on the metadata
       // for the document
