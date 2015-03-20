@@ -248,6 +248,15 @@ var Sync = /** @lends Sync */{
     });
   },
 
+  /**
+   * Reads the provided documents using both local and network persistence.
+   *
+   * @private
+   * @param {string} collection The collection.
+   * @param {Array} documents List of documents.
+   * @param {Options} [options] Options.
+   * @returns {Promise} The response.
+   */
   _read: function(collection, documents, options) {
     var identifiers = Object.keys(documents);
     var promises = identifiers.map(function(id) {
