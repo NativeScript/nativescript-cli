@@ -422,7 +422,22 @@ Options:
         You cannot use --device and --emulator simultaneously.
     --release - If set, produces a release build. Otherwise, produces a debug build.
 --[/]--
-    
+
+--[debug]--
+
+Usage:
+    $ tns debug <Command>
+
+You must run the debug command with a related command.
+
+Debugs your project on a connected device or in a native emulator.
+
+<Command> is a related command that extends the debug command. You can run the following related commands:
+	android - Debugs your project on a connected Android device, native Android emulator or Genymotion emulator.
+	ios - Debugs your project on a connected iOS device or in a native iOS emulator. 
+
+--[/]--
+
 --[debug|android]--
 
 Usage:
