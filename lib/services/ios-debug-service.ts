@@ -342,4 +342,4 @@ class IOSDeviceDebugging {
 		this.$logger.info("\nSetting up debugger proxy...\n\nPress Ctrl + C to terminate, or disconnect.\n");
 	}
 }
-$injector.register("iOSDeviceDebugging", IOSDeviceDebugging);
+$injector.register("iosDeviceDebugging", IOSDeviceDebugging);
