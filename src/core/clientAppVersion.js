@@ -105,14 +105,6 @@
       }
 
       clearClientAppVersion();
-    },
-
-    /**
-     * Returns the client app version or `undefined`.
-     * @return {?string} Client app version or `undefined`.
-     */
-    toJSON: function() {
-      return clientAppVersion;
     }
   };
 

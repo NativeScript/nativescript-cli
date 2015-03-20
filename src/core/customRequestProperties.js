@@ -142,10 +142,6 @@
       }
 
       clearCustomRequestProperty(name);
-    },
-
-    toJSON: function() {
-      return customRequestProperties;
     }
   };
 

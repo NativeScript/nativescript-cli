@@ -152,6 +152,9 @@
 	},
     "test": {
       "apiHostName"      : "http://myapihostname.com/",
+      "customRequestProperties": {
+        "foo": "bar"
+      },
       "clientAppVersion" : "1.2.3",
       "appKey"           : "kid_-kpx2Yw6U",
       "appSecret"        : "736bfe159c9149f881ecef2269b8b48d",
@@ -165,6 +168,9 @@
 	},
     "test": {
       "apiHostName"      : "https://myapihostname.com/",
+      "customRequestProperties": {
+        "foo": "bar"
+      },
       "clientAppVersion" : "1.2.3",
       "appKey"           : "kid_PTsIpH9WF5",
       "appSecret"        : "c0be7de6e91a49a4ba6b0d35da68f3d2",
@@ -179,6 +185,9 @@
     "test": {
       "appKey"           : "kid_VPL790AbkM",
       "clientAppVersion" : "1.2.3",
+      "customRequestProperties": {
+        "foo": "bar"
+      },
       "appSecret"        : "78375555c2d34243a6ed8a06819ebb68",
       "masterSecret"     : "008d21b7f2a540b38539c1ca892ab281"
 	 }

@@ -134,7 +134,8 @@ var Sync = /** @lends Sync */{
         }
 
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
-        var clientAppVersion, customRequestProperties;
+        var clientAppVersion,
+            customRequestProperties = options.customRequestProperties || {};
 
         // Get the app version if one is set
         if (options.clientAppVersion != null) {
@@ -143,14 +144,8 @@ var Sync = /** @lends Sync */{
           clientAppVersion = Kinvey.ClientAppVersion.stringVersion();
         }
 
-        // Get the custom request properties
-        if (options.customRequestProperties != null) {
-          customRequestProperties = options.customRequestProperties;
-        }
-
-        if (Kinvey.CustomRequestProperties.properties() != null) {
-          var globalCustomRequestProperties = Kinvey.CustomRequestProperties.properties();
-
+        var globalCustomRequestProperties = Kinvey.CustomRequestProperties.properties();
+        if (globalCustomRequestProperties != null) {
           Object.keys(globalCustomRequestProperties).forEach(function(name) {
             // If the property is not already set then set it
             if (!customRequestProperties.hasOwnProperty(name)) {
@@ -184,51 +179,12 @@ var Sync = /** @lends Sync */{
    * @returns {Promise} The response.
    */
   _collection: function(collection, documents, options) {
-    var error;
-
     // Prepare the response.
     var result = { collection: collection, success: [], error: [] };
-
-    // Obtain the actual documents from local and net.
     var identifiers = Object.keys(documents);
-    var request     = {
-      namespace  : USERS === collection ? USERS : DATA_STORE,
-      collection : USERS === collection ? null : collection,
-      query      : new Kinvey.Query().contains('_id', identifiers),
-      auth       : Auth.Default
-    };
 
-    // Step 1: obtain the documents from local and net.
-    var promises = [
-      Kinvey.Persistence.Local.read(request, options),
-      Kinvey.Persistence.Net.read(request, options)
-    ];
-    return Kinvey.Defer.all(promises).then(function(responses) {
-      // `responses` is a list of documents. Re-format as object
-      // ( id => document ).
-      var response = { local: {}, net: {} };
-      responses[0].forEach(function(document) {
-        // Check document for property _id. Thrown error will reject promise.
-        if (document._id == null) {
-          error = new Kinvey.Error('Document does not have _id property defined. ' +
-                                   'It is required to do proper synchronization.');
-          throw error;
-        }
-
-        response.local[document._id] = document;
-      });
-      responses[1].forEach(function(document) {
-        // Check document for property _id. Thrown error will reject promise.
-        if (document._id == null) {
-          error = new Kinvey.Error('Document does not have _id property defined. ' +
-                                   'It is required to do proper synchronization.');
-          throw error;
-        }
-
-        response.net[document._id] = document;
-      });
-      return response;
-    }).then(function(response) {
+    // Read the documents
+    return Sync._read(collection, documents, options).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
         var document = documents[id];
@@ -289,6 +245,71 @@ var Sync = /** @lends Sync */{
       //console.log(result);
       // Step 5: return the synchronization result.
       return result;
+    });
+  },
+
+  _read: function(collection, documents, options) {
+    var identifiers = Object.keys(documents);
+    var promises = identifiers.map(function(id) {
+      var metadata = documents[id];
+      var requestOptions = options || {};
+
+      // Set options.clientAppVersion based on the metadata for the document
+      requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
+
+      // Set options.customRequestProperties based on the metadata
+      // for the document
+      requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
+                                               metadata.customRequestProperties : null;
+
+      // Build the request.
+      var request = {
+        namespace  : USERS === collection ? USERS : DATA_STORE,
+        collection : USERS === collection ? null  : collection,
+        query      : new Kinvey.Query().contains('_id', [id]),
+        auth       : Auth.Default
+      };
+
+      // Read from local and net in parallel.
+      return Kinvey.Defer.all([
+        Kinvey.Persistence.Local.read(request, options),
+        Kinvey.Persistence.Net.read(request, options)
+      ]).then(function(responses) {
+        return { local: responses[0], net: responses[1] };
+      });
+    });
+
+    return Kinvey.Defer.all(promises).then(function(responses) {
+      var response = { local: {}, net: {} };
+      var error;
+
+      responses.forEach(function(composite) {
+        var locals = composite.local;
+        var nets = composite.net;
+
+        locals.forEach(function(document) {
+          // Check document for property _id. Thrown error will reject promise.
+          if (document._id == null) {
+            error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                     'It is required to do proper synchronization.');
+            throw error;
+          }
+
+          response.local[document._id] = document;
+        });
+        nets.forEach(function(document) {
+          // Check document for property _id. Thrown error will reject promise.
+          if (document._id == null) {
+            error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                     'It is required to do proper synchronization.');
+            throw error;
+          }
+
+          response.net[document._id] = document;
+        });
+      });
+
+      return response;
     });
   },
 

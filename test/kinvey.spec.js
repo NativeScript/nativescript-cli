@@ -122,7 +122,15 @@ describe('Kinvey', function() {
         appKey: config.test.appKey,
         appSecret: config.test.appSecret
       });
-      expect(Kinvey.ClientAppVersion.toString()).to.equal(config.test.clientAppVersion);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(config.test.clientAppVersion);
+    });
+    it('should save custom request properties on arguments: options.customRequestProperties', function() {
+      Kinvey.init({
+        customRequestProperties: config.test.customRequestProperties,
+        appKey: config.test.appKey,
+        appSecret: config.test.appSecret
+      });
+      expect(Kinvey.CustomRequestProperties.properties()).to.deep.equal(config.test.customRequestProperties);
     });
     it('should save API host name with Kinvey.API_ENDPOINT', function() {
       Kinvey.API_ENDPOINT = config.test.apiHostName;
@@ -210,33 +218,6 @@ describe('Kinvey', function() {
       options.appSecret = config.test.appSecret;
       return Kinvey.init(options);
     }));
-  });
-
-  // Kinvey.CUSTOM_REQUEST_PROPERTIES
-  describe('the custom request properties', function() {
-    var properties = {
-      foo: 'bar'
-    };
-
-    // Housekeeping
-    afterEach(function() {
-      Kinvey.setCustomRequestProperties(undefined);
-    });
-
-    it('should save the custom request properties with Kinvey.CUSTOM_REQUEST_PROPERTIES', function() {
-      Kinvey.CUSTOM_REQUEST_PROPERTIES = properties;
-      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
-    });
-
-    it('should save the custom request properties with Kinvey.setCustomRequestProperties()', function() {
-      Kinvey.setCustomRequestProperties(properties);
-      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
-    });
-
-    it('should save the custom request properties with Kinvey.addCustomRequestProperties()', function() {
-      Kinvey.addCustomRequestProperties(properties);
-      expect(Kinvey.getCustomRequestProperties()).to.deep.equal(properties);
-    });
   });
 
   // Kinvey.ping.
