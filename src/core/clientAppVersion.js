@@ -20,79 +20,46 @@
 // Set app version for the application.
 
 (function(root) {
-  var appVersion = {
-    version: undefined,
-    major: undefined,
-    minor: undefined,
-    patch: undefined
-  };
-  var semverRegex = /^v?((\d+)\.(\d+)\.(\d+))(?:-([\dA-Za-z\-]+(?:\.[\dA-Za-z\-]+)*))?(?:\+([\dA-Za-z\-]+(?:\.[\dA-Za-z\-]+)*))?$/;
+  var appVersion;
 
-  var parseVersion = function(version) {
-    var m = [undefined, version];
+  var parseAppVersion = function() {
+    var version = arguments[0];
 
-    // If the version is a string, try and parse the values
-    if (isString(version)) {
-      version.trim();
-      m = semverRegex.exec(version) || m;
-    } else {
-      // If version is an object, set the individual values
-      if (version.hasOwnProperty('version')) {
-        m[1] = (version.version + '').trim();
+    // Set app version using specified major, minor, and patch
+    // provided as arguments.
+    if (arguments.length > 1) {
+      // Get individual parts of app version
+      var major = arguments[0];
+      var minor = arguments[1];
+      var patch = arguments[2];
+
+      // Set app version to major value
+      version = (major + '').trim();
+
+      // Append minor value if it was provided
+      if (minor != null) {
+        version += ('.' + minor).trim();
       }
-      if (version.hasOwnProperty('major') && isNumber(version.major)) {
-        m[2] = (version.major + '').trim();
-      }
-      if (version.hasOwnProperty('minor') && isNumber(version.minor)) {
-        m[3] = (version.minor + '').trim();
-      }
-      if (version.hasOwnProperty('patch') && isNumber(version.patch)) {
-        m[4] = (version.patch + '').trim();
+
+      // Append patch value if it was provided
+      if (patch != null) {
+        version += ('.' + patch).trim();
       }
     }
 
-    // Reset the app version
-    resetAppVersion();
-
-    // Set the values for the app version
-    appVersion = {
-      version: m[1],
-      major: m[2],
-      minor: m[3],
-      patch: m[4]
-    };
-
-    return appVersion;
+    return version;
   };
 
-  var stringifyAppVersion = function(appVersion) {
-    var str = '';
-
-    // If the version isn't semver style then just
-    // use the version
-    if (null != appVersion.version && null == semverRegex.exec(appVersion.version)) {
-      str = appVersion.version;
-    } else {
-      // Build the string from the version pieces
-      str += appVersion.major || '0';
-      str += '.';
-      str += appVersion.minor || '0';
-      str += '.';
-      str += appVersion.patch || '0';
+  var stringifyAppVersion = function(version) {
+    if (null == version) {
+      return undefined;
     }
 
-    return str;
+    return (version + '').trim();
   };
 
-  var resetAppVersion = function() {
-    appVersion = {
-      version: undefined,
-      major: undefined,
-      minor: undefined,
-      patch: undefined
-    };
-
-    return appVersion;
+  var clearAppVersion = function() {
+    appVersion = undefined;
   };
 
   root.ClientAppVersion = {
@@ -101,43 +68,24 @@
       return stringifyAppVersion(appVersion);
     },
 
-    setVersion: function(version) {
-      parseVersion(version);
-    },
+    setVersion: function() {
+      Kinvey.ClientAppVersion.clear();
 
-    setMajorVersion: function(major) {
-      major = isEmptyString(major) || isNaN(major) ? major : parseInt(major);
-
-      if (!isNumber(major)) {
-        throw new Kinvey.Error('Major version must be a number.');
+      // Debug
+      if (KINVEY_DEBUG) {
+        log('Setting the client app version.', arguments);
       }
 
-      appVersion.major = (major + '').trim();
-    },
-
-    setMinorVersion: function(minor) {
-      minor = isEmptyString(minor) || isNaN(minor) ? minor : parseInt(minor);
-
-      if (!isNumber(minor)) {
-        throw new Kinvey.Error('Minor version must be a number.');
-      }
-
-      appVersion.minor = (minor + '').trim();
-    },
-
-    setPatchVersion: function(patch) {
-      patch = isEmptyString(patch) || isNaN(patch) ? patch : parseInt(patch);
-
-      if (!isNumber(patch)) {
-        throw new Kinvey.Error(patch + ' + is not a valid patch version. ' +
-                               'Patch version must be a number. ');
-      }
-
-      appVersion.patch = (patch + '').trim();
+      appVersion = parseAppVersion.apply(root, arguments);
     },
 
     clear: function() {
-      resetAppVersion();
+      // Debug
+      if (KINVEY_DEBUG) {
+        log('Clearing the client app version.');
+      }
+
+      clearAppVersion();
     }
   };
 

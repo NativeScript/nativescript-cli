@@ -35,63 +35,42 @@ describe('Kinvey.ClientAppVersion', function() {
     });
 
     // Test suite.
-    it('should save the version', function() {
+    it('should save the version as \'foo\'', function() {
       var customVersion = 'foo';
       Kinvey.ClientAppVersion.setVersion(customVersion);
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(customVersion);
     });
 
-    it('should save the version and set semver values if version uses the semver format', function() {
+    it('should save the version as ' + version, function() {
       Kinvey.ClientAppVersion.setVersion(version);
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(version);
     });
 
-    it('should save the major version ' + major, function() {
-      Kinvey.ClientAppVersion.setMajorVersion(major);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(major + '.0.0');
-    });
-    it('should save the major version \'' + major + '\'', function() {
+    it('should save the version as \'' + major + '\'', function() {
+      Kinvey.ClientAppVersion.setVersion(major);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(major + '');
+
       var majorString = major + '';
-      Kinvey.ClientAppVersion.setMajorVersion(majorString);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(majorString + '.0.0');
-    });
-    it('should throw an error if trying to set major version to something that is not a number', function() {
-      var invalidMajor = 'foo';
-      expect(function() {
-        Kinvey.ClientAppVersion.setMajorVersion(invalidMajor);
-      }).to.Throw();
+      Kinvey.ClientAppVersion.setVersion(majorString);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(majorString);
     });
 
-    it('should save the minor version ' + minor, function() {
-      Kinvey.ClientAppVersion.setMinorVersion(minor);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minor + '.0');
-    });
-    it('should save the minor version \'' + minor + '\'', function() {
+    it('should save the version as \'0.' + minor + '\'', function() {
+      Kinvey.ClientAppVersion.setVersion(0, minor);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minor);
+
       var minorString = minor + '';
-      Kinvey.ClientAppVersion.setMinorVersion(minorString);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minorString + '.0');
-    });
-    it('should throw an error if trying to set minor version to something that is not a number', function() {
-      var invalidMinor = 'foo';
-      expect(function() {
-        Kinvey.ClientAppVersion.setMinorVersion(invalidMinor);
-      }).to.Throw();
+      Kinvey.ClientAppVersion.setVersion(0, minorString);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minorString);
     });
 
-    it('should save the patch version ' + patch, function() {
-      Kinvey.ClientAppVersion.setPatchVersion(patch);
+    it('should save the version as \'0.0.' + patch + '\'', function() {
+      Kinvey.ClientAppVersion.setVersion(0, 0, patch);
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.0.' + patch);
-    });
-    it('should save the patch version \'' + patch + '\'', function() {
+
       var patchString = patch + '';
-      Kinvey.ClientAppVersion.setPatchVersion(patchString);
+      Kinvey.ClientAppVersion.setVersion(0, 0,  patchString);
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.0.' + patchString);
-    });
-    it('should throw an error if trying to set patch version to something that is not a number', function() {
-      var invalidPatch = 'foo';
-      expect(function() {
-        Kinvey.ClientAppVersion.setPatchVersion(invalidPatch);
-      }).to.Throw();
     });
   });
 
@@ -111,28 +90,28 @@ describe('Kinvey.ClientAppVersion', function() {
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(version);
     });
 
-    it('should return \'' + major + '.0.0\'', function() {
-      Kinvey.ClientAppVersion.setMajorVersion(major);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(major + '.0.0');
+    it('should return \'' + major + '\'', function() {
+      Kinvey.ClientAppVersion.setVersion(major);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(major + '');
     });
 
-    it('should return \'0.' + minor + '.0\'', function() {
-      Kinvey.ClientAppVersion.setMinorVersion(minor);
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minor + '.0');
+    it('should return \'0.' + minor + '\'', function() {
+      Kinvey.ClientAppVersion.setVersion('0', minor);
+      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.' + minor);
     });
 
     it('should return \'0.0.' + patch + '\'', function() {
-      Kinvey.ClientAppVersion.setPatchVersion(patch);
+      Kinvey.ClientAppVersion.setVersion(0, 0, patch);
       expect(Kinvey.ClientAppVersion.stringVersion()).to.equal('0.0.' + patch);
     });
   });
 
   describe('clear the version', function() {
-    var semver = '1.2.3';
+    var version = '1.2.3';
 
     beforeEach(function() {
       // Set the version
-      Kinvey.ClientAppVersion.setVersion(semver);
+      Kinvey.ClientAppVersion.setVersion(version);
     });
 
     afterEach(function() {
@@ -143,9 +122,6 @@ describe('Kinvey.ClientAppVersion', function() {
     it('should clear out the version', function() {
       Kinvey.ClientAppVersion.clear();
       expect(Kinvey.ClientAppVersion.stringVersion()).to.be.undefined;
-      expect(Kinvey.ClientAppVersion.majorVersion()).to.deep.equal(NaN);
-      expect(Kinvey.ClientAppVersion.minorVersion()).to.deep.equal(NaN);
-      expect(Kinvey.ClientAppVersion.patchVersion()).to.deep.equal(NaN);
     });
   });
 

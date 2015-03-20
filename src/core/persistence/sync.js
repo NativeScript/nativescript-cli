@@ -139,8 +139,8 @@ var Sync = /** @lends Sync */{
         // Get the app version if one is set
         if (options.clientAppVersion != null) {
           clientAppVersion = options.clientAppVersion;
-        } else if (Kinvey.ClientAppVersion.toString() != null) {
-          clientAppVersion = Kinvey.ClientAppVersion.toString();
+        } else if (Kinvey.ClientAppVersion.stringVersion() != null) {
+          clientAppVersion = Kinvey.ClientAppVersion.stringVersion();
         }
 
         // Get the custom request properties

@@ -241,7 +241,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     };
 
     // Append optional headers.
-    options.clientAppVersion = options.clientAppVersion || Kinvey.ClientAppVersion.toString();
+    options.clientAppVersion = options.clientAppVersion || Kinvey.ClientAppVersion.stringVersion();
     if (options.clientAppVersion != null) {
       headers['X-Kinvey-Customer-App-Version'] = options.clientAppVersion;
     }
