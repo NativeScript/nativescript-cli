@@ -148,10 +148,10 @@ var Sync = /** @lends Sync */{
           customRequestProperties = options.customRequestProperties;
         }
 
-        if (Kinvey.getCustomRequestProperties() != null) {
-          var globalCustomRequestProperties = Kinvey.getCustomRequestProperties();
+        if (Kinvey.CustomRequestProperties.properties() != null) {
+          var globalCustomRequestProperties = Kinvey.CustomRequestProperties.properties();
 
-          Object.keys(globalCustomRequestProperties).map(function(name) {
+          Object.keys(globalCustomRequestProperties).forEach(function(name) {
             // If the property is not already set then set it
             if (!customRequestProperties.hasOwnProperty(name)) {
               customRequestProperties[name] = globalCustomRequestProperties[name];

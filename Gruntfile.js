@@ -93,6 +93,7 @@ module.exports = function(grunt) {
           'src/core/auth.js',
           'src/core/device.js',
           'src/core/clientAppVersion.js',
+          'src/core/customRequestProperties.js',
 
           // Features.
           'src/core/acl.js',

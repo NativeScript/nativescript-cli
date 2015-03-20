@@ -101,9 +101,9 @@ var isRegExp = function(regExp) {
 var isString = function(str) {
   return '[object String]' === Object.prototype.toString.call(str);
 };
-var isEmptyString = String.isEmpty = function(str) {
-  return isString(str) && (str.length === 0 || !str.trim());
-};
+// var isEmptyString = String.isEmpty = function(str) {
+//   return isString(str) && (str.length === 0 || !str.trim());
+// };
 
 var isEmpty = function(obj) {
   if(null == obj) {

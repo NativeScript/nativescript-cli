@@ -46,9 +46,6 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
-// Custom Request Properties is private. Do NOT document.
-Kinvey.CUSTOM_REQUEST_PROPERTIES = {};
-
 // Properties.
 // -----------
 
@@ -221,67 +218,6 @@ Kinvey.setActiveUser = function(user) {
 };
 
 /**
- * Returns the custom request properties sent for all API requests.
- *
- * @return {object} The custom request properties.
- */
-Kinvey.getCustomRequestProperties = function() {
-  return Kinvey.CUSTOM_REQUEST_PROPERTIES;
-};
-
-/**
- * Set the custom request properties for the application.
- *
- * @param {?Object} properties Properties to set or `undefined`
- *                             to remove all custom request properties.
- */
-Kinvey.setCustomRequestProperties = function(properties) {
-  Kinvey.CUSTOM_REQUEST_PROPERTIES = {};
-  Kinvey.addCustomRequestProperties(properties);
-};
-
-/**
- * Add the properties to the custom request properties for the
- * application.
- *
- * @param {Object} properties Properties to add to cutsom request properties.
- */
-Kinvey.addCustomRequestProperties = function(properties) {
-  if (properties != null) {
-    var customRequestProperties = Kinvey.CUSTOM_REQUEST_PROPERTIES || {};
-
-    Object.keys(properties).map(function(key) {
-      var value = properties[key];
-
-      if (!isString(value)) {
-        throw new Kinvey.Error('Custom property value for ' + key +
-                               ' must be a string.');
-      }
-
-      if (!isEmptyString(value)) {
-        customRequestProperties[key] = value;
-      }
-    });
-
-    Kinvey.CUSTOM_REQUEST_PROPERTIES = customRequestProperties;
-  }
-};
-
-/**
- * Add property name and value to custom request properties for the
- * application.
- *
- * @param {string} name Custom request property name.
- * @param {string} value Custom request property value.
- */
-Kinvey.addCustomRequestProperty = function(name, value) {
-  var property = {
-    name: value
-  };
-  Kinvey.addCustomRequestProperties(property);
-};
-
-/**
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
@@ -336,7 +272,7 @@ Kinvey.init = function(options) {
 
   // Set the custom request properties
   if (options.customRequestProperties != null) {
-    Kinvey.setCustomRequestProperties(options.customRequestProperties);
+    Kinvey.CustomRequestProperties.setProperties(options.customRequestProperties);
   }
 
   // Save credentials.

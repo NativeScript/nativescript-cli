@@ -20,7 +20,7 @@
 // Set app version for the application.
 
 (function(root) {
-  var appVersion;
+  var clientAppVersion;
 
   var parseAppVersion = function() {
     var version = arguments[0];
@@ -58,34 +58,61 @@
     return (version + '').trim();
   };
 
-  var clearAppVersion = function() {
-    appVersion = undefined;
+  var clearClientAppVersion = function() {
+    clientAppVersion = undefined;
   };
 
+  /**
+   * The `Kinvey.ClientAppVersion` class.
+   *
+   * @memberof! <global>
+   * @class Kinvey.ClientAppVersion
+   */
   root.ClientAppVersion = {
 
+    /**
+     * Returns a string representation of the client app version or
+     * `undefined` if one has not been set.
+     *
+     * @return {?string} A string representation of the client app
+     *                   version or `undefined`.
+     */
     stringVersion: function() {
-      return stringifyAppVersion(appVersion);
+      return stringifyAppVersion(clientAppVersion);
     },
 
+    /**
+     * Sets the client app version for the application.
+     */
     setVersion: function() {
-      Kinvey.ClientAppVersion.clear();
+      root.ClientAppVersion.clear();
 
       // Debug
       if (KINVEY_DEBUG) {
         log('Setting the client app version.', arguments);
       }
 
-      appVersion = parseAppVersion.apply(root, arguments);
+      clientAppVersion = parseAppVersion.apply(root, arguments);
     },
 
+    /**
+     * Clears the client app version that is set.
+     */
     clear: function() {
       // Debug
       if (KINVEY_DEBUG) {
         log('Clearing the client app version.');
       }
 
-      clearAppVersion();
+      clearClientAppVersion();
+    },
+
+    /**
+     * Returns the client app version or `undefined`.
+     * @return {?string} Client app version or `undefined`.
+     */
+    toJSON: function() {
+      return clientAppVersion;
     }
   };
 

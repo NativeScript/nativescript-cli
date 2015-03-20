@@ -261,9 +261,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
 
     // Set the custom request properties
     options.customRequestProperties = options.customRequestProperties || {};
-    var customRequestProperties = Kinvey.getCustomRequestProperties();
+    var customRequestProperties = Kinvey.CustomRequestProperties.properties();
     if (customRequestProperties != null) {
-      Object.keys(customRequestProperties).map(function(name) {
+      Object.keys(customRequestProperties).forEach(function(name) {
         // If the property is not already set then set it
         if (!options.customRequestProperties.hasOwnProperty(name)) {
           options.customRequestProperties[name] = customRequestProperties[name];
