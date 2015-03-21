@@ -91,7 +91,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 1. To install JDK, run the following command.
 
 	```Shell
-	choco install java
+	choco install java.jdk
 	```
 1. If not present, create the following environment variable.
 
