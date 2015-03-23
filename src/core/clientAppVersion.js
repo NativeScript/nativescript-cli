@@ -19,95 +19,91 @@
 
 // Set app version for the application.
 
-(function(root) {
-  var clientAppVersion;
+var clientAppVersion;
 
-  var parseAppVersion = function() {
-    var version = arguments[0];
+var parseAppVersion = function() {
+  var version = arguments[0];
 
-    // Set app version using specified major, minor, and patch
-    // provided as arguments.
-    if (arguments.length > 1) {
-      // Get individual parts of app version
-      var major = arguments[0];
-      var minor = arguments[1];
-      var patch = arguments[2];
+  // Set app version using specified major, minor, and patch
+  // provided as arguments.
+  if (arguments.length > 1) {
+    // Get individual parts of app version
+    var major = arguments[0];
+    var minor = arguments[1];
+    var patch = arguments[2];
 
-      // Set app version to major value
-      version = (major + '').trim();
+    // Set app version to major value
+    version = (major + '').trim();
 
-      // Append minor value if it was provided
-      if (minor != null) {
-        version += ('.' + minor).trim();
-      }
-
-      // Append patch value if it was provided
-      if (patch != null) {
-        version += ('.' + patch).trim();
-      }
+    // Append minor value if it was provided
+    if (minor != null) {
+      version += ('.' + minor).trim();
     }
 
-    return version;
-  };
-
-  var stringifyAppVersion = function(version) {
-    if (null == version) {
-      return undefined;
+    // Append patch value if it was provided
+    if (patch != null) {
+      version += ('.' + patch).trim();
     }
+  }
 
-    return (version + '').trim();
-  };
+  return version;
+};
 
-  var clearClientAppVersion = function() {
-    clientAppVersion = undefined;
-  };
+var stringifyAppVersion = function(version) {
+  if (null == version) {
+    return undefined;
+  }
+
+  return (version + '').trim();
+};
+
+var clearClientAppVersion = function() {
+  clientAppVersion = undefined;
+};
+
+/**
+ * The `Kinvey.ClientAppVersion` class.
+ *
+ * @memberof! <global>
+ * @class Kinvey.ClientAppVersion
+ */
+Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
 
   /**
-   * The `Kinvey.ClientAppVersion` class.
+   * Returns a string representation of the client app version or
+   * `undefined` if one has not been set.
    *
-   * @memberof! <global>
-   * @class Kinvey.ClientAppVersion
+   * @return {?string} A string representation of the client app
+   *                   version or `undefined`.
    */
-  root.ClientAppVersion = {
+  stringVersion: function() {
+    return stringifyAppVersion(clientAppVersion);
+  },
 
-    /**
-     * Returns a string representation of the client app version or
-     * `undefined` if one has not been set.
-     *
-     * @return {?string} A string representation of the client app
-     *                   version or `undefined`.
-     */
-    stringVersion: function() {
-      return stringifyAppVersion(clientAppVersion);
-    },
+  /**
+   * Sets the client app version for the application.
+   */
+  setVersion: function() {
+    Kinvey.ClientAppVersion.clear();
 
-    /**
-     * Sets the client app version for the application.
-     */
-    setVersion: function() {
-      root.ClientAppVersion.clear();
-
-      // Debug
-      if (KINVEY_DEBUG) {
-        log('Setting the client app version.', arguments);
-      }
-
-      clientAppVersion = parseAppVersion.apply(root, arguments);
-    },
-
-    /**
-     * Clears the client app version that is set.
-     */
-    clear: function() {
-      // Debug
-      if (KINVEY_DEBUG) {
-        log('Clearing the client app version.');
-      }
-
-      clearClientAppVersion();
+    // Debug
+    if (KINVEY_DEBUG) {
+      log('Setting the client app version.', arguments);
     }
-  };
 
-  return root.ClientAppVersion;
-})(Kinvey || {});
+    clientAppVersion = parseAppVersion.apply(root, arguments);
+  },
+
+  /**
+   * Clears the client app version that is set.
+   */
+  clear: function() {
+    // Debug
+    if (KINVEY_DEBUG) {
+      log('Clearing the client app version.');
+    }
+
+    clearClientAppVersion();
+  }
+};
 

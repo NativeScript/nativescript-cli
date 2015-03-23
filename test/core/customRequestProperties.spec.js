@@ -116,15 +116,6 @@ describe('Kinvey.CustomRequestProperties', function() {
       Kinvey.CustomRequestProperties.addProperties(myProperties);
       expect(Kinvey.CustomRequestProperties.properties()).to.deep.equal(mergeObjects(properties, myProperties));
     });
-
-    it('should add the property by name and value to the exisiting properties', function() {
-      var myProperties = {
-        foo2: 'baz'
-      };
-
-      Kinvey.CustomRequestProperties.addProperty('foo2', myProperties.foo2);
-      expect(Kinvey.CustomRequestProperties.properties()).to.deep.equal(mergeObjects(properties, myProperties));
-    });
   });
 
   describe('clear properties', function() {
