@@ -62,10 +62,8 @@ var clearClientAppVersion = function() {
 };
 
 /**
- * The `Kinvey.ClientAppVersion` class.
- *
  * @memberof! <global>
- * @class Kinvey.ClientAppVersion
+ * @namespace Kinvey.ClientAppVersion
  */
 Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
 
@@ -95,7 +93,7 @@ Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
   },
 
   /**
-   * Clears the client app version that is set.
+   * Clears the client app version that is set for the application.
    */
   clear: function() {
     // Debug
