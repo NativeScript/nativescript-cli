@@ -298,7 +298,7 @@ export class PlatformService implements IPlatformService {
 	public addLibrary(platform: string, libraryPath: string): IFuture<void> {
 		return (() => {
 			if (!this.$fs.exists(libraryPath).wait()) {
-				this.$errors.fail("The path %s does not exist", libraryPath);
+				this.$errors.failWithoutHelp("The path %s does not exist", libraryPath);
 			} else {
 				var platformData = this.$platformsData.getPlatformData(platform);
 				platformData.platformProjectService.addLibrary(platformData, libraryPath).wait();
