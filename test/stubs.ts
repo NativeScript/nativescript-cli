@@ -7,6 +7,7 @@ import path = require("path");
 
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void {}
+	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void {}
 	error(...args: string[]): void {}
 	warn(...args: string[]): void {}
@@ -144,6 +145,10 @@ export class FileSystemStub implements IFileSystem {
 
 	enumerateFilesInDirectorySync(directoryPath: string, filterCallback?: (file: string, stat: IFsStats) => boolean): string[] {
 		return [];
+	}
+
+	tryExecuteFileOperation(path: string, operation: () => IFuture<any>, enoentErrorMessage?: string): IFuture<void> {
+		return undefined;
 	}
 
 	isRelativePath(path: string): boolean {
