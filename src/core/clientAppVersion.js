@@ -74,7 +74,7 @@ Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
    * @return {?string} A string representation of the client app
    *                   version or `undefined`.
    */
-  stringVersion: function() {
+  stringValue: function() {
     return stringifyAppVersion(clientAppVersion);
   },
 
