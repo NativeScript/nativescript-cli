@@ -274,8 +274,8 @@ var Sync = /** @lends Sync */{
 
       // Read from local and net in parallel.
       return Kinvey.Defer.all([
-        Kinvey.Persistence.Local.read(request, options),
-        Kinvey.Persistence.Net.read(request, options)
+        Kinvey.Persistence.Local.read(request, requestOptions),
+        Kinvey.Persistence.Net.read(request, requestOptions)
       ]).then(function(responses) {
         return { local: responses[0], net: responses[1] };
       });
@@ -456,14 +456,14 @@ var Sync = /** @lends Sync */{
     var promises = documents.map(function(composite) {
       var document = composite.document;
       var metadata = composite.metadata;
-      var options = options || {};
+      var requestOptions = options || {};
 
-      // Set options.appVersion based on the metadata for the document
-      options.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
+      // Set requestOptions.appVersion based on the metadata for the document
+      requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
-      // Set options.customRequestProperties based on the metadata
+      // Set requestOptions.customRequestProperties based on the metadata
       // for the document
-      options.customRequestProperties = metadata.customRequestProperties != null ?
+      requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
                                         metadata.customRequestProperties : null;
 
       return Kinvey.Persistence.Net.update({
@@ -472,7 +472,7 @@ var Sync = /** @lends Sync */{
         id         : document._id,
         data       : document,
         auth       : Auth.Default
-      }, options).then(null, function() {
+      }, requestOptions).then(null, function() {
         // Rejection should not break the entire synchronization. Instead,
         // append the document id to `error`, and resolve.
         error.push(document._id);
