@@ -11,7 +11,7 @@ export class DynamicHelpProvider implements IDynamicHelpProvider {
 		return Future.fromResult(true);
 	}
 
-	public getLocalVariables(): IFuture<IDictionary<any>> {
+	public getLocalVariables(options: { isHtml: boolean }): IFuture<IDictionary<any>> {
 		var localVariables: IDictionary<any> = {};
 		return Future.fromResult(localVariables);
 	}

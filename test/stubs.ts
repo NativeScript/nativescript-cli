@@ -84,6 +84,10 @@ export class FileSystemStub implements IFileSystem {
 		return undefined;
 	}
 
+	appendFile(filename: string, data: any, encoding?: string): IFuture<void> {
+		return undefined;
+	}
+
 	writeJson(filename: string, data: any, space?: string, encoding?: string): IFuture<void> {
 		return undefined;
 	}
@@ -336,4 +340,3 @@ export class LockFile {
 	 	return (() => {}).future<void>()();
 	}
 }
-

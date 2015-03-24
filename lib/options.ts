@@ -36,7 +36,7 @@ if(hostInfo.isWindows()) {
 
 commonOptions.setProfileDir(defaultProfileDir);
 var errors: IErrors = $injector.resolve("errors");
-_(errors.validateArgs("nativescript", commonOptions.knownOpts, commonOptions.shorthands)).each((val,key) => {
+_(errors.validateArgs("tns", commonOptions.knownOpts, commonOptions.shorthands)).each((val,key) => {
 	key = shorthands[key] || key;
 	commonOptions[key] = val;
 }).value();
