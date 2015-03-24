@@ -272,8 +272,13 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     }
 
     // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
-    // request properties for the request
-    headers['X-Kinvey-Custom-Request-Properties'] = JSON.stringify(options.customRequestProperties);
+    // request properties for the request. Checks to make sure the JSON string of
+    // the custom request properties is less then the max bytes allowed for custom
+    // request properties.
+    var customRequestPropertiesHeader = JSON.stringify(options.customRequestProperties);
+    if (getByteCount(customRequestProperties) < CRP_MAX_BYTES) {
+      headers['X-Kinvey-Custom-Request-Properties'] = customRequestPropertiesHeader;
+    }
 
     // Debug.
     if(KINVEY_DEBUG) {

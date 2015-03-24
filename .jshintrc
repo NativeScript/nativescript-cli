@@ -12,12 +12,10 @@
   "noarg"     : true,
   "noempty"   : true,
   "nonew"     : true,
-  "plusplus"  : true,
   "quotmark"  : "single",
   "undef"     : true,
   "unused"    : true,
   "trailing"  : true,
   "eqnull"    : true,
-
   "node"      : true
 }

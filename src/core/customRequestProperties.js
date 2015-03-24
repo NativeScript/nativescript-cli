@@ -32,15 +32,13 @@ var clearCustomRequestProperties = function() {
 };
 
 /**
- * The `Kinvey.CustomRequestProperties` class.
- *
  * @memberof! <global>
- * @class Kinvey.CustomRequestProperties
+ * @namespace Kinvey.CustomRequestProperties
  */
 Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
 
   /**
-   * Returns the custom request properties that have been set.
+   * Returns the custom request properties that have been set for the application.
    * @return {Object} Custom request properties
    */
   properties: function() {
@@ -52,7 +50,7 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
    * it has not been set.
    *
    * @param  {string} name Custom request property name
-   * @return {any}         Custom request property value
+   * @return {*}           Custom request property value
    */
   property: function(name) {
     if (null != name && customRequestProperties.hasOwnProperty(name)) {
@@ -63,8 +61,9 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
   },
 
   /**
-   * Replaces all custom request properties with the properties
-   * provided.
+   * Clears all custom request properties that were previously set
+   * for the application. Then sets the provided properties
+   * for the application.
    *
    * @param {Object} properties Custom request properties
    */
@@ -77,7 +76,7 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
    * Sets the custom request property for the name and value.
    *
    * @param {string} name  Custom request property name
-   * @param {string} value Custom request property value
+   * @param {*}      value Custom request property value
    */
   setProperty: function(name, value) {
     var properties = {};

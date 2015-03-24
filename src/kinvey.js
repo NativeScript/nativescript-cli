@@ -82,6 +82,7 @@ var FILES       = 'blob';
 /*var PUSH = 'push';*/
 var RPC         = 'rpc';
 var USERS       = 'user';
+var CRP_MAX_BYTES = 2000;
 /*var USER_GROUPS = 'group';*/
 
 // The library has a concept of an active user which represents the person
