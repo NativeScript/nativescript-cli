@@ -125,19 +125,18 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public prepareProject(platformData: IPlatformData): IFuture<string> {
 		return (() => {
-			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-			var assetsDirectory = path.join(platformData.projectRoot, "assets");
-			var resDirectory = path.join(platformData.projectRoot, "res");
+			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			var assetsDirectoryPath = path.join(platformData.projectRoot, "assets");
 
-			shell.cp("-Rf", path.join(appSourceDirectory, "*"), assetsDirectory);
+			shell.cp("-Rf", path.join(appSourceDirectoryPath, "*"), assetsDirectoryPath);
 
-			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_RESOURCES_FOLDER_NAME);
+			var appResourcesDirectoryPath = path.join(assetsDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.projectRoot);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
-			return assetsDirectory;
+			return assetsDirectoryPath;
 
 		}).future<string>()();
 	}
