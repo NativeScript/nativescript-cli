@@ -113,14 +113,12 @@ class IOSProjectService implements  IPlatformProjectService {
 		return (() => {
 			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			var appDestinationDirectory = path.join(platformData.projectRoot, this.$projectData.projectName);
-			var resDirectory = path.join(platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
-			this.$fs.ensureDirectoryExists(resDirectory).wait();
 
 			shell.cp("-Rf", path.join(appSourceDirectory, "*"), appDestinationDirectory);
 
 			var appResourcesDirectoryPath = path.join(appDestinationDirectory, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), appDestinationDirectory);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 
