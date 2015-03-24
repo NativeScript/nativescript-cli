@@ -134,15 +134,8 @@ var Sync = /** @lends Sync */{
         }
 
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
-        var clientAppVersion,
+        var clientAppVersion = options.clientAppVersion || Kinvey.ClientAppVersion.stringValue(),
             customRequestProperties = options.customRequestProperties || {};
-
-        // Get the app version if one is set
-        if (options.clientAppVersion != null) {
-          clientAppVersion = options.clientAppVersion;
-        } else if (Kinvey.ClientAppVersion.stringVersion() != null) {
-          clientAppVersion = Kinvey.ClientAppVersion.stringVersion();
-        }
 
         var globalCustomRequestProperties = Kinvey.CustomRequestProperties.properties();
         if (globalCustomRequestProperties != null) {
