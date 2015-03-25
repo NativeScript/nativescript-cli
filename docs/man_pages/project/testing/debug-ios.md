@@ -2,7 +2,7 @@ debug ios
 ==========
 
 Usage:
-    `$ tns debug ios [--debug-brk | --start] [--device <Device ID> | --emulator <Emulator Options>] [--no-client]`
+    `$ tns debug ios [--debug-brk | --start] [--device <Device ID> | --emulator <Emulator Options>] [--print-app-output] [--no-client]`
 
 Example usage:
     `$ tns debug ios --debug-brk`
@@ -22,6 +22,7 @@ Options:
 * `--debug-brk` - Shorthand for prepare, build and deploy. Prepares, builds and deploys the application package on a device or in an emulator, launches the developer tools of your Safari browser.
 * `--start` - Attaches the debug tools to a deployed and running app. Your app must be running on device or emulator, launches the developer tools of your Safari browser.
 * `--emulator` - Debug on already running emulator. Requires `xcrun` from Xcode 6 or later.
+* `--print-app-output` - If set, prints the standard output of the running application. (Device only)
 * `--no-client` - Suppresses the launch of the developer tools in Safari.
 <% if(isHtml) { %> 
 

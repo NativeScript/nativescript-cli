@@ -2,7 +2,7 @@ device run
 ==========
 
 Usage:
-    `$ tns device run <ApplicationId> [--device <Device ID>]`
+    `$ tns device run <ApplicationId> [--print-app-output] [--device <Device ID>]`
 Runs the selected application on a connected Android or iOS device.
 You can run this command on one connected device at a time.
 
@@ -15,6 +15,7 @@ Before running your app on an iOS device, verify that your system and app meet t
 * You have built your app with the debug build configuration.
 
 Options:
+* `--print-app-output` - If set, prints the output of the running application.
 * `--device` - If multiple devices are connected, sets the device on which you want to run the app. You can run this command on one connected device at a time.
 <% if(isHtml) { %> 
 

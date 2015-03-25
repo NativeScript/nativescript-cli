@@ -2,8 +2,8 @@ run android
 ==========
 
 Usage:
-    `$ tns run android [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
-    `$ tns run android --emulator [<Emulator Options>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
+    `$ tns run android [--print-app-output] [--device <Device ID>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
+    `$ tns run android --emulator [<Emulator Options>] [--print-app-output] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
 
 Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy.
 
@@ -23,6 +23,7 @@ Before running your app in the Android emulator from the Android SDK, verify tha
         * /Applications/Genymotion Shell.app/Contents/MacOS/
 <% } %>
 Options:
+* `--print-app-output` - If set, prints the system debug output (logcat). 
 * `--device` - Specifies a connected device on which to run the app. You cannot use `--device` and `--emulator` simultaneously.
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate android`. You cannot use `--device` and `--emulator` simultaneously.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When the `--keyStore*` options are specified, produces a signed release build.

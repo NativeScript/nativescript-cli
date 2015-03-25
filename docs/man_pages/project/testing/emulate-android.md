@@ -2,9 +2,9 @@ emulate android
 ==========
 
 Usage:
-    `$ tns emulate android [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
-    `$ tns emulate android [--avd <Name>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
-    `$ tns emulate android [--geny <GenyName>] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
+    `$ tns emulate android [--print-app-output] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
+    `$ tns emulate android [--avd <Name>] [--print-app-output] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
+    `$ tns emulate android [--geny <GenyName>] [--print-app-output] [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release]`
 
 Builds the specified project and runs it in a native Android emulator.
 
@@ -32,6 +32,7 @@ Before running your app in the Android emulator from the Android SDK, verify tha
 <% } %>
 
 Options:
+* `--print-app-output` - If set, prints the system debug output (logcat). 
 * `--path` - Specifies the directory that contains the project. If not specified, the project is searched for in the current directory and all directories above it.
 * `--avd` - Sets the Android virtual device on which you want to run your app. You can set only one device at a time. To list the available Android virtual devices, run `$ android list avd`. You cannot use `--avd` and `--geny` simultaneously.
 * `--geny` - Sets the Genymotion virtual device on which you want to run your app. You can set only one device at a time. To list the available Genymotion virtual devices, run `$ genyshell -c "devices list"`. You cannot use `--avd` and `--geny` simultaneously.      

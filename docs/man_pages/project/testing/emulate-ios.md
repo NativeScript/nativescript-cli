@@ -2,7 +2,7 @@ emulate ios
 ==========
 
 Usage:
-    `$ tns emulate ios [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]`
+    `$ tns emulate ios [--print-app-output] [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]`
 
 Builds the specified project and runs it in the native iOS Simulator.
 
@@ -13,6 +13,7 @@ Before running the iOS Simulator, verify that you have met the following require
 * You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
 
 Options:
+* `--print-app-output` - If set, prints the standard output of the running application.
 * `--availableDevices` - Lists all available device type identifiers for the current XCode.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--path` - Specifies the directory that contains the project. If not specified, the project is searched for in the current directory and all directories above it.
