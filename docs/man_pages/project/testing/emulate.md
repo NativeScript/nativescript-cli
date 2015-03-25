@@ -9,8 +9,8 @@ You must run the emulate command with a related command.
 Builds and runs the project in the native emulator for the selected target platform.
 
 `<Command>` is a related command that sets a target platform for the emulate command. You can run the following related commands:
-* `android` - Builds the specified project in the cloud and runs it in the native Android emulator.
-* `ios` - Builds the specified project in the cloud and runs it in the native iOS Simulator.
+* `android` - Builds the specified project and runs it in the native Android emulator.
+* `ios` - Builds the specified project and runs it in the native iOS Simulator.
 
 Options:
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.

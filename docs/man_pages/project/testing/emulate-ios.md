@@ -4,7 +4,7 @@ emulate ios
 Usage:
     `$ tns emulate ios [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]`
 
-Builds the specified project in the cloud and runs it in the native iOS Simulator.
+Builds the specified project and runs it in the native iOS Simulator.
 
 `<Device Name>` is the name of the iOS Simulator device on which you want to run your app as listed by `$ tns emulate ios --availableDevices`
 Prerequisites:
