@@ -46,15 +46,6 @@ Kinvey.API_VERSION = '<%= config.apiVersion %>';
  */
 Kinvey.SDK_VERSION = '<%= pkg.version %>';
 
-/**
- * The current app version used by the library.
- *
- * @constant
- * @type {string}
- * @default
- */
-Kinvey.APP_VERSION = undefined;
-
 // Properties.
 // -----------
 
@@ -91,6 +82,7 @@ var FILES       = 'blob';
 /*var PUSH = 'push';*/
 var RPC         = 'rpc';
 var USERS       = 'user';
+var CRP_MAX_BYTES = 2000;
 /*var USER_GROUPS = 'group';*/
 
 // The library has a concept of an active user which represents the person
@@ -227,64 +219,12 @@ Kinvey.setActiveUser = function(user) {
 };
 
 /**
- * Returns the current app version used on Kinvey.
- *
- * @return {string} The current app version.
- */
-Kinvey.getAppVersion = function() {
-  return Kinvey.APP_VERSION;
-};
-
-/**
- * Set the app version used on Kinvey.
- *
- * @param {string} version App version to use.
- */
-Kinvey.setAppVersion = function(version) {
-  var appVersion = version;
-  var major, minor, patch;
-
-  // Debug
-  if (KINVEY_DEBUG) {
-    log('Setting the app version.', arguments);
-  }
-
-  // Set app version using specified major, minor, and patch
-  // provided as arguments.
-  if (arguments.length > 1) {
-    // Get individual parts of app version
-    major = arguments[0];
-    minor = arguments[1];
-    patch = arguments[2];
-
-    // Set app version to major value
-    appVersion = major;
-
-    // Append minor value if it was provided
-    if (minor != null) {
-      appVersion += '.' + minor;
-    }
-
-    // Append patch value if it was provided
-    if (patch != null) {
-      appVersion += '.' + patch;
-    }
-  }
-
-  // Set the app version
-  Kinvey.APP_VERSION = appVersion;
-};
-
-/**
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
-<<<<<<< HEAD
- * @param {string}  [options.apiHostName]  API Host Name.
- * @param {string}  [options.appVersion]   App Version.
-=======
+ * @param {string}  [options.clientAppVersion]   Client App Version.
+ * @param {Object}  [options.customRequestProperties] Customer request properties.
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
->>>>>>> 1.1.x
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -326,8 +266,15 @@ Kinvey.init = function(options) {
                            ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
   }
 
-  // Set the App Version
-  Kinvey.APP_VERSION = options.appVersion;
+  // Set the Client App Version
+  if (options.clientAppVersion != null) {
+    Kinvey.ClientAppVersion.setVersion(options.clientAppVersion);
+  }
+
+  // Set the custom request properties
+  if (options.customRequestProperties != null) {
+    Kinvey.CustomRequestProperties.setProperties(options.customRequestProperties);
+  }
 
   // Save credentials.
   Kinvey.appKey       = options.appKey;

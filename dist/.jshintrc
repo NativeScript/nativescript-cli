@@ -12,18 +12,13 @@
   "noarg"     : true,
   "noempty"   : true,
   "nonew"     : true,
-  "plusplus"  : true,
   "quotmark"  : "single",
   "undef"     : true,
   "unused"    : true,
   "trailing"  : true,
-  "maxlen"    : 120,
-
   "eqnull"    : true,
-
   "browser"   : true,
   "node"      : true,
-
   "globals"   : {
     "define"       : true,
     "KINVEY_DEBUG" : true

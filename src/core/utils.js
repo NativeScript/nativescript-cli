@@ -101,6 +101,9 @@ var isRegExp = function(regExp) {
 var isString = function(str) {
   return '[object String]' === Object.prototype.toString.call(str);
 };
+// var isEmptyString = String.isEmpty = function(str) {
+//   return isString(str) && (str.length === 0 || !str.trim());
+// };
 
 var isEmpty = function(obj) {
   if(null == obj) {
@@ -155,6 +158,22 @@ var use = function(nsInterface) {
       };
     });
   };
+};
+
+// Gets the byte count for a string
+var getByteCount = function(str) {
+  var count = 0,
+      stringLength = str.length,
+      i;
+
+  str = String(str || '');
+
+  for (i = 0 ;i < stringLength ; i++) {
+    var partCount = encodeURI(str[i]).split('%').length;
+    count += partCount === 1 ? 1 : partCount-1;
+  }
+
+  return count;
 };
 
 // Define the request Option type for documentation purposes.

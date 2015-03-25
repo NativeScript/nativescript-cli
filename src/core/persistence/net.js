@@ -241,8 +241,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     };
 
     // Append optional headers.
-    if (options.appVersion != null || Kinvey.APP_VERSION != null) {
-      headers['X-Kinvey-Customer-App-Version'] = options.AppVersion || Kinvey.APP_VERSION;
+    options.clientAppVersion = options.clientAppVersion || Kinvey.ClientAppVersion.stringValue();
+    if (options.clientAppVersion != null) {
+      headers['X-Kinvey-Client-App-Version'] = (options.clientAppVersion + '');
     }
     if(null != request.data) {
       headers['Content-Type'] = 'application/json; charset=utf-8';
@@ -257,6 +258,40 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
       headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
+
+    // Set the custom request properties for the request defaulting to an
+    // empty object.
+    options.customRequestProperties = options.customRequestProperties || {};
+
+    // Get globally set custom request properties.
+    var customRequestProperties = Kinvey.CustomRequestProperties.properties();
+
+    // If any custom request properties exist globally, merge them into the
+    // custom request properties for this request. Only global custom request
+    // properties that don't already exist for this request will be added.
+    // Global request properties do NOT overwrite existing custom request
+    // properties for the request.
+    if (customRequestProperties != null) {
+      Object.keys(customRequestProperties).forEach(function(name) {
+        if (!options.customRequestProperties.hasOwnProperty(name)) {
+          options.customRequestProperties[name] = customRequestProperties[name];
+        }
+      });
+    }
+
+    // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
+    // request properties for the request. Checks to make sure the JSON string of
+    // the custom request properties is less then the max bytes allowed for custom
+    // request properties otherwise throws an error.
+    var customRequestPropertiesHeader = JSON.stringify(options.customRequestProperties);
+    var customRequestPropertiesByteCount = getByteCount(customRequestPropertiesHeader);
+    if (customRequestPropertiesByteCount >= CRP_MAX_BYTES) {
+      throw new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
+                             '. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
+    }
+
+    // Set the custom request properties header.
+    headers['X-Kinvey-Custom-Request-Properties'] = customRequestPropertiesHeader;
 
     // Debug.
     if(KINVEY_DEBUG) {
