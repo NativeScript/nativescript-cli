@@ -1,4 +1,8 @@
 # Changelog
+## 1.2.0 (2015-03-25)
+* Enhancement(MLIBZ-162): Added support for custom request properties.
+* Enhancement(MLIBZ-188): Added support for client app version.
+
 ## 1.1.14 (2015-03-17)
 * BugFix(MLIBZ-198): Fixed bug where all Angular requests would fail to due to headers object being null
 
