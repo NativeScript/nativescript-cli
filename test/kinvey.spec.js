@@ -122,7 +122,7 @@ describe('Kinvey', function() {
         appKey: config.test.appKey,
         appSecret: config.test.appSecret
       });
-      expect(Kinvey.ClientAppVersion.stringVersion()).to.equal(config.test.clientAppVersion);
+      expect(Kinvey.ClientAppVersion.stringValue()).to.equal(config.test.clientAppVersion);
     });
     it('should save custom request properties on arguments: options.customRequestProperties', function() {
       Kinvey.init({
