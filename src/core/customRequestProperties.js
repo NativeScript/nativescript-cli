@@ -42,7 +42,8 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
    * @return {Object} Custom request properties
    */
   properties: function() {
-    return customRequestProperties;
+    // Return a copy and not a reference
+    return JSON.parse(JSON.stringify(customRequestProperties));
   },
 
   /**
