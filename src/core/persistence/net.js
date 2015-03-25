@@ -259,12 +259,20 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       headers['X-Kinvey-ResponseWrapper']             = 'true';
     }
 
-    // Set the custom request properties
+    // Set the custom request properties for the request defaulting to an
+    // empty object.
     options.customRequestProperties = options.customRequestProperties || {};
+
+    // Get globally set custom request properties.
     var customRequestProperties = Kinvey.CustomRequestProperties.properties();
+
+    // If any custom request properties exist globally, merge them into the
+    // custom request properties for this request. Only global custom request
+    // properties that don't already exist for this request will be added.
+    // Global request properties do NOT overwrite existing custom request
+    // properties for the request.
     if (customRequestProperties != null) {
       Object.keys(customRequestProperties).forEach(function(name) {
-        // If the property is not already set then set it
         if (!options.customRequestProperties.hasOwnProperty(name)) {
           options.customRequestProperties[name] = customRequestProperties[name];
         }
@@ -281,6 +289,8 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       throw new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
                              '. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
     }
+
+    // Set the custom request properties header.
     headers['X-Kinvey-Custom-Request-Properties'] = customRequestPropertiesHeader;
 
     // Debug.

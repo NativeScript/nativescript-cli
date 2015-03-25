@@ -133,11 +133,19 @@ var Sync = /** @lends Sync */{
           metadata.size += 1;
         }
 
+        // Get metadata for the doucment.
         var timestamp = null != document._kmd ? document._kmd.lmt : null;
         var clientAppVersion = options.clientAppVersion || Kinvey.ClientAppVersion.stringValue(),
             customRequestProperties = options.customRequestProperties || {};
 
+        // Get globally set custom request properties.
         var globalCustomRequestProperties = Kinvey.CustomRequestProperties.properties();
+
+        // If any custom request properties exist globally, merge them into the
+        // custom request properties for this document. Only global custom request
+        // properties that don't already exist for this document will be added.
+        // Global request properties do NOT overwrite existing custom request
+        // properties for the document.
         if (globalCustomRequestProperties != null) {
           Object.keys(globalCustomRequestProperties).forEach(function(name) {
             // If the property is not already set then set it
@@ -147,6 +155,7 @@ var Sync = /** @lends Sync */{
           });
         }
 
+        // Store the metadata.
         metadata.documents[document._id] = {
           timestamp: timestamp,
           clientAppVersion: clientAppVersion,
