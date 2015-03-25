@@ -176,28 +176,6 @@ var getByteCount = function(str) {
   return count;
 };
 
-// var byteLength = function(str) {
-//   var bytes = 0;
-
-//   if (isString(str)) {
-//     bytes = str.length;
-//     for (var i = str.length - 1; i >= 0; i -= 1) {
-//       var code = str.charCodeAt(i);
-//       if (code > 0x7f && code <= 0x7ff) {
-//         bytes += 1;
-//       } else if (code > 0x7ff && code <= 0xffff) {
-//         bytes += 2;
-//       }
-
-//       if (code >= 0xDC00 && code <= 0xDFFF) {
-//         i -= 1; //trail surrogate
-//       }
-//     }
-//   }
-
-//   return bytes;
-// };
-
 // Define the request Option type for documentation purposes.
 
 /**
