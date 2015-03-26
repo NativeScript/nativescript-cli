@@ -24,6 +24,8 @@ class PlatformData implements IPlatformData {
 	deviceBuildOutputPath = "";
 	validPackageNamesForDevice: string[] = [];
 	frameworkFilesExtensions = [".jar", ".dat"];
+	appDestinationDirectoryPath = "";
+	appResourcesDestinationDirectoryPath = "";
 }
 
 class ErrorsNoFailStub implements IErrors {

@@ -26,7 +26,6 @@ interface IPlatformProjectService {
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
 	interpolateData(projectRoot: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
-	prepareProject(platformData: IPlatformData): IFuture<string>;
 	buildProject(projectRoot: string): IFuture<void>;
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
 	addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void>;

@@ -24,14 +24,18 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $npm: INodePackageManager) { }
 
 	public get platformData(): IPlatformData {
+		var projectRoot = path.join(this.$projectData.platformsDir, "ios");
+
 		return {
 			frameworkPackageName: "tns-ios",
 			normalizedPlatformName: "iOS",
+			appDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName),
+			appResourcesDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName, "Resources", "icons"),
 			platformProjectService: this,
 			emulatorServices: this.$iOSEmulatorServices,
-			projectRoot: path.join(this.$projectData.platformsDir, "ios"),
-			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "device"),
-			emulatorBuildOutputPath: path.join(this.$projectData.platformsDir, "ios", "build", "emulator"),
+			projectRoot: projectRoot,
+			deviceBuildOutputPath: path.join(projectRoot, "build", "device"),
+			emulatorBuildOutputPath: path.join(projectRoot, "build", "emulator"),
 			validPackageNamesForDevice: [
 				this.$projectData.projectName + ".ipa"
 			],
@@ -107,25 +111,6 @@ class IOSProjectService implements  IPlatformProjectService {
 			this.$fs.rename(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER),
 				path.join(projectRoot, this.$projectData.projectName)).wait();
 		}).future<void>()();
-	}
-
-	public prepareProject(platformData: IPlatformData): IFuture<string> {
-		return (() => {
-			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-			var appDestinationDirectory = path.join(platformData.projectRoot, this.$projectData.projectName);
-			var resDirectory = path.join(platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
-			this.$fs.ensureDirectoryExists(resDirectory).wait();
-
-			shell.cp("-Rf", path.join(appSourceDirectory, "*"), appDestinationDirectory);
-
-			var appResourcesDirectoryPath = path.join(appDestinationDirectory, constants.APP_RESOURCES_FOLDER_NAME);
-			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
-				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
-			}
-
-			return appDestinationDirectory;
-		}).future<string>()();
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {

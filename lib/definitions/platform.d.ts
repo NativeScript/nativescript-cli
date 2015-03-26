@@ -24,6 +24,8 @@ interface IPlatformData {
 	emulatorServices: Mobile.IEmulatorPlatformServices;
 	projectRoot: string;
 	normalizedPlatformName: string;
+	appDestinationDirectoryPath: string;
+	appResourcesDestinationDirectoryPath: string;
 	deviceBuildOutputPath: string;
 	emulatorBuildOutputPath?: string;
 	validPackageNamesForDevice: string[];
