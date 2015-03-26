@@ -1,0 +1,13 @@
+h1 {
+  font-family:serif;
+  font-size:50px;
+  font-weight:bold;
+  color: red;
+}
+
+h2 {
+  background:#eee;
+}
+h1, h2 {
+  line-height:40px;
+}
