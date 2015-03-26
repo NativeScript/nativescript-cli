@@ -30,12 +30,16 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	public get platformData(): IPlatformData {
+		var projectRoot = path.join(this.$projectData.platformsDir, "android");
+
 		return {
 			frameworkPackageName: "tns-android",
 			normalizedPlatformName: "Android",
+			appDestinationDirectoryPath: path.join(projectRoot, "assets"),
+			appResourcesDestinationDirectoryPath: path.join(projectRoot, "res"),
 			platformProjectService: this,
 			emulatorServices: this.$androidEmulatorServices,
-			projectRoot: path.join(this.$projectData.platformsDir, "android"),
+			projectRoot: projectRoot,
 			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
 			validPackageNamesForDevice: [
 				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
@@ -121,25 +125,6 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.$logger.trace("Android target: %s", targetApi);
 			this.runAndroidUpdate(projectRoot, targetApi).wait();
 		}).future<void>()();
-	}
-
-	public prepareProject(platformData: IPlatformData): IFuture<string> {
-		return (() => {
-			var appSourceDirectory = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-			var assetsDirectory = path.join(platformData.projectRoot, "assets");
-			var resDirectory = path.join(platformData.projectRoot, "res");
-
-			shell.cp("-Rf", path.join(appSourceDirectory, "*"), assetsDirectory);
-
-			var appResourcesDirectoryPath = path.join(assetsDirectory, constants.APP_RESOURCES_FOLDER_NAME);
-			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), resDirectory);
-				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
-			}
-
-			return assetsDirectory;
-
-		}).future<string>()();
 	}
 
 	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {

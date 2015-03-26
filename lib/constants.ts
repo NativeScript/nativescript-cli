@@ -1,7 +1,6 @@
 ///<reference path=".d.ts"/>
 
 export var APP_FOLDER_NAME = "app";
-export var TNS_MODULES_FOLDER_NAME = "tns_modules";
 export var APP_RESOURCES_FOLDER_NAME = "App_Resources";
 export var PROJECT_FRAMEWORK_FOLDER_NAME = "framework";
 

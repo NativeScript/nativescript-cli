@@ -139,20 +139,29 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
-			var platformProjectService = platformData.platformProjectService;
 
-			var appFilesLocation = platformProjectService.prepareProject(platformData).wait();
+			// Copy app folder to native project
+			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			shell.cp("-R", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
 
-			var appDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-			var contents = this.$fs.readDirectory(appDirectoryPath).wait();
+			// Copy App_Resources to project root folder
+			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
+			var appResourcesDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
+				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
+				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
+			}
+
+			// Process platform specific files
+			var contents = this.$fs.readDirectory(platformData.appDestinationDirectoryPath).wait();
 			var files: string[] = [];
 
 			_.each(contents, d => {
-				var fsStat = this.$fs.getFsStats(path.join(appDirectoryPath, d)).wait();
+				var fsStat = this.$fs.getFsStats(path.join(platformData.appDestinationDirectoryPath, d)).wait();
 				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
-					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(path.join(appFilesLocation, d))).wait();
+					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(path.join(platformData.appDestinationDirectoryPath, d))).wait();
 				} else if(fsStat.isFile()) {
-					files.push(path.join(appFilesLocation,d));
+					files.push(path.join(platformData.appDestinationDirectoryPath, d));
 				}
 			});
 

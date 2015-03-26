@@ -231,7 +231,9 @@ export class PlatformsDataStub implements IPlatformsData {
 			projectRoot: "",
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
-			frameworkFilesExtensions: []
+			frameworkFilesExtensions: [],
+			appDestinationDirectoryPath: "",
+			appResourcesDestinationDirectoryPath: ""
 		};
 	}
 
@@ -250,7 +252,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			projectRoot: "",
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
-			frameworkFilesExtensions: []
+			frameworkFilesExtensions: [],
+			appDestinationDirectoryPath: "",
+			appResourcesDestinationDirectoryPath: ""
 		};
 	}
 	validate(): IFuture<void> {
