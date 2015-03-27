@@ -59,7 +59,7 @@ System Requirements
 
 You can install and run the NativeScript CLI on Windows or OS X.
 
-* [Windows](#widnows)
+* [Windows](#windows)
 * [OS X](#os-x)
 * [Linux](#linux)
 
