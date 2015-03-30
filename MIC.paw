@@ -114,7 +114,7 @@
         <attribute name="redirectauthorization" type="bool">0</attribute>
         <attribute name="method" type="string">POST</attribute>
         <attribute name="followredirects" type="bool">0</attribute>
-        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["response_type","code",true],["username","mjs",true],["password","demo",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
+        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["response_type","code",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
         <attribute name="order" type="int64">1</attribute>
         <attribute name="name" type="string">Auth</attribute>
         <relationship name="parent" type="0/1" destination="LMREQUESTTREEITEM"></relationship>
@@ -153,12 +153,12 @@
         <attribute name="redirectauthorization" type="bool">0</attribute>
         <attribute name="method" type="string">POST</attribute>
         <attribute name="followredirects" type="bool">0</attribute>
-        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["grant_type","authorization_code",true],["code","440656fa244de7f3be8faf673f90231ef0122268",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
+        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["grant_type","authorization_code",true],["code","a0b73f31e93a4276c23a0ff1b97b666eb68bf7bb  ",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
         <attribute name="order" type="int64">2</attribute>
         <attribute name="name" type="string">Token</attribute>
         <relationship name="parent" type="0/1" destination="LMREQUESTTREEITEM"></relationship>
         <relationship name="children" type="0/0" destination="LMREQUESTTREEITEM"></relationship>
-        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z104 z112 z102"></relationship>
+        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z112 z102 z104"></relationship>
     </object>
     <object type="LMENVIRONMENT" id="z111">
         <attribute name="uuid" type="string">96DC11B6-93EB-4AFB-BB3D-437ACB6FB952</attribute>

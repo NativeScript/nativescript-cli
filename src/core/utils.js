@@ -176,6 +176,25 @@ var getByteCount = function(str) {
   return count;
 };
 
+// Get a query parameter by name in the query string
+function getParameterByName(queryString, name) {
+  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+  var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
+      results = regex.exec(queryString);
+  return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, ' '));
+}
+
+// Encode data for Content-Type: application/x-www-form-urlencoded
+function encodeFormData(data) {
+  var str = [];
+  for (var p in data) {
+    if (data.hasOwnProperty(p)) {
+      str.push(encodeURIComponent(p) + '=' + encodeURIComponent(data[p]));
+    }
+  }
+  return str.join('&');
+}
+
 // Define the request Option type for documentation purposes.
 
 /**
