@@ -114,7 +114,7 @@ var TiHttp = {
         }
 
         // Check `Content-Type` header for application/json
-        if (response != null && !(response instanceof Titanium.Blob)) {
+        if (!options.file && response != null) {
           var responseContentType = this.getResponseHeader('Content-Type');
           var error;
 
