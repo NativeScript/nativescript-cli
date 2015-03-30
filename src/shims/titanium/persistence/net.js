@@ -114,23 +114,34 @@ var TiHttp = {
         }
 
         // Check `Content-Type` header for application/json
-        if (response != null && !(response instanceof Titanium.Blob)) {
-          var responseContentType = this.getResponseHeader('Content-Type');
-          var error;
+        if (response != null) {
+          var shouldCheck = true;
 
-          if (responseContentType == null) {
-            error = new Kinvey.Error('Content-Type header missing in response. Please add ' +
-                                     'Content-Type header to response with value ' +
-                                     'application/json.');
+          if (isMobileWeb) {
+            shouldCheck = !(response instanceof Titanium.Blob);
           }
-          else if (responseContentType.indexOf('application/json') === -1) {
-            error = new Kinvey.Error('Response Content-Type header is set to ' +
-                                     responseContentType + '. Expected it to be set ' +
-                                     'to application/json.');
+          else if (options.file) {
+            shouldCheck = false;
           }
 
-          if (error) {
-            return deferred.reject(error);
+          if (shouldCheck) {
+            var responseContentType = this.getResponseHeader('Content-Type');
+            var error;
+
+            if (responseContentType == null) {
+              error = new Kinvey.Error('Content-Type header missing in response. Please add ' +
+                                       'Content-Type header to response with value ' +
+                                       'application/json.');
+            }
+            else if (responseContentType.indexOf('application/json') === -1) {
+              error = new Kinvey.Error('Response Content-Type header is set to ' +
+                                       responseContentType + '. Expected it to be set ' +
+                                       'to application/json.');
+            }
+
+            if (error) {
+              return deferred.reject(error);
+            }
           }
         }
 
