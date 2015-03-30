@@ -1,4 +1,8 @@
 # Changelog
+## 1.2.1 (2015-03-30)
+* BugFix(MLIBZ-208): Fixed bug that would throw incorrect `Content-Type` header errors for file requests.
+* BugFix(MLIBZ-236): Fixed bug that would throw incorrect `Content-Type` header errors for requests with a 204 response status code.
+
 ## 1.2.0 (2015-03-25)
 * Enhancement(MLIBZ-162): Added support for custom request properties.
 * Enhancement(MLIBZ-188): Added support for client app version.
