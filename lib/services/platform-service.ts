@@ -142,6 +142,9 @@ export class PlatformService implements IPlatformService {
 
 			// Copy app folder to native project
 			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+
+			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
+			this.$fs.deleteDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
 			shell.cp("-R", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
 
 			// Copy App_Resources to project root folder
