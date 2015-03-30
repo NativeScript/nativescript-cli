@@ -114,7 +114,7 @@ var Xhr = {
       }
 
       // Check `Content-Type` header for application/json
-      if (responseData != null && !(responseData instanceof Blob)) {
+      if (!options.file && responseData != null) {
         var responseContentType = request.getResponseHeader('Content-Type');
         var error;
 

@@ -82,7 +82,7 @@ var BackboneAjax = {
         if(options.file && null != response && null != root.ArrayBuffer) {
           // jQuery does not provide a nice way to set the responseType to blob,
           // so convert the response to binary manually.
-// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
+          // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
           var buffer  = new root.ArrayBuffer(response.length);
           var bufView = new root.Uint8Array(buffer);
           for(var i = 0, length = response.length; i < length; i += 1) {
@@ -97,7 +97,7 @@ var BackboneAjax = {
         }
 
         // Check `Content-Type` header for application/json
-        if (response != null && !(response instanceof Blob)) {
+        if (!options.file && response != null) {
           var responseContentType = request.getResponseHeader('Content-Type') || undefined;
           var error;
 

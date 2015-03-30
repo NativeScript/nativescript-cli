@@ -85,7 +85,7 @@ var NodeHttp = {
         var responseData = Buffer.concat(data);
 
         // Check `Content-Type` header for application/json
-        if (responseData != null && !(responseData instanceof Blob)) {
+        if (!options.file && responseData != null) {
           var responseContentType = response.getHeader('Content-Type');
           var error;
 
