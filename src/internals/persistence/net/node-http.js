@@ -85,7 +85,7 @@ var NodeHttp = {
         var responseData = Buffer.concat(data);
 
         // Check `Content-Type` header for application/json
-        if (!options.file && responseData != null) {
+        if (!options.file && responseData != null && 204 !== response.statusCode) {
           var responseContentType = response.getHeader('Content-Type');
           var error;
 

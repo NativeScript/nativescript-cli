@@ -97,7 +97,7 @@ var BackboneAjax = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null) {
+        if (!options.file && response != null && 204 !== status) {
           var responseContentType = request.getResponseHeader('Content-Type') || undefined;
           var error;
 
