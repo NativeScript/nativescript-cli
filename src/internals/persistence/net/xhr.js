@@ -114,7 +114,7 @@ var Xhr = {
       }
 
       // Check `Content-Type` header for application/json
-      if (!options.file && responseData != null) {
+      if (!options.file && responseData != null && 204 !== request.status) {
         var responseContentType = request.getResponseHeader('Content-Type');
         var error;
 

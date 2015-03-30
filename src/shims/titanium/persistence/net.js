@@ -114,7 +114,7 @@ var TiHttp = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null) {
+        if (!options.file && response != null && 204 !== this.status) {
           var responseContentType = this.getResponseHeader('Content-Type');
           var error;
 

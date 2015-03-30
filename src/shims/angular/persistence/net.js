@@ -110,7 +110,7 @@ var AngularHTTP = {
 
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null) {
+      if (!options.file && response != null && 204 !== response.status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
