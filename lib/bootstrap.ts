@@ -48,3 +48,4 @@ $injector.require("lockfile", "./lockfile");
 $injector.require("optionsService", "./services/options-service");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
+$injector.require("commandsServiceProvider", "./providers/commands-service-provider");
