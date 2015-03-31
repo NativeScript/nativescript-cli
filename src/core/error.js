@@ -465,6 +465,13 @@ Kinvey.Error.SOCIAL_ERROR = 'SocialError';
  */
 Kinvey.Error.SYNC_ERROR = 'SyncError';
 
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.INVALID_AUTHORIZATION_GRANT = 'InvalidAuthorizationGrant';
+
 // All client-side errors are fully declared below.
 var ClientError = {};
 
@@ -598,6 +605,12 @@ ClientError[Kinvey.Error.SYNC_ERROR] = {
   name        : Kinvey.Error.SYNC_ERROR,
   description : 'The synchronization operation cannot be completed.',
   debug       : ''
+};
+
+ClientError[Kinvey.Error.INVALID_AUTHORIZATION_GRANT] = {
+  name: Kinvey.Error.INVALID_AUTHORIZATION_GRANT,
+  description: 'The authorization grant is invalid.',
+  debug: ''
 };
 
 // The `description` and `debug` properties can be overridden if desired. The
