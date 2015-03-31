@@ -2,7 +2,7 @@ debug
 ==========
 
 Usage:
-    `$ tns debug <Command>`
+    `$ tns debug <Command> [--print-app-output]`
 You must run the debug command with a related command.
 
 Debugs your project on a connected device or in a native emulator.
@@ -10,7 +10,10 @@ Debugs your project on a connected device or in a native emulator.
 `<Command>` is a related command that extends the debug command. You can run the following related commands:
 * `android` - Debugs your project on a connected Android device, native Android emulator or Genymotion emulator.
 * `ios` - Debugs your project on a connected iOS device or in a native iOS emulator.
-<% if(isHtml) { %> 
+
+Options:
+* `--print-app-output` - If set, prints the output of the running application.
+<% if(isHtml) { %>
 
 #### Related Commands
 

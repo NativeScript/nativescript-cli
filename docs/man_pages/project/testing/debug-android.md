@@ -2,11 +2,11 @@ debug android
 ==========
 
 Usage:
-    `$ tns debug android [--device <Device ID> | --emulator <Emulator Options> | --geny <Geny Name> ] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>]`
+    `$ tns debug android [--device <Device ID> | --emulator <Emulator Options> | --geny <Geny Name> ] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>] [--print-app-output]`
 
 Example usage:
-    `$ tns debug android --get-port`    `$ tns debug android --debug-brk [--debug-port <port>]`    
-    `$ tns debug android --start [--debug-port <port>]`  
+    `$ tns debug android --get-port`    `$ tns debug android --debug-brk [--debug-port <port>]`
+    `$ tns debug android --start [--debug-port <port>]`
     `$ tns debug android --stop`
 
 Debugs your project on a connected device or in a native emulator.
@@ -22,6 +22,7 @@ Options:
 * `--stop` - Detaches the debug tools.
 * `--get-port` - Retrieves the port on which you are debugging your application.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
+* `--print-app-output` - If set, prints the system debug output (logcat). 
 <% if(isHtml) { %> 
 
 #### Related Commands
