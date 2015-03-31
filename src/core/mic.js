@@ -177,7 +177,7 @@ var MIC = {
     var request = {
       auth: Auth.App,
       method: 'POST',
-      url: MIC.KINVEY_AUTH_URL + MIC.TOKEN_PATH,
+      url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
       data: {
         grant_type: grantType,
         client_id: clientId,
