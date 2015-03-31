@@ -97,12 +97,6 @@ Kinvey.Social = /** @lends Kinvey.Social */{
           throw error;
         }
 
-        // Check user for property _id. Thrown error will reject promise.
-        if (user._id == null) {
-          error = new Kinvey.Error('User does not have _id property defined.');
-          throw error;
-        }
-
         if (activeUser._id === user._id) {
           options._provider = provider;// Force tokens to be updated.
           return Kinvey.User.update(user, options);
