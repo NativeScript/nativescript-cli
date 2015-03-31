@@ -271,14 +271,14 @@ class IOSDeviceDebugging {
 			this.$logger.info("Got AppLaunching");
 			this.proxyDebuggingTraffic();
 			var waitForDebuggerMessage = notification.waitForDebug(this.bundleId);
-			this.$notificationProxyClient.postNotification(waitForDebuggerMessage);
+			this.$notificationProxyClient.postNotificationAndAttachForData(waitForDebuggerMessage);
 		});
 	}
 
 	public debugRunningApplication() {
 		this.proxyDebuggingTraffic();
 		var attachRequestMessage = notification.attachRequest(this.bundleId);
-		this.$notificationProxyClient.postNotification(attachRequestMessage);
+		this.$notificationProxyClient.postNotificationAndAttachForData(attachRequestMessage);
 	}
 
 	private proxyDebuggingTraffic(): void {
