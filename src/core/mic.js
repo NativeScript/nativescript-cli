@@ -93,7 +93,7 @@ var MIC = {
       });
     }).then(function(token) {
       options.create = options.create || true;
-      return MIC.connect(activeUser, MIC.AUTH_PROVIDER, token.access_token, options);
+      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
     });
   },
 
@@ -345,10 +345,6 @@ var MIC = {
           return MIC.connect(user, provider, accessToken, options);
         });
       }
-      else if (Kinvey.Error.ALREADY_LOGGED_IN) {
-        return Kinvey.User.update(user, options);
-      }
-
 
       return Kinvey.Defer.reject(error);
     });
