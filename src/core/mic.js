@@ -67,25 +67,28 @@ var MIC = {
    * @return {Promise}                   The user.
    */
   login: function(authorizationGrant, redirectUri, options) {
+    var error;
     var clientId = Kinvey.appKey;
 
     return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
       if (null != token) {
-        if (MIC.isTokenExpired(token)) {
-          return MIC.refreshToken('refresh_token', clientId, redirectUri, token.refresh_token, options).catch(function() {
-            return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
-          }).then(function() {
-            return MIC.login(authorizationGrant, redirectUri, options);
-          });
-        }
-        else {
-          return token;
-        }
+        return token;
       }
       else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
-        return MIC.requestCode(clientId, redirectUri, 'code', options).then(function(code) {
+        return MIC.requestCodeWithPopup(clientId, redirectUri, 'code', options).then(function(code) {
           return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
         });
+      }
+      else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
+        return MIC.requestUrl(clientId, redirectUri, 'code', options).then(function(url) {
+          return MIC.requestCodeWithUrl(url, clientId, redirectUri, 'code', options);
+        }).then(function(code) {
+          return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
+        });
+      }
+      else {
+        error = new Kinvey.Error('Authorization grant ' + authorizationGrant + ' is unrecognized.');
+        throw error;
       }
     }).then(function(token) {
       return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
@@ -97,6 +100,42 @@ var MIC = {
     });
   },
 
+  requestUrl: function(clientId, redirectUri, responseType, options) {
+    // Create a request
+    var request = {
+      method: 'POST',
+      url: MIC.AUTH_HOST + MIC.AUTH_PATH,
+      data: {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: responseType
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'X-Kinvey-API-Version': Kinvey.API_VERSION,
+        'X-Kinvey-Device-Information': deviceInformation()
+      }
+    };
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      request.headers['X-Kinvey-Trace-Request'] = 'true';
+      request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
+    }
+
+    // Send request
+    return Kinvey.Persistence.Net.request(
+      request.method,
+      request.url,
+      MIC.encodeFormData(request.data),
+      request.headers,
+      options
+    ).then(function(response) {
+      return response.temp_login_uri;
+    });
+  },
+
   /**
    * Request a code by opening a popup up to a url.
    *
@@ -105,7 +144,7 @@ var MIC = {
    * @param  {Object} options     Options.
    * @return {Promise}            The code.
    */
-  requestCode: function(clientId, redirectUri, responseType, options) {
+  requestCodeWithPopup: function(clientId, redirectUri, responseType, options) {
     // Popup blockers only allow opening a dialog at this moment.
     var blank = 'about:blank';
     var popup = root.open(blank, 'KinveyMIC');
@@ -186,6 +225,42 @@ var MIC = {
 
     // Return the promise.
     return deferred.promise;
+  },
+
+  requestCodeWithUrl: function(url, clientId, redirectUri, responseType, options) {
+    // Create a request
+    var request = {
+      method: 'POST',
+      url: url,
+      data: {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: responseType,
+        username: options.username,
+        password: options.password
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'X-Kinvey-API-Version': Kinvey.API_VERSION,
+        'X-Kinvey-Device-Information': deviceInformation()
+      }
+    };
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      request.headers['X-Kinvey-Trace-Request'] = 'true';
+      request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
+    }
+
+    // Send request
+    return Kinvey.Persistence.Net.request(
+      request.method,
+      request.url,
+      MIC.encodeFormData(request.data),
+      request.headers,
+      options
+    );
   },
 
   /**
@@ -382,16 +457,6 @@ var MIC = {
       }
     }
     return str.join('&');
-  },
-
-  isTokenExpired: function(token) {
-    if (null != token) {
-      var expiredDate = new Date(0);
-      expiredDate.setUTCSeconds(token.expires_in);
-      return (expiredDate.valueOf() > new Date().valueOf());
-    }
-
-    return false;
   }
 };
 
