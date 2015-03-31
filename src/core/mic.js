@@ -18,41 +18,73 @@
 // ----
 
 var MIC = {
-  KINVEY_AUTH_URL: 'https://auth.kinvey.com',
+  /**
+   * Auth Host
+   *
+   * @constant
+   * @default
+   */
+  AUTH_HOST: 'https://auth.kinvey.com',
+
+  /**
+   * Auth Path
+   *
+   * @constant
+   * @default
+   */
   AUTH_PATH: '/oauth/auth',
+
+  /**
+   * Token Path
+   *
+   * @constant
+   * @default
+   */
   TOKEN_PATH: '/oauth/token',
+
+  /**
+   * Auth Provider
+   *
+   * @constant
+   * @default
+   */
   KINVEY_AUTH_PROVIDER: 'kinveyAuth',
-  MIC_ACCESS_TOKEN_KEY: 'micAccessToken',
 
-  AuthorizationGrant: {
-    AuthorizationCode: {
-      LoginPage: 'authorization_code', // Uses Authentication Flow #1: Authentication Grant
-      API: 'authorization_code' // Uses Authentication Flow #2: Authentication Grant without a login page
-    }
-  },
-
+  /**
+   * Login with MIC using the authorization grant.
+   *
+   * @param  {string} authorizationGrant Authorization grant.
+   * @param  {string} redirectUri        Redirect uri.
+   * @param  {Object} options            Options.
+   * @return {Promise}                   The user.
+   */
   login: function(authorizationGrant, redirectUri, options) {
     var clientId = Kinvey.appKey;
 
-    if (MIC.AuthorizationGrant.AuthorizationCode.LoginPage === authorizationGrant) {
-      return MIC.requestCode(clientId, redirectUri, options).then(function(code) {
-        return MIC.requestToken(authorizationGrant, clientId, redirectUri, code, options);
+    if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+      return MIC.requestCode(clientId, redirectUri, 'code', options).then(function(code) {
+        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
       }).then(function(token) {
-        // Default to creating the user if it doesn't exist
         options.create = options.create || true;
-
-        // Connect
         return MIC.connect(null, MIC.KINVEY_AUTH_PROVIDER, token, options);
       });
     }
   },
 
-  requestCode: function(clientId, redirectUri, options) {
+  /**
+   * Request a code by opening a popup up to a url.
+   *
+   * @param  {string} clientId    Client id or app key.
+   * @param  {string} redirectUri Redirect uri.
+   * @param  {Object} options     Options.
+   * @return {Promise}            The code.
+   */
+  requestCode: function(clientId, redirectUri, responseType, options) {
     // Popup blockers only allow opening a dialog at this moment.
     var blank = 'about:blank';
     var popup = root.open(blank, 'KinveyMIC');
-    popup.location = MIC.KINVEY_AUTH_URL + MIC.AUTH_PATH + '?client_id=' + clientId +
-                    '&redirect_uri=' + redirectUri + '&response_type=code';
+    popup.location = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + clientId +
+                    '&redirect_uri=' + redirectUri + '&response_type=' + responseType;
 
     // Obtain the tokens from the login dialog.
     var deferred = Kinvey.Defer.deferred();
@@ -130,6 +162,16 @@ var MIC = {
     return deferred.promise;
   },
 
+  /**
+   * Request a token from MIC using the provided code.
+   *
+   * @param  {string} grantType   Grant type.
+   * @param  {string} clientId    Client id or app key.
+   * @param  {string} redirectUri Redirect uri.
+   * @param  {string} code        MIC Code.
+   * @param  {Object} options     Options.
+   * @return {Promise}            The token.
+   */
   requestToken: function(grantType, clientId, redirectUri, code, options) {
     // Create a request
     var request = {
@@ -179,6 +221,16 @@ var MIC = {
     });
   },
 
+  /**
+   * Links a social identity to the provided (if any) Kinvey user.
+   *
+   * @param {Object} [user] The associated user.
+   * @param {string} provider The provider.
+   * @param {Options} [options] Options.
+   * @param {boolean} [options.create=true] Create a new user if no user with
+   *          the provided social identity exists.
+   * @returns {Promise} The user.
+   */
   connect: function(user, provider, token, options) {
     var error;
 
@@ -241,6 +293,12 @@ var MIC = {
     return tokens;
   },
 
+  /**
+   * Encodes the data as form data.
+   *
+   * @param  {object} data Data to encode.
+   * @return {string} Encoded data string.
+   */
   encodeFormData: function(data) {
     var str = [];
     for (var p in data) {
@@ -259,8 +317,25 @@ var MIC = {
 Kinvey.User = Kinvey.User || {};
 Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
 
-  AuthorizationGrant: MIC.AuthorizationGrant,
+  /**
+   * Enum for authorization grant values.
+   *
+   * @readOnly
+   * @enum {string}
+   */
+  AuthorizationGrant: {
+    AuthorizationCodeLoginPage: 'LoginPage', // Uses Authentication Flow #1: Authentication Grant
+    AuthorizationCodeAPI: 'API' // Uses Authentication Flow #2: Authentication Grant without a login page
+  },
 
+  /**
+   * Login with Mobile Identity Connect (MIC) using the provided authorization grant.
+   *
+   * @param  {Kinvey.User.MIC.AuthorizationGrant} authorizationGrant Authorization grant.
+   * @param  {string}                             redirectUri        Redirect uri.
+   * @param  {Object}                             options            Options.
+   * @return {Promise}                                               The user.
+   */
   login: function(authorizationGrant, redirectUri, options) {
     var promise = MIC.login(authorizationGrant, redirectUri, options);
     return wrapCallbacks(promise, options);
