@@ -48,7 +48,15 @@ var MIC = {
    * @constant
    * @default
    */
-  KINVEY_AUTH_PROVIDER: 'kinveyAuth',
+  AUTH_PROVIDER: 'kinveyAuth',
+
+  /**
+   * Token Storage Key
+   *
+   * @constant
+   * @default
+   */
+  TOKEN_STORAGE_KEY: 'micToken',
 
   /**
    * Login with MIC using the authorization grant.
@@ -61,23 +69,32 @@ var MIC = {
   login: function(authorizationGrant, redirectUri, options) {
     var clientId = Kinvey.appKey;
 
-    if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
-      // Step 1: Request Code
-      return MIC.requestCode(clientId, redirectUri, 'code', options).then(function(code) {
-        // Step 2: Request token with code
-        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
-      }).then(function(token) {
-        // Step 3: Connect with token
-        options.create = options.create || true;
-        return MIC.connect(null, MIC.KINVEY_AUTH_PROVIDER, token, options).then(function(user) {
-          // Step 4: Save token
-          Storage.save(token.access_token, token);
-
-          // Return the user
-          return user;
+    return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
+      if (null != token) {
+        if (MIC.isTokenExpired(token)) {
+          return MIC.refreshToken('refresh_token', clientId, redirectUri, token.refresh_token, options).catch(function() {
+            return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
+          }).then(function() {
+            return MIC.login(authorizationGrant, redirectUri, options);
+          });
+        }
+        else {
+          return token;
+        }
+      }
+      else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+        return MIC.requestCode(clientId, redirectUri, 'code', options).then(function(code) {
+          return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
         });
+      }
+    }).then(function(token) {
+      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
+        return token;
       });
-    }
+    }).then(function(token) {
+      options.create = options.create || true;
+      return MIC.connect(activeUser, MIC.AUTH_PROVIDER, token.access_token, options);
+    });
   },
 
   /**
@@ -230,6 +247,55 @@ var MIC = {
     });
   },
 
+  refreshToken: function(grantType, clientId, redirectUri, refreshToken, options) {
+    // Create a request
+    var request = {
+      auth: Auth.App,
+      method: 'POST',
+      url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
+      data: {
+        grant_type: grantType,
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        refresh_token: refreshToken
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'X-Kinvey-API-Version': Kinvey.API_VERSION,
+        'X-Kinvey-Device-Information': deviceInformation()
+      }
+    };
+
+    // Debug.
+    if(KINVEY_DEBUG) {
+      request.headers['X-Kinvey-Trace-Request'] = 'true';
+      request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
+    }
+
+    return request.auth().then(function(auth) {
+      if (null !== auth) {
+        // Format credentials.
+        var credentials = auth.credentials;
+        if (null != auth.username) {
+          credentials = Kinvey.Persistence.Net.base64(auth.username + ':' + auth.password);
+        }
+
+        // Append header.
+        request.headers.Authorization = auth.scheme + ' ' + credentials;
+      }
+
+      // Send request
+      return Kinvey.Persistence.Net.request(
+        request.method,
+        request.url,
+        MIC.encodeFormData(request.data),
+        request.headers,
+        options
+      );
+    });
+  },
+
   /**
    * Links a social identity to the provided (if any) Kinvey user.
    *
@@ -240,7 +306,7 @@ var MIC = {
    *          the provided social identity exists.
    * @returns {Promise} The user.
    */
-  connect: function(user, provider, token, options) {
+  connect: function(user, provider, accessToken, options) {
     var error;
 
     // Update the user data.
@@ -250,7 +316,7 @@ var MIC = {
     var activeUser = Kinvey.getActiveUser();
     user._socialIdentity = user._socialIdentity || {};
     user._socialIdentity[provider] = {
-      access_token: token.access_token
+      access_token: accessToken
     };
 
     if (null != activeUser) {
@@ -269,16 +335,20 @@ var MIC = {
     // Attempt logging in with the tokens.
     user._socialIdentity = {};
     user._socialIdentity[provider] = {
-      access_token: token.access_token
+      access_token: accessToken
     };
     return Kinvey.User.login(user, null, options).then(null, function(error) {
       // If `options.create`, attempt to signup as a new user if no user with
       // the identity exists.
       if (options.create && Kinvey.Error.USER_NOT_FOUND === error.name) {
         return Kinvey.User.signup(user, options).then(function(user) {
-          return MIC.connect(user, provider, token, options);
+          return MIC.connect(user, provider, accessToken, options);
         });
       }
+      else if (Kinvey.Error.ALREADY_LOGGED_IN) {
+        return Kinvey.User.update(user, options);
+      }
+
 
       return Kinvey.Defer.reject(error);
     });
@@ -316,6 +386,16 @@ var MIC = {
       }
     }
     return str.join('&');
+  },
+
+  isTokenExpired: function(token) {
+    if (null != token) {
+      var expiredDate = new Date(0);
+      expiredDate.setUTCSeconds(token.expires_in);
+      return (expiredDate.valueOf() > new Date().valueOf());
+    }
+
+    return false;
   }
 };
 
