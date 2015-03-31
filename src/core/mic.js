@@ -62,11 +62,20 @@ var MIC = {
     var clientId = Kinvey.appKey;
 
     if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+      // Step 1: Request Code
       return MIC.requestCode(clientId, redirectUri, 'code', options).then(function(code) {
+        // Step 2: Request token with code
         return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
       }).then(function(token) {
+        // Step 3: Connect with token
         options.create = options.create || true;
-        return MIC.connect(null, MIC.KINVEY_AUTH_PROVIDER, token, options);
+        return MIC.connect(null, MIC.KINVEY_AUTH_PROVIDER, token, options).then(function(user) {
+          // Step 4: Save token
+          Storage.save(token.access_token, token);
+
+          // Return the user
+          return user;
+        });
       });
     }
   },
