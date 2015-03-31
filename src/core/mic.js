@@ -61,36 +61,40 @@ var MIC = {
   /**
    * Login with MIC using the authorization grant.
    *
-   * @param  {string} authorizationGrant Authorization grant.
-   * @param  {string} redirectUri        Redirect uri.
+   * @param  {string} authorizationGrant Authorization Grant.
+   * @param  {string} redirectUri        Redirect Uri.
    * @param  {Object} options            Options.
-   * @return {Promise}                   The user.
+   * @return {Promise}                   User.
    */
   login: function(authorizationGrant, redirectUri, options) {
     var error;
+    var promise;
     var clientId = Kinvey.appKey;
 
-    return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
-      if (null != token) {
-        return token;
-      }
-      else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
-        return MIC.requestCodeWithPopup(clientId, redirectUri, 'code', options).then(function(code) {
-          return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
-        });
-      }
-      else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
-        return MIC.requestUrl(clientId, redirectUri, 'code', options).then(function(url) {
-          return MIC.requestCodeWithUrl(url, clientId, redirectUri, 'code', options);
-        }).then(function(code) {
-          return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
-        });
-      }
-      else {
-        error = new Kinvey.Error('Authorization grant ' + authorizationGrant + ' is unrecognized.');
-        throw error;
-      }
-    }).then(function(token) {
+    // Should this be able to be called with an existing active user? Should it throw an error instead?
+
+    if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+      promise = MIC.requestCodeWithPopup(clientId, redirectUri, 'code', options).then(function(code) {
+        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
+      });
+    }
+    else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
+      promise = MIC.requestUrl(clientId, redirectUri, 'code', options).then(function(url) {
+        return MIC.requestCodeWithUrl(url, clientId, redirectUri, 'code', options);
+      }).then(function(code) {
+        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
+      });
+    }
+    else {
+      error = clientError(Kinvey.Error.INVALID_AUTHORIZATION_GRANT, {
+        debug: 'The authorization grant ' + authorizationGrant + ' is unrecognized. Please provide one of the ' +
+               'following authorization grants: ' + Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
+               Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
+      });
+      return Kinvey.Defer.reject(error);
+    }
+
+    promise.then(function(token) {
       return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
         return token;
       });
@@ -98,8 +102,19 @@ var MIC = {
       options.create = options.create || true;
       return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
     });
+
+    return promise;
   },
 
+  /**
+   * Send a request to get a temp login uri.
+   *
+   * @param  {string} clientId     Client Id.
+   * @param  {string} redirectUri  Redirect Uri.
+   * @param  {string} responseType Response Type.
+   * @param  {Object} options      Options.
+   * @return {promise}             Temp Login Uri.
+   */
   requestUrl: function(clientId, redirectUri, responseType, options) {
     // Create a request
     var request = {
@@ -139,10 +154,10 @@ var MIC = {
   /**
    * Request a code by opening a popup up to a url.
    *
-   * @param  {string} clientId    Client id or app key.
-   * @param  {string} redirectUri Redirect uri.
+   * @param  {string} clientId    Client Id.
+   * @param  {string} redirectUri Redirect Uri.
    * @param  {Object} options     Options.
-   * @return {Promise}            The code.
+   * @return {Promise}            Code.
    */
   requestCodeWithPopup: function(clientId, redirectUri, responseType, options) {
     // Popup blockers only allow opening a dialog at this moment.
@@ -227,10 +242,20 @@ var MIC = {
     return deferred.promise;
   },
 
+  /**
+   * Request a code by sending a POST request to the provided url.
+   *
+   * @param  {string} url          Url.
+   * @param  {string} clientId     Client Id.
+   * @param  {string} redirectUri  Redirect Uri.
+   * @param  {string} responseType Response Type.
+   * @param  {Object} options      Options.
+   * @return {Promise}             Code.
+   */
   requestCodeWithUrl: function(url, clientId, redirectUri, responseType, options) {
     // Create a request
     var request = {
-      method: 'POST',
+      method: 'GET',
       url: url,
       data: {
         client_id: clientId,
@@ -257,7 +282,7 @@ var MIC = {
     return Kinvey.Persistence.Net.request(
       request.method,
       request.url,
-      MIC.encodeFormData(request.data),
+      request.data,
       request.headers,
       options
     );
@@ -267,11 +292,11 @@ var MIC = {
    * Request a token from MIC using the provided code.
    *
    * @param  {string} grantType   Grant type.
-   * @param  {string} clientId    Client id or app key.
-   * @param  {string} redirectUri Redirect uri.
+   * @param  {string} clientId    Client Id.
+   * @param  {string} redirectUri Redirect Uri.
    * @param  {string} code        MIC Code.
    * @param  {Object} options     Options.
-   * @return {Promise}            The token.
+   * @return {Promise}            Token.
    */
   requestToken: function(grantType, clientId, redirectUri, code, options) {
     // Create a request
@@ -322,6 +347,16 @@ var MIC = {
     });
   },
 
+  /**
+   * Refresh a token with the provided refresh token.
+   *
+   * @param  {string} grantType    Grant Type.
+   * @param  {string} clientId     Client Id.
+   * @param  {string} redirectUri  Redirect Uri.
+   * @param  {string} refreshToken Refresh Token.
+   * @param  {Object} options      Options.
+   * @return {Promise}             User.
+   */
   refreshToken: function(grantType, clientId, redirectUri, refreshToken, options) {
     // Create a request
     var request = {
@@ -368,6 +403,12 @@ var MIC = {
         request.headers,
         options
       );
+    }).then(function(token) {
+      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
+        return token;
+      });
+    }).then(function(token) {
+      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
     });
   },
 
@@ -474,8 +515,8 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @enum {string}
    */
   AuthorizationGrant: {
-    AuthorizationCodeLoginPage: 'LoginPage', // Uses Authentication Flow #1: Authentication Grant
-    AuthorizationCodeAPI: 'API' // Uses Authentication Flow #2: Authentication Grant without a login page
+    AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage', // Uses Authentication Flow #1: Authentication Grant
+    AuthorizationCodeAPI: 'AuthorizationCodeAPI' // Uses Authentication Flow #2: Authentication Grant without a login page
   },
 
   /**
