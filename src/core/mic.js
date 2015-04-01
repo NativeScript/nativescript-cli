@@ -78,15 +78,23 @@ var MIC = {
     var error;
     var promise;
     var clientId = Kinvey.appKey;
+    var activeUser = Kinvey.getActiveUser();
 
     // Set defaults for options
     options = options || {};
     options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
 
-    // Should this be able to be called with an existing active user? Should it throw an error instead?
-
+    if (null != activeUser) {
+      // Reject with error because of active user
+      error = clientError(Kinvey.Error.MIC_ERROR, {
+        debug: 'A user is already logged in. To refresh a token used to authenticate a user, ' +
+               'try calling Kinvey.User.MIC.refresh(). Or your can logout the user and try logging ' +
+               'in again.'
+      });
+      return Kinvey.Defer.reject(error);
+    }
     // Step 1: Check authorization grant type
-    if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+    else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
       // Step 2: Request a code
       promise = MIC.requestCode(clientId, redirectUri, options);
     }
