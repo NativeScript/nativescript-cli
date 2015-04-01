@@ -478,7 +478,7 @@ var MIC = {
    *          the provided social identity exists.
    * @returns {Promise} The user.
    */
-  connect: function(user, provider, accessToken, options) {
+  connect: function(user, accessToken, options) {
     var error;
 
     // Update the user data.
@@ -487,7 +487,7 @@ var MIC = {
     // If the user is the active user, forward to `Kinvey.User.update`.
     var activeUser = Kinvey.getActiveUser();
     user._socialIdentity = user._socialIdentity || {};
-    user._socialIdentity[provider] = {
+    user._socialIdentity[MIC.AUTH_PROVIDER] = {
       access_token: accessToken
     };
 
@@ -506,7 +506,7 @@ var MIC = {
 
     // Attempt logging in with the tokens.
     user._socialIdentity = {};
-    user._socialIdentity[provider] = {
+    user._socialIdentity[MIC.AUTH_PROVIDER] = {
       access_token: accessToken
     };
     return Kinvey.User.login(user, null, options).then(null, function(error) {
@@ -514,12 +514,34 @@ var MIC = {
       // the identity exists.
       if (options.create && Kinvey.Error.USER_NOT_FOUND === error.name) {
         return Kinvey.User.signup(user, options).then(function(user) {
-          return MIC.connect(user, provider, accessToken, options);
+          return MIC.connect(user, accessToken, options);
         });
       }
 
       return Kinvey.Defer.reject(error);
     });
+  },
+
+  /**
+   * Removes a MIC token from the provided Kinvey user.
+   *
+   * @param {Object} [user] The user.
+   * @param {string} provider The provider.
+   * @param {Options} [options] Options.
+   * @returns {Promise} The user.
+   */
+  disconnect: function(user, options) {
+    // Update the user data.
+    user._socialIdentity = user._socialIdentity || {};
+    user._socialIdentity[MIC.AUTH_PROVIDER] = null;
+
+    // If the user exists, forward to `Kinvey.User.update`. Otherwise, resolve
+    // immediately.
+    if(null == user._id) {
+      var promise = Kinvey.Defer.resolve(user);
+      return wrapCallbacks(promise, options);
+    }
+    return Kinvey.User.update(user, options);
   },
 
   /**
@@ -585,8 +607,17 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}                                                  Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
+    options = options || {};
     var promise = MIC.login(authorizationGrant, redirectUri, options);
     return wrapCallbacks(promise, options);
+  },
+
+  loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
+    return Kinvey.User.MIC.login(Kinvey.User.MIC.authorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
+  },
+
+  loginWithAuthorizationCodeAPI: function(redirectUri, options) {
+    return Kinvey.User.MIC.login(Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
   },
 
   /**
@@ -596,6 +627,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}          Authorized user.
    */
   refresh: function(options) {
+    options = options || {};
     var promise = MIC.refresh(options);
     return wrapCallbacks(promise, options);
   }
