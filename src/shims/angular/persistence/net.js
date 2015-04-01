@@ -84,6 +84,8 @@ var AngularHTTP = {
       url     : url
     }).then(function(response) {
       var _response = response;
+      var status = response.status;
+
       // Debug.
       if(KINVEY_DEBUG) {
         log('The network request completed.', response);
@@ -110,7 +112,7 @@ var AngularHTTP = {
 
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 204 !== response.status) {
+      if (!options.file && response != null && 204 !== status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
