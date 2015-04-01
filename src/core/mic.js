@@ -67,7 +67,7 @@ var MIC = {
   AUTH_TIMEOUT: (1000 * 60 * 5),
 
   /**
-   * Login with MIC using the authorization grant.
+   * Login with MIC.
    *
    * @param  {string} authorizationGrant Authorization Grant.
    * @param  {string} redirectUri        Redirect Uri.
@@ -121,7 +121,7 @@ var MIC = {
   },
 
   /**
-   * Refresh an existing saved MIC token for a new token.
+   * Refresh a MIC token.
    *
    * @param  {Object} options Options.
    * @return {Promise}        User.
@@ -153,12 +153,12 @@ var MIC = {
   },
 
   /**
-   * Send a request to get a temp login uri.
+   * Send a request to get a temp login url.
    *
    * @param  {string} clientId     Client Id.
    * @param  {string} redirectUri  Redirect Uri.
    * @param  {Object} options      Options.
-   * @return {promise}             Temp Login Uri.
+   * @return {Promise}             Temp Login Uri.
    */
   requestUrl: function(clientId, redirectUri, options) {
     // Create a request
@@ -465,7 +465,7 @@ var MIC = {
   },
 
   /**
-   * Links a social identity to the provided (if any) Kinvey user.
+   * Links a MIC token to the provided (if any) Kinvey user.
    *
    * @param {Object} [user] The associated user.
    * @param {string} provider The provider.
@@ -572,18 +572,25 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
   },
 
   /**
-   * Login with Mobile Identity Connect (MIC) using the provided authorization grant.
+   * Authorize a user with Mobile Identity Connect (MIC).
    *
-   * @param  {Kinvey.User.MIC.AuthorizationGrant} authorizationGrant Authorization grant.
-   * @param  {string}                             redirectUri        Redirect uri.
-   * @param  {Object}                             options            Options.
-   * @return {Promise}                                               The user.
+   * @param  {Kinvey.User.MIC.AuthorizationGrant} authorizationGrant    Authorization grant.
+   * @param  {string}                             redirectUri           Redirect uri.
+   * @param  {Object}                             [options]             Options.
+   * @param  {boolean}                            [options.create=true] Create a new user if no user exists.
+   * @return {Promise}                                                  Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
     var promise = MIC.login(authorizationGrant, redirectUri, options);
     return wrapCallbacks(promise, options);
   },
 
+  /**
+   * Reauthorize a user with Mobile Identity Connect (MIC).
+   *
+   * @param  {Object} [options] Options.
+   * @return {Promise}          Authorized user.
+   */
   refresh: function(options) {
     var promise = MIC.refresh(options);
     return wrapCallbacks(promise, options);
