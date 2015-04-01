@@ -22,7 +22,7 @@ var MIC = {
    * Auth Host
    *
    * @constant
-   * @default
+   * @default 'https://auth.kinvey.com'
    */
   AUTH_HOST: 'https://auth.kinvey.com',
 
@@ -30,7 +30,7 @@ var MIC = {
    * Auth Path
    *
    * @constant
-   * @default
+   * @default '/oauth/auth'
    */
   AUTH_PATH: '/oauth/auth',
 
@@ -38,7 +38,7 @@ var MIC = {
    * Token Path
    *
    * @constant
-   * @default
+   * @default '/oauth/token'
    */
   TOKEN_PATH: '/oauth/token',
 
@@ -46,7 +46,7 @@ var MIC = {
    * Auth Provider
    *
    * @constant
-   * @default
+   * @default 'kinveyAuth'
    */
   AUTH_PROVIDER: 'kinveyAuth',
 
@@ -54,9 +54,17 @@ var MIC = {
    * Token Storage Key
    *
    * @constant
-   * @default
+   * @default 'micToken'
    */
   TOKEN_STORAGE_KEY: 'micToken',
+
+  /**
+   * Auth Timeout
+   *
+   * @constant
+   * @default 5 minutes
+   */
+  AUTH_TIMEOUT: (1000 * 60 * 5),
 
   /**
    * Login with MIC using the authorization grant.
@@ -73,20 +81,21 @@ var MIC = {
 
     // Should this be able to be called with an existing active user? Should it throw an error instead?
 
+    // Step 1: Check authorization grant type
     if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
-      promise = MIC.requestCodeWithPopup(clientId, redirectUri, 'code', options).then(function(code) {
-        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
-      });
+      // Step 2: Request a code
+      options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
+      promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
-      promise = MIC.requestUrl(clientId, redirectUri, 'code', options).then(function(url) {
-        return MIC.requestCodeWithUrl(url, clientId, redirectUri, 'code', options);
-      }).then(function(code) {
-        return MIC.requestToken('authorization_code', clientId, redirectUri, code, options);
+      // Step 2a: Request a temp login url
+      promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
+        // Step 2b: Request a code
+        return MIC.requestCodeWithUrl(url, clientId, redirectUri, options);
       });
     }
     else {
-      error = clientError(Kinvey.Error.INVALID_AUTHORIZATION_GRANT, {
+      error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'The authorization grant ' + authorizationGrant + ' is unrecognized. Please provide one of the ' +
                'following authorization grants: ' + Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
                Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
@@ -94,11 +103,16 @@ var MIC = {
       return Kinvey.Defer.reject(error);
     }
 
-    promise.then(function(token) {
+    promise.then(function(code) {
+      // Step 3: Request a token
+      return MIC.requestToken(clientId, redirectUri, code, options);
+    }).then(function(token) {
+      // Step 4: Save the token
       return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
         return token;
       });
     }).then(function(token) {
+      // Step 5: Connet the token with the user. Create a new user by default if one does not exist.
       options.create = options.create || true;
       return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
     });
@@ -107,15 +121,46 @@ var MIC = {
   },
 
   /**
+   * Refresh an existing saved MIC token for a new token.
+   *
+   * @param  {Object} options Options.
+   * @return {Promise}        User.
+   */
+  refresh: function(options) {
+    var error;
+
+    // Step 1: Retrieve the saved token
+    return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
+      if (null != token) {
+        // Step 2: Refresh the token
+        return MIC.refreshToken(token.client_id, token.redirect_uri, token.refresh_token, options);
+      }
+
+      error = clientError(Kinvey.Error.MIC_ERROR, {
+        debug: 'Unable to refresh token because there is not a saved token to refresh. Try to ' +
+               'login first by calling Kinvey.User.MIC.login().'
+      });
+      throw error;
+    }).then(function(token) {
+      // Step 3: Save the token
+      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
+        return token;
+      });
+    }).then(function(token) {
+      // Step 4: Connect the token with the user
+      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
+    });
+  },
+
+  /**
    * Send a request to get a temp login uri.
    *
    * @param  {string} clientId     Client Id.
    * @param  {string} redirectUri  Redirect Uri.
-   * @param  {string} responseType Response Type.
    * @param  {Object} options      Options.
    * @return {promise}             Temp Login Uri.
    */
-  requestUrl: function(clientId, redirectUri, responseType, options) {
+  requestUrl: function(clientId, redirectUri, options) {
     // Create a request
     var request = {
       method: 'POST',
@@ -123,7 +168,7 @@ var MIC = {
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
-        response_type: responseType
+        response_type: 'code'
       },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -159,12 +204,12 @@ var MIC = {
    * @param  {Object} options     Options.
    * @return {Promise}            Code.
    */
-  requestCodeWithPopup: function(clientId, redirectUri, responseType, options) {
+  requestCodeWithPopup: function(clientId, redirectUri, options) {
     // Popup blockers only allow opening a dialog at this moment.
     var blank = 'about:blank';
     var popup = root.open(blank, 'KinveyMIC');
-    popup.location = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + clientId +
-                    '&redirect_uri=' + redirectUri + '&response_type=' + responseType;
+    popup.location = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
+                    '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
 
     // Obtain the tokens from the login dialog.
     var deferred = Kinvey.Defer.deferred();
@@ -176,34 +221,34 @@ var MIC = {
       var error;
 
       // The popup was blocked.
-      if(null == popup) {
-        root.clearTimeout(timer);// Stop listening.
+      if (null == popup) {
+        root.clearTimeout(timer); // Stop listening.
 
         // Return the response.
-        error = clientError(Kinvey.Error.SOCIAL_ERROR, {
+        error = clientError(Kinvey.Error.MIC_ERROR, {
           debug: 'The popup was blocked.'
         });
         deferred.reject(error);
       }
 
       // The popup closed unexpectedly.
-      else if(popup.closed) {
-        root.clearTimeout(timer);// Stop listening.
+      else if (popup.closed) {
+        root.clearTimeout(timer); // Stop listening.
 
         // Return the response.
-        error = clientError(Kinvey.Error.SOCIAL_ERROR, {
+        error = clientError(Kinvey.Error.MIC_ERROR, {
           debug: 'The popup was closed unexpectedly.'
         });
         deferred.reject(error);
       }
 
       // The user waited too long to reply to the authorization request.
-      else if(options.timeout && elapsed > options.timeout) {// Timeout.
-        root.clearTimeout(timer);// Stop listening.
+      else if (options.timeout && elapsed > options.timeout) {
+        root.clearTimeout(timer); // Stop listening.
         popup.close();
 
         // Return the response.
-        error = clientError(Kinvey.Error.SOCIAL_ERROR, {
+        error = clientError(Kinvey.Error.MIC_ERROR, {
           debug: 'The authorization request timed out.'
         });
         deferred.reject(error);
@@ -243,27 +288,32 @@ var MIC = {
   },
 
   /**
-   * Request a code by sending a POST request to the provided url.
+   * Request a code by sending a request to the provided url.
    *
    * @param  {string} url          Url.
    * @param  {string} clientId     Client Id.
    * @param  {string} redirectUri  Redirect Uri.
-   * @param  {string} responseType Response Type.
    * @param  {Object} options      Options.
    * @return {Promise}             Code.
    */
-  requestCodeWithUrl: function(url, clientId, redirectUri, responseType, options) {
+  requestCodeWithUrl: function(url, clientId, redirectUri, options) {
+    url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
+          '&response_type=code&username=' + encodeURIComponent(options.username) +
+          '&password=' + encodeURIComponent(options.password);
+
+
+      //     data: {
+      //   client_id: clientId,
+      //   redirect_uri: redirectUri,
+      //   response_type: responseType,
+      //   username: options.username,
+      //   password: options.password
+      // },
+      //
     // Create a request
     var request = {
       method: 'GET',
       url: url,
-      data: {
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        response_type: responseType,
-        username: options.username,
-        password: options.password
-      },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': 'application/json',
@@ -291,21 +341,20 @@ var MIC = {
   /**
    * Request a token from MIC using the provided code.
    *
-   * @param  {string} grantType   Grant type.
    * @param  {string} clientId    Client Id.
    * @param  {string} redirectUri Redirect Uri.
    * @param  {string} code        MIC Code.
    * @param  {Object} options     Options.
    * @return {Promise}            Token.
    */
-  requestToken: function(grantType, clientId, redirectUri, code, options) {
+  requestToken: function(clientId, redirectUri, code, options) {
     // Create a request
     var request = {
       auth: Auth.App,
       method: 'POST',
       url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
       data: {
-        grant_type: grantType,
+        grant_type: 'authorization_code',
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
@@ -344,27 +393,31 @@ var MIC = {
         request.headers,
         options
       );
+    }).then(function(token) {
+      // Extend the token
+      token.client_id = clientId;
+      token.redirect_uri = redirectUri;
+      return token;
     });
   },
 
   /**
    * Refresh a token with the provided refresh token.
    *
-   * @param  {string} grantType    Grant Type.
    * @param  {string} clientId     Client Id.
    * @param  {string} redirectUri  Redirect Uri.
    * @param  {string} refreshToken Refresh Token.
    * @param  {Object} options      Options.
    * @return {Promise}             User.
    */
-  refreshToken: function(grantType, clientId, redirectUri, refreshToken, options) {
+  refreshToken: function(clientId, redirectUri, refreshToken, options) {
     // Create a request
     var request = {
       auth: Auth.App,
       method: 'POST',
       url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
       data: {
-        grant_type: grantType,
+        grant_type: 'refresh_token',
         client_id: clientId,
         redirect_uri: redirectUri,
         refresh_token: refreshToken
@@ -404,11 +457,10 @@ var MIC = {
         options
       );
     }).then(function(token) {
-      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
-        return token;
-      });
-    }).then(function(token) {
-      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
+      // Extend the token
+      token.client_id = clientId;
+      token.redirect_uri = redirectUri;
+      return token;
     });
   },
 
@@ -529,6 +581,11 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    */
   login: function(authorizationGrant, redirectUri, options) {
     var promise = MIC.login(authorizationGrant, redirectUri, options);
+    return wrapCallbacks(promise, options);
+  },
+
+  refresh: function(options) {
+    var promise = MIC.refresh(options);
     return wrapCallbacks(promise, options);
   }
 };
