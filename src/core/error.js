@@ -470,7 +470,7 @@ Kinvey.Error.SYNC_ERROR = 'SyncError';
  * @constant
  * @default
  */
-Kinvey.Error.INVALID_AUTHORIZATION_GRANT = 'InvalidAuthorizationGrant';
+Kinvey.Error.MIC_ERROR = 'MIC_ERROR';
 
 // All client-side errors are fully declared below.
 var ClientError = {};
@@ -607,9 +607,16 @@ ClientError[Kinvey.Error.SYNC_ERROR] = {
   debug       : ''
 };
 
-ClientError[Kinvey.Error.INVALID_AUTHORIZATION_GRANT] = {
-  name: Kinvey.Error.INVALID_AUTHORIZATION_GRANT,
-  description: 'The authorization grant is invalid.',
+/**
+ * MIC error.
+ *
+ * @constant
+ * @type {Object}
+ * @default
+ */
+ClientError[Kinvey.Error.MIC_ERROR] = {
+  name: Kinvey.Error.MIC_ERROR,
+  description: 'Unable to authorize using Mobile Identity Connect.',
   debug: ''
 };
 
