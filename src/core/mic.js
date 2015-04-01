@@ -79,22 +79,29 @@ var MIC = {
     var promise;
     var clientId = Kinvey.appKey;
 
+    // Set defaults for options
+    options = options || {};
+    options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
+
     // Should this be able to be called with an existing active user? Should it throw an error instead?
 
     // Step 1: Check authorization grant type
     if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
       // Step 2: Request a code
-      options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
-      promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
+      promise = MIC.requestCode(clientId, redirectUri, options);
     }
     else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
       // Step 2a: Request a temp login url
       promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
         // Step 2b: Request a code
-        return MIC.requestCodeWithUrl(url, clientId, redirectUri, options);
+        options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
+          '&response_type=code&username=' + encodeURIComponent(options.username) +
+          '&password=' + encodeURIComponent(options.password);
+        return MIC.requestCode(clientId, redirectUri, options);
       });
     }
     else {
+      // Reject with error because of invalid authorization grant
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'The authorization grant ' + authorizationGrant + ' is unrecognized. Please provide one of the ' +
                'following authorization grants: ' + Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
@@ -204,15 +211,55 @@ var MIC = {
    * @param  {Object} options     Options.
    * @return {Promise}            Code.
    */
-  requestCodeWithPopup: function(clientId, redirectUri, options) {
+  requestCode: function(clientId, redirectUri, options) {
+    // // Detect if running in cordova enviroment
+    // var runningInCordova;
+    // document.addEventListener('deviceready', function () {
+    //     runningInCordova = true;
+    // }, false);
+
     // Popup blockers only allow opening a dialog at this moment.
+    var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
+              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var blank = 'about:blank';
     var popup = root.open(blank, 'KinveyMIC');
-    popup.location = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
-                    '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
+
+    // Set the popup location
+    options = options || {};
+    popup.location = options.url || url;
 
     // Obtain the tokens from the login dialog.
     var deferred = Kinvey.Defer.deferred();
+
+    // // Inappbrowser load start handler: Used when running in Cordova only
+    // var popupLoadStartHandler = function(event) {
+    //   var host = false;
+    //   try {
+    //     host = blank !== popup.location.toString();
+    //   }
+    //   catch(e) { }
+
+    //   // Continue if the popup was redirected back to our domain.
+    //   if (host) {
+    //     var timeout = 600 - (new Date().getTime() - startTime);
+    //     setTimeout(function () {
+    //       popup.close();
+    //     }, timeout > 0 ? timeout : 0);
+    //   }
+    // };
+
+    // // Inappbrowser exit handler: Used when running in Cordova only
+    // var popupExitHandler = function() {
+    //     // Handle the situation where the user closes the login window manually before completing the login process
+    //     error = clientError(Kinvey.Error.MIC_ERROR, {
+    //       debug: 'The popup was closed unexpectedly.'
+    //     });
+    //     deferred.reject(error);
+    //     popup.removeEventListener('loadstop', popupLoadStartHandler);
+    //     popup.removeEventListener('exit', popupExitHandler);
+    //     popup = null;
+    //     console.log('done removing listeners');
+    // };
 
     // Popup management.
     var elapsed = 0; // Time elapsed since opening the popup.
@@ -274,7 +321,7 @@ var MIC = {
           var tokens = MIC.tokenize(tokenString);
           deferred.resolve(tokens.code);
 
-          // Close the popup.
+          // Close the popup
           popup.close();
         }
       }
@@ -285,57 +332,6 @@ var MIC = {
 
     // Return the promise.
     return deferred.promise;
-  },
-
-  /**
-   * Request a code by sending a request to the provided url.
-   *
-   * @param  {string} url          Url.
-   * @param  {string} clientId     Client Id.
-   * @param  {string} redirectUri  Redirect Uri.
-   * @param  {Object} options      Options.
-   * @return {Promise}             Code.
-   */
-  requestCodeWithUrl: function(url, clientId, redirectUri, options) {
-    url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
-          '&response_type=code&username=' + encodeURIComponent(options.username) +
-          '&password=' + encodeURIComponent(options.password);
-
-
-      //     data: {
-      //   client_id: clientId,
-      //   redirect_uri: redirectUri,
-      //   response_type: responseType,
-      //   username: options.username,
-      //   password: options.password
-      // },
-      //
-    // Create a request
-    var request = {
-      method: 'GET',
-      url: url,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-        'X-Kinvey-API-Version': Kinvey.API_VERSION,
-        'X-Kinvey-Device-Information': deviceInformation()
-      }
-    };
-
-    // Debug.
-    if(KINVEY_DEBUG) {
-      request.headers['X-Kinvey-Trace-Request'] = 'true';
-      request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
-    }
-
-    // Send request
-    return Kinvey.Persistence.Net.request(
-      request.method,
-      request.url,
-      request.data,
-      request.headers,
-      options
-    );
   },
 
   /**
