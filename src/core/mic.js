@@ -654,7 +654,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}                            Authorized user.
    */
   loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
-    return Kinvey.User.MIC.login(Kinvey.User.MIC.authorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
+    return Kinvey.User.MIC.login(Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
   },
 
   /**
