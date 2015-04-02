@@ -143,7 +143,7 @@ var MIC = {
     }).then(function(token) {
       // Step 5: Connet the token with the user. Create a new user by default if one does not exist.
       options.create = options.create || true;
-      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
+      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     });
 
     return promise;
@@ -178,7 +178,7 @@ var MIC = {
       });
     }).then(function(token) {
       // Step 4: Connect the token with the user
-      return MIC.connect(Kinvey.getActiveUser(), MIC.AUTH_PROVIDER, token.access_token, options);
+      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     });
   },
 
