@@ -75,7 +75,7 @@ var MIC = {
    * @params {string}   [options.username]        Username for the user to be authorized.
    * @params {string}   [options.password]        Password for the user to be authorized.
    * @param  {boolean}  [options.create=true]     Create a new user if no user exists.
-   * @param  {number}   [options.timeout=300000]  How long to wait for a successfull authorization. Defaults to 5 minutes.
+   * @param  {number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
    * @return {Promise}                            Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
@@ -152,8 +152,8 @@ var MIC = {
   /**
    * Refresh a MIC token.
    *
-   * @param  {Object} options Options.
-   * @return {Promise}        User.
+   * @param  {Object}   [options]   Options.
+   * @return {Promise}              Authorized user.
    */
   refresh: function(options) {
     var error;
@@ -165,6 +165,7 @@ var MIC = {
         return MIC.refreshToken(token.client_id, token.redirect_uri, token.refresh_token, options);
       }
 
+      // Throw error to reject promise for missing token.
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'Unable to refresh token because there is not a saved token to refresh. Try to ' +
                'login first by calling Kinvey.User.MIC.login().'
@@ -486,7 +487,6 @@ var MIC = {
    * Links a MIC token to the provided (if any) Kinvey user.
    *
    * @param {Object} [user] The associated user.
-   * @param {string} provider The provider.
    * @param {Options} [options] Options.
    * @param {boolean} [options.create=true] Create a new user if no user with
    *          the provided social identity exists.
@@ -513,7 +513,7 @@ var MIC = {
       }
 
       if (activeUser._id === user._id) {
-        options._provider = provider; // Force tokens to be updated.
+        options._provider = MIC.AUTH_PROVIDER; // Force tokens to be updated.
         return Kinvey.User.update(user, options);
       }
     }
@@ -540,7 +540,6 @@ var MIC = {
    * Removes a MIC token from the provided Kinvey user.
    *
    * @param {Object} [user] The user.
-   * @param {string} provider The provider.
    * @param {Options} [options] Options.
    * @returns {Promise} The user.
    */
@@ -630,12 +629,12 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {string}                             redirectUri                   Where to redirect to after a succesful login. This should be the same value as setup
    *                                                                            in the Kinvey Console for your applicaiton.
    * @param  {Object}                             [options]                     Options.
-   * @params {string}                             [options.username]            Username for the user to be authorized. Only required with
-   *                                                                            Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI.
-   * @params {string}                             [options.password]            Password for the user to be authorized. Only required with
-   *                                                                            Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI.
+   * @param  {string}                             [options.username]            Username for the user to be authorized. Only required with
+   *                                                                            AuthorizationGrant.AuthorizationCodeAPI.
+   * @param  {string}                             [options.password]            Password for the user to be authorized. Only required with
+   *                                                                            AuthorizationGrant.AuthorizationCodeAPI.
    * @param  {boolean}                            [options.create=true]         Create a new user if no user exists.
-   * @param  {number}                             [options.timeout=300000]      How long to wait for a successfull authorization. Defaults to 5 minutes.
+   * @param  {number}                             [options.timeout=300000]      How long to wait for a successful authorization. Defaults to 5 minutes.
    * @return {Promise}                                                          Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
@@ -645,13 +644,14 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
   },
 
   /**
-   * Authorize a user with Mobile Identity Connect (MIC) using a Login Page.
+   * Authorize a user with Mobile Identity Connect (MIC) using a login page.
    *
-   * @param  {string}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
-   *                                            in the Kinvey Console for your applicaiton.
-   * @param  {Object}   [options]               Options.
-   * @param  {boolean}  [options.create=true]   Create a new user if no user exists.
-   * @return {Promise}                          Authorized user.
+   * @param  {string}   redirectUri               Where to redirect to after a succesful login. This should be the same value as setup
+   *                                              in the Kinvey Console for your applicaiton.
+   * @param  {Object}   [options]                 Options.
+   * @param  {boolean}  [options.create=true]     Create a new user if no user exists.
+   * @param  {number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
+   * @return {Promise}                            Authorized user.
    */
   loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
     return Kinvey.User.MIC.login(Kinvey.User.MIC.authorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
@@ -663,8 +663,8 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {string}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
    *                                            in the Kinvey Console for your applicaiton.
    * @param  {Object}   options                 Options.
-   * @params {string}   options.username        Username for the user to be authorized.
-   * @params {string}   options.password        Password for the user to be authorized.
+   * @param  {string}   options.username        Username for the user to be authorized.
+   * @param  {string}   options.password        Password for the user to be authorized.
    * @param  {boolean}  [options.create=true]   Create a new user if no user exists.
    * @return {Promise}                          Authorized user.
    */
