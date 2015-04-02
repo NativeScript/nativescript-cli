@@ -245,7 +245,7 @@ var MIC = {
     var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
               '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var blank = 'about:blank';
-    var popup = root.open(blank, 'KinveyMIC');
+    var popup = root.open(blank, '_blank', 'menubar=no,toolbar=no,location=no');
 
     // Set the popup location
     options = options || {};
