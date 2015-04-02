@@ -235,123 +235,135 @@ var MIC = {
    * @return {Promise}            Code.
    */
   requestCode: function(clientId, redirectUri, options) {
-    // // Detect if running in cordova enviroment
-    // var runningInCordova;
-    // document.addEventListener('deviceready', function () {
-    //     runningInCordova = true;
-    // }, false);
-
-    // Popup blockers only allow opening a dialog at this moment.
-    var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
-              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
-    var blank = 'about:blank';
-    var popup = root.open(blank, '_blank', 'menubar=no,toolbar=no,location=no');
-
-    // Set the popup location
-    options = options || {};
-    popup.location = options.url || url;
-
-    // Obtain the tokens from the login dialog.
+    var error;
     var deferred = Kinvey.Defer.deferred();
+    var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
+             '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
+    var popup;
+    options = options || {};
 
-    // // Inappbrowser load start handler: Used when running in Cordova only
-    // var popupLoadStartHandler = function(event) {
-    //   var host = false;
-    //   try {
-    //     host = blank !== popup.location.toString();
-    //   }
-    //   catch(e) { }
+    // Load start handler
+    var loadStartHandler = function(evt) {
+      // Firefox will throw an exception when `popup.location.host` has
+      // a different origin.
+      var redirected = false;
+      try {
+        redirected = -1 !== evt.url.indexOf(redirectUri);
+      }
+      catch(e) { }
 
-    //   // Continue if the popup was redirected back to our domain.
-    //   if (host) {
-    //     var timeout = 600 - (new Date().getTime() - startTime);
-    //     setTimeout(function () {
-    //       popup.close();
-    //     }, timeout > 0 ? timeout : 0);
-    //   }
-    // };
+      // Continue if the popup was redirected.
+      if (redirected) {
+        // Extract tokens from the url.
+        var location = popup.location;
+        var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
+        var tokens = MIC.tokenize(tokenString);
+        deferred.resolve(tokens.code);
 
-    // // Inappbrowser exit handler: Used when running in Cordova only
-    // var popupExitHandler = function() {
-    //     // Handle the situation where the user closes the login window manually before completing the login process
-    //     error = clientError(Kinvey.Error.MIC_ERROR, {
-    //       debug: 'The popup was closed unexpectedly.'
-    //     });
-    //     deferred.reject(error);
-    //     popup.removeEventListener('loadstop', popupLoadStartHandler);
-    //     popup.removeEventListener('exit', popupExitHandler);
-    //     popup = null;
-    //     console.log('done removing listeners');
-    // };
+        // Close the popup
+        popup.close();
+      }
+    };
 
-    // Popup management.
-    var elapsed = 0; // Time elapsed since opening the popup.
-    var interval = 100; // ms.
-    var timer = root.setInterval(function() {
-      var error;
+    // Inappbrowser exit handler: Used when running in Cordova only
+    var exitHandler = function() {
+      popup.removeEventListener('loadstop', loadStartHandler);
+      popup.removeEventListener('exit', exitHandler);
+    };
 
-      // The popup was blocked.
+    if (MIC.isPhoneGap()) {
+      if (null == root.cordova.InAppBrowser) {
+        error = new Kinvey.Error('Please install the InAppBrowser plugin by following the guide at ' +
+                                 'https://github.com/apache/cordova-plugin-inappbrowser. This plugin is required ' +
+                                 'to use Mobile Identity Connect (MIC) with a Cordova/PhoneGap application.');
+        deferred.reject(error);
+      }
+
+      // Open the popup
+      popup = root.cordova.InAppBrowser.open(options.url || url, '_blank', 'toolbar=yes,location=yes');
+
       if (null == popup) {
-        root.clearTimeout(timer); // Stop listening.
-
         // Return the response.
         error = clientError(Kinvey.Error.MIC_ERROR, {
           debug: 'The popup was blocked.'
         });
         deferred.reject(error);
       }
-
-      // The popup closed unexpectedly.
-      else if (popup.closed) {
-        root.clearTimeout(timer); // Stop listening.
-
-        // Return the response.
-        error = clientError(Kinvey.Error.MIC_ERROR, {
-          debug: 'The popup was closed unexpectedly.'
-        });
-        deferred.reject(error);
-      }
-
-      // The user waited too long to reply to the authorization request.
-      else if (options.timeout && elapsed > options.timeout) {
-        root.clearTimeout(timer); // Stop listening.
-        popup.close();
-
-        // Return the response.
-        error = clientError(Kinvey.Error.MIC_ERROR, {
-          debug: 'The authorization request timed out.'
-        });
-        deferred.reject(error);
-      }
-
-      // The popup is still active, check its location.
       else {
-        // Firefox will throw an exception when `popup.location.host` has
-        // a different origin.
-        var host = false;
-        try {
-          host = blank !== popup.location.toString();
-        }
-        catch(e) { }
+        popup.addEventListener('loadstart', loadStartHandler);
+        popup.addEventListener('exit', exitHandler);
+      }
+    }
+    else {
+      // Open the popup
+      popup = root.open(options.url || url, '_blank', 'toolbar=no,location=no');
 
-        // Continue if the popup was redirected back to our domain.
-        if (host) {
+      // Popup management.
+      var elapsed = 0; // Time elapsed since opening the popup.
+      var interval = 100; // ms.
+      var timer = root.setInterval(function() {
+        // The popup was blocked.
+        if (null == popup) {
           root.clearTimeout(timer); // Stop listening.
 
-          // Extract tokens from the url.
-          var location = popup.location;
-          var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
-          var tokens = MIC.tokenize(tokenString);
-          deferred.resolve(tokens.code);
-
-          // Close the popup
-          popup.close();
+          // Return the response.
+          error = clientError(Kinvey.Error.MIC_ERROR, {
+            debug: 'The popup was blocked.'
+          });
+          deferred.reject(error);
         }
-      }
 
-      // Update elapsed time.
-      elapsed += interval;
-    }, interval);
+        // The popup closed unexpectedly.
+        else if (popup.closed) {
+          root.clearTimeout(timer); // Stop listening.
+
+          // Return the response.
+          error = clientError(Kinvey.Error.MIC_ERROR, {
+            debug: 'The popup was closed unexpectedly.'
+          });
+          deferred.reject(error);
+        }
+        // The user waited too long to reply to the authorization request.
+        else if (options.timeout && elapsed > options.timeout) {
+          root.clearTimeout(timer); // Stop listening.
+          popup.close();
+
+          // Return the response.
+          error = clientError(Kinvey.Error.MIC_ERROR, {
+            debug: 'The authorization request timed out.'
+          });
+          deferred.reject(error);
+        }
+
+        // The popup is still active, check its location.
+        else {
+          // Firefox will throw an exception when `popup.location.host` has
+          // a different origin.
+          var redirected = false;
+          try {
+            redirected = -1 !== popup.location.href.indexOf(redirectUri);
+          }
+          catch(e) { }
+
+          // Continue if the popup was redirected.
+          if (redirected) {
+            root.clearTimeout(timer);
+
+            // Extract tokens from the url.
+            var location = popup.location;
+            var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
+            var tokens = MIC.tokenize(tokenString);
+            deferred.resolve(tokens.code);
+
+            // Close the popup
+            popup.close();
+          }
+        }
+
+        // Update elapsed time.
+        elapsed += interval;
+      }, interval);
+    }
 
     // Return the promise.
     return deferred.promise;
@@ -601,6 +613,10 @@ var MIC = {
       }
     }
     return str.join('&');
+  },
+
+  isPhoneGap: function() {
+    return ('undefined' !== typeof root.cordova && 'undefined' !== typeof root.device);
   }
 };
 
