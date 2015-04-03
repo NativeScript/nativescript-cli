@@ -177,6 +177,10 @@ var MIC = {
     }).then(function(token) {
       // Step 4: Connect the token with the user
       return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
+    }, function(err) {
+      return Storage.destroy(MIC.TOKEN_STORAGE_KEY).then(function() {
+        throw err;
+      });
     });
   },
 
@@ -619,6 +623,10 @@ var MIC = {
 
   isPhoneGap: function() {
     return ('undefined' !== typeof root.cordova && 'undefined' !== typeof root.device);
+  },
+
+  getToken: function() {
+    return Storage.get(MIC.TOKEN_STORAGE_KEY);
   }
 };
 
@@ -688,18 +696,6 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    */
   loginWithAuthorizationCodeAPI: function(redirectUri, options) {
     return Kinvey.User.MIC.login(Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
-  },
-
-  /**
-   * Reauthorize a user with Mobile Identity Connect (MIC).
-   *
-   * @param  {Object}   [options]   Options.
-   * @return {Promise}              Authorized user.
-   */
-  refresh: function(options) {
-    options = options || {};
-    var promise = MIC.refresh(options);
-    return wrapCallbacks(promise, options);
   }
 };
 
