@@ -132,7 +132,7 @@ var MIC = {
       return Kinvey.Defer.reject(error);
     }
 
-    promise.then(function(code) {
+    return promise.then(function(code) {
       // Step 3: Request a token
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
@@ -145,8 +145,6 @@ var MIC = {
       options.create = options.create || true;
       return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     });
-
-    return promise;
   },
 
   /**
