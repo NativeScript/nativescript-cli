@@ -240,6 +240,7 @@ var MIC = {
     var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var popup;
+    var popupManuallyClosed = false;
     options = options || {};
 
     // Load start handler
@@ -255,32 +256,35 @@ var MIC = {
       // Continue if the popup was redirected.
       if (redirected) {
         // Extract tokens from the url.
-        var location = popup.location;
-        var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
+        var location = evt.url;
+        var tokenString = location.split('?')[1];
         var tokens = MIC.tokenize(tokenString);
         deferred.resolve(tokens.code);
 
         // Close the popup
+        popupManuallyClosed = true;
         popup.close();
       }
     };
 
     // Inappbrowser exit handler: Used when running in Cordova only
     var exitHandler = function() {
+      if (!popupManuallyClosed) {
+        // Return the response.
+        error = clientError(Kinvey.Error.MIC_ERROR, {
+          debug: 'The popup was closed unexpectedly.'
+        });
+        deferred.reject(error);
+      }
+
+      // Remove event listeners
       popup.removeEventListener('loadstop', loadStartHandler);
       popup.removeEventListener('exit', exitHandler);
     };
 
     if (MIC.isPhoneGap()) {
-      if (null == root.cordova.InAppBrowser) {
-        error = new Kinvey.Error('Please install the InAppBrowser plugin by following the guide at ' +
-                                 'https://github.com/apache/cordova-plugin-inappbrowser. This plugin is required ' +
-                                 'to use Mobile Identity Connect (MIC) with a Cordova/PhoneGap application.');
-        deferred.reject(error);
-      }
-
       // Open the popup
-      popup = root.cordova.InAppBrowser.open(options.url || url, '_blank', 'toolbar=yes,location=yes');
+      popup = root.open(options.url || url, '_blank', 'location=yes');
 
       if (null == popup) {
         // Return the response.
