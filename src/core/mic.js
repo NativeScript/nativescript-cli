@@ -141,7 +141,7 @@ var MIC = {
         return token;
       });
     }).then(function(token) {
-      // Step 5: Connet the token with the user. Create a new user by default if one does not exist.
+      // Step 5: Connect the token with the user. Create a new user by default if one does not exist.
       options.create = options.create || true;
       return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     });
