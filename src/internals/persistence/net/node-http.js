@@ -108,7 +108,7 @@ var NodeHttp = {
 
         // Success implicates 2xx (Successful), or 304 (Not Modified).
         var status = response.statusCode;
-        if(2 === parseInt(status / 100, 10) || 304 === status) {
+        if(2 === parseInt(status / 100, 10) || 304 === response.statusCode) {
           // Unless `options.file`, convert the response to a string.
           if(!options.file) {
             responseData = responseData.toString() || null;
@@ -116,29 +116,7 @@ var NodeHttp = {
           deferred.resolve(responseData);
         }
         else {// Failure.
-          var promise;
-          var originalRequest = options._originalRequest;
-          options._originalRequest = null;
-
-          if (options.attemptMICRefresh && null != originalRequest) {
-            // Try and refresh MIC access token
-            promise = MIC.refresh(options);
-          }
-          else {
-            // Go ahead an just reject
-            promise = Kinvey.Defer.reject();
-          }
-
-          promise.then(function() {
-            // Resend original request
-            Kinvey.Persistence.Net._request(originalRequest, options).then(function(response) {
-              deferred.resolve(response);
-            }, function(err) {
-              deferred.reject(err);
-            });
-          }, function() {
-            deferred.reject(responseData.toString() || null);
-          });
+          deferred.reject(responseData.toString() || null);
         }
       });
     });

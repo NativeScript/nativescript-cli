@@ -85,7 +85,6 @@ var AngularHTTP = {
       url     : url
     }).then(function(response) {
       var _response = response;
-      var status = response.status;
 
       // Debug.
       if(KINVEY_DEBUG) {
@@ -113,7 +112,7 @@ var AngularHTTP = {
 
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 204 !== status) {
+      if (!options.file && response != null && 204 !== _response.status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
@@ -141,26 +140,8 @@ var AngularHTTP = {
         log('The network request failed.', response);
       }
 
-      var promise;
-      var originalRequest = options._originalRequest;
-      options._originalRequest = null;
-
-      if (options.attemptMICRefresh && null != originalRequest) {
-        // Try and refresh MIC access token
-        promise = MIC.refresh(options);
-      }
-      else {
-        // Go ahead an just reject
-        promise = Kinvey.Defer.reject();
-      }
-
-      return promise.then(function() {
-        // Resend original request
-        return Kinvey.Persistence.Net._request(originalRequest, options);
-      }, function() {
-        // Return the response.
-        return $q.reject(response.data || null);
-      });
+      // Return the response.
+      return $q.reject(response.data || null);
     });
   }
 };

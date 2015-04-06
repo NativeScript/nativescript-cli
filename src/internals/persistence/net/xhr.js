@@ -157,7 +157,10 @@ var Xhr = {
           else if(null != root.Blob && response instanceof root.Blob) {
             var reader = new root.FileReader();
             reader.onload = function(event) {
-              deferred.reject(event.target.result);
+              deferred.reject({
+                data: event.target.result,
+                status: request.status
+              });
             };
             reader.readAsText(response);
           }

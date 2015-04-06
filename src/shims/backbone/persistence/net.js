@@ -77,7 +77,7 @@ var BackboneAjax = {
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status   = request.status;
-      if(2 === parseInt(status / 100, 10) || 304 === status) {
+      if(2 === parseInt(status / 100, 10) || 304 === request.status) {
         // If `options.file`, convert the response to `Blob` object.
         var response = request.responseText;
         if(options.file && null != response && null != root.ArrayBuffer) {
@@ -98,7 +98,7 @@ var BackboneAjax = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null && 204 !== status) {
+        if (!options.file && response != null && 204 !== request.status) {
           var responseContentType = request.getResponseHeader('Content-Type') || undefined;
           var error;
 
@@ -122,29 +122,7 @@ var BackboneAjax = {
         deferred.resolve(response || null);
       }
       else {// Failure.
-        var promise;
-        var originalRequest = options._originalRequest;
-        options._originalRequest = null;
-
-        if (options.attemptMICRefresh && null != originalRequest) {
-          // Try and refresh MIC access token
-          promise = MIC.refresh(options);
-        }
-        else {
-          // Go ahead an just reject
-          promise = Kinvey.Defer.reject();
-        }
-
-        promise.then(function() {
-          // Resend original request
-          Kinvey.Persistence.Net._request(originalRequest, options).then(function(response) {
-            deferred.resolve(response);
-          }, function(err) {
-            deferred.reject(err);
-          });
-        }, function() {
-          deferred.reject(request.responseText || textStatus || null);
-        });
+        deferred.reject(request.responseText || textStatus || null);
       }
     };
 
