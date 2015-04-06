@@ -66,15 +66,9 @@ var MIC = {
    */
   AUTH_TIMEOUT: (1000 * 60 * 5),
 
-  /**
-   * Enum for authorization grant values.
-   *
-   * @readOnly
-   * @enum {string}
-   */
   AuthorizationGrant: {
-    AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage', // Uses Authentication Flow #1: Authentication Grant
-    AuthorizationCodeAPI: 'AuthorizationCodeAPI' // Uses Authentication Flow #2: Authentication Grant without a login page
+    AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
+    AuthorizationCodeAPI: 'AuthorizationCodeAPI'
   },
 
   /**
@@ -650,11 +644,11 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
   /**
    * Authorize a user with Mobile Identity Connect (MIC) using a login page.
    *
-   * @param  {string}   redirectUri               Where to redirect to after a succesful login. This should be the same value as setup
+   * @param  {String}   redirectUri               Where to redirect to after a succesful login. This should be the same value as setup
    *                                              in the Kinvey Console for your applicaiton.
    * @param  {Object}   [options]                 Options.
-   * @param  {boolean}  [options.create=true]     Create a new user if no user exists.
-   * @param  {number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
+   * @param  {Boolean}  [options.create=true]     Create a new user if no user exists.
+   * @param  {Number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
    * @return {Promise}                            Authorized user.
    */
   loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
@@ -664,12 +658,12 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
   /**
    * Authorize a user with Mobile Identity Connect (MIC) using a provided username and password.
    *
-   * @param  {string}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
+   * @param  {String}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
    *                                            in the Kinvey Console for your applicaiton.
    * @param  {Object}   options                 Options.
-   * @param  {string}   options.username        Username for the user to be authorized.
-   * @param  {string}   options.password        Password for the user to be authorized.
-   * @param  {boolean}  [options.create=true]   Create a new user if no user exists.
+   * @param  {String}   options.username        Username for the user to be authorized.
+   * @param  {String}   options.password        Password for the user to be authorized.
+   * @param  {Boolean}  [options.create=true]   Create a new user if no user exists.
    * @return {Promise}                          Authorized user.
    */
   loginWithAuthorizationCodeAPI: function(redirectUri, options) {
