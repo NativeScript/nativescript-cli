@@ -53,6 +53,7 @@ var AngularHTTP = {
     body    = body    || {};
     headers = headers || {};
     options = options || {};
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Append header for compatibility with Android 2.2, 2.3.3, and 3.2.
 // http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
@@ -140,8 +141,26 @@ var AngularHTTP = {
         log('The network request failed.', response);
       }
 
-      // Return the response.
-      return $q.reject(response.data || null);
+      var promise;
+      var originalRequest = options._originalRequest;
+      options._originalRequest = null;
+
+      if (options.attemptMICRefresh && null != originalRequest) {
+        // Try and refresh MIC access token
+        promise = MIC.refresh(options);
+      }
+      else {
+        // Go ahead an just reject
+        promise = Kinvey.Defer.reject();
+      }
+
+      return promise.then(function() {
+        // Resend original request
+        return Kinvey.Persistence.Net._request(originalRequest, options);
+      }, function() {
+        // Return the response.
+        return $q.reject(response.data || null);
+      });
     });
   }
 };

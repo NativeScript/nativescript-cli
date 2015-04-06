@@ -38,6 +38,7 @@ var TiHttp = {
     // Cast arguments.
     headers = headers || {};
     options = options || {};
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
@@ -138,7 +139,29 @@ var TiHttp = {
         deferred.resolve(response || null);
       }
       else { // Failure.
-        deferred.reject(this.responseText || e.type || null);
+        var promise;
+        var originalRequest = options._originalRequest;
+        options._originalRequest = null;
+
+        if (options.attemptMICRefresh && null != originalRequest) {
+          // Try and refresh MIC access token
+          promise = MIC.refresh(options);
+        }
+        else {
+          // Go ahead an just reject
+          promise = Kinvey.Defer.reject();
+        }
+
+        promise.then(function() {
+          // Resend original request
+          Kinvey.Persistence.Net._request(originalRequest, options).then(function(response) {
+            deferred.resolve(response);
+          }, function(err) {
+            deferred.reject(err);
+          });
+        }, function() {
+          deferred.reject(this.responseText || e.type || null);
+        });
       }
     };
 

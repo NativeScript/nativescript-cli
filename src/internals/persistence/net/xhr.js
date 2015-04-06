@@ -145,7 +145,7 @@ var Xhr = {
         var originalRequest = options._originalRequest;
         options._originalRequest = null;
 
-        if (options.attemptMICRefresh) {
+        if (options.attemptMICRefresh && null != originalRequest) {
           // Try and refresh MIC access token
           promise = MIC.refresh(options);
         }
