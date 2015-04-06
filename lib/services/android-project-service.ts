@@ -70,14 +70,14 @@ class AndroidProjectService implements IPlatformProjectService {
 			var versionNumber = _.last(newTarget.split("-"));
 			if(options.symlink) {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
 
 				this.symlinkDirectory("assets", projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
 			} else {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 				this.copy(projectRoot, frameworkDir, "assets libs", "-R").wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
 			}
 
 			if(newTarget) {
