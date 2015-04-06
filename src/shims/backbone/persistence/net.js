@@ -122,7 +122,23 @@ var BackboneAjax = {
         deferred.resolve(response || null);
       }
       else {// Failure.
-        deferred.reject(request.responseText || textStatus || null);
+        var promise;
+
+        if (401 === request.status) {
+          promise = MIC.refresh(options);
+        }
+        else {
+          promise = Kinvey.Defer.reject();
+        }
+
+        return promise.then(function() {
+          // Resend original request
+          return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+        }).then(function(response) {
+          deferred.resolve(response);
+        }, function() {
+          deferred.reject(request.responseText || textStatus || null);
+        });
       }
     };
 

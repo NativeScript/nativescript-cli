@@ -142,7 +142,11 @@ var MIC = {
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
       // Step 4: Save the token
-      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
+      return Storage.save(MIC.TOKEN_STORAGE_KEY, {
+        refresh_token: token.refresh_token,
+        client_id: token.client_id,
+        redirect_uri: token.redirect_uri
+      }).then(function() {
         return token;
       });
     }).then(function(token) {
@@ -172,20 +176,23 @@ var MIC = {
 
       // Throw error to reject promise for missing token.
       error = clientError(Kinvey.Error.MIC_ERROR, {
-        debug: 'Unable to refresh token because there is not a saved token to refresh. Try to ' +
-               'login first by calling Kinvey.User.MIC.login().'
+        debug: 'Unable to refresh because there is not a valid refresh token available.'
       });
       throw error;
     }).then(function(token) {
       // Step 3: Save the token
-      return Storage.save(MIC.TOKEN_STORAGE_KEY, token).then(function() {
+      return Storage.save(MIC.TOKEN_STORAGE_KEY, {
+        refresh_token: token.refresh_token,
+        client_id: token.client_id,
+        redirect_uri: token.redirect_uri
+      }).then(function() {
         return token;
       });
     }).then(function(token) {
       // Step 4: Connect the token with the user
       return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     }, function(err) {
-      return MIC.disconnect(Kinvey.getActiveUser(), options).then(function() {
+      return Storage.destroy(MIC.TOKEN_STORAGE_KEY).then(function() {
         throw err;
       });
     });

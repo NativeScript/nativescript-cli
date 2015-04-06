@@ -116,7 +116,23 @@ var NodeHttp = {
           deferred.resolve(responseData);
         }
         else {// Failure.
-          deferred.reject(responseData.toString() || null);
+          var promise;
+
+          if (401 === response.statusCode) {
+            promise = MIC.refresh(options);
+          }
+          else {
+            promise = Kinvey.Defer.reject();
+          }
+
+          promise.then(function() {
+            // Resend original request
+            return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+          }).then(function(response) {
+            deferred.resolve(response);
+          }, function() {
+            deferred.reject(responseData.toString() || null);
+          });
         }
       });
     });

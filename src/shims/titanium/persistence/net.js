@@ -139,7 +139,23 @@ var TiHttp = {
         deferred.resolve(response || null);
       }
       else { // Failure.
-        deferred.reject(this.responseText || e.type || null);
+        var promise;
+
+        if (401 === this.status) {
+          promise = MIC.refresh(options);
+        }
+        else {
+          promise = Kinvey.Defer.reject();
+        }
+
+        return promise.then(function() {
+          // Resend original request
+          return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+        }).then(function(response) {
+          deferred.resolve(response);
+        }, function() {
+          deferred.reject(this.responseText || e.type || null);
+        });
       }
     };
 

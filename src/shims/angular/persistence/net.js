@@ -135,13 +135,26 @@ var AngularHTTP = {
       // Return the response.
       return response || null;
     }, function(response) {
+      var promise;
+
       // Debug.
       if(KINVEY_DEBUG) {
         log('The network request failed.', response);
       }
 
-      // Return the response.
-      return $q.reject(response.data || null);
+      if (401 === response.status) {
+        promise = MIC.refresh(options);
+      }
+      else {
+        promise = Kinvey.Defer.reject();
+      }
+
+      return promise.then(function() {
+        // Resend original request
+        return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+      }, function() {
+        return Kinvey.Defer.reject(response.data || null);
+      });
     });
   }
 };
