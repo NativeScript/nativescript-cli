@@ -60,7 +60,6 @@ var Xhr = {
     body    = body    || null;
     headers = headers || {};
     options = options || {};
-    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
@@ -141,53 +140,31 @@ var Xhr = {
         deferred.resolve(responseData);
       }
       else {// Failure.
-        var promise;
-        var originalRequest = options._originalRequest;
-        options._originalRequest = null;
+        var type = null !== timer ? 'timeout' : event.type;
+        var response = 0 !== status ? responseData : type;
 
-        if (options.attemptMICRefresh && null != originalRequest) {
-          // Try and refresh MIC access token
-          promise = MIC.refresh(options);
-        }
-        else {
-          // Go ahead an just reject
-          promise = Kinvey.Defer.reject();
-        }
-
-        promise.then(function() {
-          // Resend original request
-          Kinvey.Persistence.Net._request(originalRequest, options).then(function(response) {
-            deferred.resolve(response);
-          }, function(err) {
-            deferred.reject(err);
-          });
-        }, function() {
-          var type = null !== timer ? 'timeout' : event.type;
-          var response = 0 !== status ? responseData : type;
-
-          // If `options.file`, parse the response to obtain the error.
-          if(options.file && 0 !== status) {
-            // Convert the binary response to a string.
-            if(null != root.ArrayBuffer && response instanceof root.ArrayBuffer) {
-              var buffer  = '';
-              var bufView = new root.Uint8Array(response);
-              for(var i = 0; i < response.byteLength; i += 1) {
-                buffer += String.fromCharCode(bufView[i]);
-              }
-              deferred.reject(buffer);
+        // If `options.file`, parse the response to obtain the error.
+        if(options.file && 0 !== status) {
+          // Convert the binary response to a string.
+          if(null != root.ArrayBuffer && response instanceof root.ArrayBuffer) {
+            var buffer  = '';
+            var bufView = new root.Uint8Array(response);
+            for(var i = 0; i < response.byteLength; i += 1) {
+              buffer += String.fromCharCode(bufView[i]);
             }
-            else if(null != root.Blob && response instanceof root.Blob) {
-              var reader = new root.FileReader();
-              reader.onload = function(event) {
-                deferred.reject(event.target.result);
-              };
-              reader.readAsText(response);
-            }
+            deferred.reject(buffer);
           }
-          else {// Return the error.
-            deferred.reject(response || type || null);
+          else if(null != root.Blob && response instanceof root.Blob) {
+            var reader = new root.FileReader();
+            reader.onload = function(event) {
+              deferred.reject(event.target.result);
+            };
+            reader.readAsText(response);
           }
-        });
+        }
+        else {// Return the error.
+          deferred.reject(response || type || null);
+        }
       }
     };
 

@@ -315,9 +315,6 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
 
     // Invoke the network layer.
     return promise.then(function() {
-      // Store the original request
-      options._originalRequest = request;
-
       // Send the request
       var response = Kinvey.Persistence.Net.request(
         request.method,

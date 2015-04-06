@@ -254,6 +254,8 @@ var MIC = {
 
     // InAppBrowser Load start handler: Used when running Cordova only
     var loadStartHandler = function(event) {
+      console.log(event);
+
       // Firefox will throw an exception when `popup.location.host` has
       // a different origin.
       var redirected = false;
@@ -265,8 +267,10 @@ var MIC = {
       // Continue if the popup was redirected.
       if (redirected) {
         // Extract the code
-        var code = (event.url).split('code=')[1];
-        deferred.resolve(code);
+        var queryString = '?' + event.url.split('?')[1];
+        console.log(queryString);
+        var params = MIC.parse(event.url);
+        deferred.resolve(params.code);
 
         // Close the popup
         popupProgramaticallyClosed = true;
@@ -361,8 +365,8 @@ var MIC = {
             root.clearTimeout(timer);
 
             // Extract the code
-            var code = (popup.location.href).split('code=')[1];
-            deferred.resolve(code);
+            var params = MIC.parse(popup.location.search);
+            deferred.resolve(params.code);
 
             // Close the popup
             popupProgramaticallyClosed = true;
@@ -591,21 +595,45 @@ var MIC = {
   },
 
   /**
-   * Tokenizes a string.
+   * Parse a query string and return an object.
    *
    * @example foo=bar&baz=qux -> { foo: "bar", baz: "qux" }
-   * @param {string} string The token string.
-   * @returns {Object} The tokens.
+   * @param {string} string The query string.
+   * @returns {Object} The query string params.
    */
-  tokenize: function(string) {
-    var tokens = {};
-    string.split('&').forEach(function(pair) {
-      var segments = pair.split('=', 2).map(root.decodeURIComponent);
-      if(segments[0]) {
-        tokens[segments[0]] = segments[1];
+  parse: function(str) {
+    if (typeof str !== 'string') {
+      return {};
+    }
+
+    str = str.trim().replace(/^(\?|#)/, '');
+
+    if (!str) {
+      return {};
+    }
+
+    return str.trim().split('&').reduce(function (ret, param) {
+      var parts = param.replace(/\+/g, ' ').split('=');
+      var key = parts[0];
+      var val = parts[1];
+
+      key = decodeURIComponent(key);
+      // missing `=` should be `null`:
+      // http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
+      val = val === undefined ? null : decodeURIComponent(val);
+
+      if (!ret.hasOwnProperty(key)) {
+        ret[key] = val;
       }
-    });
-    return tokens;
+      else if (Array.isArray(ret[key])) {
+        ret[key].push(val);
+      }
+      else {
+        ret[key] = [ret[key], val];
+      }
+
+      return ret;
+    }, {});
   },
 
   /**
