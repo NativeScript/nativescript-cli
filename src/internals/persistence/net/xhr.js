@@ -60,7 +60,7 @@ var Xhr = {
     body    = body    || null;
     headers = headers || {};
     options = options || {};
-    options.attemptMICRefresh = options.attemptMICRefresh || true;
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
@@ -142,6 +142,8 @@ var Xhr = {
       }
       else {// Failure.
         var promise;
+        var originalRequest = options._originalRequest;
+        options._originalRequest = null;
 
         if (options.attemptMICRefresh) {
           // Try and refresh MIC access token
@@ -154,13 +156,13 @@ var Xhr = {
 
         promise.then(function() {
           // Resend original request
-          Kinvey.Persistence.Net._request(options._originalRequest, options).then(function(response) {
+          Kinvey.Persistence.Net._request(originalRequest, options).then(function(response) {
             deferred.resolve(response);
-          }).catch(function(err) {
+          }, function(err) {
             deferred.reject(err);
           });
-        }).catch(function() {
-          var type     = null !== timer ? 'timeout' : event.type;
+        }, function() {
+          var type = null !== timer ? 'timeout' : event.type;
           var response = 0 !== status ? responseData : type;
 
           // If `options.file`, parse the response to obtain the error.

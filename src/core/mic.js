@@ -67,6 +67,17 @@ var MIC = {
   AUTH_TIMEOUT: (1000 * 60 * 5),
 
   /**
+   * Enum for authorization grant values.
+   *
+   * @readOnly
+   * @enum {string}
+   */
+  AuthorizationGrant: {
+    AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage', // Uses Authentication Flow #1: Authentication Grant
+    AuthorizationCodeAPI: 'AuthorizationCodeAPI' // Uses Authentication Flow #2: Authentication Grant without a login page
+  },
+
+  /**
    * Login with MIC.
    *
    * @param  {string}   authorizationGrant        Authorization Grant.
@@ -91,25 +102,25 @@ var MIC = {
     if (null != activeUser) {
       // Reject with error because of active user
       error = clientError(Kinvey.Error.MIC_ERROR, {
-        debug: 'A user is already logged in. To refresh a token used to authenticate a user, ' +
-               'try calling Kinvey.User.MIC.refresh(). Or your can logout the user and try logging ' +
-               'in again.'
+        debug: 'An active user is already logged in.'
       });
       return Kinvey.Defer.reject(error);
     }
     // Step 1: Check authorization grant type
-    else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+    else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
       // Step 2: Request a code
       promise = MIC.requestCode(clientId, redirectUri, options);
     }
-    else if (Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
+    else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
       if (null == options.username) {
-        error = new Kinvey.Error('A username must be provided in the options argument to login with MIC using this flow.');
+        error = new Kinvey.Error('A username must be provided in the options argument to login with MIC using the ' +
+                                 MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
         return Kinvey.Defer.reject(error);
       }
 
       if (null == options.password) {
-        error = new Kinvey.Error('A password must be provided in the options argument to login with MIC using this flow.');
+        error = new Kinvey.Error('A password must be provided in the options argument to login with MIC using the ' +
+                                 MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
         return Kinvey.Defer.reject(error);
       }
 
@@ -126,8 +137,8 @@ var MIC = {
       // Reject with error because of invalid authorization grant
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'The authorization grant ' + authorizationGrant + ' is unrecognized. Please provide one of the ' +
-               'following authorization grants: ' + Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
-               Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
+               'following authorization grants: ' + MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
+               MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
       });
       return Kinvey.Defer.reject(error);
     }
@@ -180,7 +191,7 @@ var MIC = {
       // Step 4: Connect the token with the user
       return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     }, function(err) {
-      return Storage.destroy(MIC.TOKEN_STORAGE_KEY).then(function() {
+      return MIC.disconnect(Kinvey.getActiveUser(), options).then(function() {
         throw err;
       });
     });
@@ -244,36 +255,34 @@ var MIC = {
     var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var popup;
-    var popupManuallyClosed = false;
+    var popupProgramaticallyClosed = false;
     options = options || {};
 
-    // Load start handler
-    var loadStartHandler = function(evt) {
+    // InAppBrowser Load start handler: Used when running Cordova only
+    var loadStartHandler = function(event) {
       // Firefox will throw an exception when `popup.location.host` has
       // a different origin.
       var redirected = false;
       try {
-        redirected = -1 !== evt.url.indexOf(redirectUri);
+        redirected = 0 === event.url.indexOf(redirectUri);
       }
       catch(e) { }
 
       // Continue if the popup was redirected.
       if (redirected) {
-        // Extract tokens from the url.
-        var location = evt.url;
-        var tokenString = location.split('?')[1];
-        var tokens = MIC.tokenize(tokenString);
-        deferred.resolve(tokens.code);
+        // Extract the code
+        var code = (event.url).split('code=')[1];
+        deferred.resolve(code);
 
         // Close the popup
-        popupManuallyClosed = true;
+        popupProgramaticallyClosed = true;
         popup.close();
       }
     };
 
-    // Inappbrowser exit handler: Used when running in Cordova only
+    // InAppBrowser exit handler: Used when running in Cordova only
     var exitHandler = function() {
-      if (!popupManuallyClosed) {
+      if (!popupProgramaticallyClosed) {
         // Return the response.
         error = clientError(Kinvey.Error.MIC_ERROR, {
           debug: 'The popup was closed unexpectedly.'
@@ -349,7 +358,7 @@ var MIC = {
           // a different origin.
           var redirected = false;
           try {
-            redirected = -1 !== popup.location.href.indexOf(redirectUri);
+            redirected = 0 === popup.location.href.indexOf(redirectUri);
           }
           catch(e) { }
 
@@ -357,13 +366,12 @@ var MIC = {
           if (redirected) {
             root.clearTimeout(timer);
 
-            // Extract tokens from the url.
-            var location = popup.location;
-            var tokenString = location.search.substring(1) + '&' + location.hash.substring(1);
-            var tokens = MIC.tokenize(tokenString);
-            deferred.resolve(tokens.code);
+            // Extract the code
+            var code = (popup.location.href).split('code=')[1];
+            deferred.resolve(code);
 
             // Close the popup
+            popupProgramaticallyClosed = true;
             popup.close();
           }
         }
@@ -575,18 +583,17 @@ var MIC = {
 
     // If the user exists, forward to `Kinvey.User.update`. Otherwise, resolve
     // immediately.
-    if(null == user._id) {
+    if (null == user._id) {
       promise = Kinvey.Defer.resolve(user);
     }
-
-    promise = Kinvey.User.update(user, options);
+    else {
+      promise = Kinvey.User.update(user, options);
+    }
 
     // Destroy the token
-    promise.then(function() {
+    return promise.then(function() {
       return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
     });
-
-    return wrapCallbacks(promise, options);
   },
 
   /**
@@ -623,12 +630,13 @@ var MIC = {
     return str.join('&');
   },
 
+  /**
+   * Return true or false if using Cordova/PhoneGap framework.
+   *
+   * @return {Boolean} Cordova/PhoneGap Framework
+   */
   isPhoneGap: function() {
     return ('undefined' !== typeof root.cordova && 'undefined' !== typeof root.device);
-  },
-
-  getToken: function() {
-    return Storage.get(MIC.TOKEN_STORAGE_KEY);
   }
 };
 
@@ -638,38 +646,6 @@ var MIC = {
  */
 Kinvey.User = Kinvey.User || {};
 Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
-
-  /**
-   * Enum for authorization grant values.
-   *
-   * @readOnly
-   * @enum {string}
-   */
-  AuthorizationGrant: {
-    AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage', // Uses Authentication Flow #1: Authentication Grant
-    AuthorizationCodeAPI: 'AuthorizationCodeAPI' // Uses Authentication Flow #2: Authentication Grant without a login page
-  },
-
-  /**
-   * Authorize a user with Mobile Identity Connect (MIC).
-   *
-   * @param  {Kinvey.User.MIC.AuthorizationGrant} authorizationGrant            Authorization grant.
-   * @param  {string}                             redirectUri                   Where to redirect to after a succesful login. This should be the same value as setup
-   *                                                                            in the Kinvey Console for your applicaiton.
-   * @param  {Object}                             [options]                     Options.
-   * @param  {string}                             [options.username]            Username for the user to be authorized. Only required with
-   *                                                                            AuthorizationGrant.AuthorizationCodeAPI.
-   * @param  {string}                             [options.password]            Password for the user to be authorized. Only required with
-   *                                                                            AuthorizationGrant.AuthorizationCodeAPI.
-   * @param  {boolean}                            [options.create=true]         Create a new user if no user exists.
-   * @param  {number}                             [options.timeout=300000]      How long to wait for a successful authorization. Defaults to 5 minutes.
-   * @return {Promise}                                                          Authorized user.
-   */
-  login: function(authorizationGrant, redirectUri, options) {
-    options = options || {};
-    var promise = MIC.login(authorizationGrant, redirectUri, options);
-    return wrapCallbacks(promise, options);
-  },
 
   /**
    * Authorize a user with Mobile Identity Connect (MIC) using a login page.
@@ -682,7 +658,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}                            Authorized user.
    */
   loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
-    return Kinvey.User.MIC.login(Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
+    return MIC.login(MIC.AuthorizationGrant.AuthorizationCodeLoginPage, redirectUri, options);
   },
 
   /**
@@ -697,7 +673,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}                          Authorized user.
    */
   loginWithAuthorizationCodeAPI: function(redirectUri, options) {
-    return Kinvey.User.MIC.login(Kinvey.User.MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
+    return MIC.login(MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
   }
 };
 
