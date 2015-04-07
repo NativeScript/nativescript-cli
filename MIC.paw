@@ -107,14 +107,14 @@
     </object>
     <object type="LMREQUEST" id="z107">
         <attribute name="uuid" type="string">E2154077-42F8-4465-86B5-76B806E0AF61</attribute>
-        <attribute name="url" type="string">https://auth.kinvey.com/oauth/authenticate/36c3e6dfed56431c99cbeb71c3d7fcb8</attribute>
+        <attribute name="url" type="string">https://auth.kinvey.com/oauth/authenticate/e9f33b69632b4712b801a3b596aa7c32</attribute>
         <attribute name="storecookies" type="bool">1</attribute>
         <attribute name="sendcookies" type="bool">1</attribute>
         <attribute name="redirectmethod" type="bool">0</attribute>
         <attribute name="redirectauthorization" type="bool">0</attribute>
         <attribute name="method" type="string">POST</attribute>
         <attribute name="followredirects" type="bool">0</attribute>
-        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["response_type","code",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
+        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["response_type","code",true],["username","mjs",true],["password","demo",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
         <attribute name="order" type="int64">1</attribute>
         <attribute name="name" type="string">Auth</attribute>
         <relationship name="parent" type="0/1" destination="LMREQUESTTREEITEM"></relationship>
@@ -153,12 +153,12 @@
         <attribute name="redirectauthorization" type="bool">0</attribute>
         <attribute name="method" type="string">POST</attribute>
         <attribute name="followredirects" type="bool">0</attribute>
-        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["grant_type","authorization_code",true],["code","a0b73f31e93a4276c23a0ff1b97b666eb68bf7bb  ",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
+        <attribute name="body" type="string">[{"data":{"keyValues":[["client_id","kid_WyYCSd34p",true],["redirect_uri","http:\\/\\/localhost:8778",true],["grant_type","authorization_code",true],["code","6a200590394ce16914024a43ee4238b4633cc0b4  ",true]]},"identifier":"com.luckymarmot.BodyFormKeyValueDynamicValue"}]</attribute>
         <attribute name="order" type="int64">2</attribute>
         <attribute name="name" type="string">Token</attribute>
         <relationship name="parent" type="0/1" destination="LMREQUESTTREEITEM"></relationship>
         <relationship name="children" type="0/0" destination="LMREQUESTTREEITEM"></relationship>
-        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z112 z102 z104"></relationship>
+        <relationship name="headers" type="0/0" destination="LMKEYVALUE" idrefs="z104 z112 z102"></relationship>
     </object>
     <object type="LMENVIRONMENT" id="z111">
         <attribute name="uuid" type="string">96DC11B6-93EB-4AFB-BB3D-437ACB6FB952</attribute>
