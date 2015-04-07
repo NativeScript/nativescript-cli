@@ -118,7 +118,7 @@ var MIC = {
         return Kinvey.Defer.reject(error);
       }
 
-      // Step 2a: Request a temp login url
+      // Step 2a: Request a temp login uri
       promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
         // Step 2b: Request a code
         options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
@@ -141,18 +141,17 @@ var MIC = {
       // Step 3: Request a token
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
-      // Step 4: Save the token
-      return Storage.save(MIC.TOKEN_STORAGE_KEY, {
-        refresh_token: token.refresh_token,
-        client_id: token.client_id,
-        redirect_uri: token.redirect_uri
-      }).then(function() {
-        return token;
-      });
-    }).then(function(token) {
-      // Step 5: Connect the token with the user. Create a new user by default if one does not exist.
+      // Step 4: Connect the token with the user. Create a new user by default if one does not exist.
       options.create = options.create || true;
-      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
+      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options).then(function(user) {
+        // Step 5: Save the token
+        return Storage.save(MIC.TOKEN_STORAGE_KEY, {
+          refresh_token: token.refresh_token,
+          redirect_uri: token.redirect_uri
+        }).then(function() {
+          return user;
+        });
+      });
     });
   },
 
@@ -180,17 +179,16 @@ var MIC = {
       });
       throw error;
     }).then(function(token) {
-      // Step 3: Save the token
-      return Storage.save(MIC.TOKEN_STORAGE_KEY, {
-        refresh_token: token.refresh_token,
-        client_id: token.client_id,
-        redirect_uri: token.redirect_uri
-      }).then(function() {
-        return token;
+      // Step 3: Connect the token with the user
+      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options).then(function(user) {
+        // Step 4: Save the token
+        return Storage.save(MIC.TOKEN_STORAGE_KEY, {
+          refresh_token: token.refresh_token,
+          redirect_uri: token.redirect_uri
+        }).then(function() {
+          return user;
+        });
       });
-    }).then(function(token) {
-      // Step 4: Connect the token with the user
-      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options);
     }, function(err) {
       return Storage.destroy(MIC.TOKEN_STORAGE_KEY).then(function() {
         throw err;
@@ -447,7 +445,6 @@ var MIC = {
       );
     }).then(function(token) {
       // Extend the token
-      token.client_id = clientId;
       token.redirect_uri = redirectUri;
       return token;
     });
@@ -510,7 +507,6 @@ var MIC = {
       );
     }).then(function(token) {
       // Extend the token
-      token.client_id = clientId;
       token.redirect_uri = redirectUri;
       return token;
     });
