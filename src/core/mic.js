@@ -149,7 +149,7 @@ var MIC = {
         // Step 5: Save the token
         return Storage.save(MIC.TOKEN_STORAGE_KEY, {
           refresh_token: token.refresh_token,
-          redirect_uri: token.redirect_uri
+          redirect_uri: redirectUri
         }).then(function() {
           return user;
         });
@@ -167,6 +167,7 @@ var MIC = {
     var error;
     var clientId = Kinvey.appKey;
     var activeUser = Kinvey.getActiveUser();
+    var redirectUri;
 
     // Set defaults for options
     options = options || {};
@@ -176,7 +177,8 @@ var MIC = {
     return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
       if (null != token) {
         // Step 2: Refresh the token
-        return MIC.refreshToken(clientId, token.redirect_uri, token.refresh_token, options);
+        redirectUri = token.redirect_uri;
+        return MIC.refreshToken(clientId, redirectUri, token.refresh_token, options);
       }
 
       // Throw error to reject promise for missing token.
@@ -190,7 +192,7 @@ var MIC = {
         // Step 4: Save the token
         return Storage.save(MIC.TOKEN_STORAGE_KEY, {
           refresh_token: token.refresh_token,
-          redirect_uri: token.redirect_uri
+          redirect_uri: redirectUri
         }).then(function() {
           return user;
         });
@@ -242,6 +244,10 @@ var MIC = {
       request.headers,
       options
     ).then(function(response) {
+      try {
+        response = JSON.parse(response);
+      } catch(e)  {}
+
       return response.temp_login_uri;
     });
   },
@@ -260,15 +266,14 @@ var MIC = {
     var url = MIC.AUTH_HOST_NAME + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var popup;
+    var tiWebView;
     var popupProgramaticallyClosed = false;
     options = options || {};
+    options.url = options.url || url;
 
-    // InAppBrowser Load start handler: Used when running Cordova only
-    var loadStartHandler = function(event) {
-      console.log(event);
-
-      // Firefox will throw an exception when `popup.location.host` has
-      // a different origin.
+    // Load handler: Used when running Cordova or Titanium
+    var loadHandler = function(event) {
+      // Check if url is location of redirect uri
       var redirected = false;
       try {
         redirected = 0 === event.url.indexOf(redirectUri);
@@ -279,18 +284,21 @@ var MIC = {
       if (redirected) {
         // Extract the code
         var queryString = '?' + event.url.split('?')[1];
-        console.log(queryString);
-        var params = MIC.parse(event.url);
+        var params = MIC.parse(queryString);
         deferred.resolve(params.code);
 
-        // Close the popup
-        popupProgramaticallyClosed = true;
-        popup.close();
+        // Animation popup open prevents closing sometimes so
+        // wait just a moment to close
+        setTimeout(function() {
+          // Close the popup
+          popupProgramaticallyClosed = true;
+          popup.close();
+        }, 200);
       }
     };
 
-    // InAppBrowser exit handler: Used when running in Cordova only
-    var exitHandler = function() {
+    // Close handler: Used when running Cordova or Titanium
+    var closeHandler = function() {
       if (!popupProgramaticallyClosed) {
         // Return the response.
         error = clientError(Kinvey.Error.MIC_ERROR, {
@@ -300,13 +308,20 @@ var MIC = {
       }
 
       // Remove event listeners
-      popup.removeEventListener('loadstop', loadStartHandler);
-      popup.removeEventListener('exit', exitHandler);
+      if (MIC.isPhoneGap()) {
+        popup.removeEventListener('loadstart', loadHandler);
+        popup.removeEventListener('exit', closeHandler);
+      }
+      else if (MIC.isTitanium()) {
+        tiWebView.removeEventListener('load', loadHandler);
+        tiWebView.removeEventListener('error', loadHandler);
+        popup.removeEventListener('close', closeHandler);
+      }
     };
 
     if (MIC.isPhoneGap()) {
       // Open the popup
-      popup = root.open(options.url || url, '_blank', 'location=yes');
+      popup = root.open(options.url, '_blank', 'location=yes');
 
       if (null == popup) {
         // Return the response.
@@ -316,13 +331,48 @@ var MIC = {
         deferred.reject(error);
       }
       else {
-        popup.addEventListener('loadstart', loadStartHandler);
-        popup.addEventListener('exit', exitHandler);
+        popup.addEventListener('loadstart', loadHandler);
+        popup.addEventListener('exit', closeHandler);
       }
+    }
+    else if (MIC.isTitanium()) {
+      // Create Titanium Web View UI
+      popup = Titanium.UI.createWindow({
+        backgroundColor: 'white',
+        barColor: '#000',
+        title: 'Kinvey - MIC',
+        modal: true
+      });
+      // var spinner = Titanium.UI.createActivityIndicator({
+      //   zIndex: 1,
+      //   height: 50,
+      //   width: 50,
+      //   hide: true,
+      //   style: Titanium.UI.iPhone.ActivityIndicatorStyle.DARK
+      // });
+      // var closeButton = Titanium.UI.createButton({
+      //   title: 'Close'
+      // });
+      tiWebView = Titanium.UI.createWebView({
+        width: '100%',
+        height: '100%',
+        url: options.url
+      });
+
+      // Open the web view UI
+      // popup.add(spinner);
+      // popup.rightNavButton = closeButton;
+      popup.add(tiWebView);
+      popup.open();
+
+      // Add event listener
+      tiWebView.addEventListener('load', loadHandler);
+      tiWebView.addEventListener('error', loadHandler);
+      popup.addEventListener('close', closeHandler);
     }
     else {
       // Open the popup
-      popup = root.open(options.url || url, '_blank', 'toolbar=no,location=no');
+      popup = root.open(options.url, '_blank', 'toolbar=no,location=no');
 
       // Popup management.
       var elapsed = 0; // Time elapsed since opening the popup.
@@ -450,8 +500,10 @@ var MIC = {
         options
       );
     }).then(function(token) {
-      // Extend the token
-      token.redirect_uri = redirectUri;
+      try {
+        token = JSON.parse(token);
+      } catch(e)  {}
+
       return token;
     });
   },
@@ -512,8 +564,10 @@ var MIC = {
         options
       );
     }).then(function(token) {
-      // Extend the token
-      token.redirect_uri = redirectUri;
+      try {
+        token = JSON.parse(token);
+      } catch(e)  {}
+
       return token;
     });
   },
@@ -621,6 +675,11 @@ var MIC = {
       return {};
     }
 
+    var index = str.indexOf('#/');
+    if (index === str.length - 2) {
+      str = str.substring(0, index);
+    }
+
     return str.trim().split('&').reduce(function (ret, param) {
       var parts = param.replace(/\+/g, ' ').split('=');
       var key = parts[0];
@@ -668,6 +727,15 @@ var MIC = {
    */
   isPhoneGap: function() {
     return ('undefined' !== typeof root.cordova && 'undefined' !== typeof root.device);
+  },
+
+  /**
+   * Return true or false if using Titanium framework.
+   *
+   * @return {Boolean} Titanium Framework
+   */
+  isTitanium: function() {
+    return ('undefined' !== typeof Titanium);
   }
 };
 
