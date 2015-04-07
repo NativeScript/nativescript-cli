@@ -24,7 +24,7 @@ var MIC = {
    * @constant
    * @default 'https://auth.kinvey.com'
    */
-  AUTH_HOST: 'https://auth.kinvey.com',
+  AUTH_HOST_NAME: 'https://auth.kinvey.com',
 
   /**
    * Auth Path
@@ -80,6 +80,7 @@ var MIC = {
    * @params {string}   [options.username]        Username for the user to be authorized.
    * @params {string}   [options.password]        Password for the user to be authorized.
    * @param  {boolean}  [options.create=true]     Create a new user if no user exists.
+   * @param  {string}   [options.authHostName]    Custom auth host name.
    * @param  {number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
    * @return {Promise}                            Authorized user.
    */
@@ -92,6 +93,7 @@ var MIC = {
     // Set defaults for options
     options = options || {};
     options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
+    MIC.AUTH_HOST_NAME = options.authHostName || MIC.AUTH_HOST_NAME;
 
     if (null != activeUser) {
       // Reject with error because of active user
@@ -143,7 +145,7 @@ var MIC = {
     }).then(function(token) {
       // Step 4: Connect the token with the user. Create a new user by default if one does not exist.
       options.create = options.create || true;
-      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options).then(function(user) {
+      return MIC.connect(activeUser, token.access_token, options).then(function(user) {
         // Step 5: Save the token
         return Storage.save(MIC.TOKEN_STORAGE_KEY, {
           refresh_token: token.refresh_token,
@@ -163,13 +165,18 @@ var MIC = {
    */
   refresh: function(options) {
     var error;
+    var clientId = Kinvey.appKey;
+    var activeUser = Kinvey.getActiveUser();
+
+    // Set defaults for options
     options = options || {};
+    MIC.AUTH_HOST_NAME = options.authHostName || MIC.AUTH_HOST_NAME;
 
     // Step 1: Retrieve the saved token
     return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
       if (null != token) {
         // Step 2: Refresh the token
-        return MIC.refreshToken(token.client_id, token.redirect_uri, token.refresh_token, options);
+        return MIC.refreshToken(clientId, token.redirect_uri, token.refresh_token, options);
       }
 
       // Throw error to reject promise for missing token.
@@ -179,7 +186,7 @@ var MIC = {
       throw error;
     }).then(function(token) {
       // Step 3: Connect the token with the user
-      return MIC.connect(Kinvey.getActiveUser(), token.access_token, options).then(function(user) {
+      return MIC.connect(activeUser, token.access_token, options).then(function(user) {
         // Step 4: Save the token
         return Storage.save(MIC.TOKEN_STORAGE_KEY, {
           refresh_token: token.refresh_token,
@@ -207,7 +214,7 @@ var MIC = {
     // Create a request
     var request = {
       method: 'POST',
-      url: MIC.AUTH_HOST + MIC.AUTH_PATH,
+      url: MIC.AUTH_HOST_NAME + MIC.AUTH_PATH,
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -250,7 +257,7 @@ var MIC = {
   requestCode: function(clientId, redirectUri, options) {
     var error;
     var deferred = Kinvey.Defer.deferred();
-    var url = MIC.AUTH_HOST + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
+    var url = MIC.AUTH_HOST_NAME + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var popup;
     var popupProgramaticallyClosed = false;
@@ -401,7 +408,7 @@ var MIC = {
     var request = {
       auth: Auth.App,
       method: 'POST',
-      url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
+      url: MIC.AUTH_HOST_NAME + MIC.TOKEN_PATH,
       data: {
         grant_type: 'authorization_code',
         client_id: clientId,
@@ -463,7 +470,7 @@ var MIC = {
     var request = {
       auth: Auth.App,
       method: 'POST',
-      url: MIC.AUTH_HOST + MIC.TOKEN_PATH,
+      url: MIC.AUTH_HOST_NAME + MIC.TOKEN_PATH,
       data: {
         grant_type: 'refresh_token',
         client_id: clientId,
@@ -679,6 +686,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {Object}   [options]                 Options.
    * @param  {Boolean}  [options.create=true]     Create a new user if no user exists.
    * @param  {Number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
+   * @param  {String}   [options.authHostName]    Custom auth host name.
    * @return {Promise}                            Authorized user.
    */
   loginWithAuthorizationCodeLoginPage: function(redirectUri, options) {
@@ -694,6 +702,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {String}   options.username        Username for the user to be authorized.
    * @param  {String}   options.password        Password for the user to be authorized.
    * @param  {Boolean}  [options.create=true]   Create a new user if no user exists.
+   * @param  {string}   [options.authHostName]  Custom auth host name.
    * @return {Promise}                          Authorized user.
    */
   loginWithAuthorizationCodeAPI: function(redirectUri, options) {
