@@ -164,7 +164,6 @@ var MIC = {
   refresh: function(options) {
     var error;
     options = options || {};
-    options.attemptMICRefresh = false;
 
     // Step 1: Retrieve the saved token
     return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
