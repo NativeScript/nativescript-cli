@@ -136,6 +136,7 @@ var AngularHTTP = {
       return response || null;
     }, function(response) {
       var promise;
+      var originalRequest = options._originalRequest;
 
       // Debug.
       if(KINVEY_DEBUG) {
@@ -150,8 +151,10 @@ var AngularHTTP = {
       }
 
       return promise.then(function() {
+        // Don't refresh MIC again
+        options.attemptMICRefresh = false;
         // Resend original request
-        return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+        return Kinvey.Persistence.Net._request(originalRequest, options);
       }, function() {
         return Kinvey.Defer.reject(response.data || null);
       });

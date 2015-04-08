@@ -106,7 +106,7 @@ var MIC = {
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
       // Step 2: Request a code
-      promise = MIC.requestCode(clientId, redirectUri, options);
+      promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
       if (null == options.username) {
@@ -145,7 +145,7 @@ var MIC = {
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
       // Step 4: Connect the token with the user. Create a new user by default if one does not exist.
-      options.create = options.create || true;
+      options.create = false === options.create ? false : true;
       return MIC.connect(activeUser, token.access_token, options).then(function(user) {
         // Step 5: Save the token
         return Storage.save(MIC.TOKEN_STORAGE_KEY, {
@@ -172,6 +172,7 @@ var MIC = {
 
     // Set defaults for options
     options = options || {};
+    options.attemptMICRefresh = false;
     MIC.AUTH_HOST_NAME = options.authHostName || MIC.AUTH_HOST_NAME;
 
     // Step 1: Retrieve the saved token
@@ -261,7 +262,7 @@ var MIC = {
    * @param  {Object} options     Options.
    * @return {Promise}            Code.
    */
-  requestCode: function(clientId, redirectUri, options) {
+  requestCodeWithPopup: function(clientId, redirectUri, options) {
     var error;
     var deferred = Kinvey.Defer.deferred();
     var url = MIC.AUTH_HOST_NAME + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
@@ -483,6 +484,15 @@ var MIC = {
     return deferred.promise;
   },
 
+  /**
+   * Request a code by sending a POST request to the url.
+   *
+   * @param  {String} url         Url.
+   * @param  {string} clientId    Client Id.
+   * @param  {string} redirectUri Redirect Uri.
+   * @param  {Object} options     Options.
+   * @return {Promise}            Code.
+   */
   requestCodeWithUrl: function(url, clientId, redirectUri, options) {
     // Create a request
     var request = {
@@ -514,6 +524,12 @@ var MIC = {
       } catch(e)  {}
 
       return code;
+    }, function(error) {
+      error = clientError(Kinvey.Error.MIC_ERROR, {
+        debug: 'Unable to authorize user with username ' + options.username + ' and ' +
+               'password ' + options.password + '.'
+      });
+      throw error;
     });
   },
 
@@ -655,30 +671,11 @@ var MIC = {
    * @returns {Promise} The user.
    */
   connect: function(user, accessToken, options) {
-    var error;
-
-    // Update the user data.
+    // Default user.
     user = user || {};
 
-    // If the user is the active user, forward to `Kinvey.User.update`.
-    var activeUser = Kinvey.getActiveUser();
-    user._socialIdentity = user._socialIdentity || {};
-    user._socialIdentity[MIC.AUTH_PROVIDER] = {
-      access_token: accessToken
-    };
-
-    if (null != activeUser) {
-      // Check activeUser for property _id. Thrown error will reject promise.
-      if (activeUser._id == null) {
-        error = new Kinvey.Error('Active user does not have _id property defined.');
-        throw error;
-      }
-
-      if (activeUser._id === user._id) {
-        options._provider = MIC.AUTH_PROVIDER; // Force tokens to be updated.
-        return Kinvey.User.update(user, options);
-      }
-    }
+    // Set active user to null
+    Kinvey.setActiveUser(null);
 
     // Attempt logging in with the tokens.
     user._socialIdentity = {};

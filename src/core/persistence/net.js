@@ -316,6 +316,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
 
     // Invoke the network layer.
     return promise.then(function() {
+      // Store the original request
+      options._originalRequest = request;
+
       // Send the request
       var response = Kinvey.Persistence.Net.request(
         request.method,
@@ -406,7 +409,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
 
       // Handle certain errors.
       return response.then(null, function(error) {
-        if(Kinvey.Error.USER_LOCKED_DOWN === error.name) {
+        if (Kinvey.Error.USER_LOCKED_DOWN === error.name) {
           // Clear user credentials.
           Kinvey.setActiveUser(null);
 
@@ -418,13 +421,14 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
             return Kinvey.Sync.destruct().then(fn, fn);
           }
         }
-        else if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+        else if (Kinvey.Error.INVALID_CREDENTIALS === error.name) {
           // Add a descriptive message to `InvalidCredentials` error so the user
           // knows what’s going on.
           error.debug += ' It is possible the tokens used to execute the ' +
            'request are expired. In that case, please run ' +
            '`Kinvey.User.logout({ force: true })`, and then log back in ' +
-           ' using`Kinvey.User.login(username, password)` to solve this issue.';
+           'using `Kinvey.User.login(username, password)` ' +
+           'to solve this issue.';
         }
         return Kinvey.Defer.reject(error);
       });

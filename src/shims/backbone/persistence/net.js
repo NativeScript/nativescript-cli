@@ -123,6 +123,7 @@ var BackboneAjax = {
       }
       else {// Failure.
         var promise;
+        var originalRequest = options._originalRequest;
 
         if (401 === request.status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
@@ -132,8 +133,10 @@ var BackboneAjax = {
         }
 
         return promise.then(function() {
+          // Don't refresh MIC again
+          options.attemptMICRefresh = false;
           // Resend original request
-          return Kinvey.Persistence.Net.request(method, url, body, headers, options);
+          return Kinvey.Persistence.Net._request(originalRequest, options);
         }).then(function(response) {
           deferred.resolve(response);
         }, function() {
