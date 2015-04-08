@@ -265,9 +265,10 @@ var MIC = {
     var deferred = Kinvey.Defer.deferred();
     var url = MIC.AUTH_HOST_NAME + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
              '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
+    var deferredResolved = false;
     var popup;
     var tiWebView;
-    var popupProgramaticallyClosed = false;
+    var tiCloseButton;
     options = options || {};
     options.url = options.url || url;
 
@@ -286,12 +287,12 @@ var MIC = {
         var queryString = '?' + event.url.split('?')[1];
         var params = MIC.parse(queryString);
         deferred.resolve(params.code);
+        deferredResolved = true;
 
         // Animation popup open prevents closing sometimes so
         // wait just a moment to close
         setTimeout(function() {
           // Close the popup
-          popupProgramaticallyClosed = true;
           popup.close();
         }, 200);
       }
@@ -299,10 +300,10 @@ var MIC = {
 
     // Close handler: Used when running Cordova or Titanium
     var closeHandler = function() {
-      if (!popupProgramaticallyClosed) {
+      if (!deferredResolved) {
         // Return the response.
         error = clientError(Kinvey.Error.MIC_ERROR, {
-          debug: 'The popup was closed unexpectedly.'
+          debug: 'The popup was closed without authorizing the user.'
         });
         deferred.reject(error);
       }
@@ -316,7 +317,20 @@ var MIC = {
         tiWebView.removeEventListener('load', loadHandler);
         tiWebView.removeEventListener('error', loadHandler);
         popup.removeEventListener('close', closeHandler);
+
+        if (OS_IOS) {
+          tiCloseButton.removeEventListener('click', clickHandler);
+        }
+        else if (OS_ANDROID) {
+          popup.close();
+          popup.removeEventListener('androidback', closeHandler);
+        }
       }
+    };
+
+    // Click handler: Used when running Titanium
+    var clickHandler = function() {
+      popup.close();
     };
 
     if (MIC.isPhoneGap()) {
@@ -336,33 +350,57 @@ var MIC = {
       }
     }
     else if (MIC.isTitanium()) {
-      // Create Titanium Web View UI
-      popup = Titanium.UI.createWindow({
-        backgroundColor: 'white',
-        barColor: '#000',
-        title: 'Kinvey - MIC',
-        modal: true
-      });
-      // var spinner = Titanium.UI.createActivityIndicator({
-      //   zIndex: 1,
-      //   height: 50,
-      //   width: 50,
-      //   hide: true,
-      //   style: Titanium.UI.iPhone.ActivityIndicatorStyle.DARK
-      // });
-      // var closeButton = Titanium.UI.createButton({
-      //   title: 'Close'
-      // });
+      // Create a web view
       tiWebView = Titanium.UI.createWebView({
         width: '100%',
         height: '100%',
         url: options.url
       });
 
-      // Open the web view UI
-      // popup.add(spinner);
-      // popup.rightNavButton = closeButton;
+      // Create a popup window
+      popup = Titanium.UI.createWindow({
+        backgroundColor: 'white',
+        barColor: '#000',
+        title: 'Kinvey - MIC',
+        modal: true
+      });
+
+      // Add the web view to the popup window
       popup.add(tiWebView);
+
+      if(OS_IOS) {
+        // Create a window
+        var win = Titanium.UI.createWindow({
+          backgroundColor: 'white',
+          barColor: '#e3e3e3',
+          title: 'Kinvey - MIC'
+        });
+
+        // Add the web view to the window
+        win.add(tiWebView);
+
+        // Create close button
+        tiCloseButton = Titanium.UI.createButton({
+          title: 'Close',
+          style: Titanium.UI.iPhone.SystemButtonStyle.DONE
+        });
+        win.setLeftNavButton(tiCloseButton);
+
+        // Listen for click event on close button
+        tiCloseButton.addEventListener('click', clickHandler);
+
+        // Create a navigation window
+        popup = Titanium.UI.iOS.createNavigationWindow({
+          backgroundColor: 'white',
+          window: win,
+          modal: true
+        });
+      }
+      else if(OS_ANDROID) {
+        popup.addEventListener('androidback', closeHandler);
+      }
+
+      // Open the web view UI
       popup.open();
 
       // Add event listener
@@ -395,7 +433,7 @@ var MIC = {
 
           // Return the response.
           error = clientError(Kinvey.Error.MIC_ERROR, {
-            debug: 'The popup was closed unexpectedly.'
+            debug: 'The popup was closed without authorizing the user.'
           });
           deferred.reject(error);
         }
@@ -428,9 +466,9 @@ var MIC = {
             // Extract the code
             var params = MIC.parse(popup.location.search);
             deferred.resolve(params.code);
+            deferredResolved = true;
 
             // Close the popup
-            popupProgramaticallyClosed = true;
             popup.close();
           }
         }

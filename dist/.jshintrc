@@ -21,6 +21,8 @@
   "node"      : true,
   "globals"   : {
     "define"       : true,
-    "KINVEY_DEBUG" : true
+    "KINVEY_DEBUG" : true,
+    "OS_IOS"       : true,
+    "OS_ANDROID"   : true
   }
 }
