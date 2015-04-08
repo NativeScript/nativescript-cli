@@ -422,13 +422,25 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
           }
         }
         else if (Kinvey.Error.INVALID_CREDENTIALS === error.name) {
+          var activeUser = Kinvey.getActiveUser();
+
           // Add a descriptive message to `InvalidCredentials` error so the user
           // knows what’s going on.
-          error.debug += ' It is possible the tokens used to execute the ' +
-           'request are expired. In that case, please run ' +
-           '`Kinvey.User.logout({ force: true })`, and then log back in ' +
-           'using `Kinvey.User.login(username, password)` ' +
-           'to solve this issue.';
+          if (activeUser != null && activeUser._socialIdentity != null && activeUser._socialIdentity[MIC.AUTH_PROVIDER] != null) {
+            error.debug += ' It is possible the tokens used to execute the ' +
+             'request are expired. In that case, please execute ' +
+             '`Kinvey.User.logout({ force: true })`, and then log back in ' +
+             'using `Kinvey.User.MIC.loginWithAuthorizationCodeLoginPage(redirectUri)` or ' +
+             '`Kinvey.User.MIC.loginWithAuthorizationCodeAPI(username, password, redirectUri)` ' +
+             'to solve this issue.';
+          }
+          else {
+            error.debug += ' It is possible the tokens used to execute the ' +
+             'request are expired. In that case, please execute ' +
+             '`Kinvey.User.logout({ force: true })`, and then log back in ' +
+             'using `Kinvey.User.login(username, password)` ' +
+             'to solve this issue.';
+          }
         }
         return Kinvey.Defer.reject(error);
       });
