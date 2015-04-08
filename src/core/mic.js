@@ -844,7 +844,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @return {Promise}                          Authorized user.
    */
   loginWithAuthorizationCodeAPI: function(username, password, redirectUri, options) {
-    options = optionas || {};
+    options = options || {};
     options.username = username;
     options.password = password;
     return MIC.login(MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
