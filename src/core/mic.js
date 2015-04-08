@@ -834,16 +834,19 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
   /**
    * Authorize a user with Mobile Identity Connect (MIC) using a provided username and password.
    *
+   * @param  {String}   username                Username for the user to be authorized.
+   * @param  {String}   password                Password for the user to be authorized.
    * @param  {String}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
    *                                            in the Kinvey Console for your applicaiton.
    * @param  {Object}   options                 Options.
-   * @param  {String}   options.username        Username for the user to be authorized.
-   * @param  {String}   options.password        Password for the user to be authorized.
    * @param  {Boolean}  [options.create=true]   Create a new user if no user exists.
    * @param  {string}   [options.authHostName]  Custom auth host name.
    * @return {Promise}                          Authorized user.
    */
-  loginWithAuthorizationCodeAPI: function(redirectUri, options) {
+  loginWithAuthorizationCodeAPI: function(username, password, redirectUri, options) {
+    options = optionas || {};
+    options.username = username;
+    options.password = password;
     return MIC.login(MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
   }
 };
