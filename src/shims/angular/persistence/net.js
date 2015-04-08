@@ -142,7 +142,7 @@ var AngularHTTP = {
         log('The network request failed.', response);
       }
 
-      if (401 === response.status) {
+      if (401 === response.status && options.attemptMICRefresh) {
         promise = MIC.refresh(options);
       }
       else {

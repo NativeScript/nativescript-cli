@@ -142,7 +142,7 @@ var Xhr = {
       else {// Failure.
         var promise;
 
-        if (401 === request.status) {
+        if (401 === request.status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
         }
         else {

@@ -176,6 +176,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
 
     // Cast arguments.
     options.trace = options.trace || (KINVEY_DEBUG && false !== options.trace);
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Build, escape, and join URL segments.
     // Format: <APIHostName>/<namespace>[/<Kinvey.appKey>][/<collection>][/<id>]

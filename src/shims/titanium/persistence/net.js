@@ -141,7 +141,7 @@ var TiHttp = {
       else { // Failure.
         var promise;
 
-        if (401 === this.status) {
+        if (401 === this.status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
         }
         else {

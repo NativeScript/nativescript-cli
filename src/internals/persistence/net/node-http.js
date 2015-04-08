@@ -118,7 +118,7 @@ var NodeHttp = {
         else {// Failure.
           var promise;
 
-          if (401 === response.statusCode) {
+          if (401 === response.statusCode && options.attemptMICRefresh) {
             promise = MIC.refresh(options);
           }
           else {

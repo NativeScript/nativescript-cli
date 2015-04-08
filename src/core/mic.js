@@ -93,6 +93,7 @@ var MIC = {
     // Set defaults for options
     options = options || {};
     options.timeout = options.timeout || MIC.AUTH_TIMEOUT;
+    options.attemptMICRefresh = false;
     MIC.AUTH_HOST_NAME = options.authHostName || MIC.AUTH_HOST_NAME;
 
     if (null != activeUser) {
@@ -123,10 +124,10 @@ var MIC = {
       // Step 2a: Request a temp login uri
       promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
         // Step 2b: Request a code
-        options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
-          '&response_type=code&username=' + encodeURIComponent(options.username) +
-          '&password=' + encodeURIComponent(options.password);
-        return MIC.requestCode(clientId, redirectUri, options);
+        // options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
+        //   '&response_type=code&username=' + encodeURIComponent(options.username) +
+        //   '&password=' + encodeURIComponent(options.password);
+        return MIC.requestCodeWithUrl(url, clientId, redirectUri, options);
       });
     }
     else {
@@ -480,6 +481,40 @@ var MIC = {
 
     // Return the promise.
     return deferred.promise;
+  },
+
+  requestCodeWithUrl: function(url, clientId, redirectUri, options) {
+    // Create a request
+    var request = {
+      method: 'POST',
+      url: url,
+      data: {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        username: options.username,
+        password: options.password
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+      }
+    };
+
+    // Send request
+    return Kinvey.Persistence.Net.request(
+      request.method,
+      request.url,
+      MIC.encodeFormData(request.data),
+      request.headers,
+      options
+    ).then(function(code) {
+      try {
+        code = JSON.parse(code);
+      } catch(e)  {}
+
+      return code;
+    });
   },
 
   /**
