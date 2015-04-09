@@ -149,7 +149,7 @@
     "kcs": {
       "protocol" : "http",
       "host"     : "localhost:7007"
-	},
+	  },
     "test": {
       "apiHostName"      : "http://myapihostname.com/",
       "customRequestProperties": {
@@ -159,13 +159,13 @@
       "appKey"           : "kid_-kpx2Yw6U",
       "appSecret"        : "736bfe159c9149f881ecef2269b8b48d",
       "masterSecret"     : "1ed873294e9440de8cf765d644c7eac9"
-	}
+	  }
   },
   "staging"    : {
     "kcs": {
       "protocol" : "https",
       "host"     : "v3yk1n-kcs.kinvey.com"
-	},
+	  },
     "test": {
       "apiHostName"      : "https://myapihostname.com/",
       "customRequestProperties": {
@@ -181,15 +181,15 @@
     "kcs": {
       "protocol" : "https",
       "host"     : "baas.kinvey.com"
-	},
+	  },
     "test": {
-      "appKey"           : "kid_VPL790AbkM",
       "clientAppVersion" : "1.2.3",
       "customRequestProperties": {
         "foo": "bar"
       },
+      "appKey"           : "kid_VPL790AbkM",
       "appSecret"        : "78375555c2d34243a6ed8a06819ebb68",
       "masterSecret"     : "008d21b7f2a540b38539c1ca892ab281"
-	 }
+	  }
   }
 }
