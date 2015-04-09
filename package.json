@@ -48,7 +48,7 @@
     "grunt-shell"           : "~0.6",
     "grunt-simple-mocha"    : "~0.4",
     "mocha"                 : "~2.2",
-    "nock"                  : "1.2.0",
+    "nock"                  : "~1.5",
     "promises-aplus-tests"  : "~2.0",
     "sinon"                 : "~1.7",
     "sinon-chai"            : "~2.4"
