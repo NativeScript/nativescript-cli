@@ -1,17 +1,15 @@
-autocomplete
+autocomplete disable
 ==========
 
 Usage | Syntax
 ------|-------
-General | `$ appbuilder autocomplete`
-Get status | `$ appbuilder autocomplete status`
-Enable | `$ appbuilder autocomplete enable`
-Disable | `$ appbuilder autocomplete disable`
+General | `$ tns autocomplete disable`
 
 
-Asks for confirmation if command line autocompletion should be enabled for bash and zsh.
+Disables autocompletion for bash and zsh.
 
 > NOTE: This will modify your .bash_profile, .bashrc and .zshrc files.
+
 <% if(isHtml) { %> 
 
 #### Related Commands
@@ -19,8 +17,8 @@ Asks for confirmation if command line autocompletion should be enabled for bash 
 Command | Description
 ----------|----------
 [autocomplete-status](autocomplete-status.html) | Shows if autocompletion is enabled for bash and zsh.
+[autocomplete](autocomplete.html) | Asks for confirmation if command line autocompletion should be enabled for bash and zsh.
 [autocomplete-enable](autocomplete-enable.html) | Enables autocompletion for bash and zsh.
-[autocomplete-disable](autocomplete-disable.html) | Disables autocompletion for bash and zsh.
 [feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript command-line interface.
 [help](help.html) | Lists the available commands or shows information about the selected command.
 <% } %>
