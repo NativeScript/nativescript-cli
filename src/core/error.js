@@ -465,6 +465,13 @@ Kinvey.Error.SOCIAL_ERROR = 'SocialError';
  */
 Kinvey.Error.SYNC_ERROR = 'SyncError';
 
+/**
+ * @memberof Kinvey.Error
+ * @constant
+ * @default
+ */
+Kinvey.Error.MIC_ERROR = 'MIC_ERROR';
+
 // All client-side errors are fully declared below.
 var ClientError = {};
 
@@ -598,6 +605,19 @@ ClientError[Kinvey.Error.SYNC_ERROR] = {
   name        : Kinvey.Error.SYNC_ERROR,
   description : 'The synchronization operation cannot be completed.',
   debug       : ''
+};
+
+/**
+ * MIC error.
+ *
+ * @constant
+ * @type {Object}
+ * @default
+ */
+ClientError[Kinvey.Error.MIC_ERROR] = {
+  name: Kinvey.Error.MIC_ERROR,
+  description: 'Unable to authorize using Mobile Identity Connect.',
+  debug: ''
 };
 
 // The `description` and `debug` properties can be overridden if desired. The

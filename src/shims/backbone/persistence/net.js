@@ -54,6 +54,7 @@ var BackboneAjax = {
     body    = body    || null;
     headers = headers || {};
     options = options || {};
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
@@ -76,7 +77,7 @@ var BackboneAjax = {
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status   = request.status;
-      if(2 === parseInt(status / 100, 10) || 304 === status) {
+      if(2 === parseInt(status / 100, 10) || 304 === request.status) {
         // If `options.file`, convert the response to `Blob` object.
         var response = request.responseText;
         if(options.file && null != response && null != root.ArrayBuffer) {
@@ -97,7 +98,7 @@ var BackboneAjax = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null && 204 !== status) {
+        if (!options.file && response != null && 204 !== request.status) {
           var responseContentType = request.getResponseHeader('Content-Type') || undefined;
           var error;
 
@@ -121,7 +122,26 @@ var BackboneAjax = {
         deferred.resolve(response || null);
       }
       else {// Failure.
-        deferred.reject(request.responseText || textStatus || null);
+        var promise;
+        var originalRequest = options._originalRequest;
+
+        if (401 === request.status && options.attemptMICRefresh) {
+          promise = MIC.refresh(options);
+        }
+        else {
+          promise = Kinvey.Defer.reject();
+        }
+
+        return promise.then(function() {
+          // Don't refresh MIC again
+          options.attemptMICRefresh = false;
+          // Resend original request
+          return Kinvey.Persistence.Net._request(originalRequest, options);
+        }).then(function(response) {
+          deferred.resolve(response);
+        }, function() {
+          deferred.reject(request.responseText || textStatus || null);
+        });
       }
     };
 

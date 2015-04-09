@@ -38,6 +38,7 @@ var TiHttp = {
     // Cast arguments.
     headers = headers || {};
     options = options || {};
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
@@ -96,7 +97,7 @@ var TiHttp = {
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = 'timeout' === e.type ? 0 : this.status;
-      if(2 === parseInt(status / 100, 10) || 304 === status) {
+      if(2 === parseInt(status / 100, 10) || 304 === this.status) {
         var response;
 
         // Mobile web response.
@@ -138,7 +139,26 @@ var TiHttp = {
         deferred.resolve(response || null);
       }
       else { // Failure.
-        deferred.reject(this.responseText || e.type || null);
+        var promise;
+        var originalRequest = options._originalRequest;
+
+        if (401 === this.status && options.attemptMICRefresh) {
+          promise = MIC.refresh(options);
+        }
+        else {
+          promise = Kinvey.Defer.reject();
+        }
+
+        return promise.then(function() {
+          // Don't refresh MIC again
+          options.attemptMICRefresh = false;
+          // Resend original request
+          return Kinvey.Persistence.Net._request(originalRequest, options);
+        }).then(function(response) {
+          deferred.resolve(response);
+        }, function() {
+          deferred.reject(this.responseText || e.type || null);
+        });
       }
     };
 

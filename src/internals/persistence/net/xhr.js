@@ -140,31 +140,50 @@ var Xhr = {
         deferred.resolve(responseData);
       }
       else {// Failure.
-        var type     = null !== timer ? 'timeout' : event.type;
-        var response = 0 !== status ? responseData : type;
+        var promise;
+        var originalRequest = options._originalRequest;
 
-        // If `options.file`, parse the response to obtain the error.
-        if(options.file && 0 !== status) {
-          // Convert the binary response to a string.
-          if(null != root.ArrayBuffer && response instanceof root.ArrayBuffer) {
-            var buffer  = '';
-            var bufView = new root.Uint8Array(response);
-            for(var i = 0; i < response.byteLength; i += 1) {
-              buffer += String.fromCharCode(bufView[i]);
+        if (401 === request.status && options.attemptMICRefresh) {
+          promise = MIC.refresh(options);
+        }
+        else {
+          promise = Kinvey.Defer.reject();
+        }
+
+        promise.then(function() {
+          // Don't refresh MIC again
+          options.attemptMICRefresh = false;
+          // Resend original request
+          return Kinvey.Persistence.Net._request(originalRequest, options);
+        }).then(function(response) {
+          deferred.resolve(response);
+        }, function() {
+          var type = null !== timer ? 'timeout' : event.type;
+          var response = 0 !== status ? responseData : type;
+
+          // If `options.file`, parse the response to obtain the error.
+          if(options.file && 0 !== status) {
+            // Convert the binary response to a string.
+            if(null != root.ArrayBuffer && response instanceof root.ArrayBuffer) {
+              var buffer  = '';
+              var bufView = new root.Uint8Array(response);
+              for(var i = 0; i < response.byteLength; i += 1) {
+                buffer += String.fromCharCode(bufView[i]);
+              }
+              deferred.reject(buffer);
             }
-            deferred.reject(buffer);
+            else if(null != root.Blob && response instanceof root.Blob) {
+              var reader = new root.FileReader();
+              reader.onload = function(event) {
+                deferred.reject(event.target.result);
+              };
+              reader.readAsText(response);
+            }
           }
-          else if(null != root.Blob && response instanceof root.Blob) {
-            var reader = new root.FileReader();
-            reader.onload = function(event) {
-              deferred.reject(event.target.result);
-            };
-            reader.readAsText(response);
+          else {// Return the error.
+            deferred.reject(response || type || null);
           }
-        }
-        else {// Return the error.
-          deferred.reject(response || type || null);
-        }
+        });
       }
     };
 

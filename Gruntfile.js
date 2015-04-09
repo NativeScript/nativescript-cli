@@ -104,6 +104,7 @@ module.exports = function(grunt) {
           'src/core/metadata.js',
           'src/core/social.js',
           'src/core/user.js',
+          'src/core/mic.js',
           'src/core/query.js',
           'src/core/reference.js',
 

@@ -53,6 +53,7 @@ var AngularHTTP = {
     body    = body    || {};
     headers = headers || {};
     options = options || {};
+    options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Append header for compatibility with Android 2.2, 2.3.3, and 3.2.
 // http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
@@ -84,7 +85,6 @@ var AngularHTTP = {
       url     : url
     }).then(function(response) {
       var _response = response;
-      var status = response.status;
 
       // Debug.
       if(KINVEY_DEBUG) {
@@ -112,7 +112,7 @@ var AngularHTTP = {
 
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 204 !== status) {
+      if (!options.file && response != null && 204 !== _response.status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
@@ -135,13 +135,29 @@ var AngularHTTP = {
       // Return the response.
       return response || null;
     }, function(response) {
+      var promise;
+      var originalRequest = options._originalRequest;
+
       // Debug.
       if(KINVEY_DEBUG) {
         log('The network request failed.', response);
       }
 
-      // Return the response.
-      return $q.reject(response.data || null);
+      if (401 === response.status && options.attemptMICRefresh) {
+        promise = MIC.refresh(options);
+      }
+      else {
+        promise = Kinvey.Defer.reject();
+      }
+
+      return promise.then(function() {
+        // Don't refresh MIC again
+        options.attemptMICRefresh = false;
+        // Resend original request
+        return Kinvey.Persistence.Net._request(originalRequest, options);
+      }, function() {
+        return Kinvey.Defer.reject(response.data || null);
+      });
     });
   }
 };
