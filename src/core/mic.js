@@ -810,7 +810,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {String}   password                Password for the user to be authorized.
    * @param  {String}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
    *                                            in the Kinvey Console for your applicaiton.
-   * @param  {Object}   options                 Options.
+   * @param  {Object}   [options]               Options.
    * @param  {Boolean}  [options.create=true]   Create a new user if no user exists.
    * @return {Promise}                          Authorized user.
    */
