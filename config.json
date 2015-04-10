@@ -176,9 +176,9 @@
         "foo": "bar"
       },
       "clientAppVersion" : "1.2.3",
-      "appKey"           : "kid_byW23pLgR",
-      "appSecret"        : "15e67b69e76540c2984cbcb77d8de763",
-      "masterSecret"     : "d1a941df0f084eb6a3a7da249a23d350"
+      "appKey"           : "kid_PTsIpH9WF5",
+      "appSecret"        : "c0be7de6e91a49a4ba6b0d35da68f3d2",
+      "masterSecret"     : "41db729981ba404fa2273b6b3e6dfd30"
 	 }
   },
   "production" : {
