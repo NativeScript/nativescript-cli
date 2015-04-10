@@ -93,6 +93,10 @@ var MIC = {
       });
       return Kinvey.Defer.reject(error);
     }
+    else if (null == redirectUri) {
+      error = new Kinvey.Error('A redirect uri must be provided to login with MIC.');
+        return Kinvey.Defer.reject(error);
+    }
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
       // Step 2: Request a code
@@ -100,13 +104,13 @@ var MIC = {
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
       if (null == options.username) {
-        error = new Kinvey.Error('A username must be provided in the options argument to login with MIC using the ' +
+        error = new Kinvey.Error('A username must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
         return Kinvey.Defer.reject(error);
       }
 
       if (null == options.password) {
-        error = new Kinvey.Error('A password must be provided in the options argument to login with MIC using the ' +
+        error = new Kinvey.Error('A password must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
         return Kinvey.Defer.reject(error);
       }
