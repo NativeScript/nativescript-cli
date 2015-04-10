@@ -695,7 +695,7 @@ var MIC = {
    * @param {Options} [options] Options.
    * @returns {Promise} The user.
    */
-  disconnect: function(user, options) {
+  disconnect: function() {
     // Destroy the token
     return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
   },
