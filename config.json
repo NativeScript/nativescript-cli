@@ -166,6 +166,10 @@
       "protocol" : "https",
       "host"     : "v3yk1n-kcs.kinvey.com"
 	  },
+    "auth": {
+      "protocol" : "https",
+      "host"     : "v3yk1n-auth.kinvey.com"
+    },
     "test": {
       "apiHostName"      : "https://myapihostname.com/",
       "customRequestProperties": {
@@ -182,6 +186,10 @@
       "protocol" : "https",
       "host"     : "baas.kinvey.com"
 	  },
+    "auth": {
+      "protocol" : "https",
+      "host"     : "auth.kinvey.com"
+    },
     "test": {
       "clientAppVersion" : "1.2.3",
       "customRequestProperties": {

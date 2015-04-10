@@ -29,6 +29,15 @@ Kinvey.APIHostName = '<%= config.kcs.protocol %>://<%= config.kcs.host %>';
 Kinvey.API_ENDPOINT = undefined;
 
 /**
+ * The Auth server.
+ *
+ * @constant
+ * @type {String}
+ * @default <%= config.auth.protocol %>://<%= config.auth.host %>
+ */
+Kinvey.MICHostName = '<%= config.auth.protocol %>://<%= config.auth.host %>';
+
+/**
  * The Kinvey API version used when communicating with `Kinvey.APIHostName`.
  *
  * @constant
@@ -225,6 +234,7 @@ Kinvey.setActiveUser = function(user) {
  * @param {string}  [options.clientAppVersion]   Client App Version.
  * @param {Object}  [options.customRequestProperties] Customer request properties.
  * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
+ * @param {string}  [options.micHostName]  MIC Host Name. Must use the `https` protocol
  * @param {string}   options.appKey        App Key.
  * @param {string}  [options.appSecret]    App Secret.
  * @param {string}  [options.masterSecret] Master Secret. **Never use the
@@ -234,6 +244,7 @@ Kinvey.setActiveUser = function(user) {
  * @throws {Kinvey.Error} `options` must contain: `appSecret` or
  *                          `masterSecret`.
  * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.APIHostName
+ * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.MICHostName
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
@@ -254,7 +265,7 @@ Kinvey.init = function(options) {
   // The active user is not ready yet.
   activeUserReady = false;
 
-  // Set the API endpoint
+  // Set the API host name
   var apiHostName = options.apiHostName || Kinvey.API_ENDPOINT;
   Kinvey.APIHostName = apiHostName || Kinvey.APIHostName;
 
@@ -264,6 +275,17 @@ Kinvey.init = function(options) {
                            ' Kinvey.APIHostName, instead found the protocol ' +
                            Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
                            ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
+  }
+
+  // Set the MIC host name
+  Kinvey.MICHostName = options.micHostName || Kinvey.MICHostName;
+
+  // Check if Kinvey.MICHostName uses https protocol
+  if (Kinvey.MICHostName.indexOf('https://') !== 0) {
+    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
+                           ' Kinvey.MICHostName, instead found the protocol ' +
+                           Kinvey.MICHostName.substring(0, Kinvey.MICHostName.indexOf(':/')) +
+                           ' in Kinvey.MICHostName: ' + Kinvey.MICHostName);
   }
 
   // Set the Client App Version
