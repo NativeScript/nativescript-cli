@@ -1,4 +1,8 @@
 # Changelog
+### 1.3.0 (2015-04-10)
+* Enhancement(MLIBZ-213): Added support for Mobile Identity Connect
+* BugFix(MLIBZ-207): Fixed bug that prevented a user from being logged out on Angular
+
 ## 1.2.1 (2015-03-30)
 * BugFix(MLIBZ-208): Fixed bug that would throw incorrect `Content-Type` header errors for file requests.
 * BugFix(MLIBZ-236): Fixed bug that would throw incorrect `Content-Type` header errors for requests with a 204 response status code.
