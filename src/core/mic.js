@@ -95,7 +95,7 @@ var MIC = {
     }
     else if (null == redirectUri) {
       error = new Kinvey.Error('A redirect uri must be provided to login with MIC.');
-        return Kinvey.Defer.reject(error);
+      return Kinvey.Defer.reject(error);
     }
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
