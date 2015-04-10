@@ -696,28 +696,8 @@ var MIC = {
    * @returns {Promise} The user.
    */
   disconnect: function(user, options) {
-    var promise;
-
-    // Default options
-    options = options || {};
-
-    // Update the user data.
-    user._socialIdentity = user._socialIdentity || {};
-    user._socialIdentity[MIC.AUTH_PROVIDER] = null;
-
-    // If the user exists, forward to `Kinvey.User.update`. Otherwise, resolve
-    // immediately.
-    if (null == user._id) {
-      promise = Kinvey.Defer.resolve(user);
-    }
-    else {
-      promise = Kinvey.User.update(user, options);
-    }
-
     // Destroy the token
-    return promise.then(function() {
-      return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
-    });
+    return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
   },
 
   /**
@@ -839,6 +819,20 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
     options.username = username;
     options.password = password;
     return MIC.login(MIC.AuthorizationGrant.AuthorizationCodeAPI, redirectUri, options);
+  },
+
+  /**
+   * Logout the active user.
+   *
+   * @param {Options} [options] Options.
+   * @param {boolean} [options.force=false] Reset the active user even if an
+   *          `InvalidCredentials` error is returned.
+   * @param {boolean} [options.silent=false] Succeed when there is no active
+   *          user.
+   * @returns {Promise} The previous active user.
+   */
+  logout: function(options) {
+    return Kinvey.User.logout(options);
   }
 };
 

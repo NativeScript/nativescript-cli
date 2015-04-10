@@ -198,6 +198,9 @@ Kinvey.User = /** @lends Kinvey.User */{
         }
         return Kinvey.Defer.reject(error);
       }).then(function() {
+        // Disconnect MIC
+        return MIC.disconnect();
+      }).then(function() {
         var error;
 
         // Reset the active user, and return the previous active user. Make
