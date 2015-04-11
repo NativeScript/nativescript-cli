@@ -1,0 +1,2 @@
+require("./typescript-compilation.js");
+

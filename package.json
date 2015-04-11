@@ -61,6 +61,7 @@
     "shelljs": "0.3.0",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.1",
+    "typescript": "1.4.1",
     "winreg": "0.0.12",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
@@ -77,8 +78,7 @@
     "grunt-ts": "2.0.1",
     "mocha": "1.21.4",
     "mocha-fibers": "https://github.com/Icenium/mocha-fibers/tarball/master",
-    "should": "4.0.4",
-    "typescript": "1.4.1"
+    "should": "4.0.4"
   },
   "license": "Apache-2.0",
   "engines": {

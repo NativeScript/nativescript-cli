@@ -3,6 +3,9 @@
 	"USE_PROXY": false,
 	"PROXY_PORT": 8888,
 	"PROXY_HOSTNAME": "127.0.0.1",
-	"TYPESCRIPT_COMPILER_OPTIONS": {},
+	"TYPESCRIPT_COMPILER_OPTIONS": {
+		"targetVersion": "ES5",
+		"module": "commonjs"
+	},
 	"CI_LOGGER": false
 }

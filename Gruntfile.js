@@ -34,17 +34,17 @@ module.exports = function(grunt) {
 			},
 
 			devlib: {
-				src: ["lib/**/*.ts"],
+				src: ["lib/**/*.ts", "!lib/common/resources/**/*.d.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/resources/**/*.d.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/resources/**/*.d.ts"],
 				reference: "lib/.d.ts",
 				options: {
 					sourceMap: false,
@@ -55,7 +55,7 @@ module.exports = function(grunt) {
 
 		watch: {
 			devall: {
-				files: ["lib/**/*.ts", 'test/**/*.ts'],
+				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/resources/**/*.d.ts"],
 				tasks: [
 					'ts:devall',
 					'shell:npm_test'
