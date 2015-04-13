@@ -1,32 +1,40 @@
 debug ios
 ==========
 
-Usage:
-    `$ tns debug ios [--debug-brk | --start] [--device <Device ID> | --emulator <Emulator Options>] [--print-app-output] [--no-client]`
+Usage | Synopsis
+---|---
+Deploy on device, run the app and stop at the first breakpoint | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
+Deploy in the iOS Simulator, run the app and stop at the first breakpoint | `$ tns debug ios --debug-brk --emulator [<Emulator Options>] [--no-client]`
+Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--no-client]`
+Attach the debug tools to a running app in the iOS Simulator | `$ tns debug ios --start --emulator [<Emulator Options>] [--no-client]`
 
-Example usage:
-    `$ tns debug ios --debug-brk`
-    `$ tns debug ios --start`
-    `$ tns debug ios --debug-brk --emulator`
-    `$ tns debug ios --start --emulator`	
+Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml) { %>Any debugging traffic is forwarded on port 8080 from the device to the local machine.<% } %> 
 
-Debugs your project on a connected device or in a native emulator.
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help debug ios`<% } %> 
 
-`<Device ID>` is the index or name of the target device as listed by `$ tns list-devices`
-Before debugging on iOS device, verify that you have configured a valid pair of development certificate and provisioning profile on your OS X system.
-Debugging on iOS device will forward the debugging traffic on port 8080 from the device to the local machine.
+<% if((isConsole && isMacOS) || isHtml) { %>
+<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
-Debugging on emulator will require an already started emulator and Xcode 6 or later.
+### Options
+* `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, runs the app, launches the developer tools of your Safari browser and stops at the first breakpoint.
+* `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
+* `--emulator` - Indicates that you want to debug your app in the iOS simulator.
+* `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari.
 
-Options:
-* `--debug-brk` - Shorthand for prepare, build and deploy. Prepares, builds and deploys the application package on a device or in an emulator, launches the developer tools of your Safari browser.
-* `--start` - Attaches the debug tools to a deployed and running app. Your app must be running on device or emulator, launches the developer tools of your Safari browser.
-* `--emulator` - Debug on already running emulator. Requires `xcrun` from Xcode 6 or later.
-* `--print-app-output` - If set, prints the standard output of the running application. (Device only)
-* `--no-client` - Suppresses the launch of the developer tools in Safari.
+### Attributes
+* `<Device ID>` is the index or name of the target device as listed by `$ tns list-devices`
+* `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate ios`
+<% } %> 
 <% if(isHtml) { %> 
+### Prerequisite
 
-#### Related Commands
+* If you want to debug in the iOS Simulator, you must have Xcode 6 or later installed on your system.
+
+### Command Limitations
+
+* You can run `$ tns debug ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

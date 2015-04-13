@@ -1,26 +1,30 @@
 autocomplete
 ==========
 
-Usage | Syntax
+Usage | Synopsis
 ------|-------
-General | `$ appbuilder autocomplete`
-Get status | `$ appbuilder autocomplete status`
-Enable | `$ appbuilder autocomplete enable`
-Disable | `$ appbuilder autocomplete disable`
+General | `$ tns autocomplete [<Command>]`
+Get settings | `$ tns autocomplete status`
+Enable | `$ tns autocomplete enable`
+Disable | `$ tns autocomplete disable`
 
+Prints your current command-line completion settings. If disabled, prompts you to enable it.
 
-Asks for confirmation if command line autocompletion should be enabled for bash and zsh.
+<% if(isHtml) { %>> <% } %>NOTE: This operation might modify the `.bash_profile`, `.bashrc` and `.zshrc` files.
 
-> NOTE: This will modify your .bash_profile, .bashrc and .zshrc files.
+### Attributes
+`<Command>` extends the `autocomplete` command. You can set the following values for this attribute.
+* `status` - Prints your current command-line completion settings.
+* `enable` - Enables command-line completion. You need to restart the shell to complete the operation.
+* `disable` - Disables command-line completion. You need to restart the shell to complete the operation.
+
 <% if(isHtml) { %> 
-
-#### Related Commands
+### Related Commands
 
 Command | Description
 ----------|----------
-[autocomplete-status](autocomplete-status.html) | Shows if autocompletion is enabled for bash and zsh.
-[autocomplete-enable](autocomplete-enable.html) | Enables autocompletion for bash and zsh.
-[autocomplete-disable](autocomplete-disable.html) | Disables autocompletion for bash and zsh.
+[autocomplete-status](autocomplete-status.html) | Prints the current status of your command-line completion settings.
+[autocomplete-enable](autocomplete-enable.html) |[autocomplete](autocomplete.html) | Configures your current command-line completion settings.
+[autocomplete-disable](autocomplete-disable.html) | Disables command-line completion for bash and zsh shells.
 [feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript command-line interface.
-[help](help.html) | Lists the available commands or shows information about the selected command.
 <% } %>

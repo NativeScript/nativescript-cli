@@ -1,21 +1,24 @@
 debug
 ==========
 
-Usage:
-    `$ tns debug <Command> [--print-app-output]`
-You must run the debug command with a related command.
+Usage | Synopsis
+---|---
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %> 
 
-Debugs your project on a connected device or in a native emulator.
+Debugs your project on a connected device or in a native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %>
 
-`<Command>` is a related command that extends the debug command. You can run the following related commands:
+<% if((isConsole && isMacOS) || isHtml) { %>### Attributes
+`<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms.
 * `android` - Debugs your project on a connected Android device, native Android emulator or Genymotion emulator.
-* `ios` - Debugs your project on a connected iOS device or in a native iOS emulator.
+* `ios` - Debugs your project on a connected iOS device or in a native iOS emulator.<% } %>
 
-Options:
-* `--print-app-output` - If set, prints the output of the running application.
 <% if(isHtml) { %>
+### Command Limitations
 
-#### Related Commands
+* You can run `$ tns debug ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

@@ -1,17 +1,19 @@
 help
 ==========
 
-Usage:
-    `$ tns help [<Command>]`    `$ nativescript [<Command>]`  
+Usage | Synopsis
+------|-------
+General | `$ tns help [<Command>]`
 
 Lists the available commands or shows information about the selected command.
-`<Command>` is any of the available commands as listed by $ tns help.
-<% if(isHtml) { %> 
 
-#### Related Commands
+### Attributes
+* `<Command>` is any of the available commands as listed by `$ tns help`
+
+<% if(isHtml) { %> 
+### Related Commands
 
 Command | Description
 ----------|----------
-[autocomplete](autocomplete.html) | Note: this will modify your .
-[feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript command-line interface.
+[user](user.html) | Prints information about the currently logged in user, including name, email address, subscription plan and license expiration date.
 <% } %>
