@@ -58,10 +58,11 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    * @param {Options} [options] Options.
    * @param {boolean} [options.create=true] Create a new user if no user with
    *          the provided social identity exists.
-   * @throws {Kinvey.Error} `provider` is not supported.
    * @returns {Promise} The user.
    */
   connect: function(user, provider, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Linking a social identity to a Kinvey user.', arguments);
@@ -71,12 +72,13 @@ Kinvey.Social = /** @lends Kinvey.Social */{
     options        = options || {};
     options.create = 'undefined' !== typeof options.create ? options.create : true;
     if(!Kinvey.Social.isSupported(provider)) {
-      throw new Kinvey.Error('provider argument is not supported.');
+      error = new Kinvey.Error('provider argument is not supported.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Remove callbacks from `options` to avoid multiple calls.
     var success = options.success;
-    var error   = options.error;
+    error = options.error;
     delete options.success;
     delete options.error;
 
@@ -142,10 +144,11 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    * @param {Object} [user] The user.
    * @param {string} provider The provider.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `provider` is not supported.
    * @returns {Promise} The user.
    */
   disconnect: function(user, provider, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Unlinking a social identity from a Kinvey user.', arguments);
@@ -153,7 +156,8 @@ Kinvey.Social = /** @lends Kinvey.Social */{
 
     // Cast and validate arguments.
     if(!Kinvey.Social.isSupported(provider)) {
-      throw new Kinvey.Error('provider argument is not supported.');
+      error = new Kinvey.Error('provider argument is not supported.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Update the user data.

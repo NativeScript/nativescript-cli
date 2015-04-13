@@ -85,6 +85,8 @@ var TiSocialAdapter = {
    * @throws {Kinvey.Error} `options` must contain: `appId`.
    */
   facebook: function(options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Initiating the Facebook OAuth2.0 flow.', arguments);
@@ -93,7 +95,8 @@ var TiSocialAdapter = {
     // Validate arguments.
     options = options || {};
     if(null == options.appId) {
-      throw new Kinvey.Error('options argument must contain: appId.');
+      error = new Kinvey.Error('options argument must contain: appId.');
+      return Kinvey.Defer.reject(error);
     }
 
     // Prepare the response.

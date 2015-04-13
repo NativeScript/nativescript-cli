@@ -100,7 +100,6 @@ var backboneRelations = function(mode, model) {
  * @param {?string} id The document id (if any).
  * @param {?Object} document The document (if any).
  * @param {Object} options Options.
- * @throws {Kinvey.Error} `id` must not be null.
  * @returns {Promise} The response.
  */
 var backboneToKinveyCRUD = function(method, collection, id, data, options) {
@@ -144,10 +143,11 @@ var backboneToKinveyCRUD = function(method, collection, id, data, options) {
  * @param {string} method The CRUD method.
  * @param {Object} model The model to be saved, or the collection to be read.
  * @param {Object} options Callbacks, and request options.
- * @throws {Kinvey.Error} `model` or `options` must contain: url.
  * @returns {Promise} The response.
  */
 Kinvey.Backbone.Sync = function(method, model, options) {
+  var error;
+
   // Cast and validate arguments.
   options.query   = options.query || model.query;// Attach a (optional) query.
   options.subject = model;// Used by the persistence layer.
@@ -170,7 +170,8 @@ Kinvey.Backbone.Sync = function(method, model, options) {
   var data = options.attrs || model.toJSON(options);
   var url  = options.url   || _.result(model, 'url');
   if(null == url) {
-    throw new Kinvey.Error('model or options argument must contain: url.');
+    error = new Kinvey.Error('model or options argument must contain: url.');
+    return kinveyToBackbonePromise(Kinvey.Defer.reject(error), options);
   }
 
   // Strip the leading slash (if any).
