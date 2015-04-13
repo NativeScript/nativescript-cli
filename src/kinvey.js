@@ -241,10 +241,6 @@ Kinvey.setActiveUser = function(user) {
  *          Master Secret in client-side code.**
  * @param {boolean} [options.refresh=true] Refresh the active user (if any).
  * @param {Object}  [options.sync]         Synchronization options.
- * @throws {Kinvey.Error} `options` must contain: `appSecret` or
- *                          `masterSecret`.
- * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.APIHostName
- * @throws {Kinvey.Error} Kinvey requires https as the protocol when setting Kinvey.MICHostName
  * @returns {Promise} The active user.
  */
 Kinvey.init = function(options) {
@@ -256,10 +252,10 @@ Kinvey.init = function(options) {
   // Validate arguments.
   options = options || {};
   if(null == options.appKey) {
-    throw new Kinvey.Error('options argument must contain: appKey.');
+    return Kinvey.Defer.reject(new Kinvey.Error('options argument must contain: appKey.'));
   }
   if(null == options.appSecret && null == options.masterSecret) {
-    throw new Kinvey.Error('options argument must contain: appSecret and/or masterSecret.');
+    return Kinvey.Defer.reject(new Kinvey.Error('options argument must contain: appSecret and/or masterSecret.'));
   }
 
   // The active user is not ready yet.
@@ -271,10 +267,10 @@ Kinvey.init = function(options) {
 
   // Check if Kinvey.APIHostName uses https protocol
   if (Kinvey.APIHostName.indexOf('https://') !== 0) {
-    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
+    return Kinvey.Defer.reject(new Kinvey.Error('Kinvey requires https as the protocol when setting' +
                            ' Kinvey.APIHostName, instead found the protocol ' +
                            Kinvey.APIHostName.substring(0, Kinvey.APIHostName.indexOf(':/')) +
-                           ' in Kinvey.APIHostName: ' + Kinvey.APIHostName);
+                           ' in Kinvey.APIHostName: ' + Kinvey.APIHostName));
   }
 
   // Set the MIC host name
@@ -282,10 +278,10 @@ Kinvey.init = function(options) {
 
   // Check if Kinvey.MICHostName uses https protocol
   if (Kinvey.MICHostName.indexOf('https://') !== 0) {
-    throw new Kinvey.Error('Kinvey requires https as the protocol when setting' +
+    return Kinvey.Defer.reject(new Kinvey.Error('Kinvey requires https as the protocol when setting' +
                            ' Kinvey.MICHostName, instead found the protocol ' +
                            Kinvey.MICHostName.substring(0, Kinvey.MICHostName.indexOf(':/')) +
-                           ' in Kinvey.MICHostName: ' + Kinvey.MICHostName);
+                           ' in Kinvey.MICHostName: ' + Kinvey.MICHostName));
   }
 
   // Set the Client App Version

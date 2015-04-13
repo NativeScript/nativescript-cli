@@ -146,32 +146,33 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
    * @param {Request} request The request.
    * @param {string} request.method The request method.
    * @param {Options} options Options.
-   * @throws {Kinvey.Error} * `request` must contain: `method`.
-   *                         * `request` must contain: `namespace`.
-   *                         * `request` must contain: `auth`.
    * @returns {Promise}
    */
   _request: function(request, options) {
+    var error;
+
     // Validate arguments.
     if(null == request.method) {
-      throw new Kinvey.Error('request argument must contain: method.');
+      error = new Kinvey.Error('request argument must contain: method.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     if(null == request.namespace) {
-      throw new Kinvey.Error('request argument must contain: namespace.');
+      error = new Kinvey.Error('request argument must contain: namespace.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     if(null == request.auth) {
-      throw new Kinvey.Error('request argument must contain: auth.');
+      error = new Kinvey.Error('request argument must contain: auth.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Validate preconditions.
-    var error;
     if(null == Kinvey.appKey && Auth.None !== request.auth) {
       error = clientError(Kinvey.Error.MISSING_APP_CREDENTIALS);
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     if(null == Kinvey.masterSecret && options.skipBL) {
       error = clientError(Kinvey.Error.MISSING_MASTER_CREDENTIALS);
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -287,8 +288,9 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     var customRequestPropertiesHeader = JSON.stringify(options.customRequestProperties);
     var customRequestPropertiesByteCount = getByteCount(customRequestPropertiesHeader);
     if (customRequestPropertiesByteCount >= CRP_MAX_BYTES) {
-      throw new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
-                             '. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
+      error = new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
+                               '. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Set the custom request properties header.

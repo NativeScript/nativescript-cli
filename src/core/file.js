@@ -215,10 +215,11 @@ Kinvey.File = /** @lends Kinvey.File */{
    * @param {boolean} [options.tls=true] Use the https protocol to communicate
    *          with GCS.
    * @param {integer} [options.ttl] A custom expiration time.
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
    * @returns {Promise} A list of files.
    */
   find: function(query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Retrieving files by query.', arguments);
@@ -226,7 +227,8 @@ Kinvey.File = /** @lends Kinvey.File */{
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
