@@ -135,15 +135,6 @@ var AngularHTTP = {
         }
       }
 
-      // Handle redirects
-      if (3 === parseInt(status / 100, 10) && 304 !== status) {
-        if (url.indexOf(Kinvey.MICHostName) === 0) {
-          var location = _response.headers('location');
-          var redirectPathQueryString = '?' + location.split('?')[1];
-          return parseQueryString(redirectPathQueryString);
-        }
-      }
-
       // Return the response.
       return response || null;
     }, function(response) {

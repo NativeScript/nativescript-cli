@@ -98,18 +98,7 @@ var TiHttp = {
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = 'timeout' === e.type ? 0 : this.status;
 
-       // Handle redirects
-      if (3 === parseInt(status / 100, 10) && 304 !== status) {
-        if (url.indexOf(Kinvey.MICHostName) === 0) {
-          var location = this.getResponseHeader('location');
-          var redirectPathQueryString = '?' + location.split('?')[1];
-          return deferred.resolve(parseQueryString(redirectPathQueryString));
-        }
-
-        // Return response
-        deferred.resolve(options.file ? this.responseData : this.responseText);
-      }
-      else if(2 === parseInt(status / 100, 10) || 304 === this.status) {
+      if(2 === parseInt(status / 100, 10) || 304 === this.status) {
         var response;
 
         // Mobile web response.

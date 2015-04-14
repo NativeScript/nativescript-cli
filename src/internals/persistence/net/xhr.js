@@ -138,18 +138,7 @@ var Xhr = {
       }
 
 
-      // Handle redirects
-      if (3 === parseInt(status / 100, 10) && 304 !== status) {
-        if (url.indexOf(Kinvey.MICHostName) === 0) {
-          var location = request.getResponseHeader('location');
-          var redirectPathQueryString = '?' + location.split('?')[1];
-          return deferred.resolve(parseQueryString(redirectPathQueryString));
-        }
-
-        // Return response
-        deferred.resolve(responseData);
-      }
-      else if(2 === parseInt(status / 100, 10) || 304 === status) {
+      if(2 === parseInt(status / 100, 10) || 304 === status) {
         deferred.resolve(responseData);
       }
       else {// Failure.

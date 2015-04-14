@@ -77,19 +77,7 @@ var BackboneAjax = {
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = request.status;
-
-      // Handle redirects
-      if (3 === parseInt(status / 100, 10) && 304 !== status) {
-        if (url.indexOf(Kinvey.MICHostName) === 0) {
-          var location = request.getResponseHeader('location');
-          var redirectPathQueryString = '?' + location.split('?')[1];
-          return deferred.resolve(parseQueryString(redirectPathQueryString));
-        }
-
-        // Return the response.
-        deferred.resolve(request.responseText || null);
-      }
-      else if(2 === parseInt(status / 100, 10) || 304 === status) {
+      if(2 === parseInt(status / 100, 10) || 304 === status) {
         // If `options.file`, convert the response to `Blob` object.
         var response = request.responseText;
         if(options.file && null != response && null != root.ArrayBuffer) {
