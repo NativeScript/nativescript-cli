@@ -30,10 +30,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @param {string} collection Collection.
    * @param {Kinvey.Query} [query] The query.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
    * @returns {Promise} A list of documents.
    */
   find: function(collection, query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Retrieving documents by query.', arguments);
@@ -41,7 +42,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -164,7 +166,6 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @param {string} collection Collection.
    * @param {Object} document Document.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `document` must contain: `_id`.
    * @returns {Promise} The (new) document.
    */
   update: function(collection, document, options) {
@@ -178,8 +179,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     // Validate arguments.
     if(null == document._id) {
       error = new Kinvey.Error('document argument must contain: _id');
-      throw error;
-      // return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -218,6 +218,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @returns {Promise} The response.
    */
   clean: function(collection, query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Deleting documents by query.', arguments);
@@ -227,7 +229,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     options = options || {};
     query   = query   || new Kinvey.Query();
     if(!(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Prepare the response.
@@ -310,10 +313,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @param {string} collection The collection.
    * @param {Kinvey.Query} [query] The query.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
    * @returns {Promise} The response.
    */
   count: function(collection, query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Counting the number of documents.', arguments);
@@ -321,7 +325,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -358,10 +363,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    * @param {string} collection The collection.
    * @param {Kinvey.Aggregation} aggregation The aggregation.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `aggregation` must be of type `Kinvey.Group`.
    * @returns {Promise} The response.
    */
   group: function(collection, aggregation, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Grouping documents', arguments);
@@ -369,7 +375,8 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
 
     // Validate arguments.
     if(!(aggregation instanceof Kinvey.Group)) {
-      throw new Kinvey.Error('aggregation argument must be of type: Kinvey.Group.');
+      error = new Kinvey.Error('aggregation argument must be of type: Kinvey.Group.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.

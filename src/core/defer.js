@@ -35,9 +35,12 @@ Kinvey.Defer = /** @lends Kinvey.Defer */{
    * @returns {Promise} The promise.
    */
   all: function(promises) {
+    var error;
+
     // Validate arguments.
     if(!isArray(promises)) {
-      throw new Kinvey.Error('promises argument must be of type: Array.');
+      error = new Kinvey.Error('promises argument must be of type: Array.');
+      return Kinvey.Defer.reject(error);
     }
 
     // If there are no promises, resolve immediately.
