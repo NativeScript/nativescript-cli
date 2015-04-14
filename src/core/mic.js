@@ -280,7 +280,7 @@ var MIC = {
       if (redirected) {
         // Extract the code
         var queryString = '?' + event.url.split('?')[1];
-        var params = MIC.parse(queryString);
+        var params = parseQueryString(queryString);
         deferred.resolve(params.code);
         deferredResolved = true;
 
@@ -459,7 +459,7 @@ var MIC = {
             root.clearTimeout(timer);
 
             // Extract the code
-            var params = MIC.parse(popup.location.search);
+            var params = parseQueryString(popup.location.search);
             deferred.resolve(params.code);
             deferredResolved = true;
 
@@ -511,12 +511,12 @@ var MIC = {
       MIC.encodeFormData(request.data),
       request.headers,
       options
-    ).then(function(code) {
+    ).then(function(response) {
       try {
-        code = JSON.parse(code);
+        response = JSON.parse(response);
       } catch(e)  {}
 
-      return code;
+      return response.code;
     }, function(error) {
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'Unable to authorize user with username ' + options.username + ' and ' +
@@ -698,53 +698,6 @@ var MIC = {
   disconnect: function() {
     // Destroy the token
     return Storage.destroy(MIC.TOKEN_STORAGE_KEY);
-  },
-
-  /**
-   * Parse a query string and return an object.
-   *
-   * @example foo=bar&baz=qux -> { foo: "bar", baz: "qux" }
-   * @param {string} string The query string.
-   * @returns {Object} The query string params.
-   */
-  parse: function(str) {
-    if (typeof str !== 'string') {
-      return {};
-    }
-
-    str = str.trim().replace(/^(\?|#)/, '');
-
-    if (!str) {
-      return {};
-    }
-
-    var index = str.indexOf('#/');
-    if (index === str.length - 2) {
-      str = str.substring(0, index);
-    }
-
-    return str.trim().split('&').reduce(function (ret, param) {
-      var parts = param.replace(/\+/g, ' ').split('=');
-      var key = parts[0];
-      var val = parts[1];
-
-      key = decodeURIComponent(key);
-      // missing `=` should be `null`:
-      // http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-      val = val === undefined ? null : decodeURIComponent(val);
-
-      if (!ret.hasOwnProperty(key)) {
-        ret[key] = val;
-      }
-      else if (Array.isArray(ret[key])) {
-        ret[key].push(val);
-      }
-      else {
-        ret[key] = [ret[key], val];
-      }
-
-      return ret;
-    }, {});
   },
 
   /**
