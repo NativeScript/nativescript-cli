@@ -31,7 +31,10 @@
         return expect(Kinvey.User.MIC.loginWithAuthorizationCodeLoginPage(null)).to.be.rejected;
       });
 
-      it('should reject because of authorization timeout');
+      it('should reject because popup was blocked');
+      it('should reject because authorization timeout');
+      it('should reject because popup was closed');
+      it('should fulfill with a user');
     });
 
     describe('#loginWithAuthorizationCodeAPI()', function() {
@@ -53,7 +56,7 @@
 
       it('should reject because of incorrect credentials', function() {
         var tempLoginUriPath = '/' + randomId();
-        nock(Kinvey.MICHostName)
+        var api = nock(Kinvey.MICHostName)
           .filteringPath(/(&)?_=([^&]*)/, '')
           .filteringRequestBody(function() {
             return '*';
@@ -67,8 +70,14 @@
           .post(tempLoginUriPath, '*')
           .reply(403);
 
-        var promise = Kinvey.User.MIC.loginWithAuthorizationCodeAPI('tester', 'tester', redirectUri);
-        return expect(promise).to.be.rejected;
+        return Kinvey.User.MIC.loginWithAuthorizationCodeAPI('tester', 'tester', redirectUri).catch(function(error) {
+          expect(error).to.deep.equal({
+            name: 'MIC_ERROR',
+            debug: 'Unable to authorize user with username tester and password tester.',
+            description: 'Unable to authorize using Mobile Identity Connect.'
+          });
+          expect(api.isDone()).to.be.true;
+        });
       });
 
       it('should fulfill with a user', function() {
@@ -135,7 +144,7 @@
 
         return Kinvey.User.MIC.loginWithAuthorizationCodeAPI(username, password, redirectUri).then(function(authorizedUser) {
           expect(authorizedUser).to.not.be.null;
-          expect(authorizedUser._id).to.equal(user._id);
+          expect(authorizedUser).to.deep.equal(user);
           expect(mic.isDone()).to.be.true;
           expect(api.isDone()).to.be.true;
         });
