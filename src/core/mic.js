@@ -106,7 +106,7 @@ var MIC = {
       promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
-      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap()) {
+      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap() || this.isTitanium()) {
         error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant is not supported.');
         return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
