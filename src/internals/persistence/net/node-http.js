@@ -54,7 +54,10 @@ var NodeHttp = {
       length = body.length;
     }
     else if(null != body) {
-      body   = JSON.stringify(body);// Convert to string.
+      if (!isString(body)) {
+        body = JSON.stringify(body);// Convert to string.
+      }
+
       length = Buffer.byteLength(body);
     }
     headers['Content-Length'] = length;
@@ -85,8 +88,11 @@ var NodeHttp = {
         // Parse response.
         var responseData = Buffer.concat(data);
 
+        // Success implicates 2xx (Successful), 302 (Redirect), or 304 (Not Modified).
+        var status = response.statusCode;
+
         // Check `Content-Type` header for application/json
-        if (!options.file && responseData != null && 204 !== response.statusCode) {
+        if (!options.file && '' !== responseData.toString() && 2 === parseInt(status / 100, 10) && 204 !== status) {
           var responseContentType = response.headers['content-type'];
           var error;
 
@@ -106,9 +112,21 @@ var NodeHttp = {
           }
         }
 
-        // Success implicates 2xx (Successful), or 304 (Not Modified).
-        var status = response.statusCode;
-        if(2 === parseInt(status / 100, 10) || 304 === response.statusCode) {
+        // Handle redirects
+        if (3 === parseInt(status / 100, 10) && 304 !== status) {
+          if ((path.protocol + '//' + path.hostname).indexOf(Kinvey.MICHostName) === 0) {
+            var location = response.headers.location;
+            var redirectPath = NodeHttp.url.parse(location);
+            return deferred.resolve(parseQueryString(redirectPath.search));
+          }
+
+          // Unless `options.file`, convert the response to a string.
+          if (!options.file) {
+            responseData = responseData.toString() || null;
+          }
+          deferred.resolve(responseData);
+        }
+        else if(2 === parseInt(status / 100, 10) || 304 === status) {
           // Unless `options.file`, convert the response to a string.
           if(!options.file) {
             responseData = responseData.toString() || null;

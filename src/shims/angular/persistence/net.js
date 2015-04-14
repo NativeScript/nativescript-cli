@@ -110,9 +110,12 @@ var AngularHTTP = {
         response = buffer;
       }
 
+      // Success implicates 2xx (Successful), or 304 (Not Modified).
+      var status = _response.status;
+
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 204 !== _response.status) {
+      if (!options.file && response != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 

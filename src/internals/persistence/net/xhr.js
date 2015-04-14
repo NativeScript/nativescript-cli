@@ -113,8 +113,11 @@ var Xhr = {
         responseData = request.responseText || null;
       }
 
+      // Success implicates 2xx (Successful), or 304 (Not Modified).
+      var status = request.status;
+
       // Check `Content-Type` header for application/json
-      if (!options.file && responseData != null && 204 !== request.status) {
+      if (!options.file && responseData != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
         var responseContentType = request.getResponseHeader('Content-Type');
         var error;
 
@@ -134,8 +137,7 @@ var Xhr = {
         }
       }
 
-      // Success implicates 2xx (Successful), or 304 (Not Modified).
-      var status = request.status;
+
       if(2 === parseInt(status / 100, 10) || 304 === status) {
         deferred.resolve(responseData);
       }

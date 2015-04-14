@@ -76,10 +76,10 @@ var MIC = {
    * @return {Promise}                            Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
-    var error;
-    var promise;
     var clientId = Kinvey.appKey;
     var activeUser = Kinvey.getActiveUser();
+    var error;
+    var promise;
 
     // Set defaults for options
     options = options || {};
@@ -88,31 +88,39 @@ var MIC = {
 
     if (null != activeUser) {
       // Reject with error because of active user
-      error = clientError(Kinvey.Error.MIC_ERROR, {
-        debug: 'An active user is already logged in.'
-      });
-      return Kinvey.Defer.reject(error);
+      error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     else if (null == redirectUri) {
       error = new Kinvey.Error('A redirect uri must be provided to login with MIC.');
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+      if (this.isNode()) {
+        error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ' grant is not supported.');
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
+      }
+
       // Step 2: Request a code
       promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
+      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap() || this.isTitanium()) {
+        error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant is not supported.');
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
+      }
+
       if (null == options.username) {
         error = new Kinvey.Error('A username must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return Kinvey.Defer.reject(error);
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
 
       if (null == options.password) {
         error = new Kinvey.Error('A password must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return Kinvey.Defer.reject(error);
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
 
       // Step 2a: Request a temp login uri
@@ -131,10 +139,10 @@ var MIC = {
                'following authorization grants: ' + MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
                MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
       });
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    return promise.then(function(code) {
+    promise = promise.then(function(code) {
       // Step 3: Request a token
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
@@ -150,6 +158,8 @@ var MIC = {
         });
       });
     });
+
+    return wrapCallbacks(promise, options);
   },
 
   /**
@@ -163,13 +173,14 @@ var MIC = {
     var clientId = Kinvey.appKey;
     var activeUser = Kinvey.getActiveUser();
     var redirectUri;
+    var promise;
 
     // Set defaults for options
     options = options || {};
     options.attemptMICRefresh = false;
 
     // Step 1: Retrieve the saved token
-    return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
+    promise = Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
       if (null != token) {
         // Step 2: Refresh the token
         redirectUri = token.redirect_uri;
@@ -197,6 +208,8 @@ var MIC = {
         throw err;
       });
     });
+
+    return wrapCallbacks(promise, options);
   },
 
   /**
@@ -280,7 +293,7 @@ var MIC = {
       if (redirected) {
         // Extract the code
         var queryString = '?' + event.url.split('?')[1];
-        var params = MIC.parse(queryString);
+        var params = parseQueryString(queryString);
         deferred.resolve(params.code);
         deferredResolved = true;
 
@@ -459,7 +472,7 @@ var MIC = {
             root.clearTimeout(timer);
 
             // Extract the code
-            var params = MIC.parse(popup.location.search);
+            var params = parseQueryString(popup.location.search);
             deferred.resolve(params.code);
             deferredResolved = true;
 
@@ -511,12 +524,12 @@ var MIC = {
       MIC.encodeFormData(request.data),
       request.headers,
       options
-    ).then(function(code) {
+    ).then(function(response) {
       try {
-        code = JSON.parse(code);
+        response = JSON.parse(response);
       } catch(e)  {}
 
-      return code;
+      return response.code;
     }, function(error) {
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'Unable to authorize user with username ' + options.username + ' and ' +
@@ -701,53 +714,6 @@ var MIC = {
   },
 
   /**
-   * Parse a query string and return an object.
-   *
-   * @example foo=bar&baz=qux -> { foo: "bar", baz: "qux" }
-   * @param {string} string The query string.
-   * @returns {Object} The query string params.
-   */
-  parse: function(str) {
-    if (typeof str !== 'string') {
-      return {};
-    }
-
-    str = str.trim().replace(/^(\?|#)/, '');
-
-    if (!str) {
-      return {};
-    }
-
-    var index = str.indexOf('#/');
-    if (index === str.length - 2) {
-      str = str.substring(0, index);
-    }
-
-    return str.trim().split('&').reduce(function (ret, param) {
-      var parts = param.replace(/\+/g, ' ').split('=');
-      var key = parts[0];
-      var val = parts[1];
-
-      key = decodeURIComponent(key);
-      // missing `=` should be `null`:
-      // http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
-      val = val === undefined ? null : decodeURIComponent(val);
-
-      if (!ret.hasOwnProperty(key)) {
-        ret[key] = val;
-      }
-      else if (Array.isArray(ret[key])) {
-        ret[key].push(val);
-      }
-      else {
-        ret[key] = [ret[key], val];
-      }
-
-      return ret;
-    }, {});
-  },
-
-  /**
    * Encodes the data as form data.
    *
    * @param  {object} data Data to encode.
@@ -761,6 +727,33 @@ var MIC = {
       }
     }
     return str.join('&');
+  },
+
+  /**
+   * Return true or false if using HTML5.
+   *
+   * @return {Boolean} HTML5
+   */
+  isHTML5: function() {
+    return !(this.isTitanium() || this.isNode());
+  },
+
+  /**
+   * Return true or false if using Angular framework.
+   *
+   * @return {Boolean} Angular Framework
+   */
+  isAngular: function() {
+    return ('undefined' !== typeof root.angular);
+  },
+
+  /**
+   * Return true or false if using Backbone framework.
+   *
+   * @return {Boolean} Backbone Framework
+   */
+  isBackbone: function() {
+    return ('undefined' !== typeof root.Backbone);
   },
 
   /**
@@ -779,6 +772,15 @@ var MIC = {
    */
   isTitanium: function() {
     return ('undefined' !== typeof Titanium);
+  },
+
+  /**
+   * Return true or false if using NodeJS.
+   *
+   * @return {Boolean} NodeJS
+   */
+  isNode: function() {
+    return ('undefined' !== typeof module && module.exports);
   }
 };
 
