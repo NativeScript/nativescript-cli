@@ -114,7 +114,7 @@ var NodeHttp = {
 
         // Handle redirects
         if (3 === parseInt(status / 100, 10) && 304 !== status) {
-          if ((path.protocol + '//' + path.hostname) === Kinvey.MICHostName) {
+          if ((path.protocol + '//' + path.hostname).indexOf(Kinvey.MICHostName) === 0) {
             var location = response.headers.location;
             var redirectPath = NodeHttp.url.parse(location);
             return deferred.resolve(parseQueryString(redirectPath.search));
