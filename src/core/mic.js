@@ -76,10 +76,10 @@ var MIC = {
    * @return {Promise}                            Authorized user.
    */
   login: function(authorizationGrant, redirectUri, options) {
-    var error;
-    var promise;
     var clientId = Kinvey.appKey;
     var activeUser = Kinvey.getActiveUser();
+    var error;
+    var promise;
 
     // Set defaults for options
     options = options || {};
@@ -141,10 +141,10 @@ var MIC = {
                'following authorization grants: ' + MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ', ' +
                MIC.AuthorizationGrant.AuthorizationCodeAPI + '.'
       });
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    return promise.then(function(code) {
+    promise = promise.then(function(code) {
       // Step 3: Request a token
       return MIC.requestToken(clientId, redirectUri, code, options);
     }).then(function(token) {
@@ -160,6 +160,8 @@ var MIC = {
         });
       });
     });
+
+    return wrapCallbacks(promise, options);
   },
 
   /**
@@ -173,13 +175,14 @@ var MIC = {
     var clientId = Kinvey.appKey;
     var activeUser = Kinvey.getActiveUser();
     var redirectUri;
+    var promise;
 
     // Set defaults for options
     options = options || {};
     options.attemptMICRefresh = false;
 
     // Step 1: Retrieve the saved token
-    return Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
+    promise = Storage.get(MIC.TOKEN_STORAGE_KEY).then(function(token) {
       if (null != token) {
         // Step 2: Refresh the token
         redirectUri = token.redirect_uri;
@@ -207,6 +210,8 @@ var MIC = {
         throw err;
       });
     });
+
+    return wrapCallbacks(promise, options);
   },
 
   /**
