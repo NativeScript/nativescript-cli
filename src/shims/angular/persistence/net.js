@@ -110,9 +110,12 @@ var AngularHTTP = {
         response = buffer;
       }
 
+      // Success implicates 2xx (Successful), or 304 (Not Modified).
+      var status = _response.status;
+
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 204 !== _response.status) {
+      if (!options.file && response != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 
@@ -129,6 +132,15 @@ var AngularHTTP = {
 
         if (error) {
           throw error;
+        }
+      }
+
+      // Handle redirects
+      if (3 === parseInt(status / 100, 10) && 304 !== status) {
+        if (url.indexOf(Kinvey.MICHostName) === 0) {
+          var location = _response.headers('location');
+          var redirectPathQueryString = '?' + location.split('?')[1];
+          return parseQueryString(redirectPathQueryString);
         }
       }
 
