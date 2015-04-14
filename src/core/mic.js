@@ -91,28 +91,38 @@ var MIC = {
       error = clientError(Kinvey.Error.MIC_ERROR, {
         debug: 'An active user is already logged in.'
       });
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     else if (null == redirectUri) {
       error = new Kinvey.Error('A redirect uri must be provided to login with MIC.');
-      return Kinvey.Defer.reject(error);
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
+      if (this.isNode()) {
+        error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ' grant is not supported.');
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
+      }
+
       // Step 2: Request a code
       promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
+      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap()) {
+        error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant is not supported.');
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
+      }
+
       if (null == options.username) {
         error = new Kinvey.Error('A username must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return Kinvey.Defer.reject(error);
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
 
       if (null == options.password) {
         error = new Kinvey.Error('A password must be provided to login with MIC using the ' +
                                  MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return Kinvey.Defer.reject(error);
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
 
       // Step 2a: Request a temp login uri
@@ -717,6 +727,33 @@ var MIC = {
   },
 
   /**
+   * Return true or false if using HTML5.
+   *
+   * @return {Boolean} HTML5
+   */
+  isHTML5: function() {
+    return !(this.isTitanium() || this.isNode());
+  },
+
+  /**
+   * Return true or false if using Angular framework.
+   *
+   * @return {Boolean} Angular Framework
+   */
+  isAngular: function() {
+    return ('undefined' !== typeof root.angular);
+  },
+
+  /**
+   * Return true or false if using Backbone framework.
+   *
+   * @return {Boolean} Backbone Framework
+   */
+  isBackbone: function() {
+    return ('undefined' !== typeof root.Backbone);
+  },
+
+  /**
    * Return true or false if using Cordova/PhoneGap framework.
    *
    * @return {Boolean} Cordova/PhoneGap Framework
@@ -732,6 +769,15 @@ var MIC = {
    */
   isTitanium: function() {
     return ('undefined' !== typeof Titanium);
+  },
+
+  /**
+   * Return true or false if using NodeJS.
+   *
+   * @return {Boolean} NodeJS
+   */
+  isNode: function() {
+    return ('undefined' !== typeof module && module.exports);
   }
 };
 
