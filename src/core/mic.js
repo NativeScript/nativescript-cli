@@ -88,9 +88,7 @@ var MIC = {
 
     if (null != activeUser) {
       // Reject with error because of active user
-      error = clientError(Kinvey.Error.MIC_ERROR, {
-        debug: 'An active user is already logged in.'
-      });
+      error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
     else if (null == redirectUri) {
