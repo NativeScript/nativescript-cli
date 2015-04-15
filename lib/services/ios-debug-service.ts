@@ -66,13 +66,11 @@ class IOSDebugService implements IDebugService {
 
 	private emulatorDebugBrk(): IFuture<void> {
 		return (() => {
-			var device = this.getRunningEmulatorOrRunNew().wait();
 			var platformData = this.$platformsData.getPlatformData(this.platform);
 			this.$platformService.buildPlatform(this.platform).wait();
 			var emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
-			device.installApp(emulatorPackage.packageName).wait();
 			this.executeOpenDebuggerClient().wait();
-			device.launchApp(this.$projectData.projectId, "--nativescript-debug-brk").wait();
+			this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
 		}).future<void>()();
 	}
 
