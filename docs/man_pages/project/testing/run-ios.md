@@ -1,27 +1,38 @@
 run ios
 ==========
 
-Usage:
-    `$ tns run ios [--device <Device ID>] [--release]`
-    `$ tns run ios --emulator [<Emulator Options>] [--release]`
+Usage | Synopsis
+---|---
+Run on all connected devices | `$ tns run ios [--release]`
+Run on a selected connected device | `$ tns run ios [--device <Device ID>] [--release]`
+Start an emulator and run the app inside it | `$ tns run ios --emulator [<Emulator Options>] [--release]`
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build, and deploy.
 
-`<Device ID>` is the index or name of the target device as listed by `$ tns device <Emulator Options>` is any valid combination of options as listed by `$ tns help emulate ios`
-Prerequisites:
-Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help run ios`<% } %> 
+<% if((isConsole && isMacOS) || isHtml) { %> 
+<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
-Before running the iOS Simulator, verify that you have met the following requirements.
-* You are running the NativeScript CLI on OS X.
-* You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the  NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
-
-Options:
-* `--device` - Specifies a connected device on which to run the app. You cannot use `--device` and `--emulator` simultaneously.
+### Options
+* `--device` - Specifies a connected device on which to run the app. 
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate ios`. You cannot use `--device` and `--emulator` simultaneously.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
-<% if(isHtml) { %> 
 
-#### Related Commands
+### Attributes
+* `<Device ID>` is the index or name of the target device as listed by `$ tns device ios` 
+* `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate ios`
+<% } %>
+<% if(isHtml) { %> 
+### Prerequisites
+Before running the iOS Simulator, verify that you have met the following requirements.
+* You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the  NativeScript CLI depends. For more information, visit [https://www.npmjs.org/package/ios-sim-portable](https://www.npmjs.org/package/ios-sim-portable).
+
+### Command Limitations
+
+* You can run `$ tns run ios` only on OS X systems.
+* You cannot use `--device` and `--emulator` simultaneously.
+
+### Related Commands
 
 Command | Description
 ----------|----------

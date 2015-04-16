@@ -1,18 +1,24 @@
 run
 ==========
 
-Usage:
-    `$ tns run <Command>`
-You must run the run command with a related command.
+Usage | Synopsis
+---|---
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns run <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns run android`<% } %>
 
-Runs your project on a connected device or in the native emulator for the selected platform.
+Runs your project on a connected device or in the native emulator for the selected platform.<% if(isMacOS) { %>You must specify the target platform on which you want to run your project.<% } %><% if(isConsole && (isLinux || isWindows)) { %>You must run `$ tns run android`<% } %>
 
-`<Command>` is a related command that sets a target platform for the run command. You can run the following related commands:
-* `android` - Runs your project on a connected Android device or in a native Android emulator, if configured. 
-* `ios` - Runs your project on a connected iOS device or in the iOS Simulator, if configured.
+<% if((isConsole && isMacOS) || isHtml) { %>### Attributes
+`<Platform>` is the target mobile platform on which you want to run your project. You can set the following target platforms.
+* `android` - Runs your project on a connected Android device, in the native emulator or in Genymotion.
+* `ios` - Runs your project on a connected iOS device or in the iOS Simulator.<% } %> 
+
 <% if(isHtml) { %> 
+### Command Limitations
 
-#### Related Commands
+* You can run `$ tns run ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

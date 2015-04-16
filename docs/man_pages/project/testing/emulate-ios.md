@@ -1,27 +1,34 @@
 emulate ios
 ==========
 
-Usage:
-    `$ tns emulate ios [--print-app-output] [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]`
+Usage | Synopsis
+---|---
+General | `$ tns emulate ios [--path <Directory>] [--device <Device Name>] [--availableDevices] [--release] [--timeout]`
 
 Builds the specified project and runs it in the native iOS Simulator.
 
-`<Device Name>` is the name of the iOS Simulator device on which you want to run your app as listed by `$ tns emulate ios --availableDevices`
-Prerequisites:
-Before running the iOS Simulator, verify that you have met the following requirements.
-* You are running the NativeScript CLI on OS X.
-* You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the NativeScript CLI depends. For more information, visit https://www.npmjs.org/package/ios-sim-portable
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help emulate ios`<% } %> 
 
-Options:
-* `--print-app-output` - If set, prints the standard output of the running application.
-* `--availableDevices` - Lists all available device type identifiers for the current XCode.
+<% if((isConsole && isMacOS) || isHtml) { %>### Options
+* `--availableDevices` - Lists all available device type identifiers for the current Xcode.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--path` - Specifies the directory that contains the project. If not specified, the project is searched for in the current directory and all directories above it.
 * `--device` - Specifies the name of the iOS Simulator device on which you want to run your app. To list the available iOS Simulator devices, run `$ tns emulate ios --availableDevices`
-* `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the iOS Simulator to start before quitting the operation and releasing the console. The value must be a positive integer. If not set, the default timeout is 90 seconds.
-<% if(isHtml) { %> 
+* `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the iOS Simulator to start before quitting the operation and releasing the console. The value must be a positive integer. If not set, the default timeout is 90 seconds. 
 
-#### Related Commands
+### Attributes
+* `<Device Name>` is the name of the iOS Simulator device on which you want to run your app as listed by `$ tns emulate ios --availableDevices`<% } %> 
+
+<% if(isHtml) { %> 
+### Prerequisites
+Before running the iOS Simulator, verify that you have met the following requirements.
+* You have installed Xcode. The version of Xcode must be compatible with the ios-sim-portable npm package on which the NativeScript CLI depends. For more information, visit [https://www.npmjs.org/package/ios-sim-portable](https://www.npmjs.org/package/ios-sim-portable).
+
+### Command Limitations
+
+* You can run `$ tns emulate ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

@@ -1,18 +1,24 @@
 build
 ==========
 
-Usage:
-    `$ tns build <Command>`
-You must run the build command with a related command.
+Usage | Synopsis
+---|---
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns build <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns build android`<% } %>
 
-Builds the project for the selected target platform and produces an application package that you can manually deploy on device or in the native emulator.
+Builds the project for Android <% if(isMacOS) { %>or iOS <% } %>and produces an application package that you can manually deploy on device or in the native emulator. <% if(isMacOS) { %>You must specify the target platform for which you want to build your project.<% } %>
 
-`<Command>` is a related command that sets a target platform for the build command. You can run the following related commands:
-* `android` - Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
-* `ios` - Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
+<% if((isConsole && isMacOS) || isHtml) { %>### Attributes
+`<Platform>` is the target mobile platform for which you want to build your project. You can set the following target platforms.
+* `android` - Builds the project for Android and produces an `APK` that you can manually deploy on device or in the native emulator.
+* `ios` - Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on device, respectively.<% } %> 
+
 <% if(isHtml) { %> 
+### Command Limitations
 
-#### Related Commands
+* You can run `$ tns build ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

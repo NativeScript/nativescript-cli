@@ -1,17 +1,24 @@
 device list-applications
 ==========
 
-Usage:
-    `$ tns device list-applications [--device <Device ID>]`
+Usage | Synopsis
+------|-------
+General | `$ tns device list-applications [--device <Device ID>]`
 
-Lists the installed applications on all connected Android and iOS devices. 
+Lists the installed applications on all connected Android <% if(isWindows || isMacOS) { %>and iOS <% } %>devices. 
 
-`<Device ID>` is the device index or identifier as listed by run `$ tns device`
-Options:
+### Options
 * `--device` - If multiple devices are connected, sets the device for which you want to list all currently installed applications.
-<% if(isHtml) { %> 
 
-#### Related Commands
+### Attributes
+* `<Device ID>` is the device index or identifier as listed by run `$ tns device`
+
+<% if(isHtml) { %> 
+### Command Limitations
+
+* You cannot work with connected iOS devices on Linux systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------
