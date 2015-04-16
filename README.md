@@ -265,6 +265,7 @@ Run `tns help` to list all available commands. Run or `tns <Command> --help` to 
 * `device run` runs a selected application on a connected device.
 * `device list-applications` lists the installed applications on all connected devices.
 * `feature-usage-tracking` configures anonymous feature usage tracking.
+* `autocomplete` lets you configure your command-line completion settings for zsh and bash profiles.
 
 [Back to Top][1]
 
