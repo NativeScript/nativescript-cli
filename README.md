@@ -141,7 +141,6 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
-	* (Optional for working with third-party libraries) [64-bit Mono][Mono] installed via Homebrew
 * For Android development
 	* [JDK 7][JDK 7] or a later stable official release 
 	* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
@@ -530,4 +529,3 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
 [Android SDK 19]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
-[Mono]: http://www.mono-project.com
