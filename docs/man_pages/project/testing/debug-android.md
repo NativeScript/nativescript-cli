@@ -1,31 +1,41 @@
 debug android
 ==========
 
-Usage:
-    `$ tns debug android [--device <Device ID> | --emulator <Emulator Options> | --geny <Geny Name> ] [--debug-brk | --start | --stop | --get-port] [--debug-port <port>] [--print-app-output]`
+Usage | Synopsis
+---|---
+Deploy on device, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>]`
+Deploy in the native emulator, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --emulator [<Emulator Options>]`
+Deploy in Genymotion, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --geny <Geny Name>`
+Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--debug-port <port>]`
+Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>]`
+Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output]`
+Retrieve the device port on which you are debugging | `$ tns debug android [--device <Device ID>] --get-port`
+Detach the debug tools | `$ tns debug android --stop`
 
-Example usage:
-    `$ tns debug android --get-port`    `$ tns debug android --debug-brk [--debug-port <port>]`
-    `$ tns debug android --start [--debug-port <port>]`
-    `$ tns debug android --stop`
+Debugs your project on a connected device, in a native emulator or in Genymotion.
 
-Debugs your project on a connected device or in a native emulator.
-
-`<Device ID>` is the index or name of the target device as listed by `$ tns list-devices <Port>` is an accessible port on the device to which you want to attach the debugging tools.
-
-Options:
-* `--device` - Specifies a connected device on which to run the app.
+### Options
+* `--device` - Specifies a connected device on which to debug the app.
 * `--emulator` - Specifies that you want to debug the app in the native Android emulator from the Android SDK.
 * `--geny` - Specifies a Genymotion emulator on which you want to debug your app.
-* `--debug-brk` - Shorthand for prepare, build and deploy. Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser. You must have Chrome installed on your system.
-* `--start` - Attaches the debug tools to a deployed and running app. Your app must be running on device.
+* `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser. 
+* `--start` - Attaches the debug tools to a deployed and running app.
 * `--stop` - Detaches the debug tools.
 * `--get-port` - Retrieves the port on which you are debugging your application.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
-* `--print-app-output` - If set, prints the system debug output (logcat). 
-<% if(isHtml) { %> 
 
-#### Related Commands
+### Attributes
+* `<Device ID>` is the index or name of the target device as listed by `$ tns list-devices` 
+* `<Port>` is an accessible port on the device to which you want to attach the debugging tools.
+* `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate android`
+* `<GenyName>` is the name of the Genymotion virtual device that you want to use as listed by `$ genyshell -c "devices list"`
+ 
+<% if(isHtml) { %> 
+### Prerequisites
+
+* You must have Chrome installed on your system.
+
+### Related Commands
 
 Command | Description
 ----------|----------
