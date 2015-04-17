@@ -29,24 +29,29 @@ class AndroidProjectService implements IPlatformProjectService {
 		private $propertiesParser: IPropertiesParser) {
 	}
 
+	private _platformData: IPlatformData = null;
 	public get platformData(): IPlatformData {
-		var projectRoot = path.join(this.$projectData.platformsDir, "android");
+		if (!this._platformData) {
+			var projectRoot = path.join(this.$projectData.platformsDir, "android");
 
-		return {
-			frameworkPackageName: "tns-android",
-			normalizedPlatformName: "Android",
-			appDestinationDirectoryPath: path.join(projectRoot, "assets"),
-			appResourcesDestinationDirectoryPath: path.join(projectRoot, "res"),
-			platformProjectService: this,
-			emulatorServices: this.$androidEmulatorServices,
-			projectRoot: projectRoot,
-			deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
-			validPackageNamesForDevice: [
-				util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
-				util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
-			],
-			frameworkFilesExtensions: [".jar", ".dat", ".so"]
-		};
+			this._platformData = {
+				frameworkPackageName: "tns-android",
+				normalizedPlatformName: "Android",
+				appDestinationDirectoryPath: path.join(projectRoot, "assets"),
+				appResourcesDestinationDirectoryPath: path.join(projectRoot, "res"),
+				platformProjectService: this,
+				emulatorServices: this.$androidEmulatorServices,
+				projectRoot: projectRoot,
+				deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
+				validPackageNamesForDevice: [
+					util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
+					util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
+				],
+				frameworkFilesExtensions: [".jar", ".dat", ".so"]
+			};
+		}
+
+		return this._platformData;
 	}
 
 	public validate(): IFuture<void> {
@@ -54,7 +59,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.validatePackageName(this.$projectData.projectId);
 			this.validateProjectName(this.$projectData.projectName);
 
-			this.checkAnt().wait() && this.checkAndroid().wait() && this.checkJava().wait();
+			this.checkAnt().wait() && this.checkAndroid().wait();
 		}).future<void>()();
 	}
 
@@ -65,14 +70,14 @@ class AndroidProjectService implements IPlatformProjectService {
 			var versionNumber = _.last(newTarget.split("-"));
 			if(options.symlink) {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
 
 				this.symlinkDirectory("assets", projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
 			} else {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 				this.copy(projectRoot, frameworkDir, "assets libs", "-R").wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties", "-f").wait();
+				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
 			}
 
 			if(newTarget) {
@@ -132,45 +137,18 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
-		return (() => {
-			return true;
-		}).future<boolean>()();
+		return Future.fromResult<boolean>(true);
 	}
 
 	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
 		return (() => { }).future<void>()();
 	}
 
-	private updateMetadata(projectRoot: string): void {
-		var projMetadataDir = path.join(projectRoot, "assets", "metadata");
-		var libsmetadataDir = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName, AndroidProjectService.METADATA_DIRNAME);
-		shell.cp("-f", path.join(libsmetadataDir, "*.dat"), projMetadataDir);
-	}
-
-	private generateMetadata(projectRoot: string): void {
-		var metadataGeneratorPath = path.join(__dirname, "../../resources/tools/metadata-generator.jar");
-		var libsFolder = path.join(projectRoot, "../../lib", this.platformData.normalizedPlatformName);
-		var metadataDirName = AndroidProjectService.METADATA_DIRNAME;
-		var outDir = path.join(libsFolder, metadataDirName);
-		this.$fs.ensureDirectoryExists(outDir).wait();
-
-		shell.cp("-f", path.join(__dirname, "../../resources/tools/android.jar"), libsFolder);
-		shell.cp("-f", path.join(__dirname, "../../resources/tools/android-support-v4.jar"), libsFolder);
-		shell.cp("-f", path.join(projectRoot, "libs/*.jar"), libsFolder);
-
-		this.spawn('java', ['-jar', metadataGeneratorPath, libsFolder, outDir]).wait();
-	}
-
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
 			var buildConfiguration = options.release ? "release" : "debug";
 			var args = this.getAntArgs(buildConfiguration, projectRoot);
-			var argsSaved = this.getAntArgs(buildConfiguration, projectRoot);
 			this.spawn('ant', args).wait();
-			this.generateMetadata(projectRoot);
-			this.updateMetadata(projectRoot);
-			// build the project again in order to include the newly generated metadata
-			this.spawn('ant', argsSaved).wait();
 		}).future<void>()();
 	}
 
@@ -285,7 +263,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	private spawn(command: string, args: string[]): IFuture<void> {
 		if (hostInfo.isWindows()) {
 			args.unshift('/s', '/c', command);
-			command = 'cmd';
+			command = process.env.COMSPEC || 'cmd.exe';
 		}
 
 		return this.$childProcess.spawnFromEvent(command, args, "close", {stdio: "inherit"});
@@ -310,6 +288,9 @@ class AndroidProjectService implements IPlatformProjectService {
 				args = args.concat(["-Dkey.alias.password", options.keyStoreAliasPassword])
 			}
 		}
+
+		// metadata generation support
+		args = args.concat(["-Dns.resources", path.join(__dirname, "../../resources/tools")]);
 
 		return args;
 	}
@@ -418,16 +399,6 @@ class AndroidProjectService implements IPlatformProjectService {
 				this.$childProcess.exec("ant -version").wait();
 			} catch(error) {
 				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.")
-			}
-		}).future<void>()();
-	}
-
-	private checkJava(): IFuture<void> {
-		return (() => {
-			try {
-				this.$childProcess.exec("java -version").wait();
-			} catch(error) {
-				this.$errors.fail("%s\n Failed to run 'java', make sure your java environment is set up.\n Including JDK and JRE.\n Your JAVA_HOME variable is %s", error, process.env.JAVA_HOME);
 			}
 		}).future<void>()();
 	}

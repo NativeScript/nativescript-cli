@@ -1,19 +1,26 @@
 build ios
 ==========
 
-Usage:
-    `$ tns build ios [--forDevice] [--release]`
+Usage | Synopsis
+---|---
+General | `$ tns build ios [--forDevice] [--release]`
 
-Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
+Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on device, respectively.
 
-> WARNING: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system.
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help build ios`<% } %> 
+<% if((isConsole && isMacOS) || isHtml) { %>  
+<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %> 
 
-Options:
+### Options
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--forDevice` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
+<% } %>
 <% if(isHtml) { %> 
+### Command Limitations
 
-#### Related Commands
+* You can run `$ tns build ios` only on OS X systems.
+
+### Related Commands
 
 Command | Description
 ----------|----------

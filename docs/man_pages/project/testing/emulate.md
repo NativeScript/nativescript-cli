@@ -1,23 +1,20 @@
 emulate
 ==========
 
-Usage:
-    `$ tns emulate <Command> [--print-app-output] [--release]`
+Usage | Synopsis
+---|---
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns emulate <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns emulate android`<% } %>
 
-You must run the emulate command with a related command.
+Builds and runs the project in the native emulator for the selected target platform. <% if(isMacOS) { %>You must specify the target platform for which you want to build your project.<% } %>
 
-Builds and runs the project in the native emulator for the selected target platform.
-
-`<Command>` is a related command that sets a target platform for the emulate command. You can run the following related commands:
+<% if((isConsole && isMacOS) || isHtml) { %>### Attributes
+`<Platform>` is the target mobile platform for which you want to emulate your project. You can set the following target platforms.
 * `android` - Builds the specified project and runs it in the native Android emulator.
-* `ios` - Builds the specified project and runs it in the native iOS Simulator.
+* `ios` - Builds the specified project and runs it in the native iOS Simulator.<% } %>
 
-Options:
-* `--print-app-output` - If set, prints the output of the running application.
-* `--release` - If set, produces a release build. Otherwise, produces a debug build.
 <% if(isHtml) { %> 
-
-#### Related Commands
+### Related Commands
 
 Command | Description
 ----------|----------
