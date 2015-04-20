@@ -34,7 +34,6 @@ Before adding a framework, verify that your project meets the following requirem
 
 Before adding an iOS framework, verify that your system and the framework meets the following requirements.
 
-* You have installed Mono using Homebrew.
 * You have Xcode 6 and the iOS 8.0 SDK installed.
 * The framework is a Cocoa Touch Framework with all build architectures enabled.
 * If the framework relies on other third-party frameworks, make sure to add these frameworks manually as well.
