@@ -76,8 +76,8 @@ var BackboneAjax = {
       }
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
-      var status   = request.status;
-      if(2 === parseInt(status / 100, 10) || 304 === request.status) {
+      var status = request.status;
+      if(2 === parseInt(status / 100, 10) || 304 === status) {
         // If `options.file`, convert the response to `Blob` object.
         var response = request.responseText;
         if(options.file && null != response && null != root.ArrayBuffer) {
