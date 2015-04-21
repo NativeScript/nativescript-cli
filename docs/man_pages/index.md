@@ -9,7 +9,7 @@ Alias | `$ nativescript <Command> [Command Parameters] [--command <Options>]`
 
 Command | Description
 -------|----------
-[help `<Command>`](general/help.html) | Shows additional information about the commands in this list.
+[help `<Command>`](general/help.html) | Shows additional information about the commands in this list in the browser.
 [autocomplete](general/autocomplete.html) | Configures your current command-line completion settings.
 [feature-usage-tracking](general/feature-usage-tracking.html) | Configures anonymous feature usage tracking.
 
@@ -40,7 +40,7 @@ Command | Description
 ## Global Options
 Option | Description
 -------|---------
---help, -h, /? | Prints help about the current command.
+--help, -h, /? | Prints help about the selected command in the console.
 --path `<Directory>` | Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 --version | Prints the client version.
 --log trace | Prints a detailed diagnostic log for the execution of the current command.
