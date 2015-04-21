@@ -166,11 +166,10 @@ export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/s
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release<br/>If installed via `sudo apt-get install`, use the `nodejs-legacy` package.
+* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
 
-	```Shell
-	sudo apt-get install nodejs-legacy
-	```
+	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
+	
 * G++ compiler
 
 	```Shell
