@@ -246,9 +246,9 @@ Quick Start
 
 ## The Commands
 
-Run `tns help` to list all available commands. Run or `tns <Command> --help` to view more information about a selected command.
+Run `tns help` to view all available commands in the browser. Run `tns help <Command>` to view more information about a selected command in the browser.
 
-* `help` lists all available commands.
+* `help` opens a new browser window and lists all available commands.
 * `create <App Name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]` creates a new project with the specified settings.
 * `platform list` lists the current target platforms for your project.
 * `platform add <Platform>` adds a new target platform to your project.
