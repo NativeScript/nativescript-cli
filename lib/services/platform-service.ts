@@ -18,7 +18,8 @@ export class PlatformService implements IPlatformService {
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter) { }
+		private $prompter: IPrompter,
+		private $commandsService: ICommandsService) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -190,7 +191,6 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 
-			this.preparePlatform(platform).wait();
 			if (options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
@@ -242,7 +242,7 @@ export class PlatformService implements IPlatformService {
 			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
 			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
 			this.$devicesServices.execute(action).wait();
-
+			this.$commandsService.tryExecuteCommand("device", ["run", this.$projectData.projectId]).wait();
 		}).future<void>()();
 	}
 
