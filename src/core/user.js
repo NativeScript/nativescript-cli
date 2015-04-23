@@ -81,6 +81,8 @@ Kinvey.User = /** @lends Kinvey.User */{
    * @returns {Promise} The active user.
    */
   login: function(usernameOrData, password, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Logging in an existing user.', arguments);
@@ -98,12 +100,13 @@ Kinvey.User = /** @lends Kinvey.User */{
     // Validate arguments.
     if(null == usernameOrData.username && null == usernameOrData.password &&
      null == usernameOrData._socialIdentity) {
-      throw new Kinvey.Error('Argument must contain: username and password, or _socialIdentity.');
+      error = new Kinvey.Error('Argument must contain: username and password, or _socialIdentity.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Validate preconditions.
     if(null !== Kinvey.getActiveUser()) {
-      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
+      error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
@@ -491,7 +494,6 @@ Kinvey.User = /** @lends Kinvey.User */{
    * @param {Options} [options] Options.
    * @param {string} [options._provider] Do not strip the `access_token` for
    *          this provider. Should only be used internally.
-   * @throws {Kinvey.Error} `data` must contain: `_id`.
    * @returns {Promise} The user.
    */
   update: function(data, options) {
@@ -504,7 +506,8 @@ Kinvey.User = /** @lends Kinvey.User */{
 
     // Validate arguments.
     if(null == data._id) {
-      throw new Kinvey.Error('data argument must contain: _id');
+      error = new Kinvey.Error('data argument must contain: _id');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -598,10 +601,11 @@ Kinvey.User = /** @lends Kinvey.User */{
    * @param {Options} [options] Options.
    * @param {boolean} [discover=false] Use
    *          [User Discovery](http://devcenter.kinvey.com/guides/users#lookup).
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
    * @returns {Promise} A list of users.
    */
   find: function(query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Retrieving users by query.', arguments);
@@ -609,7 +613,8 @@ Kinvey.User = /** @lends Kinvey.User */{
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -812,10 +817,11 @@ Kinvey.User = /** @lends Kinvey.User */{
    *
    * @param {Kinvey.Query} [query] The query.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
    * @returns {Promise} The response.
    */
   count: function(query, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Counting the number of users.', arguments);
@@ -823,7 +829,8 @@ Kinvey.User = /** @lends Kinvey.User */{
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -858,10 +865,11 @@ Kinvey.User = /** @lends Kinvey.User */{
    *
    * @param {Kinvey.Aggregation} aggregation The aggregation.
    * @param {Options} [options] Options.
-   * @throws {Kinvey.Error} `aggregation` must be of type `Kinvey.Group`.
    * @returns {Promise} The response.
    */
   group: function(aggregation, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Grouping users.', arguments);
@@ -869,7 +877,8 @@ Kinvey.User = /** @lends Kinvey.User */{
 
     // Validate arguments.
     if(!(aggregation instanceof Kinvey.Group)) {
-      throw new Kinvey.Error('aggregation argument must be of type: Kinvey.Group.');
+      error = new Kinvey.Error('aggregation argument must be of type: Kinvey.Group.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.

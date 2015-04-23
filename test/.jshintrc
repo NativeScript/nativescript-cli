@@ -20,6 +20,7 @@
   "eqnull"    : true,
   "expr"      : true,
   "globals"   : {
+    "global"     : true,
     "console"    : true,
     "after"      : true,
     "afterEach"  : true,
@@ -35,6 +36,15 @@
     "angular"    : true,
     "Backbone"   : true,
     "Kinvey"     : true,
-    "require"    : true
+    "require"    : true,
+    "nock"       : true,
+    "apiHostName": true,
+    "appKey"     : true,
+    "module"     : true,
+    "exports"    : true,
+    "randomId"   : true,
+    "login"      : true,
+    "logout"     : true,
+    "randomId"   : true
   }
 }
