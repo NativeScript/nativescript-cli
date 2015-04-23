@@ -1,4 +1,8 @@
 # Changelog
+### 1.3.1 (2015-04-23)
+* BugFix(MLIBZ-194): Returns a rejected promise rather then throwing an error when calling a function and expecting a promise to be returned.
+* BugFix(MLIBZ-249): Fixed platform specific issues with MIC.
+
 ### 1.3.0 (2015-04-10)
 * Enhancement(MLIBZ-213): Added support for Mobile Identity Connect
 * BugFix(MLIBZ-207): Fixed bug that prevented a user from being logged out on Angular
