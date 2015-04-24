@@ -99,7 +99,9 @@ function createTestInjector() {
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => {}
 	});
-
+	testInjector.register("commandsService", {
+		tryExecuteCommand: () => {}
+	});
 
 	return testInjector;
 }

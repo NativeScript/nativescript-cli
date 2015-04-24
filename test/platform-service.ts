@@ -38,6 +38,9 @@ function createTestInjector() {
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});
 	testInjector.register('lockfile', stubs.LockFile);
+	testInjector.register("commandsService", {
+		tryExecuteCommand: () => {}
+	});
 
 	return testInjector;
 }
