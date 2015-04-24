@@ -1,6 +1,5 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import Future = require("fibers/future");
 
 export class LogcatPrinter implements Mobile.ILogcatPrinter {
 	constructor(private $logger: ILogger) { }
