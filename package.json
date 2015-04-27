@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "0.10.0",
+  "version": "1.0.0",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -42,6 +42,7 @@
     "log4js": "0.6.22",
     "marked": "0.3.3",
     "marked-terminal": "1.4.0",
+    "minimatch": "2.0.4",
     "mkdirp": "0.3.5",
     "mute-stream": "0.0.4",
     "node-inspector": "0.7.4",
