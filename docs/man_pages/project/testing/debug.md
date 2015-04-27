@@ -3,8 +3,7 @@ debug
 
 Usage | Synopsis
 ---|---
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %> 
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %> 
 
 Debugs your project on a connected device or in a native emulator. <% if(isMacOS) { %>You must specify the target platform on which you want to debug.<% } %>
 
