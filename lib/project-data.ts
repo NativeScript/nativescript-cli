@@ -24,14 +24,14 @@ export class ProjectData implements IProjectData {
 			// If no project found, projectDir should be null
 			if(projectDir) {
 				this.projectDir = projectDir;
-				this.projectName = path.basename(projectDir);
+				this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 				this.platformsDir = path.join(projectDir, "platforms");
 				this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 
 				if (this.$fs.exists(this.projectFilePath).wait()) {
 					try {
-					var fileContent = this.$fs.readJson(this.projectFilePath).wait();
-					this.projectId = fileContent.id;
+						var fileContent = this.$fs.readJson(this.projectFilePath).wait();
+						this.projectId = fileContent.id;
 					} catch (err) {
 						this.$errors.fail({formatStr: "The project file %s is corrupted." + os.EOL +
 							"Consider restoring an earlier version from your source control or backup." + os.EOL +
