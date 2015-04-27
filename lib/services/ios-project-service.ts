@@ -174,8 +174,6 @@ class IOSProjectService implements  IPlatformProjectService {
             this.$fs.ensureDirectoryExists(targetPath).wait();
             shell.cp("-R", libraryPath, targetPath);
 
-            this.generateFrameworkMetadata(platformData.projectRoot, targetPath, frameworkName, umbrellaHeader).wait();
-
             var pbxProjPath = path.join(platformData.projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
             var project = new xcode.project(pbxProjPath);
             project.parseSync();
@@ -255,38 +253,6 @@ class IOSProjectService implements  IPlatformProjectService {
 
             return match[1];
         }).future<string>()();
-    }
-
-    private generateFrameworkMetadata(projectRoot: string, frameworkDir: string, frameworkName: string, umbrellaHeader: string): IFuture<void> {
-        return (() => {
-            if (!this.$fs.exists("/usr/local/lib/libmonoboehm-2.0.1.dylib").wait()) {
-                this.$errors.failWithoutHelp("NativeScript needs Mono 3.10 or newer installed in /usr/local");
-            }
-
-            var yamlOut = path.join(frameworkDir, "Metadata");
-            this.$fs.createDirectory(yamlOut).wait();
-
-            var tempHeader = path.join(yamlOut, "Metadata.h");
-            this.$fs.writeFile(tempHeader, util.format("#import <%s/%s>", frameworkName, umbrellaHeader)).wait();
-
-            this.$logger.info("Generating metadata for %s.framework. This can take a minute.", frameworkName);
-            var sdkPath = this.$childProcess.exec("xcrun -sdk iphoneos --show-sdk-path").wait().trim();
-            // MetadataGenerator P/Invokes libclang.dylib, so we need to instruct the Mach-O loader where to find it.
-            // Without this Mono will fail with a DllNotFoundException.
-            // Once the MetadataGenerator is rewritten in C++ and starts linking Clang statically, this will become superfluous.
-            var generatorExecOptions = {
-                env: {
-                    DYLD_FALLBACK_LIBRARY_PATH: this.$childProcess.exec("xcode-select -p").wait().trim() + "/Toolchains/XcodeDefault.xctoolchain/usr/lib"
-                }
-            };
-            this.$childProcess.exec(util.format('%s/Metadata/MetadataGenerator -s %s -u %s -o %s -cflags="-F%s"', projectRoot, sdkPath, tempHeader, yamlOut, frameworkDir), generatorExecOptions).wait();
-
-			var metadataFileName = frameworkName + ".yaml";
-			this.$fs.copyFile(path.join(yamlOut, "Metadata-armv7", metadataFileName), path.join(projectRoot, "Metadata", "Metadata-armv7", metadataFileName)).wait();
-			this.$fs.copyFile(path.join(yamlOut, "Metadata-arm64", metadataFileName), path.join(projectRoot, "Metadata", "Metadata-arm64", metadataFileName)).wait();
-
-            this.$fs.deleteDirectory(yamlOut).wait();
-        }).future<void>()();
     }
 
 	private replaceFileContent(file: string): IFuture<void> {
