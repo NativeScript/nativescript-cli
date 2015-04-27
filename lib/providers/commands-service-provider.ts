@@ -3,6 +3,10 @@
 import Future = require("fibers/future");
 
 export class CommandsServiceProvider implements ICommandsServiceProvider {
+	public get dynamicCommandsPrefix(): string {
+		return "";
+	}
+
 	public getDynamicCommands(): IFuture<string[]> {
 		return Future.fromResult([]);
 	}
