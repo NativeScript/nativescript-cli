@@ -3,8 +3,8 @@ run ios
 
 Usage | Synopsis
 ---|---
-Run on all connected devices | `$ tns run ios [--release]`
-Run on a selected connected device | `$ tns run ios [--device <Device ID>] [--release]`
+Run on all connected devices | `$ tns run ios [--release] [--justlaunch]`
+Run on a selected connected device | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch]`
 Start an emulator and run the app inside it | `$ tns run ios --emulator [<Emulator Options>] [--release]`
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build, and deploy.
@@ -17,6 +17,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 * `--device` - Specifies a connected device on which to run the app. 
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate ios`. You cannot use `--device` and `--emulator` simultaneously.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
+* `--justlaunch` - If set, does not print application output on the console. Otherwise prints the application output on the console.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device ios` 
