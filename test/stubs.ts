@@ -321,6 +321,10 @@ export class ProjectHelperStub implements IProjectHelper {
 	generateDefaultAppId(appName: string, baseAppId: string): string {
 		return "org.nativescript";
 	}
+
+	sanitizeName(appName: string): string {
+		return "";
+	}
 }
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
