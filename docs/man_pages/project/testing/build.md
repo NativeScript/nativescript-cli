@@ -3,8 +3,7 @@ build
 
 Usage | Synopsis
 ---|---
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns build <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns build android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns build <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns build android`<% } %>
 
 Builds the project for Android <% if(isMacOS) { %>or iOS <% } %>and produces an application package that you can manually deploy on device or in the native emulator. <% if(isMacOS) { %>You must specify the target platform for which you want to build your project.<% } %>
 

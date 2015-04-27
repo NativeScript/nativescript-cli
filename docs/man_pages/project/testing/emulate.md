@@ -3,8 +3,7 @@ emulate
 
 Usage | Synopsis
 ---|---
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns emulate <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns emulate android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns emulate <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns emulate android`<% } %>
 
 Builds and runs the project in the native emulator for the selected target platform. <% if(isMacOS) { %>You must specify the target platform for which you want to build your project.<% } %>
 
