@@ -1,7 +1,7 @@
 NativeScript CLI Changelog
 ================
 
-1.0.0 (2015, April 28)
+1.0.0-rc0 (2015, April 28)
 ==
 
 ### New
@@ -26,6 +26,13 @@ NativeScript CLI Changelog
 
 0.10.0 (2015, April 21)
 ==
+
+### Breaking
+
+* Introduced new project structure. To migrate to the new structure, complete the following steps.
+	1. Manually move all files and folders from the inner `app` folder one level up inside the outer `app` folder.
+	1. Remove the now empty inner `app` folder.
+	1. Verify that your project structure reflects the structure described [here](README.md#create-project).
 
 ### New
 

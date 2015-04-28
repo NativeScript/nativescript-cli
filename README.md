@@ -289,18 +289,18 @@ The CLI places the project in a new directory in the current directory. The newl
 
 ```
 MyApp/
-|-- app/
-|-- |-- app/
-|-- |-- App_Resources/
-|-- |-- |-- Android/
-|-- |-- `-- iOS/ 
-|-- |-- tns_modules/
-|-- |-- `-- .../
-|-- |-- LICENSE
-|-- |-- package.json
-|-- `-- README.md
-|-- platforms/
-`-- .tnsproject
+├── app
+│   ├── app.css
+│   ├── app.js
+│   ├── bootstrap.js
+│   ├── main-page.js
+│   ├── main-page.xml
+│   ├── App_Resources
+│   │   └── ...
+│   └── tns_modules
+│       └── ...
+└── platforms
+    └── ...
 ```
 
 * The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
