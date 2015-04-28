@@ -50,3 +50,7 @@ $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilitie
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
 
 $injector.require("logcatPrinter", "./providers/logcat-printer");
+
+$injector.require("broccoliBuilder", "./tools/broccoli/builder");
+$injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");
+$injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wrapper");
