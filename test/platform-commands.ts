@@ -105,6 +105,9 @@ function createTestInjector() {
 	});
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
+	testInjector.register("broccoliBuilder", {
+		prepareNodeModulesFolder: () => {}
+	});
 
 	return testInjector;
 }

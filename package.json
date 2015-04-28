@@ -25,6 +25,8 @@
   ],
   "dependencies": {
     "bplist-parser": "0.0.6",
+    "broccoli": "0.16.2",
+    "broccoli-funnel": "0.2.3",
     "bufferpack": "0.0.6",
     "byline": "4.1.1",
     "chalk": "1.0.0",
