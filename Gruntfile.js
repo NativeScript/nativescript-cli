@@ -125,7 +125,8 @@ module.exports = function(grunt) {
 		var packageJson = grunt.file.readJSON("package.json");
 		var versionParts = packageJson.version.split("-");
 		if (process.env["RELEASE_BUILD"]) {
-			packageJson.version = versionParts[0];
+// HACK - excluded until 1.0.0 release or we refactor our project infrastructure (whichever comes first)
+//			packageJson.version = versionParts[0];
 		} else {
 			versionParts[1] = buildVersion;
 			packageJson.version = versionParts.join("-");
