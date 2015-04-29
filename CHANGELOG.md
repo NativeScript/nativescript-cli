@@ -1,7 +1,7 @@
 NativeScript CLI Changelog
 ================
 
-1.0.0-rc0 (2015, April 28)
+1.0.0 (2015, April 28)
 ==
 
 ### New
