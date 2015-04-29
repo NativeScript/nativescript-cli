@@ -209,11 +209,11 @@ The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
 
-```Shell
-npm install nativescript -g
-```
-
-> On OS X and Linux systems, you might need to run this command using sudo.
+OS | Node.js installed from http://nodejs.org/ | Node.js installed via package manager
+---|---------------------|----
+Windows | `npm install nativescript -g` | `npm install nativescript -g`
+OS X | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
+Linux | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
 
 ## Configure Proxy Usage
 
