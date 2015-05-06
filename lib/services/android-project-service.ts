@@ -156,12 +156,6 @@ class AndroidProjectService implements IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
 	}
 
-	private generateBuildFile(projDir: string, targetSdk: string): void {
-		this.$logger.info("Generate build.xml for %s", projDir);
-		var cmd = util.format("android update project -p %s --target %s --subprojects", projDir, targetSdk);
-		this.$childProcess.exec(cmd).wait();
-	}
-
 	private parseProjectProperties(projDir: string, destDir: string): void {
 		var projProp = path.join(projDir, "project.properties");
 
@@ -188,7 +182,8 @@ class AndroidProjectService implements IPlatformProjectService {
 		var targetDir = path.join(destDir, path.basename(projDir));
 		// TODO: parametrize targetSdk
 		var targetSdk = "android-17";
-		this.generateBuildFile(targetDir, targetSdk);
+		this.$logger.info("Generate build.xml for %s", targetDir);
+		this.runAndroidUpdate(targetDir, targetSdk).wait();
 	}
 
 	private getProjectReferences(projDir: string): ILibRef[]{
