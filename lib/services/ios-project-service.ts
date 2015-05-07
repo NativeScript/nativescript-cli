@@ -103,6 +103,8 @@ class IOSProjectService implements  IPlatformProjectService {
 			var pbxprojFilePath = path.join(projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
 			this.replaceFileContent(pbxprojFilePath).wait();
 
+			var mainFilePath = path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "main.m");
+			this.replaceFileContent(mainFilePath).wait();
 		}).future<void>()();
 	}
 
