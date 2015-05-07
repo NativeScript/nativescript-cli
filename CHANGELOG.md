@@ -1,4 +1,8 @@
 # Changelog
+### 1.3.2 (2015-05-07)
+* Enhancement(MLIBZ-266): Report library version and build in logs.
+* BugFix(MLIBZ-284): Don't send an empty custom request properties header by default.
+
 ### 1.3.1 (2015-04-23)
 * BugFix(MLIBZ-194): Returns a rejected promise rather then throwing an error when calling a function and expecting a promise to be returned.
 * BugFix(MLIBZ-249): Fixed platform specific issues with MIC.
