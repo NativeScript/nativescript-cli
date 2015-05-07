@@ -281,20 +281,24 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
       });
     }
 
-    // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
-    // request properties for the request. Checks to make sure the JSON string of
-    // the custom request properties is less then the max bytes allowed for custom
-    // request properties otherwise throws an error.
-    var customRequestPropertiesHeader = JSON.stringify(options.customRequestProperties);
-    var customRequestPropertiesByteCount = getByteCount(customRequestPropertiesHeader);
-    if (customRequestPropertiesByteCount >= CRP_MAX_BYTES) {
-      error = new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
-                               '. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
+    // Set the custom request properties header only if there are custom request
+    // properties to send
+    if (Object.getOwnPropertyNames(options.customRequestProperties).length > 0) {
+      // Set X-Kinvey-Custom-Request-Properties to the JSON string of the custom
+      // request properties for the request. Checks to make sure the JSON string of
+      // the custom request properties is less then the max bytes allowed for custom
+      // request properties otherwise throw an error.
+      var customRequestPropertiesHeader = JSON.stringify(options.customRequestProperties);
+      var customRequestPropertiesByteCount = getByteCount(customRequestPropertiesHeader);
+      if (customRequestPropertiesByteCount >= CRP_MAX_BYTES) {
+        error = new Kinvey.Error('Custom request properties is ' + customRequestPropertiesByteCount +
+                                 ' bytes. It must be less then ' + CRP_MAX_BYTES + ' bytes.');
+        return wrapCallbacks(Kinvey.Defer.reject(error), options);
+      }
 
-    // Set the custom request properties header.
-    headers['X-Kinvey-Custom-Request-Properties'] = customRequestPropertiesHeader;
+      // Set the custom request property header
+      headers['X-Kinvey-Custom-Request-Properties'] = customRequestPropertiesHeader;
+    }
 
     // Debug.
     if(KINVEY_DEBUG) {
