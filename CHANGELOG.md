@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+1.0.1 (2015, May 8)
+==
+
+### Fixed
+
+* [Fixed #459](https://github.com/NativeScript/nativescript-cli/issues/459): You cannot add a third-party iOS native library to your project, if the path to the library contains spaces. 
+* [Fixed #458](https://github.com/NativeScript/nativescript-cli/issues/458): If you have installed Xcode 6.2 or earlier on your system, you cannot debug in the iOS Simulator.
+* [Fixed #413](https://github.com/NativeScript/nativescript-cli/issues/413): If your project name contains a hyphen, the NativeScript CLI sets your application identifier inconsistently across the project.
+
 1.0.0 (2015, April 28)
 ==
 
