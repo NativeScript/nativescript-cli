@@ -125,7 +125,6 @@ class IOSDebugService implements IDebugService {
 				var deviceDebugging: IOSDeviceDebugging = this.$injector.resolve("iosDeviceDebugging", { bundleId: this.$projectData.projectId, $iOSDevice: device });
 				deviceDebugging.debugApplicationOnStart();
 				this.executeOpenDebuggerClient().wait();
-				device.runApplication(this.$projectData.projectId).wait();
 			}).future<void>()()).wait();
 		}).future<void>()();
 	}
