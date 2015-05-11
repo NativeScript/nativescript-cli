@@ -31,10 +31,10 @@ var Database = /** @lends Database */{
 
   upgrade: function() {
     // Read the existing version of the database
-    return Database.find(Database.versionTable).then(, function(versions) {
+    return Database.find(Database.versionTable).then(null, function() {
       return [undefined];
     }).then(function(versions) {
-      var doc = versions[0];
+      var doc = versions[0] || {};
       return Database.onUpgrade(doc.version, Database.version).then(function() {
         return doc;
       });
@@ -48,24 +48,24 @@ var Database = /** @lends Database */{
   },
 
   onUpgrade: function(oldVersion, newVersion) {
-    // Default old version to 0
-    oldVersion = oldVersion == null ? 0 : oldVersion;
-
-    // Get upgrade version
-    var upgradeVersion = oldVersion + 1;
+    var deferred = Kinvey.Defer.deferred();
+    var upgradeVersion = oldVersion == null ? 1 : oldVersion;
 
     // Loop until old version equals new version
     while (upgradeVersion <= newVersion) {
-      if (upgradeVersion === 1) {
-        // Do upgrades for version 1
-      }
-      else if (upgradeVersion === 2) {
-        // Do upgrades for version 2
-      }
+      // if (upgradeVersion === 1) {
+      //   // Do upgrades for version 1
+      // }
+      // else if (upgradeVersion === 2) {
+      //   // Do upgrades for version 2
+      // }
 
       // Add 1 to upgrade version
       upgradeVersion += 1;
     }
+
+    deferred.resolve();
+    return deferred.promise;
   },
 
   /**
