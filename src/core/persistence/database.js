@@ -25,6 +25,40 @@
  * @namespace Database
  */
 var Database = /** @lends Database */{
+
+  version: 1,
+  versionTable: 'KINVEY_DATABASE_VERSION',
+
+  upgrade: function() {
+    // Read the existing version of the database
+    return Database.get(Database.versionTable, 1).then(null, function() {
+      return undefined;
+    }).then(function(oldVersion) {
+      return Database.onUpgrade(oldVersion, Database.version);
+    });
+  },
+
+  onUpgrade: function(oldVersion, newVersion) {
+    // Default old version to 0
+    oldVersion = oldVersion == null ? 0 : oldVersion;
+
+    // Get upgrade version
+    var upgradeVersion = oldVersion + 1;
+
+    // Loop until old version equals new version
+    while (upgradeVersion <= newVersion) {
+      if (upgradeVersion === 1) {
+        // Do upgrades for version 1
+      }
+      else if (upgradeVersion === 2) {
+        // Do upgrades for version 2
+      }
+
+      // Add 1 to upgrade version
+      upgradeVersion += 1;
+    }
+  },
+
   /**
    * Saves multiple (new) documents.
    *
