@@ -308,11 +308,15 @@ Kinvey.init = function(options) {
   // Set the encryption key.
   Kinvey.encryptionKey = null != options.encryptionKey ? options.encryptionKey : null;
 
-  // Initialize the synchronization namespace and restore the active user.
-  var promise = Kinvey.Sync.init(options.sync).then(function() {
+  // Upgrade the database
+  var promise = Database.upgrade().then(function() {
+    // Initialize the synchronization namespace and restore the active user.
+    return Kinvey.Sync.init(options.sync);
+  }).then(function() {
     log('Kinvey initialized, running version: js-<%= build %>/<%= pkg.version %>');
     return restoreActiveUser(options);
   });
+
   return wrapCallbacks(promise, options);
 };
 
