@@ -412,24 +412,6 @@ var Sync = /** @lends Sync */{
       return Kinvey.Defer.reject(error);
     }
 
-    if (net != null) {
-      // Check if net has property _kmd
-      if (net._kmd == null) {
-        error = new Kinvey.Error('The server entity does not have _kmd defined as a property. ' +
-                                 'This is required to properly sync server entity _id ' +
-                                 net._id + ' in collection ' + collection + '.');
-        return Kinvey.Defer.reject(error);
-      }
-
-      // Check if net has property _kmd.lmt.
-      if (net._kmd.lmt == null) {
-        error = new Kinvey.Error('The server entity does not have _kmd.lmt defined as a ' +
-                                 'property. This is required to properly sync servery entity ' +
-                                 '_id ' + net._id + ' in collection ' + collection + '.') ;
-        return Kinvey.Defer.reject(error);
-      }
-    }
-
     // Resolve if the remote copy does not exist or if both timestamps match.
     // Reject otherwise.
     if(null === net || (null != net._kmd && metadata.timestamp === net._kmd.lmt)) {
