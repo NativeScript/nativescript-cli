@@ -189,7 +189,7 @@ var Sync = /** @lends Sync */{
     return Sync._read(collection, documents, options).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
-        var document = documents[id];
+        var document = documents[id] || {};
         var metadata = {
           id: id,
           timestamp: document.timestamp,
