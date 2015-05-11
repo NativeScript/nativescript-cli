@@ -266,11 +266,11 @@ var Sync = /** @lends Sync */{
       var requestOptions = options || {};
 
       // Set options.clientAppVersion based on the metadata for the document
-      requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
+      requestOptions.clientAppVersion = metadata != null && metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
       // Set options.customRequestProperties based on the metadata
       // for the document
-      requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
+      requestOptions.customRequestProperties = metadata != null && metadata.customRequestProperties != null ?
                                                metadata.customRequestProperties : null;
 
       // Build the request.
