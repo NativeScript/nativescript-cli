@@ -31,10 +31,19 @@ var Database = /** @lends Database */{
 
   upgrade: function() {
     // Read the existing version of the database
-    return Database.get(Database.versionTable, 1).then(null, function() {
-      return undefined;
-    }).then(function(oldVersion) {
-      return Database.onUpgrade(oldVersion, Database.version);
+    return Database.find(Database.versionTable).then(, function(versions) {
+      return [undefined];
+    }).then(function(versions) {
+      var doc = versions[0];
+      return Database.onUpgrade(doc.version, Database.version).then(function() {
+        return doc;
+      });
+    }).then(function(doc) {
+      // Update the version doc
+      doc.version = Database.version;
+
+      // Save the version doc
+      return Database.save(Database.versionTable, doc);
     });
   },
 
