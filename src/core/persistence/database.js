@@ -68,7 +68,7 @@ var Database = /** @lends Database */{
    */
   onUpgrade: function(currentVersion, newVersion) {
     var deferred = Kinvey.Defer.deferred();
-    var upgradeVersion = currentVersion == null ? 1 : currentVersion;
+    var upgradeVersion = currentVersion == null ? 1 : currentVersion + 1;
 
     // Loop until old version equals new version
     while (upgradeVersion <= newVersion) {
