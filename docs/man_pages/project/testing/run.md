@@ -3,8 +3,7 @@ run
 
 Usage | Synopsis
 ---|---
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns run <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns run android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns run <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns run android`<% } %>
 
 Runs your project on a connected device or in the native emulator for the selected platform.<% if(isMacOS) { %>You must specify the target platform on which you want to run your project.<% } %><% if(isConsole && (isLinux || isWindows)) { %>You must run `$ tns run android`<% } %>
 

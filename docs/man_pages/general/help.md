@@ -18,5 +18,6 @@ To print information about a selected command in the console, run `$ tns <Comman
 
 Command | Description
 ----------|----------
-[user](user.html) | Prints information about the currently logged in user, including name, email address, subscription plan and license expiration date.
+[feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript CLI.
+[autocomplete](autocomplete.html) | Prints your current command-line completion settings. If disabled, prompts you to enable it.
 <% } %>
