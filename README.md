@@ -209,11 +209,11 @@ The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
 
-```Shell
-npm install nativescript -g
-```
-
-> On OS X and Linux systems, you might need to run this command using sudo.
+OS | Node.js installed from http://nodejs.org/ | Node.js installed via package manager
+---|---------------------|----
+Windows | `npm install nativescript -g` | `npm install nativescript -g`
+OS X | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
+Linux | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
 
 ## Configure Proxy Usage
 
@@ -289,18 +289,18 @@ The CLI places the project in a new directory in the current directory. The newl
 
 ```
 MyApp/
-|-- app/
-|-- |-- app/
-|-- |-- App_Resources/
-|-- |-- |-- Android/
-|-- |-- `-- iOS/ 
-|-- |-- tns_modules/
-|-- |-- `-- .../
-|-- |-- LICENSE
-|-- |-- package.json
-|-- `-- README.md
-|-- platforms/
-`-- .tnsproject
+├── app
+│   ├── app.css
+│   ├── app.js
+│   ├── bootstrap.js
+│   ├── main-page.js
+│   ├── main-page.xml
+│   ├── App_Resources
+│   │   └── ...
+│   └── tns_modules
+│       └── ...
+└── platforms
+    └── ...
 ```
 
 * The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
