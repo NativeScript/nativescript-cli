@@ -25,6 +25,62 @@
  * @namespace Database
  */
 var Database = /** @lends Database */{
+
+  // Current version of database
+  version: 1,
+
+  // Name of database version table
+  versionTable: 'KinveyDatabaseVersion',
+
+  /**
+   * Called internally by the library to upgrade any changes
+   * made to the database schema on library updates.
+   *
+   * @return {Promise} Upgrade has completed
+   */
+  upgrade: function() {
+    // Read the existing version of the database
+    return Database.find(Database.versionTable).then(null, function() {
+      return [undefined];
+    }).then(function(versions) {
+      var doc = versions[0] || {};
+      return Database.onUpgrade(doc.version, Database.version).then(function() {
+        return doc;
+      });
+    }).then(function(doc) {
+      // Update the version doc
+      doc.version = Database.version;
+
+      // Save the version doc
+      return Database.save(Database.versionTable, doc);
+    }).then(function() {
+      return;
+    });
+  },
+
+  /**
+   * Upgrades the database schema from the current version to the new
+   * version.
+   *
+   * @param  {Number}  currentVersion Current version of the database
+   * @param  {Number}  newVersion New version to upgrade database to
+   * @return {Promise} Upgrade has compelted
+   */
+  onUpgrade: function(currentVersion, newVersion) {
+    var deferred = Kinvey.Defer.deferred();
+    var upgradeVersion = currentVersion == null ? 1 : currentVersion + 1;
+
+    // Upgrade
+    if (upgradeVersion <= newVersion) {
+      // Add upgrades here...
+
+      return Database.onUpgrade(upgradeVersion, newVersion);
+    }
+
+    deferred.resolve();
+    return deferred.promise;
+  },
+
   /**
    * Saves multiple (new) documents.
    *
