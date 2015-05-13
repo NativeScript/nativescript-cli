@@ -63,6 +63,7 @@
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.1",
     "winreg": "0.0.12",
+    "ws": "0.7.1",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "yargs": "1.2.2"
