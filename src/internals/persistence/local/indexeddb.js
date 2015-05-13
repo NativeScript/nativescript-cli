@@ -110,7 +110,11 @@ var IDBAdapter = {
       // If the collection exists, obtain and return the transaction handle.
       if(IDBAdapter.db.objectStoreNames.contains(collection)) {
         var mode  = write ? 'readwrite' : 'readonly';
-        var txn   = IDBAdapter.db.transaction([collection], mode);
+        var txnResult = IDBAdapter.openTransactionSafely(IDBAdapter.db, [collection], mode);
+        if (txnResult.error) {
+          error(txnResult.error);
+        }
+        var txn = txnResult.txn;
         var store = txn.objectStore(collection);
         return success(store);
       }
@@ -207,6 +211,26 @@ var IDBAdapter = {
     request.onerror = function(event) {
       error(clientError(Kinvey.Error.DATABASE_ERROR, { debug: event }));
     };
+  },
+
+  /**
+   * Opens a IDBDatabase transaction catching any errors that might occur.
+   *
+   * @param  {Database} idb    Database connection to open the transaction with.
+   * @param  {Array}    stores Database stores used by transaction.
+   * @param  {String}   mode   Mode of transaction.
+   * @return {Object}          Contains transaction or error.
+   */
+  openTransactionSafely: function(idb, stores, mode) {
+    try {
+      return {
+        txn: idb.transaction(stores, mode)
+      };
+    } catch (err) {
+      return {
+        error: err
+      };
+    }
   },
 
   /**
