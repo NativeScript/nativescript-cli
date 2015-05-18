@@ -189,7 +189,7 @@ var Sync = /** @lends Sync */{
     return Sync._read(collection, documents, options).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
-        var document = documents[id];
+        var document = documents[id] || {};
         var metadata = {
           id: id,
           timestamp: document.timestamp,
@@ -266,11 +266,11 @@ var Sync = /** @lends Sync */{
       var requestOptions = options || {};
 
       // Set options.clientAppVersion based on the metadata for the document
-      requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
+      requestOptions.clientAppVersion = metadata != null && metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
       // Set options.customRequestProperties based on the metadata
       // for the document
-      requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
+      requestOptions.customRequestProperties = metadata != null && metadata.customRequestProperties != null ?
                                                metadata.customRequestProperties : null;
 
       // Build the request.
@@ -410,24 +410,6 @@ var Sync = /** @lends Sync */{
                                'required to properly sync the document in collection ' +
                                collection + '.');
       return Kinvey.Defer.reject(error);
-    }
-
-    if (net != null) {
-      // Check if net has property _kmd
-      if (net._kmd == null) {
-        error = new Kinvey.Error('The server entity does not have _kmd defined as a property. ' +
-                                 'This is required to properly sync server entity _id ' +
-                                 net._id + ' in collection ' + collection + '.');
-        return Kinvey.Defer.reject(error);
-      }
-
-      // Check if net has property _kmd.lmt.
-      if (net._kmd.lmt == null) {
-        error = new Kinvey.Error('The server entity does not have _kmd.lmt defined as a ' +
-                                 'property. This is required to properly sync servery entity ' +
-                                 '_id ' + net._id + ' in collection ' + collection + '.') ;
-        return Kinvey.Defer.reject(error);
-      }
     }
 
     // Resolve if the remote copy does not exist or if both timestamps match.

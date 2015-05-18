@@ -1,4 +1,10 @@
 # Changelog
+### 1.3.3 (2015-05-18)
+* Enhancement(MLIBZ-288): User friendly handling of 4xx/5xx responses.
+* Enhancement(MLIBZ-307): Simple cache versioning.
+* BugFix(MLIBZ-315): Default metadata to an empty object for backwards compatible syncing.
+* BugFix(MLIBZ-323): Update build file to include IndexedDB adapter for PhoneGap build to Support Windows 8.
+
 ### 1.3.2 (2015-05-07)
 * Enhancement(MLIBZ-266): Report library version and build in logs.
 * BugFix(MLIBZ-284): Don't send an empty custom request properties header by default.

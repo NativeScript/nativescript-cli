@@ -85,6 +85,7 @@
       "internals": [
         "src/internals/deferreds/promiscuous.js",
         "src/internals/persistence/local/websql.js",
+        "src/internals/persistence/local/indexeddb.js",
         "src/internals/persistence/net/xhr.js",
         "src/internals/storage/local-storage.js",
         "src/shims/phonegap/phonegap.js",
@@ -101,6 +102,7 @@
       "internals": [
         "src/internals/deferreds/promiscuous.js",
         "src/internals/persistence/local/websql.js",
+        "src/internals/persistence/local/indexeddb.js",
         "src/internals/persistence/net/xhr.js",
         "src/internals/storage/local-storage.js",
         "src/shims/phonegap/phonegap.js",

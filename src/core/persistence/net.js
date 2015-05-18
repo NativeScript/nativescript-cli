@@ -303,7 +303,6 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     // Debug.
     if(KINVEY_DEBUG) {
       headers['X-Kinvey-Trace-Request']               = 'true';
-      headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
     }
 
     // Authorization.

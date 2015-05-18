@@ -145,7 +145,7 @@ var Xhr = {
         var promise;
         var originalRequest = options._originalRequest;
 
-        if (401 === request.status && options.attemptMICRefresh) {
+        if (401 === status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
         }
         else {
@@ -183,7 +183,14 @@ var Xhr = {
             }
           }
           else {// Return the error.
-            deferred.reject(response || type || null);
+            var error = response || type || null;
+
+            if (Array.isArray(error)) {
+              error = new Kinvey.Error('Received an array as a response with a status code of ' + status + '. A JSON ' +
+                                       'object is expected as a response to requests that result in an error status code.');
+            }
+
+            deferred.reject(error);
           }
         });
       }
