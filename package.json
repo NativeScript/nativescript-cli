@@ -58,7 +58,7 @@
     "ref": "https://github.com/icenium/ref/tarball/master",
     "ref-struct": "https://github.com/telerik/ref-struct/tarball/master",
     "rimraf": "2.2.6",
-    "semver": "3.0.1",
+    "semver": "4.3.4",
     "shelljs": "0.3.0",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.1",
