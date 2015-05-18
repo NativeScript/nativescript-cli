@@ -35,6 +35,8 @@ var TiHttp = {
    * @augments {Kinvey.Persistence.Net.request}
    */
   request: function(method, url, body, headers, options) {
+    var error;
+
     // Cast arguments.
     headers = headers || {};
     options = options || {};
@@ -118,7 +120,6 @@ var TiHttp = {
         // Check `Content-Type` header for application/json
         if (!options.file && response != null && 204 !== this.status) {
           var responseContentType = this.getResponseHeader('Content-Type');
-          var error;
 
           if (responseContentType == null) {
             error = new Kinvey.Error('Content-Type header missing in response. Please add ' +
@@ -142,7 +143,7 @@ var TiHttp = {
       else { // Failure.
         var promise;
         var originalRequest = options._originalRequest;
-        var error = this.responseText || e.type || null;
+        error = this.responseText || e.type || null;
 
         if (401 === status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
