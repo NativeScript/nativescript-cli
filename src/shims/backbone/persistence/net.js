@@ -125,7 +125,7 @@ var BackboneAjax = {
         var promise;
         var originalRequest = options._originalRequest;
 
-        if (401 === request.status && options.attemptMICRefresh) {
+        if (401 === status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
         }
         else {
@@ -140,7 +140,14 @@ var BackboneAjax = {
         }).then(function(response) {
           deferred.resolve(response);
         }, function() {
-          deferred.reject(request.responseText || textStatus || null);
+          var error = request.responseText || textStatus || null;
+
+          if (Array.isArray(error)) {
+            error = new Kinvey.Error('Received an array as a response with a status code of ' + status + '. A JSON ' +
+                                     'object is expected as a response to requests that result in an error status code.');
+          }
+
+          deferred.reject(error);
         });
       }
     };

@@ -142,8 +142,9 @@ var TiHttp = {
       else { // Failure.
         var promise;
         var originalRequest = options._originalRequest;
+        var error = this.responseText || e.type || null;
 
-        if (401 === this.status && options.attemptMICRefresh) {
+        if (401 === status && options.attemptMICRefresh) {
           promise = MIC.refresh(options);
         }
         else {
@@ -158,7 +159,12 @@ var TiHttp = {
         }).then(function(response) {
           deferred.resolve(response);
         }, function() {
-          deferred.reject(this.responseText || e.type || null);
+          if (Array.isArray(error)) {
+            error = new Kinvey.Error('Received an array as a response with a status code of ' + status + '. A JSON ' +
+                                     'object is expected as a response to requests that result in an error status code.');
+          }
+
+          deferred.reject(error);
         });
       }
     };

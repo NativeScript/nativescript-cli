@@ -159,7 +159,14 @@ var AngularHTTP = {
         // Resend original request
         return Kinvey.Persistence.Net._request(originalRequest, options);
       }, function() {
-        return Kinvey.Defer.reject(response.data || null);
+        var error = response.data || null;
+
+        if (Array.isArray(error)) {
+          error = new Kinvey.Error('Received an array as a response with a status code of ' + response.status + '. A JSON ' +
+                                   'object is expected as a response to requests that result in an error status code.');
+        }
+
+        return Kinvey.Defer.reject(error);
       });
     });
   }
