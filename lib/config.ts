@@ -21,7 +21,8 @@ export class Configuration extends configBaseLib.ConfigBase implements IConfigur
 $injector.register("config", Configuration);
 
 export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase implements IStaticConfig {
-	public PROJECT_FILE_NAME = ".tnsproject";
+	public PROJECT_FILE_NAME = "package.json";
+	public CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 	public CLIENT_NAME = "tns";
 	public CLIENT_NAME_ALIAS = "NativeScript";
 	public ANALYTICS_API_KEY = "5752dabccfc54c4ab82aea9626b7338e";

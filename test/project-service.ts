@@ -6,11 +6,13 @@ import stubs = require('./stubs');
 
 import ProjectServiceLib = require("../lib/services/project-service");
 import ProjectDataServiceLib = require("../lib/services/project-data-service");
+import ProjectDataLib = require("../lib/project-data");
 import ProjectHelperLib = require("../lib/common/project-helper");
 import StaticConfigLib = require("../lib/config");
 import NpmLib = require("../lib/node-package-manager");
 import HttpClientLib = require("../lib/common/http-client");
 import fsLib = require("../lib/common/file-system");
+import platformServiceLib = require("../lib/services/platform-service");
 
 import path = require("path");
 import temp = require("temp");
@@ -64,7 +66,7 @@ class ProjectIntegrationTest {
 			var projectDir = path.join(tempFolder, projectName);
 			var appDirectoryPath = path.join(projectDir, "app");
 			var platformsDirectoryPath = path.join(projectDir, "platforms");
-			var tnsProjectFilePath = path.join(projectDir, ".tnsproject");
+			let tnsProjectFilePath = path.join(projectDir, "package.json");
 
 			assert.isTrue(fs.exists(appDirectoryPath).wait());
 			assert.isTrue(fs.exists(platformsDirectoryPath).wait());
@@ -73,7 +75,7 @@ class ProjectIntegrationTest {
 			assert.isFalse(fs.isEmptyDir(appDirectoryPath).wait());
 			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath).wait());
 
-			var actualAppId = fs.readJson(tnsProjectFilePath).wait().id;
+			var actualAppId = fs.readJson(tnsProjectFilePath).wait()["nativescript"].id;
 			var expectedAppId = appId;
 			assert.equal(actualAppId, expectedAppId);
 
@@ -140,3 +142,134 @@ describe("Project Service Tests", () => {
 		});
 	});
 });
+
+function createTestInjector() {
+	var testInjector = new yok.Yok();
+	
+	testInjector.register("errors", stubs.ErrorsStub);
+	testInjector.register('logger', stubs.LoggerStub);
+	testInjector.register("projectService", ProjectServiceLib.ProjectService);
+	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
+	testInjector.register("projectTemplatesService", stubs.ProjectTemplatesService);
+	testInjector.register("projectNameValidator", mockProjectNameValidator);
+
+	testInjector.register("fs", fsLib.FileSystem);
+	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
+	
+	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+
+	testInjector.register("npm", NpmLib.NodePackageManager);
+	testInjector.register("httpClient", HttpClientLib.HttpClient);
+	testInjector.register("config", {});
+	testInjector.register("lockfile", stubs.LockFile);
+	
+	testInjector.register('projectData', ProjectDataLib.ProjectData);
+	
+	return testInjector;
+}
+
+describe("project upgrade procedure tests", () => {
+	it("should throw error when no nativescript project folder specified", () => {
+		var testInjector = createTestInjector();
+		var tempFolder = temp.mkdirSync("project upgrade");
+		options.path = tempFolder;
+		var isErrorThrown = false;
+		
+		try {
+			testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		} catch(err) {
+			isErrorThrown = true;
+			var expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
+			assert.equal(expectedErrorMessage, err.toString());
+		}
+		
+		assert.isTrue(isErrorThrown);
+	});
+	it("should upgrade project when .tnsproject file exists but package.json file doesn't exist", () => {
+		var testInjector = createTestInjector();
+		var fs: IFileSystem = testInjector.resolve("fs");
+		
+		var tempFolder = temp.mkdirSync("projectUpgradeTest2");	
+		options.path = tempFolder;	
+		var tnsProjectData = {
+			"id": "org.nativescript.Test",
+			"tns-ios": {
+				"version": "1.0.0"
+			}	
+		};
+		var tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
+		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
+		
+		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		
+		var packageJsonFilePath = path.join(tempFolder, "package.json");
+		var packageJsonFileContent = require(packageJsonFilePath);
+		assert.isTrue(fs.exists(packageJsonFilePath).wait());
+		assert.isFalse(fs.exists(tnsProjectFilePath).wait());
+		assert.deepEqual(tnsProjectData, packageJsonFileContent["nativescript"]);
+	}); 
+	it("should upgrade project when .tnsproject and package.json exist but nativescript key is not presented in package.json file", () => {
+		var testInjector = createTestInjector();
+		var fs: IFileSystem = testInjector.resolve("fs");
+		
+		var tempFolder = temp.mkdirSync("projectUpgradeTest3");	
+		options.path = tempFolder;	
+		var tnsProjectData = {
+			"id": "org.nativescript.Test",
+			"tns-ios": {
+				"version": "1.0.1"
+			}	
+		};
+		var packageJsonData = {
+			"name": "testModuleName",
+			"version": "0.0.0",
+			"dependencies": {
+				"myFirstDep": "0.0.1"
+			}
+		}
+		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
+		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
+		
+		var packageJsonFilePath = path.join(tempFolder, "package.json");
+		fs.writeJson(packageJsonFilePath, packageJsonData).wait();
+		
+		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		
+		var packageJsonFileContent = require(packageJsonFilePath);
+		var expectedPackageJsonContent: any = packageJsonData;
+		expectedPackageJsonContent["nativescript"] = tnsProjectData;
+		assert.deepEqual(expectedPackageJsonContent, packageJsonFileContent);
+	});
+	it("shouldn't upgrade project when .tnsproject and package.json exist and nativescript key is presented in package.json file", () => {
+		var testInjector = createTestInjector();
+		var fs: IFileSystem = testInjector.resolve("fs");
+		
+		var tempFolder = temp.mkdirSync("projectUpgradeTest4");	
+		options.path = tempFolder;	
+		var tnsProjectData = {
+			
+		};
+		var packageJsonData = {
+			"name": "testModuleName",
+			"version": "0.0.0",
+			"dependencies": {
+				"myFirstDep": "0.0.2"
+			},
+			"nativescript": {
+				"id": "org.nativescript.Test",
+				"tns-ios": {
+					"version": "1.0.2"
+				}	
+			}
+		}
+		
+		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData).wait();
+		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
+		testInjector.resolve("projectData"); // This should trigger upgrade procedure
+		
+		var packageJsonFilePath = path.join(tempFolder, "package.json");
+		var packageJsonFileContent = require(packageJsonFilePath);
+		
+		assert.deepEqual(packageJsonData, packageJsonFileContent);
+	});
+}); 
