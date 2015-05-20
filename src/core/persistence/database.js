@@ -39,23 +39,29 @@ var Database = /** @lends Database */{
    * @return {Promise} Upgrade has completed
    */
   upgrade: function() {
-    // Read the existing version of the database
-    return Database.find(Database.versionTable).then(null, function() {
-      return [undefined];
-    }).then(function(versions) {
-      var doc = versions[0] || {};
-      return Database.onUpgrade(doc.version, Database.version).then(function() {
-        return doc;
-      });
-    }).then(function(doc) {
-      // Update the version doc
-      doc.version = Database.version;
+    try {
+      // Read the existing version of the database
+      return Database.find(Database.versionTable).then(null, function() {
+        return [undefined];
+      }).then(function(versions) {
+        var doc = versions[0] || {};
+        return Database.onUpgrade(doc.version, Database.version).then(function() {
+          return doc;
+        });
+      }).then(function(doc) {
+        // Update the version doc
+        doc.version = Database.version;
 
-      // Save the version doc
-      return Database.save(Database.versionTable, doc);
-    }).then(function() {
-      return;
-    });
+        // Save the version doc
+        return Database.save(Database.versionTable, doc);
+      }).then(function() {
+        return;
+      });
+    } catch (err) {
+      // Catch unsupported database methods error and
+      // just resolve
+      return Kinvey.Defer.resolve();
+    }
   },
 
   /**
