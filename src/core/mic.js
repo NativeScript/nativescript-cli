@@ -780,7 +780,7 @@ var MIC = {
    * @return {Boolean} NodeJS
    */
   isNode: function() {
-    return ('undefined' !== typeof module && module.exports);
+    return (typeof process !== 'undefined' && typeof require !== 'undefined');
   }
 };
 
