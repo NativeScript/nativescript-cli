@@ -326,10 +326,12 @@ var MIC = {
         tiWebView.removeEventListener('error', loadHandler);
         popup.removeEventListener('close', closeHandler);
 
-        if (OS_IOS) {
+        // If on an iPhone, iPod, or iPad device
+        if (Titanium.Platform.name === 'iPhone OS') {
           tiCloseButton.removeEventListener('click', clickHandler);
         }
-        else if (OS_ANDROID) {
+        // If on an Android device
+        else if (Titanium.Platform.name === 'Android') {
           popup.close();
           popup.removeEventListener('androidback', closeHandler);
         }
