@@ -30,3 +30,18 @@ interface ILockFile {
 interface IOpener {
     open(target: string, appname: string): void;
 }
+
+interface IOptions extends ICommonOptions {
+	frameworkPath: string;
+	copyFrom: string;
+	linkTo: string;
+	release: boolean;
+	emulator: boolean;
+	symlink: boolean;
+	forDevice: boolean;
+	client: boolean;
+	keyStorePath: string;
+	keyStorePassword: string;
+	keyStoreAlias: string;
+	keyStoreAliasPassword: string;
+}

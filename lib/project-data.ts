@@ -4,7 +4,6 @@
 import constants = require("./constants");
 import path = require("path");
 import os = require("os");
-import options = require("./common/options");
 
 export class ProjectData implements IProjectData {
 	private static OLD_PROJECT_FILE_NAME = ".tnsproject";
@@ -19,7 +18,8 @@ export class ProjectData implements IProjectData {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectHelper: IProjectHelper,
-		private $staticConfig: IStaticConfig) {
+		private $staticConfig: IStaticConfig,
+		private $options: IOptions) {
 		this.initializeProjectData().wait();
 	}
 
@@ -56,12 +56,12 @@ export class ProjectData implements IProjectData {
 	}
 
 	private throwNoProjectFoundError(): void {
-		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", options.path || path.resolve("."));
+		this.$errors.fail("No project found at or above '%s' and neither was a --path specified.", this.$options.path || path.resolve("."));
 	}
 
 	private tryToUpgradeProject(): IFuture<void> {
 		return (() => {
-			let projectDir = this.projectDir || path.resolve(options.path || ".");
+			let projectDir = this.projectDir || path.resolve(this.$options.path || ".");
 			let oldProjectFilePath = path.join(projectDir, ProjectData.OLD_PROJECT_FILE_NAME);
 			if(this.$fs.exists(oldProjectFilePath).wait()) {
 				this.upgrade(projectDir, oldProjectFilePath).wait();

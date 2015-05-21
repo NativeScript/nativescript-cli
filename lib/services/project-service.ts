@@ -3,7 +3,6 @@
 
 import constants = require("./../constants");
 import helpers = require("../common/helpers");
-import options = require("../common/options");
 import osenv = require("osenv");
 import path = require("path");
 import shell = require("shelljs");
@@ -18,7 +17,8 @@ export class ProjectService implements IProjectService {
 		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
 		private $projectNameValidator: IProjectNameValidator,
-		private $projectTemplatesService: IProjectTemplatesService) { }
+		private $projectTemplatesService: IProjectTemplatesService,
+		private $options: IOptions) { }
 
 	public createProject(projectName: string): IFuture<void> {
 		return(() => {
@@ -27,9 +27,9 @@ export class ProjectService implements IProjectService {
 			}
 			this.$projectNameValidator.validate(projectName);
 
-			var projectId = options.appid || this.$projectHelper.generateDefaultAppId(projectName, ProjectService.DEFAULT_APP_IDENTIFIER_PREFIX);
+			var projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, ProjectService.DEFAULT_APP_IDENTIFIER_PREFIX);
 
-			var projectDir = path.join(path.resolve(options.path || "."), projectName);
+			var projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
 
 			var customAppPath = this.getCustomAppPath();
@@ -89,7 +89,7 @@ export class ProjectService implements IProjectService {
 			var appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
 			this.$fs.createDirectory(appDestinationPath).wait();
 
-			if(options.symlink) {
+			if(this.$options.symlink) {
 				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
 			} else {
 				shell.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
@@ -108,7 +108,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	private getCustomAppPath(): string {
-		var customAppPath = options["copy-from"] || options["link-to"];
+		var customAppPath = this.$options.copyFrom || this.$options.linkTo;
 		if(customAppPath) {
 			if(customAppPath.indexOf("http://") === 0) {
 				this.$errors.fail("Only local paths for custom app are supported.");

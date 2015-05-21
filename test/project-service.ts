@@ -20,7 +20,8 @@ import util = require("util");
 import helpers = require("../lib/common/helpers");
 
 var assert = require("chai").assert;
-var options: any = require("../lib/common/options");
+var optionsLib = require("../lib/options");
+var hostInfoLib = require("../lib/common/host-info");
 var mockProjectNameValidator = {
 	validate: () => { return true; }
 };
@@ -28,7 +29,7 @@ var mockProjectNameValidator = {
 temp.track();
 
 class ProjectIntegrationTest {
-	private testInjector: IInjector;
+	public testInjector: IInjector;
 
 	constructor() {
 		this.createTestInjector();
@@ -67,6 +68,7 @@ class ProjectIntegrationTest {
 			var appDirectoryPath = path.join(projectDir, "app");
 			var platformsDirectoryPath = path.join(projectDir, "platforms");
 			let tnsProjectFilePath = path.join(projectDir, "package.json");
+			var options = this.testInjector.resolve("options");
 
 			assert.isTrue(fs.exists(appDirectoryPath).wait());
 			assert.isTrue(fs.exists(platformsDirectoryPath).wait());
@@ -79,12 +81,12 @@ class ProjectIntegrationTest {
 			var expectedAppId = appId;
 			assert.equal(actualAppId, expectedAppId);
 
-			var actualFiles = fs.enumerateFilesInDirectorySync(options["copy-from"]);
+			var actualFiles = fs.enumerateFilesInDirectorySync(options.copyFrom);
 			var expectedFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
 
 			assert.equal(actualFiles.length, expectedFiles.length);
 			_.each(actualFiles, file => {
-				var relativeToProjectDir = helpers.getRelativeToRootPath(options["copy-from"], file);
+				var relativeToProjectDir = helpers.getRelativeToRootPath(options.copyFrom, file);
 				assert.isTrue(fs.exists(path.join(appDirectoryPath, relativeToProjectDir)).wait());
 			});
 		}).future<void>()();
@@ -112,6 +114,9 @@ class ProjectIntegrationTest {
 		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
 		this.testInjector.register("config", {});
 		this.testInjector.register("lockfile", stubs.LockFile);
+		
+		this.testInjector.register("options", optionsLib.Options);
+		this.testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	}
 }
 
@@ -121,9 +126,10 @@ describe("Project Service Tests", () => {
 			var	projectIntegrationTest = new ProjectIntegrationTest();
 			var tempFolder = temp.mkdirSync("project");
 			var projectName = "myapp";
+			var options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
-			options["copy-from"] = projectIntegrationTest.getDefaultTemplatePath().wait();
+			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath().wait();
 
 			projectIntegrationTest.createProject(projectName).wait();
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp").wait();
@@ -132,9 +138,10 @@ describe("Project Service Tests", () => {
 			var	projectIntegrationTest = new ProjectIntegrationTest();
 			var tempFolder = temp.mkdirSync("project1");
 			var projectName = "myapp";
+			var options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
-			options["copy-from"] = projectIntegrationTest.getDefaultTemplatePath().wait();
+			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath().wait();
 			options.appid = "my.special.id";
 
 			projectIntegrationTest.createProject(projectName).wait();
@@ -164,6 +171,8 @@ function createTestInjector() {
 	testInjector.register("lockfile", stubs.LockFile);
 	
 	testInjector.register('projectData', ProjectDataLib.ProjectData);
+	testInjector.register("options", optionsLib.Options);
+	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	
 	return testInjector;
 }
@@ -172,6 +181,7 @@ describe("project upgrade procedure tests", () => {
 	it("should throw error when no nativescript project folder specified", () => {
 		var testInjector = createTestInjector();
 		var tempFolder = temp.mkdirSync("project upgrade");
+		var options = testInjector.resolve("options");
 		options.path = tempFolder;
 		var isErrorThrown = false;
 		
@@ -190,6 +200,7 @@ describe("project upgrade procedure tests", () => {
 		var fs: IFileSystem = testInjector.resolve("fs");
 		
 		var tempFolder = temp.mkdirSync("projectUpgradeTest2");	
+		var options = testInjector.resolve("options");
 		options.path = tempFolder;	
 		var tnsProjectData = {
 			"id": "org.nativescript.Test",
@@ -213,6 +224,7 @@ describe("project upgrade procedure tests", () => {
 		var fs: IFileSystem = testInjector.resolve("fs");
 		
 		var tempFolder = temp.mkdirSync("projectUpgradeTest3");	
+		var options = testInjector.resolve("options");
 		options.path = tempFolder;	
 		var tnsProjectData = {
 			"id": "org.nativescript.Test",
@@ -245,6 +257,7 @@ describe("project upgrade procedure tests", () => {
 		var fs: IFileSystem = testInjector.resolve("fs");
 		
 		var tempFolder = temp.mkdirSync("projectUpgradeTest4");	
+		var options = testInjector.resolve("options");
 		options.path = tempFolder;	
 		var tnsProjectData = {
 			

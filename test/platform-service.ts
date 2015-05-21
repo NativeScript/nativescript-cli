@@ -16,12 +16,13 @@ import NpmLib = require("../lib/node-package-manager");
 import HttpClientLib = require("../lib/common/http-client");
 import ProjectDataLib = require("../lib/project-data");
 import ProjectHelperLib = require("../lib/common/project-helper");
+import optionsLib = require("../lib/options");
+import hostInfoLib = require("../lib/common/host-info");
 
 import path = require("path");
 import Future = require("fibers/future");
 
 var assert = require("chai").assert;
-var options: any = require("../lib/common/options");
 require('should');
 
 function createTestInjector() {
@@ -41,6 +42,9 @@ function createTestInjector() {
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => {}
 	});
+	testInjector.register("options", optionsLib.Options);
+	testInjector.register("hostInfo", hostInfoLib.HostInfo);
+	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 
 	return testInjector;
 }

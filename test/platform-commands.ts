@@ -9,10 +9,11 @@ import PlatformUpdateCommandLib = require("../lib/commands/update-platform");
 import PlatformServiceLib = require('../lib/services/platform-service');
 import StaticConfigLib = require("../lib/config");
 import CommandsServiceLib = require("../lib/common/services/commands-service");
+import optionsLib = require("../lib/options");
+import hostInfoLib = require("../lib/common/host-info");
 import path = require("path");
 import Future = require("fibers/future");
 var assert = require("chai").assert;
-var options: any = require("../lib/common/options");
 var isCommandExecuted = true;
 
 class PlatformData implements IPlatformData {
@@ -102,6 +103,8 @@ function createTestInjector() {
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => {}
 	});
+	testInjector.register("options", optionsLib.Options);
+	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 
 	return testInjector;
 }

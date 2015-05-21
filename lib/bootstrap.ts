@@ -1,6 +1,6 @@
 require("./common/bootstrap");
 $injector.require("config", "./config");
-require("./options");
+$injector.require("options", "./options");
 // note: order above is important!
 $injector.require("nativescript-cli", "./nativescript-cli");
 

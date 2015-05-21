@@ -4,10 +4,14 @@
 import Future = require("fibers/future");
 import lockfile = require("lockfile");
 import path = require("path");
-import options = require("./common/options");
 
 export class LockFile implements ILockFile {
-	private static LOCK_FILENAME = path.join(options["profile-dir"], ".lock");
+	private lockFilePath: string;
+	
+	constructor(private $options: IOptions) {
+		this.lockFilePath = path.join(this.$options.profileDir, ".lock");
+	}
+	
 	private static LOCK_EXPIRY_PERIOD_SEC = 180;
 	private static LOCK_PARAMS = {
 		retryWait: 100,
@@ -17,7 +21,7 @@ export class LockFile implements ILockFile {
 
 	public lock(): IFuture<void> {
 		var future = new Future<void>();
-		lockfile.lock(LockFile.LOCK_FILENAME, LockFile.LOCK_PARAMS, (err: Error) => {
+		lockfile.lock(this.lockFilePath, LockFile.LOCK_PARAMS, (err: Error) => {
 			if(err) {
 				future.throw(err);
 			} else {
@@ -29,7 +33,7 @@ export class LockFile implements ILockFile {
 
 	public unlock(): IFuture<void> {
 		var future = new Future<void>();
-		lockfile.unlock(LockFile.LOCK_FILENAME, (err: Error) => {
+		lockfile.unlock(this.lockFilePath, (err: Error) => {
 			if(err) {
 				future.throw(err);
 			} else {

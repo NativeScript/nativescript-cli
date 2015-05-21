@@ -2,12 +2,12 @@
 "use strict";
 
 import path = require("path");
-import options = require("../common/options");
 import userSettingsServiceBaseLib = require("../common/services/user-settings-service");
 
 class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
-	constructor($fs: IFileSystem) {
-		var userSettingsFilePath = path.join(options["profile-dir"], "user-settings.json");
+	constructor($fs: IFileSystem,
+		$options: IOptions) {
+		var userSettingsFilePath = path.join($options.profileDir, "user-settings.json");
 		super(userSettingsFilePath, $fs);
 	}
 }
