@@ -6,7 +6,6 @@ import shell = require("shelljs");
 import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
-import options = require("./../common/options");
 import semver = require("semver");
 
 export class PlatformService implements IPlatformService {
@@ -19,7 +18,8 @@ export class PlatformService implements IPlatformService {
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
-		private $commandsService: ICommandsService) { }
+		private $commandsService: ICommandsService,
+		private $options: IOptions) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -66,8 +66,8 @@ export class PlatformService implements IPlatformService {
 				pathToSave: path.join(this.$projectData.platformsDir, platform)
 			};
 
-			if(options.frameworkPath) {
-				packageToInstall = options.frameworkPath;
+			if(this.$options.frameworkPath) {
+				packageToInstall = this.$options.frameworkPath;
 			} else {
 				packageToInstall = platformData.frameworkPackageName;
 				npmOptions["version"] = version;
@@ -94,7 +94,7 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 			var installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 
-			if(options.frameworkPath && this.$fs.getFsStats(options.frameworkPath).wait().isFile() && !options.symlink) {
+			if(this.$options.frameworkPath && this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile() && !this.$options.symlink) {
 				// Need to remove unneeded node_modules folder
 				// One level up is the runtime module and one above is the node_modules folder.
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
@@ -191,7 +191,7 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 
-			if (options.emulator) {
+			if (this.$options.emulator) {
 				this.deployOnEmulator(platform).wait();
 			} else {
 				this.deployOnDevice(platform).wait();
@@ -230,16 +230,16 @@ export class PlatformService implements IPlatformService {
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 
-			var cachedDeviceOption = options.forDevice;
-			options.forDevice = true;
+			var cachedDeviceOption = this.$options.forDevice;
+			this.$options.forDevice = true;
 			this.buildPlatform(platform).wait();
-			options.forDevice = cachedDeviceOption;
+			this.$options.forDevice = cachedDeviceOption;
 
 			// Get latest package that is produced from build
 			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			this.$devicesServices.initialize({platform: platform, deviceId: options.device}).wait();
+			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
 			this.$devicesServices.execute(action).wait();
 			this.$commandsService.tryExecuteCommand("device", ["run", this.$projectData.projectId]).wait();
@@ -257,7 +257,7 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkAvailability().wait();
 			emulatorServices.checkDependencies().wait();
 
-			if(!options.availableDevices) {
+			if(!this.$options.availableDevices) {
 				this.buildPlatform(platform).wait();
 
 				var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
@@ -425,7 +425,7 @@ export class PlatformService implements IPlatformService {
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 				}
 			} else {
-				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s. Are you sure?", options.profileDir), () => true).wait();
+				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s. Are you sure?", this.$options.profileDir), () => true).wait();
 				if(isUpdateConfirmed) {
 					platformData.platformProjectService.updatePlatform(currentVersion, newVersion).wait();
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();

@@ -1,46 +1,32 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import path = require("path");
-import commonOptions = require("./common/options");
+import commonOptionsLibPath = require("./common/options");
 import osenv = require("osenv");
-import hostInfo = require("./common/host-info");
+import path = require("path");
 
-var knownOpts: any = {
-		"frameworkPath": String,
-		"copy-from": String,
-		"link-to": String,
-		"release": Boolean,
-		"emulator": Boolean,
-		"symlink": Boolean,
-		"for-device": Boolean,
-		"client": Boolean,
-		"keyStorePath": String,
-		"keyStorePassword": String,
-		"keyStoreAlias": String,
-		"keyStoreAliasPassword": String
-	},
-	shorthands: IStringDictionary = {
-	};
+let OptionType = commonOptionsLibPath.OptionType;
 
-_.extend(commonOptions.knownOpts, knownOpts);
-_.extend(commonOptions.shorthands, shorthands);
-
-var defaultProfileDir = "";
-var nativeScriptCacheFolder = ".nativescript-cli";
-if(hostInfo.isWindows()) {
-	defaultProfileDir = path.join(process.env.LocalAppData, nativeScriptCacheFolder);
-} else {
-	defaultProfileDir = path.join(osenv.home(), ".local/share", nativeScriptCacheFolder);
+export class Options extends commonOptionsLibPath.OptionsBase {
+	constructor($errors: IErrors,
+		$staticConfig: IStaticConfig,
+		$hostInfo: IHostInfo) {
+		super({
+			frameworkPath: { type: OptionType.String },
+			copyFrom: { type: OptionType.String },
+			linkTo: { type: OptionType.String  },
+			release: { type: OptionType.Boolean },
+			emulator: { type: OptionType.Boolean },
+			symlink: { type: OptionType.Boolean },
+			forDevice: { type: OptionType.Boolean },
+			client: { type: OptionType.Boolean },
+			keyStorePath: { type: OptionType.String },
+			keyStorePassword: { type: OptionType.String,},
+			keyStoreAlias: { type: OptionType.String },
+			keyStoreAliasPassword: { type: OptionType.String }
+		},
+		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share", "Telerik", "BlackDragon", ".nativescript-cli")),
+			$errors, $staticConfig);
+	}
 }
-
-commonOptions.setProfileDir(defaultProfileDir);
-var errors: IErrors = $injector.resolve("errors");
-_(errors.validateArgs("tns", commonOptions.knownOpts, commonOptions.shorthands)).each((val,key) => {
-	key = shorthands[key] || key;
-	commonOptions[key] = val;
-}).value();
-exports.knownOpts = knownOpts;
-
-declare var exports:any;
-export = exports;
+$injector.register("options", Options);

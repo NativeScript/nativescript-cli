@@ -8,7 +8,6 @@ import semver = require("semver");
 import shell = require("shelljs");
 import helpers = require("./common/helpers");
 import constants = require("./constants");
-import options = require("./common/options");
 
 export class NodePackageManager implements INodePackageManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
@@ -19,7 +18,8 @@ export class NodePackageManager implements INodePackageManager {
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $lockfile: ILockFile) {
+		private $lockfile: ILockFile,
+		private $options: IOptions) {
 		this.versionsCache = {};
 		this.load().wait();
 	}
@@ -94,14 +94,14 @@ export class NodePackageManager implements INodePackageManager {
 
 	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
 		return (() => {
-			if (options.frameworkPath) {
-				if (this.$fs.getFsStats(options.frameworkPath).wait().isFile()) {
+			if (this.$options.frameworkPath) {
+				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
 					this.npmInstall(packageName, pathToSave, version).wait();
 					var pathToNodeModules = path.join(pathToSave, "node_modules");
 					var folders = this.$fs.readDirectory(pathToNodeModules).wait();
 					return path.join(pathToNodeModules, folders[0]);
 				}
-				return options.frameworkPath;
+				return this.$options.frameworkPath;
 			} else {
 				version = version || this.getLatestVersion(packageName).wait();
 				var packagePath = this.getCachedPackagePath(packageName, version);
@@ -121,7 +121,7 @@ export class NodePackageManager implements INodePackageManager {
 		this.$logger.out("Installing ", packageName);
 
 		var incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
-		if (!options.frameworkPath && packageName.indexOf("@") < 0) {
+		if (!this.$options.frameworkPath && packageName.indexOf("@") < 0) {
 			packageName = packageName + "@<" + incrementedVersion;
 		}
 

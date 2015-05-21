@@ -8,7 +8,6 @@ import util = require("util");
 import xcode = require("xcode");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
-import options = require("../common/options");
 
 class IOSProjectService implements  IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -21,7 +20,8 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
-		private $npm: INodePackageManager) { }
+		private $npm: INodePackageManager,
+		private $options: IOptions) { }
 
 	public get platformData(): IPlatformData {
 		var projectRoot = path.join(this.$projectData.platformsDir, "ios");
@@ -72,7 +72,7 @@ class IOSProjectService implements  IPlatformProjectService {
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
-			if(options.symlink) {
+			if(this.$options.symlink) {
 				this.$fs.ensureDirectoryExists(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 				var xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 
@@ -120,13 +120,13 @@ class IOSProjectService implements  IPlatformProjectService {
 			var basicArgs = [
 				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
 				"-target", this.$projectData.projectName,
-				"-configuration", options.release ? "Release" : "Debug",
+				"-configuration", this.$options.release ? "Release" : "Debug",
 				"build",
 				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 			];
 			var args: string[] = [];
 
-			if(options.forDevice) {
+			if(this.$options.forDevice) {
 				args = basicArgs.concat([
 					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
 					"-sdk", "iphoneos",
@@ -144,9 +144,9 @@ class IOSProjectService implements  IPlatformProjectService {
 
 			}
 
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: options, stdio: 'inherit'}).wait();
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
 
-			if(options.forDevice) {
+			if(this.$options.forDevice) {
 				var buildOutputPath = path.join(projectRoot, "build", "device");
 
 				// Produce ipa file
@@ -157,7 +157,7 @@ class IOSProjectService implements  IPlatformProjectService {
 					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
 				];
 
-				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: options, stdio: 'inherit'}).wait();
+				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
 			}
 		}).future<void>()();
 	}
@@ -204,7 +204,7 @@ class IOSProjectService implements  IPlatformProjectService {
 		return (() => {
 			// Copy old file to options["profile-dir"]
 			var sourceFile = path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName));
-			var destinationFile = path.join(options.profileDir, "xcodeproj");
+			var destinationFile = path.join(this.$options.profileDir, "xcodeproj");
 			this.$fs.deleteDirectory(destinationFile).wait();
 			shell.cp("-R", path.join(sourceFile, "*"), destinationFile);
 			this.$logger.info("Backup file %s at location %s", sourceFile, destinationFile);

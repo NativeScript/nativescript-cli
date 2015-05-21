@@ -1,4 +1,3 @@
-import options = require("./../common/options");
 import iOSProxyServices = require("./../common/mobile/ios/ios-proxy-services");
 import iOSDevice = require("./../common/mobile/ios/ios-device");
 import net = require("net");
@@ -35,7 +34,8 @@ class IOSDebugService implements IDebugService {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $npm: INodePackageManager,
-		private $iosXcrunSimctl: IOSXcrunSimctl) {
+		private $iosXcrunSimctl: IOSXcrunSimctl,
+		private $options: IOptions) {
 	}
 
 	get platform(): string {
@@ -43,20 +43,20 @@ class IOSDebugService implements IDebugService {
 	}
 
 	public debug(): IFuture<void> {
-		if ((!options.debugBrk && !options.start) || (options.debugBrk && options.start)) {
+		if ((!this.$options.debugBrk && !this.$options.start) || (this.$options.debugBrk && this.$options.start)) {
 			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
 		}
 
-		if (options.emulator) {
-			if (options.debugBrk) {
+		if (this.$options.emulator) {
+			if (this.$options.debugBrk) {
 				return this.emulatorDebugBrk();
-			} else if (options.start) {
+			} else if (this.$options.start) {
 				return this.emulatorStart();
 			}
 		} else {
-			if (options.debugBrk) {
+			if (this.$options.debugBrk) {
 				return this.deviceDebugBrk();
-			} else if (options.start) {
+			} else if (this.$options.start) {
 				return this.deviceStart();
 			}
 		}
@@ -119,7 +119,7 @@ class IOSDebugService implements IDebugService {
 
 	private deviceDebugBrk(): IFuture<void> {
 		return (() => {
-			this.$devicesServices.initialize({ platform: this.platform, deviceId: options.device }).wait();
+			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
 			this.$devicesServices.execute(device => (() => {
 				this.$platformService.deployOnDevice(this.platform).wait();
 				var deviceDebugging: IOSDeviceDebugging = this.$injector.resolve("iosDeviceDebugging", { bundleId: this.$projectData.projectId, $iOSDevice: device });
@@ -132,7 +132,7 @@ class IOSDebugService implements IDebugService {
 
 	private deviceStart(): IFuture<void> {
 		return (() => {
-			this.$devicesServices.initialize({ platform: this.platform, deviceId: options.device }).wait();
+			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
 			this.$devicesServices.execute(device => (() => {
 				this.executeOpenDebuggerClient().wait();
 				var deviceDebugging: IOSDeviceDebugging = this.$injector.resolve("iosDeviceDebugging", { bundleId: this.$projectData.projectId, $iOSDevice: device });
@@ -142,7 +142,7 @@ class IOSDebugService implements IDebugService {
 	}
 
 	public executeOpenDebuggerClient(): IFuture<void> {
-		if (options.client === false) {
+		if (this.$options.client === false) {
 			// NOTE: The --no-client has been specified. Otherwise its either false or undefined.
 			return (() => {
 				this.$logger.info("Supressing debugging client.");
@@ -162,11 +162,11 @@ class IOSDebugService implements IDebugService {
 	private getSafariPath(): IFuture<string> {
 		return (() => {
 			var tnsIosPackage = "";
-			if (options.frameworkPath) {
-				if (this.$fs.getFsStats(options.frameworkPath).wait().isFile()) {
+			if (this.$options.frameworkPath) {
+				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
 					this.$errors.failWithoutHelp("frameworkPath option must be path to directory which contains tns-ios framework");
 				}
-				tnsIosPackage = path.resolve(options.frameworkPath);
+				tnsIosPackage = path.resolve(this.$options.frameworkPath);
 			} else {
 				var platformData = this.$platformsData.getPlatformData(this.platform);
 				tnsIosPackage = this.$npm.install(platformData.frameworkPackageName).wait();

@@ -4,9 +4,7 @@ import path = require("path");
 import shell = require("shelljs");
 import util = require("util");
 import Future = require("fibers/future");
-import options = require("../common/options");
 import constants = require("../constants");
-import hostInfo = require("../common/host-info");
 import helpers = require("../common/helpers");
 import fs = require("fs");
 import os = require("os");
@@ -26,7 +24,9 @@ class AndroidProjectService implements IPlatformProjectService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $projectData: IProjectData,
-		private $propertiesParser: IPropertiesParser) {
+		private $propertiesParser: IPropertiesParser,
+		private $options: IOptions,
+		private $hostInfo: IHostInfo) {
 	}
 
 	private _platformData: IPlatformData = null;
@@ -68,7 +68,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
 			var newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
 			var versionNumber = _.last(newTarget.split("-"));
-			if(options.symlink) {
+			if(this.$options.symlink) {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
 
@@ -146,7 +146,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			var buildConfiguration = options.release ? "release" : "debug";
+			var buildConfiguration = this.$options.release ? "release" : "debug";
 			var args = this.getAntArgs(buildConfiguration, projectRoot);
 			this.spawn('ant', args).wait();
 		}).future<void>()();
@@ -256,7 +256,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private spawn(command: string, args: string[]): IFuture<void> {
-		if (hostInfo.isWindows()) {
+		if (this.$hostInfo.isWindows) {
 			args.unshift('/s', '/c', command);
 			command = process.env.COMSPEC || 'cmd.exe';
 		}
@@ -267,20 +267,20 @@ class AndroidProjectService implements IPlatformProjectService {
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
 		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
 		if(configuration === "release") {
-			if(options.keyStorePath) {
-				args = args.concat(["-Dkey.store", options.keyStorePath]);
+			if(this.$options.keyStorePath) {
+				args = args.concat(["-Dkey.store", this.$options.keyStorePath]);
 			}
 
-			if(options.keyStorePassword) {
-				args = args.concat(["-Dkey.store.password", options.keyStorePassword]);
+			if(this.$options.keyStorePassword) {
+				args = args.concat(["-Dkey.store.password", this.$options.keyStorePassword]);
 			}
 
-			if(options.keyStoreAlias) {
-				args = args.concat(["-Dkey.alias", options.keyStoreAlias]);
+			if(this.$options.keyStoreAlias) {
+				args = args.concat(["-Dkey.alias", this.$options.keyStoreAlias]);
 			}
 
-			if(options.keyStoreAliasPassword) {
-				args = args.concat(["-Dkey.alias.password", options.keyStoreAliasPassword])
+			if(this.$options.keyStoreAliasPassword) {
+				args = args.concat(["-Dkey.alias.password", this.$options.keyStoreAliasPassword])
 			}
 		}
 

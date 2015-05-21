@@ -5,7 +5,6 @@ import util = require("util");
 import path = require("path");
 import shell = require("shelljs");
 import npm = require("npm");
-var options = require("../common/options");
 var helpers = require("../common/helpers");
 import Future = require("fibers/future");
 
