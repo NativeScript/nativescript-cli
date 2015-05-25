@@ -37,7 +37,7 @@ class AndroidDebugService implements IDebugService {
 				var cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
 				this.$platformService.buildPlatform(this.platform).wait();
-				this.$options.forDevice = cachedDeviceOption;
+				this.$options.forDevice = !!cachedDeviceOption;
 
 				packageFile = this.$platformService.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
