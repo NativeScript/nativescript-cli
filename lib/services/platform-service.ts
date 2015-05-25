@@ -233,7 +233,7 @@ export class PlatformService implements IPlatformService {
 			var cachedDeviceOption = this.$options.forDevice;
 			this.$options.forDevice = true;
 			this.buildPlatform(platform).wait();
-			this.$options.forDevice = cachedDeviceOption;
+			this.$options.forDevice = !!cachedDeviceOption;
 
 			// Get latest package that is produced from build
 			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
