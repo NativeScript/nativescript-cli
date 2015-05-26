@@ -1,6 +1,5 @@
 import iOSProxyServices = require("./../common/mobile/ios/ios-proxy-services");
 import iOSDevice = require("./../common/mobile/ios/ios-device");
-import iOSEmulatorService = require("./../common/mobile/ios/ios-emulator-services");
 import net = require("net");
 import ws = require("ws");
 import stream = require("stream");
@@ -45,7 +44,7 @@ function connectEventually(factory: () => net.Socket, handler: (socket: net.Sock
 class IOSDebugService implements IDebugService {
 	constructor(
 		private $platformService: IPlatformService,
-		private $iOSEmulatorServices: iOSEmulatorService,
+		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $devicesServices: Mobile.IDevicesServices,
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
@@ -102,7 +101,9 @@ class IOSDebugService implements IDebugService {
             this.executeOpenDebuggerClient().wait();
 			var projectId = this.$projectData.projectId;
 			var attachRequestMessage = notification.attachRequest(projectId);
-            this.$iOSEmulatorServices.postDarwinNotification(attachRequestMessage).wait();
+			
+			var iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
+            iOSEmulator.postDarwinNotification(attachRequestMessage).wait();
 		}).future<void>()();
 	}
 
