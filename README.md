@@ -70,7 +70,7 @@ You can install and run the NativeScript CLI on Windows or OS X.
 * Windows Vista or later
 * [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
 * (Optional) [Chocolatey][Chocolatey]
-* [JDK 7][JDK 7] or a later stable official release
+* [JDK 8][JDK 8] or a later stable official release
 * [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
 * [Android SDK 19][Android SDK 19] or a later stable official release
 * (Optional) [Genymotion][Genymotion]
@@ -142,7 +142,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
 * For Android development
-	* [JDK 7][JDK 7] or a later stable official release 
+	* [JDK 8][JDK 8] or a later stable official release 
 	* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
 	* [Android SDK 19][Android SDK 19] or a later stable official release 
 	* (Optional) [Genymotion][Genymotion]
@@ -180,7 +180,7 @@ export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/s
 		```Shell
 		sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
 		```
-* [JDK 7][JDK 7] or a later stable official release
+* [JDK 8][JDK 8] or a later stable official release
 * [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
 * [Android SDK 19][Android SDK 19] or a later stable official release 
 * (Optional) [Genymotion][Genymotion]
@@ -525,7 +525,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [12]: https://developer.apple.com/xcode/downloads/
 [Node.js 0.10.26]: http://nodejs.org/download/
 [Chocolatey]: https://chocolatey.org/
-[JDK 7]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+[JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
 [Android SDK 19]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
