@@ -5,22 +5,39 @@ import ws = require("ws");
 import stream = require("stream");
 import path = require("path");
 import http = require("http");
+import Future = require("fibers/future");
 
 module notification {
+	function formatNotification(bundleId: string, notification: string) {
+		return `${bundleId}:NativeScript.Debug.${notification}`;
+	}
+	
 	export function waitForDebug(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.WaitForDebugger";
+		return formatNotification(bundleId, "WaitForDebugger");
 	}
 
 	export function attachRequest(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.AttachRequest";
+		return formatNotification(bundleId, "AttachRequest");
 	}
 
 	export function appLaunching(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.AppLaunching";
+		return formatNotification(bundleId, "AppLaunching");
 	}
 
 	export function readyForAttach(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.ReadyForAttach";
+		return formatNotification(bundleId, "ReadyForAttach");
+	}
+	
+	export function attachAvailabilityQuery(bundleId: string) {
+		return formatNotification(bundleId, "AttachAvailabilityQuery");
+	}
+	
+	export function alreadyConnected(bundleId: string) {
+		return formatNotification(bundleId, "AlreadyConnected");
+	}
+	
+	export function attachAvailable(bundleId: string) {
+		return formatNotification(bundleId, "AttachAvailable");
 	}
 }
 
@@ -111,12 +128,27 @@ class IOSDebugService implements IDebugService {
 		return (() => {
 			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
 			this.$devicesServices.execute(device => (() => {
-				this.$platformService.deployOnDevice(this.platform).wait();
-
-                var iosDevice = <iOSDevice.IOSDevice>device;
-                iosDevice.runApplication(this.$projectData.projectId /* , ["--nativescript-debug-brk"] */).wait();
+				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
+				let deploy = this.$platformService.deployOnDevice(this.platform);
+				
+				let iosDevice = <iOSDevice.IOSDevice>device;
+				let projectId = this.$projectData.projectId;
+				let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
+				
+				try {
+					awaitNotification(npc, notification.appLaunching(projectId), 60000).wait();
+					process.nextTick(() => {
+						npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
+						npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
+					});
+					awaitNotification(npc, notification.readyForAttach(projectId), 5000).wait();
+				} catch(e) {
+					this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
+				}
+				
                 createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
                 this.executeOpenDebuggerClient().wait();
+				deploy.wait();
 			}).future<void>()()).wait();
 		}).future<void>()();
 	}
@@ -125,9 +157,38 @@ class IOSDebugService implements IDebugService {
 		return (() => {
 			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
 			this.$devicesServices.execute(device => (() => {
-				var iosDevice = <iOSDevice.IOSDevice>device;
-				createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
-                this.executeOpenDebuggerClient().wait();
+				let iosDevice = <iOSDevice.IOSDevice>device;
+				let projectId = this.$projectData.projectId;
+				let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
+				
+				let [alreadyConnected, readyForAttach, attachAvailable] = [
+					notification.alreadyConnected(projectId),
+					notification.readyForAttach(projectId),
+					notification.attachAvailable(projectId)
+				].map((notification) => awaitNotification(npc, notification, 2000));
+				
+				npc.postNotificationAndAttachForData(notification.attachAvailabilityQuery(projectId));
+				
+				let receivedNotification: IFuture<string>;
+				try {
+					receivedNotification = whenAny(alreadyConnected, readyForAttach, attachAvailable).wait();
+				} catch (e) {
+					this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.getDisplayName()} or is not built with debugging enabled.`);
+				}
+				
+				switch (receivedNotification) {
+					case alreadyConnected:
+						this.$errors.failWithoutHelp("A debugger is already connected.");
+					case attachAvailable:
+						process.nextTick(() => npc.postNotificationAndAttachForData(notification.attachRequest(projectId)));
+						try { awaitNotification(npc, notification.readyForAttach(projectId), 2000).wait(); }
+						catch (e) {
+							this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
+						}
+					case readyForAttach:
+						createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
+            			this.executeOpenDebuggerClient().wait();
+				}
 			}).future<void>()()).wait();
 		}).future<void>()();
 	}
@@ -183,18 +244,16 @@ function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket
     var server = ws.createServer(<any>{
         port: localPort,
         verifyClient: (info: any, callback: any) => {
+            $logger.info("Frontend client connected.");
             socketFactory((socket) => {
+				$logger.info("Backend socket created.");
                 info.req["__deviceSocket"] = socket;
                 callback(true);
             });
         }
     });
     server.on("connection", (webSocket) => {
-        $logger.info("Frontend client connected.");
-
         var deviceSocket: net.Socket = (<any>webSocket.upgradeReq)["__deviceSocket"];
-
-        $logger.info("Backend socket created.");
         var packets = new PacketStream();
         deviceSocket.pipe(packets);
 
@@ -225,48 +284,50 @@ function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket
     return server;
 }
 
-class IOSDeviceDebugging {
-	private $notificationProxyClient: iOSProxyServices.NotificationProxyClient;
-
-	constructor(private bundleId: string,
-		private $iOSDevice: iOSDevice.IOSDevice,
-		private $logger: ILogger,
-		private $injector: IInjector) {
-
-		this.$notificationProxyClient = this.$injector.resolve(iOSProxyServices.NotificationProxyClient, { device: this.$iOSDevice })
+function awaitNotification(npc: iOSProxyServices.NotificationProxyClient, notification: string, timeout: number): IFuture<string> {
+	let future = new Future<string>();
+	
+	let timeoutObject = setTimeout(() => {
+		detachObserver();
+		future.throw(new Error("Timeout receiving notification."));
+	}, timeout);
+	
+	function notificationObserver(notification: string) {
+		clearTimeout(timeoutObject);
+		detachObserver();
+		future.return(notification);
 	}
-
-	public debugApplicationOnStart() {
-		var appLaunchMessage = notification.appLaunching(this.bundleId);
-		this.$notificationProxyClient.addObserver(appLaunchMessage, () => {
-			this.$logger.info("Got AppLaunching");
-			this.proxyDebuggingTraffic();
-			var waitForDebuggerMessage = notification.waitForDebug(this.bundleId);
-			this.$notificationProxyClient.postNotificationAndAttachForData(waitForDebuggerMessage);
-		});
+	
+	function detachObserver() {
+		process.nextTick(() => npc.removeObserver(notification, notificationObserver));
 	}
-
-	public debugRunningApplication() {
-		this.proxyDebuggingTraffic();
-		var attachRequestMessage = notification.attachRequest(this.bundleId);
-		this.$notificationProxyClient.postNotificationAndAttachForData(attachRequestMessage);
-	}
-
-	private proxyDebuggingTraffic(): void {
-		var identifier = this.$iOSDevice.getIdentifier();
-		this.$logger.info("Device Identifier: " + identifier);
-
-		var readyForAttachMessage = notification.readyForAttach(this.bundleId);
-		this.$notificationProxyClient.addObserver(readyForAttachMessage, () => {
-			createWebSocketProxy(this.$logger, (callback) => callback(this.$iOSDevice.connectToPort(InspectorBackendPort)));
-		});
-	}
-
-	private printHowToTerminate() {
-		this.$logger.info("\nSetting up debugger proxy...\n\nPress Ctrl + C to terminate, or disconnect.\n");
-	}
+	
+	npc.addObserver(notification, notificationObserver);
+	
+	return future;
 }
-$injector.register("iosDeviceDebugging", IOSDeviceDebugging);
+
+function whenAny<T>(...futures: IFuture<T>[]): IFuture<IFuture<T>> {
+	let resultFuture = new Future<IFuture<T>>();	
+	let futuresLeft = futures.length;
+
+	for (let future of futures) {
+		var futureLocal = future;
+		future.resolve((error, result?) => {
+			futuresLeft--;
+			
+			if (!resultFuture.isResolved()) {
+				if (typeof error === "undefined") {
+					resultFuture.return(futureLocal);
+				} else if (futuresLeft == 0) {
+					resultFuture.throw(new Error("None of the futures succeeded."));
+				}
+			}
+		});
+	}
+	
+	return resultFuture;
+}
 
 class PacketStream extends stream.Transform {
     private buffer: Buffer;
