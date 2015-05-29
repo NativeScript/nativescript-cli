@@ -20,6 +20,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			symlink: { type: OptionType.Boolean },
 			forDevice: { type: OptionType.Boolean },
 			client: { type: OptionType.Boolean },
+			production: { type: OptionType.Boolean },
 			keyStorePath: { type: OptionType.String },
 			keyStorePassword: { type: OptionType.String,},
 			keyStoreAlias: { type: OptionType.String },

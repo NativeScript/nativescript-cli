@@ -54,3 +54,7 @@ $injector.require("logcatPrinter", "./providers/logcat-printer");
 $injector.require("broccoliBuilder", "./tools/broccoli/builder");
 $injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");
 $injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wrapper");
+
+$injector.require("pluginsService", "./services/plugins-service");
+$injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
+$injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");

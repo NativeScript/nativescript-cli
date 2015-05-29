@@ -28,13 +28,15 @@ export class DestCopy implements IBroccoliPlugin {
 		
 		_.each(packageJsonFiles, packageJsonFilePath => {
 			let fileContent = require(packageJsonFilePath);
+			let isPlugin = fileContent.nativescript;
 	
 			if(!devDependencies[fileContent.name]) { // Don't flatten dev dependencies
 		
 				let currentDependency = {
 					name: fileContent.name,
 					version: fileContent.version,
-					directory: path.dirname(packageJsonFilePath)
+					directory: path.dirname(packageJsonFilePath),
+					isPlugin: isPlugin
 				};
 				
 				let addedDependency = dependencies[currentDependency.name];
@@ -57,7 +59,10 @@ export class DestCopy implements IBroccoliPlugin {
 	
 	_.each(dependencies, dependency => {
 		shelljs.cp("-R", dependency.directory, this.outputRoot);
-		shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));		 
+		shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
+		if(dependency.isPlugin) {
+			shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "platforms"));
+		}
 	});
 	
 	// Cache input tree

@@ -22,7 +22,8 @@ export class PlatformService implements IPlatformService {
 		private $prompter: IPrompter,
 		private $commandsService: ICommandsService,
 		private $options: IOptions,
-		private $broccoliBuilder: IBroccoliBuilder) { }
+		private $broccoliBuilder: IBroccoliBuilder,
+		private $pluginsService: IPluginsService) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -86,6 +87,10 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(platformPath).wait();
 				throw err;
 			}
+			
+			// Prepare installed plugins
+			let installedPlugins = this.$pluginsService.getAllInstalledPlugins().wait();
+			_.each(installedPlugins, pluginData => this.$pluginsService.prepare(pluginData).wait());
 
 			this.$logger.out("Project successfully created.");
 
@@ -310,6 +315,12 @@ export class PlatformService implements IPlatformService {
 			}
 		}).future<void>()();
 	}
+	
+	private isPlatformInstalled(platform: string): IFuture<boolean> {
+		return (() => {
+			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
+		}).future<boolean>()();
+	}
 
 	private isValidPlatform(platform: string) {
 		return this.$platformsData.getPlatformData(platform);
@@ -323,12 +334,6 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
-	}
-
-	private isPlatformInstalled(platform: string): IFuture<boolean> {
-		return (() => {
-			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
-		}).future<boolean>()();
 	}
 
 	private isPlatformPrepared(platform: string): IFuture<boolean> {
