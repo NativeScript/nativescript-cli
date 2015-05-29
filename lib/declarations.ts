@@ -39,7 +39,8 @@ interface IOptions extends ICommonOptions {
 	emulator: boolean;
 	symlink: boolean;
 	forDevice: boolean;
-	client: boolean;
+	client: boolean
+	production: boolean;
 	keyStorePath: string;
 	keyStorePassword: string;
 	keyStoreAlias: string;
