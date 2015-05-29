@@ -45,6 +45,9 @@ function createTestInjector() {
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("broccoliBuilder", {
+		prepareNodeModulesFolder: () => {}
+	})
 
 	return testInjector;
 }
