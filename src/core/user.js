@@ -98,8 +98,9 @@ Kinvey.User = /** @lends Kinvey.User */{
     options = options || {};
 
     // Validate arguments.
-    if(null == usernameOrData.username || null == usernameOrData.password) {
-      error = new Kinvey.Error('Argument must contain: username and password');
+    if((null == usernameOrData.username || null == usernameOrData.password)
+       && null == usernameOrData._socialIdentity) {
+      error = new Kinvey.Error('Username and/or password missing. Please provide both a username and password to login.');
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
