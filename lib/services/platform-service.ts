@@ -157,15 +157,16 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// Process platform specific files
-			var contents = this.$fs.readDirectory(platformData.appDestinationDirectoryPath).wait();
+			var contents = this.$fs.readDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
 			var files: string[] = [];
 
 			_.each(contents, d => {
-				var fsStat = this.$fs.getFsStats(path.join(platformData.appDestinationDirectoryPath, d)).wait();
+				let filePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, d);				
+				let fsStat = this.$fs.getFsStats(filePath).wait();
 				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
-					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(path.join(platformData.appDestinationDirectoryPath, d))).wait();
+					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(filePath)).wait();
 				} else if(fsStat.isFile()) {
-					files.push(path.join(platformData.appDestinationDirectoryPath, d));
+					files.push(filePath);
 				}
 			});
 
