@@ -10,8 +10,7 @@ import fs = require("fs");
 import os = require("os");
 
 class AndroidProjectService implements IPlatformProjectService {
-	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"];
-	private static METADATA_DIRNAME = "__metadata";
+	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-MNC"];
 	private static RES_DIRNAME = "res";
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
@@ -32,7 +31,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	private _platformData: IPlatformData = null;
 	public get platformData(): IPlatformData {
 		if (!this._platformData) {
-			var projectRoot = path.join(this.$projectData.platformsDir, "android");
+			let projectRoot = path.join(this.$projectData.platformsDir, "android");
 
 			this._platformData = {
 				frameworkPackageName: "tns-android",
@@ -66,8 +65,8 @@ class AndroidProjectService implements IPlatformProjectService {
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
-			var newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
-			var versionNumber = _.last(newTarget.split("-"));
+			let newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
+			let versionNumber = _.last(newTarget.split("-"));
 			if(this.$options.symlink) {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
@@ -85,9 +84,9 @@ class AndroidProjectService implements IPlatformProjectService {
 			}
 
 			// Create src folder
-			var packageName = this.$projectData.projectId;
-			var packageAsPath = packageName.replace(/\./g, path.sep);
-			var activityDir = path.join(projectRoot, 'src', packageAsPath);
+			let packageName = this.$projectData.projectId;
+			let packageAsPath = packageName.replace(/\./g, path.sep);
+			let activityDir = path.join(projectRoot, 'src', packageAsPath);
 			this.$fs.createDirectory(activityDir).wait();
 
 		}).future<any>()();
@@ -95,11 +94,11 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private copyResValues(projectRoot: string, frameworkDir: string, versionNumber: string): IFuture<void> {
 		return (() => {
-			var resSourceDir = path.join(frameworkDir, AndroidProjectService.RES_DIRNAME);
-			var resDestinationDir = path.join(projectRoot, AndroidProjectService.RES_DIRNAME);
+			let resSourceDir = path.join(frameworkDir, AndroidProjectService.RES_DIRNAME);
+			let resDestinationDir = path.join(projectRoot, AndroidProjectService.RES_DIRNAME);
 			this.$fs.createDirectory(resDestinationDir).wait();
-			var versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
-			var directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
+			let versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
+			let directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
 			if(this.$fs.exists(path.join(resSourceDir, versionDirName)).wait()) {
 				directoriesToCopy.push(versionDirName);
 			}
@@ -111,25 +110,33 @@ class AndroidProjectService implements IPlatformProjectService {
 	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
 			// Interpolate the activity name and package
-			var manifestPath = path.join(projectRoot, "AndroidManifest.xml");
-			var safeActivityName = this.$projectData.projectName.replace(/\W/g, '');
+			let manifestPath = path.join(projectRoot, "AndroidManifest.xml");
+			let safeActivityName = this.$projectData.projectName.replace(/\W/g, '');
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
 			shell.sed('-i', /__APILEVEL__/, this.getTarget(projectRoot).wait().split('-')[1], manifestPath);
 
-			var stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
+			let stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
-
 		}).future<void>()();
 	}
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			var targetApi = this.getTarget(projectRoot).wait();
+			let targetApi = this.getTarget(projectRoot).wait();
 			this.$logger.trace("Android target: %s", targetApi);
 			this.runAndroidUpdate(projectRoot, targetApi).wait();
+			this.adjustMinSdk(projectRoot);
 		}).future<void>()();
+	}
+
+	private adjustMinSdk(projectRoot: string): void {
+		let manifestPath = path.join(projectRoot, "AndroidManifest.xml");
+		let apiLevel = this.getTarget(projectRoot).wait().split('-')[1];
+		if (apiLevel === "MNC") { // MNC SDK requires that minSdkVersion is set to "MNC"
+			shell.sed('-i', /android:minSdkVersion=".*?"/, `android:minSdkVersion="${apiLevel}"`, manifestPath);
+		}
 	}
 
 	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
@@ -145,11 +152,9 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
-		return (() => {
-			var buildConfiguration = this.$options.release ? "release" : "debug";
-			var args = this.getAntArgs(buildConfiguration, projectRoot);
-			this.spawn('ant', args).wait();
-		}).future<void>()();
+		let buildConfiguration = this.$options.release ? "release" : "debug";
+		let args = this.getAntArgs(buildConfiguration, projectRoot);
+		return this.spawn('ant', args);
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
@@ -157,20 +162,20 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private parseProjectProperties(projDir: string, destDir: string): void {
-		var projProp = path.join(projDir, "project.properties");
+		let projProp = path.join(projDir, "project.properties");
 
 		if (!this.$fs.exists(projProp).wait()) {
 			this.$logger.warn("Warning: File %s does not exist", projProp);
 			return;
 		}
 
-		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
+		let lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
-		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
+		let regEx = /android\.library\.reference\.(\d+)=(.*)/;
 		lines.forEach(elem => {
-			var match = elem.match(regEx);
+			let match = elem.match(regEx);
 			if (match) {
-				var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
+				let libRef: ILibRef = { idx: parseInt(match[1]), path: match[2].trim() };
 				libRef.adjustedPath = this.$fs.isRelativePath(libRef.path) ? path.join(projDir, libRef.path) : libRef.path;
 				this.parseProjectProperties(libRef.adjustedPath, destDir);
 			}
@@ -179,25 +184,25 @@ class AndroidProjectService implements IPlatformProjectService {
 		this.$logger.info("Copying %s", projDir);
 		shell.cp("-Rf", projDir, destDir);
 
-		var targetDir = path.join(destDir, path.basename(projDir));
+		let targetDir = path.join(destDir, path.basename(projDir));
 		// TODO: parametrize targetSdk
-		var targetSdk = "android-17";
+		let targetSdk = "android-17";
 		this.$logger.info("Generate build.xml for %s", targetDir);
 		this.runAndroidUpdate(targetDir, targetSdk).wait();
 	}
 
 	private getProjectReferences(projDir: string): ILibRef[]{
-		var projProp = path.join(projDir, "project.properties");
+		let projProp = path.join(projDir, "project.properties");
 
-		var lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
+		let lines = this.$fs.readText(projProp, "utf-8").wait().split(os.EOL);
 
-		var refs: ILibRef[] = [];
+		let refs: ILibRef[] = [];
 
-		var regEx = /android\.library\.reference\.(\d+)=(.*)/;
+		let regEx = /android\.library\.reference\.(\d+)=(.*)/;
 		lines.forEach(elem => {
-			var match = elem.match(regEx);
+			let match = elem.match(regEx);
 			if (match) {
-				var libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
+				let libRef: ILibRef = { idx: parseInt(match[1]), path: match[2] };
 				libRef.adjustedPath = path.join(projDir, libRef.path);
 				refs.push(libRef);
 			}
@@ -207,37 +212,37 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private updateProjectReferences(projDir: string, libraryPath: string): void {
-		var refs = this.getProjectReferences(projDir);
-		var maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0;
+		let refs = this.getProjectReferences(projDir);
+		let maxIdx = refs.length > 0 ? _.max(refs, r => r.idx).idx : 0;
 
-		var relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
+		let relLibDir = path.relative(projDir, libraryPath).split("\\").join("/");
 
-		var libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
+		let libRefExists = _.any(refs, r => path.normalize(r.path) === path.normalize(relLibDir));
 
 		if (!libRefExists) {
-			var projRef = util.format("%sandroid.library.reference.%d=%s", os.EOL, maxIdx + 1, relLibDir);
-			var projProp = path.join(projDir, "project.properties");
+			let projRef = util.format("%sandroid.library.reference.%d=%s", os.EOL, maxIdx + 1, relLibDir);
+			let projProp = path.join(projDir, "project.properties");
 			fs.appendFileSync(projProp, projRef, { encoding: "utf-8" });
 		}
 	}
 
 	public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
 		return (() => {
-			var name = path.basename(libraryPath);
-			var projDir = this.$projectData.projectDir;
-			var targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
+			let name = path.basename(libraryPath);
+			let projDir = this.$projectData.projectDir;
+			let targetPath = path.join(projDir, "lib", platformData.normalizedPlatformName);
 			this.$fs.ensureDirectoryExists(targetPath).wait();
 
 			this.parseProjectProperties(libraryPath, targetPath);
 
 			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
-			var projectLibsDir = path.join(platformData.projectRoot, "libs");
+			let projectLibsDir = path.join(platformData.projectRoot, "libs");
 			this.$fs.ensureDirectoryExists(projectLibsDir).wait();
 			shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
 
-			var targetLibPath = path.join(targetPath, path.basename(libraryPath));
+			let targetLibPath = path.join(targetPath, path.basename(libraryPath));
 
-			var libProjProp = path.join(libraryPath, "project.properties");
+			let libProjProp = path.join(libraryPath, "project.properties");
 			if (this.$fs.exists(libProjProp).wait()) {
 				this.updateProjectReferences(platformData.projectRoot, targetLibPath);
 			}
@@ -250,7 +255,7 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): IFuture<void> {
 		return (() => {
-			var paths = files.split(' ').map(p => path.join(frameworkDir, p));
+			let paths = files.split(' ').map(p => path.join(frameworkDir, p));
 			shell.cp(cpArg, paths, projectRoot);
 		}).future<void>()();
 	}
@@ -265,7 +270,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
-		var args = [configuration, "-f", path.join(projectRoot, "build.xml")];
+		let args = [configuration, "-f", path.join(projectRoot, "build.xml")];
 		if(configuration === "release") {
 			if(this.$options.keyStorePath) {
 				args = args.concat(["-Dkey.store", this.$options.keyStorePath]);
@@ -291,15 +296,13 @@ class AndroidProjectService implements IPlatformProjectService {
 	}
 
 	private runAndroidUpdate(projectPath: string, targetApi: string): IFuture<void> {
-		return (() => {
-			var args = [
-				"--path", projectPath,
-				"--target", targetApi,
-				"--name", this.$projectData.projectName
-			];
+		let args = [
+			"--path", projectPath,
+			"--target", targetApi,
+			"--name", this.$projectData.projectName
+		];
 
-			this.spawn("android", ['update', 'project'].concat(args)).wait();
-		}).future<void>()();
+		return this.spawn("android", ['update', 'project'].concat(args));
 	}
 
 	private validatePackageName(packageName: string): void {
@@ -328,8 +331,8 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private getLatestValidAndroidTarget(frameworkDir: string): IFuture<string> {
 		return (() => {
-			var validTarget = this.getTarget(frameworkDir).wait();
-			var installedTargets = this.getInstalledTargets().wait();
+			let validTarget = this.getTarget(frameworkDir).wait();
+			let installedTargets = this.getInstalledTargets().wait();
 
 			// adjust to the latest available version
 			var	newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
@@ -345,10 +348,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	private updateTarget(projectRoot: string, newTarget: string): IFuture<void> {
 		return (() => {
-			var file = path.join(projectRoot, "project.properties");
-			var editor = this.$propertiesParser.createEditor(file).wait();
+			let file = path.join(projectRoot, "project.properties");
+			let editor = this.$propertiesParser.createEditor(file).wait();
 			editor.set("target", newTarget);
-			var future = new Future<void>();
+			let future = new Future<void>();
 			editor.save((err:any) => {
 				if (err) {
 					future.throw(err);
@@ -366,7 +369,7 @@ class AndroidProjectService implements IPlatformProjectService {
 		return (() => {
 			if (!this.installedTargetsCache) {
 				this.installedTargetsCache = [];
-				var output = this.$childProcess.exec('android list targets').wait();
+				let output = this.$childProcess.exec('android list targets').wait();
 				output.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
 			}
 			return this.installedTargetsCache;
@@ -376,10 +379,10 @@ class AndroidProjectService implements IPlatformProjectService {
 	private getTarget(projectRoot: string): IFuture<string> {
 		return (() => {
 			if(!this.targetApi) {
-				var projectPropertiesFilePath = path.join(projectRoot, "project.properties");
+				let projectPropertiesFilePath = path.join(projectRoot, "project.properties");
 
 				if (this.$fs.exists(projectPropertiesFilePath).wait()) {
-					var properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
+					let properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
 					this.targetApi = properties.get("target");
 				}
 			}
@@ -393,7 +396,7 @@ class AndroidProjectService implements IPlatformProjectService {
 			try {
 				this.$childProcess.exec("ant -version").wait();
 			} catch(error) {
-				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.")
+				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
 			}
 		}).future<void>()();
 	}
@@ -415,11 +418,11 @@ class AndroidProjectService implements IPlatformProjectService {
 	private symlinkDirectory(directoryName: string, projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
 			this.$fs.createDirectory(path.join(projectRoot, directoryName)).wait();
-			var directoryContent = this.$fs.readDirectory(path.join(frameworkDir, directoryName)).wait();
+			let directoryContent = this.$fs.readDirectory(path.join(frameworkDir, directoryName)).wait();
 
 			_.each(directoryContent, (file: string) => {
-				var sourceFilePath = path.join(frameworkDir, directoryName, file);
-				var destinationFilePath = path.join(projectRoot, directoryName, file);
+				let sourceFilePath = path.join(frameworkDir, directoryName, file);
+				let destinationFilePath = path.join(projectRoot, directoryName, file);
 				if(this.$fs.getFsStats(sourceFilePath).wait().isFile()) {
 					this.$fs.symlink(sourceFilePath, destinationFilePath).wait();
 				} else {
