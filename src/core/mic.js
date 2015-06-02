@@ -378,7 +378,7 @@ var MIC = {
       // Add the web view to the popup window
       popup.add(tiWebView);
 
-      if(OS_IOS) {
+      if(Titanium.Platform.name === 'iPhone OS') {
         // Create a window
         var win = Titanium.UI.createWindow({
           backgroundColor: 'white',
@@ -406,7 +406,7 @@ var MIC = {
           modal: true
         });
       }
-      else if(OS_ANDROID) {
+      else if(Titanium.Platform.name === 'Android') {
         popup.addEventListener('androidback', closeHandler);
       }
 
