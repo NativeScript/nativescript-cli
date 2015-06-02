@@ -300,41 +300,16 @@ describe('Kinvey.User', function() {
       });
       return expect(promise).to.be.fulfilled;
     });
-    it('should fail when there is no active user.', function() {
+    it('should succeed when there is no active user.', function() {
       Kinvey.setActiveUser(null);
 
       var promise = Kinvey.User.logout();
-      return promise.then(function() {
-        // We should not reach this code branch.
-        return expect(promise).to.be.rejected;
-      }, function(error) {
-        expect(error).to.have.property('name', Kinvey.Error.NO_ACTIVE_USER);
-      });
-    });
-    it('should succeed when there is no active user and the `silent` flag was set.', function() {
-      Kinvey.setActiveUser(null);
-
-      var promise = Kinvey.User.logout({ silent: true });
       return expect(promise).to.be.fulfilled;
     });
-    it('should fail when the active user is invalid.', function() {
+    it('should succeed when the active user is invalid.', function() {
       Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
 
       var promise = Kinvey.User.logout();
-      return promise.then(function() {
-        // We should not reach this code branch.
-        return expect(promise).to.be.rejected;
-      }, function(error) {
-        expect(error).to.have.property('name', Kinvey.Error.INVALID_CREDENTIALS);
-        expect(error).to.have.property('debug');
-        expect(error.debug).to.contain('Kinvey.User.logout');
-        expect(error.debug).to.contain('Kinvey.User.login');
-      });
-    });
-    it('should succeed when the active user is invalid and the `force` flag was set.', function() {
-      Kinvey.setActiveUser({ _id: this.randomID(), _kmd: { authtoken: this.randomID() } });
-
-      var promise = Kinvey.User.logout({ force: true });
       return promise.then(function() {
         expect(Kinvey.getActiveUser()).to.be['null'];
       });
