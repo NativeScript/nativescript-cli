@@ -457,6 +457,32 @@ var Sync = /** @lends Sync */{
       requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
                                         metadata.customRequestProperties : null;
 
+      // Send a create request if the document was created offline
+      if (Database.isTemporaryObjectID(document._id)) {
+        var tempId = document._id;
+
+        // Delete the id
+        delete document._id;
+
+        // Send the request
+        return Kinvey.Persistence.Net.create({
+          namespace  : USERS === collection ? USERS : DATA_STORE,
+          collection : USERS === collection ? null  : collection,
+          data       : document,
+          auth       : Auth.Default
+        }, requestOptions).then(function(createdDoc) {
+          createdDoc._id = tempId;
+          return createdDoc;
+        }, function() {
+          document._id = tempId;
+          // Rejection should not break the entire synchronization. Instead,
+          // append the document id to `error`, and resolve.
+          error.push(document._id);
+          return null;
+        });
+      }
+
+      // Send and update request
       return Kinvey.Persistence.Net.update({
         namespace  : USERS === collection ? USERS : DATA_STORE,
         collection : USERS === collection ? null  : collection,
