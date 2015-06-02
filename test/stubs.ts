@@ -227,9 +227,7 @@ export class ProjectDataStub implements IProjectData {
 }
 
 export class PlatformsDataStub implements IPlatformsData {
-	public get platformsNames(): string[] {
-		return undefined;
-	}
+	public platformsNames: string[]; 
 
 	public getPlatformData(platform: string): IPlatformData {
 		return {
