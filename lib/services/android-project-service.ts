@@ -10,7 +10,7 @@ import fs = require("fs");
 import os = require("os");
 
 class AndroidProjectService implements IPlatformProjectService {
-	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-MNC"];
+	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"]; // forbidden for now: "android-MNC"
 	private static RES_DIRNAME = "res";
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
