@@ -108,6 +108,13 @@ function createTestInjector() {
 	testInjector.register("broccoliBuilder", {
 		prepareNodeModulesFolder: () => {}
 	});
+	testInjector.register("pluginsService", {
+		getAllInstalledPlugins: () => {
+			return (() => {
+				return <any>[];
+			}).future<IPluginData[]>()();
+		}
+	});
 
 	return testInjector;
 }

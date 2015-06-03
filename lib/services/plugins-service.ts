@@ -3,7 +3,9 @@
 import path = require("path");
 import shelljs = require("shelljs");
 import semver = require("semver");
+import Future = require("fibers/future");
 import constants = require("./../constants");
+let xmlmerge = require("xmlmerge-js");
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -38,7 +40,7 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
 			let showMessage = true;
-			let action = (modulesDestinationPath: string, platform: string) => {
+			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 				this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform} platform`);
 				showMessage = false;
@@ -53,7 +55,7 @@ export class PluginsService implements IPluginsService {
 	
 	public prepare(pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			let action = (pluginDestinationPath: string, platform: string) => {
+			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				let skipExecution = false;
 				// Process .js files 				
 				let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
@@ -66,12 +68,19 @@ export class PluginsService implements IPluginsService {
 				if(!skipExecution) {
 					this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
-	
-					// TODO: Merge xmls - check if android.manifest or info.plist files exist and merge them				
+				
 					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms");
-					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {		
-						shelljs.rm("-rf", pluginPlatformsFolderPath);									
+					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);					
+					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+						let pluginConfigurationFileContent = this.$fs.readFile(pluginConfigurationFilePath).wait().toString();
+						let configurationFileContent = this.$fs.readFile(platformData.configurationFilePath).wait().toString();
+						let resultXml = this.mergeXml(pluginConfigurationFileContent, configurationFileContent).wait();
+						this.$fs.writeFile(platformData.configurationFilePath, resultXml).wait();	
 					}
+					
+					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+						shelljs.rm("-rf", pluginPlatformsFolderPath);			
+					}						
 					
 					// TODO: Add libraries
 					
@@ -120,14 +129,14 @@ export class PluginsService implements IPluginsService {
 		return npmCommandResult.split("@")[0]; // returns plugin name
 	}
 	
-	private executeForAllInstalledPlatforms(action: (pluginDestinationPath: string, platform: string) => void): void {
+	private executeForAllInstalledPlatforms(action: (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => void): void {
 		let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
 		_.each(availablePlatforms, platform => {
 			let isPlatformInstalled = this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase())).wait();
 			if(isPlatformInstalled) {
 				let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
 				let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
-				action(pluginDestinationPath, platform.toLowerCase());
+				action(pluginDestinationPath, platform.toLowerCase(), platformData);
 			}
 		});
 	}
@@ -167,6 +176,15 @@ export class PluginsService implements IPluginsService {
 			let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 			return frameworkData.version;
 		}).future<string>()();
+	}
+	
+	private mergeXml(xml1: string, xml2: string): IFuture<string> {
+		let future = new Future<string>();
+		xmlmerge.merge(xml1, xml2, (mergedXml: string) => { // TODO: process errors
+			future.return(mergedXml);
+		});
+		
+		return future;
 	}
 }
 $injector.register("pluginsService", PluginsService);

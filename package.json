@@ -68,6 +68,7 @@
     "ws": "0.7.1",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
+    "xmlmerge-js": "0.2.4",
     "yargs": "1.2.2"
   },
   "analyze": true,
