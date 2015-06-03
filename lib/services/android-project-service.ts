@@ -47,7 +47,9 @@ class AndroidProjectService implements IPlatformProjectService {
 					util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
 					util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
 				],
-				frameworkFilesExtensions: [".jar", ".dat", ".so"]
+				frameworkFilesExtensions: [".jar", ".dat", ".so"],
+				configurationFileName: "AndroidManifest.xml",
+				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml")
 			};
 		}
 
