@@ -1,343 +1,362 @@
 import iOSProxyServices = require("./../common/mobile/ios/ios-proxy-services");
 import iOSDevice = require("./../common/mobile/ios/ios-device");
 import net = require("net");
+import ws = require("ws");
+import stream = require("stream");
 import path = require("path");
+import http = require("http");
+import Future = require("fibers/future");
 
 module notification {
-	export function waitForDebug(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.WaitForDebugger";
-	}
+    function formatNotification(bundleId: string, notification: string) {
+        return `${bundleId}:NativeScript.Debug.${notification}`;
+    }
+    
+    export function waitForDebug(bundleId: string): string {
+        return formatNotification(bundleId, "WaitForDebugger");
+    }
 
-	export function attachRequest(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.AttachRequest";
-	}
+    export function attachRequest(bundleId: string): string {
+        return formatNotification(bundleId, "AttachRequest");
+    }
 
-	export function appLaunching(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.AppLaunching";
-	}
+    export function appLaunching(bundleId: string): string {
+        return formatNotification(bundleId, "AppLaunching");
+    }
 
-	export function readyForAttach(bundleId: string): string {
-		return bundleId + ":NativeScript.Debug.ReadyForAttach";
-	}
+    export function readyForAttach(bundleId: string): string {
+        return formatNotification(bundleId, "ReadyForAttach");
+    }
+    
+    export function attachAvailabilityQuery(bundleId: string) {
+        return formatNotification(bundleId, "AttachAvailabilityQuery");
+    }
+    
+    export function alreadyConnected(bundleId: string) {
+        return formatNotification(bundleId, "AlreadyConnected");
+    }
+    
+    export function attachAvailable(bundleId: string) {
+        return formatNotification(bundleId, "AttachAvailable");
+    }
+}
+
+var InspectorBackendPort = 18181;
+
+function connectEventually(factory: () => net.Socket, handler: (socket: net.Socket) => void) {
+    function tryConnect() {
+        var tryConnectAfterTimeout = setTimeout.bind(undefined, tryConnect, 1000);
+
+        var socket = factory();
+        socket.on("connect", () => {
+            socket.removeListener("error", tryConnectAfterTimeout);
+            handler(socket);
+        });
+        socket.on("error", tryConnectAfterTimeout);
+    }
+
+    tryConnect();
 }
 
 class IOSDebugService implements IDebugService {
-	constructor(
-		private $platformService: IPlatformService,
-		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
-		private $devicesServices: Mobile.IDevicesServices,
-		private $platformsData: IPlatformsData,
-		private $projectData: IProjectData,
-		private $childProcess: IChildProcess,
-		private $logger: ILogger,
-		private $fs: IFileSystem,
-		private $errors: IErrors,
-		private $injector: IInjector,
-		private $npm: INodePackageManager,
-		private $iosXcrunSimctl: IOSXcrunSimctl,
-		private $options: IOptions) {
-	}
+    constructor(
+        private $platformService: IPlatformService,
+        private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+        private $devicesServices: Mobile.IDevicesServices,
+        private $platformsData: IPlatformsData,
+        private $projectData: IProjectData,
+        private $childProcess: IChildProcess,
+        private $logger: ILogger,
+        private $fs: IFileSystem,
+        private $errors: IErrors,
+        private $injector: IInjector,
+        private $npm: INodePackageManager,
+        private $options: IOptions) {
+    }
 
-	get platform(): string {
-		return "ios";
-	}
+    get platform(): string {
+        return "ios";
+    }
 
-	public debug(): IFuture<void> {
-		if ((!this.$options.debugBrk && !this.$options.start) || (this.$options.debugBrk && this.$options.start)) {
-			this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
-		}
+    public debug(): IFuture<void> {
+        if ((!this.$options.debugBrk && !this.$options.start) || (this.$options.debugBrk && this.$options.start)) {
+            this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
+        }
 
-		if (this.$options.emulator) {
-			if (this.$options.debugBrk) {
-				return this.emulatorDebugBrk();
-			} else if (this.$options.start) {
-				return this.emulatorStart();
-			}
-		} else {
-			if (this.$options.debugBrk) {
-				return this.deviceDebugBrk();
-			} else if (this.$options.start) {
-				return this.deviceStart();
-			}
-		}
+        if (this.$options.emulator) {
+            if (this.$options.debugBrk) {
+                return this.emulatorDebugBrk();
+            } else if (this.$options.start) {
+                return this.emulatorStart();
+            }
+        } else {
+            if (this.$options.debugBrk) {
+                return this.deviceDebugBrk();
+            } else if (this.$options.start) {
+                return this.deviceStart();
+            }
+        }
 
-		this.$errors.failWithoutHelp("Failed to select device or emulator to debug on.");
-	}
+        this.$errors.failWithoutHelp("Failed to select device or emulator to debug on.");
+    }
 
-	private emulatorDebugBrk(): IFuture<void> {
-		return (() => {
-			var platformData = this.$platformsData.getPlatformData(this.platform);
-			this.$platformService.buildPlatform(this.platform).wait();
-			var emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
-			this.executeOpenDebuggerClient().wait();
-			this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
-		}).future<void>()();
-	}
+    private emulatorDebugBrk(): IFuture<void> {
+        return (() => {
+            var platformData = this.$platformsData.getPlatformData(this.platform);
+            this.$platformService.buildPlatform(this.platform).wait();
+            var emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
-	private emulatorStart(): IFuture<void> {
-		return (() => {
-			var device = this.getRunningEmulatorOrFail().wait();
-			this.executeOpenDebuggerClient().wait();
-			var projectId = this.$projectData.projectId;
-			var attachRequestMessage = notification.attachRequest(projectId);
-			device.postNotification(attachRequestMessage).wait();
-		}).future<void>()();
-	}
+            this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
+            createWebSocketProxy(this.$logger, (callback) => connectEventually(() => net.connect(InspectorBackendPort), callback));
+            this.executeOpenDebuggerClient().wait();
+        }).future<void>()();
+    }
 
-	private getRunningEmulatorOrFail(): IFuture<IOSXcrunSimctlDevice> {
-		return (() => {
-			var device = this.$iosXcrunSimctl.getRunningEmulator().wait();
-			if (device) {
-				this.$logger.info("Using emulator: " + device.uuid);
-			} else {
-				this.$errors.failWithoutHelp("This command expects the app to be running in an emulator.");
-			}
-			return device;
-		}).future<IOSXcrunSimctlDevice>()();
-	}
+    private emulatorStart(): IFuture<void> {
+        return (() => {
+            createWebSocketProxy(this.$logger, (callback) => connectEventually(() => net.connect(InspectorBackendPort), callback));
+            this.executeOpenDebuggerClient().wait();
+            var projectId = this.$projectData.projectId;
+            var attachRequestMessage = notification.attachRequest(projectId);
+            
+            var iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
+            iOSEmulator.postDarwinNotification(attachRequestMessage).wait();
+        }).future<void>()();
+    }
 
-	private getRunningEmulatorOrRunNew(): IFuture<IOSXcrunSimctlDevice> {
-		return (() => {
-			var device = this.$iosXcrunSimctl.getRunningEmulator().wait();
-			if (device) {
-				this.$logger.info("Using emulator: " + device.uuid);
-			} else {
-				var devices = this.$iosXcrunSimctl.getDevices().wait();
-				var deviceToBoot = _.findLast(devices, d => d.available);
-				if (deviceToBoot) {
-					this.$logger.info("Booting device: " + deviceToBoot.name + " (" + deviceToBoot.uuid + ")");
-					deviceToBoot.boot().wait();
-					return deviceToBoot;
-				} else {
-					// NOTE: Please do not ask me to create one, if there is no available device.
-					this.$errors.failWithoutHelp("No available emulator to use.");
-				}
-			}
-			return device;
-		}).future<IOSXcrunSimctlDevice>()();
-	}
+    private deviceDebugBrk(): IFuture<void> {
+        return (() => {
+            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesServices.execute(device => (() => {
+                // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
+                let deploy = this.$platformService.deployOnDevice(this.platform);
+                
+                let iosDevice = <iOSDevice.IOSDevice>device;
+                let projectId = this.$projectData.projectId;
+                let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
+                
+                try {
+                    awaitNotification(npc, notification.appLaunching(projectId), 60000).wait();
+                    process.nextTick(() => {
+                        npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
+                        npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
+                    });
+                    awaitNotification(npc, notification.readyForAttach(projectId), 5000).wait();
+                } catch(e) {
+                    this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
+                }
+                
+                createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
+                this.executeOpenDebuggerClient().wait();
+                deploy.wait();
+            }).future<void>()()).wait();
+        }).future<void>()();
+    }
 
-	private deviceDebugBrk(): IFuture<void> {
-		return (() => {
-			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-			this.$devicesServices.execute(device => (() => {
-				this.$platformService.deployOnDevice(this.platform).wait();
-				var deviceDebugging: IOSDeviceDebugging = this.$injector.resolve("iosDeviceDebugging", { bundleId: this.$projectData.projectId, $iOSDevice: device });
-				deviceDebugging.debugApplicationOnStart();
-				this.executeOpenDebuggerClient().wait();
-				device.runApplication(this.$projectData.projectId).wait();
-			}).future<void>()()).wait();
-		}).future<void>()();
-	}
+    private deviceStart(): IFuture<void> {
+        return (() => {
+            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesServices.execute(device => (() => {
+                let iosDevice = <iOSDevice.IOSDevice>device;
+                let projectId = this.$projectData.projectId;
+                let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
+                
+                let [alreadyConnected, readyForAttach, attachAvailable] = [
+                    notification.alreadyConnected(projectId),
+                    notification.readyForAttach(projectId),
+                    notification.attachAvailable(projectId)
+                ].map((notification) => awaitNotification(npc, notification, 2000));
+                
+                npc.postNotificationAndAttachForData(notification.attachAvailabilityQuery(projectId));
+                
+                let receivedNotification: IFuture<string>;
+                try {
+                    receivedNotification = whenAny(alreadyConnected, readyForAttach, attachAvailable).wait();
+                } catch (e) {
+                    this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.getDisplayName()} or is not built with debugging enabled.`);
+                }
+                
+                switch (receivedNotification) {
+                    case alreadyConnected:
+                        this.$errors.failWithoutHelp("A debugger is already connected.");
+                    case attachAvailable:
+                        process.nextTick(() => npc.postNotificationAndAttachForData(notification.attachRequest(projectId)));
+                        try { awaitNotification(npc, notification.readyForAttach(projectId), 2000).wait(); }
+                        catch (e) {
+                            this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
+                        }
+                    case readyForAttach:
+                        createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
+                        this.executeOpenDebuggerClient().wait();
+                }
+            }).future<void>()()).wait();
+        }).future<void>()();
+    }
 
-	private deviceStart(): IFuture<void> {
-		return (() => {
-			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-			this.$devicesServices.execute(device => (() => {
-				this.executeOpenDebuggerClient().wait();
-				var deviceDebugging: IOSDeviceDebugging = this.$injector.resolve("iosDeviceDebugging", { bundleId: this.$projectData.projectId, $iOSDevice: device });
-				deviceDebugging.debugRunningApplication();
-			}).future<void>()()).wait();
-		}).future<void>()();
-	}
+    public executeOpenDebuggerClient(): IFuture<void> {
+        if (this.$options.client === false) {
+            // NOTE: The --no-client has been specified. Otherwise its either false or undefined.
+            return (() => {
+                this.$logger.info("Supressing debugging client.");
+            }).future<void>()();
+        } else {
+            return this.openDebuggingClient();
+        }
+    }
 
-	public executeOpenDebuggerClient(): IFuture<void> {
-		if (this.$options.client === false) {
-			// NOTE: The --no-client has been specified. Otherwise its either false or undefined.
-			return (() => {
-				this.$logger.info("Supressing debugging client.");
-			}).future<void>()();
-		} else {
-			return this.openDebuggingClient();
-		}
-	}
+    private openDebuggingClient(): IFuture<void> {
+        return (() => {
+            var cmd = "open -a Safari " + this.getSafariPath().wait();
+            this.$childProcess.exec(cmd).wait();
+        }).future<void>()();
+    }
 
-	private openDebuggingClient(): IFuture<void> {
-		return (() => {
-			var cmd = "open -a Safari " + this.getSafariPath().wait();
-			this.$childProcess.exec(cmd).wait();
-		}).future<void>()();
-	}
-
-	private getSafariPath(): IFuture<string> {
-		return (() => {
-			var tnsIosPackage = "";
-			if (this.$options.frameworkPath) {
-				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
-					this.$errors.failWithoutHelp("frameworkPath option must be path to directory which contains tns-ios framework");
-				}
-				tnsIosPackage = path.resolve(this.$options.frameworkPath);
-			} else {
-				var platformData = this.$platformsData.getPlatformData(this.platform);
-				tnsIosPackage = this.$npm.install(platformData.frameworkPackageName).wait();
-			}
-			var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
-			return safariPath;
-		}).future<string>()();
-	}
+    private getSafariPath(): IFuture<string> {
+        return (() => {
+            var tnsIosPackage = "";
+            if (this.$options.frameworkPath) {
+                if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
+                    this.$errors.failWithoutHelp("frameworkPath option must be path to directory which contains tns-ios framework");
+                }
+                tnsIosPackage = path.resolve(this.$options.frameworkPath);
+            } else {
+                var platformData = this.$platformsData.getPlatformData(this.platform);
+                tnsIosPackage = this.$npm.install(platformData.frameworkPackageName).wait();
+            }
+            var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
+            return safariPath;
+        }).future<string>()();
+    }
 }
 $injector.register("iOSDebugService", IOSDebugService);
 
-class IOSXcrunSimctlDevice {
-	constructor(private deviceName: string,
-		private deviceUUID: string,
-		private deviceBooted: boolean,
-		private deviceAvailable: boolean,
-		private $childProcess: IChildProcess) { }
+function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
+    // NOTE: We will try to provide command line options to select ports, at least on the localhost.
+    var localPort = 8080;
 
-	public get name(): string { return this.deviceName; }
-	public get uuid(): string { return this.deviceUUID; }
-	public get booted(): boolean { return this.deviceBooted; }
-	public get available(): boolean { return this.deviceAvailable; }
+    $logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
 
-	public boot(): IFuture<void> {
-		return (() => {
-			try {
-				// TRICKY: Using simctl here will sometimes boot the device, set its state to booted, but won't open UI.
-				this.$childProcess.exec("xcrun instruments -w " + this.uuid, { stdio: [null, process.stdout, process.stdout] }).wait();
-				this.deviceBooted = true;
-			} catch (e) {
-				console.log("Err: " + e);
-			}
-		}).future<void>()();
-	}
+    // NB: When the inspector frontend connects we might not have connected to the inspector backend yet.
+    // That's why we use the verifyClient callback of the websocket server to stall the upgrade request until we connect.
+    // We store the socket that connects us to the device in the upgrade request object itself and later on retrieve it
+    // in the connection callback.
 
-	public postNotification(notification: string): IFuture<void> {
-		return this.$childProcess.exec("xcrun simctl notify_post " + this.uuid + " " + notification);
-	}
+    var server = ws.createServer(<any>{
+        port: localPort,
+        verifyClient: (info: any, callback: any) => {
+            $logger.info("Frontend client connected.");
+            socketFactory((socket) => {
+                $logger.info("Backend socket created.");
+                info.req["__deviceSocket"] = socket;
+                callback(true);
+            });
+        }
+    });
+    server.on("connection", (webSocket) => {
+        var deviceSocket: net.Socket = (<any>webSocket.upgradeReq)["__deviceSocket"];
+        var packets = new PacketStream();
+        deviceSocket.pipe(packets);
 
-	public installApp(appPackage: string): IFuture<void> {
-		return this.$childProcess.exec("xcrun simctl install " + this.uuid + " " + appPackage);
-	}
+        packets.on("data", (buffer: Buffer) => {
+            webSocket.send(buffer.toString("utf16le"));
+        });
 
-	public launchApp(appId: string, args?: string): IFuture<void> {
-		var cmd = "xcrun simctl launch " + this.uuid + " " + appId;
-		if (args) {
-			cmd = cmd + " " + args;
-		}
+        webSocket.on("message", (message, flags) => {
+            var length = Buffer.byteLength(message, "utf16le");
+            var payload = new Buffer(length + 4);
+            payload.writeInt32BE(length, 0);
+            payload.write(message, 4, length, "utf16le");
+            deviceSocket.write(payload);
+        });
 
-		return this.$childProcess.exec(cmd, { stdio: "inherit" });
-	}
+        deviceSocket.on("end", () => {
+            $logger.info("Backend socket closed!");
+            process.exit(0);
+        });
+
+        webSocket.on("close", () => {
+            $logger.info('Frontend socket closed!');
+            process.exit(0);
+        });
+    });
+
+    $logger.info("Opened localhost " + localPort);
+    return server;
 }
-$injector.register("iosXcrunSimctlDevice", IOSXcrunSimctlDevice);
 
-class IOSXcrunSimctl {
-	constructor(private $injector: IInjector,
-		private $childProcess: IChildProcess) { }
-
-	public getRunningEmulator(): IFuture<IOSXcrunSimctlDevice> {
-		return (() => {
-			return _.findLast(this.getDevices().wait(), d => d.booted);
-		}).future<IOSXcrunSimctlDevice>()();
-	}
-
-	public getDevices(): IFuture<IOSXcrunSimctlDevice[]> {
-		return (() => {
-			var list: string = this.$childProcess.exec("xcrun simctl list devices").wait();
-			var devices = new Array<IOSXcrunSimctlDevice>();
-			var matcher = /^\s*(.*?)\s*\((.*?)\)\s*(\(shutdown\)|\(booted\))\s*((\(unavailable\))?)\s*$/gim;
-			var matches: RegExpExecArray;
-			while (matches = matcher.exec(list)) {
-				devices.push(this.$injector.resolve(IOSXcrunSimctlDevice, {
-					deviceName: matches[1],
-					deviceUUID: matches[2],
-					deviceBooted: matches[3].toLowerCase() === "(booted)",
-					deviceAvailable: !matches[4]
-				}));
-			}
-
-			return devices;
-		}).future<IOSXcrunSimctlDevice[]>()();
-	}
+function awaitNotification(npc: iOSProxyServices.NotificationProxyClient, notification: string, timeout: number): IFuture<string> {
+    let future = new Future<string>();
+    
+    let timeoutObject = setTimeout(() => {
+        detachObserver();
+        future.throw(new Error("Timeout receiving notification."));
+    }, timeout);
+    
+    function notificationObserver(notification: string) {
+        clearTimeout(timeoutObject);
+        detachObserver();
+        future.return(notification);
+    }
+    
+    function detachObserver() {
+        process.nextTick(() => npc.removeObserver(notification, notificationObserver));
+    }
+    
+    npc.addObserver(notification, notificationObserver);
+    
+    return future;
 }
-$injector.register("iosXcrunSimctl", IOSXcrunSimctl);
 
-class IOSDeviceDebugging {
-	private $notificationProxyClient: iOSProxyServices.NotificationProxyClient;
+function whenAny<T>(...futures: IFuture<T>[]): IFuture<IFuture<T>> {
+    let resultFuture = new Future<IFuture<T>>();    
+    let futuresLeft = futures.length;
 
-	constructor(private bundleId: string,
-		private $iOSDevice: iOSDevice.IOSDevice,
-		private $logger: ILogger,
-		private $injector: IInjector) {
-
-		this.$notificationProxyClient = this.$injector.resolve(iOSProxyServices.NotificationProxyClient, { device: this.$iOSDevice })
-	}
-
-	public debugApplicationOnStart() {
-		var appLaunchMessage = notification.appLaunching(this.bundleId);
-		this.$notificationProxyClient.addObserver(appLaunchMessage, () => {
-			this.$logger.info("Got AppLaunching");
-			this.proxyDebuggingTraffic();
-			var waitForDebuggerMessage = notification.waitForDebug(this.bundleId);
-			this.$notificationProxyClient.postNotificationAndAttachForData(waitForDebuggerMessage);
-		});
-	}
-
-	public debugRunningApplication() {
-		this.proxyDebuggingTraffic();
-		var attachRequestMessage = notification.attachRequest(this.bundleId);
-		this.$notificationProxyClient.postNotificationAndAttachForData(attachRequestMessage);
-	}
-
-	private proxyDebuggingTraffic(): void {
-
-		var identifier = this.$iOSDevice.getIdentifier();
-		this.$logger.info("Device Identifier: " + identifier);
-
-		var readyForAttachMessage = notification.readyForAttach(this.bundleId);
-		this.$notificationProxyClient.addObserver(readyForAttachMessage, () => {
-			this.$logger.info("Got ReadyForAttach");
-
-			// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-			var devicePort = 8080;
-			var localPort = 8080;
-
-			this.printHowToTerminate();
-
-			var localServer = net.createServer((localSocket) => {
-
-				this.$logger.info("Front-end client connected to localhost " + localPort);
-
-				var deviceSocket: any;
-
-				var buff = new Array();
-				localSocket.on('data', (data: NodeBuffer) => {
-					if (deviceSocket) {
-						deviceSocket.write(data);
-					} else {
-						buff.push(data);
-					}
-				});
-				localSocket.on('end', () => {
-					this.$logger.info('Localhost client disconnected!');
-					process.exit(0);
-				});
-
-				deviceSocket = this.$iOSDevice.connectToPort(devicePort);
-				this.$logger.info("Connected localhost " + localPort + " to device " + devicePort);
-
-				buff.forEach((data) => {
-					deviceSocket.write(data);
-				});
-
-				deviceSocket.on('data', (data: NodeBuffer) => {
-					localSocket.write(data);
-				});
-
-				deviceSocket.on('end', () => {
-					this.$logger.info("Device socket closed!");
-					process.exit(0);
-				});
-			});
-
-			localServer.listen(localPort, () => {
-				this.$logger.info("Opened localhost " + localPort);
-			});
-		});
-	}
-
-	private printHowToTerminate() {
-		this.$logger.info("\nSetting up debugger proxy...\n\nPress Ctrl + C to terminate, or disconnect.\n");
-	}
+    for (let future of futures) {
+        var futureLocal = future;
+        future.resolve((error, result?) => {
+            futuresLeft--;
+            
+            if (!resultFuture.isResolved()) {
+                if (typeof error === "undefined") {
+                    resultFuture.return(futureLocal);
+                } else if (futuresLeft == 0) {
+                    resultFuture.throw(new Error("None of the futures succeeded."));
+                }
+            }
+        });
+    }
+    
+    return resultFuture;
 }
-$injector.register("iosDeviceDebugging", IOSDeviceDebugging);
+
+class PacketStream extends stream.Transform {
+    private buffer: Buffer;
+    private offset: number;
+
+    constructor(opts?: stream.TransformOptions) {
+        super(opts);
+    }
+
+    public _transform(packet: any, encoding: string, done: Function): void {
+        while (packet.length > 0) {
+            if (!this.buffer) {
+                // read length
+                var length = packet.readInt32BE(0);
+                this.buffer = new Buffer(length);
+                this.offset = 0;
+                packet = packet.slice(4);
+            }
+
+            packet.copy(this.buffer, this.offset);
+            var copied = Math.min(this.buffer.length - this.offset, packet.length);
+            this.offset += copied;
+            packet = packet.slice(copied);
+
+            if (this.offset === this.buffer.length) {
+                this.push(this.buffer);
+                this.buffer = undefined;
+            }
+        }
+        done();
+    }
+}
