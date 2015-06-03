@@ -14,6 +14,7 @@ interface INodeModuleData {
 	version: string;
 	fullPath: string;
 	isPlugin: boolean;
+	moduleInfo: any;
 }
 
 interface IPluginPlatformsData {

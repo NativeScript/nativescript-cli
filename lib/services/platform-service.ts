@@ -317,9 +317,7 @@ export class PlatformService implements IPlatformService {
 	}
 	
 	private isPlatformInstalled(platform: string): IFuture<boolean> {
-		return (() => {
-			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
-		}).future<boolean>()();
+		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform));
 	}
 
 	private isValidPlatform(platform: string) {

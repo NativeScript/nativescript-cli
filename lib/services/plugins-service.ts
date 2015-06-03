@@ -28,11 +28,11 @@ export class PluginsService implements IPluginsService {
 			if(!nodeModuleData.isPlugin) {
 				// We should remove already downloaded plugin and show an error message
 				this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
-				this.$errors.failWithoutHelp(`The specified plugin ${plugin} is not a valid NativeScript plugin. Ensure that the plugin contains nativescript key in package.json file and try again.`);
+				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 			}
 			
 			this.prepare(this.convertToPluginData(nodeModuleData)).wait();
-			this.$logger.out(`Succsessfully installed plugin with name ${nodeModuleData.name}.`);	
+			this.$logger.out(`Successfully installed plugin ${nodeModuleData.name}.`);	
 		}).future<void>()();
 	}
 	
@@ -42,7 +42,7 @@ export class PluginsService implements IPluginsService {
 			let showMessage = true;
 			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
-				this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform} platform`);
+				this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
 				showMessage = false;
 			};
 			this.executeForAllInstalledPlatforms(action);
@@ -61,7 +61,7 @@ export class PluginsService implements IPluginsService {
 				let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
 				let pluginVersion = (<any>pluginData.platformsData)[platform];
 				if(semver.gt(pluginVersion, installedFrameworkVersion)) {
-					this.$logger.warn(`Plugin ${pluginData.name} with specified version ${pluginVersion} for ${platform} platform is not compatible for currently installed framework with version ${installedFrameworkVersion}.`);
+					this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
 					skipExecution = true;  
 				}
 				
@@ -69,11 +69,11 @@ export class PluginsService implements IPluginsService {
 					this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
 				
-					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms");
+					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
 					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);					
 					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						let pluginConfigurationFileContent = this.$fs.readFile(pluginConfigurationFilePath).wait().toString();
-						let configurationFileContent = this.$fs.readFile(platformData.configurationFilePath).wait().toString();
+						let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
+						let configurationFileContent = this.$fs.readText(platformData.configurationFilePath).wait();
 						let resultXml = this.mergeXml(pluginConfigurationFileContent, configurationFileContent).wait();
 						this.$fs.writeFile(platformData.configurationFilePath, resultXml).wait();	
 					}
@@ -85,7 +85,7 @@ export class PluginsService implements IPluginsService {
 					// TODO: Add libraries
 					
 					// Show message
-					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform} platform`);
+					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 				}
 			};
 			
@@ -98,7 +98,7 @@ export class PluginsService implements IPluginsService {
 			let nodeModules = this.$fs.readDirectory(this.nodeModulesPath).wait();
 			let plugins: IPluginData[] = [];
 			_.each(nodeModules, nodeModuleName => {
-				var nodeModuleData = this.getNodeModuleData(nodeModuleName);
+				let nodeModuleData = this.getNodeModuleData(nodeModuleName);
 				if(nodeModuleData.isPlugin) {
 					plugins.push(this.convertToPluginData(nodeModuleData));
 				}
@@ -117,7 +117,7 @@ export class PluginsService implements IPluginsService {
 	}
 	
 	private composeNpmCommand(npmCommandName: string, npmCommandArguments: string): string {
-		let command = `npm ${npmCommandName} ${npmCommandArguments} --save `;
+		let command = ` npm ${npmCommandName} ${npmCommandArguments} --save `;
 		if(this.$options.production) {
 			command += " --production ";
 		}
@@ -148,8 +148,9 @@ export class PluginsService implements IPluginsService {
 		let result = {
 			name: data.name,
 			version: data.version,
-			isPlugin: data.nativescript,		
 			fullPath: fullNodeModulePath,
+			isPlugin: data.nativescript !== undefined,
+			moduleInfo: data.nativescript			
 		};
 		
 		return result;
@@ -157,9 +158,9 @@ export class PluginsService implements IPluginsService {
 	
 	private convertToPluginData(nodeModuleData: INodeModuleData): IPluginData {
 		let pluginData: any = _.extend({}, nodeModuleData);
-		let data = <any>(nodeModuleData.isPlugin);
-		if(data) {
-			pluginData.platformsData = data.platforms;
+		
+		if(pluginData.isPlugin) {
+			pluginData.platformsData = nodeModuleData.moduleInfo.platforms;
 		}
 		
 		return pluginData;
@@ -180,9 +181,14 @@ export class PluginsService implements IPluginsService {
 	
 	private mergeXml(xml1: string, xml2: string): IFuture<string> {
 		let future = new Future<string>();
-		xmlmerge.merge(xml1, xml2, (mergedXml: string) => { // TODO: process errors
-			future.return(mergedXml);
-		});
+		
+		try {
+			xmlmerge.merge(xml1, xml2, "", (mergedXml: string) => { 
+				future.return(mergedXml);
+			});
+		} catch(err) {
+			future.throw(err);
+		}
 		
 		return future;
 	}

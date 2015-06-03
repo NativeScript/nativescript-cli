@@ -133,7 +133,7 @@ describe("plugins service", () => {
 			addPluginWhenExpectingToFail(testInjector, null, "You must specify plugin name.");
 		}); 
 		it("fails when invalid nativescript plugin name is specified", () => {
-			addPluginWhenExpectingToFail(testInjector, "lodash", "The specified plugin lodash is not a valid NativeScript plugin. Ensure that the plugin contains nativescript key in package.json file and try again.");
+			addPluginWhenExpectingToFail(testInjector, "lodash", "lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.");
 		});
 		it("fails when the plugin is already installed", () => {
 			let pluginName = "plugin1";
@@ -162,7 +162,7 @@ describe("plugins service", () => {
 		});
 		it("fails when the plugin does not support the installed framework", () => {
 			let isWarningMessageShown = false;
-			let expectedWarningMessage = "Plugin mySamplePlugin with specified version 1.0.1 for android platform is not compatible for currently installed framework with version 1.0.0.";
+			let expectedWarningMessage = "mySamplePlugin 1.0.1 for android is not compatible with the currently installed framework version 1.0.0.";
 			
 			// Creates plugin in temp folder			
 			let pluginName = "mySamplePlugin";
