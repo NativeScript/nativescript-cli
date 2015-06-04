@@ -51,10 +51,10 @@ export class Builder implements IBroccoliBuilder {
               if(err.file) {
                 this.$logger.error("File: " + err.file); 
               }
-              if(err.statck) {
+              if(err.stack) {
                 this.$logger.error(err.stack);
               }
-              future.throw(err.toString());                        
+              future.throw(err);                        
         });
     
     return future;

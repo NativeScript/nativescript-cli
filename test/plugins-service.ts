@@ -111,6 +111,9 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 			}];
 		}).future<IPluginData[]>()();
 	}
+	pluginsService.ensureAllDependenciesAreInstalled = () => {
+		return (() => { }).future<void>()();
+	}
 				
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);				
 	

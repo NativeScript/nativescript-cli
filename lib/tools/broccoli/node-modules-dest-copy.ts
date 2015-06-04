@@ -45,8 +45,9 @@ export class DestCopy implements IBroccoliPlugin {
 						let currentDependencyMajorVersion = semver.major(currentDependency.version);
 						let addedDependencyMajorVersion = semver.major(addedDependency.version);
 		
-						let message = util.format("Old version %s, new version %s. Old location %s, new location %s.", addedDependency.version, currentDependency.version, addedDependency.directory, currentDependency.directory);
-						currentDependencyMajorVersion === addedDependencyMajorVersion ? console.log(message) : console.log(message);
+						let message = `The depedency located at ${addedDependency.directory} with version  ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
+						let logger = $injector.resolve("$logger");
+						currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
 		
 						dependencies[currentDependency.name] = currentDependency;
 					}
@@ -73,18 +74,19 @@ export class DestCopy implements IBroccoliPlugin {
   }
   
   private getDependencies(): IDictionary<any> {
-	  let result = Object.create(null);
-	  try {
-		  let dirs = fs.readdirSync(this.outputRoot);
-		  _.each(dirs, dir => {
-			  let fileContent = require(path.join(dir, constants.PACKAGE_JSON_FILE_NAME));
-			  result[fileContent.name] = fileContent;
-			 });
-	  } catch(err) {
-		  result = Object.create(null);
-	  }
-	  
-	  return result;
+	let result = Object.create(null);
+	if(fs.existsSync(this.outputRoot)) {
+		let dirs = fs.readdirSync(this.outputRoot);
+		_.each(dirs, dir => {
+			let filePath = path.join(dir, constants.PACKAGE_JSON_FILE_NAME);
+			if(fs.existsSync(filePath)) {
+				let fileContent = require(filePath);
+				result[fileContent.name] = fileContent;		
+			}
+		});
+	}
+	
+	return result;
   }
   
   private getDevDependencies(projectDir: string): IDictionary<any> {

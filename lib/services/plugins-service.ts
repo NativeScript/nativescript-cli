@@ -23,11 +23,15 @@ export class PluginsService implements IPluginsService {
 		
 	public add(plugin: string): IFuture<void> {
 		return (() => {
+			let dependencies = this.getAllInstalledModules().wait();
 			let pluginName = this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
-			let nodeModuleData = this.getNodeModuleData(pluginName);
-			if(!nodeModuleData.isPlugin) {
+			let nodeModuleData = this.getNodeModuleData(pluginName).wait();
+			if(nodeModuleData && !nodeModuleData.isPlugin) { 
 				// We should remove already downloaded plugin and show an error message
-				this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
+				let pluginNameLowerCase = pluginName.toLowerCase();
+				if(!_.any(dependencies, dependency => dependency.name.toLowerCase() === pluginNameLowerCase)) {
+					this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
+				}
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
 			}
 			
@@ -93,19 +97,25 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 	
+	public ensureAllDependenciesAreInstalled(): IFuture<void> {
+		return this.$childProcess.exec("npm install ");
+	}
+	
 	public getAllInstalledPlugins(): IFuture<IPluginData[]> {
 		return (() => {
-			let nodeModules = this.$fs.readDirectory(this.nodeModulesPath).wait();
-			let plugins: IPluginData[] = [];
-			_.each(nodeModules, nodeModuleName => {
-				let nodeModuleData = this.getNodeModuleData(nodeModuleName);
-				if(nodeModuleData.isPlugin) {
-					plugins.push(this.convertToPluginData(nodeModuleData));
-				}
-			});
-			
-			return plugins;
+			let nodeModules = this.getAllInstalledModules().wait();
+			return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 		}).future<IPluginData[]>()();
+	}
+	
+	private getAllInstalledModules(): IFuture<INodeModuleData[]> {
+		return (() => {
+			this.ensureAllDependenciesAreInstalled().wait();
+			this.$fs.ensureDirectoryExists(this.nodeModulesPath).wait();
+			
+			let nodeModules = this.$fs.readDirectory(this.nodeModulesPath).wait();
+			return _.map(nodeModules, nodeModuleName => this.getNodeModuleData(nodeModuleName).wait());
+		}).future<INodeModuleData[]>()();
 	}
 	
 	private executeNpmCommand(npmCommandName: string, npmCommandArguments: string): IFuture<string> {
@@ -117,7 +127,7 @@ export class PluginsService implements IPluginsService {
 	}
 	
 	private composeNpmCommand(npmCommandName: string, npmCommandArguments: string): string {
-		let command = ` npm ${npmCommandName} ${npmCommandArguments} --save `;
+		let command = ` npm ${npmCommandName} "${npmCommandArguments}" --save `;
 		if(this.$options.production) {
 			command += " --production ";
 		}
@@ -141,19 +151,23 @@ export class PluginsService implements IPluginsService {
 		});
 	}
 	
-	private getNodeModuleData(moduleName: string): INodeModuleData {
-		let fullNodeModulePath = path.join(this.nodeModulesPath, moduleName);
-		let packageJsonFilePath = path.join(fullNodeModulePath, "package.json");
-		let data = require(packageJsonFilePath);
-		let result = {
-			name: data.name,
-			version: data.version,
-			fullPath: fullNodeModulePath,
-			isPlugin: data.nativescript !== undefined,
-			moduleInfo: data.nativescript			
-		};
-		
-		return result;
+	private getNodeModuleData(moduleName: string): IFuture<INodeModuleData> {
+		return (() => { 
+			let fullNodeModulePath = path.join(this.nodeModulesPath, moduleName);
+			let packageJsonFilePath = path.join(fullNodeModulePath, "package.json");
+			if(this.$fs.exists(packageJsonFilePath).wait()) {
+				let data = require(packageJsonFilePath);
+				return {
+					name: data.name,
+					version: data.version,
+					fullPath: fullNodeModulePath,
+					isPlugin: data.nativescript !== undefined,
+					moduleInfo: data.nativescript			
+				};
+			}
+			
+			return null;
+		}).future<INodeModuleData>()();
 	}
 	
 	private convertToPluginData(nodeModuleData: INodeModuleData): IPluginData {
@@ -178,7 +192,7 @@ export class PluginsService implements IPluginsService {
 			return frameworkData.version;
 		}).future<string>()();
 	}
-	
+
 	private mergeXml(xml1: string, xml2: string): IFuture<string> {
 		let future = new Future<string>();
 		

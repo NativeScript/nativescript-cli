@@ -3,6 +3,7 @@ interface IPluginsService {
 	remove(pluginName: string): IFuture<void>; // removes plugin only by name
 	prepare(pluginData: IPluginData): IFuture<void>;
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
+	ensureAllDependenciesAreInstalled(): IFuture<void>;
 }
 
 interface IPluginData extends INodeModuleData {

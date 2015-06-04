@@ -180,6 +180,7 @@ export class PlatformService implements IPlatformService {
 			this.processPlatformSpecificFiles(platform, files).wait();
 
 			// Process node_modules folder
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
 			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir).wait();
 
@@ -318,7 +319,7 @@ export class PlatformService implements IPlatformService {
 	}
 	
 	private isPlatformInstalled(platform: string): IFuture<boolean> {
-		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform));
+		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
 	}
 
 	private isValidPlatform(platform: string) {
