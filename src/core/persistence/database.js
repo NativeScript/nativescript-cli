@@ -219,6 +219,16 @@ var Database = /** @lends Database */{
   update: methodNotImplemented('Database.update'),
 
   /**
+   * Checks if an id was created offline as a temporary ID.
+   *
+   * @abstract
+   * @method
+   * @param {String} id The id.
+   * @returns {Boolean} True or false if the id is a temporary ID.
+   */
+  isTemporaryObjectID: methodNotImplemented('Database.isTemporaryObjectID'),
+
+  /**
    * Sets the implementation of `Database` to the specified adapter.
    *
    * @method
@@ -226,6 +236,6 @@ var Database = /** @lends Database */{
    */
   use: use([
     'batch', 'clean', 'count', 'destroy', 'destruct', 'find', 'findAndModify',
-    'get', 'group', 'save', 'update'
+    'get', 'group', 'save', 'update', 'isTemporaryObjectID'
   ])
 };

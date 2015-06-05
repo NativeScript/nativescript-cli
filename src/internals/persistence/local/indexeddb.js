@@ -39,6 +39,8 @@ var IDBAdapter = {
     return 'Kinvey.' + Kinvey.appKey;
   },
 
+  objectIdPrefix: 'temp_',
+
   /**
    * The reference to the underlying IndexedDB implementation.
    *
@@ -62,13 +64,22 @@ var IDBAdapter = {
    */
   objectID: function(length) {
     length = length || 24;
-    var chars  = 'abcdef0123456789';
+    var chars = 'abcdef0123456789';
     var result = '';
     for(var i = 0, j = chars.length; i < length; i += 1) {
       var pos = Math.floor(Math.random() * j);
       result += chars.substring(pos, pos + 1);
     }
+    result = IDBAdapter.objectIdPrefix + result;
     return result;
+  },
+
+  isTemporaryObjectID: function(id) {
+    if (id != null) {
+      return id.indexOf(WebSqlAdapter.objectIdPrefix) === 0;
+    }
+
+    return false;
   },
 
   /**

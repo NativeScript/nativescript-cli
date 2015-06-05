@@ -98,8 +98,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     options = options || {};
 
     // Validate arguments.
-    if((null == usernameOrData.username || null == usernameOrData.password)
-       && null == usernameOrData._socialIdentity) {
+    if((null == usernameOrData.username || null == usernameOrData.password) && null == usernameOrData._socialIdentity) {
       error = new Kinvey.Error('Username and/or password missing. Please provide both a username and password to login.');
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
@@ -187,7 +186,7 @@ Kinvey.User = /** @lends Kinvey.User */{
         auth       : Auth.Session
       }, options).then(null, function(error) {
         // Clear the active user on `INVALID_CREDENTIALS`.
-        if (Kinvey.Error.INVALID_CREDENTIALS === error.name || Kinvey.Error.EMAIL_VERIFICATION_REQUIRED === error.name)) {
+        if (Kinvey.Error.INVALID_CREDENTIALS === error.name || Kinvey.Error.EMAIL_VERIFICATION_REQUIRED === error.name) {
           // Debug.
           if(KINVEY_DEBUG) {
             log('The user credentials are invalid. Returning success because of the force flag.');
