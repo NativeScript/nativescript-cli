@@ -39,6 +39,8 @@ var IDBAdapter = {
     return 'Kinvey.' + Kinvey.appKey;
   },
 
+  objectIdPrefix: 'temp_',
+
   /**
    * The reference to the underlying IndexedDB implementation.
    *
@@ -62,13 +64,22 @@ var IDBAdapter = {
    */
   objectID: function(length) {
     length = length || 24;
-    var chars  = 'abcdef0123456789';
+    var chars = 'abcdef0123456789';
     var result = '';
     for(var i = 0, j = chars.length; i < length; i += 1) {
       var pos = Math.floor(Math.random() * j);
       result += chars.substring(pos, pos + 1);
     }
+    result = IDBAdapter.objectIdPrefix + result;
     return result;
+  },
+
+  isTemporaryObjectID: function(id) {
+    if (id != null) {
+      return id.indexOf(WebSqlAdapter.objectIdPrefix) === 0;
+    }
+
+    return false;
   },
 
   /**
@@ -110,9 +121,17 @@ var IDBAdapter = {
       // If the collection exists, obtain and return the transaction handle.
       if(IDBAdapter.db.objectStoreNames.contains(collection)) {
         var mode  = write ? 'readwrite' : 'readonly';
-        var txn   = IDBAdapter.db.transaction([collection], mode);
-        var store = txn.objectStore(collection);
-        return success(store);
+        var txnResult = IDBAdapter.openTransactionSafely(IDBAdapter.db, [collection], mode);
+        if (txnResult.error) {
+          error(txnResult.error);
+        }
+        if (txnResult.txn != null) {
+          var txn = txnResult.txn;
+          var store = txn.objectStore(collection);
+          return success(store);
+        }
+
+        return error(new Kinvey.Error('Unable to open a transaction for the database. Please try this database transaction again.'));
       }
 
       // The collection does not exist. If we want to read only, return an error
@@ -207,6 +226,26 @@ var IDBAdapter = {
     request.onerror = function(event) {
       error(clientError(Kinvey.Error.DATABASE_ERROR, { debug: event }));
     };
+  },
+
+  /**
+   * Opens a IDBDatabase transaction catching any errors that might occur.
+   *
+   * @param  {Database} idb    Database connection to open the transaction with.
+   * @param  {Array}    stores Database stores used by transaction.
+   * @param  {String}   mode   Mode of transaction.
+   * @return {Object}          Contains transaction or error.
+   */
+  openTransactionSafely: function(idb, stores, mode) {
+    try {
+      return {
+        txn: idb.transaction(stores, mode)
+      };
+    } catch (err) {
+      return {
+        error: err
+      };
+    }
   },
 
   /**

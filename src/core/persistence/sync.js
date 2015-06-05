@@ -232,7 +232,7 @@ var Sync = /** @lends Sync */{
 
       // Step 4: update the metadata.
       return Database.findAndModify(Sync.system, collection, function(metadata) {
-        // Remove each document from the metadata.
+        // Remove each document from the metadata that was synced
         result.success.forEach(function(id) {
           if(metadata.documents.hasOwnProperty(id)) {
             metadata.size -= 1;
@@ -240,11 +240,22 @@ var Sync = /** @lends Sync */{
           }
         });
 
+        // Remove id's that were created offline, synced with the Kinvey Cloud and
+        // didn't result in an error
+        try {
+          var ids = Object.keys(metadata.documents);
+          ids.forEach(function(id) {
+            if (metadata.documents.hasOwnProperty(id) && result.error.indexOf(id) === -1) {
+              metadata.size -= 1;
+              delete metadata.documents[id];
+            }
+          });
+        } catch(err) {}
+
         // Return the new metadata.
         return metadata;
       }, options);
     }).then(function() {
-      //console.log(result);
       // Step 5: return the synchronization result.
       return result;
     });
@@ -448,6 +459,7 @@ var Sync = /** @lends Sync */{
       var document = composite.document;
       var metadata = composite.metadata;
       var requestOptions = options || {};
+      var originalId = document._id;
 
       // Set requestOptions.appVersion based on the metadata for the document
       requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
@@ -457,6 +469,32 @@ var Sync = /** @lends Sync */{
       requestOptions.customRequestProperties = metadata.customRequestProperties != null ?
                                         metadata.customRequestProperties : null;
 
+      // Send a create request if the document was created offline
+      if (Database.isTemporaryObjectID(originalId)) {
+        // Delete the id
+        delete document._id;
+
+        // Send the request
+        return Kinvey.Persistence.Net.create({
+          namespace  : USERS === collection ? USERS : DATA_STORE,
+          collection : USERS === collection ? null  : collection,
+          data       : document,
+          auth       : Auth.Default
+        }, requestOptions).then(function(createdDoc) {
+          // Remove the doc created offline
+          return Database.destroy(collection, originalId).then(function() {
+            return createdDoc;
+          });
+        }, function() {
+          document._id = originalId;
+          // Rejection should not break the entire synchronization. Instead,
+          // append the document id to `error`, and resolve.
+          error.push(document._id);
+          return null;
+        });
+      }
+
+      // Send and update request
       return Kinvey.Persistence.Net.update({
         namespace  : USERS === collection ? USERS : DATA_STORE,
         collection : USERS === collection ? null  : collection,
