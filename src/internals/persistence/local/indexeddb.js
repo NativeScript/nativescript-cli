@@ -131,7 +131,7 @@ var IDBAdapter = {
           return success(store);
         }
 
-        return error(new Kinvey.Error('Unable to open a transaction for the database. Please try this database transaction again.');
+        return error(new Kinvey.Error('Unable to open a transaction for the database. Please try this database transaction again.'));
       }
 
       // The collection does not exist. If we want to read only, return an error
