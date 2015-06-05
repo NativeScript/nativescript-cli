@@ -186,7 +186,7 @@ export class ErrorsStub implements IErrors {
 	validateYargsArguments(parsed: any, knownOpts: any, shorthands: any, clientName?: string): void { }
 }
 
-export class NPMStub implements INodePackageManager {
+export class NpmInstallationManagerStub implements INpmInstallationManager {
 	getCacheRootPath(): string {
 		return undefined;
 	}

@@ -10,7 +10,7 @@
   },
   "main": "./lib/nativescript-cli.js",
   "scripts": {
-    "test": "node_modules\\.bin\\_mocha --ui mocha-fibers --recursive --reporter spec --require test/test-bootstrap.js --timeout 15000 test/",
+    "test": "node_modules\\.bin\\_mocha --ui mocha-fibers --recursive --reporter spec --require test/test-bootstrap.js --timeout 30000 test/",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js"
   },
