@@ -9,17 +9,21 @@ import helpers = require("./../common/helpers");
 import semver = require("semver");
 
 export class PlatformService implements IPlatformService {
+	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
+	
 	constructor(private $devicesServices: Mobile.IDevicesServices,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $npm: INodePackageManager,
+		private $npmInstallationManager: INpmInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $commandsService: ICommandsService,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $broccoliBuilder: IBroccoliBuilder,
+		private $pluginsService: IPluginsService) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -73,7 +77,7 @@ export class PlatformService implements IPlatformService {
 				npmOptions["version"] = version;
 			}
 
-			var downloadedPackagePath = this.$npm.install(packageToInstall, npmOptions).wait();
+			var downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
 			var frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 
@@ -83,6 +87,10 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(platformPath).wait();
 				throw err;
 			}
+			
+			// Prepare installed plugins
+			let installedPlugins = this.$pluginsService.getAllInstalledPlugins().wait();
+			_.each(installedPlugins, pluginData => this.$pluginsService.prepare(pluginData).wait());
 
 			this.$logger.out("Project successfully created.");
 
@@ -169,14 +177,17 @@ export class PlatformService implements IPlatformService {
 					files.push(filePath);
 				}
 			});
-
 			this.processPlatformSpecificFiles(platform, files).wait();
 
-			this.$logger.out("Project successfully prepared");
+			// Process node_modules folder
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
+			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir).wait();
 
+			this.$logger.out("Project successfully prepared");
 		}).future<void>()();
 	}
-
+		
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
@@ -306,6 +317,10 @@ export class PlatformService implements IPlatformService {
 			}
 		}).future<void>()();
 	}
+	
+	private isPlatformInstalled(platform: string): IFuture<boolean> {
+		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
+	}
 
 	private isValidPlatform(platform: string) {
 		return this.$platformsData.getPlatformData(platform);
@@ -319,12 +334,6 @@ export class PlatformService implements IPlatformService {
 		}
 
 		return false;
-	}
-
-	private isPlatformInstalled(platform: string): IFuture<boolean> {
-		return (() => {
-			return this.$fs.exists(path.join(this.$projectData.platformsDir, platform)).wait();
-		}).future<boolean>()();
 	}
 
 	private isPlatformPrepared(platform: string): IFuture<boolean> {
@@ -407,7 +416,7 @@ export class PlatformService implements IPlatformService {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			var data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 			var currentVersion = data && data.version ? data.version : "0.2.0";
-			var newVersion = version || this.$npm.getLatestVersion(platformData.frameworkPackageName).wait();
+			var newVersion = version || this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
 
 			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
 
@@ -455,7 +464,7 @@ export class PlatformService implements IPlatformService {
 
 			// Add new framework files
 			var newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
-			var cacheDirectoryPath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
+			var cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
 
 			_.each(newFrameworkData.frameworkFiles, file => {
 				var sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
@@ -482,7 +491,7 @@ export class PlatformService implements IPlatformService {
 
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
-			var cachedPackagePath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, version);
+			var cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
 			this.ensurePackageIsCached(cachedPackagePath, platformData.frameworkPackageName, version).wait();
 
 			var allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
@@ -502,7 +511,7 @@ export class PlatformService implements IPlatformService {
 	private ensurePackageIsCached(cachedPackagePath: string, packageName: string, version: string): IFuture<void> {
 		return (() => {
 			if(!this.$fs.exists(cachedPackagePath).wait()) {
-				this.$npm.addToCache(packageName, version).wait();
+				this.$npmInstallationManager.addToCache(packageName, version).wait();
 			}
 		}).future<void>()();
 	}

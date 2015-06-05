@@ -70,9 +70,8 @@ class IOSDebugService implements IDebugService {
         private $fs: IFileSystem,
         private $errors: IErrors,
         private $injector: IInjector,
-        private $npm: INodePackageManager,
-        private $options: IOptions) {
-    }
+        private $npmInstallationManager: INpmInstallationManager,
+        private $options: IOptions) { }
 
     get platform(): string {
         return "ios";
@@ -221,7 +220,7 @@ class IOSDebugService implements IDebugService {
                 tnsIosPackage = path.resolve(this.$options.frameworkPath);
             } else {
                 var platformData = this.$platformsData.getPlatformData(this.platform);
-                tnsIosPackage = this.$npm.install(platformData.frameworkPackageName).wait();
+                tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName).wait();
             }
             var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
             return safariPath;

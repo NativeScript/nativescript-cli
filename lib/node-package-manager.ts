@@ -3,40 +3,16 @@
 
 import Future = require("fibers/future");
 import npm = require("npm");
-import path = require("path");
-import semver = require("semver");
-import shell = require("shelljs");
-import helpers = require("./common/helpers");
-import constants = require("./constants");
 
 export class NodePackageManager implements INodePackageManager {
-	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
-	private static NPM_REGISTRY_URL = "http://registry.npmjs.org/";
-
-	private versionsCache: IDictionary<string[]>;
-
 	constructor(private $logger: ILogger,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $lockfile: ILockFile,
-		private $options: IOptions) {
-		this.versionsCache = {};
-		this.load().wait();
-	}
+		private $options: IOptions) { }
 
-	public getCacheRootPath(): string {
+	public getCache(): string {
 		return npm.cache;
-	}
-
-	public addToCache(packageName: string, version: string): IFuture<void> {
-		return (() => {
-			this.addToCacheCore(packageName, version).wait();
-
-			var packagePath = path.join(npm.cache, packageName, version, "package");
-			if(!this.isPackageUnpacked(packagePath).wait()) {
-				this.cacheUnpack(packageName, version).wait();
-			}
-		}).future<void>()();
 	}
 
 	public load(config?: any): IFuture<void> {
@@ -50,128 +26,51 @@ export class NodePackageManager implements INodePackageManager {
 		});
 		return future;
 	}
-
-	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
-		return (() => {
-			this.$lockfile.lock().wait();
-
-			try {
-				var packageToInstall = packageName;
-				var pathToSave = (opts && opts.pathToSave) || npm.cache;
-				var version = (opts && opts.version) || null;
-
-				return this.installCore(packageToInstall, pathToSave, version).wait();
-			} catch(error) {
-				this.$logger.debug(error);
-				this.$errors.fail("%s. Error: %s", NodePackageManager.NPM_LOAD_FAILED, error);
-			} finally {
-				this.$lockfile.unlock().wait();
-			}
-
-		}).future<string>()();
+	
+	public install(packageName: string, pathToSave: string, config?: any): IFuture<any> {
+		return this.loadAndExecute("install", [pathToSave, packageName], { config: config });
+	}
+	
+	public uninstall(packageName: string, config?: any): IFuture<any> {
+		return this.loadAndExecute("uninstall", [[packageName]], { config: config });
 	}
 
-	public getLatestVersion(packageName: string): IFuture<string> {
-		var future = new Future<string>();
-
-		npm.commands["view"]([packageName, "dist-tags"], [false], (err: any, data: any) => { // [false] - silent
+	public cache(packageName: string, version: string, config?: any): IFuture<ICacheData> {
+		// function cache (pkg, ver, where, scrub, cb)
+		return this.loadAndExecute("cache", [packageName, version, undefined, false], { subCommandName: "add", config: config });
+	}
+	
+	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
+		// function unpack (pkg, ver, unpackTarget, dMode, fMode, uid, gid, cb)
+		return this.loadAndExecute("cache", [packageName, version, unpackTarget, null, null, null, null], { subCommandName: "unpack" });
+	}
+	
+	public view(packageName: string, propertyName: string): IFuture<any> {
+		return this.loadAndExecute("view", [[packageName, propertyName], [false]]);
+	}
+	
+	private loadAndExecute(commandName: string, args: any[], opts?: { config?: any, subCommandName?: string }): IFuture<any> {
+		return (() => {
+			opts = opts || {};
+			this.load(opts.config).wait();
+			return this.executeCore(commandName, args, opts.subCommandName).wait();
+		}).future<any>()();
+	}
+	
+	private executeCore(commandName: string, args: any[], subCommandName?: string): IFuture<any> {
+		let future = new Future<any>();
+		let callback = (err: Error, data: any) => {
 			if(err) {
 				future.throw(err);
 			} else {
-				var latestVersion = _.first(_.keys(data));
-				this.$logger.trace("Using version %s. ", latestVersion);
-
-				future.return(latestVersion);
-			}
-		});
-
-		return future;
-	}
-
-	public getCachedPackagePath(packageName: string, version: string): string {
-		return path.join(npm.cache, packageName, version, "package");
-	}
-
-	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
-		return (() => {
-			if (this.$options.frameworkPath) {
-				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
-					this.npmInstall(packageName, pathToSave, version).wait();
-					var pathToNodeModules = path.join(pathToSave, "node_modules");
-					var folders = this.$fs.readDirectory(pathToNodeModules).wait();
-					return path.join(pathToNodeModules, folders[0]);
-				}
-				return this.$options.frameworkPath;
-			} else {
-				version = version || this.getLatestVersion(packageName).wait();
-				var packagePath = this.getCachedPackagePath(packageName, version);
-				if (!this.isPackageCached(packagePath).wait()) {
-					this.addToCacheCore(packageName, version).wait();
-				}
-
-				if(!this.isPackageUnpacked(packagePath).wait()) {
-					this.cacheUnpack(packageName, version).wait();
-				}
-				return packagePath;
-			}
-		}).future<string>()();
-	}
-
-	private npmInstall(packageName: string, pathToSave: string, version: string): IFuture<void> {
-		this.$logger.out("Installing ", packageName);
-
-		var incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
-		if (!this.$options.frameworkPath && packageName.indexOf("@") < 0) {
-			packageName = packageName + "@<" + incrementedVersion;
-		}
-
-		var future = new Future<void>();
-		npm.commands["install"](pathToSave, packageName, (err: Error, data: any) => {
-			if(err) {
-				future.throw(err);
-			} else {
-				this.$logger.out("Installed ", packageName);
 				future.return(data);
 			}
-		});
-		return future;
-	}
-
-	private isPackageCached(packagePath: string): IFuture<boolean> {
-		return this.$fs.exists(packagePath);
-	}
-
-	private isPackageUnpacked(packagePath: string): IFuture<boolean> {
-		return (() => {
-			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
-				this.$fs.enumerateFilesInDirectorySync(packagePath).length > 1;
-		}).future<boolean>()();
-	}
-
-	private addToCacheCore(packageName: string, version: string): IFuture<void> {
-		var future = new Future<void>();
-		// cache.add = function (pkg, ver, where, scrub, cb)
-		npm.commands["cache"].add(packageName, version, undefined, false, (err: Error, data: any) => {
-			if(err) {
-				future.throw(err);
-			} else {
-				future.return();
-			}
-		});
-		return future;
-	}
-
-	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
-		var future = new Future<void>();
-		unpackTarget = unpackTarget || path.join(npm.cache, packageName, version, "package");
-		// function unpack (pkg, ver, unpackTarget, dMode, fMode, uid, gid, cb)
-		npm.commands["cache"].unpack(packageName, version, unpackTarget, null, null, null, null, (err: Error, data: any) => {
-			if(err) {
-				future.throw(err);
-			} else {
-				future.return();
-			}
-		});
+		}
+		args.push(callback);
+		
+		let command = subCommandName ? npm.commands[commandName][subCommandName] : npm.commands[commandName];
+		command.apply(this, args);
+		
 		return future;
 	}
 }
