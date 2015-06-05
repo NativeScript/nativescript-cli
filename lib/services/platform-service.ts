@@ -15,7 +15,7 @@ export class PlatformService implements IPlatformService {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $npm: INodePackageManager,
+		private $npmInstallationManager: INpmInstallationManager,
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
@@ -77,7 +77,7 @@ export class PlatformService implements IPlatformService {
 				npmOptions["version"] = version;
 			}
 
-			var downloadedPackagePath = this.$npm.install(packageToInstall, npmOptions).wait();
+			var downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
 			var frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 
@@ -416,7 +416,7 @@ export class PlatformService implements IPlatformService {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			var data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 			var currentVersion = data && data.version ? data.version : "0.2.0";
-			var newVersion = version || this.$npm.getLatestVersion(platformData.frameworkPackageName).wait();
+			var newVersion = version || this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
 
 			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
 
@@ -464,7 +464,7 @@ export class PlatformService implements IPlatformService {
 
 			// Add new framework files
 			var newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
-			var cacheDirectoryPath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
+			var cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
 
 			_.each(newFrameworkData.frameworkFiles, file => {
 				var sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
@@ -491,7 +491,7 @@ export class PlatformService implements IPlatformService {
 
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
-			var cachedPackagePath = this.$npm.getCachedPackagePath(platformData.frameworkPackageName, version);
+			var cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
 			this.ensurePackageIsCached(cachedPackagePath, platformData.frameworkPackageName, version).wait();
 
 			var allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
@@ -511,7 +511,7 @@ export class PlatformService implements IPlatformService {
 	private ensurePackageIsCached(cachedPackagePath: string, packageName: string, version: string): IFuture<void> {
 		return (() => {
 			if(!this.$fs.exists(cachedPackagePath).wait()) {
-				this.$npm.addToCache(packageName, version).wait();
+				this.$npmInstallationManager.addToCache(packageName, version).wait();
 			}
 		}).future<void>()();
 	}

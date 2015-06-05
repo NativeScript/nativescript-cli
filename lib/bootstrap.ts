@@ -44,6 +44,7 @@ $injector.requireCommand("emulate|android", "./commands/emulate");
 $injector.requireCommand("emulate|ios", "./commands/emulate");
 
 $injector.require("npm", "./node-package-manager");
+$injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("lockfile", "./lockfile");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");

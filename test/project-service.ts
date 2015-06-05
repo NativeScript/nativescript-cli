@@ -10,6 +10,7 @@ import ProjectDataLib = require("../lib/project-data");
 import ProjectHelperLib = require("../lib/common/project-helper");
 import StaticConfigLib = require("../lib/config");
 import NpmLib = require("../lib/node-package-manager");
+import NpmInstallationManagerLib = require("../lib/npm-installation-manager");
 import HttpClientLib = require("../lib/common/http-client");
 import fsLib = require("../lib/common/file-system");
 import platformServiceLib = require("../lib/services/platform-service");
@@ -42,19 +43,19 @@ class ProjectIntegrationTest {
 
 	public getDefaultTemplatePath(): IFuture<string> {
 		return (() => {
-			var npm = this.testInjector.resolve("npm");
+			var npmInstallationManager = this.testInjector.resolve("npmInstallationManager");
 			var fs = this.testInjector.resolve("fs");
 
 			var defaultTemplatePackageName = "tns-template-hello-world";
-			var cacheRoot = npm.getCacheRootPath();
+			var cacheRoot = npmInstallationManager.getCacheRootPath();
 			var defaultTemplatePath = path.join(cacheRoot, defaultTemplatePackageName);
-			var latestVersion = npm.getLatestVersion(defaultTemplatePackageName).wait();
+			var latestVersion = npmInstallationManager.getLatestVersion(defaultTemplatePackageName).wait();
 
 			if(!fs.exists(path.join(defaultTemplatePath, latestVersion)).wait()) {
-				npm.addToCache(defaultTemplatePackageName, latestVersion).wait();
+				npmInstallationManager.addToCache(defaultTemplatePackageName, latestVersion).wait();
 			}
 			if(!fs.exists(path.join(defaultTemplatePath, latestVersion, "package", "app")).wait()) {
-				npm.cacheUnpack(defaultTemplatePackageName, latestVersion).wait();
+				npmInstallationManager.cacheUnpack(defaultTemplatePackageName, latestVersion).wait();
 			}
 
 			return path.join(defaultTemplatePath, latestVersion, "package");
@@ -110,6 +111,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 		this.testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 
+		this.testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 		this.testInjector.register("npm", NpmLib.NodePackageManager);
 		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
 		this.testInjector.register("config", {});
@@ -165,7 +167,7 @@ function createTestInjector() {
 	
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 
-	testInjector.register("npm", NpmLib.NodePackageManager);
+	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 	testInjector.register("httpClient", HttpClientLib.HttpClient);
 	testInjector.register("config", {});
 	testInjector.register("lockfile", stubs.LockFile);

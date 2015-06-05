@@ -28,7 +28,7 @@ let assert = require("chai").assert;
 let isErrorThrown = false;	
 
 function createTestInjector() {
-	var testInjector = new yok.Yok();
+	let testInjector = new yok.Yok();
 	
 	testInjector.register("npm", NpmLib.NodePackageManager);
 	testInjector.register("fs", FsLib.FileSystem);
@@ -73,7 +73,7 @@ function createProjectFile(testInjector: IInjector): string {
 	
 	let packageJsonData = {
 		"name": "testModuleName",
-		"version": "0.0.0",
+		"version": "0.1.0",
 		"nativescript": {
 			"id": "org.nativescript.Test",
 			"tns-android": {
@@ -124,7 +124,7 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 	assert.isTrue(isErrorThrown);
 }
 
-describe("plugins service", () => {
+describe("Plugins service", () => {
 	let testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
@@ -142,9 +142,13 @@ describe("plugins service", () => {
 			let pluginName = "plugin1";
 			let projectFolder = createProjectFile(testInjector);
 			let fs = testInjector.resolve("fs");
-			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
-			fs.createDirectory(nodeModulesFolderPath).wait();
-			fs.createDirectory(path.join(nodeModulesFolderPath, pluginName)).wait();
+			
+			// Add plugin			
+			let projectFilePath = path.join(projectFolder, "package.json");
+			let projectData = require(projectFilePath);
+			projectData.dependencies = { };
+			projectData.dependencies[pluginName] = "^1.0.0";
+			fs.writeJson(projectFilePath, projectData).wait();
 			
 			let pluginsService = testInjector.resolve("pluginsService");
 			pluginsService.getAllInstalledPlugins = () => { 
@@ -249,7 +253,7 @@ describe("plugins service", () => {
 			});
 			
 			// Asserts that the plugin is added in package.json file
-			let packageJsonContent = require(path.join(projectFolder, "package.json"));
+			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
 			let expectedDependencies = {
 				"plugin1": "^1.0.0"
@@ -287,7 +291,7 @@ describe("plugins service", () => {
 			});
 			
 			// Assert that the plugin is added in package.json file
-			let packageJsonContent = require(path.join(projectFolder, "package.json"));
+			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
 			let expectedDependencies = {
 				"plugin1": "^1.0.0"

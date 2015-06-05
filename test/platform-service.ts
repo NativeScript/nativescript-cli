@@ -34,7 +34,7 @@ function createTestInjector() {
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
-	testInjector.register('npm', stubs.NPMStub);
+	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', stubs.PlatformsDataStub);
 	testInjector.register('devicesServices', {});
@@ -101,8 +101,8 @@ describe('Platform Service Tests', () => {
 				fs.exists = () => Future.fromResult(false);
 
 				var errorMessage = "Npm is unavalible";
-				var npm = testInjector.resolve("npm");
-				npm.install = () => { throw new Error(errorMessage) };
+				var npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				npmInstallationManager.install = () => { throw new Error(errorMessage) };
 
 				try {
 					platformService.addPlatforms(["android"]).wait();
@@ -175,9 +175,9 @@ describe('Platform Service Tests', () => {
 	describe("update Platform", () => {
 		describe("#updatePlatform(platform)", () => {
 			it("should fail when the versions are the same", () => {
-				var npm: INodePackageManager = testInjector.resolve("npm");
-				npm.getLatestVersion = () => (() => "0.2.0").future<string>()();
-				npm.getCacheRootPath = () => "";
+				var npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
+				npmInstallationManager.getLatestVersion = () => (() => "0.2.0").future<string>()();
+				npmInstallationManager.getCacheRootPath = () => "";
 
 				(() => platformService.updatePlatforms(["android"]).wait()).should.throw();
 			});
