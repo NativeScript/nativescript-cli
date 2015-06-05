@@ -350,15 +350,16 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
             request.collection != null &&
             request.namespace === 'appdata') {
           var expectSingleEntity = request.id != null ? true : false;
+          var rawResponse = options.trace && isObject(response) ? response.result : response;
           var error;
 
-          if (isArray(response) && expectSingleEntity) {
+          if (isArray(rawResponse) && expectSingleEntity) {
             error = new Kinvey.Error('Expected a single entity as a response to ' +
                                      request.method + ' ' + url + '. Received an array ' +
                                      'of entities instead.');
             throw error;
           }
-          else if (!isArray(response) && !expectSingleEntity) {
+          else if (!isArray(rawResponse) && !expectSingleEntity) {
             error = new Kinvey.Error('Expected an array of entities as a response to ' +
                                      request.method + ' ' + url + '. Received a single ' +
                                      'entity instead.');

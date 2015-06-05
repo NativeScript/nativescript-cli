@@ -39,23 +39,29 @@ var Database = /** @lends Database */{
    * @return {Promise} Upgrade has completed
    */
   upgrade: function() {
-    // Read the existing version of the database
-    return Database.find(Database.versionTable).then(null, function() {
-      return [undefined];
-    }).then(function(versions) {
-      var doc = versions[0] || {};
-      return Database.onUpgrade(doc.version, Database.version).then(function() {
-        return doc;
-      });
-    }).then(function(doc) {
-      // Update the version doc
-      doc.version = Database.version;
+    try {
+      // Read the existing version of the database
+      return Database.find(Database.versionTable).then(null, function() {
+        return [undefined];
+      }).then(function(versions) {
+        var doc = versions[0] || {};
+        return Database.onUpgrade(doc.version, Database.version).then(function() {
+          return doc;
+        });
+      }).then(function(doc) {
+        // Update the version doc
+        doc.version = Database.version;
 
-      // Save the version doc
-      return Database.save(Database.versionTable, doc);
-    }).then(function() {
-      return;
-    });
+        // Save the version doc
+        return Database.save(Database.versionTable, doc);
+      }).then(function() {
+        return;
+      });
+    } catch (err) {
+      // Catch unsupported database methods error and
+      // just resolve
+      return Kinvey.Defer.resolve();
+    }
   },
 
   /**
@@ -213,6 +219,16 @@ var Database = /** @lends Database */{
   update: methodNotImplemented('Database.update'),
 
   /**
+   * Checks if an id was created offline as a temporary ID.
+   *
+   * @abstract
+   * @method
+   * @param {String} id The id.
+   * @returns {Boolean} True or false if the id is a temporary ID.
+   */
+  isTemporaryObjectID: methodNotImplemented('Database.isTemporaryObjectID'),
+
+  /**
    * Sets the implementation of `Database` to the specified adapter.
    *
    * @method
@@ -220,6 +236,6 @@ var Database = /** @lends Database */{
    */
   use: use([
     'batch', 'clean', 'count', 'destroy', 'destruct', 'find', 'findAndModify',
-    'get', 'group', 'save', 'update'
+    'get', 'group', 'save', 'update', 'isTemporaryObjectID'
   ])
 };

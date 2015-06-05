@@ -1,4 +1,8 @@
 # Changelog
+### 1.3.4 (2015-05-20)
+* BugFix(MLIBZ-337): Make `Kinvey.User.MIC.loginWithAuthorizationCodeLoginPage` work on the Titanium platform.
+* BugFix: Handle database upgrade correctly on NodeJS platform.
+
 ### 1.3.3 (2015-05-18)
 * Enhancement(MLIBZ-288): User friendly handling of 4xx/5xx responses.
 * Enhancement(MLIBZ-307): Simple cache versioning.

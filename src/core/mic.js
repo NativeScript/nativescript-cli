@@ -326,10 +326,12 @@ var MIC = {
         tiWebView.removeEventListener('error', loadHandler);
         popup.removeEventListener('close', closeHandler);
 
-        if (OS_IOS) {
+        // If on an iPhone, iPod, or iPad device
+        if (Titanium.Platform.name === 'iPhone OS') {
           tiCloseButton.removeEventListener('click', clickHandler);
         }
-        else if (OS_ANDROID) {
+        // If on an Android device
+        else if (Titanium.Platform.name === 'Android') {
           popup.close();
           popup.removeEventListener('androidback', closeHandler);
         }
@@ -376,7 +378,7 @@ var MIC = {
       // Add the web view to the popup window
       popup.add(tiWebView);
 
-      if(OS_IOS) {
+      if(Titanium.Platform.name === 'iPhone OS') {
         // Create a window
         var win = Titanium.UI.createWindow({
           backgroundColor: 'white',
@@ -404,7 +406,7 @@ var MIC = {
           modal: true
         });
       }
-      else if(OS_ANDROID) {
+      else if(Titanium.Platform.name === 'Android') {
         popup.addEventListener('androidback', closeHandler);
       }
 
@@ -780,7 +782,7 @@ var MIC = {
    * @return {Boolean} NodeJS
    */
   isNode: function() {
-    return ('undefined' !== typeof module && module.exports);
+    return (typeof process !== 'undefined' && typeof require !== 'undefined');
   }
 };
 

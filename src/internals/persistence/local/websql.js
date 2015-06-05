@@ -44,6 +44,8 @@ var WebSqlAdapter = {
     return 'Kinvey.' + Kinvey.appKey;
   },
 
+  objectIdPrefix: 'temp_',
+
   /**
    * The database size (in bytes).
    * Use 1000 instead of 1024 due to Apple Safari limits.
@@ -190,7 +192,16 @@ var WebSqlAdapter = {
       var pos = Math.floor(Math.random() * j);
       result += chars.substring(pos, pos + 1);
     }
+    result = WebSqlAdapter.objectIdPrefix + result;
     return result;
+  },
+
+  isTemporaryObjectID: function(id) {
+    if (id != null) {
+      return id.indexOf(WebSqlAdapter.objectIdPrefix) === 0;
+    }
+
+    return false;
   },
 
   /**
