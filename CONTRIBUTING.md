@@ -61,7 +61,7 @@ Before you submit a Pull Request, consider the following guidelines.
 ```
 * Ensure all the tests pass.
 ```bash
-    grunt test
+    grunt tests
 ```
 * Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
 ```bash
