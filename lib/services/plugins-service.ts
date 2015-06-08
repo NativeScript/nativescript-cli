@@ -101,7 +101,7 @@ export class PluginsService implements IPluginsService {
 	}
 	
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
-		return this.$childProcess.exec("npm install");
+		return this.$childProcess.exec("npm install ", { cwd: this.$projectData.projectDir });
 	}
 	
 	public getAllInstalledPlugins(): IFuture<IPluginData[]> {
