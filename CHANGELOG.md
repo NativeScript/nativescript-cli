@@ -1,6 +1,13 @@
 NativeScript CLI Changelog
 ================
 
+1.0.2 (2015, May 27)
+==
+
+### Fixed
+
+* [Fixed #498](https://github.com/NativeScript/nativescript-cli/issues/498): On some Linux and OS X systems, when the USER or SUDO_USER environment variables are missing, you cannot run NativeScript CLI commands. The following error appears when you attempt to run `nativescript` or `tns` commands: `TypeError: Arguments to path.join must be strings`.
+
 1.0.1 (2015, May 8)
 ==
 
