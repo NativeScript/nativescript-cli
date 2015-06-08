@@ -44,9 +44,18 @@ $injector.requireCommand("emulate|android", "./commands/emulate");
 $injector.requireCommand("emulate|ios", "./commands/emulate");
 
 $injector.require("npm", "./node-package-manager");
+$injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("lockfile", "./lockfile");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
 
 $injector.require("logcatPrinter", "./providers/logcat-printer");
+
+$injector.require("broccoliBuilder", "./tools/broccoli/builder");
+$injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");
+$injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wrapper");
+
+$injector.require("pluginsService", "./services/plugins-service");
+$injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
+$injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");

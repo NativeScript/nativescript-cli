@@ -11,10 +11,10 @@ import Future = require("fibers/future");
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	private static NPM_DEFAULT_TEMPLATE_NAME = "tns-template-hello-world";
 
-	public constructor(private $npm: INodePackageManager) { }
+	public constructor(private $npmInstallationManager: INpmInstallationManager) { }
 
 	public get defaultTemplatePath(): IFuture<string> {
-		return this.$npm.install(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
+		return this.$npmInstallationManager.install(ProjectTemplatesService.NPM_DEFAULT_TEMPLATE_NAME);
 	}
 }
 $injector.register("projectTemplatesService", ProjectTemplatesService);

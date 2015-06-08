@@ -13,6 +13,10 @@ class IOSProjectService implements  IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
+	
+	private get $npmInstallationManager(): INpmInstallationManager {
+		return this.$injector.resolve("npmInstallationManager");
+	}
 
 	constructor(private $projectData: IProjectData,
 		private $fs: IFileSystem,
@@ -20,8 +24,8 @@ class IOSProjectService implements  IPlatformProjectService {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
-		private $npm: INodePackageManager,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $injector: IInjector) { }
 
 	public get platformData(): IPlatformData {
 		var projectRoot = path.join(this.$projectData.platformsDir, "ios");
@@ -45,7 +49,9 @@ class IOSProjectService implements  IPlatformProjectService {
 			frameworkFilesExtensions: [".a", ".framework", ".bin"],
 			frameworkDirectoriesExtensions: [".framework"],
 			frameworkDirectoriesNames: ["Metadata"],
-			targetedOS: ['darwin']
+			targetedOS: ['darwin'],
+			configurationFileName: this.$projectData.projectName+"-Info.plist",
+			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist")
 		};
 	}
 
@@ -211,7 +217,7 @@ class IOSProjectService implements  IPlatformProjectService {
 			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName))).wait();
 
 			// Copy xcodeProject file
-			var cachedPackagePath = path.join(this.$npm.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+			var cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
 			shell.cp("-R", path.join(cachedPackagePath, "*"), path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName)));
 			this.$logger.info("Copied from %s at %s.", cachedPackagePath, this.platformData.projectRoot);
 
@@ -222,7 +228,7 @@ class IOSProjectService implements  IPlatformProjectService {
 	}
 
 	private buildPathToXcodeProjectFile(version: string): string {
-		return path.join(this.$npm.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
+		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
 	}
 
     private validateDynamicFramework(libraryPath: string): IFuture<void> {
