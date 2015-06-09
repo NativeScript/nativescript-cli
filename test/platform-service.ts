@@ -235,7 +235,7 @@ describe('Platform Service Tests', () => {
 			
 			// Asserts that the files in app folder are process as platform specific
 			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app" , "test1.js")).wait());
-			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2.js")).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
 			
@@ -286,7 +286,7 @@ describe('Platform Service Tests', () => {
 			
 			// Asserts that the files in app folder are process as platform specific
 			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app" , "test2.js")).wait());
-			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1.js")).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
 			
