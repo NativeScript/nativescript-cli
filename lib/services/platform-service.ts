@@ -342,8 +342,8 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
-		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms.join("|"));
-		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
+		var regex = util.format("^(.+?)\\.(%s)(\\..+?)$", platforms.join("|"));
+		var parsed = fileName.match(new RegExp(regex, "i"));
 		if (parsed) {
 			return {
 				platform: parsed[2],
