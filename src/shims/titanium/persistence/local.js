@@ -35,6 +35,14 @@ var TiDatabaseAdapter = {
   },
 
   /**
+   * Constant object ID prefix for prepended to object IDs
+   * created locally.
+   *
+   * @type {String}
+   */
+  objectIdPrefix: 'temp_',
+
+  /**
    * Executes a query.
    *
    * @param {string} collection The table name.
@@ -147,7 +155,23 @@ var TiDatabaseAdapter = {
       var pos = Math.floor(Math.random() * j);
       result += chars.substring(pos, pos + 1);
     }
+    result = TiDatabaseAdapter.objectIdPrefix + result;
     return result;
+  },
+
+  /**
+   * Check if an object ID was created offline as a
+   * temporary object ID.
+   *
+   * @param  {String}  id The object ID.
+   * @return {Boolean}    True of false if the object ID is temporary.
+   */
+  isTemporaryObjectID: function(id) {
+    if (id != null) {
+      return id.indexOf(TiDatabaseAdapter.objectIdPrefix) === 0;
+    }
+
+    return false;
   },
 
   /**
