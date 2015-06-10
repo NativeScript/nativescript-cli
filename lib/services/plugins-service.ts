@@ -6,6 +6,7 @@ import semver = require("semver");
 import Future = require("fibers/future");
 import constants = require("./../constants");
 let xmlmerge = require("xmlmerge-js");
+let DOMParser = require('xmldom').DOMParser;
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -77,12 +78,22 @@ export class PluginsService implements IPluginsService {
 					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
 				
 					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
-					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);					
+					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
+					let configurationFilePath = platformData.configurationFilePath;
+					
 					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+						// Validate plugin configuration file
 						let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-						let configurationFileContent = this.$fs.readText(platformData.configurationFilePath).wait();
-						let resultXml = this.mergeXml(pluginConfigurationFileContent, configurationFileContent).wait();
-						this.$fs.writeFile(platformData.configurationFilePath, resultXml).wait();	
+						this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
+						
+						// Validate configuration file
+						let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
+						this.validateXml(configurationFileContent, configurationFilePath);
+						
+						// Merge xml
+						let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
+						this.validateXml(resultXml);
+						this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 					}
 					
 					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
@@ -209,11 +220,11 @@ export class PluginsService implements IPluginsService {
 		}).future<string>()();
 	}
 
-	private mergeXml(xml1: string, xml2: string): IFuture<string> {
+	private mergeXml(xml1: string, xml2: string, config: any[]): IFuture<string> {
 		let future = new Future<string>();
 		
 		try {
-			xmlmerge.merge(xml1, xml2, "", (mergedXml: string) => { 
+			xmlmerge.merge(xml1, xml2, config, (mergedXml: string) => { 
 				future.return(mergedXml);
 			});
 		} catch(err) {
@@ -221,6 +232,17 @@ export class PluginsService implements IPluginsService {
 		}
 		
 		return future;
+	}
+	
+	private validateXml(xml: string, xmlFilePath?: string): void {
+		let doc = new DOMParser({
+			locator: {},
+			errorHandler: (level: any, msg: string) => {
+				let errorMessage = xmlFilePath ? `Invalid xml file ${xmlFilePath}.` : `Invalid xml ${xml}.`;
+				this.$errors.fail(errorMessage + ` Additional technical information: ${msg}.` )
+			}
+		});
+		doc.parseFromString(xml, 'text/xml');
 	}
 }
 $injector.register("pluginsService", PluginsService);
