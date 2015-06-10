@@ -6,7 +6,7 @@ Usage | Synopsis
 Deploy on device, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>]`
 Deploy in the native emulator, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --emulator [<Emulator Options>]`
 Deploy in Genymotion, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --geny <Geny Name>`
-Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--debug-port <port>]`
+Attach the debug tools to a running app on device | `$ tns debug android --start [--device <Device ID>] [--debug-port <port>]`
 Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>]`
 Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output]`
 Retrieve the device port on which you are debugging | `$ tns debug android [--device <Device ID>] --get-port`
