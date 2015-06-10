@@ -6,6 +6,7 @@ import semver = require("semver");
 import Future = require("fibers/future");
 import constants = require("./../constants");
 let xmlmerge = require("xmlmerge-js");
+let DOMParser = require('xmldom').DOMParser;
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -77,12 +78,33 @@ export class PluginsService implements IPluginsService {
 					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
 				
 					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
-					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);					
+					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
+					let configurationFilePath = platformData.configurationFilePath;		
+					
 					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+						// Validate plugin configuration file
 						let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-						let configurationFileContent = this.$fs.readText(platformData.configurationFilePath).wait();
-						let resultXml = this.mergeXml(pluginConfigurationFileContent, configurationFileContent).wait();
-						this.$fs.writeFile(platformData.configurationFilePath, resultXml).wait();	
+						
+						var doc = new DOMParser({
+							locator: {},
+							errorHandler: (level: any, msg: string) => {
+								this.$errors.fail(`Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: ${msg}.` )
+							}
+						});
+						doc.parseFromString(pluginConfigurationFileContent, 'text/xml');
+						
+						// Create a backup of configuration file
+						let configurationBackupFilePath = path.join(path.dirname(configurationFilePath), "original-" + path.basename(configurationFilePath));
+						let configurationFileContent = "";
+						if(this.$fs.exists(configurationBackupFilePath).wait()) {
+							configurationFileContent = this.$fs.readText(configurationBackupFilePath).wait();
+						} else {
+							configurationFileContent = this.$fs.readText(configurationFilePath).wait();
+							this.$fs.writeFile(configurationBackupFilePath, configurationFileContent).wait();
+						}
+						
+						let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
+						this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 					}
 					
 					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
@@ -209,11 +231,11 @@ export class PluginsService implements IPluginsService {
 		}).future<string>()();
 	}
 
-	private mergeXml(xml1: string, xml2: string): IFuture<string> {
+	private mergeXml(xml1: string, xml2: string, config: any[]): IFuture<string> {
 		let future = new Future<string>();
 		
 		try {
-			xmlmerge.merge(xml1, xml2, "", (mergedXml: string) => { 
+			xmlmerge.merge(xml1, xml2, config, (mergedXml: string) => { 
 				future.return(mergedXml);
 			});
 		} catch(err) {

@@ -67,6 +67,7 @@
     "winreg": "0.0.12",
     "ws": "0.7.1",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
+    "xmldom": "0.1.19",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "xmlmerge-js": "0.2.4",
     "yargs": "1.2.2"
