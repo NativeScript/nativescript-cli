@@ -48,7 +48,8 @@ class AndroidProjectService implements IPlatformProjectService {
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
-				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml")
+				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml"),
+				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }]
 			};
 		}
 
