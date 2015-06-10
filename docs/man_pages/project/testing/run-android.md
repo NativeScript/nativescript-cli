@@ -7,7 +7,7 @@ Run on all connected devices and running emulators | `$ tns run android [--keySt
 Run on a selected connected device or running emulator | `$ tns run android --device <Device ID> [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release] [--justlaunch]`
 Start an emulator and run the app inside it | `$ tns run android --emulator [<Emulator Options>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release] [--justlaunch]`
 
-Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy.
+Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console.
 
 ### Options
 * `--device` - Specifies a connected device on which to run the app. 
@@ -17,7 +17,7 @@ Runs your project on a connected Android device or in a native Android emulator,
 * `--keyStorePassword` - Provides the password for the keystore file specified with `--keyStorePath`. You can use the `--keyStore*` options along with `--release` to produce a signed release build. You need to specify all `--keyStore*` options.
 * `--keyStoreAlias` - Provides the alias for the keystore file specified with `--keyStorePath`. You can use the `--keyStore*` options along with `--release` to produce a signed release build. You need to specify all `--keyStore*` options.
 * `--keyStoreAliasPassword` - Provides the password for the alias specified with `--keStoreAliasPassword`. You can use the `--keyStore*` options along with `--release` to produce a signed release build. You need to specify all `--keyStore*` options.
-* `--justlaunch` - If set, does not print application output on the console. Otherwise prints the application output on the console. 
+* `--justlaunch` - If set, does not print the application output in the console. 
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device android`

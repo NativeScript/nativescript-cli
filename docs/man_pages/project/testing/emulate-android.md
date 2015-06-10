@@ -7,7 +7,7 @@ Run in the native emulator | `$ tns emulate android [--avd <Name>] [--path <Dire
 Run in Genymotion | `$ tns emulate android --geny <GenyName> [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release] [--justlaunch]`
 Run in the default Android virtual device or in a currently running emulator | `$ tns emulate android [--path <Directory>] [--timeout <Seconds>] [--keyStorePath <File Path> --keyStorePassword <Password> --keyStoreAlias <Name> --keyStoreAliasPassword <Password>] [--release] [--justlaunch]`
 
-Builds the specified project and runs it in the native emulator from the Android SDK or Genymotion. <% if(isHtml) { %>If you do not select an Android virtual device (AVD) with the `--avd` option or a Genymotion virtual device with the `--geny` option, your app runs in the default AVD or a currently running emulator, if any. <% } %> 
+Builds the specified project and runs it in the native emulator from the Android SDK or Genymotion. While your app is running, prints the output from the application in the console.<% if(isHtml) { %>If you do not select an Android virtual device (AVD) with the `--avd` option or a Genymotion virtual device with the `--geny` option, your app runs in the default AVD or a currently running emulator, if any. <% } %> 
 
 ### Options
 * `--path` - Specifies the directory that contains the project. If not specified, the project is searched for in the current directory and all directories above it.
@@ -19,7 +19,7 @@ Builds the specified project and runs it in the native emulator from the Android
 * `--keyStorePassword` - Provides the password for the keystore file specified with --keyStorePath. You can use the `--keyStore*` options along with --release to produce a signed release build. You need to specify all `--keyStore*` options.
 * `--keyStoreAlias` - Provides the alias for the keystore file specified with `--keyStorePath`. You can use the `--keyStore*` options along with `--release` to produce a signed release build. You need to specify all `--keyStore*` options.
 * `--keyStoreAliasPassword` - Provides the password for the alias specified with `--keStoreAliasPassword`. You can use the `--keyStore*` options along with `--release` to produce a signed release build. You need to specify all `--keyStore*` options.
-* `--justlaunch` - If set, does not print application output on the console. Otherwise prints the application output on the console.
+* `--justlaunch` - If set, does not print the application output in the console.
 
 ### Attributes
 * `<Name>` is the name of the Android virtual device that you want to use as listed by `$ android list avd`  
