@@ -28,6 +28,7 @@ Command | Description
 [emulate `<Platform>`](project/testing/emulate.html) | Deploys the project in the native emulator for the selected target platform.
 [run `<Platform>`](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected device. 
+[plugin](plugin.html) | Lists all installed plugins for your project or lets you manage the plugins for your project.
 
 ## Device Commands
 Command | Description
