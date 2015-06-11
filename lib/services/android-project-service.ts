@@ -10,7 +10,9 @@ import fs = require("fs");
 import os = require("os");
 
 class AndroidProjectService implements IPlatformProjectService {
-	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21"]; // forbidden for now: "android-MNC"
+	private static MIN_SUPPORTED_VERSION = 17;
+	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22"]; // forbidden for now: "android-MNC"
+	private static ANDROID_TARGET_PREFIX = "android";
 	private static RES_DIRNAME = "res";
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
@@ -67,7 +69,9 @@ class AndroidProjectService implements IPlatformProjectService {
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
-			let newTarget = this.getLatestValidAndroidTarget(frameworkDir).wait();
+			
+			let newTarget = this.getAndroidTarget(frameworkDir).wait();
+			this.$logger.trace(`Using Android SDK '${newTarget}'.`);
 			let versionNumber = _.last(newTarget.split("-"));
 			if(this.$options.symlink) {
 				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
@@ -331,17 +335,37 @@ class AndroidProjectService implements IPlatformProjectService {
 		}
 	}
 
+	private getAndroidTarget(frameworkDir: string): IFuture<string> {
+		return ((): string => { 
+			let newTarget = this.$options.sdk ? `${AndroidProjectService.ANDROID_TARGET_PREFIX}-${this.$options.sdk}` : this.getLatestValidAndroidTarget(frameworkDir).wait();
+			if(!_.contains(this.SUPPORTED_TARGETS, newTarget)) {
+				let versionNumber = parseInt(_.last(newTarget.split("-")));
+				if(versionNumber && (versionNumber < AndroidProjectService.MIN_SUPPORTED_VERSION)) {
+					this.$errors.failWithoutHelp(`The selected target SDK ${newTarget} is not supported. You should target at least ${AndroidProjectService.MIN_SUPPORTED_VERSION}.`);
+				}
+
+				if(!_.contains(this.getInstalledTargets().wait(), newTarget)) {
+					this.$errors.failWithoutHelp(`You have selected to use ${newTarget}, but it is not currently installed.`+
+						' Run \"android\" from your command-line to install/update any missing SDKs or tools.');
+				}
+				this.$logger.warn(`The selected Android target '${newTarget}' is not verified as supported. Some functionality may not work as expected.`);
+			}
+
+			return newTarget;
+		}).future<string>()();
+	}
+
 	private getLatestValidAndroidTarget(frameworkDir: string): IFuture<string> {
 		return (() => {
 			let validTarget = this.getTarget(frameworkDir).wait();
 			let installedTargets = this.getInstalledTargets().wait();
 
 			// adjust to the latest available version
-			var	newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
+			var newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
 			if (!newTarget) {
-				this.$errors.fail("Please install Android target %s. Make sure you have the latest Android tools installed as well." +
-					" Run \"android\" from your command-line to install/update any missing SDKs or tools.",
-					validTarget.split('-')[1]);
+				this.$errors.failWithoutHelp(`Could not find supported Android target. Please install one of the following: ${this.SUPPORTED_TARGETS.join(", ")}.` + 
+					" Make sure you have the latest Android tools installed as well." + 
+					' Run "android" from your command-line to install/update any missing SDKs or tools.')
 			}
 
 			return newTarget;
