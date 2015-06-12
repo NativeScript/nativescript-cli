@@ -256,7 +256,7 @@ describe("Plugins service", () => {
 			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
 			let expectedDependencies = {
-				"plugin1": "^1.0.0"
+				"plugin1": "^1.0.3"
 			};
 			assert.deepEqual(actualDependencies, expectedDependencies); 
 		});
