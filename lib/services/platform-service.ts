@@ -218,6 +218,7 @@ export class PlatformService implements IPlatformService {
 
 				var platformDir = path.join(this.$projectData.platformsDir, platform);
 				this.$fs.deleteDirectory(platformDir).wait();
+				this.$logger.out(`Platform ${platform} successfully removed.`);
 			});
 
 		}).future<void>()();
