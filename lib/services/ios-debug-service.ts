@@ -172,7 +172,7 @@ class IOSDebugService implements IDebugService {
                 try {
                     receivedNotification = whenAny(alreadyConnected, readyForAttach, attachAvailable).wait();
                 } catch (e) {
-                    this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.getDisplayName()} or is not built with debugging enabled.`);
+                    this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.deviceInfo.displayName} or is not built with debugging enabled.`);
                 }
                 
                 switch (receivedNotification) {

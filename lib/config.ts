@@ -30,6 +30,11 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public TRACK_FEATURE_USAGE_SETTING_NAME = "TrackFeatureUsage";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
 	public START_PACKAGE_ACTIVITY_NAME = "com.tns.NativeScriptActivity";
+	
+	constructor($injector: IInjector) {
+		super($injector);	 
+	}
+	
 	public get SYS_REQUIREMENTS_LINK(): string {
 		var linkToSysRequirements: string;
 		switch(process.platform) {
