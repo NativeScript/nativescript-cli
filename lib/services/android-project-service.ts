@@ -106,8 +106,22 @@ class AndroidProjectService implements IPlatformProjectService {
 			this.$fs.createDirectory(resDestinationDir).wait();
 			let versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
 			let directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
-			if(this.$fs.exists(path.join(resSourceDir, versionDirName)).wait()) {
-				directoriesToCopy.push(versionDirName);
+			let directoriesInResFolder = this.$fs.readDirectory(resSourceDir).wait();
+			let integerFrameworkVersion = parseInt(versionNumber);
+			let versionDir = _.find(directoriesInResFolder, dir => dir === versionDirName) || 
+				_(directoriesInResFolder)
+				.map(dir => { 
+					return {
+						dirName: dir,
+						sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
+					}
+				})
+				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX) && dir.sdkNum && (!integerFrameworkVersion || (integerFrameworkVersion >= dir.sdkNum)))
+				.max(dir => dir.sdkNum)
+				.dirName;
+
+			if(versionDir) {
+				directoriesToCopy.push(versionDir);
 			}
 
 			this.copy(resDestinationDir, resSourceDir, directoriesToCopy.join(" "), "-R").wait();
