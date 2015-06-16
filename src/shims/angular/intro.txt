@@ -1,1 +1,0 @@
-module.factory('$kinvey', ['$http', '$q', function($http, $q) {
