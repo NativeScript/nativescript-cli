@@ -61,50 +61,52 @@ export class PluginsService implements IPluginsService {
 	public prepare(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
-				let skipExecution = false;
 				// Process .js files 				
 				let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
 				let pluginPlatformsData = pluginData.platformsData;
 				if(pluginPlatformsData) {
 					let pluginVersion = (<any>pluginPlatformsData)[platform];
+					if(!pluginVersion) {
+						this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
+						return;
+					} 
+					
 					if(semver.gt(pluginVersion, installedFrameworkVersion)) {
 						this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
-						skipExecution = true;  
+						return;
 					}
 				}
+			
+				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
+				shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
+			
+				let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
+				let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
+				let configurationFilePath = platformData.configurationFilePath;
 				
-				if(!skipExecution) {
-					this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
-					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
-				
-					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
-					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
-					let configurationFilePath = platformData.configurationFilePath;
+				if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+					// Validate plugin configuration file
+					let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
+					this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
 					
-					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						// Validate plugin configuration file
-						let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-						this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
-						
-						// Validate configuration file
-						let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
-						this.validateXml(configurationFileContent, configurationFilePath);
-						
-						// Merge xml
-						let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
-						this.validateXml(resultXml);
-						this.$fs.writeFile(configurationFilePath, resultXml).wait();	
-					}
+					// Validate configuration file
+					let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
+					this.validateXml(configurationFileContent, configurationFilePath);
 					
-					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
-						shelljs.rm("-rf", pluginPlatformsFolderPath);			
-					}						
-					
-					// TODO: Add libraries
-					
-					// Show message
-					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
+					// Merge xml
+					let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
+					this.validateXml(resultXml);
+					this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 				}
+				
+				if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+					shelljs.rm("-rf", pluginPlatformsFolderPath);			
+				}						
+				
+				// TODO: Add libraries
+				
+				// Show message
+				this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 			};
 			
 			this.executeForAllInstalledPlatforms(action);
