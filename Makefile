@@ -2,17 +2,21 @@
 
 test: all
 
-all: prepare \
-	test-kcs \
-	test-mic
+all: test-http \
+	test-httpMethod \
+	test-nodeRequest \
+	test-response
 
-prepare:
-	@./node_modules/.bin/grunt deploy
+test-http:
+	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/http.js
 
-test-kcs:
-	@./node_modules/.bin/mocha --reporter spec --slow 500 --timeout 2000 test/core/kcs.spec.js
+test-httpMethod:
+	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/httpMethod.js
 
-test-mic:
-	@./node_modules/.bin/mocha --reporter spec --slow 500 --timeout 2000 test/core/mic.spec.js
+test-nodeRequest:
+	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/nodeRequest.js
+
+test-response:
+	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/response.js
 
 .PHONY: test
