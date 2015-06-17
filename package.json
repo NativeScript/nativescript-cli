@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Telerik <support@telerik.com>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -28,6 +28,7 @@
     "broccoli": "0.16.2",
     "broccoli-funnel": "0.2.3",
     "bufferpack": "0.0.6",
+    "bufferutil": "https://github.com/telerik/bufferutil/tarball/master",
     "byline": "4.1.1",
     "chalk": "1.0.0",
     "cli-table": "https://github.com/telerik/cli-table/tarball/master",
@@ -64,9 +65,11 @@
     "shelljs": "0.3.0",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.1",
+    "utf-8-validate": "https://github.com/telerik/utf-8-validate/tarball/master",
     "winreg": "0.0.12",
     "ws": "0.7.1",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
+    "xmldom": "0.1.19",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "xmlmerge-js": "0.2.4",
     "yargs": "1.2.2"

@@ -6,6 +6,7 @@ import semver = require("semver");
 import Future = require("fibers/future");
 import constants = require("./../constants");
 let xmlmerge = require("xmlmerge-js");
+let DOMParser = require('xmldom').DOMParser;
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -60,40 +61,52 @@ export class PluginsService implements IPluginsService {
 	public prepare(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
-				let skipExecution = false;
 				// Process .js files 				
 				let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
 				let pluginPlatformsData = pluginData.platformsData;
 				if(pluginPlatformsData) {
 					let pluginVersion = (<any>pluginPlatformsData)[platform];
+					if(!pluginVersion) {
+						this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
+						return;
+					} 
+					
 					if(semver.gt(pluginVersion, installedFrameworkVersion)) {
 						this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
-						skipExecution = true;  
+						return;
 					}
 				}
+			
+				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
+				shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
+			
+				let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
+				let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
+				let configurationFilePath = platformData.configurationFilePath;
 				
-				if(!skipExecution) {
-					this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
-					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
-				
-					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
-					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);					
-					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-						let configurationFileContent = this.$fs.readText(platformData.configurationFilePath).wait();
-						let resultXml = this.mergeXml(pluginConfigurationFileContent, configurationFileContent).wait();
-						this.$fs.writeFile(platformData.configurationFilePath, resultXml).wait();	
-					}
+				if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+					// Validate plugin configuration file
+					let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
+					this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
 					
-					if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
-						shelljs.rm("-rf", pluginPlatformsFolderPath);			
-					}						
+					// Validate configuration file
+					let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
+					this.validateXml(configurationFileContent, configurationFilePath);
 					
-					// TODO: Add libraries
-					
-					// Show message
-					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
+					// Merge xml
+					let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
+					this.validateXml(resultXml);
+					this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 				}
+				
+				if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+					shelljs.rm("-rf", pluginPlatformsFolderPath);			
+				}						
+				
+				// TODO: Add libraries
+				
+				// Show message
+				this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 			};
 			
 			this.executeForAllInstalledPlatforms(action);
@@ -209,11 +222,11 @@ export class PluginsService implements IPluginsService {
 		}).future<string>()();
 	}
 
-	private mergeXml(xml1: string, xml2: string): IFuture<string> {
+	private mergeXml(xml1: string, xml2: string, config: any[]): IFuture<string> {
 		let future = new Future<string>();
 		
 		try {
-			xmlmerge.merge(xml1, xml2, "", (mergedXml: string) => { 
+			xmlmerge.merge(xml1, xml2, config, (mergedXml: string) => { 
 				future.return(mergedXml);
 			});
 		} catch(err) {
@@ -221,6 +234,17 @@ export class PluginsService implements IPluginsService {
 		}
 		
 		return future;
+	}
+	
+	private validateXml(xml: string, xmlFilePath?: string): void {
+		let doc = new DOMParser({
+			locator: {},
+			errorHandler: (level: any, msg: string) => {
+				let errorMessage = xmlFilePath ? `Invalid xml file ${xmlFilePath}.` : `Invalid xml ${xml}.`;
+				this.$errors.fail(errorMessage + ` Additional technical information: ${msg}.` )
+			}
+		});
+		doc.parseFromString(xml, 'text/xml');
 	}
 }
 $injector.register("pluginsService", PluginsService);

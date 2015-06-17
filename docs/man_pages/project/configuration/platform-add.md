@@ -3,8 +3,8 @@ platform add
 
 Usage | Synopsis
 ------|-------
-Android latest runtime | `$ tns platform add android [--frameworkPath <File Path>] [--symlink]`
-Android selected runtime | `$ tns platform add android[@<Version>] [--frameworkPath <File Path>] [--symlink]`
+Android latest runtime | `$ tns platform add android [--frameworkPath <File Path>] [--symlink] [--sdk <target sdk>]`
+Android selected runtime | `$ tns platform add android[@<Version>] [--frameworkPath <File Path>] [--symlink] [--sdk <target sdk>]`
 <% if (isMacOS) { %>iOS latest runtime | `$ tns platform add ios [--frameworkPath <File Path>] [--symlink]`
 iOS selected runtime | `$ tns platform add ios[@<Version>] [--frameworkPath <File Path>] [--symlink]`<% } %>
 
@@ -13,6 +13,7 @@ Configures the current project to target the selected platform. <% if(isHtml) { 
 ### Options
 * `--frameworkPath` - Sets the path to a NativeScript runtime for the specified platform that you want to use instead of the default runtime. If `--symlink` is specified, `<File Path>` must point to directory in which the runtime is already extracted. If `--symlink` is not specified, `<File Path>` must point to a valid npm package. 
 * `--symlink` - Creates a symlink to a NativeScript runtime for the specified platform that you want to use instead of the default runtime. If `--frameworkPath` is specified, creates a symlink to the specified directory. If `--frameworkPath` is not specified, creates a symlink to platform runtime installed with your current version of NativeScript.
+* `--sdk` - Sets the Android target SDK. The value should be a valid Android API Level, for example 17, 19, MNC.
 
 ### Attributes
 * `<File Path>` is the complete path to a valid npm package or a directory that contains a NativeScript runtime for the selected platform.

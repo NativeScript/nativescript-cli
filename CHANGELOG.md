@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+1.1.1 (2015, June 17)
+==
+
+### New
+* [Implemented #551](https://github.com/NativeScript/nativescript-cli/issues/551): Add support for Android 5.1.1 (API Level 22). In case you have this SDK installed, it will be used as default when using `tns platform add android`.
+* [Implemented #552](https://github.com/NativeScript/nativescript-cli/issues/552): Add `--sdk` option to specify Android Target SDK. You can use `tns platform add android --sdk <API_LEVEL>` to target specific SDK.
+
+### Fixed
+* [Fixed #555](https://github.com/NativeScript/nativescript-cli/issues/555): Merging plugin's platform specific XMLs with project's platform specific XMLs is not working correctly in some cases.
+* [Fixed #567](https://github.com/NativeScript/nativescript-cli/issues/567): Npm support does not work.
+* [Fixed #569](https://github.com/NativeScript/nativescript-cli/issues/569): On some Windows systems, installation is showing errors in the output.
+
 1.1.0 (2015, June 10)
 ==
 

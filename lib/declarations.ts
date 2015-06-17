@@ -62,4 +62,5 @@ interface IOptions extends ICommonOptions {
 	keyStorePassword: string;
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
+	sdk: string;
 }
