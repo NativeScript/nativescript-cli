@@ -10,7 +10,7 @@ class ParserMiddleware extends Middleware {
     let response = request.response || new Response();
     let contentType = response.getHeader('Content-Type');
 
-    if (contentType === 'application/json') {
+    if (contentType.indexOf('application/json') === 0) {
       try {
         response.data = JSON.parse(response.data);
       } catch (err) { }

@@ -8,12 +8,22 @@ class HttpMiddleware extends Middleware {
   }
 
   handle(request) {
-    let http = Http.request(request);
-    return http.send().then((httpResponse) => {
-      let response = new Response();
-      response.addHeaders(httpResponse.headers);
-      response.data = httpResponse.data;
+    // Create a http request
+    let httpRequest = Http.request(request);
+
+    // Send the http request
+    return httpRequest.send().then((httpResponse) => {
+      let statusCode = httpResponse.statusCode;
+      let headers = httpResponse.headers;
+      let data = httpResponse.data;
+
+      // Create a response
+      let response = new Response(statusCode, headers, data);
+
+      // Set the response on the request
       request.response = response;
+
+      // Return the request
       return request;
     });
   }

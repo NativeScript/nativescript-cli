@@ -8,8 +8,8 @@ class SerializerMiddleware extends Middleware {
   handle(request) {
     let contentType = request.getHeader('content-type');
 
-    if (contentType === 'application/json') {
-      request.data = JSON.stringify(request.data);
+    if (contentType.indexOf('application/json') === 0) {
+      request.body = JSON.stringify(request.body);
     }
 
     return Promise.resolve(request);
