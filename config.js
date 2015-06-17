@@ -25,10 +25,7 @@ var defaultConfig = {
       'clone'
     ],
     outputName: 'kinvey.js',
-    standalone: 'Kinvey',
-    transform: [
-      'browserify-shim'
-    ]
+    standalone: 'Kinvey'
   },
   releaseName: 'kinvey.min.js',
   preprocess: {
