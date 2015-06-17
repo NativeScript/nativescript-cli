@@ -1,6 +1,7 @@
-import Kinvey from '../kinvey';
 import CoreObject from './object';
-import Utils from './utils';
+import Kinvey from '../kinvey';
+import Session from './session';
+import utils from './utils';
 
 class Auth extends CoreObject {
   static all() {
@@ -9,7 +10,7 @@ class Auth extends CoreObject {
 
   static app() {
     // Validate preconditions.
-    if (!Utils.isDefined(Kinvey.appKey) || !Utils.isDefined(Kinvey.appSecret)) {
+    if (!utils.isDefined(Kinvey.appKey) || !utils.isDefined(Kinvey.appSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -29,11 +30,10 @@ class Auth extends CoreObject {
     return Auth.Master().then(null, Auth.App);
   }
 
-  static default() {
+  static def() {
     return Auth.Session().then(null, function(error) {
       return Auth.Master().then(null, function() {
-        // Most likely, the developer did not create a user. Return a useful
-        // error.
+        // Most likely, the developer did not create a user. Return a useful error.
         return Promise.resolve(error);
       });
     });
@@ -41,7 +41,7 @@ class Auth extends CoreObject {
 
   static master() {
     // Validate preconditions.
-    if (!Utils.isDefined(Kinvey.appKey) || !Utils.isDefined(Kinvey.masterSecret)) {
+    if (!utils.isDefined(Kinvey.appKey) || !utils.isDefined(Kinvey.masterSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -62,19 +62,18 @@ class Auth extends CoreObject {
   }
 
   static session() {
-    // Validate preconditions.
+    let session = Session.current;
     let error;
-    let user;
 
-    if (!Utils.isDefined(user)) {
-      error = new Error('User not defined');
+    if (!utils.isDefined(session)) {
+      error = new Error('There is not an active session.');
       return Promise.reject(error);
     }
 
     // Prepare the response.
     let promise = Promise.resolve({
       scheme: 'Kinvey',
-      credentials: user._kmd.authtoken
+      credentials: session.authToken
     });
 
     // Return the response.
