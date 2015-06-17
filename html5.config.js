@@ -17,7 +17,8 @@ module.exports = config({
   dist: dist,
   preprocess: {
     context: {
-      HTTP_LIB: 'kinvey-http-xhr'
+      HTTP_LIB: 'kinvey-http-xhr',
+      DATABASE_LIB: 'indexeddbshim'
     }
   },
   test: {
