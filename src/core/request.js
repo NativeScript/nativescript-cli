@@ -1,15 +1,12 @@
+import CoreObject from './object';
+import HttpMethod from '../enums/httpMethod';
 import utils from './utils';
 import Kinvey from '../kinvey';
 import url from 'url';
-import HttpMethod from '../enums/httpMethod';
-import Rack from './rack';
 import Query from './query';
-import AuthType from '../enums/authType';
-import Rack from 'kinvey-rack';
-import CacheRequest from './cacheRequest';
 
-class Request extends Rack.Request {
-  constructor(method = HttpMethod.GET, path = '', query = {}, data = {}) {
+class Request extends CoreObject {
+  constructor(method = HttpMethod.GET, path = '', query = {}, body = {}) {
     super();
 
     // Set request info
@@ -19,20 +16,14 @@ class Request extends Rack.Request {
     this.hostname = Kinvey.apiHostname;
     this.path = path;
     this.query = query instanceof Query ? query.toJSON() : query;
-    this.data = data;
-    this.authType = AuthType.None;
+    this.body = body;
 
     // Add default headers
     let headers = {};
     headers.Accept = 'application/json';
     headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = Kinvey.apiVersion;
+    // headers['X-Kinvey-Api-Version'] = Kinvey.apiVersion;
     this.addHeaders(headers);
-  }
-
-  get cacheKey() {
-    // Return a string that uniquely represents this request
-    return `${JSON.stringify(this.toJSON())}`;
   }
 
   get headers() {
@@ -82,80 +73,17 @@ class Request extends Rack.Request {
     });
   }
 
-  clearCache() {
-    // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.DELETE, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
-
-    // Execute the cache request
-    return cacheRequest.execute();
-  }
-
-  cacheResponse() {
-    // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.POST, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
-
-    // Execute the cache request
-    return cacheRequest.execute();
-  }
-
-  getCachedResponse() {
-     // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.GET, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
-
-    // Execute the cache request
-    return cacheRequest.execute();
-  }
-
-  execute(options = {}) {
-    const auth = this.authType;
-    const networkRack = Rack.networkRack();
-    let promise = Promise.resolve();
-
-    return promise.then(() => {
-      if (utils.isDefined(auth)) {
-        promise = utils.isFunction(auth) ? auth() : Promise.resolve(auth);
-
-        // Add auth info to headers
-        promise = promise.then((authInfo) => {
-          if (auth !== null) {
-            // Format credentials
-            let credentials = authInfo.credentials;
-            if (utils.isDefined(authInfo.username)) {
-              credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-            }
-
-            // Set the header
-            this.setHeader('Authorization', `${auth.scheme} ${credentials}`);
-          }
-        });
-      }
-    }).then(() => {
-      // Execute the request
-      networkRack.execute(this);
-    }).then((response) => {
-      if (options.cache) {
-        return this.cacheResponse().then(() => {
-          return response;
-        });
-      }
-
-      return response;
-    });
+  execute() {
+    return Promise.reject(new Error('Subclass must override this method'));
   }
 
   toJSON() {
     // Create an object representing the request
     let json = {
-      headers: utils.clone(this.headers),
+      headers: this.headers,
       method: this.method,
       url: this.url,
-      data: utils.clone(this.data)
+      body: this.body
     };
 
     // Return the json object

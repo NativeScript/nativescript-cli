@@ -9,7 +9,7 @@ const cacheRack = Symbol();
 
 class Rack extends KinveyRack {
 
-  static networkRack() {
+  static get networkRack() {
     if (!utils.isDefined(this[networkRack])) {
       let rack = new Rack('Kinvey Network Rack');
       rack.use(new SerializerMiddleware());
@@ -20,7 +20,11 @@ class Rack extends KinveyRack {
     return this[networkRack];
   }
 
-  static cacheRack() {
+  static set networkRack(rack) {
+    this[networkRack] = rack;
+  }
+
+  static get cacheRack() {
     if (!utils.isDefined(this[cacheRack])) {
       let rack = new Rack('Kinvey Cache Rack');
       rack.use(new SerializerMiddleware());
@@ -29,6 +33,10 @@ class Rack extends KinveyRack {
       this[cacheRack] = rack;
     }
     return this[cacheRack];
+  }
+
+  static set cacheRack(rack) {
+    this[cacheRack] = rack;
   }
 
   execute(request) {

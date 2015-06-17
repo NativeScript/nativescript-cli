@@ -1,11 +1,13 @@
-import Rack from 'kinvey-rack';
+import CoreObject from './object';
 import utils from './utils';
 
-class Response extends Rack.Response {
-  constructor(headers = {}, data = {}) {
+class Response extends CoreObject {
+  constructor(statusCode = 200, headers = {}, data = {}) {
     super();
 
     // Set request env
+    this.statusCode = statusCode;
+    this._headers = {};
     this.addHeaders(headers);
     this.data = data;
   }
@@ -29,7 +31,9 @@ class Response extends Rack.Response {
   }
 
   setHeader(header, value) {
-    this._headers[header] = value;
+    let headers = this._headers || {};
+    headers[header] = value;
+    this._headers = headers;
   }
 
   addHeaders(headers) {

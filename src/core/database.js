@@ -1,10 +1,23 @@
+import CoreObject from './object';
 import Dexie from 'dexie';
-import indexedDBShim from 'indexeddbshim';
+import indexedDBShim from '/* @echo DATABASE_LIB */';
+import utils from './utils';
+import Kinvey from '../kinvey';
 Dexie.dependencies.indexedDB = indexedDBShim;
-let version = 1;
 
-class Database {
-  constructor(name) {
+let databaseLib = '/* @echo DATABASE_LIB */';
+if (databaseLib === 'fake-indexeddb') {
+  Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+  Dexie.dependencies.IDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
+}
+
+let version = 1;
+const datbaseSymbol = Symbol();
+
+class Database extends CoreObject {
+  constructor(name = `Kinvey.${Kinvey.appKey}`) {
+    super();
+
     // Set the database name
     this.name = name;
 
@@ -24,11 +37,18 @@ class Database {
   /**
    * Read a document from the database.
    *
-   * @param  {Any}      id  Id of the document.
+   * @param  {String}  id   Id of the document.
    * @return {Promise}      The document.
    */
-  read(id) {
-    return this.db.data.get(id);
+  static read(id = '') {
+    let database = Database.instance();
+    let db = database.db;
+
+    // Open a read transaction
+    return db.transaction('r', db.data, () => {
+      // Retrieve the document
+      return db.data.where('_id').equals(id).first();
+    });
   }
 
   /**
@@ -37,18 +57,43 @@ class Database {
    * @param  {Object}   doc The document to be saved.
    * @return {Promise}      The document.
    */
-  save(doc = {}) {
-    return this.db.data.put(doc, doc._id);
+  static save(doc = {}) {
+    let database = Database.instance();
+    let db = database.db;
+
+    // Open a read/write transaction
+    return db.transaction('rw', db.data, () => {
+      // Add the document
+      db.data.add(doc);
+    });
   }
 
   /**
    * Delete a document from the database.
    *
-   * @param  {Object}   doc The document to delete.
+   * @param  {String}  id   Id of the document.
    * @return {Promise}      The document.
    */
-  delete(doc = {}) {
-    return this.db.data.delete(doc._id);
+  static delete(id = '') {
+    let database = Database.instance();
+    let db = database.db;
+
+    // Open a read/write transaction
+    return db.transaction('rw', db.data, () => {
+      // Delete the document
+      return db.data.where('_id').equals(id).delete();
+    });
+  }
+
+  static instance() {
+    let database = this[datbaseSymbol];
+
+    if (!utils.isDefined(database)) {
+      database = new Database();
+      this[datbaseSymbol] = database;
+    }
+
+    return database;
   }
 }
 
