@@ -3,10 +3,7 @@ import Rack from './Rack';
 
 class CacheRequest extends Request {
   execute() {
-    const rack = Rack.cacheRack();
-    let promise = Promise.resolve();
-
-    // Execute the request
+    const rack = Rack.cacheRack;
     return rack.execute(this);
   }
 }
