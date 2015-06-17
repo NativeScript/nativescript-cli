@@ -1,101 +1,65 @@
 import HttpMethod from '../enums/httpMethod';
 import Kinvey from '../kinvey';
 import CoreObject from './object';
-// import Persistence from './persistence';
-import Auth from './auth';
-import CachePolicy from '../enums/cachePolicy';
-import Utils from './utils';
-import Request from './request';
-// import Logger from './logger';
+import utils from './utils';
+import NetworkRequest from './networkRequest';
+import AuthType from '../enums/authType';
+import Session from './session';
+import LocalDataStore from './localDataStore';
 const currentUser = Symbol();
 
 class User extends CoreObject {
-  // static signup(data, options = {}) {
-  //   // Mark the created user as the active user
-  //   options.state = true;
+  constructor(data = {}) {
+    super();
 
-  //   // Forward to `User.create`.
-  //   return User.create(data, options);
-  // }
+    // Set data for the user
+    this.data = data;
+  }
 
-  // static signupWithProvider(provider, tokens, options = {}) {
-  //   // Parse tokens.
-  //   let data = {_socialIdentity: {}};
-  //   data._socialIdentity[provider] = tokens;
-
-  //   // Forward to `User.signup`.
-  //   return User.signup(data, options);
-  // }
-
-  // static create(data, options= {}) {
-  //   User.getActiveUser()
-  //   if (options.state !== false && Utils.) {
-  //     var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-  //     return wrapCallbacks(Kinvey.Defer.reject(error), options);
-  //   }
-
-  //   // Create the new user.
-  //   var promise = Kinvey.Persistence.create({
-  //     namespace : USERS,
-  //     data      : data || {},
-  //     auth      : Auth.App
-  //   }, options).then(function(user) {
-  //     // If `options.state`, set the active user.
-  //     if(false !== options.state) {
-  //       Kinvey.setActiveUser(user);
-  //     }
-  //     return user;
-  //   });
-
-  //   // Debug.
-  //   if(KINVEY_DEBUG) {
-  //     promise.then(function(response) {
-  //       log('Created the new user.', response);
-  //     }, function(error) {
-  //       log('Failed to create the new user.', error);
-  //     });
-  //   }
-
-  //   // Return the response.
-  //   return wrapCallbacks(promise, options);
-  // },
+  toJSON() {
+    return this.data;
+  }
 
   static login(username, password) {
     // Reject if a user is already active
-    // TODO...
-    // Create the request
-    let request = new Request(HttpMethod.POST, `/user/${Kinvey.appKey}/login`, null, {
+    if (utils.isDefined(Session.current)) {
+      return Promise.reject(new Error('You already have a current session.'));
+    }
+
+    // Create a network request
+    let request = new NetworkRequest(HttpMethod.POST, `/user/${Kinvey.appKey}/login`, null, {
         username: username,
         password: password
     });
-    request.auth = Auth.app;
 
-    // Check the cache
-    request.getCachedResponse().then(() => {
-      // Do something with the cached response
-    }).catch(() => {
-      // Did not find a cached response so execute the request on the rack
-      return request.execute();
-    }).then(() => {
-      // Received a response from the network so lets cache it
-      return request.cacheResponse();
-    });
+    // Set the auth type
+    request.authType = AuthType.App;
 
     // Execute the request
-    return request.execute(true).then((response) => {
-      // Get the user from the response
-      let user = response.data;
+    return request.execute().then((response) => {
+      // Create a user from the response
+      let user = new User(response.data);
 
-      // Return the user
-      return user;
+      // Set the user as the current session
+      Session.current = user.toJSON();
+
+      // Save the user to the local datastore
+      return LocalDataStore.save(user.toJSON()).then(() => {
+        return user;
+      });
     });
   }
 
-  static current() {
+  static get current() {
     let user = this[currentUser];
 
-    if (!Utils.isDefined(user)) {
-      user = null;
+    if (!utils.isDefined(user)) {
+      let session = Session.current;
+
+      if (utils.isDefined(session)) {
+        user = new User(session.user);
+        this[currentUser] = user;
+      }
     }
 
     return user;
