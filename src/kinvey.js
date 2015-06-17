@@ -4,7 +4,7 @@ import url from 'url';
 let Kinvey = {
   apiProtocol: '/* @echo API_PROTOCOL */',
   apiHostname: '/* @echo API_HOSTNAME */',
-  appId: undefined,
+  appKey: undefined,
   appSecret: undefined,
   masterSecret: undefined,
   encryptionKey: undefined
@@ -16,12 +16,12 @@ Kinvey.init = function(options) {
   let error;
 
   return new Promise((resolve, reject) => {
-    if (!Utils.isDefined(options.appId)) {
-      error = new Kinvey.Error('No APP ID was provided. Unable to initialize Kinvey without an APP ID.');
+    if (!Utils.isDefined(options.appKey)) {
+      error = new Kinvey.Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
       return reject(error);
     }
     if (!Utils.isDefined(options.appSecret) && !Utils.isDefined(options.masterSecret)) {
-      error = new Kinvey.Error('NO APP Secret or Master Secret was provided. Unable to initialize Kinvey without an APP Secret or Master Secret.');
+      error = new Kinvey.Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
       return reject(error);
     }
 
@@ -61,7 +61,7 @@ Kinvey.init = function(options) {
     // }
 
     // Save credentials.
-    Kinvey.appId = options.appId;
+    Kinvey.appKey = options.appKey;
     Kinvey.appSecret = options.appSecret || undefined;
     Kinvey.masterSecret = options.masterSecret || undefined;
 
