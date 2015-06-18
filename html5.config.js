@@ -17,8 +17,9 @@ module.exports = config({
   dist: dist,
   preprocess: {
     context: {
+      DATABASE_LIB: 'indexeddbshim',
       HTTP_LIB: 'kinvey-http-xhr',
-      DATABASE_LIB: 'indexeddbshim'
+      PLATFORM_ENV: 'html5'
     }
   },
   test: {

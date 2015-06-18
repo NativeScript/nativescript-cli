@@ -17,8 +17,9 @@ module.exports = config({
   dist: dist,
   preprocess: {
     context: {
+      DATABASE_LIB: 'fake-indexeddb',
       HTTP_LIB: 'kinvey-http-node',
-      DATABASE_LIB: 'fake-indexeddb'
+      PLATFORM_ENV: 'node'
     }
   },
   test: {
