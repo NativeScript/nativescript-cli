@@ -1,11 +1,13 @@
 import CoreObject from './object';
 import utils from './utils';
 import Cache from './cache';
+import Entity from './entity';
+import log from './logger';
 const currentSession = Symbol();
 const currentSessionKey = 'CurrentSession';
 let sessionUser;
 
-class Session extends CoreObject {
+class PrivateSession extends CoreObject {
   constructor(user) {
     super();
 
@@ -20,7 +22,9 @@ class Session extends CoreObject {
   get user() {
     return sessionUser;
   }
+}
 
+class Session extends CoreObject {
   static get current() {
     let session = this[currentSession];
 
@@ -29,7 +33,7 @@ class Session extends CoreObject {
       let cachedSession = Cache.get(currentSessionKey);
 
       if (utils.isDefined(cachedSession)) {
-        session = new Session(cachedSession);
+        session = new PrivateSession(cachedSession);
         this[currentSession] = session;
       }
     }
@@ -40,16 +44,26 @@ class Session extends CoreObject {
 
   static set current(user) {
     if (utils.isDefined(user)) {
+      let userData = user instanceof Entity ? user.toJSON() : user;
+
       // Store the current session
-      Cache.set(currentSessionKey, user);
+      Cache.set(currentSessionKey, userData);
 
       // Create a new session
-      this[currentSession] = new Session(user);
+      this[currentSession] = new PrivateSession(userData);
+
+      // Debug
+      log.info(`Set user ${userData._id} as the current session.`);
     }
     else {
       // Remove the current session
       Cache.remove(currentSessionKey);
+
+      // Set the current session to null
       this[currentSession] = null;
+
+      // Debug
+      log.info(`Removed the current session. There is no active session.`);
     }
   }
 }
