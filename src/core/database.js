@@ -3,13 +3,14 @@ import Dexie from 'dexie';
 import indexedDBShim from '/* @echo DATABASE_LIB */';
 import utils from './utils';
 import Kinvey from '../kinvey';
+
+// Setup Dexie dependencies
 Dexie.dependencies.indexedDB = indexedDBShim;
 
-let databaseLib = '/* @echo DATABASE_LIB */';
-if (databaseLib === 'fake-indexeddb') {
-  Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
-  Dexie.dependencies.IDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
-}
+// @if PLATFORM_ENV='node'
+Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+Dexie.dependencies.IDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
+// @endif
 
 let version = 1;
 const datbaseSymbol = Symbol();
@@ -74,7 +75,7 @@ class Database extends CoreObject {
    * @param  {String}  id   Id of the document.
    * @return {Promise}      The document.
    */
-  static delete(id = '') {
+  static destroy(id = '') {
     let database = Database.instance();
     let db = database.db;
 
@@ -85,6 +86,11 @@ class Database extends CoreObject {
     });
   }
 
+  /**
+   * Singleton instance of the Database
+   *
+   * @return {Database} Database instance.
+   */
   static instance() {
     let database = this[datbaseSymbol];
 
