@@ -1,26 +1,36 @@
+import log from 'loglevel';
+
 let Logger = {
-  log: () => {
-    console.log(...arguments);
+  trace: (statement) => {
+    log.trace(statement);
   },
 
-  debug: () => {
-    console.log(...arguments);
+  debug: (statement) => {
+    log.debug(statement);
   },
 
-  verbose: () => {
-    console.log(...arguments);
+  info: (statement) => {
+    log.info(statement);
   },
 
-  info: () => {
-    console.log(...arguments);
+  warn: (statement) => {
+    log.warn(statement);
   },
 
-  warn: () => {
-    console.log(...arguments);
+  error: (statement) => {
+    log.error(statement);
   },
 
-  error: () => {
-    console.error(...arguments);
+  setLevel(level, persist) {
+    log.setLevel(level, persist);
+  },
+
+  enableAll() {
+    log.enableAll();
+  },
+
+  disableAll() {
+    log.disableAll();
   }
 };
 
