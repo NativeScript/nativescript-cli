@@ -5,13 +5,15 @@ NativeScript CLI Changelog
 ==
 
 ### New
-* [Implemented #551](https://github.com/NativeScript/nativescript-cli/issues/551): Add support for Android 5.1.1 (API Level 22). In case you have this SDK installed, it will be used as default when using `tns platform add android`.
-* [Implemented #552](https://github.com/NativeScript/nativescript-cli/issues/552): Add `--sdk` option to specify Android Target SDK. You can use `tns platform add android --sdk <API_LEVEL>` to target specific SDK.
+
+* [Implemented #551](https://github.com/NativeScript/nativescript-cli/issues/551): You can now develop for Android 5.1.1 (API Level 22). If you have this SDK installed on your system, the CLI will set it as the default target SDK when you run `$ tns platform add android`
+* [Implemented #552](https://github.com/NativeScript/nativescript-cli/issues/552): You can now set the target Android SDK for your project by specifying the `--sdk ` option for `$ tns platform add android` operations.
 
 ### Fixed
-* [Fixed #555](https://github.com/NativeScript/nativescript-cli/issues/555): Merging plugin's platform specific XMLs with project's platform specific XMLs is not working correctly in some cases.
-* [Fixed #567](https://github.com/NativeScript/nativescript-cli/issues/567): Npm support does not work.
-* [Fixed #569](https://github.com/NativeScript/nativescript-cli/issues/569): On some Windows systems, installation is showing errors in the output.
+
+* [Fixed #555](https://github.com/NativeScript/nativescript-cli/issues/555): In some cases, the CLI merges incorrectly the plugin platform-specific `AndroidManifest.xml` or `Info.plist` with the respective platform-specific configuration files from the project.
+* [Fixed #567](https://github.com/NativeScript/nativescript-cli/issues/567): You cannot use npm as a package manager inside your project.
+* [Fixed #569](https://github.com/NativeScript/nativescript-cli/issues/569): On some Windows systems, the CLI installation shows errors in the console.
 
 1.1.0 (2015, June 10)
 ==
