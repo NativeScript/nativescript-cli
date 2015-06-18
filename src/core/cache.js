@@ -2,10 +2,20 @@ import CoreObject from './object';
 import lscache from 'lscache';
 import Kinvey from '../kinvey';
 import utils from './utils';
+import sha1 from 'crypto-js/sha1';
 const cacheSymbol = Symbol();
 
+// Set the local storage implementation
+global.localStorage = require('humble-localstorage');
+
+// @if PLATFORM_ENV='node'
+let window = global.window || {};
+window.JSON = JSON;
+global.window = window;
+// @endif
+
 function generateKeyHash(key) {
-  return key;
+  return sha1(key).toString();
 }
 
 class Cache extends CoreObject {
@@ -41,7 +51,7 @@ class Cache extends CoreObject {
     return cache.set(key, value, time);
   }
 
-  set(key, value, time) {
+  set(key, value, time = this.defaultTime) {
     // Generate a key hash
     let keyHash = generateKeyHash(key);
 
