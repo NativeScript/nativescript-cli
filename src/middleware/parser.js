@@ -1,5 +1,5 @@
 import Middleware from './middleware';
-import Response from '../core/response';
+import utils from '../core/utils';
 
 class ParserMiddleware extends Middleware {
   constructor(name = 'Kinvey Parser Middleware') {
@@ -7,15 +7,18 @@ class ParserMiddleware extends Middleware {
   }
 
   handle(request) {
-    let response = request.response || new Response();
-    let contentType = response.getHeader('Content-Type');
+    let response = request.response;
 
-    if (contentType.indexOf('application/json') === 0) {
-      try {
-        response.data = JSON.parse(response.data);
-      } catch (err) { }
+    if (utils.isDefined(response) && utils.isDefined(response.data)) {
+      let contentType = response.getHeader('Content-Type');
 
-      request.response = response;
+      if (contentType.indexOf('application/json') === 0) {
+        try {
+          response.data = JSON.parse(response.data);
+        } catch (err) { }
+
+        request.response = response;
+      }
     }
 
     return Promise.resolve(request);
