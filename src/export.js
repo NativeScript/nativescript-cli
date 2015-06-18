@@ -2,6 +2,7 @@ let Kinvey = require('./kinvey');
 
 Kinvey.Defer = require('./core/defer');
 Kinvey.LocalDataStore = require('./core/localDataStore');
+Kinvey.Log = require('./core/logger');
 Kinvey.Middleware = require('./middleware/middleware');
 Kinvey.Middleware.Cache = require('./middleware/cache');
 Kinvey.Middleware.Http = require('./middleware/http');
