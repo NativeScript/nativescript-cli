@@ -7,12 +7,11 @@ class Response extends CoreObject {
 
     // Set request env
     this.statusCode = statusCode;
-    this._headers = {};
     this.addHeaders(headers);
     this.data = data;
   }
 
-  getHeaders() {
+  get headers() {
     return utils.clone(this._headers);
   }
 
@@ -43,6 +42,18 @@ class Response extends CoreObject {
       let value = headers[header];
       this.setHeader(header, value);
     });
+  }
+
+  toJSON() {
+    // Create an object representing the response
+    let json = {
+      statusCode: this.statusCode,
+      headers: this.headers,
+      data: this.data
+    };
+
+    // Return the json object
+    return json;
   }
 }
 
