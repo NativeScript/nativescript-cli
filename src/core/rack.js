@@ -27,9 +27,9 @@ class Rack extends KinveyRack {
   static get cacheRack() {
     if (!utils.isDefined(this[cacheRack])) {
       let rack = new Rack('Kinvey Cache Rack');
-      rack.use(new SerializerMiddleware());
+      // rack.use(new SerializerMiddleware());
       rack.use(new CacheMiddleware());
-      rack.use(new ParserMiddleware());
+      // rack.use(new ParserMiddleware());
       this[cacheRack] = rack;
     }
     return this[cacheRack];
