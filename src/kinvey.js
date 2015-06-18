@@ -1,5 +1,6 @@
-import Utils from './core/utils';
+import utils from './core/utils';
 import url from 'url';
+import Session from './core/session';
 
 let Kinvey = {
   apiProtocol: '/* @echo API_PROTOCOL */',
@@ -10,17 +11,17 @@ let Kinvey = {
   encryptionKey: undefined
 };
 
-Kinvey.init = function(options) {
+Kinvey.init = (options) => {
   let apiUrl;
   let apiUrlComponents;
   let error;
 
   return new Promise((resolve, reject) => {
-    if (!Utils.isDefined(options.appKey)) {
+    if (!utils.isDefined(options.appKey)) {
       error = new Kinvey.Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
       return reject(error);
     }
-    if (!Utils.isDefined(options.appSecret) && !Utils.isDefined(options.masterSecret)) {
+    if (!utils.isDefined(options.appSecret) && !utils.isDefined(options.masterSecret)) {
       error = new Kinvey.Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
       return reject(error);
     }
@@ -68,6 +69,10 @@ Kinvey.init = function(options) {
     // Set the encryption key.
     Kinvey.encryptionKey = options.encryptionKey || undefined;
   });
+};
+
+Kinvey.setActiveUser = (user) => {
+  Session.current = user;
 };
 
 export default Kinvey;
