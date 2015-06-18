@@ -30,6 +30,10 @@ class LocalDataStore extends DataStore {
     // Save the doc
     return Database.save(doc);
   }
+
+  static destroy(id) {
+    return Database.destroy(id);
+  }
 }
 
 export default LocalDataStore;
