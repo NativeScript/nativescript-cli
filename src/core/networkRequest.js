@@ -29,14 +29,13 @@ class NetworkRequest extends Request {
   }
 
   get cacheKey() {
-    return `${JSON.stringify(this.toJSON())}`;
+    return JSON.stringify(this.toJSON());
   }
 
   cache() {
     // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.POST, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
+    let cacheRequest = new CacheRequest(HttpMethod.POST, this.cacheKey);
+    cacheRequest.response = this.response;
 
     // Execute the cache request
     return cacheRequest.execute();
@@ -44,19 +43,21 @@ class NetworkRequest extends Request {
 
   getCache() {
      // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.GET, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
+    let cacheRequest = new CacheRequest(HttpMethod.GET, this.cacheKey);
 
     // Execute the cache request
-    return cacheRequest.execute();
+    return cacheRequest.execute().then((response) => {
+      // Set the response
+      this.response = response;
+
+      // Return the response
+      return response;
+    });
   }
 
   clearCache() {
     // Create a cache request
-    let cacheRequest = new CacheRequest(HttpMethod.DELETE, this.path, this.query, this.data);
-    cacheRequest.authType = this.authType;
-    cacheRequest.headers = this.headers;
+    let cacheRequest = new CacheRequest(HttpMethod.DELETE, this.cacheKey);
 
     // Execute the cache request
     return cacheRequest.execute();
@@ -89,12 +90,17 @@ class NetworkRequest extends Request {
       // Execute the request
       return networkRack.execute(this);
     }).then((response) => {
+      // Set the response
+      this.response = response;
+
+      // Cache the response
       if (options.cache) {
         return this.cache().then(() => {
           return response;
         });
       }
 
+      // Return the response
       return response;
     });
   }
