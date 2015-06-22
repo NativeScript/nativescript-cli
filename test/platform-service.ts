@@ -18,6 +18,7 @@ import ProjectDataLib = require("../lib/project-data");
 import ProjectHelperLib = require("../lib/common/project-helper");
 import optionsLib = require("../lib/options");
 import hostInfoLib = require("../lib/common/host-info");
+import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
 
 import path = require("path");
 import Future = require("fibers/future");
@@ -63,6 +64,7 @@ function createTestInjector() {
 			return (() => { }).future<void>()();
 		}
 	});
+	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 
 	return testInjector;
 }

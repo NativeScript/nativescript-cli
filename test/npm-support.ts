@@ -19,6 +19,8 @@ import BroccoliBuilderLib = require("../lib/tools/broccoli/builder");
 import NodeModulesTreeLib = require("../lib/tools/broccoli/trees/node-modules-tree");
 import PluginsServiceLib = require("../lib/services/plugins-service");
 import ChildProcessLib = require("../lib/common/child-process");
+import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
+import Future = require("fibers/future");
 
 import path = require("path");
 import temp = require("temp");
@@ -53,6 +55,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("pluginsService", PluginsServiceLib.PluginsService);
 	testInjector.register("npm", NpmLib.NodePackageManager);
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
+	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => {}
 	});

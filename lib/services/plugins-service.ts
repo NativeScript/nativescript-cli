@@ -24,7 +24,8 @@ export class PluginsService implements IPluginsService {
 		private $options: IOptions,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $projectFilesManager: IProjectFilesManager) { }
 		
 	public add(plugin: string): IFuture<void> {
 		return (() => {
@@ -101,7 +102,9 @@ export class PluginsService implements IPluginsService {
 				
 				if(this.$fs.exists(pluginPlatformsFolderPath).wait()) {
 					shelljs.rm("-rf", pluginPlatformsFolderPath);			
-				}						
+				}
+				
+				this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();						
 				
 				// TODO: Add libraries
 				
