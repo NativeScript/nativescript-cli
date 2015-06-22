@@ -240,7 +240,9 @@ export class PlatformsDataStub implements IPlatformsData {
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
-			appResourcesDestinationDirectoryPath: ""
+			appResourcesDestinationDirectoryPath: "",
+			preparePluginNativeCode: () => Future.fromResult(),
+			removePluginNativeCode: () => Future.fromResult()
 		};
 	}
 
@@ -297,7 +299,13 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
+	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> { 
+		return Future.fromResult();
+	}
+	preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
+		return Future.fromResult();
+	}
+	removePluginNativeCode(pluginData: IPluginData): IFuture<void> { 
 		return Future.fromResult();
 	}
 }
