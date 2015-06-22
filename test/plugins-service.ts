@@ -17,6 +17,7 @@ import ProjectHelperLib = require("../lib/common/project-helper");
 import PlatformsDataLib = require("../lib/platforms-data");
 import ProjectDataServiceLib = require("../lib/services/project-data-service");
 import helpers = require("../lib/common/helpers");
+import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
 import os = require("os");
 
 import PluginsServiceLib = require("../lib/services/plugins-service");
@@ -64,6 +65,7 @@ function createTestInjector() {
 		checkConsent: () => { return (() => { }).future<void>()(); },
 		trackFeature: () => { return (() => { }).future<void>()(); }
 	});
+	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	
 	return testInjector;
 }

@@ -23,7 +23,8 @@ export class PlatformService implements IPlatformService {
 		private $commandsService: ICommandsService,
 		private $options: IOptions,
 		private $broccoliBuilder: IBroccoliBuilder,
-		private $pluginsService: IPluginsService) { }
+		private $pluginsService: IPluginsService,
+		private $projectFilesManager: IProjectFilesManager) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -165,19 +166,9 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// Process platform specific files
-			var contents = this.$fs.readDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
-			var files: string[] = [];
-
-			_.each(contents, d => {
-				let filePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, d);				
-				let fsStat = this.$fs.getFsStats(filePath).wait();
-				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
-					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(filePath)).wait();
-				} else if(fsStat.isFile()) {
-					files.push(filePath);
-				}
-			});
-			this.processPlatformSpecificFiles(platform, files).wait();
+			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
 			// Process node_modules folder
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
@@ -339,33 +330,6 @@ export class PlatformService implements IPlatformService {
 	private isPlatformPrepared(platform: string): IFuture<boolean> {
 		var platformData = this.$platformsData.getPlatformData(platform);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
-	}
-
-	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
-		var regex = util.format("^(.+?)\.(%s)(\..+?)$", platforms.join("|"));
-		var parsed = fileName.toLowerCase().match(new RegExp(regex, "i"));
-		if (parsed) {
-			return {
-				platform: parsed[2],
-				onDeviceName: parsed[1] + parsed[3]
-			};
-		}
-		return undefined;
-	}
-
-	private processPlatformSpecificFiles( platform: string, files: string[]): IFuture<void> {
-		// Renames the files that have `platform` as substring and removes the files from other platform
-		return (() => {
-			_.each(files, fileName => {
-				var platformInfo = PlatformService.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
-				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
-				if (shouldExcludeFile) {
-					this.$fs.deleteFile(fileName).wait();
-				} else if (platformInfo && platformInfo.onDeviceName) {
-					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
-				}
-			});
-		}).future<void>()();
 	}
 
 	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage[]> {

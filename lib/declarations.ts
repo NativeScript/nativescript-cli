@@ -64,3 +64,7 @@ interface IOptions extends ICommonOptions {
 	keyStoreAliasPassword: string;
 	sdk: string;
 }
+
+interface IProjectFilesManager {
+	processPlatformSpecificFiles(directoryPath: string, platform: string, excludedDirs?: string[]): IFuture<void>;
+}
