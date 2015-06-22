@@ -6,7 +6,7 @@ Starting with NativeScript CLI 1.1.0, you can develop or use plugins in your Nat
 * [What Are NativeScript Plugins](#what-are-nativescript-plugins)
 * [Create a Plugin](#create-a-plugin)
   * [Directory Structure](#directory-structure)
-  * [Package.json Specification](#package-json-specification)
+  * [Package.json Specification](#packagejson-specification)
 * [Install a Plugin](#install-a-plugin)
   * [Valid Plugin Sources](#valid-plugin-sources)
   * [Installation Specifics](#installation-specifics)
@@ -20,7 +20,7 @@ Starting with NativeScript CLI 1.1.0, you can develop or use plugins in your Nat
 
 A NativeScript plugin is any npm package, published or not, that exposes a native API via JavaScript and consists of the following elements.
 
-* A `package.json` file which contains the following metadata: name, version, supported runtime versions, dependencies and others. For more information, see the [Package.json Specification](#package-json-specification) section.
+* A `package.json` file which contains the following metadata: name, version, supported runtime versions, dependencies and others. For more information, see the [Package.json Specification](#packagejson-specification) section.
 * One or more CommonJS modules that expose a native API via a unified JavaScript API. For more information about Common JS modules, see the [CommonJS Wiki](http://wiki.commonjs.org/wiki/CommonJS).
 * `AndroidManifest.xml` and `Info.plist` which describe the permissions, features or other configurations required or used by your app for Android and iOS, respectively.
 
