@@ -142,7 +142,8 @@
         "src/shims/titanium/social.js",
         "src/shims/titanium/utils.js",
         "src/shims/titanium/persistence/local.js",
-        "src/shims/titanium/persistence/net.js"
+        "src/shims/titanium/persistence/net.js",
+        "src/shims/titanium/push.js"
       ]
     }
   },
