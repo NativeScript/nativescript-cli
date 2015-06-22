@@ -19,7 +19,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			emulator: { type: OptionType.Boolean },
 			symlink: { type: OptionType.Boolean },
 			forDevice: { type: OptionType.Boolean },
-			client: { type: OptionType.Boolean },
+			client: { type: OptionType.Boolean, default: true},
 			production: { type: OptionType.Boolean },
 			keyStorePath: { type: OptionType.String },
 			keyStorePassword: { type: OptionType.String,},
