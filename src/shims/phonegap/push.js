@@ -96,6 +96,8 @@ Kinvey.Push = /** @lends Kinvey.Push */{
    * @returns {Promise} The response.
    */
   unregister: function(deviceId, options) {
+    var error;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Registering a device to receive push notifications.', arguments);
@@ -107,12 +109,13 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     // Validate arguments.
     var activeUser = Kinvey.getActiveUser();
     if(null === activeUser && null == options.userId) {
-      throw new Kinvey.Error('options argument must contain: userId.');
+      error = new Kinvey.Error('options argument must contain: userId.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Validate preconditions.
     if(null == root.device) {
-      var error = clientError(Kinvey.Error.PUSH_ERROR, {
+      error = clientError(Kinvey.Error.PUSH_ERROR, {
         description : 'Unable to obtain the device platform.',
         debug       : 'Did you install the Cordova Device plugin?'
       });
