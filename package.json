@@ -72,7 +72,7 @@
     "xmldom": "0.1.19",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "xmlmerge-js": "0.2.4",
-    "yargs": "1.2.2"
+    "yargs": "3.12.0"
   },
   "analyze": true,
   "devDependencies": {
