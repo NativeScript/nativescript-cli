@@ -44,6 +44,12 @@ var WebSqlAdapter = {
     return 'Kinvey.' + Kinvey.appKey;
   },
 
+  /**
+   * Constant object ID prefix for prepended to object IDs
+   * created locally.
+   *
+   * @type {String}
+   */
   objectIdPrefix: 'temp_',
 
   /**
@@ -196,6 +202,13 @@ var WebSqlAdapter = {
     return result;
   },
 
+  /**
+   * Check if an object ID was created offline as a
+   * temporary object ID.
+   *
+   * @param  {String}  id The object ID.
+   * @return {Boolean}    True of false if the object ID is temporary.
+   */
   isTemporaryObjectID: function(id) {
     if (id != null) {
       return id.indexOf(WebSqlAdapter.objectIdPrefix) === 0;
