@@ -193,13 +193,12 @@ class IOSDebugService implements IDebugService {
     }
 
     public executeOpenDebuggerClient(): IFuture<void> {
-        if (this.$options.client === false) {
-            // NOTE: The --no-client has been specified. Otherwise its either false or undefined.
+        if (this.$options.client) {
+            return this.openDebuggingClient();
+        } else {
             return (() => {
                 this.$logger.info("Supressing debugging client.");
             }).future<void>()();
-        } else {
-            return this.openDebuggingClient();
         }
     }
 
