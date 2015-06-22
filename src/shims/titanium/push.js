@@ -35,10 +35,16 @@ Kinvey.Push = /** @lends Kinvey.Push */{
    */
   register: function(deviceId, options) {
     var error;
+    var platform;
 
     // Debug.
     if(KINVEY_DEBUG) {
       log('Registering a device to receive push notifications.', arguments);
+    }
+
+    if (isMobileWeb) {
+      error = new Kinvey.Error('Unable to register device for a mobile web application.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -59,12 +65,25 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
+
+    // Standarize the platform name
+    switch (Titanium.Platform.getName()) {
+      case 'android':
+        platform = 'android';
+        break;
+      case 'iPhone OS':
+        platform = 'ios';
+        break;
+      default:
+        platform = 'unknown';
+    }
+
     // Prepare the response.
     var promise = Kinvey.Persistence.Net.create({
       namespace : PUSH,
       id        : 'register-device',
       data      : {
-        platform : Titanium.Platform.ostype.toLowerCase(),
+        platform : platform.toLowerCase(),
         framework: 'titanium',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
@@ -95,9 +114,17 @@ Kinvey.Push = /** @lends Kinvey.Push */{
    * @returns {Promise} The response.
    */
   unregister: function(deviceId, options) {
+    var error;
+    var platform;
+
     // Debug.
     if(KINVEY_DEBUG) {
       log('Registering a device to receive push notifications.', arguments);
+    }
+
+    if (isMobileWeb) {
+      error = new Kinvey.Error('Unable to unregister device for a mobile web application.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Cast arguments.
@@ -106,15 +133,28 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     // Validate arguments.
     var activeUser = Kinvey.getActiveUser();
     if(null === activeUser && null == options.userId) {
-      throw new Kinvey.Error('options argument must contain: userId.');
+      error = new Kinvey.Error('options argument must contain: userId.');
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Validate preconditions.
     if(null == root.device) {
-      var error = clientError(Kinvey.Error.PUSH_ERROR, {
+      error = clientError(Kinvey.Error.PUSH_ERROR, {
         description : 'Unable to obtain the device platform.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error));
+    }
+
+    // Standarize the platform name
+    switch (Titanium.Platform.getName()) {
+      case 'android':
+        platform = 'android';
+        break;
+      case 'iPhone OS':
+        platform = 'ios';
+        break;
+      default:
+        platform = 'unknown';
     }
 
     // Prepare the response.
@@ -122,7 +162,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       namespace : PUSH,
       id        : 'unregister-device',
       data      : {
-        platform : Titanium.Platform.ostype.toLowerCase(),
+        platform : platform.toLowerCase(),
         framework: 'titanium',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
