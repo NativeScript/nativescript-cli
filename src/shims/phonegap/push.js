@@ -119,7 +119,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
         description : 'Unable to obtain the device platform.',
         debug       : 'Did you install the Cordova Device plugin?'
       });
-      return wrapCallbacks(Kinvey.Defer.reject(error));
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Prepare the response.
