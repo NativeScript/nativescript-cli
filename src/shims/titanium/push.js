@@ -42,11 +42,6 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       log('Registering a device to receive push notifications.', arguments);
     }
 
-    if (isMobileWeb) {
-      error = new Kinvey.Error('Unable to register device for a mobile web application.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
     // Cast arguments.
     options = options || {};
 
@@ -58,13 +53,12 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     }
 
     // Validate preconditions.
-    if(null == root.device) {
+    if (isMobileWeb) {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
         description : 'Unable to obtain the device platform.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
-
 
     // Standarize the platform name
     switch (Titanium.Platform.getName()) {
@@ -122,11 +116,6 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       log('Registering a device to receive push notifications.', arguments);
     }
 
-    if (isMobileWeb) {
-      error = new Kinvey.Error('Unable to unregister device for a mobile web application.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
     // Cast arguments.
     options = options || {};
 
@@ -138,11 +127,11 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     }
 
     // Validate preconditions.
-    if(null == root.device) {
+    if (isMobileWeb) {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
         description : 'Unable to obtain the device platform.'
       });
-      return wrapCallbacks(Kinvey.Defer.reject(error));
+      return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
     // Standarize the platform name
