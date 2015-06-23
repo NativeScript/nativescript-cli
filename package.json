@@ -68,7 +68,7 @@
     "utf-8-validate": "https://github.com/telerik/utf-8-validate/tarball/master",
     "winreg": "0.0.12",
     "ws": "0.7.1",
-    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-0.9.tar.gz",
+    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.1.tar.gz",
     "xmldom": "0.1.19",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "xmlmerge-js": "0.2.4",

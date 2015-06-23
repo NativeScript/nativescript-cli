@@ -276,8 +276,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	afterCreateProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	prepareProject(platformData: IPlatformData): IFuture<string> {
-		return Future.fromResult("");
+	prepareProject(): IFuture<void> {
+		return Future.fromResult();
 	}
 	buildProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();

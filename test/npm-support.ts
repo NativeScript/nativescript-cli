@@ -121,7 +121,10 @@ describe("Npm support tests", () => {
 				appDestinationDirectoryPath: appDestinationFolderPath,
 				appResourcesDestinationDirectoryPath: path.join(appDestinationFolderPath, "app", "App_Resources"),
 				frameworkPackageName: "tns-android",
-				normalizedPlatformName: "Android"
+				normalizedPlatformName: "Android",
+				platformProjectService: {
+					prepareProject: () => Future.fromResult()
+				}
 			}	
 		};
 		
