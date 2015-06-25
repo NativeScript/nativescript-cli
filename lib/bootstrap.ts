@@ -59,3 +59,4 @@ $injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wra
 $injector.require("pluginsService", "./services/plugins-service");
 $injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
+$injector.requireCommand("install", "./commands/install");
