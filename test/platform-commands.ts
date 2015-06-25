@@ -11,6 +11,7 @@ import StaticConfigLib = require("../lib/config");
 import CommandsServiceLib = require("../lib/common/services/commands-service");
 import optionsLib = require("../lib/options");
 import hostInfoLib = require("../lib/common/host-info");
+import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
 import path = require("path");
 import Future = require("fibers/future");
 var assert = require("chai").assert;
@@ -115,6 +116,7 @@ function createTestInjector() {
 			}).future<IPluginData[]>()();
 		}
 	});
+	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 
 	return testInjector;
 }
