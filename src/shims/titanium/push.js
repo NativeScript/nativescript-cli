@@ -35,6 +35,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
    */
   register: function(deviceId, options) {
     var error;
+    var platform;
 
     // Debug.
     if(KINVEY_DEBUG) {
@@ -51,11 +52,14 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    // Validate preconditions.
-    if(null == root.device) {
+    // Get the platform
+    platform = Titanium.Platform.getName();
+    platform = platform === 'iPhone OS' ? 'ios' : platform;
+
+    // Handle unsupported platforms
+    if (platform !== 'android' || platform !== 'ios') {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
-        description : 'Unable to obtain the device platform.',
-        debug       : 'Did you install the Cordova Device plugin?'
+        description: 'Kinvey currently does not support ' + platform + ' for push notifications.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
@@ -65,8 +69,8 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       namespace : PUSH,
       id        : 'register-device',
       data      : {
-        platform : root.device.platform.toLowerCase(),
-        framework: 'phonegap',
+        platform : platform.toLowerCase(),
+        framework: 'titanium',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
       },
@@ -97,6 +101,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
    */
   unregister: function(deviceId, options) {
     var error;
+    var platform;
 
     // Debug.
     if(KINVEY_DEBUG) {
@@ -113,11 +118,14 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    // Validate preconditions.
-    if(null == root.device) {
+    // Get the platform
+    platform = Titanium.Platform.getName();
+    platform = platform === 'iPhone OS' ? 'ios' : platform;
+
+    // Handle unsupported platforms
+    if (platform !== 'android' || platform !== 'ios') {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
-        description : 'Unable to obtain the device platform.',
-        debug       : 'Did you install the Cordova Device plugin?'
+        description: 'Kinvey currently does not support ' + platform + ' for push notifications.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
@@ -127,8 +135,8 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       namespace : PUSH,
       id        : 'unregister-device',
       data      : {
-        platform : root.device.platform.toLowerCase(),
-        framework: 'phonegap',
+        platform : platform.toLowerCase(),
+        framework: 'titanium',
         deviceId : deviceId,
         userId   : null != activeUser ? null : options.userId
       },
