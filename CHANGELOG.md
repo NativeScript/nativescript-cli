@@ -1,4 +1,7 @@
 # Changelog
+### 1.4.0 (2015-06-25)
+* Enhancement(MLIBZ-367): Added support to register a device for push notifications on Titanium.
+
 ### 1.3.6 (2015-06-09)
 * Bugfix(MLIBZ-386): Added `isTemporaryObjectID` function to Titanium database adapter.
 * Bugfix: Fixed typo where `IDBAdapter` was referencing `WebSqlAdapter`.
