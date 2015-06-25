@@ -52,24 +52,16 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    // Validate preconditions.
-    if (isMobileWeb) {
+    // Get the platform
+    platform = Titanium.Platform.getName();
+    platform = platform === 'iPhone OS' ? 'ios' : platform;
+
+    // Handle unsupported platforms
+    if (platform !== 'android' || platform !== 'ios') {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
-        description : 'Unable to obtain the device platform.'
+        description: 'Kinvey currently does not support ' + platform + ' for push notifications.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Standarize the platform name
-    switch (Titanium.Platform.getName()) {
-      case 'android':
-        platform = 'android';
-        break;
-      case 'iPhone OS':
-        platform = 'ios';
-        break;
-      default:
-        platform = 'unknown';
     }
 
     // Prepare the response.
@@ -126,24 +118,16 @@ Kinvey.Push = /** @lends Kinvey.Push */{
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
     }
 
-    // Validate preconditions.
-    if (isMobileWeb) {
+    // Get the platform
+    platform = Titanium.Platform.getName();
+    platform = platform === 'iPhone OS' ? 'ios' : platform;
+
+    // Handle unsupported platforms
+    if (platform !== 'android' || platform !== 'ios') {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
-        description : 'Unable to obtain the device platform.'
+        description: 'Kinvey currently does not support ' + platform + ' for push notifications.'
       });
       return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Standarize the platform name
-    switch (Titanium.Platform.getName()) {
-      case 'android':
-        platform = 'android';
-        break;
-      case 'iPhone OS':
-        platform = 'ios';
-        break;
-      default:
-        platform = 'unknown';
     }
 
     // Prepare the response.
