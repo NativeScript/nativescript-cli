@@ -20,7 +20,7 @@ export class Builder implements IBroccoliBuilder {
     private $injector: IInjector,
     private $logger: ILogger) { }
   
-  public prepareNodeModules(absoluteOutputPath: string, projectDir: string, lastModifiedTime?: Date): IFuture<void> {
+  public prepareNodeModules(absoluteOutputPath: string, projectDir: string, platform: string, lastModifiedTime?: Date): IFuture<void> {
     return (() => {
       let isNodeModulesModified = false;
       let nodeModulesPath = path.join(projectDir, "node_modules");
@@ -75,7 +75,8 @@ export class Builder implements IBroccoliBuilder {
            inputPath: projectDir,  
            cachePath: "", 
            outputRoot: absoluteOutputPath,
-           projectDir: projectDir
+           projectDir: projectDir,
+           platform: platform
       });
       
       destCopy.rebuildChangedDirectories(_.keys(this.nodeModules));
