@@ -165,6 +165,8 @@ export class PlatformService implements IPlatformService {
 				shell.cp("-R", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
+			
+			platformData.platformProjectService.prepareProject().wait();
 
 			// Process platform specific files
 			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
