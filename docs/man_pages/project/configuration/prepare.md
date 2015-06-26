@@ -23,6 +23,7 @@ in the `platforms` directory. This lets you build the project with the SDK for t
 
 Command | Description
 ----------|----------
+[install](install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [platform add](platform-add.html) | Configures the current project to target the selected platform.
 [platform remove](platform-remove.html) | Removes the selected platform from the platforms that the project currently targets.
 [platform update](platform-update.html) | Updates the NativeScript runtime for the specified platform.
