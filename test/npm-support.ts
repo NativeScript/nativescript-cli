@@ -123,7 +123,8 @@ describe("Npm support tests", () => {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
 				platformProjectService: {
-					prepareProject: () => Future.fromResult()
+					prepareProject: () => Future.fromResult(),
+					prepareAppResources: () => Future.fromResult()
 				}
 			}	
 		};
