@@ -254,6 +254,10 @@ class IOSProjectService implements  IPlatformProjectService {
 		}).future<void>()();
 	}
 	
+	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
+		return this.$fs.deleteDirectory(this.platformData.appResourcesDestinationDirectoryPath);
+	}
+	
 	private replace(name: string): string {
 		if(_.startsWith(name, '"')) {
 			name = name.substr(1, name.length-2);

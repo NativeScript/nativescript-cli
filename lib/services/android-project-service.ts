@@ -181,6 +181,16 @@ class AndroidProjectService implements IPlatformProjectService {
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
 	}
+	
+	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
+		return (() => {
+			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait();
+			_.each(resourcesDirs, resourceDir => {
+				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();				
+			});	
+		}).future<void>()();
+	}
 
 	private parseProjectProperties(projDir: string, destDir: string): void {
 		let projProp = path.join(projDir, "project.properties");
