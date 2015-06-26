@@ -161,7 +161,8 @@ export class PlatformService implements IPlatformService {
 			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
 			var appResourcesDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
+				this.$fs.deleteDirectory(platformData.appResourcesDestinationDirectoryPath).wait(); // Respect removed files
+				shell.cp("-R", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
 

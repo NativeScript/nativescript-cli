@@ -225,7 +225,10 @@ describe('Platform Service Tests', () => {
 				return {
 					appDestinationDirectoryPath: appDestFolderPath,
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
-					normalizedPlatformName: "iOS"
+					normalizedPlatformName: "iOS",
+					platformProjectService: {
+						prepareProject: () => Future.fromResult()
+					}
 				}	
 			};
 			
@@ -276,7 +279,10 @@ describe('Platform Service Tests', () => {
 				return {
 					appDestinationDirectoryPath: appDestFolderPath,
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
-					normalizedPlatformName: "Android"
+					normalizedPlatformName: "Android",
+					platformProjectService: {
+						prepareProject: () => Future.fromResult()
+					}
 				}	
 			};
 			

@@ -51,7 +51,7 @@ class AndroidProjectService implements IPlatformProjectService {
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml"),
-				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }]
+				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, { "application": "manifest", "attrname": "*" }]
 			};
 		}
 
@@ -272,6 +272,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public getFrameworkFilesExtensions(): string[] {
 		return [".jar", ".dat"];
+	}
+	
+	public prepareProject(): IFuture<void> {
+		return (() => { }).future<void>()();
 	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): IFuture<void> {
