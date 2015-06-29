@@ -13,6 +13,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		$hostInfo: IHostInfo) {
 		super({
 			frameworkPath: { type: OptionType.String },
+			frameworkName: { type: OptionType.String },
+			frameworkVersion: { type: OptionType.String },
 			copyFrom: { type: OptionType.String },
 			linkTo: { type: OptionType.String  },
 			release: { type: OptionType.Boolean },
