@@ -1,4 +1,7 @@
 # Changelog
+### 1.4.1 (2015-06-25)
+* Enhancement(MLIBZ-413): Added support for MIC API versioning.
+
 ### 1.4.0 (2015-06-25)
 * Enhancement(MLIBZ-367): Added support to register a device for push notifications on Titanium.
 
