@@ -30,41 +30,43 @@ export class DestCopy implements IBroccoliPlugin {
   
   public rebuildChangedDirectories(changedDirectories: string[], platform: string): void {
 	_.each(changedDirectories, changedDirectoryAbsolutePath => {
-		let pathToPackageJson = path.join(changedDirectoryAbsolutePath, "package.json");
-		let packageJsonFiles = fs.existsSync(pathToPackageJson) ? [pathToPackageJson] : [];
-		let nodeModulesFolderPath = path.join(changedDirectoryAbsolutePath, "node_modules");
-		packageJsonFiles = packageJsonFiles.concat(this.enumeratePackageJsonFilesSync(nodeModulesFolderPath));
-			
-		_.each(packageJsonFiles, packageJsonFilePath => {
-			let fileContent = require(packageJsonFilePath);
-			let isPlugin = fileContent.nativescript;
-	
-			if(!this.devDependencies[fileContent.name]) { // Don't flatten dev dependencies
-		
-				let currentDependency = {
-					name: fileContent.name,
-					version: fileContent.version,
-					directory: path.dirname(packageJsonFilePath),
-					isPlugin: isPlugin
-				};
+		if(!this.devDependencies[path.basename(changedDirectoryAbsolutePath)]) {
+			let pathToPackageJson = path.join(changedDirectoryAbsolutePath, constants.PACKAGE_JSON_FILE_NAME);
+			let packageJsonFiles = fs.existsSync(pathToPackageJson) ? [pathToPackageJson] : [];
+			let nodeModulesFolderPath = path.join(changedDirectoryAbsolutePath, constants.NODE_MODULES_FOLDER_NAME);
+			packageJsonFiles = packageJsonFiles.concat(this.enumeratePackageJsonFilesSync(nodeModulesFolderPath));
 				
-				let addedDependency = this.dependencies[currentDependency.name];
-				if (addedDependency) {
-					if (semver.gt(currentDependency.version, addedDependency.version)) {
-						let currentDependencyMajorVersion = semver.major(currentDependency.version);
-						let addedDependencyMajorVersion = semver.major(addedDependency.version);
+			_.each(packageJsonFiles, packageJsonFilePath => {
+				let fileContent = require(packageJsonFilePath);
 		
-						let message = `The depedency located at ${addedDependency.directory} with version  ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
-						let logger = $injector.resolve("$logger");
-						currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
-		
+				if(!this.devDependencies[fileContent.name]) { // Don't flatten dev dependencies
+					let isPlugin = fileContent.nativescript;
+					
+					let currentDependency = {
+						name: fileContent.name,
+						version: fileContent.version,
+						directory: path.dirname(packageJsonFilePath),
+						isPlugin: isPlugin
+					};
+					
+					let addedDependency = this.dependencies[currentDependency.name];
+					if (addedDependency) {
+						if (semver.gt(currentDependency.version, addedDependency.version)) {
+							let currentDependencyMajorVersion = semver.major(currentDependency.version);
+							let addedDependencyMajorVersion = semver.major(addedDependency.version);
+			
+							let message = `The depedency located at ${addedDependency.directory} with version  ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
+							let logger = $injector.resolve("$logger");
+							currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
+			
+							this.dependencies[currentDependency.name] = currentDependency;
+						}
+					} else {
 						this.dependencies[currentDependency.name] = currentDependency;
 					}
-				} else {
-					this.dependencies[currentDependency.name] = currentDependency;
 				}
-			}
-		});
+			});
+		}
 	});
 	
 	_.each(this.dependencies, dependency => {
@@ -98,12 +100,12 @@ export class DestCopy implements IBroccoliPlugin {
 		if(fs.existsSync(nodeModulesDirectoryPath)) {
 			let contents = fs.readdirSync(nodeModulesDirectoryPath);
 			for (let i = 0; i < contents.length; ++i) {
-				let packageJsonFilePath = path.join(nodeModulesDirectoryPath, contents[i], "package.json");
+				let packageJsonFilePath = path.join(nodeModulesDirectoryPath, contents[i], constants.PACKAGE_JSON_FILE_NAME);
 				if (fs.existsSync(packageJsonFilePath)) {
 					foundFiles.push(packageJsonFilePath);
 				}
                 
-                var directoryPath = path.join(nodeModulesDirectoryPath, contents[i], "node_modules");
+                var directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
                 if (fs.existsSync(directoryPath)) {
                     this.enumeratePackageJsonFilesSync(directoryPath, foundFiles);
                 }

@@ -83,6 +83,7 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 		}
 	};
 	packageJsonData["dependencies"] = dependencies;
+	packageJsonData["devDependencies"] = {};
 	
 	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
 	return tempFolder;
@@ -131,7 +132,7 @@ function setupProject(): IFuture<any> {
 	}).future<any>()();
 }
 
-function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any): IFuture<void> {
+function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any, devDependencies?: any): IFuture<void> {
 	return (() => {
 		let fs = testInjector.resolve("fs");
 		let packageJsonPath = path.join(projectFolder, "package.json");
@@ -139,6 +140,11 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 		
 		let currentDependencies = packageJsonData.dependencies;
 		_.extend(currentDependencies, dependencies);
+		
+		if(devDependencies) {
+			let currentDevDependencies = packageJsonData.devDependencies;
+			_.extend(currentDevDependencies, devDependencies);
+		}
 		fs.writeJson(packageJsonPath, packageJsonData).wait();
 	}).future<void>()();
 }
@@ -175,5 +181,58 @@ describe("Npm support tests", () => {
 		assert.isTrue(fs.exists(bplistFolderPath).wait());
 		assert.isTrue(fs.exists(bplistCreatorFolderPath).wait());
 		assert.isTrue(fs.exists(bplistParserFolderPath).wait());
+	});
+});
+
+describe("Flatten npm modules tests", () => {
+	it("Doesn't handle the dependencies of devDependencies", () => {
+		let projectSetup = setupProject().wait();
+		let testInjector = projectSetup.testInjector;
+		let projectFolder = projectSetup.projectFolder;
+		let appDestinationFolderPath = projectSetup.appDestinationFolderPath;
+		
+		let devDependencies = {
+			"gulp": "3.9.0",
+			"gulp-jscs": "1.6.0",
+			"gulp-jshint": "1.11.0"
+		};
+		
+		addDependencies(testInjector, projectFolder, {}, devDependencies).wait();
+		
+		preparePlatform(testInjector).wait();
+		
+		// Assert
+		let fs = testInjector.resolve("fs");
+		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+		
+		let lodashFolderPath = path.join(tnsModulesFolderPath, "lodash");
+		assert.isTrue(fs.exists(lodashFolderPath).wait());
+		
+		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
+		assert.isFalse(fs.exists(gulpFolderPath).wait());
+		
+		let gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
+		assert.isFalse(fs.exists(gulpJscsFolderPath).wait());
+		
+		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
+		assert.isFalse(fs.exists(gulpJshint).wait());
+		
+		// Get  all gulp dependencies
+		let gulpDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp", "node_modules")).wait();
+		_.each(gulpDependencies, dependency => {
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+		});
+		
+		// Get all gulp-jscs dependencies
+		let gulpJscsDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp-jscs", "node_modules")).wait();
+		_.each(gulpJscsDependencies, dependency => {
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+		});
+		
+		// Get all gulp-jshint dependencies
+		let gulpJshintDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp-jshint", "node_modules")).wait();
+		_.each(gulpJshintDependencies, dependency => {
+			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
+		}); 
 	});
 });
