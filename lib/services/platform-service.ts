@@ -149,17 +149,26 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
+			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? 
+				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			// Copy app folder to native project
+			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
 			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-
+			
 			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
-			this.$fs.deleteDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
-			shell.cp("-R", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
+			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
+			
+			_(contents)
+				.filter(directoryName => directoryName !== "tns_modules")
+				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
+				.value();
+			shell.cp("-Rf", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);			
 
 			// Copy App_Resources to project root folder
-			var appResourcesDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
-			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait();
+			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
+			var appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
 				shell.cp("-R", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
@@ -176,7 +185,7 @@ export class PlatformService implements IPlatformService {
 			// Process node_modules folder
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
-			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir).wait();
+			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
 
 			this.$logger.out("Project successfully prepared");
 		}).future<void>()();

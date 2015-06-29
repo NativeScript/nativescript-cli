@@ -88,15 +88,10 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	return tempFolder;
 }
 
-describe("Npm support tests", () => {
-	it("Ensures that the installed dependencies are prepared correctly", () => {
-		let dependencies = {
-			"bplist": "0.0.4",
-			"lodash": "3.9.3"
-		};
-		
+function setupProject(): IFuture<any> {
+	return (() => {
 		let testInjector = createTestInjector();
-		let projectFolder = createProject(testInjector, dependencies);
+		let projectFolder = createProject(testInjector);
 		
 		let fs = testInjector.resolve("fs");		
 		
@@ -111,7 +106,6 @@ describe("Npm support tests", () => {
 		// Creates platforms/android folder
 		let androidFolderPath = path.join(projectFolder, "platforms", "android");
 		fs.ensureDirectoryExists(androidFolderPath).wait();
-		
 		
 		// Mock platform data
 		let appDestinationFolderPath = path.join(androidFolderPath, "assets");
@@ -129,8 +123,45 @@ describe("Npm support tests", () => {
 			}	
 		};
 		
-		let platformService = testInjector.resolve("platformService");
-		platformService.preparePlatform("android").wait();
+		return {
+			testInjector: testInjector,
+			projectFolder: projectFolder,
+			appDestinationFolderPath: appDestinationFolderPath,
+		};
+	}).future<any>()();
+}
+
+function addDependencies(testInjector: IInjector, projectFolder: string, dependencies: any): IFuture<void> {
+	return (() => {
+		let fs = testInjector.resolve("fs");
+		let packageJsonPath = path.join(projectFolder, "package.json");
+		let packageJsonData = fs.readJson(packageJsonPath).wait();
+		
+		let currentDependencies = packageJsonData.dependencies;
+		_.extend(currentDependencies, dependencies);
+		fs.writeJson(packageJsonPath, packageJsonData).wait();
+	}).future<void>()();
+}
+
+function preparePlatform(testInjector: IInjector): IFuture<void> {
+	let platformService = testInjector.resolve("platformService");
+	return platformService.preparePlatform("android");
+}
+
+describe("Npm support tests", () => {
+	let testInjector: IInjector, projectFolder: string, appDestinationFolderPath: string;
+	before(() => {
+		let projectSetup = setupProject().wait();
+		testInjector = projectSetup.testInjector;
+		projectFolder = projectSetup.projectFolder;
+		appDestinationFolderPath = projectSetup.appDestinationFolderPath;
+	});
+	it("Ensures that the installed dependencies are prepared correctly", () => {
+		// Setup
+		addDependencies(testInjector, projectFolder, {"bplist": "0.0.4"}).wait();
+		
+		// Act
+		preparePlatform(testInjector).wait();
 		
 		// Assert
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");		
@@ -139,6 +170,7 @@ describe("Npm support tests", () => {
 		let bplistCreatorFolderPath = path.join(tnsModulesFolderPath, "bplist-creator");
 		let bplistParserFolderPath = path.join(tnsModulesFolderPath, "bplist-parser");
 		
+		let fs = testInjector.resolve("fs");		
 		assert.isTrue(fs.exists(lodashFolderPath).wait());
 		assert.isTrue(fs.exists(bplistFolderPath).wait());
 		assert.isTrue(fs.exists(bplistCreatorFolderPath).wait());
