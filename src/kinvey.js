@@ -243,7 +243,7 @@ Kinvey.setActiveUser = function(user) {
  * @param {Object}  [options.customRequestProperties] Customer request properties.
  * @param {string}  [options.apiHostName]             API Host Name. Must use the `https` protocol
  * @param {string}  [options.micHostName]             MIC Host Name. Must use the `https` protocol
- * @param {number}  [options.micApiVersion=1]         MIC version to use.
+ * @param {number}  [options.micApiVersion]         MIC version to use.
  * @param {string}   options.appKey                   App Key.
  * @param {string}  [options.appSecret]               App Secret.
  * @param {string}  [options.masterSecret]            Master Secret. **Never use the
