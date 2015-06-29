@@ -69,6 +69,7 @@ var MIC = {
    * @param  {string}   authorizationGrant        Authorization Grant.
    * @param  {string}   redirectUri               Redirect Uri.
    * @param  {Object}   [options]                 Options.
+   * @params {string}   [options.micApiVersion]   MIC API version to use.
    * @params {string}   [options.username]        Username for the user to be authorized.
    * @params {string}   [options.password]        Password for the user to be authorized.
    * @param  {boolean}  [options.create=true]     Create a new user if no user exists.
@@ -221,10 +222,20 @@ var MIC = {
    * @return {Promise}             Temp Login Uri.
    */
   requestUrl: function(clientId, redirectUri, options) {
+    var url = Kinvey.MICHostName;
+    options.micApiVersion = options.micApiVersion || Kinvey.MICAPIVersion;
+
+    // Set the MIC API version
+    if (options.micApiVersion != null) {
+      var version = options.micApiVersion + '';
+      version = version.indexOf('v') === 0 ? version : 'v' + version;
+      url = url + '/' + version;
+    }
+
     // Create a request
     var request = {
       method: 'POST',
-      url: Kinvey.MICHostName + MIC.AUTH_PATH,
+      url: url + MIC.AUTH_PATH,
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -271,8 +282,18 @@ var MIC = {
   requestCodeWithPopup: function(clientId, redirectUri, options) {
     var error;
     var deferred = Kinvey.Defer.deferred();
-    var url = Kinvey.MICHostName + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
-             '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
+    var url = Kinvey.MICHostName;
+    options.micApiVersion = options.micApiVersion || Kinvey.MICAPIVersion;
+
+    // Set the MIC API version
+    if (options.micApiVersion != null) {
+      var version = options.micApiVersion + '';
+      version = version.indexOf('v') === 0 ? version : 'v' + version;
+      url = url + '/' + version;
+    }
+
+    url = url + MIC.AUTH_PATH + '?client_id=' + encodeURIComponent(clientId) +
+          '&redirect_uri=' + encodeURIComponent(redirectUri) + '&response_type=code';
     var deferredResolved = false;
     var popup;
     var tiWebView;
@@ -799,6 +820,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {String}   redirectUri               Where to redirect to after a succesful login. This should be the same value as setup
    *                                              in the Kinvey Console for your applicaiton.
    * @param  {Object}   [options]                 Options.
+   * @param  {String}   [options.micApiVersion]   MIC API version to use.
    * @param  {Boolean}  [options.create=true]     Create a new user if no user exists.
    * @param  {Number}   [options.timeout=300000]  How long to wait for a successful authorization. Defaults to 5 minutes.
    * @return {Promise}                            Authorized user.
@@ -815,6 +837,7 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
    * @param  {String}   redirectUri             Where to redirect to after a succesful login. This should be the same value as setup
    *                                            in the Kinvey Console for your applicaiton.
    * @param  {Object}   [options]               Options.
+   * @param  {String}   [options.micApiVersion] MIC API version to use.
    * @param  {Boolean}  [options.create=true]   Create a new user if no user exists.
    * @return {Promise}                          Authorized user.
    */

@@ -38,6 +38,14 @@ Kinvey.API_ENDPOINT = undefined;
 Kinvey.MICHostName = '<%= config.auth.protocol %>://<%= config.auth.host %>';
 
 /**
+ * The MIC API version.
+ *
+ * @type {Number}
+ * @default undefined
+ */
+Kinvey.MICAPIVersion = undefined;
+
+/**
  * The Kinvey API version used when communicating with `Kinvey.APIHostName`.
  *
  * @constant
@@ -231,17 +239,18 @@ Kinvey.setActiveUser = function(user) {
  * Initializes the library for use with Kinvey services.
  *
  * @param {Options}  options Options.
- * @param {string}  [options.clientAppVersion]   Client App Version.
+ * @param {string}  [options.clientAppVersion]        Client App Version.
  * @param {Object}  [options.customRequestProperties] Customer request properties.
- * @param {string}  [options.apiHostName]  API Host Name. Must use the `https` protocol
- * @param {string}  [options.micHostName]  MIC Host Name. Must use the `https` protocol
- * @param {string}   options.appKey        App Key.
- * @param {string}  [options.appSecret]    App Secret.
- * @param {string}  [options.masterSecret] Master Secret. **Never use the
- *          Master Secret in client-side code.**
- * @param {boolean} [options.refresh=true] Refresh the active user (if any).
- * @param {Object}  [options.sync]         Synchronization options.
- * @returns {Promise} The active user.
+ * @param {string}  [options.apiHostName]             API Host Name. Must use the `https` protocol
+ * @param {string}  [options.micHostName]             MIC Host Name. Must use the `https` protocol
+ * @param {number}  [options.micApiVersion=1]         MIC version to use.
+ * @param {string}   options.appKey                   App Key.
+ * @param {string}  [options.appSecret]               App Secret.
+ * @param {string}  [options.masterSecret]            Master Secret. **Never use the
+ *                                                    Master Secret in client-side code.**
+ * @param {boolean} [options.refresh=true]            Refresh the active user (if any).
+ * @param {Object}  [options.sync]                    Synchronization options.
+ * @returns {Promise}                                 The active user.
  */
 Kinvey.init = function(options) {
   var error;
@@ -289,6 +298,9 @@ Kinvey.init = function(options) {
                            ' in Kinvey.MICHostName: ' + Kinvey.MICHostName);
     return wrapCallbacks(Kinvey.Defer.reject(error), options);
   }
+
+  // Set the MIC version
+  Kinvey.MICAPIVersion = options.micApiVersion || Kinvey.MICAPIVersion;
 
   // Set the Client App Version
   if (options.clientAppVersion != null) {
