@@ -1,5 +1,3 @@
-/*eslint-disable*/
-
 var config = require('./config');
 var path = require('path');
 var build = path.join(__dirname, 'build/html5');

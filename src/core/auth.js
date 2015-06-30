@@ -30,7 +30,7 @@ class Auth extends CoreObject {
     return Auth.Master().then(null, Auth.App);
   }
 
-  static def() {
+  static default() {
     return Auth.Session().then(null, function(error) {
       return Auth.Master().then(null, function() {
         // Most likely, the developer did not create a user. Return a useful error.

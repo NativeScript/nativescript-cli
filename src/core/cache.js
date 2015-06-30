@@ -19,7 +19,7 @@ function generateKeyHash(key) {
 }
 
 class Cache extends CoreObject {
-  constructor(name = `Kinvey.${Kinvey.appKey}`, time = null) {
+  constructor(name = `Kinvey.${Kinvey.appKey}-`, time = null) {
     super();
 
     // Set the name

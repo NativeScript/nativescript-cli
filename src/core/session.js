@@ -5,22 +5,18 @@ import Entity from './entity';
 import log from './logger';
 const currentSession = Symbol();
 const currentSessionKey = 'CurrentSession';
-let sessionUser;
+let authToken;
 
 class PrivateSession extends CoreObject {
-  constructor(user) {
+  constructor(token) {
     super();
 
-    // Set the user
-    sessionUser = user;
+    // Set the authToken
+    authToken = token;
   }
 
   get authToken() {
-    return sessionUser._kmd.authtoken;
-  }
-
-  get user() {
-    return sessionUser;
+    return authtoken;
   }
 }
 

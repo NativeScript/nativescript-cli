@@ -1,5 +1,3 @@
-/*eslint-disable*/
-
 var gulp = require('gulp');
 var runSequence = require('run-sequence');
 var del = require('del');
@@ -13,14 +11,19 @@ var source = require('vinyl-source-stream');
 var preprocess = require('gulp-preprocess');
 var gutil = require('gulp-util');
 var path = require('path');
-var eslint = require('gulp-eslint');
+var jscs = require('gulp-jscs');
+var jshint = require('gulp-jshint');
+var stylish = require('gulp-jscs-stylish');
 var platform = gutil.env.platform || 'html5';
 var config = require('./' + platform + '.config');
 
 gulp.task('lint', function() {
   return gulp.src(config.src)
-    .pipe(eslint())
-    .pipe(eslint.format());
+    .pipe(jshint())
+    .pipe(jscs())
+    .on('error', function() {})
+    .pipe(stylish.combineWithHintResults())
+    .pipe(jshint.reporter('jshint-stylish'));
 });
 
 gulp.task('build', function(done) {

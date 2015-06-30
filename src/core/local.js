@@ -9,6 +9,7 @@ class Local extends CoreObject {
     if (!Utils.isDefined(this[database])) {
       this[database] = new Database(Kinvey.appKey);
     }
+
     return this[database];
   }
 

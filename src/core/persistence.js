@@ -23,7 +23,6 @@ class Persistence extends CoreObject {
       promise = Net.read(request, options);
     }
 
-
     return promise.then((response) => {
       // Update the local if offline policy is not AlwaysOnline
       if (offlinePolicy !== OfflinePolicy.AlwaysOnline) {

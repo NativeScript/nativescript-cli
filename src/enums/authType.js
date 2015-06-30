@@ -1,7 +1,11 @@
 const Auth = {
-  Default: 'Default',
+  All: 'All',
   App: 'App',
-  None: 'None'
+  Basic: 'Basic',
+  Default: 'Default',
+  Master: 'Master',
+  None: 'None',
+  Session: 'Session'
 };
 Object.freeze(Auth);
 export default Auth;

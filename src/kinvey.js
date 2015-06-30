@@ -1,10 +1,12 @@
 import utils from './core/utils';
 import url from 'url';
 import Session from './core/session';
+import User from './core/user';
 
 let Kinvey = {
   apiProtocol: '/* @echo API_PROTOCOL */',
   apiHostname: '/* @echo API_HOSTNAME */',
+  apiVersion: '/* @echo API_VERSION */',
   appKey: undefined,
   appSecret: undefined,
   masterSecret: undefined,
@@ -21,6 +23,7 @@ Kinvey.init = (options) => {
       error = new Kinvey.Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
       return reject(error);
     }
+
     if (!utils.isDefined(options.appSecret) && !utils.isDefined(options.masterSecret)) {
       error = new Kinvey.Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
       return reject(error);
@@ -69,6 +72,10 @@ Kinvey.init = (options) => {
     // Set the encryption key.
     Kinvey.encryptionKey = options.encryptionKey || undefined;
   });
+};
+
+Kinvey.getActiveUser = () => {
+  return User.current;
 };
 
 Kinvey.setActiveUser = (user) => {

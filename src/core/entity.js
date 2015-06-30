@@ -1,5 +1,4 @@
 import CoreObject from './object';
-import LocalDataStore from './localDataStore';
 
 class Entity extends CoreObject {
   constructor(data = {}) {
@@ -11,13 +10,8 @@ class Entity extends CoreObject {
     return this.data;
   }
 
-  save(options = {}) {
-    // Save the entity locally
-    if (options.local) {
-      return LocalDataStore.save(this.toJSON()).then(() => {
-        return this;
-      });
-    }
+  save() {
+    return Promise.resolve(this);
   }
 }
 

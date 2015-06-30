@@ -1,5 +1,3 @@
-/*eslint-disable*/
-
 var path = require('path');
 var fs = require('fs');
 var src = path.join(__dirname, 'src/**/*.js');
@@ -31,7 +29,8 @@ var defaultConfig = {
   preprocess: {
     context: {
       API_PROTOCOL: 'https:',
-      API_HOSTNAME: 'baas.kinvey.com'
+      API_HOSTNAME: 'baas.kinvey.com',
+      API_VERSION: 3
     }
   },
   src: [

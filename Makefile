@@ -2,21 +2,9 @@
 
 test: all
 
-all: test-http \
-	test-httpMethod \
-	test-nodeRequest \
-	test-response
+all: test-user
 
-test-http:
-	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/http.js
-
-test-httpMethod:
-	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/httpMethod.js
-
-test-nodeRequest:
-	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/nodeRequest.js
-
-test-response:
-	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 server_test/spec/response.js
+test-user:
+	@./node_modules/.bin/mocha --compilers js:babel/register --reporter spec --slow 500 --timeout 2000 test/specs/user.spec.js
 
 .PHONY: test
