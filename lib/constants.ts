@@ -7,6 +7,7 @@ export var NATIVESCRIPT_KEY_NAME = "nativescript";
 export var NODE_MODULES_FOLDER_NAME = "node_modules";
 export var PACKAGE_JSON_FILE_NAME = "package.json";
 export var NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
+export var DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 
 export class ReleaseType {
 	static MAJOR = "major";

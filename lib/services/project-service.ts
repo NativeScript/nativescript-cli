@@ -9,7 +9,6 @@ import shell = require("shelljs");
 import util = require("util");
 
 export class ProjectService implements IProjectService {
-	private static DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 
 	constructor(private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -27,7 +26,7 @@ export class ProjectService implements IProjectService {
 			}
 			this.$projectNameValidator.validate(projectName);
 
-			var projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, ProjectService.DEFAULT_APP_IDENTIFIER_PREFIX);
+			var projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 
 			var projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
