@@ -7,7 +7,9 @@ export class InstallCommand implements ICommand {
 	constructor(private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService) { }
+		private $projectDataService: IProjectDataService,
+		private $pluginsService: IPluginsService,
+		private $logger: ILogger) { }
 		
 	public enableHooks = false;
 		
@@ -15,15 +17,27 @@ export class InstallCommand implements ICommand {
 	
 	public execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let error: string = "";
 			
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+						
+			this.$projectDataService.initialize(this.$projectData.projectDir);
 			_.each(this.$platformsData.platformsNames, platform => {
 				let platformData = this.$platformsData.getPlatformData(platform);
 				let frameworkPackageData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 				if(frameworkPackageData && frameworkPackageData.version) {
-					this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]).wait();
+					try {
+						this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]).wait();
+					} catch(err) {
+						error += err;
+					}
 				}
 			});
+			
+			if(error) {
+				this.$logger.error(error);
+			}
+			
 		}).future<void>()();
 	}
 }
