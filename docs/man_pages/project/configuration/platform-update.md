@@ -29,6 +29,7 @@ To list only experimental versions for ios, run `$ npm view tns-ios dist-tags`
 
 Command | Description
 ----------|----------
+[install](install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [platform add](platform-add.html) | Configures the current project to target the selected platform.
 [platform remove](platform-remove.html) | Removes the selected platform from the platforms that the project currently targets.
 [platform](platform.html) | Lists all platforms that the project currently targets.

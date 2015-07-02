@@ -6,9 +6,7 @@ export class PrepareCommand implements ICommand {
 		private $platformCommandParameter: ICommandParameter) { }
 
 	execute(args: string[]): IFuture<void> {
-		return (() => {
-			this.$platformService.preparePlatform(args[0]).wait();
-		}).future<void>()();
+		return this.$platformService.preparePlatform(args[0]);
 	}
 
 	allowedParameters = [this.$platformCommandParameter];

@@ -182,13 +182,11 @@ class IOSProjectService implements  IPlatformProjectService {
             this.$fs.ensureDirectoryExists(targetPath).wait();
             shell.cp("-R", libraryPath, targetPath);
 
-            var pbxProjPath = path.join(platformData.projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
-            var project = new xcode.project(pbxProjPath);
-            project.parseSync();
+            let project = this.createPbxProj();
 
             project.addFramework(path.join(targetPath, frameworkName + ".framework"), { customFramework: true, embed: true });
             project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-            this.$fs.writeFile(pbxProjPath, project.writeSync()).wait();
+            this.savePbxProj(project).wait();
             this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
         }).future<void>()();
 	}
@@ -221,10 +219,66 @@ class IOSProjectService implements  IPlatformProjectService {
 			shell.cp("-R", path.join(cachedPackagePath, "*"), path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName)));
 			this.$logger.info("Copied from %s at %s.", cachedPackagePath, this.platformData.projectRoot);
 
-
 			var pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
 			this.replaceFileContent(pbxprojFilePath).wait();
 		}).future<void>()();
+	}
+	
+	public prepareProject(): IFuture<void> {
+		return (() => {
+			let project = this.createPbxProj();
+			let resources = project.pbxGroupByName("Resources");
+			
+			if(resources) {
+				let references = project.pbxFileReferenceSection();
+				
+				let xcodeProjectImages = _.map(<any[]>resources.children, resource => this.replace(references[resource.value].name));
+				this.$logger.trace("Images from Xcode project");
+				this.$logger.trace(xcodeProjectImages);
+				
+				let appResourcesImages = this.$fs.readDirectory(this.platformData.appResourcesDestinationDirectoryPath).wait();
+				this.$logger.trace("Current images from App_Resources");
+				this.$logger.trace(appResourcesImages);
+	
+				let imagesToAdd = _.difference(appResourcesImages, xcodeProjectImages);
+				this.$logger.trace(`New images to add into xcode project: ${imagesToAdd.join(", ")}`);			
+				_.each(imagesToAdd, image => project.addResourceFile(path.relative(this.platformData.projectRoot, path.join( this.platformData.appResourcesDestinationDirectoryPath, image))));
+				
+				let imagesToRemove = _.difference(xcodeProjectImages, appResourcesImages);
+				this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);			
+				_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.platformData.appResourcesDestinationDirectoryPath, image))); 
+				
+				this.savePbxProj(project).wait();
+			}
+			
+		}).future<void>()();
+	}
+	
+	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
+		return this.$fs.deleteDirectory(this.platformData.appResourcesDestinationDirectoryPath);
+	}
+	
+	private replace(name: string): string {
+		if(_.startsWith(name, '"')) {
+			name = name.substr(1, name.length-2);
+		}
+		
+		return name.replace(/\\\"/g, "\"");
+	}
+	
+	private get pbxProjPath(): string {
+		return path.join(this.platformData.projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
+	}
+	
+	private createPbxProj(): any {
+		let project = new xcode.project(this.pbxProjPath);
+		project.parseSync();
+		
+		return project;
+	}
+	
+	private savePbxProj(project: any): IFuture<void> {
+		 return this.$fs.writeFile(this.pbxProjPath, project.writeSync());
 	}
 
 	private buildPathToXcodeProjectFile(version: string): string {

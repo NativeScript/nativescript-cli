@@ -50,6 +50,8 @@ interface IOpener {
 
 interface IOptions extends ICommonOptions {
 	frameworkPath: string;
+	frameworkName: string;
+	frameworkVersion: string;
 	copyFrom: string;
 	linkTo: string;
 	release: boolean;
@@ -63,4 +65,12 @@ interface IOptions extends ICommonOptions {
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
 	sdk: string;
+}
+
+interface IProjectFilesManager {
+	processPlatformSpecificFiles(directoryPath: string, platform: string, excludedDirs?: string[]): IFuture<void>;
+}
+
+interface IInitService {
+	initialize(): IFuture<void>;
 }
