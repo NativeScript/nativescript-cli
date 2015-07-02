@@ -65,6 +65,7 @@ interface IOptions extends ICommonOptions {
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
 	sdk: string;
+	ignoreScripts: boolean;
 }
 
 interface IProjectFilesManager {

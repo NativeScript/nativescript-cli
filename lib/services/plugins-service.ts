@@ -116,7 +116,11 @@ export class PluginsService implements IPluginsService {
 	}
 	
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
-		return this.$childProcess.exec("npm install ", { cwd: this.$projectData.projectDir });
+		let command = "npm install ";
+		if(this.$options.ignoreScripts) {
+			command += "--ignore-scripts";
+		}
+		return this.$childProcess.exec(command, { cwd: this.$projectData.projectDir });
 	}
 	
 	public getAllInstalledPlugins(): IFuture<IPluginData[]> {
