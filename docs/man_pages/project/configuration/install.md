@@ -12,7 +12,7 @@ The `package.json` file must be a valid `package.json` describing the configurat
 <% } %>
 
 ### Options
-* `--path` - Specifies the directory where you want to create the project, if different from the current directory. The directory must be empty.
+* `--path` - Specifies the directory which contains the `package.json` file, if different from the current directory.
 
 <% if(isHtml) { %> 
 ### Related Commands
