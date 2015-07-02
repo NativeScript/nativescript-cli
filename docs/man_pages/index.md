@@ -12,6 +12,7 @@ Command | Description
 [help `<Command>`](general/help.html) | Shows additional information about the commands in this list in the browser.
 [autocomplete](general/autocomplete.html) | Configures your current command-line completion settings.
 [feature-usage-tracking](general/feature-usage-tracking.html) | Configures anonymous feature usage tracking.
+[doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 
 ## Project Development Commands
 Command | Description

@@ -27,5 +27,5 @@ Command | Description
 [autocomplete-status](autocomplete-status.html) | Prints the current status of your command-line completion settings.
 [autocomplete-enable](autocomplete-enable.html) | Configures your current command-line completion settings.
 [autocomplete-disable](autocomplete-disable.html) | Disables command-line completion for bash and zsh shells.
-[doctor](doctor.html) | Checks your system and reports potential problems which may prevent developing with NativeScript.
+[doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 <% } %>
