@@ -51,7 +51,7 @@ class AndroidProjectService implements IPlatformProjectService {
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml"),
-				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }]
+				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, { "application": "manifest", "attrname": "*" }]
 			};
 		}
 
@@ -181,6 +181,16 @@ class AndroidProjectService implements IPlatformProjectService {
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
 	}
+	
+	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
+		return (() => {
+			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait();
+			_.each(resourcesDirs, resourceDir => {
+				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();				
+			});	
+		}).future<void>()();
+	}
 
 	private parseProjectProperties(projDir: string, destDir: string): void {
 		let projProp = path.join(projDir, "project.properties");
@@ -272,6 +282,10 @@ class AndroidProjectService implements IPlatformProjectService {
 
 	public getFrameworkFilesExtensions(): string[] {
 		return [".jar", ".dat"];
+	}
+	
+	public prepareProject(): IFuture<void> {
+		return (() => { }).future<void>()();
 	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): IFuture<void> {

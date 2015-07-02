@@ -23,7 +23,8 @@ export class PlatformService implements IPlatformService {
 		private $commandsService: ICommandsService,
 		private $options: IOptions,
 		private $broccoliBuilder: IBroccoliBuilder,
-		private $pluginsService: IPluginsService) { }
+		private $pluginsService: IPluginsService,
+		private $projectFilesManager: IProjectFilesManager) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -145,44 +146,48 @@ export class PlatformService implements IPlatformService {
 
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
+			this.validatePlatform(platform);
+			
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
+			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? 
+				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			// Copy app folder to native project
+			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
 			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-
+			
 			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
-			this.$fs.deleteDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
-			shell.cp("-R", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
+			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
+			
+			_(contents)
+				.filter(directoryName => directoryName !== "tns_modules")
+				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
+				.value();
+			shell.cp("-Rf", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);			
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
-			var appResourcesDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
+			var appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
-				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
+				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
+				shell.cp("-R", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
+			
+			platformData.platformProjectService.prepareProject().wait();
 
 			// Process platform specific files
-			var contents = this.$fs.readDirectory(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
-			var files: string[] = [];
-
-			_.each(contents, d => {
-				let filePath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, d);				
-				let fsStat = this.$fs.getFsStats(filePath).wait();
-				if(fsStat.isDirectory() && d !== constants.APP_RESOURCES_FOLDER_NAME) {
-					this.processPlatformSpecificFiles(platform, this.$fs.enumerateFilesInDirectorySync(filePath)).wait();
-				} else if(fsStat.isFile()) {
-					files.push(filePath);
-				}
-			});
-			this.processPlatformSpecificFiles(platform, files).wait();
+			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
 			// Process node_modules folder
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
-			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir).wait();
+			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
 
 			this.$logger.out("Project successfully prepared");
 		}).future<void>()();
@@ -340,33 +345,6 @@ export class PlatformService implements IPlatformService {
 	private isPlatformPrepared(platform: string): IFuture<boolean> {
 		var platformData = this.$platformsData.getPlatformData(platform);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
-	}
-
-	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
-		var regex = util.format("^(.+?)\\.(%s)(\\..+?)$", platforms.join("|"));
-		var parsed = fileName.match(new RegExp(regex, "i"));
-		if (parsed) {
-			return {
-				platform: parsed[2],
-				onDeviceName: parsed[1] + parsed[3]
-			};
-		}
-		return undefined;
-	}
-
-	private processPlatformSpecificFiles( platform: string, files: string[]): IFuture<void> {
-		// Renames the files that have `platform` as substring and removes the files from other platform
-		return (() => {
-			_.each(files, fileName => {
-				var platformInfo = PlatformService.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
-				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
-				if (shouldExcludeFile) {
-					this.$fs.deleteFile(fileName).wait();
-				} else if (platformInfo && platformInfo.onDeviceName) {
-					this.$fs.rename(fileName, path.join(path.dirname(fileName), platformInfo.onDeviceName)).wait();
-				}
-			});
-		}).future<void>()();
 	}
 
 	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage[]> {

@@ -276,8 +276,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	afterCreateProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	prepareProject(platformData: IPlatformData): IFuture<string> {
-		return Future.fromResult("");
+	prepareProject(): IFuture<void> {
+		return Future.fromResult();
 	}
 	buildProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
@@ -295,6 +295,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 		return Future.fromResult(false);
 	}
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return Future.fromResult();
 	}
 }

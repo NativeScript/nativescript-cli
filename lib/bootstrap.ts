@@ -61,3 +61,9 @@ $injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
 
 $injector.require("doctorService", "./services/doctor-service");
+$injector.requireCommand("install", "./commands/install");
+
+$injector.require("initService", "./services/init-service");
+$injector.requireCommand("init", "./commands/init");
+
+$injector.require("projectFilesManager", "./services/project-files-manager");
