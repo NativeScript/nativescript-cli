@@ -204,12 +204,15 @@ class IOSDebugService implements IDebugService {
 
     private openDebuggingClient(): IFuture<void> {
         return (() => {
-            var cmd = "open -a Safari " + this.getSafariPath().wait();
+            let inspectorPath = this.getInspectorPath().wait();
+            let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
+            let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
+            let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`;
             this.$childProcess.exec(cmd).wait();
         }).future<void>()();
     }
 
-    private getSafariPath(): IFuture<string> {
+    private getInspectorPath(): IFuture<string> {
         return (() => {
             var tnsIosPackage = "";
             if (this.$options.frameworkPath) {
@@ -221,8 +224,8 @@ class IOSDebugService implements IDebugService {
                 var platformData = this.$platformsData.getPlatformData(this.platform);
                 tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName).wait();
             }
-            var safariPath = path.join(tnsIosPackage, "WebInspectorUI/Safari/Main.html");
-            return safariPath;
+            var inspectorPath = path.join(tnsIosPackage, "WebInspectorUI/");
+            return inspectorPath;
         }).future<string>()();
     }
 }
