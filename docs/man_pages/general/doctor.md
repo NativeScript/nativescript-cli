@@ -12,7 +12,8 @@ Checks your system for configuration problems which might prevent the NativeScri
 
 Command | Description
 ----------|----------
-[feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript CLI.
+[usage-reporting](usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
+[error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [autocomplete](autocomplete.html) | Prints your current command-line completion settings. If disabled, prompts you to enable it.
 [help](help.html) | Lists the available commands or shows information about the selected command.
 <% } %>
