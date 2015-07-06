@@ -269,7 +269,9 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 * `device log` opens the log stream for the selected device.
 * `device run` runs a selected application on a connected device.
 * `device list-applications` lists the installed applications on all connected devices.
-* `feature-usage-tracking` configures anonymous feature usage tracking.
+* `usage-reporting` configures anonymous usage reporting.
+* `error-reporting` configures anonymous error tracking.
+* `doctor` checks for configuration issues.
 * `autocomplete` lets you configure your command-line completion settings for zsh and bash profiles.
 
 [Back to Top][1]
