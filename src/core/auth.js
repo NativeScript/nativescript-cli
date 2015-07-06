@@ -1,16 +1,18 @@
 import CoreObject from './object';
-import Kinvey from '../kinvey';
-import Session from './session';
+import User from './user';
 import utils from './utils';
+import Kinvey from '../kinvey';
 
 class Auth extends CoreObject {
   static all() {
-    return Auth.Session().then(null, Auth.Basic);
+    return Auth.session().then(null, Auth.Basic);
   }
 
   static app() {
+    let kinvey = Kinvey.instance();
+
     // Validate preconditions.
-    if (!utils.isDefined(Kinvey.appKey) || !utils.isDefined(Kinvey.appSecret)) {
+    if (!utils.isDefined(kinvey.appKey) || !utils.isDefined(kinvey.appSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -18,8 +20,8 @@ class Auth extends CoreObject {
     // Prepare the response.
     let promise = Promise.resolve({
       scheme: 'Basic',
-      username: Kinvey.appKey,
-      password: Kinvey.appSecret
+      username: kinvey.appKey,
+      password: kinvey.appSecret
     });
 
     // Return the response.
@@ -27,12 +29,12 @@ class Auth extends CoreObject {
   }
 
   static basic() {
-    return Auth.Master().then(null, Auth.App);
+    return Auth.master().then(null, Auth.App);
   }
 
   static default() {
-    return Auth.Session().then(null, function(error) {
-      return Auth.Master().then(null, function() {
+    return Auth.session().then(null, function(error) {
+      return Auth.master().then(null, function() {
         // Most likely, the developer did not create a user. Return a useful error.
         return Promise.resolve(error);
       });
@@ -40,8 +42,10 @@ class Auth extends CoreObject {
   }
 
   static master() {
+    let kinvey = Kinvey.instance();
+
     // Validate preconditions.
-    if (!utils.isDefined(Kinvey.appKey) || !utils.isDefined(Kinvey.masterSecret)) {
+    if (!utils.isDefined(kinvey.appKey) || !utils.isDefined(kinvey.masterSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -49,8 +53,8 @@ class Auth extends CoreObject {
     // Prepare the response.
     let promise = Promise.resolve({
       scheme: 'Basic',
-      username: Kinvey.appKey,
-      password: Kinvey.masterSecret
+      username: kinvey.appKey,
+      password: kinvey.masterSecret
     });
 
     // Return the response.
@@ -62,18 +66,18 @@ class Auth extends CoreObject {
   }
 
   static session() {
-    let session = Session.current;
+    let user = User.current;
     let error;
 
-    if (!utils.isDefined(session)) {
-      error = new Error('There is not an active session.');
+    if (!utils.isDefined(user)) {
+      error = new Error('There is not an active user.');
       return Promise.reject(error);
     }
 
     // Prepare the response.
     let promise = Promise.resolve({
-      scheme: 'Kinvey',
-      credentials: session.authToken
+      scheme: 'kinvey',
+      credentials: user.authToken
     });
 
     // Return the response.

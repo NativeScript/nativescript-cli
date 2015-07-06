@@ -13,10 +13,12 @@ class Request extends CoreObject {
   constructor(method = HttpMethod.GET, path = '', query = {}, body = {}) {
     super();
 
+    let kinvey = Kinvey.instance();
+
     // Set request info
     this.method = method;
-    this.protocol = Kinvey.apiProtocol;
-    this.hostname = Kinvey.apiHostname;
+    this.protocol = kinvey.apiProtocol;
+    this.hostname = kinvey.apiHostname;
     this.path = path;
     this.query = query instanceof Query ? query.toJSON() : query;
     this.body = body;
@@ -27,7 +29,7 @@ class Request extends CoreObject {
     let headers = {};
     headers.Accept = 'application/json';
     headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = Kinvey.apiVersion;
+    headers['X-Kinvey-Api-Version'] = kinvey.apiVersion;
     this.addHeaders(headers);
   }
 
@@ -145,14 +147,12 @@ class Request extends CoreObject {
       // Execute the request
       if (cachePolicy === CachePolicy.CacheOnly) {
         return cacheRack.execute(this);
-      }
-      else if (cachePolicy === CachePolicy.NetworkFirst) {
+      } else if (cachePolicy === CachePolicy.NetworkFirst) {
         return networkRack.execute(this).catch(() => {
           // TO DO: Check error
           cacheRack.execute(this);
         });
-      }
-      else if (cachePolicy === CachePolicy.CacheFirst) {
+      } else if (cachePolicy === CachePolicy.CacheFirst) {
         return cacheRack.execute(this).catch(() => {
           // TO DO: Check error
           networkRack.execute(this);

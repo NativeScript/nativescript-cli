@@ -1,13 +1,13 @@
 import CoreObject from './object';
 import Database from './database';
 import Utils from './utils';
-import Kinvey from '../kinvey';
+let kinvey = require('../kinvey').instance();
 const database = Symbol();
 
 class Local extends CoreObject {
   static get database() {
     if (!Utils.isDefined(this[database])) {
-      this[database] = new Database(Kinvey.appKey);
+      this[database] = new Database(kinvey.appKey);
     }
 
     return this[database];

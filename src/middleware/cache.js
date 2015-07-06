@@ -20,11 +20,9 @@ class CacheMiddleware extends Middleware {
       if (utils.isDefined(cachedResponse)) {
         request.response = new Response(cachedResponse.statusCode, cachedResponse.headers, cachedResponse.data);
       }
-    }
-    else if (request.method === HttpMethod.DELETE) {
-      Cache.remove(key);
-    }
-    else {
+    } else if (request.method === HttpMethod.DELETE) {
+      Cache.del(key);
+    } else {
       let data = utils.isDefined(request.response) ? request.response.toJSON() : null;
       log.info(`Set cache data: ${data}`);
       Cache.set(key, data);

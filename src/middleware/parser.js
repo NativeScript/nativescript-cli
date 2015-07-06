@@ -15,7 +15,9 @@ class ParserMiddleware extends Middleware {
       if (contentType.indexOf('application/json') === 0) {
         try {
           response.data = JSON.parse(response.data);
-        } catch (err) { }
+        } catch (err) {
+          console.error(err);
+        }
 
         request.response = response;
       }

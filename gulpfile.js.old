@@ -1,0 +1,135 @@
+var gulp = require('gulp');
+var runSequence = require('run-sequence');
+var del = require('del');
+var babel = require('gulp-babel');
+var karma = require('karma').server;
+var browserify = require('browserify');
+var rename = require('gulp-rename');
+var uglify = require('gulp-uglify');
+var gzip = require('gulp-gzip');
+var source = require('vinyl-source-stream');
+var gutil = require('gulp-util');
+var path = require('path');
+var jscs = require('gulp-jscs');
+var jshint = require('gulp-jshint');
+var stylish = require('gulp-jscs-stylish');
+var mocha = require('gulp-mocha');
+var istanbul = require('gulp-istanbul');
+var isparta = require('isparta');
+var platform = gutil.env.platform || 'node';
+var config = require('./' + platform + '.config');
+
+function createLintTask(taskName, files) {
+  gulp.task(taskName, function() {
+    return gulp.src(files)
+      .pipe($.plumber())
+      .pipe($.eslint())
+      .pipe($.eslint.format())
+      .pipe($.eslint.failOnError())
+      .pipe($.jscs())
+      .pipe($.notify(jscsNotify));
+  });
+}
+
+// Lint our source code
+createLintTask('lint-src', ['src/**/*.js']);
+
+// Lint our test code
+createLintTask('lint-test', ['test/**/*.js']);
+
+
+gulp.task('lint', function() {
+  return gulp.src(config.src)
+    .pipe(jshint())
+    .pipe(jscs())
+    .on('error', function() {})
+    .pipe(stylish.combineWithHintResults())
+    .pipe(jshint.reporter('jshint-stylish'));
+});
+
+gulp.task('build', function(done) {
+  runSequence('build:clean', 'lint', 'transpile', done);
+});
+
+gulp.task('build:clean', function(done) {
+  del([config.build], done);
+});
+
+gulp.task('transpile', function() {
+  return gulp.src(config.src)
+    .pipe(babel(config.babel))
+    .pipe(gulp.dest(config.build));
+});
+
+gulp.task('dist', function(done) {
+  runSequence(['build'], 'browserify', done);
+});
+
+gulp.task('browserify', function() {
+  return browserify(config.browserify).bundle()
+    .pipe(source(config.browserify.outputName))
+    .pipe(gulp.dest(config.dist));
+});
+
+gulp.task('release', function(done) {
+  runSequence(['dist'], 'uglify', 'gzip', done);
+});
+
+gulp.task('uglify', function() {
+  return gulp.src(config.dist + '/' + config.browserify.outputName)
+    .pipe(uglify())
+    .pipe(rename(config.releaseName))
+    .pipe(gulp.dest(config.dist));
+});
+
+gulp.task('gzip', function() {
+  return gulp.src(config.dist + '/' + config.releaseName)
+    .pipe(gzip({
+      append: true
+    }))
+    .pipe(gulp.dest(config.dist));
+});
+
+gulp.task('test', function(done) {
+  karma.start({
+    configFile: path.join(__dirname, config.test.karmaConfig),
+    singleRun: true
+  }, done);
+});
+
+function test() {
+  return gulp.src(config.test, {read: false})
+    .pipe(mocha(config.mocha));
+}
+
+gulp.task('coverage', function(done) {
+  require('babel/register');
+  gulp.src(config.src)
+    .pipe(istanbul({instrumenter: isparta.Instrumenter}))
+    .pipe(istanbul.hookRequire())
+    .on('finish', function() {
+      return test()
+        .pipe(istanbul.writeReports())
+        //.pipe(istanbul.enforceThresholds({thresholds: {global: 90}}))
+        .once('error', function () {
+          process.exit(1);
+        })
+        .once('end', function () {
+          process.exit();
+        });
+    });
+});
+
+// Lint and run our tests
+gulp.task('test', ['lint-src', 'lint-test'], function() {
+  require('babel/register');
+  return test();
+});
+
+gulp.task('release', function(done) {
+  runSequence('dist', done);
+});
+
+gulp.task('default', function(done) {
+  runSequence('build', done);
+});

@@ -1,5 +1,5 @@
 import Middleware from './middleware';
-import Http from '/* @echo HTTP_LIB */';
+let Http = require(process.env.HTTP_LIB || 'kinvey-http-node');
 import Response from '../core/response';
 
 class HttpMiddleware extends Middleware {

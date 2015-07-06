@@ -1,0 +1,96 @@
+var _ = require('underscore');
+var gulp = require('gulp');
+var $ = require('gulp-load-plugins')();
+var del = require('del');
+var babelify = require('babelify');
+var browserify = require('browserify');
+var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
+var isparta = require('isparta');
+var manifest = require('./package.json');
+var platform = $.util.env.platform || 'node';
+var config = require('./' + platform + '.config');
+
+// Remove the built files
+gulp.task('clean', function(cb) {
+  del([config.distDirectory], cb);
+});
+
+// Remove our temporary files
+gulp.task('clean-tmp', function(cb) {
+  del(config.tmp, cb);
+});
+
+// Send a notification when JSRC fails,
+// so that you know your changes didn't build
+function jscsNotify(file) {
+  if (!file.jscs) { return; }
+  return file.jscs.success ? false : 'JSRC failed';
+}
+
+function createLintTask(taskName, files) {
+  gulp.task(taskName, function() {
+    return gulp.src(files)
+      .pipe($.plumber())
+      .pipe($.eslint())
+      .pipe($.eslint.format())
+      .pipe($.eslint.failOnError())
+      .pipe($.jscs())
+      .pipe($.notify(jscsNotify));
+  });
+}
+
+// Lint our source code
+createLintTask('lint-src', config.src);
+
+// Lint our test code
+createLintTask('lint-test', config.tests);
+
+function getBanner() {
+  var banner = '// Kinvey.<%= platform %>.SDK v<%= version %>\n';
+  return _.template(banner)({
+    platform: platform,
+    version: manifest.version
+  });
+}
+
+// Build two versions of the library
+gulp.task('build', ['clean'], function() {
+  return browserify(config.browserify)
+    .transform(babelify.configure(config.babelify))
+    .require(config.entry, { entry: true })
+    .bundle()
+    .on('error', $.util.log.bind($.util, 'Browserify Error'))
+    .pipe(source(config.outputFile))
+    .pipe(gulp.dest(config.distDirectory))
+    .pipe(buffer())
+    .pipe($.sourcemaps.init({ loadMaps: true }))
+    .pipe($.uglify())
+    .pipe($.rename(config.outputMinFile))
+    .pipe($.sourcemaps.write('./'))
+    .pipe(gulp.dest(config.distDirectory));
+});
+
+
+function test() {
+  return gulp.src(config.test, {read: false})
+    .pipe($.mocha(config.mocha));
+}
+
+gulp.task('coverage', function() {
+  require('babel/register');
+  gulp.src(config.src)
+    .pipe($.istanbul({instrumenter: isparta.Instrumenter}))
+    .pipe($.istanbul.hookRequire())
+    .on('finish', function() {
+      return test()
+        .pipe($.istanbul.writeReports())
+        //.pipe(istanbul.enforceThresholds({thresholds: {global: 90}}))
+        .once('error', function () {
+          process.exit(1);
+        })
+        .once('end', function () {
+          process.exit();
+        });
+    });
+});

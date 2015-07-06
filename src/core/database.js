@@ -1,22 +1,22 @@
 import CoreObject from './object';
 import Dexie from 'dexie';
-import indexedDBShim from '/* @echo DATABASE_LIB */';
+let indexedDBShim = require(process.env.DATABASE_LIB || 'fake-indexeddb');
 import utils from './utils';
-import Kinvey from '../kinvey';
+let Kinvey = require('../kinvey');
 
 // Setup Dexie dependencies
 Dexie.dependencies.indexedDB = indexedDBShim;
 
-// @if PLATFORM_ENV='node'
-Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
-Dexie.dependencies.IDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
-// @endif
+if (process.env.PLATFORM_ENV === 'node') {
+  Dexie.dependencies.IDBKeyRange = require('fake-indexeddb/lib/FDBKeyRange');
+  Dexie.dependencies.IDBTransaction = require('fake-indexeddb/lib/FDBTransaction');
+}
 
 let version = 1;
 const datbaseSymbol = Symbol();
 
 class Database extends CoreObject {
-  constructor(name = `Kinvey.${Kinvey.appKey}`) {
+  constructor(name = 'Kinvey') {
     super();
 
     // Set the database name
@@ -93,9 +93,10 @@ class Database extends CoreObject {
    */
   static instance() {
     let database = this[datbaseSymbol];
+    let kinvey = Kinvey.instance();
 
     if (!utils.isDefined(database)) {
-      database = new Database();
+      database = new Database(`Kinvey.${kinvey.appKey}`);
       this[datbaseSymbol] = database;
     }
 

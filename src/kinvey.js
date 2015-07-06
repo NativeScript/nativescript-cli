@@ -1,46 +1,54 @@
+import CoreObject from './core/object';
 import utils from './core/utils';
 import url from 'url';
-import Session from './core/session';
 import User from './core/user';
+const instanceSymbol = Symbol();
 
-let Kinvey = {
-  apiProtocol: '/* @echo API_PROTOCOL */',
-  apiHostname: '/* @echo API_HOSTNAME */',
-  apiVersion: '/* @echo API_VERSION */',
-  appKey: undefined,
-  appSecret: undefined,
-  masterSecret: undefined,
-  encryptionKey: undefined
-};
+class Kinvey extends CoreObject {
+  constructor() {
+    super();
 
-Kinvey.init = (options) => {
-  let apiUrl;
-  let apiUrlComponents;
-  let error;
+    this.apiProtocol = process.env.API_PROTOCOL || 'https';
+    this.apiHostname = process.env.API_HOSTNAME || 'baas.kinvey.com';
+    this.apiVersion = process.env.API_VERSION || 3;
+  }
 
-  return new Promise((resolve, reject) => {
+  get activeUser() {
+    return User.current;
+  }
+
+  set activeUser(user) {
+    User.current = user;
+  }
+
+  static init(options = {}) {
+    let kinvey = new Kinvey();
+    let apiUrl;
+    let apiUrlComponents;
+    let error;
+
     if (!utils.isDefined(options.appKey)) {
       error = new Kinvey.Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
-      return reject(error);
+      throw error;
     }
 
     if (!utils.isDefined(options.appSecret) && !utils.isDefined(options.masterSecret)) {
       error = new Kinvey.Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
-      return reject(error);
+      throw error;
     }
 
     // Parse the API url
-    apiUrl = options.apiUrl || `${Kinvey.apiProtocol}//${Kinvey.apiHostname}`;
+    apiUrl = options.apiUrl || `${kinvey.apiProtocol}://${kinvey.apiHostname}`;
     apiUrlComponents = url.parse(apiUrl);
 
     // Make sure the protocol of the apiUrl is using https
     if (apiUrlComponents.protocol.indexOf('https') !== 0) {
-      apiUrlComponents.protocol = '/* @echo API_PROTOCOL */';
+      apiUrlComponents.protocol = kinvey.apiProtocol;
     }
 
     // Set the API protocol and hostname
-    Kinvey.apiProtocol = apiUrlComponents.protocol;
-    Kinvey.apiHostname = apiUrlComponents.hostname;
+    kinvey.apiProtocol = apiUrlComponents.protocol;
+    kinvey.apiHostname = apiUrlComponents.hostname;
 
     // // Set the MIC host name
     // Kinvey.MICHostName = options.micHostName || Kinvey.MICHostName;
@@ -65,21 +73,30 @@ Kinvey.init = (options) => {
     // }
 
     // Save credentials.
-    Kinvey.appKey = options.appKey;
-    Kinvey.appSecret = options.appSecret || undefined;
-    Kinvey.masterSecret = options.masterSecret || undefined;
+    kinvey.appKey = options.appKey;
+    kinvey.appSecret = options.appSecret || undefined;
+    kinvey.masterSecret = options.masterSecret || undefined;
 
     // Set the encryption key.
-    Kinvey.encryptionKey = options.encryptionKey || undefined;
-  });
-};
+    kinvey.encryptionKey = options.encryptionKey || undefined;
 
-Kinvey.getActiveUser = () => {
-  return User.current;
-};
+    // Store the instance
+    this[instanceSymbol] = kinvey;
 
-Kinvey.setActiveUser = (user) => {
-  Session.current = user;
-};
+    // Return the instance
+    return kinvey;
+  }
+
+  static instance() {
+    let instance = this[instanceSymbol];
+
+    if (!utils.isDefined(instance)) {
+      instance = new Kinvey();
+      this[instanceSymbol] = instance;
+    }
+
+    return instance;
+  }
+}
 
 export default Kinvey;
