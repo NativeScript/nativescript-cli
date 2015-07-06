@@ -7,7 +7,8 @@ interface IPluginsService {
 }
 
 interface IPluginData extends INodeModuleData {
-	platformsData: IPluginPlatformsData; 
+	platformsData: IPluginPlatformsData;
+	pluginPlatformsFolderPath(platform: string): string; 
 }
 
 interface INodeModuleData {

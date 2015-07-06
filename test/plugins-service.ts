@@ -555,7 +555,10 @@ describe("Plugins service", () => {
 					frameworkPackageName: "tns-android",
 					configurationFileName: "AndroidManifest.xml",
 					configurationFilePath: path.join(appDestinationDirectoryPath, "AndroidManifest.xml"),
-					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }]
+					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }],
+					platformProjectService:  {
+						preparePluginNativeCode: (pluginData: IPluginData) => (() => {}).future<void>()()
+					}
 				}
 			}
 			
