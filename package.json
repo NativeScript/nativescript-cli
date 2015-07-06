@@ -18,6 +18,7 @@
     "node-cache": "^3.0.0"
   },
   "devDependencies": {
+    "babel": "^5.6.14",
     "babel-eslint": "^3.1.23",
     "babel-runtime": "^5.6.15",
     "babelify": "^6.0.0",
@@ -40,6 +41,7 @@
     "gulp-uglify": "^1.2.0",
     "gulp-util": "^3.0.6",
     "isparta": "^2.2.0",
+    "istanbul": "^0.3.17",
     "mocha": "^2.1.0",
     "nock": "^2.6.0",
     "require-dir": "^0.3.0",

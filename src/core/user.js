@@ -6,8 +6,8 @@ import AuthType from '../enums/authType';
 import Cache from './cache';
 import log from './logger';
 import Kinvey from '../kinvey';
-const currentUserSymbol = Symbol();
-const currentUserKey = 'CurrentUser';
+const activeUserSymbol = Symbol();
+const activeUserKey = 'activeUser';
 
 class User extends Entity {
   get username() {
@@ -28,8 +28,8 @@ class User extends Entity {
    * @returns {Boolean} `true` if the user is active, `false` otherwise.
    */
   isActive() {
-    let currentUser = User.current;
-    return this.data._id === currentUser.data._id;
+    let activeUser = User.active;
+    return this.data._id === activeUser.data._id;
   }
 
   /**
@@ -81,8 +81,8 @@ class User extends Entity {
     // });
     //
 
-    // Set the current user to null
-    User.current = null;
+    // Set the active user to null
+    User.active = null;
 
     // Debug
     promise.then(() => {
@@ -102,7 +102,7 @@ class User extends Entity {
    * @returns {Promise}           The previous active user.
    */
   static logout() {
-    let user = User.current;
+    let user = User.active;
 
     if (utils.isDefined(user)) {
       // Forward to `user.logout()`.
@@ -140,8 +140,8 @@ class User extends Entity {
       // Set the data for the user
       this.data = response.data;
 
-      // Set the user as the current
-      kinvey.activeUser = this;
+      // Set the user as the active
+      User.active = this;
 
       // Return the user
       return this;
@@ -166,7 +166,7 @@ class User extends Entity {
    */
   static me(options = {}) {
     // Forward to `user.me()`.
-    let user = User.current;
+    let user = User.active;
     return user.me(options);
   }
 
@@ -259,7 +259,7 @@ class User extends Entity {
     log.info('Creating a new user.');
 
     // Validate preconditions
-    if (options.state !== false && utils.isDefined(User.current)) {
+    if (options.state !== false && utils.isDefined(User.active)) {
       let error = new Error('Already logged in.');
       return Promise.reject(error);
     }
@@ -275,9 +275,9 @@ class User extends Entity {
       // Create a user from the response
       let user = new User(response.data);
 
-      // Set the user as the current
+      // Set the user as the active
       if (options.state !== false) {
-        kinvey.activeUser = user;
+        User.active = user;
       }
 
       // Return the user
@@ -311,7 +311,7 @@ class User extends Entity {
     let kinvey = Kinvey.instance();
 
     // Reject if a user is already active
-    if (utils.isDefined(User.current)) {
+    if (utils.isDefined(User.active)) {
       return Promise.reject(new Error('Already logged in.'));
     }
 
@@ -347,8 +347,8 @@ class User extends Entity {
       // Create a user from the response
       let user = new User(response.data);
 
-      // Set the user as the current
-      kinvey.activeUser = user;
+      // Set the user as the active
+      User.active = user;
 
       // Return the user
       return user.toJSON();
@@ -468,7 +468,7 @@ class User extends Entity {
    */
   static resetPassword() {
     // Forward to `user.resetPassword()`.
-    let user = User.current;
+    let user = User.active;
     return user.resetPassword();
   }
 
@@ -513,59 +513,59 @@ class User extends Entity {
    *
    * @return {User} The current user.
    */
-  static get current() {
-    let user = this[currentUserSymbol];
+  static get active() {
+    let user = User[activeUserSymbol];
 
     // Check cache
     if (!utils.isDefined(user)) {
-      let cache = Cache.get(currentUserKey);
+      let cache = Cache.get(activeUserKey);
 
       if (utils.isDefined(cache)) {
         user = new User(cache);
-        this[currentUserSymbol] = user;
+        User[activeUserSymbol] = user;
       }
     }
 
     return user;
   }
 
-  static set current(user) {
-    let currentUser = this[currentUserSymbol];
+  static set active(user) {
+    let activeUser = User[activeUserSymbol];
 
     // Remove the current user
-    if (utils.isDefined(currentUser)) {
+    if (utils.isDefined(activeUser)) {
       // Remove the current user from cache
-      Cache.del(currentUserKey);
+      Cache.del(activeUserKey);
 
       // Set the current user to null
-      this[currentUserSymbol] = null;
+      User[activeUserSymbol] = null;
 
       // Debug
-      log.info(`Removed the current user with _id ${currentUser._id}.`);
+      log.info(`Removed the active user with _id ${activeUser._id}.`);
     }
 
     // Create a new user
     if (utils.isDefined(user)) {
       if (!(user instanceof User)) {
         // Call toJSON if it is available
-        if (typeof user.toJSON === typeof Function) {
+        if (utils.isFunction(user.toJSON)) {
           user = user.toJSON();
         }
 
         // Create the user
-        currentUser = new User(user);
+        activeUser = new User(user);
       } else {
-        currentUser = user;
+        activeUser = user;
       }
 
       // Store in cache
-      Cache.set(currentUserKey, currentUser.toJSON());
+      Cache.set(activeUserKey, activeUser.toJSON());
 
       // Set the current user
-      this[currentUserSymbol] = currentUser;
+      User[activeUserSymbol] = activeUser;
 
       // Debug
-      log.info(`Set current user with _id ${currentUser._id}`);
+      log.info(`Set active user with _id ${activeUser._id}`);
     }
   }
 }

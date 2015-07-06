@@ -14,11 +14,11 @@ class Kinvey extends CoreObject {
   }
 
   get activeUser() {
-    return User.current;
+    return User.active;
   }
 
   set activeUser(user) {
-    User.current = user;
+    User.active = user;
   }
 
   static init(options = {}) {
@@ -81,18 +81,18 @@ class Kinvey extends CoreObject {
     kinvey.encryptionKey = options.encryptionKey || undefined;
 
     // Store the instance
-    this[instanceSymbol] = kinvey;
+    Kinvey[instanceSymbol] = kinvey;
 
     // Return the instance
     return kinvey;
   }
 
   static instance() {
-    let instance = this[instanceSymbol];
+    let instance = Kinvey[instanceSymbol];
 
     if (!utils.isDefined(instance)) {
       instance = new Kinvey();
-      this[instanceSymbol] = instance;
+      Kinvey[instanceSymbol] = instance;
     }
 
     return instance;

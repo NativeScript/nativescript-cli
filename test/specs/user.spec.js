@@ -184,7 +184,7 @@ describe('User', function() {
       // Signup
       return User.signup().then((user) => {
         // Expectations
-        expect(user).to.deep.equal(User.current.data);
+        expect(user).to.deep.equal(User.active.data);
 
         // Make sure the scope is done
         scope.done();
@@ -193,7 +193,7 @@ describe('User', function() {
 
     it('should fail when there is already an active user', function() {
       // Mock the active user.
-      User.current = new User({
+      User.active = new User({
         _id: this.randomString(),
         _kmd: {
           authtoken: this.randomString()
@@ -368,7 +368,7 @@ describe('User', function() {
           authtoken: this.randomString()
         }
       });
-      User.current = this.currentUser;
+      User.active = this.currentUser;
 
       // Login
       return User.login().catch((e) => {
@@ -453,7 +453,7 @@ describe('User', function() {
           authtoken: this.randomString()
         }
       });
-      User.current = this.currentUser;
+      User.active = this.currentUser;
     });
 
     afterEach(function() {
@@ -464,13 +464,13 @@ describe('User', function() {
       // Logout
       return User.logout().then(() => {
         // Expectations
-        expect(User.current).to.be.null;
+        expect(User.active).to.be.null;
       });
     });
 
     it('should succeed when there is no active user', function() {
       // Set the current user to null
-      User.current = null;
+      User.active = null;
 
       // Logout
       return User.logout();

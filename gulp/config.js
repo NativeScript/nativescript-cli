@@ -1,4 +1,5 @@
 var path = require('path');
+var isparta = require('isparta');
 var deepMerge = require('deep-merge')(function(target, source) {
   if(target instanceof Array) {
     return [].concat(target, source);
@@ -28,6 +29,16 @@ var defaultConfig = {
     debug: true,
     standalone: 'Kinvey'
   },
+  coverage: {
+    istanbul: {
+      instrumenter: isparta.Instrumenter,
+      includeUntested: true
+    },
+    report: {
+      dir: path.join(__dirname, '../coverage'),
+      reporters: ['text', 'text-summary', 'json', 'html']
+    }
+  },
   entry: path.join(__dirname, '../src/index.js'),
   mocha: {
     slow: 100,
@@ -35,12 +46,8 @@ var defaultConfig = {
   },
   outputFile: 'kinvey.js',
   outputMinFile: 'kinvey.min.js',
-  srcFiles: [
-    path.join(__dirname, '../src/**/*.js')
-  ],
-  testFiles: [
-    path.join(__dirname, '../test/**/*.js')
-  ]
+  srcFiles: ['src/**/*.js'],
+  testFiles: ['test/specs/**/*.spec.js']
 };
 
 // if (process.env.NODE_ENV !== 'production') {
