@@ -26,6 +26,7 @@ Command | Description
 [autocomplete-status](autocomplete-status.html) | Prints the current status of your command-line completion settings.
 [autocomplete-enable](autocomplete-enable.html) | Configures your current command-line completion settings.
 [autocomplete-disable](autocomplete-disable.html) | Disables command-line completion for bash and zsh shells.
-[feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript command-line interface.
+[usage-reporting](usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
+[error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 <% } %>
