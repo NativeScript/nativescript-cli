@@ -18,5 +18,5 @@ Command | Description
 [autocomplete-enable](autocomplete-enable.html) | Configures your current command-line completion settings.
 [feature-usage-tracking](feature-usage-tracking.html) | Configures anonymous usage statistics tracking for the NativeScript command-line interface.
 [help](help.html) | Lists the available commands or shows information about the selected command.
-[doctor](doctor.html) | Checks your system and reports potential problems which may prevent developing with NativeScript.
+[doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 <% } %>

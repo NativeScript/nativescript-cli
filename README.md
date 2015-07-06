@@ -22,6 +22,7 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 	* [Deploy Your Project](#deploy-your-project)
 	* [Emulate Your Project](#emulate-your-project)
 	* [Run Your Project](#run-your-project)
+* [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
 * [How to Contribute](#how-to-contribute)
 * [License](#license)
@@ -130,7 +131,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 	```Shell
 	android update sdk
 	```
-1. Select all packages for the Android 19 SDK and any other SDKs that you want to install and click **Install**.
+1. Select all packages for the Android 19 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
 
 ## OS X
 
@@ -157,7 +158,7 @@ Path to the platform-tools subdirectory in the Android SDK installation director
 
 For example:
 ```
-export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/sdk/tools:/Applications/Android Studio.app/sdk/platform-tools
+export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
 ```
 
 ## Linux
@@ -214,6 +215,12 @@ OS | Node.js installed from http://nodejs.org/ | Node.js installed via package m
 Windows | `npm install nativescript -g` | `npm install nativescript -g`
 OS X | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
 Linux | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
+
+To check if your system is configured properly, run the following command.
+
+```Shell
+tns doctor
+```
 
 ## Configure Proxy Usage
 
@@ -484,6 +491,21 @@ tns run ios --emulator
 
 [Back to Top][1]
 
+Troubleshooting
+===
+
+If the NativeScript CLI does not behave as expected, you might be facing a configuration issue. For example, a missing `JAVA` path. To check if your system is configured properly for the NativeScript CLI, run the following command.
+
+```bash
+tns doctor
+```
+
+This command prints warnings about current configuration issues and provides basic information about how to resolve them.
+
+If addressing the configuration issues does not resolve your problem, you can [report an issue](CONTRIBUTING.md#report-an-issue) or [post in the NativeScript page in Google Groups](https://groups.google.com/forum/#!forum/nativescript).
+
+[Back to Top][1]
+
 Known Issues
 ===
 
@@ -493,6 +515,8 @@ Known Issues
 	1. Attempt to open a web page.
 	1. Provide your authentication credentials for accessing the Internet.
 	1. Run the terminal and continue working with the NativeScript CLI.
+
+[Back to Top][1]
 
 How to Contribute
 ===
