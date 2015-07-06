@@ -3,7 +3,7 @@ build ios
 
 Usage | Synopsis
 ---|---
-General | `$ tns build ios [--forDevice] [--release]`
+General | `$ tns build ios [--for-device] [--release]`
 
 Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on device, respectively.
 
@@ -13,7 +13,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 
 ### Options
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
-* `--forDevice` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
+* `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
 <% } %>
 <% if(isHtml) { %> 
 ### Command Limitations
