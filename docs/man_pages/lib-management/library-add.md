@@ -23,8 +23,7 @@ IMPORTANT: When adding frameworks, keep in mind the following behaviors.
     When you want to add an Android framework, `<Library Path>` might be any of the following:  
     
     * The file path to a directory containing one or more `*.jar` files.
-    * The file path to a directory containing the project.properties files for an Android library project created with Eclipse.
-    * The complete file path to a `*.jar` or `project.properties` file.
+    * The file path to a directory containing the `project.properties` files for an Android library project created with Eclipse.
 
 ### Prerequisites
 
