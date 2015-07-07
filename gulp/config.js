@@ -46,8 +46,8 @@ var defaultConfig = {
   },
   outputFile: 'kinvey.js',
   outputMinFile: 'kinvey.min.js',
-  srcFiles: ['src/**/*.js'],
-  testFiles: ['test/specs/**/*.spec.js']
+  srcFiles: 'src/**/*.js',
+  testFiles: 'test/specs/**/*.spec.js'
 };
 
 // if (process.env.NODE_ENV !== 'production') {
