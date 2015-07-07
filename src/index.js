@@ -1,34 +1,24 @@
 import Kinvey from './kinvey';
-import DataStore from './core/datastore';
-import Log from './core/logger';
-import Middleware from './middleware/middleware';
-import Cache from './middleware/cache';
-import Database from './middleware/database';
-import Http from './middleware/http';
-import Parser from './middleware/parser';
-import Serializer from './middleware/serializer';
-import Rack from './core/rack';
-import User from './core/user';
 
 // DataStore
-Kinvey.DataStore = DataStore;
+Kinvey.DataStore = require('./core/datastore');
 
 // Utils
-Kinvey.Log = Log;
+Kinvey.Log = require('./core/logger');
 
 // Middleware
-Kinvey.Middleware = Middleware;
-Kinvey.Middleware.Cache = Cache;
-Kinvey.Middleware.Database = Database;
-Kinvey.Middleware.Http = Http;
-Kinvey.Middleware.Parser = Parser;
-Kinvey.Middleware.Serializer = Serializer;
+Kinvey.Middleware = require('./middleware/middleware');
+Kinvey.Middleware.Cache = require('./middleware/cache');
+Kinvey.Middleware.Database = require('./middleware/database');
+Kinvey.Middleware.Http = require('./middleware/http');
+Kinvey.Middleware.Parser = require('./middleware/parser');
+Kinvey.Middleware.Serializer = require('./middleware/serializer');
 
 // Rack
-Kinvey.Rack = Rack;
+Kinvey.Rack = require('./core/rack');
 
 // User
-Kinvey.User = User;
+Kinvey.User = require('./core/user');
 
 // Export
 export default Kinvey;

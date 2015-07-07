@@ -10,6 +10,9 @@ class Kinvey extends CoreObject {
 
     this.apiProtocol = process.env.API_PROTOCOL || 'https';
     this.apiHostname = process.env.API_HOSTNAME || 'baas.kinvey.com';
+    this.micApiProtocol = process.env.MIC_API_PROTOCOL || 'https';
+    this.micApiHostname = process.env.MIC_API_HOSTNAME || '';
+    this.micApiVersion = process.env.MIC_API_VERSION;
     this.apiVersion = process.env.API_VERSION || 3;
   }
 
@@ -25,6 +28,8 @@ class Kinvey extends CoreObject {
     let kinvey = new Kinvey();
     let apiUrl;
     let apiUrlComponents;
+    let micApiUrl;
+    let micApiUrlComponents;
     let error;
 
     if (!utils.isDefined(options.appKey)) {
@@ -41,8 +46,8 @@ class Kinvey extends CoreObject {
     apiUrl = options.apiUrl || `${kinvey.apiProtocol}://${kinvey.apiHostname}`;
     apiUrlComponents = url.parse(apiUrl);
 
-    // Make sure the protocol of the apiUrl is using https
-    if (apiUrlComponents.protocol.indexOf('https') !== 0) {
+    // Check the protocol of the apiUrl
+    if (apiUrlComponents.protocol.indexOf(kinvey.apiProtocol) !== 0 && options.dev === false) {
       apiUrlComponents.protocol = kinvey.apiProtocol;
     }
 
@@ -50,17 +55,21 @@ class Kinvey extends CoreObject {
     kinvey.apiProtocol = apiUrlComponents.protocol;
     kinvey.apiHostname = apiUrlComponents.hostname;
 
-    // // Set the MIC host name
-    // Kinvey.MICHostName = options.micHostName || Kinvey.MICHostName;
+    // Set the MIC host name
+    kinvey.micHostName = options.micHostName || Kinvey.MICHostName;
 
-    // // Check if Kinvey.MICHostName uses https protocol
-    // if (Kinvey.MICHostName.indexOf('https://') !== 0) {
-    //   error = new Kinvey.Error('Kinvey requires https as the protocol when setting' +
-    //                          ' Kinvey.MICHostName, instead found the protocol ' +
-    //                          Kinvey.MICHostName.substring(0, Kinvey.MICHostName.indexOf(':/')) +
-    //                          ' in Kinvey.MICHostName: ' + Kinvey.MICHostName);
-    //   return reject(error);
-    // }
+    // Parse the MIC API url
+    micApiUrl = options.micApiUrl || `${kinvey.micApiProtocol}://${kinvey.micApiHostname}`;
+    micApiUrlComponents = url.parse(micApiUrl);
+
+    // Check the protocol of the micApiUrl
+    if (micApiUrlComponents.protocol.indexOf(kinvey.micApiProtocol) !== 0 && options.dev === false) {
+      micApiUrlComponents.protocol = kinvey.micApiProtocol;
+    }
+
+    // Set the MIC API protocol and hostname
+    kinvey.micApiProtocol = micApiUrlComponents.protocol;
+    kinvey.micApiHostname = micApiUrlComponents.hostname;
 
     // // Set the Client App Version
     // if (options.clientAppVersion != null) {
