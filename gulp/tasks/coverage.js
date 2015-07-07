@@ -13,6 +13,12 @@ gulp.task('coverage', function(done) {
         .pipe($.mocha(config.mocha))
         .pipe($.istanbul.writeReports(config.coverage.report))
         //.pipe($.istanbul.enforceThresholds({thresholds: {global: 90}}))
-        .on('end', done);
+        .once('error', function() {
+          process.exit(1);
+        })
+        .once('end', function() {
+          process.exit();
+          done();
+        });
     });
 });
