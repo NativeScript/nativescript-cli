@@ -96,21 +96,21 @@ function flushItem(bucket, key) {
   removeItem(bucket, exprKey);
 }
 
-// function flushExpiredItem(bucket, key) {
-//   var exprKey = expirationKey(key);
-//   var expr = getItem(bucket, exprKey);
+function flushExpiredItem(bucket, key) {
+  var exprKey = expirationKey(key);
+  var expr = getItem(bucket, exprKey);
 
-//   if (expr) {
-//     var expirationTime = parseInt(expr, EXPIRY_RADIX);
+  if (expr) {
+    var expirationTime = parseInt(expr, EXPIRY_RADIX);
 
-//     // Check if we should actually kick item out of storage
-//     if (currentTime() >= expirationTime) {
-//       removeItem(bucket, key);
-//       removeItem(bucket, exprKey);
-//       return true;
-//     }
-//   }
-// }
+    // Check if we should actually kick item out of storage
+    if (currentTime() >= expirationTime) {
+      removeItem(bucket, key);
+      removeItem(bucket, exprKey);
+      return true;
+    }
+  }
+}
 
 class Cache extends NodeCache {
   constructor(bucket = '') {
@@ -253,31 +253,27 @@ class Cache extends NodeCache {
     return cache.del(key);
   }
 
-  // static flush() {
-  //   let cache = Cache.instance();
-  //   return cache.flush();
-  // }
+  flush() {
+    eachKey(this.bucket, (key) => {
+      flushItem(this.bucket, key);
+    });
+  }
 
-  // flush() {
-  //   // Set the bucket for the cache
-  //   lscache.setBucket(this.name);
+  static flush() {
+    let cache = Cache.instance();
+    return cache.flush();
+  }
 
-  //   // Flush the cache
-  //   lscache.flush();
-  // }
+  flushExpired() {
+    eachKey(this.bucket, (key) => {
+      flushExpiredItem(this.bucket, key);
+    });
+  }
 
-  // static flushExpired() {
-  //   let cache = Cache.instance();
-  //   return cache.flushExpired;
-  // }
-
-  // flushExpired() {
-  //   // Set the bucket for the cache
-  //   lscache.setBucket(this.name);
-
-  //   // Flush the expired items
-  //   lscache.flushExpired();
-  // }
+  static flushExpired() {
+    let cache = Cache.instance();
+    return cache.flushExpired();
+  }
 
   static instance() {
     let cache = this[CACHE_SYMBOL];
