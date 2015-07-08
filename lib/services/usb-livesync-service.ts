@@ -3,6 +3,7 @@
 
 import androidLiveSyncServiceLib = require("../common/mobile/android/android-livesync-service");
 import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
+import helpers = require("../common/helpers");
 import path = require("path");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
@@ -80,13 +81,15 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commands = [ this.liveSyncCommands.SyncFilesCommand() ];			
 				this.livesync(deviceAppData.appIdentifier, deviceAppData.deviceProjectRootPath, commands).wait();
 			} else {
-				this.device.adb.executeShellCommand(`chmod 0777 ${path.join(deviceAppData.deviceProjectRootPath, "app")}`).wait();
+				// TODO: Introduce this.$mobileHelper.correctDevicePath(path: string) { return helpers.stringReplaceAll(path), '\\', '/') }
+				// Then later on this.$mobileHelper.buildDevicePath should call `correctDevicePath` before returning the output
+				this.device.adb.executeShellCommand(`chmod 0777 ${this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, "app")}`).wait();
 				
 				let commands: string[] = [];
 				
 				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 				_.each(localToDevicePaths, localToDevicePath => {
-					let devicePath = path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath());
+					let devicePath = helpers.stringReplaceAll(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()), '\\', '/');
 					//commands.push(`ls "${path.dirname(devicePath)}" >/dev/null 2>/dev/null || mkdir "${path.dirname(devicePath)}"`);
 					commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
 				});
