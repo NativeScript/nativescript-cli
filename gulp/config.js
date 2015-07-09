@@ -16,7 +16,6 @@ process.env.API_VERSION = 3;
 var defaultConfig = {
   babelify: {
     blacklist: ['useStrict'],
-    code: true,
     comments: false,
     optional: [
       'runtime',
@@ -26,7 +25,7 @@ var defaultConfig = {
     stage: 2
   },
   browserify: {
-    debug: true,
+    debug: false,
     standalone: 'Kinvey'
   },
   coverage: {
@@ -39,21 +38,17 @@ var defaultConfig = {
       reporters: ['text', 'text-summary', 'json', 'html']
     }
   },
-  entry: path.join(__dirname, '../src/index.js'),
+  entryFile: 'index.js',
   mocha: {
     slow: 100,
     timeout: 2000
   },
   outputFile: 'kinvey.js',
   outputMinFile: 'kinvey.min.js',
+  srcDirectory: path.join(__dirname, '../src'),
   srcFiles: 'src/**/*.js',
   testFiles: 'test/specs/**/*.spec.js'
 };
-
-// if (process.env.NODE_ENV !== 'production') {
-//   defaultConfig.webpack.devtool = 'source-map';
-//   defaultConfig.webpack.debug = true;
-// }
 
 function config(overrides) {
   return deepMerge(defaultConfig, overrides || {});

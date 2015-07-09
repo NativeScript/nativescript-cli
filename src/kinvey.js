@@ -30,16 +30,13 @@ class Kinvey extends CoreObject {
     let apiUrlComponents;
     let micApiUrl;
     let micApiUrlComponents;
-    let error;
 
     if (!utils.isDefined(options.appKey)) {
-      error = new Kinvey.Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
-      throw error;
+      throw new Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
     }
 
     if (!utils.isDefined(options.appSecret) && !utils.isDefined(options.masterSecret)) {
-      error = new Kinvey.Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
-      throw error;
+      throw new Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
     }
 
     // Parse the API url

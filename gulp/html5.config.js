@@ -8,5 +8,6 @@ process.env.PLATFORM_ENV = 'html5';
 
 // Config
 module.exports = config({
-  distDirectory: path.join(__dirname, '../dist/html5')
+  buildDirectory: path.join(__dirname, '../build', process.env.PLATFORM_ENV),
+  distDirectory: path.join(__dirname, '../dist', process.env.PLATFORM_ENV)
 });

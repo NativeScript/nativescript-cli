@@ -8,5 +8,6 @@ process.env.PLATFORM_ENV = 'node';
 
 // Config
 module.exports = config({
-  distDirectory: path.join(__dirname, '../dist/node')
+  buildDirectory: path.join(__dirname, '../build', process.env.PLATFORM_ENV),
+  distDirectory: path.join(__dirname, '../dist', process.env.PLATFORM_ENV)
 });

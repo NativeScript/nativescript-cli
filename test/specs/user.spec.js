@@ -2,8 +2,88 @@ require('../setup');
 import User from '../../src/core/user';
 
 describe('User', function() {
+  beforeEach(function() {
+    // Create a user
+    this.user = new User({
+      _id: this.randomString(),
+      _kmd: {
+        authtoken: this.randomString()
+      }
+    });
+  });
+
   it('should be a class', function() {
     expect(User).to.be.a('Function');
+  });
+
+  describe('username property', function() {
+
+  });
+
+  describe('password property', function() {
+
+  });
+
+  describe('authtoken property', function() {
+
+  });
+
+  describe('isActive method', function() {
+
+    afterEach(function() {
+      // Set the acvtive user to null
+      User.active = null;
+    });
+
+    it('should return true for an active user', function() {
+      // Set the active user
+      User.active = this.user;
+
+      // Expectations
+      expect(this.user.isActive()).to.be.truthy;
+    });
+
+    it('should return false for an inactive user', function() {
+      // Expectations
+      expect(this.user.isActive()).to.not.be.truthy;
+    });
+  });
+
+  describe('logout method', function() {
+    before(function() {
+      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}/login`);
+    });
+
+    beforeEach(function() {
+      // Set the active user.
+      User.active = this.user;
+    });
+
+    afterEach(function() {
+      return User.logout();
+    });
+
+    it('should logout the active user', function() {
+      // Logout
+      return User.logout().then(() => {
+        // Expectations
+        expect(User.active).to.be.null;
+      });
+    });
+
+    it('should succeed when there is no active user', function() {
+      // Set the current user to null
+      User.active = null;
+
+      // Logout
+      return User.logout();
+    });
+  });
+
+  describe('me method', function() {
+
+    it('should fail when there is no active user');
+    it('should return the user on a success');
   });
 
   describe('signup method', function() {
@@ -192,13 +272,8 @@ describe('User', function() {
     });
 
     it('should fail when there is already an active user', function() {
-      // Mock the active user.
-      User.active = new User({
-        _id: this.randomString(),
-        _kmd: {
-          authtoken: this.randomString()
-        }
-      });
+      // Set the active user.
+      User.active = this.user;
 
       // Signup
       return User.signup().catch((error) => {
@@ -361,14 +436,8 @@ describe('User', function() {
     });
 
     it('should fail when there is already an active user', function() {
-      // Mock the active user.
-      this.currentUser = new User({
-        _id: this.randomString(),
-        _kmd: {
-          authtoken: this.randomString()
-        }
-      });
-      User.active = this.currentUser;
+      // Set the active user.
+      User.active = this.user;
 
       // Login
       return User.login().catch((e) => {
@@ -440,40 +509,27 @@ describe('User', function() {
     });
   });
 
-  describe('logout method', function() {
-    before(function() {
-      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}/login`);
-    });
+  describe('resetPassword method', function() {
 
-    beforeEach(function() {
-      // Mock the active user.
-      this.currentUser = new User({
-        _id: this.randomString(),
-        _kmd: {
-          authtoken: this.randomString()
-        }
-      });
-      User.active = this.currentUser;
-    });
+  });
 
-    afterEach(function() {
-      return User.logout();
-    });
+  describe('verifyEmail method', function() {
 
-    it('should logout the active user', function() {
-      // Logout
-      return User.logout().then(() => {
-        // Expectations
-        expect(User.active).to.be.null;
-      });
-    });
+  });
 
-    it('should succeed when there is no active user', function() {
-      // Set the current user to null
-      User.active = null;
+  describe('forgotUsername method', function() {
 
-      // Logout
-      return User.logout();
-    });
+  });
+
+  describe('exists', function() {
+
+  });
+
+  describe('getActive', function() {
+
+  });
+
+  describe('setActive', function() {
+
   });
 });

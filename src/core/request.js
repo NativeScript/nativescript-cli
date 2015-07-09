@@ -186,7 +186,8 @@ class Request extends CoreObject {
       headers: this.headers,
       method: this.method,
       url: this.url,
-      body: this.body
+      body: this.body,
+      data: this.body
     };
 
     // Return the json object

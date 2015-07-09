@@ -1,6 +1,6 @@
 import CoreObject from './object';
 import Dexie from 'dexie';
-let indexedDBShim = require(process.env.DATABASE_LIB || 'fake-indexeddb');
+let indexedDBShim = require(process.env.DATABASE_LIB);
 import utils from './utils';
 let Kinvey = require('../kinvey');
 

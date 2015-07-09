@@ -4,7 +4,7 @@ import utils from './utils';
 import Request from './request';
 import AuthType from '../enums/authType';
 import Cache from './cache';
-import log from './logger';
+import log from 'loglevel';
 import Kinvey from '../kinvey';
 const activeUserSymbol = Symbol();
 const activeUserKey = 'activeUser';
@@ -28,8 +28,13 @@ class User extends Entity {
    * @returns {Boolean} `true` if the user is active, `false` otherwise.
    */
   isActive() {
-    let activeUser = User.active;
-    return this.data._id === activeUser.data._id;
+    let activeUser = User.getActive();
+
+    if (utils.isDefined(activeUser)) {
+      return this.data._id === activeUser.data._id;
+    }
+
+    return false;
   }
 
   /**
@@ -82,7 +87,7 @@ class User extends Entity {
     //
 
     // Set the active user to null
-    User.active = null;
+    User.setActive(null);
 
     // Debug
     promise.then(() => {
@@ -102,7 +107,7 @@ class User extends Entity {
    * @returns {Promise}           The previous active user.
    */
   static logout() {
-    let user = User.active;
+    let user = User.getActive();
 
     if (utils.isDefined(user)) {
       // Forward to `user.logout()`.
@@ -140,11 +145,8 @@ class User extends Entity {
       // Set the data for the user
       this.data = response.data;
 
-      // Set the user as the active
-      User.active = this;
-
       // Return the user
-      return this;
+      return this.toJSON();
     });
 
     // Debug
@@ -166,8 +168,13 @@ class User extends Entity {
    */
   static me(options = {}) {
     // Forward to `user.me()`.
-    let user = User.active;
-    return user.me(options);
+    let user = User.getActive();
+
+    if (utils.isDefined(user)) {
+      return user.me(options);
+    }
+
+    return Promise.reject('No Active User');
   }
 
   /**
@@ -259,7 +266,7 @@ class User extends Entity {
     log.info('Creating a new user.');
 
     // Validate preconditions
-    if (options.state !== false && utils.isDefined(User.active)) {
+    if (options.state !== false && utils.isDefined(User.getActive())) {
       let error = new Error('Already logged in.');
       return Promise.reject(error);
     }
@@ -277,7 +284,7 @@ class User extends Entity {
 
       // Set the user as the active
       if (options.state !== false) {
-        User.active = user;
+        User.setActive(user);
       }
 
       // Return the user
@@ -311,7 +318,7 @@ class User extends Entity {
     let kinvey = Kinvey.instance();
 
     // Reject if a user is already active
-    if (utils.isDefined(User.active)) {
+    if (utils.isDefined(User.getActive())) {
       return Promise.reject(new Error('Already logged in.'));
     }
 
@@ -348,7 +355,7 @@ class User extends Entity {
       let user = new User(response.data);
 
       // Set the user as the active
-      User.active = user;
+      User.setActive(user);
 
       // Return the user
       return user.toJSON();
@@ -468,7 +475,7 @@ class User extends Entity {
    */
   static resetPassword() {
     // Forward to `user.resetPassword()`.
-    let user = User.active;
+    let user = User.getActive();
     return user.resetPassword();
   }
 
@@ -513,7 +520,7 @@ class User extends Entity {
    *
    * @return {User} The current user.
    */
-  static get active() {
+  static getActive() {
     let user = User[activeUserSymbol];
 
     // Check cache
@@ -529,8 +536,8 @@ class User extends Entity {
     return user;
   }
 
-  static set active(user) {
-    let activeUser = User[activeUserSymbol];
+  static setActive(user) {
+    let activeUser = User.getActive();
 
     // Remove the current user
     if (utils.isDefined(activeUser)) {
