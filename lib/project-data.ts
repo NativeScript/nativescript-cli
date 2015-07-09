@@ -80,6 +80,7 @@ export class ProjectData implements IProjectData {
 				let newProjectData = this.$fs.exists(newProjectFilePath).wait() ? this.$fs.readJson(newProjectFilePath).wait() : {};
 				newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = oldProjectData;
 				this.$fs.writeJson(newProjectFilePath, newProjectData).wait();
+				this.projectId = newProjectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE].id;
 
 				this.$fs.deleteFile(oldProjectFilePath).wait();
 			} catch(err) {
