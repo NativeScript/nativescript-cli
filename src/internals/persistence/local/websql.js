@@ -166,7 +166,7 @@ var WebSqlAdapter = {
       err = isString(err) ? err : err.message;
 
       // Translate the error in case the collection does not exist.
-      if(-1 !== err.indexOf('no such table')) {
+      if(err && -1 !== err.indexOf('no such table')) {
         error = clientError(Kinvey.Error.COLLECTION_NOT_FOUND, {
           description : 'This collection not found for this app backend',
           debug       : { collection: collection }
@@ -541,7 +541,9 @@ var WebSqlAdapter = {
 };
 
 // Use WebSQL adapter.
-if('undefined' !== typeof root.openDatabase && 'undefined' !== typeof root.sift) {
+if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
+  // Normalize for Windows Phone 8.1
+  root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
   Database.use(WebSqlAdapter);
 
   // Add `Kinvey.Query` operators not supported by `sift`.

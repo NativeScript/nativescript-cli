@@ -695,7 +695,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
     options = options || {};
 
     // Save applicable options.
-    Sync.enabled = null != options ? options.enable : false;
+    Sync.enabled = 'undefined' !== typeof options.enable ? options.enable : Sync.enabled;
     Sync.online  = 'undefined' !== typeof options.online ? options.online : Sync.online;
 
     // Resolve immediately.
