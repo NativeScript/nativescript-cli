@@ -20,6 +20,10 @@ interface IProjectTemplatesService {
 	defaultTemplatePath: IFuture<string>;
 }
 
+interface IPlatformProjectServiceBase {
+	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
+}
+
 interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
@@ -30,7 +34,7 @@ interface IPlatformProjectService {
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
-	addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void>;
+	addLibrary(libraryPath: string): IFuture<void>;
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean>;
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void>;
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void>;
