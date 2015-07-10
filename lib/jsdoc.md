@@ -1,4 +1,4 @@
-## Kinvey JavaScript library (1.1.9, 2014-12-05)
+## Kinvey JavaScript library (1.4.1, 2015-06-29)
 
 ### Welcome
 Thanks for choosing Kinvey to build your backend. This is your complete guide to the Kinvey JavaScript library, available for HTML5, AngularJS, Backbone.js, Node.js, PhoneGap, and Titanium.
@@ -22,7 +22,7 @@ We are very interested in your feedback and questions. Please send an e-mail to 
 
 ### License
 
-    Copyright 2014 Kinvey, Inc.
+    Copyright 2015 Kinvey, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
