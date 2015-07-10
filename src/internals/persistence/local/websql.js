@@ -540,16 +540,26 @@ var WebSqlAdapter = {
   }
 };
 
-// Use WebSQL adapter.
-if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
-  // Normalize for Windows Phone 8.1
-  root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
-  Database.use(WebSqlAdapter);
+function useWebSqlAdapter() {
+  // Use WebSQL adapter.
+  if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
+    // Normalize for Windows Phone 8.1
+    root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
+    Database.use(WebSqlAdapter);
 
-  // Add `Kinvey.Query` operators not supported by `sift`.
-  ['near', 'regex', 'within'].forEach(function(operator) {
-    root.sift.useOperator(operator, function() {
-      throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+    // Add `Kinvey.Query` operators not supported by `sift`.
+    ['near', 'regex', 'within'].forEach(function(operator) {
+      root.sift.useOperator(operator, function() {
+        throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+      });
     });
-  });
+  }
+}
+
+if ('undefined' !== typeof root.cordova) {
+  // WebSql plugin won't register until after deviceready event is fired
+  document.addEventListener('deviceready', useWebSqlAdapter, false);
+}
+else {
+  useWebSqlAdapter();
 }
