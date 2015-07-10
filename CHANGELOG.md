@@ -1,4 +1,7 @@
 # Changelog
+### 1.4.2 (2015-06-25)
+* Bugfix: Correctly detect WebSql support for Windows Phone 8.1
+
 ### 1.4.1 (2015-06-25)
 * Enhancement(MLIBZ-413): Added support for MIC API versioning.
 
@@ -11,7 +14,7 @@
 
 ### 1.3.5 (2015-06-05)
 * Bugfix(MLIBZ-317): Send a `POST` request when sync documents created while offline.
-* Buffix(MLIBZ-324): If an error occurs while open a database transaction, send the synchronous error back to the user using the error callback.
+* Bugfix(MLIBZ-324): If an error occurs while open a database transaction, send the synchronous error back to the user using the error callback.
 * Bugfix(MLIBZ-343): `OS_IOS` and `OS_ANDROID` are undefined on non Titanium alloy projects. Replaced to use `Titanium.Platform.name === 'iPhone OS'` and `Titanium.Platform.name === 'Android'` respectively.
 * Bugfix(MLIBZ-341): Validate username and password when a user attempts to login. Don't send a network request if username and password are not valid.
 * Bugfix(MLIBZ-349): Prevent logout from failing when an active user doesn't exist or and `Invalid Credentials` error is received from the Kinvey API.
