@@ -23,7 +23,8 @@ export class DestCopy implements IBroccoliPlugin {
 	  private projectDir: string,
 	  private platform: string,
 	  private $fs: IFileSystem,
-	  private $projectFilesManager: IProjectFilesManager) {
+	  private $projectFilesManager: IProjectFilesManager,
+	  private $pluginsService: IPluginsService) {
 	this.dependencies = Object.create(null);
 	this.devDependencies = this.getDevDependencies(projectDir);
   }
@@ -40,13 +41,11 @@ export class DestCopy implements IBroccoliPlugin {
 				let fileContent = require(packageJsonFilePath);
 		
 				if(!this.devDependencies[fileContent.name]) { // Don't flatten dev dependencies
-					let isPlugin = fileContent.nativescript;
-					
 					let currentDependency = {
 						name: fileContent.name,
 						version: fileContent.version,
 						directory: path.dirname(packageJsonFilePath),
-						isPlugin: isPlugin
+						nativescript: fileContent.nativescript
 					};
 					
 					let addedDependency = this.dependencies[currentDependency.name];
@@ -72,8 +71,9 @@ export class DestCopy implements IBroccoliPlugin {
 	_.each(this.dependencies, dependency => {
 		shelljs.cp("-Rf", dependency.directory, this.outputRoot);
 		shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
-		if(dependency.isPlugin) {
-			this.$projectFilesManager.processPlatformSpecificFiles(path.join(this.outputRoot, dependency.name), platform).wait();
+		let isPlugin = !!dependency.nativescript;
+		if(isPlugin) {
+			this.$pluginsService.prepare(dependency).wait();
 			shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "platforms"));
 		}
 	});

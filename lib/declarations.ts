@@ -3,7 +3,7 @@ interface INodePackageManager {
 	load(config?: any): IFuture<void>;
 	install(packageName: string, pathToSave: string, config?: any): IFuture<any>;
 	uninstall(packageName: string, config?: any): IFuture<any>;
-	cache(packageName: string, version: string, cache?: any): IFuture<ICacheData>;
+	cache(packageName: string, version: string, cache?: any): IFuture<IDependencyData>;
 	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	view(packageName: string, propertyName: string): IFuture<any>;
 }
@@ -22,12 +22,12 @@ interface INpmInstallOptions {
 	version?: string;
 }
 
-interface ICacheData {
+interface IDependencyData {
 	name: string;
 	version: string;
-	dependencies: IStringDictionary;
-	devDependencies: IStringDictionary;
-	nativescript?: any;
+	nativescript: any;	
+	dependencies?: IStringDictionary;
+	devDependencies?: IStringDictionary;
 }
 
 interface IStaticConfig extends Config.IStaticConfig { }

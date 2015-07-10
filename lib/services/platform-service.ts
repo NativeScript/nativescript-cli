@@ -88,10 +88,6 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(platformPath).wait();
 				throw err;
 			}
-			
-			// Prepare installed plugins
-			let installedPlugins = this.$pluginsService.getAllInstalledPlugins().wait();
-			_.each(installedPlugins, pluginData => this.$pluginsService.prepare(pluginData).wait());
 
 			this.$logger.out("Project successfully created.");
 
@@ -179,15 +175,15 @@ export class PlatformService implements IPlatformService {
 			
 			platformData.platformProjectService.prepareProject().wait();
 
-			// Process platform specific files
-			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
-			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
-
 			// Process node_modules folder
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
 			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
+			
+			// Process platform specific files
+			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
+			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
 			this.$logger.out("Project successfully prepared");
 		}).future<void>()();

@@ -35,7 +35,7 @@ export class NodePackageManager implements INodePackageManager {
 		return this.loadAndExecute("uninstall", [[packageName]], { config: config });
 	}
 
-	public cache(packageName: string, version: string, config?: any): IFuture<ICacheData> {
+	public cache(packageName: string, version: string, config?: any): IFuture<IDependencyData> {
 		// function cache (pkg, ver, where, scrub, cb)
 		return this.loadAndExecute("cache", [packageName, version, undefined, false], { subCommandName: "add", config: config });
 	}

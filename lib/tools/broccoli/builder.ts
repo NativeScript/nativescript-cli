@@ -64,7 +64,7 @@ export class Builder implements IBroccoliBuilder {
       } 
       
       if(!lastModifiedTime || isNodeModulesModified) {
-         let nodeModulesDirectories = this.$fs.readDirectory(nodeModulesPath).wait();
+         let nodeModulesDirectories = this.$fs.exists(nodeModulesPath).wait() ? this.$fs.readDirectory(nodeModulesPath).wait() : [];
          _.each(nodeModulesDirectories, nodeModuleDirectoryName => {
            let nodeModuleFullPath = path.join(nodeModulesPath, nodeModuleDirectoryName);
            this.nodeModules[nodeModuleFullPath] = nodeModuleFullPath;
