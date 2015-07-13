@@ -29,11 +29,11 @@ export class PluginsService implements IPluginsService {
 	public add(plugin: string): IFuture<void> {
 		return (() => {
 			let dependencies = this.getAllInstalledModules().wait();
-			let cacheData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
-			if(cacheData.nativescript) {
+			let dependencyData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
+			if(dependencyData.nativescript) {
 				let pluginName = this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
-				this.prepare(this.convertToPluginData(cacheData)).wait();
-				this.$logger.out(`Successfully installed plugin ${cacheData.name}.`);									
+				this.prepare(dependencyData).wait();
+				this.$logger.out(`Successfully installed plugin ${dependencyData.name}.`);									
 			} else {
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);				
 			}
@@ -68,8 +68,10 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 	
-	public prepare(pluginData: IPluginData): IFuture<void> {
+	public prepare(dependencyData: IDependencyData): IFuture<void> {
 		return (() => {
+			let pluginData = this.convertToPluginData(dependencyData);
+			
 			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
 					// Process .js files 				
@@ -89,7 +91,7 @@ export class PluginsService implements IPluginsService {
 					}
 				
 					this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
-					shelljs.cp("-R", pluginData.fullPath, pluginDestinationPath);
+					shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
 				
 					let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
 					let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
