@@ -48,11 +48,9 @@ class DoctorService implements IDoctorService {
 			+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + os.EOL);
 			result = true;
 		}
-		if (!sysInfo.itunesInstalled) {
-			this.$logger.warn("WARNING: iTunes is not installed.");
-			this.$logger.out("You will not be able to work with iOS devices via cable connection." + os.EOL
-			+ "To be able to work with connected iOS devices," + os.EOL
-			+ "download and install iTunes from http://www.apple.com" + os.EOL);
+		if (!this.$hostInfo.isDarwin) {
+			this.$logger.warn("WARNING: You can work with iOS only on Mac OS X systems.");
+			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + os.EOL);
 			result = true;
 		}
 		if(!sysInfo.javaVer) {
