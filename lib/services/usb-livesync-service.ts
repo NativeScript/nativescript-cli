@@ -2,8 +2,9 @@
 "use strict";
 
 import androidLiveSyncServiceLib = require("../common/mobile/android/android-livesync-service");
-import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
+import constants = require("../constants");
 import helpers = require("../common/helpers");
+import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
 import path = require("path");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
@@ -22,20 +23,39 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		$deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		$logger: ILogger,
 		private $injector: IInjector,
+		private $platformService: IPlatformService,
 		$dispatcher: IFutureDispatcher) {
 			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher); 
 	}
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
-			this.$options.justlaunch = true;
+			platform = this.initialize(platform).wait();
+			this.$platformService.preparePlatform(platform).wait();
+			
+			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
+			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
 				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
 			}
 			
-			this.sync(platform, this.$projectData.projectId, this.$projectData.projectDir, path.join(this.$projectData.projectDir, "app"), this.excludedProjectDirsAndFiles, restartAppOnDeviceAction).wait();
+			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
+				return this.$platformService.deployOnDevice(platform);
+			}
+			
+			let beforeBatchLiveSyncAction = (filePath: string): IFuture<void> => {
+				return (() => {
+					if(filePath.indexOf("node_modules") !== -1) {
+						this.$platformService.preparePlatform(platform).wait();
+					}
+				}).future<void>()();
+			}
+			
+			let watchGlob = this.$projectData.projectDir + "/**/*";  //TODO: add node_modules folder
+			
+			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction).wait();
 		}).future<void>()();
 	}
 	
@@ -81,19 +101,17 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commands = [ this.liveSyncCommands.SyncFilesCommand() ];			
 				this.livesync(deviceAppData.appIdentifier, deviceAppData.deviceProjectRootPath, commands).wait();
 			} else {
-				// TODO: Introduce this.$mobileHelper.correctDevicePath(path: string) { return helpers.stringReplaceAll(path), '\\', '/') }
-				// Then later on this.$mobileHelper.buildDevicePath should call `correctDevicePath` before returning the output
 				this.device.adb.executeShellCommand(`chmod 0777 ${this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, "app")}`).wait();
 				
 				let commands: string[] = [];
 				
 				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 				_.each(localToDevicePaths, localToDevicePath => {
-					let devicePath = helpers.stringReplaceAll(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()), '\\', '/');
-					//commands.push(`ls "${path.dirname(devicePath)}" >/dev/null 2>/dev/null || mkdir "${path.dirname(devicePath)}"`);
+					let devicePath = this.$mobileHelper.correctDevicePath(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()));
 					commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
 				});
-
+				
+				commands.push(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`);
 				commands.push("exit");
 				
 				let commandsFileDevicePath = this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, AndroidUsbLiveSyncService.LIVESYNC_COMMANDS_FILE_NAME);
