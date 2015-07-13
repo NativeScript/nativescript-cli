@@ -185,9 +185,10 @@ class AndroidProjectService implements IPlatformProjectService {
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return (() => {
 			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
-			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait();
+			let valuesDirRegExp = /^values/;
+			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait().filter(resDir => !resDir.match(valuesDirRegExp));
 			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();				
+				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();
 			});	
 		}).future<void>()();
 	}
