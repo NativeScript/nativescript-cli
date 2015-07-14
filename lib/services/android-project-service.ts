@@ -189,7 +189,7 @@ class AndroidProjectService implements IPlatformProjectService {
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
 	}
-	
+
 	private getProjectPropertiesManager(filePath: string): IAndroidProjectPropertiesManager {
 		if(!this._androidProjectPropertiesManagers[filePath]) {
 			this._androidProjectPropertiesManagers[filePath] = this.$injector.resolve(androidProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: filePath });
@@ -252,17 +252,18 @@ class AndroidProjectService implements IPlatformProjectService {
 	public prepareProject(): IFuture<void> {
 		return (() => { }).future<void>()();
 	}
-	
+
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return (() => {
 			let resourcesDirPath = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
-			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait();
+			let valuesDirRegExp = /^values/;
+			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait().filter(resDir => !resDir.match(valuesDirRegExp));
 			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();				
+				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();
 			});	
 		}).future<void>()();
 	}
-	
+
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData);
