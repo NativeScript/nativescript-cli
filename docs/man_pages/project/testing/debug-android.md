@@ -30,10 +30,10 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate android`
 * `<GenyName>` is the name of the Genymotion virtual device that you want to use as listed by `$ genyshell -c "devices list"`
  
-<% if(isHtml) { %> 
-### Prerequisites
+<% if(isHtml) { %>
+###Prerequisites
 
-* You must have Chrome installed on your system.
+* You must have Chrome installed on your system.<br/>If you are using a non-standard named Chrome app on an OS X system (for example, a nightly Canary update), you need to set this name in the `ANDROID_DEBUG_UI_MAC` setting in the NativeScript [config.json](file:///<%= #{config.getConfigPath(config)} %>).
 
 ### Related Commands
 
