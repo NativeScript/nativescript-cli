@@ -32,7 +32,9 @@ interface IDependencyData {
 
 interface IStaticConfig extends Config.IStaticConfig { }
 
-interface IConfiguration extends Config.IConfig { }
+interface IConfiguration extends Config.IConfig {
+	ANDROID_DEBUG_UI_MAC: string;
+}
 
 interface IApplicationPackage {
 	packageName: string;
