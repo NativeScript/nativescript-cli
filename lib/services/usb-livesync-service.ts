@@ -45,15 +45,14 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				return this.$platformService.deployOnDevice(platform);
 			}
 			
-			let beforeBatchLiveSyncAction = (filePath: string): IFuture<void> => {
+			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
-					if(filePath.indexOf("node_modules") !== -1) {
-						this.$platformService.preparePlatform(platform).wait();
-					}
-				}).future<void>()();
+					this.$platformService.preparePlatform(platform).wait();
+					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
+				}).future<string>()();
 			}
 			
-			let watchGlob = this.$projectData.projectDir + "/**/*";  //TODO: add node_modules folder
+			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME) + "/**/*";
 			
 			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction).wait();
 		}).future<void>()();
