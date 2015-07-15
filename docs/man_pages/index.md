@@ -32,6 +32,7 @@ Command | Description
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected device. 
 [install](project/configuration/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
+[livesync](project/testing/livesync.html) | Synchronizes the latest changes in your project to devices.
 
 ## Device Commands
 Command | Description
