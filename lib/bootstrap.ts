@@ -23,6 +23,8 @@ $injector.require("analyticsSettingsService", "./services/analytics-settings-ser
 
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
+$injector.require("usbLiveSyncService", "./services/usb-livesync-service");
+
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
@@ -49,6 +51,7 @@ $injector.require("lockfile", "./lockfile");
 $injector.require("dynamicHelpProvider", "./dynamic-help-provider");
 $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilities");
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
+$injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("logcatPrinter", "./providers/logcat-printer");
 
@@ -67,3 +70,4 @@ $injector.require("initService", "./services/init-service");
 $injector.requireCommand("init", "./commands/init");
 
 $injector.require("projectFilesManager", "./services/project-files-manager");
+$injector.requireCommand("livesync", "./commands/livesync");

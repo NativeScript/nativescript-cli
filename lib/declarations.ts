@@ -50,6 +50,14 @@ interface IOpener {
     open(target: string, appname: string): void;
 }
 
+interface IUsbLiveSyncService {
+	liveSync(platform: string): IFuture<void>;
+}
+
+interface IPlatformSpecificUsbLiveSyncService {
+	restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void>;
+}
+
 interface IOptions extends ICommonOptions {
 	frameworkPath: string;
 	frameworkName: string;

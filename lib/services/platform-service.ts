@@ -185,7 +185,7 @@ export class PlatformService implements IPlatformService {
 			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
-			this.$logger.out("Project successfully prepared");
+			this.$logger.out("Project successfully prepared"); 
 		}).future<void>()();
 	}
 	
@@ -254,7 +254,15 @@ export class PlatformService implements IPlatformService {
 			this.$logger.out("Using ", packageFile);
 
 			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => { return device.deploy(packageFile, this.$projectData.projectId); };
+			var action = (device: Mobile.IDevice): IFuture<void> => {
+				return (() => {
+					device.deploy(packageFile, this.$projectData.projectId).wait(); 
+					
+					if (!this.$options.justlaunch) {
+						device.openDeviceLogStream();
+					}
+				}).future<void>()(); 
+			};
 			this.$devicesServices.execute(action).wait();
 			this.$commandsService.tryExecuteCommand("device", ["run", this.$projectData.projectId]).wait();
 		}).future<void>()();

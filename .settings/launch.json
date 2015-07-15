@@ -5,7 +5,7 @@
 	"configurations": [
 		{
 			// Name of configuration; appears in the launch configuration drop down menu.
-			"name": "build",
+			"name": "livesync",
 			// Type of configuration. Possible values: "node", "mono".
 			"type": "node",
 			// Workspace relative or absolute path to the program.
@@ -13,7 +13,7 @@
 			// Automatically stop program after launch.
 			"stopOnEntry": true,
 			// Command line arguments passed to the program.
-			"args": [],
+			"args": ["livesync", "--path", "scratch/syncProject", "--justlaunch"],
 			// Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.
 			"cwd": ".",
 			"isShellCommand": true,
