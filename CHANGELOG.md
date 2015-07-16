@@ -1,5 +1,8 @@
 # Changelog
-### 1.4.2 (2015-06-25)
+### 1.4.3 (2015-07-16)
+* Bugfix: Check if a table exists in SQLite before returning a generic error.
+
+### 1.4.2 (2015-07-10)
 * Bugfix: Correctly detect WebSql support for Windows Phone 8.1
 
 ### 1.4.1 (2015-06-25)
