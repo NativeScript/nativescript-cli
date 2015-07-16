@@ -1,6 +1,6 @@
 {
   "name"        : "kinvey",
-  "version"     : "1.4.2",
+  "version"     : "1.4.3",
   "description" : "Kinvey JavaScript Library",
   "homepage"    : "http://www.kinvey.com",
   "bugs"        : { "email": "support@kinvey.com" },

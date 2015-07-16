@@ -171,13 +171,33 @@ var WebSqlAdapter = {
           description : 'This collection not found for this app backend',
           debug       : { collection: collection }
         });
+        return deferred.reject(error);
       }
       else {// Other errors.
-        error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: err });
-      }
+        // Check if the collection exists.
+        var query = 'SELECT name AS value FROM #{collection} WHERE type = ? AND name = ?';
+        var parameters = ['table', collection];
 
-      // Return the rejection.
-      deferred.reject(error);
+        return WebSqlAdapter.transaction('sqlite_master', query, parameters, false).then(function(response) {
+          // Return an error if the collection was not found
+          if (response.result.length === 0) {
+            error = clientError(Kinvey.Error.COLLECTION_NOT_FOUND, {
+              description: 'This collection not found for this app backend',
+              debug: {
+                collection: collection
+              }
+            });
+          }
+          else {
+            error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: err });
+          }
+
+          return deferred.reject(error);
+        }, function() {
+          error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: err });
+          return deferred.reject(error);
+        });
+      }
     });
 
     // Return the promise.
@@ -540,16 +560,26 @@ var WebSqlAdapter = {
   }
 };
 
-// Use WebSQL adapter.
-if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
-  // Normalize for Windows Phone 8.1
-  root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
-  Database.use(WebSqlAdapter);
+function useWebSqlAdapter() {
+  // Use WebSQL adapter.
+  if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
+    // Normalize for Windows Phone 8.1
+    root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
+    Database.use(WebSqlAdapter);
 
-  // Add `Kinvey.Query` operators not supported by `sift`.
-  ['near', 'regex', 'within'].forEach(function(operator) {
-    root.sift.useOperator(operator, function() {
-      throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+    // Add `Kinvey.Query` operators not supported by `sift`.
+    ['near', 'regex', 'within'].forEach(function(operator) {
+      root.sift.useOperator(operator, function() {
+        throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+      });
     });
-  });
+  }
+}
+
+if ('undefined' !== typeof root.cordova) {
+  // WebSql plugin won't register until after deviceready event is fired
+  document.addEventListener('deviceready', useWebSqlAdapter, false);
+}
+else {
+  useWebSqlAdapter();
 }
