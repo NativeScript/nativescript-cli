@@ -11,9 +11,9 @@ Command | Description
 -------|----------
 [help `<Command>`](general/help.html) | Shows additional information about the commands in this list in the browser.
 [autocomplete](general/autocomplete.html) | Configures your current command-line completion settings.
-[usage-reporting](usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
-[error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
-[doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[usage-reporting](general/usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
+[error-reporting](general/error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
+[doctor](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 
 ## Project Development Commands
 Command | Description

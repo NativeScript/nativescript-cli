@@ -17,5 +17,5 @@ Initializes a project for development. The command prompts you to provide your p
 Command | Description
 ----------|----------
 [create](create.html) | Creates a new project for native development with NativeScript from the default template or from an existing NativeScript project.
-[install](install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
+[install](/lib-management/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 <% } %> 
