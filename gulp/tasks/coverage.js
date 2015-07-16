@@ -7,7 +7,9 @@ gulp.task('coverage', function(done) {
   require('babel/register');
   gulp.src(config.srcFiles)
     .pipe($.istanbul(config.coverage.istanbul))
-    .pipe($.istanbul.hookRequire())
+    .pipe($.istanbul.hookRequire(null, null, {
+      verbose: true
+    }))
     .on('finish', function() {
       gulp.src(config.testFiles, {read: false})
         .pipe($.mocha(config.mocha))

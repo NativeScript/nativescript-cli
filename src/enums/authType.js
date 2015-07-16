@@ -1,4 +1,4 @@
-const Auth = {
+const AuthType = {
   All: 'All',
   App: 'App',
   Basic: 'Basic',
@@ -7,5 +7,5 @@ const Auth = {
   None: 'None',
   Session: 'Session'
 };
-Object.freeze(Auth);
-export default Auth;
+Object.freeze(AuthType);
+export default AuthType;

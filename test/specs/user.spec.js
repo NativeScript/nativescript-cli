@@ -13,7 +13,7 @@ describe('User', function() {
   });
 
   it('should be a class', function() {
-    expect(User).to.be.a('Function');
+    User.should.be.a.Function();
   });
 
   describe('username property', function() {
@@ -30,22 +30,21 @@ describe('User', function() {
 
   describe('isActive method', function() {
 
-    afterEach(function() {
-      // Set the acvtive user to null
-      User.active = null;
-    });
+    // afterEach(function() {
+    //   // Set the acvtive user to null
+    //   User.setActive(null);
+    // });
 
     it('should return true for an active user', function() {
       // Set the active user
-      User.active = this.user;
+      //User.setActive(this.user);
 
       // Expectations
-      expect(this.user.isActive()).to.be.truthy;
+      this.user.isActive().should.be.true;
     });
 
     it('should return false for an inactive user', function() {
-      // Expectations
-      expect(this.user.isActive()).to.not.be.truthy;
+      this.user.isActive().should.not.be.true;
     });
   });
 
@@ -55,8 +54,7 @@ describe('User', function() {
     });
 
     beforeEach(function() {
-      // Set the active user.
-      User.active = this.user;
+      User.setActive(this.user);
     });
 
     afterEach(function() {
@@ -64,19 +62,16 @@ describe('User', function() {
     });
 
     it('should logout the active user', function() {
-      // Logout
-      return User.logout().then(() => {
-        // Expectations
-        expect(User.active).to.be.null;
+      let user = User.getActive();
+      return user.logout().then(() => {
+        user.isActive().should.be.false;
+        should.not.exist(User.getActive());
       });
     });
 
     it('should succeed when there is no active user', function() {
-      // Set the current user to null
-      User.active = null;
-
-      // Logout
-      return User.logout();
+      User.setActive(null);
+      return User.logout().should.be.fulfilled();
     });
   });
 
@@ -99,7 +94,6 @@ describe('User', function() {
     });
 
     it('should return a promise', function() {
-      // Create an API response
       let apiResponse = {
         statusCode: 200,
         headers: {
@@ -115,17 +109,14 @@ describe('User', function() {
         }
       };
 
-      // Setup response
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
-
       // Signup
+      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
       let promise = User.signup().then(() => {
-        // Make sure the scope is done
         scope.done();
       });
 
       // Expectations
-      expect(promise).to.be.an.instanceof(Promise);
+      promise.should.be.a.Promise();
 
       // Return the promise
       return promise;
@@ -154,10 +145,10 @@ describe('User', function() {
       // Signup
       return User.signup().then((user) => {
         // Expectations
-        expect(user).to.have.property('_id', apiResponse.data._id);
-        expect(user).to.have.property('username', apiResponse.data.username);
-        expect(user).to.have.property('password', apiResponse.data.password);
-        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
+        user.should.have.property('_id', apiResponse.data._id);
+        user.should.have.property('username', apiResponse.data.username);
+        user.should.have.property('password', apiResponse.data.password);
+        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
 
         // Make sure the scope is done
         scope.done();
@@ -195,9 +186,9 @@ describe('User', function() {
       // Signup
       return User.signup(data).then((user) => {
         // Expectations
-        expect(user.username).to.equal(data.username);
-        expect(user.password).to.equal(data.password);
-        expect(user.attribute).to.equal(data.attribute);
+        user.username.should.equal(data.username);
+        user.password.should.equal(data.password);
+        user.attribute.should.equal(data.attribute);
 
         // Make sure the scope is done
         scope.done();
@@ -233,8 +224,8 @@ describe('User', function() {
       // Signup
       return User.signup(data).then((user) => {
         // Expectations
-        expect(user._id).not.to.equal(data._id);
-        expect(user._kmd).not.to.equal(data._kmd);
+        user._id.should.not.equal(data._id);
+        user._kmd.should.not.equal(data._kmd);
 
         // Make sure the scope is done
         scope.done();
@@ -263,8 +254,10 @@ describe('User', function() {
 
       // Signup
       return User.signup().then((user) => {
+        let activeUser = User.getActive();
+
         // Expectations
-        expect(user).to.deep.equal(User.active.data);
+        should.deepEqual(user, activeUser.toJSON());
 
         // Make sure the scope is done
         scope.done();
@@ -273,11 +266,11 @@ describe('User', function() {
 
     it('should fail when there is already an active user', function() {
       // Set the active user.
-      User.active = this.user;
+      User.setActive(this.user);
 
       // Signup
       return User.signup().catch((error) => {
-        expect(error.message).to.equal('Already logged in.');
+        error.message.should.equal('Already logged in.');
       });
     });
   });
@@ -301,7 +294,7 @@ describe('User', function() {
       // Signup
       return User.signupWithProvider('testing', {}).then(() => {
         // Expectations
-        expect(stub).to.be.calledOnce;
+        stub.should.be.calledOnce();
 
         // Restore the signup method
         User.signup.restore();
@@ -334,8 +327,8 @@ describe('User', function() {
       // Signup
       return User.signupWithProvider(provider, tokens).then((user) => {
         // Expectations
-        expect(user).to.have.property('_socialIdentity');
-        expect(user._socialIdentity).to.deep.equal(apiResponse.data._socialIdentity);
+        user.should.have.property('_socialIdentity');
+        should.deepEqual(user._socialIdentity, apiResponse.data._socialIdentity);
 
         // Make sure the scope is done
         scope.done();
@@ -356,7 +349,7 @@ describe('User', function() {
       return User.login({
         foo: this.randomString()
       }).catch((e) => {
-        expect(e).to.not.be.undefined;
+        e.should.not.be.undefined;
       });
     });
 
@@ -386,10 +379,10 @@ describe('User', function() {
       // Login
       return User.login(username, password).then((user) => {
         // Expectations
-        expect(user).to.have.property('_id', apiResponse.data._id);
-        expect(user).to.have.property('username', apiResponse.data.username);
-        expect(user).to.have.property('password', apiResponse.data.password);
-        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
+        user.should.have.property('_id', apiResponse.data._id);
+        user.should.have.property('username', apiResponse.data.username);
+        user.should.have.property('password', apiResponse.data.password);
+        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
 
         // Make sure the scope is done
         scope.done();
@@ -425,10 +418,10 @@ describe('User', function() {
         password: password
       }).then((user) => {
         // Expectations
-        expect(user).to.have.property('_id', apiResponse.data._id);
-        expect(user).to.have.property('username', apiResponse.data.username);
-        expect(user).to.have.property('password', apiResponse.data.password);
-        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
+        user.should.have.property('_id', apiResponse.data._id);
+        user.should.have.property('username', apiResponse.data.username);
+        user.should.have.property('password', apiResponse.data.password);
+        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
 
         // Make sure the scope is done
         scope.done();
@@ -437,11 +430,11 @@ describe('User', function() {
 
     it('should fail when there is already an active user', function() {
       // Set the active user.
-      User.active = this.user;
+      User.setActive(this.user);
 
       // Login
       return User.login().catch((e) => {
-        expect(e).to.not.be.undefined;
+        e.should.not.be.undefined();
       });
     });
   });
@@ -467,7 +460,7 @@ describe('User', function() {
       // Login
       return User.loginWithProvider(provider, tokens).then(() => {
         // Expectations
-        expect(stub).to.be.calledOnce;
+        stub.should.be.calledOnce();
 
         // Restore the login method
         User.login.restore();
@@ -500,8 +493,7 @@ describe('User', function() {
       // Signup
       return User.loginWithProvider(provider, tokens).then((user) => {
         // Expectations
-        expect(user).to.have.property('_socialIdentity');
-        expect(user._socialIdentity).to.deep.equal(apiResponse.data._socialIdentity);
+        user.should.have.property('_socialIdentity', apiResponse.data._socialIdentity);
 
         // Make sure the scope is done
         scope.done();

@@ -3,7 +3,8 @@
   "rules": {
     "strict": 0,
     "quotes": [2, "single"],
-    "no-unused-expressions": 0
+    "no-unused-expressions": 0,
+    "new-cap": 0
   },
   "env": {
     "browser": true,
@@ -14,6 +15,7 @@
     "spy": true,
     "expect": true,
     "nock": true,
-    "sinon": true
+    "sinon": true,
+    "should": true
   }
 }

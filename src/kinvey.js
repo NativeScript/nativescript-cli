@@ -1,8 +1,9 @@
 import CoreObject from './core/object';
-import utils from './core/utils';
+import {isDefined} from './core/utils';
 import url from 'url';
 import User from './core/user';
 const instanceSymbol = Symbol();
+const cacheEnabledSymbol = Symbol();
 
 class Kinvey extends CoreObject {
   constructor() {
@@ -31,11 +32,11 @@ class Kinvey extends CoreObject {
     let micApiUrl;
     let micApiUrlComponents;
 
-    if (!utils.isDefined(options.appKey)) {
+    if (!isDefined(options.appKey)) {
       throw new Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
     }
 
-    if (!utils.isDefined(options.appSecret) && !utils.isDefined(options.masterSecret)) {
+    if (!isDefined(options.appSecret) && !isDefined(options.masterSecret)) {
       throw new Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
     }
 
@@ -93,10 +94,22 @@ class Kinvey extends CoreObject {
     return kinvey;
   }
 
+  static isCacheEnabled() {
+    return Kinvey[cacheEnabledSymbol] === true ? true : false;
+  }
+
+  static enabledCache() {
+    Kinvey[cacheEnabledSymbol] = true;
+  }
+
+  static disableCache() {
+    Kinvey[cacheEnabledSymbol] = false;
+  }
+
   static instance() {
     let instance = Kinvey[instanceSymbol];
 
-    if (!utils.isDefined(instance)) {
+    if (!isDefined(instance)) {
       instance = new Kinvey();
       Kinvey[instanceSymbol] = instance;
     }

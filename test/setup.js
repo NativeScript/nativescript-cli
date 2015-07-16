@@ -8,19 +8,24 @@ process.env.PLATFORM_ENV = 'node';
 
 // Modules
 import Kinvey from '../src/kinvey';
-import log from '../src/core/logger';
+import log from 'loglevel';
 import uid from 'uid';
 import nock from 'nock';
+import should from 'should';
 import sinon from 'sinon';
-import chai from 'chai';
-import sinonChai from 'sinon-chai';
-chai.use(sinonChai);
+require('should-promised');
+require('should-sinon');
+// import chai from 'chai';
+// import sinonChai from 'sinon-chai';
+//chai.use(sinonChai);
 
 // Globals
-global.expect = chai.expect;
+// global.expect = chai.expect;
 global.nock = nock;
 global.sinon = sinon;
-global.chai = chai;
+// global.chai = chai;
+global.should = should.noConflict();
+should.extend();
 
 // Disable logs
 log.disableAll();

@@ -1,39 +1,65 @@
 import CoreObject from './object';
-import Database from './database';
-import utils from './utils';
-const objectIdPrefix = 'local_';
+import {isDefined} from './utils';
+import Query from './query';
+import Request from './request';
+import log from 'loglevel';
+import HttpMethod from '../enums/httpMethod';
+import AuthType from '../enums/authType';
+import Kinvey from '../kinvey';
+// import isArray from 'lodash/lang/isArray';
+// const objectIdPrefix = 'local_';
 
-function generateObjectId(prefix = '', length = 24) {
-  let chars = 'abcdef0123456789';
-  let objectId = '';
+// function generateObjectId(prefix = '', length = 24) {
+//   let chars = 'abcdef0123456789';
+//   let objectId = '';
 
-  for (let i = 0, j = chars.length; i < length; i++) {
-    let pos = Math.floor(Math.random() * j);
-    objectId = objectId + chars.substring(pos, pos + 1);
-  }
+//   for (let i = 0, j = chars.length; i < length; i++) {
+//     let pos = Math.floor(Math.random() * j);
+//     objectId = objectId + chars.substring(pos, pos + 1);
+//   }
 
-  return `${prefix}${objectId}`;
-}
+//   return `${prefix}${objectId}`;
+// }
 
 class DataStore extends CoreObject {
 
-  static read(id) {
-    // create a request
-    return Database.read(id);
-  }
+  static find(collection, query, options = {}) {
+    let kinvey = Kinvey.instance();
 
-  static save(doc) {
-    // Generate an Id
-    if (!utils.isDefined(doc._id)) {
-      doc._id = generateObjectId(objectIdPrefix);
+    // Validate arguments
+    if (isDefined(query) && !(query instanceof Query)) {
+      return Promise.reject('query argument must be of type: Kinvey.Query.');
     }
 
-    // Save the doc
-    return Database.save(doc);
-  }
+    // Debug
+    log.info('Retrieving documents by query.', arguments);
 
-  static destroy(id) {
-    return Database.destroy(id);
+    // Create a request
+    let request = new Request(HttpMethod.GET, `/appdata/${kinvey.appKey}/${collection}`, query);
+
+    // Set the auth type
+    request.authType = AuthType.Default;
+
+    // Set the data policy
+    if (isDefined(options.dataPolicy)) {
+      request.dataPolicy = options.dataPolicy;
+    }
+
+    // Execute the request
+    let promise = request.execute(options).then((response) => {
+      // Return the data
+      return response.data;
+    });
+
+    // Debug
+    promise.then((docs) => {
+      log.info('Retrieved the documents by query.', docs);
+    }).catch((err) => {
+      log.error('Failed to retrieve the documents by query.', err);
+    });
+
+    // Return the promise
+    return promise;
   }
 }
 

@@ -1,11 +1,14 @@
 import HttpMethod from '../enums/httpMethod';
 import Entity from './entity';
-import utils from './utils';
+import {isDefined} from './utils';
 import Request from './request';
 import AuthType from '../enums/authType';
-import Cache from './cache';
+import CacheManager from './cacheManager';
 import log from 'loglevel';
 import Kinvey from '../kinvey';
+import isFunction from 'lodash/lang/isFunction';
+import isObject from 'lodash/lang/isObject';
+import DataPolicy from '../enums/dataPolicy';
 const activeUserSymbol = Symbol();
 const activeUserKey = 'activeUser';
 
@@ -30,7 +33,7 @@ class User extends Entity {
   isActive() {
     let activeUser = User.getActive();
 
-    if (utils.isDefined(activeUser)) {
+    if (isDefined(activeUser)) {
       return this.data._id === activeUser.data._id;
     }
 
@@ -109,8 +112,7 @@ class User extends Entity {
   static logout() {
     let user = User.getActive();
 
-    if (utils.isDefined(user)) {
-      // Forward to `user.logout()`.
+    if (isDefined(user)) {
       return user.logout();
     }
 
@@ -133,7 +135,7 @@ class User extends Entity {
     let request = new Request(HttpMethod.GET, `/user/${kinvey.appKey}/_me`);
 
     // Set the auth type
-    request.authType = AuthType.Session;
+    request.auth = AuthType.Session;
 
     // Execute the request
     let promise = request.execute(options).then((response) => {
@@ -170,7 +172,7 @@ class User extends Entity {
     // Forward to `user.me()`.
     let user = User.getActive();
 
-    if (utils.isDefined(user)) {
+    if (isDefined(user)) {
       return user.me(options);
     }
 
@@ -194,7 +196,7 @@ class User extends Entity {
     let request = new Request(HttpMethod.POST, `/rpc/${kinvey.appKey}/${username}/user-password-reset-initiate`);
 
     // Set the auth type
-    request.authType = AuthType.App;
+    request.auth = AuthType.App;
 
     // Execute the request
     let promise = request.execute(options).then((response) => {
@@ -266,7 +268,7 @@ class User extends Entity {
     log.info('Creating a new user.');
 
     // Validate preconditions
-    if (options.state !== false && utils.isDefined(User.getActive())) {
+    if (options.state !== false && isDefined(User.getActive())) {
       let error = new Error('Already logged in.');
       return Promise.reject(error);
     }
@@ -274,8 +276,11 @@ class User extends Entity {
     // Create a request
     let request = new Request(HttpMethod.POST, `/user/${kinvey.appKey}`, null, data);
 
+    // Set the data policy
+    request.dataPolicy = DataPolicy.CloudFirst;
+
     // Set the auth type
-    request.authType = AuthType.App;
+    request.auth = AuthType.App;
 
     // Execute the request
     let promise = request.execute(options).then((response) => {
@@ -318,13 +323,13 @@ class User extends Entity {
     let kinvey = Kinvey.instance();
 
     // Reject if a user is already active
-    if (utils.isDefined(User.getActive())) {
+    if (isDefined(User.getActive())) {
       return Promise.reject(new Error('Already logged in.'));
     }
 
     // Cast arguments
-    if (utils.isObject(usernameOrData)) {
-      options = utils.isDefined(options) ? options : password;
+    if (isObject(usernameOrData)) {
+      options = isDefined(options) ? options : password;
     } else {
       usernameOrData = {
         username: usernameOrData,
@@ -336,7 +341,7 @@ class User extends Entity {
     options = options || {};
 
     // Validate username and password
-    if ((!utils.isDefined(usernameOrData.username) || !utils.isDefined(usernameOrData.password)) && !utils.isDefined(usernameOrData._socialIdentity)) {
+    if ((!isDefined(usernameOrData.username) || !isDefined(usernameOrData.password)) && !isDefined(usernameOrData._socialIdentity)) {
       return Promise.reject(new Error('Username and/or password missing. Please provide both a username and password to login.'));
     }
 
@@ -346,8 +351,11 @@ class User extends Entity {
     // Create a request
     let request = new Request(HttpMethod.POST, `/user/${kinvey.appKey}/login`, null, usernameOrData);
 
+    // Set the data policy
+    request.dataPolicy = DataPolicy.CloudFirst;
+
     // Set the auth type
-    request.authType = AuthType.App;
+    request.auth = AuthType.App;
 
     // Execute the request
     let promise = request.execute(options).then((response) => {
@@ -522,13 +530,14 @@ class User extends Entity {
    */
   static getActive() {
     let user = User[activeUserSymbol];
+    let cache = CacheManager.instance();
 
     // Check cache
-    if (!utils.isDefined(user)) {
-      let cache = Cache.get(activeUserKey);
+    if (!isDefined(user)) {
+      let cachedUser = cache.get(activeUserKey);
 
-      if (utils.isDefined(cache)) {
-        user = new User(cache);
+      if (isDefined(cachedUser)) {
+        user = new User(cachedUser);
         User[activeUserSymbol] = user;
       }
     }
@@ -538,11 +547,12 @@ class User extends Entity {
 
   static setActive(user) {
     let activeUser = User.getActive();
+    let cache = CacheManager.instance();
 
     // Remove the current user
-    if (utils.isDefined(activeUser)) {
+    if (isDefined(activeUser)) {
       // Remove the current user from cache
-      Cache.del(activeUserKey);
+      cache.del(activeUserKey);
 
       // Set the current user to null
       User[activeUserSymbol] = null;
@@ -552,21 +562,22 @@ class User extends Entity {
     }
 
     // Create a new user
-    if (utils.isDefined(user)) {
+    if (isDefined(user)) {
       if (!(user instanceof User)) {
         // Call toJSON if it is available
-        if (utils.isFunction(user.toJSON)) {
+        if (isFunction(user.toJSON)) {
           user = user.toJSON();
         }
 
         // Create the user
         activeUser = new User(user);
-      } else {
+      }
+      else {
         activeUser = user;
       }
 
       // Store in cache
-      Cache.set(activeUserKey, activeUser.toJSON());
+      cache.set(activeUserKey, activeUser.toJSON());
 
       // Set the current user
       User[activeUserSymbol] = activeUser;

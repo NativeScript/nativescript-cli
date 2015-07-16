@@ -1,27 +1,28 @@
+import CoreObject from './object';
 import NodeCache from 'node-cache';
-import utils from './utils';
+import {isDefined} from './utils';
 import sha1 from 'crypto-js/sha1';
 import log from './logger';
 import Kinvey from '../kinvey';
 import localStorage from 'humble-localstorage';
 
 // Symbol to hold cache instance
-const CACHE_SYMBOL = Symbol();
+const cacheSymbol = Symbol();
 
 // Prefix for all lscache keys
-const CACHE_PREFIX = 'Kinvey-';
+const cachePrefix = 'Kinvey-';
 
 // Suffix for the key name on the expiration items
-const CACHE_SUFFIX = '-cacheexpiration';
+const cacheSuffix = '-cacheexpiration';
 
 // expiration date radix (set to Base-36 for most space savings)
-const EXPIRY_RADIX = 10;
+const expiryRadix = 10;
 
 // time resolution in minutes
-const EXPIRY_UNITS = 60 * 1000;
+const expiryUnits = 60 * 1000;
 
 // ECMAScript max Date (epoch + 1e8 days)
-const MAX_DATE = Math.floor(8.64e15 / EXPIRY_UNITS);
+const maxDate = Math.floor(8.64e15 / expiryUnits);
 
 function generateKeyHash(key) {
   return sha1(key).toString();
@@ -29,7 +30,7 @@ function generateKeyHash(key) {
 
 // Check to set if the error is us dealing with being out of space
 function isOutOfSpace(e) {
-  if (utils.isDefined(e) && e.name === 'QUOTA_EXCEEDED_ERR' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.name === 'QuotaExceededError') {
+  if (isDefined(e) && e.name === 'QUOTA_EXCEEDED_ERR' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.name === 'QuotaExceededError') {
     return true;
   }
   return false;
@@ -50,18 +51,18 @@ function escapeRegExpSpecialCharacters(text) {
  * @return {string}
  */
 function expirationKey(key) {
-  return key + CACHE_SUFFIX;
+  return key + cacheSuffix;
 }
 
 function eachKey(bucket, fn) {
-  let prefixRegExp = new RegExp(`^${CACHE_PREFIX}${escapeRegExpSpecialCharacters(bucket)}(.*)`);
+  let prefixRegExp = new RegExp(`^${cachePrefix}${escapeRegExpSpecialCharacters(bucket)}(.*)`);
 
   // Loop in reverse as removing items will change indices of tail
   for (let i = localStorage.length - 1; i >= 0; --i) {
     let key = localStorage.key(i);
     key = key && key.match(prefixRegExp);
     key = key && key[1];
-    if (utils.isDefined(key) && key.indexOf(CACHE_SUFFIX) < 0) {
+    if (isDefined(key) && key.indexOf(cacheSuffix) < 0) {
       fn(key, expirationKey(key));
     }
   }
@@ -72,21 +73,21 @@ function eachKey(bucket, fn) {
  * @return {number}
  */
 function currentTime() {
-  return Math.floor((new Date().getTime()) / EXPIRY_UNITS);
+  return Math.floor((new Date().getTime()) / expiryUnits);
 }
 
 function getItem(bucket, key) {
-  return localStorage.getItem(`${CACHE_PREFIX}${bucket}${key}`);
+  return localStorage.getItem(`${cachePrefix}${bucket}${key}`);
 }
 
 function setItem(bucket, key, value) {
   // Fix for iPad issue - sometimes throws QUOTA_EXCEEDED_ERR on setItem.
-  localStorage.removeItem(`${CACHE_PREFIX}${bucket}${key}`);
-  localStorage.setItem(`${CACHE_PREFIX}${bucket}${key}`, value);
+  localStorage.removeItem(`${cachePrefix}${bucket}${key}`);
+  localStorage.setItem(`${cachePrefix}${bucket}${key}`, value);
 }
 
 function removeItem(bucket, key) {
-  localStorage.removeItem(`${CACHE_PREFIX}${bucket}${key}`);
+  localStorage.removeItem(`${cachePrefix}${bucket}${key}`);
 }
 
 function flushItem(bucket, key) {
@@ -101,7 +102,7 @@ function flushExpiredItem(bucket, key) {
   var expr = getItem(bucket, exprKey);
 
   if (expr) {
-    var expirationTime = parseInt(expr, EXPIRY_RADIX);
+    var expirationTime = parseInt(expr, expiryRadix);
 
     // Check if we should actually kick item out of storage
     if (currentTime() >= expirationTime) {
@@ -125,11 +126,11 @@ class Cache extends NodeCache {
     let value = super.get(hash);
 
     // Try to retrieve the stored value
-    if (!utils.isDefined(value)) {
+    if (!isDefined(value)) {
       // Get the value from local storage
       value = getItem(this.bucket, hash);
 
-      if (utils.isDefined(value)) {
+      if (isDefined(value)) {
         // Parse the value
         try {
           value = JSON.parse(value);
@@ -180,10 +181,10 @@ class Cache extends NodeCache {
             var expiration = getItem(this.bucket, exprKey);
 
             if (expiration) {
-              expiration = parseInt(expiration, EXPIRY_RADIX);
+              expiration = parseInt(expiration, expiryRadix);
             } else {
               // TODO: Store date added for non-expiring items for smarter removal
-              expiration = MAX_DATE;
+              expiration = maxDate;
             }
 
             storedKeys.push({
@@ -224,7 +225,7 @@ class Cache extends NodeCache {
 
         // If a time is specified, store expiration info in localStorage
         if (time) {
-          setItem(this.bucket, expirationKey(key), (currentTime() + time).toString(EXPIRY_RADIX));
+          setItem(this.bucket, expirationKey(key), (currentTime() + time).toString(expiryRadix));
         } else {
           // In case they previously set a time, remove that info from localStorage.
           removeItem(expirationKey(key));
@@ -274,18 +275,20 @@ class Cache extends NodeCache {
     let cache = Cache.instance();
     return cache.flushExpired();
   }
+}
 
+class CacheManager extends CoreObject {
   static instance() {
-    let cache = this[CACHE_SYMBOL];
+    let cache = CacheManager[cacheSymbol];
     let kinvey = Kinvey.instance();
 
-    if (!utils.isDefined(cache)) {
+    if (!isDefined(cache)) {
       cache = new Cache(`${kinvey.appKey}-`);
-      this[CACHE_SYMBOL] = cache;
+      CacheManager[cacheSymbol] = cache;
     }
 
     return cache;
   }
 }
 
-export default Cache;
+export default CacheManager;

@@ -1,8 +1,9 @@
 import Middleware from './middleware';
 import HttpMethod from '../enums/httpMethod';
-import Cache from '../core/cache';
-import log from '../core/logger';
-import utils from '../core/utils';
+import StatusCode from '../enums/statusCode';
+import CacheManager from '../core/cacheManager';
+import {isDefined} from '../core/utils';
+import isFunction from 'lodash/lang/isFunction';
 import Response from '../core/response';
 
 class CacheMiddleware extends Middleware {
@@ -11,21 +12,32 @@ class CacheMiddleware extends Middleware {
   }
 
   handle(request) {
-    let key = request.cacheKey;
-    log.info(`Cache key: ${key}`);
+    if (isDefined(request)) {
+      let cache = CacheManager.instance();
+      let key = request.cacheKey;
+      let response;
 
-    if (request.method === HttpMethod.GET) {
-      let cachedResponse = Cache.get(key);
+      if (request.method === HttpMethod.GET) {
+        let cachedResponse = cache.get(key);
 
-      if (utils.isDefined(cachedResponse)) {
-        request.response = new Response(cachedResponse.statusCode, cachedResponse.headers, cachedResponse.data);
+        if (isDefined(cachedResponse)) {
+          response = new Response(cachedResponse.statusCode, cachedResponse.headers, cachedResponse.data);
+        }
+        else {
+          response = new Response(StatusCode.NotFound);
+        }
       }
-    } else if (request.method === HttpMethod.DELETE) {
-      Cache.del(key);
-    } else {
-      let data = utils.isDefined(request.response) ? request.response.toJSON() : null;
-      log.info(`Set cache data: ${data}`);
-      Cache.set(key, data);
+      else if (request.method === HttpMethod.DELETE) {
+        cache.del(key);
+        response = new Response(StatusCode.NoContent);
+      }
+      else {
+        let data = isDefined(request.response) && isFunction(request.response.toJSON) ? request.response.toJSON() : request.response;
+        cache.set(key, data);
+        response = request.response;
+      }
+
+      request.response = response;
     }
 
     return Promise.resolve(request);

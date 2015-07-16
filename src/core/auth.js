@@ -1,6 +1,6 @@
 import CoreObject from './object';
 import User from './user';
-import utils from './utils';
+import {isDefined} from './utils';
 import Kinvey from '../kinvey';
 
 class Auth extends CoreObject {
@@ -12,7 +12,7 @@ class Auth extends CoreObject {
     let kinvey = Kinvey.instance();
 
     // Validate preconditions.
-    if (!utils.isDefined(kinvey.appKey) || !utils.isDefined(kinvey.appSecret)) {
+    if (!isDefined(kinvey.appKey) || !isDefined(kinvey.appSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -45,7 +45,7 @@ class Auth extends CoreObject {
     let kinvey = Kinvey.instance();
 
     // Validate preconditions.
-    if (!utils.isDefined(kinvey.appKey) || !utils.isDefined(kinvey.masterSecret)) {
+    if (!isDefined(kinvey.appKey) || !isDefined(kinvey.masterSecret)) {
       let error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -69,7 +69,7 @@ class Auth extends CoreObject {
     let user = User.current;
     let error;
 
-    if (!utils.isDefined(user)) {
+    if (!isDefined(user)) {
       error = new Error('There is not an active user.');
       return Promise.reject(error);
     }

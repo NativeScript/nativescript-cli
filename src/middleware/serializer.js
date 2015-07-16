@@ -1,5 +1,5 @@
 import Middleware from './middleware';
-import utils from '../core/utils';
+import {isDefined} from '../core/utils';
 
 class SerializerMiddleware extends Middleware {
   constructor() {
@@ -7,7 +7,7 @@ class SerializerMiddleware extends Middleware {
   }
 
   handle(request) {
-    if (utils.isDefined(request.body)) {
+    if (isDefined(request.body)) {
       let contentType = request.getHeader('content-type');
 
       if (contentType.indexOf('application/json') === 0) {

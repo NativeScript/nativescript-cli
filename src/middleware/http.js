@@ -12,11 +12,7 @@ class HttpMiddleware extends Middleware {
     let httpRequest = Http.request(request.toJSON());
 
     // Send the http request
-    return httpRequest.send().then((httpResponse) => {
-      let statusCode = httpResponse.statusCode;
-      let headers = httpResponse.headers;
-      let data = httpResponse.data;
-
+    return httpRequest.send().then(({ statusCode, headers, data }) => {
       // Create a response
       let response = new Response(statusCode, headers, data);
 

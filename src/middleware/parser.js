@@ -1,5 +1,6 @@
 import Middleware from './middleware';
-import utils from '../core/utils';
+import {isDefined} from '../core/utils';
+import isObject from 'lodash/lang/isObject';
 
 class ParserMiddleware extends Middleware {
   constructor(name = 'Kinvey Parser Middleware') {
@@ -7,19 +8,21 @@ class ParserMiddleware extends Middleware {
   }
 
   handle(request) {
-    let response = request.response;
+    if (isObject(request)) {
+      let response = request.response;
 
-    if (utils.isDefined(response) && utils.isDefined(response.data)) {
-      let contentType = response.getHeader('Content-Type');
+      if (isDefined(response) && isDefined(response.data)) {
+        let contentType = response.getHeader('Content-Type');
 
-      if (contentType.indexOf('application/json') === 0) {
-        try {
-          response.data = JSON.parse(response.data);
-        } catch (err) {
-          console.error(err);
+        if (contentType.indexOf('application/json') === 0) {
+          try {
+            response.data = JSON.parse(response.data);
+          } catch (err) {
+            response.data = response.data;
+          }
+
+          request.response = response;
         }
-
-        request.response = response;
       }
     }
 

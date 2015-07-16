@@ -1,62 +1,63 @@
-import utils from './utils';
+import clone from 'clone';
 import KinveyRack from 'kinvey-rack';
 import SerializerMiddleware from '../middleware/serializer';
 import HttpMiddleware from '../middleware/http';
 import ParserMiddleware from '../middleware/parser';
 import CacheMiddleware from '../middleware/cache';
 import DatabaseMiddleware from '../middleware/database';
-const networkRack = Symbol();
-const cacheRack = Symbol();
-const databaseRack = Symbol();
+import {isDefined} from './utils';
+const NETWORK_RACK_SYMBOL = Symbol();
+const CACHE_RACK_SYMBOL = Symbol();
+const DATABASE_RACK_SYMBOL = Symbol();
 
 class Rack extends KinveyRack {
 
   static get networkRack() {
-    if (!utils.isDefined(this[networkRack])) {
+    if (!isDefined(Rack[NETWORK_RACK_SYMBOL])) {
       let rack = new Rack('Kinvey Network Rack');
       rack.use(new SerializerMiddleware());
       rack.use(new HttpMiddleware());
       rack.use(new ParserMiddleware());
-      this[networkRack] = rack;
+      Rack[NETWORK_RACK_SYMBOL] = rack;
     }
 
-    return this[networkRack];
+    return Rack[NETWORK_RACK_SYMBOL];
   }
 
   static set networkRack(rack) {
-    this[networkRack] = rack;
+    Rack[NETWORK_RACK_SYMBOL] = rack;
   }
 
   static get cacheRack() {
-    if (!utils.isDefined(this[cacheRack])) {
+    if (!isDefined(Rack[CACHE_RACK_SYMBOL])) {
       let rack = new Rack('Kinvey Cache Rack');
       rack.use(new CacheMiddleware());
-      this[cacheRack] = rack;
+      Rack[CACHE_RACK_SYMBOL] = rack;
     }
 
-    return this[cacheRack];
+    return Rack[CACHE_RACK_SYMBOL];
   }
 
   static set cacheRack(rack) {
-    this[cacheRack] = rack;
+    Rack[CACHE_RACK_SYMBOL] = rack;
   }
 
   static get databaseRack() {
-    if (!utils.isDefined(this[databaseRack])) {
+    if (!isDefined(Rack[DATABASE_RACK_SYMBOL])) {
       let rack = new Rack('Kinvey Database Rack');
       rack.use(new DatabaseMiddleware());
-      this[databaseRack] = rack;
+      Rack[DATABASE_RACK_SYMBOL] = rack;
     }
 
-    return this[databaseRack];
+    return Rack[DATABASE_RACK_SYMBOL];
   }
 
   static set databaseRack(rack) {
-    this[databaseRack] = rack;
+    Rack[DATABASE_RACK_SYMBOL] = rack;
   }
 
   execute(request) {
-    return super.execute(utils.clone(request)).then((result) => {
+    return super.execute(clone(request)).then((result) => {
       return result.response;
     });
   }

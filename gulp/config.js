@@ -15,8 +15,13 @@ process.env.API_VERSION = 3;
 // Default config
 var defaultConfig = {
   babelify: {
-    blacklist: ['useStrict'],
+    blacklist: [
+      'useStrict'
+    ],
     comments: false,
+    noParse: [
+      'clone'
+    ],
     optional: [
       'runtime',
       'spec.undefinedToVoid',
@@ -45,9 +50,10 @@ var defaultConfig = {
   },
   outputFile: 'kinvey.js',
   outputMinFile: 'kinvey.min.js',
+  rootDirectory: path.join(__dirname, '..'),
   srcDirectory: path.join(__dirname, '../src'),
   srcFiles: 'src/**/*.js',
-  testFiles: 'test/specs/**/*.spec.js'
+  testFiles: 'test/**/*.spec.js'
 };
 
 function config(overrides) {

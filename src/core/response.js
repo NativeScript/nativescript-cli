@@ -1,28 +1,28 @@
 import CoreObject from './object';
-import utils from './utils';
+import StatusCode from '../enums/statusCode';
+const PRIVATE_RESPONSE_SYMBOL = Symbol();
 
-class Response extends CoreObject {
-  constructor(statusCode = 200, headers = {}, data = {}) {
+class PrivateResponse extends CoreObject {
+  constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
     super();
 
-    // Set request env
+    // Set response info
     this.statusCode = statusCode;
-    this.addHeaders(headers);
+    this.headers = {};
     this.data = data;
-  }
 
-  get headers() {
-    return utils.clone(this._headers);
+    // Add headers
+    this.addHeaders(headers);
   }
 
   getHeader(header) {
-    let keys = Object.keys(this._headers);
+    let keys = Object.keys(this.headers);
 
     for (let i = 0, len = keys.length; i < len; i++) {
       let key = keys[i];
 
       if (key.toLowerCase() === header.toLowerCase()) {
-        return this._headers[key];
+        return this.headers[key];
       }
     }
 
@@ -30,9 +30,9 @@ class Response extends CoreObject {
   }
 
   setHeader(header, value) {
-    let headers = this._headers || {};
+    let headers = this.headers || {};
     headers[header] = value;
-    this._headers = headers;
+    this.headers = headers;
   }
 
   addHeaders(headers) {
@@ -42,6 +42,10 @@ class Response extends CoreObject {
       let value = headers[header];
       this.setHeader(header, value);
     });
+  }
+
+  isSuccess() {
+    return (this.statusCode >= 200 && this.statusCode < 300);
   }
 
   toJSON() {
@@ -54,6 +58,45 @@ class Response extends CoreObject {
 
     // Return the json object
     return json;
+  }
+}
+
+class Response extends CoreObject {
+  constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
+    super();
+
+    // Create a private response
+    this[PRIVATE_RESPONSE_SYMBOL] = new PrivateResponse(statusCode, headers, data);
+  }
+
+  get statusCode() {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    return privateResponse.statusCode;
+  }
+
+  get data() {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    return privateResponse.data;
+  }
+
+  set data(data) {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    privateResponse.data = data;
+  }
+
+  getHeader(header) {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    return privateResponse.getHeader(header);
+  }
+
+  isSuccess() {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    return privateResponse.isSuccess();
+  }
+
+  toJSON() {
+    let privateResponse = this[PRIVATE_RESPONSE_SYMBOL];
+    return privateResponse.toJSON();
   }
 }
 
