@@ -12,6 +12,7 @@ Synchronizes the latest changes in your project to devices. If no target platfor
 * `android` - Synchronizes the latest changes in your project to connected Android devices. 
 * `ios` - Synchronizes the latest changes in your project to connected iOS devices.
 
+<% if(isHtml) { %> 
 ### Related Commands
 
 Command | Description

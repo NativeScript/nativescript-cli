@@ -14,6 +14,7 @@ Synchronizes the latest changes in your project to Android devices.
 ### Attributes
 * `<Device ID>` is the device index or identifier as listed by `$ tns device`
 
+<% if(isHtml) { %> 
 ### Related Commands
 
 Command | Description
