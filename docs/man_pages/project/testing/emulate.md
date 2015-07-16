@@ -26,6 +26,9 @@ Command | Description
 [deploy](deploy.html) | Builds and deploys the project to a connected physical or virtual device.
 [emulate android](emulate-android.html) | Builds the specified project and runs it in a native Android emulator.
 [emulate ios](emulate-ios.html) | Builds the specified project and runs it in the native iOS Simulator.
+[livesync](livesync.html) | Synchronizes the latest changes in your project to devices.
+[livesync ios](livesync-ios.html) | Synchronizes the latest changes in your project to iOS devices.
+[livesync android](livesync-android.html) | Synchronizes the latest changes in your project to Android devices.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.
