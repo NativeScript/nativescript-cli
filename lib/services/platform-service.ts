@@ -323,7 +323,7 @@ export class PlatformService implements IPlatformService {
 				this.$errors.failWithoutHelp("The path %s does not exist", libraryPath);
 			} else {
 				var platformData = this.$platformsData.getPlatformData(platform);
-				platformData.platformProjectService.addLibrary(platformData, libraryPath).wait();
+				platformData.platformProjectService.addLibrary(libraryPath).wait();
 			}
 		}).future<void>()();
 	}

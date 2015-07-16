@@ -287,7 +287,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
-    addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
+    addLibrary(libraryPath: string): IFuture<void> {
         return Future.fromResult();
     }
 	getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {

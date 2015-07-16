@@ -8,24 +8,28 @@ import util = require("util");
 import xcode = require("xcode");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
+import projectServiceBaseLib = require("./platform-project-service-base");
 
-class IOSProjectService implements  IPlatformProjectService {
+class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements  IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
+	private static IOS_PLATFORM_NAME = "ios";
 	
 	private get $npmInstallationManager(): INpmInstallationManager {
 		return this.$injector.resolve("npmInstallationManager");
 	}
 
 	constructor(private $projectData: IProjectData,
-		private $fs: IFileSystem,
+		$fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $options: IOptions,
-		private $injector: IInjector) { }
+		private $injector: IInjector) {
+			super($fs); 
+		}
 
 	public get platformData(): IPlatformData {
 		var projectRoot = path.join(this.$projectData.platformsDir, "ios");
@@ -67,7 +71,7 @@ class IOSProjectService implements  IPlatformProjectService {
 			var splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
 			if(splitedXcodeBuildVersion.length === 3) {
 				xcodeBuildVersion = util.format("%s.%s", splitedXcodeBuildVersion[0], splitedXcodeBuildVersion[1]);
- 			}
+			}
 
 			if(helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
 				this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
@@ -172,23 +176,23 @@ class IOSProjectService implements  IPlatformProjectService {
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-    public addLibrary(platformData: IPlatformData, libraryPath: string): IFuture<void> {
-        return (() => {
-            this.validateDynamicFramework(libraryPath).wait();
-            var umbrellaHeader = this.getUmbrellaHeaderFromDynamicFramework(libraryPath).wait();
+	public addLibrary(libraryPath: string): IFuture<void> {
+		return (() => {
+			this.validateDynamicFramework(libraryPath).wait();
+			var umbrellaHeader = this.getUmbrellaHeaderFromDynamicFramework(libraryPath).wait();
 
-            var frameworkName = path.basename(libraryPath, path.extname(libraryPath));
-            var targetPath = path.join(this.$projectData.projectDir, "lib", platformData.normalizedPlatformName, frameworkName);
-            this.$fs.ensureDirectoryExists(targetPath).wait();
-            shell.cp("-R", libraryPath, targetPath);
+			var frameworkName = path.basename(libraryPath, path.extname(libraryPath));
+			var targetPath = path.join(this.$projectData.projectDir, "lib", this.platformData.normalizedPlatformName, frameworkName);
+			this.$fs.ensureDirectoryExists(targetPath).wait();
+			shell.cp("-R", libraryPath, targetPath);
 
-            let project = this.createPbxProj();
+			let project = this.createPbxProj();
 
-            project.addFramework(path.join(targetPath, frameworkName + ".framework"), { customFramework: true, embed: true });
-            project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-            this.savePbxProj(project).wait();
-            this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
-        }).future<void>()();
+			project.addFramework(path.join(targetPath, frameworkName + ".framework"), { customFramework: true, embed: true });
+			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+			this.savePbxProj(project).wait();
+			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
+		}).future<void>()();
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
@@ -282,48 +286,63 @@ class IOSProjectService implements  IPlatformProjectService {
 	}
 	
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return Future.fromResult();
+		return (() => {
+			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
+		}).future<void>()();
 	}
 	
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
-		return Future.fromResult();
+		return (() => {
+			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+			let project = this.createPbxProj();
+						
+			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => project.removeFramework(path.join(pluginPlatformsFolderPath, fileName + ".framework"), { customFramework: true, embed: true }));
+			
+			this.savePbxProj(project).wait();
+		}).future<void>()();
+	}
+	
+	private getAllDynamicFrameworksForPlugin(pluginData: IPluginData): IFuture<string[]> {
+		let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === ".framework";
+		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	}
 
 	private buildPathToXcodeProjectFile(version: string): string {
 		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
 	}
 
-    private validateDynamicFramework(libraryPath: string): IFuture<void> {
-        return (() => {
-            var infoPlistPath = path.join(libraryPath, "Info.plist");
-            if (!this.$fs.exists(infoPlistPath).wait()) {
-                this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
-            }
+	private validateDynamicFramework(libraryPath: string): IFuture<void> {
+		return (() => {
+			var infoPlistPath = path.join(libraryPath, "Info.plist");
+			if (!this.$fs.exists(infoPlistPath).wait()) {
+				this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
+			}
 
-            var packageType = this.$childProcess.exec(`/usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" "${infoPlistPath}"`).wait().trim();
-            if (packageType !== "FMWK") {
-                this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
-            }
-        }).future<void>()();
-    }
+			var packageType = this.$childProcess.exec(`/usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" "${infoPlistPath}"`).wait().trim();
+			if (packageType !== "FMWK") {
+				this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
+			}
+		}).future<void>()();
+	}
 
-    private getUmbrellaHeaderFromDynamicFramework(libraryPath: string): IFuture<string> {
-        return (() => {
-            var modulemapPath = path.join(libraryPath, "Modules", "module.modulemap");
-            if (!this.$fs.exists(modulemapPath).wait()) {
+	private getUmbrellaHeaderFromDynamicFramework(libraryPath: string): IFuture<string> {
+		return (() => {
+			var modulemapPath = path.join(libraryPath, "Modules", "module.modulemap");
+			if (!this.$fs.exists(modulemapPath).wait()) {
 				this.$errors.failWithoutHelp("The framework at %s does not contain a module.modulemap file.", modulemapPath);
-            }
+			}
 
-            var modulemap = this.$fs.readText(modulemapPath).wait();
-            var umbrellaRegex = /umbrella header "(.+\.h)"/g;
-            var match = umbrellaRegex.exec(modulemap);
-            if (!match) {
-                this.$errors.failWithoutHelp("The modulemap at %s does not specify an umbrella header.", modulemapPath);
-            }
+			var modulemap = this.$fs.readText(modulemapPath).wait();
+			var umbrellaRegex = /umbrella header "(.+\.h)"/g;
+			var match = umbrellaRegex.exec(modulemap);
+			if (!match) {
+				this.$errors.failWithoutHelp("The modulemap at %s does not specify an umbrella header.", modulemapPath);
+			}
 
-            return match[1];
-        }).future<string>()();
-    }
+			return match[1];
+		}).future<string>()();
+	}
 
 	private replaceFileContent(file: string): IFuture<void> {
 		return (() => {
