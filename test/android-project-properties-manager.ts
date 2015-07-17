@@ -46,7 +46,7 @@ describe("Android project properties parser tests", () => {
 		let projectPropertiesManager = testInjector.resolve(ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, {directoryPath: tempFolder});
 		projectPropertiesManager.addProjectReference("testValue").wait();
 		
-		let expectedContent = 'target=android-21' + os.EOL +
+		let expectedContent = 'target=android-21' + '\n' +
 		'android.library.reference.1=testValue';
 		let actualContent = fs.readText(path.join(tempFolder, "project.properties")).wait();
 		
@@ -57,7 +57,7 @@ describe("Android project properties parser tests", () => {
 		let testInjector = createTestInjector();
 		let fs = testInjector.resolve("fs"); 
 		
-		let projectPropertiesFileContent = 'target=android-21' + os.EOL +
+		let projectPropertiesFileContent = 'target=android-21' + '\n' +
 		'android.library.reference.1=someValue';
 		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");	
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent).wait();
@@ -65,9 +65,9 @@ describe("Android project properties parser tests", () => {
 		let projectPropertiesManager = testInjector.resolve(ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, {directoryPath: tempFolder});
 		projectPropertiesManager.addProjectReference("testValue").wait();
 		
-		let expectedContent = 'target=android-21' + os.EOL +
-		'android.library.reference.1=someValue' + os.EOL + 
-		'android.library.reference.2=testValue';
+		let expectedContent = ['target=android-21',
+		'android.library.reference.1=someValue',
+		'android.library.reference.2=testValue'].join('\n');
 		let actualContent = fs.readText(path.join(tempFolder, "project.properties")).wait();
 		
 		assert.equal(expectedContent, actualContent);
@@ -77,19 +77,19 @@ describe("Android project properties parser tests", () => {
 		let testInjector = createTestInjector();
 		let fs = testInjector.resolve("fs"); 
 		
-		let projectPropertiesFileContent = 'target=android-21' + os.EOL +
-		'android.library.reference.1=value1' + os.EOL +
-		'android.library.reference.2=value2' + os.EOL + 
-		'android.library.reference.3=value3' + os.EOL +
-		'android.library.reference.4=value4' + os.EOL +
-		'android.library.reference.5=value5';
+		let projectPropertiesFileContent = ['target=android-21', 
+		'android.library.reference.1=value1',
+		'android.library.reference.2=value2', 
+		'android.library.reference.3=value3',
+		'android.library.reference.4=value4',
+		'android.library.reference.5=value5'].join('\n');
 		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");	
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent).wait();
 		
 		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, {directoryPath: tempFolder});
 		projectPropertiesManager.addProjectReference("testValue").wait();
 		
-		let expectedContent = projectPropertiesFileContent + os.EOL + 
+		let expectedContent = projectPropertiesFileContent + '\n' + 
 		'android.library.reference.6=testValue';
 		
 		let actualContent = fs.readText(path.join(tempFolder, "project.properties")).wait();
@@ -101,7 +101,7 @@ describe("Android project properties parser tests", () => {
 		let testInjector = createTestInjector();
 		let fs = testInjector.resolve("fs"); 
 		
-		let projectPropertiesFileContent = 'android.library.reference.1=value1' + os.EOL + 
+		let projectPropertiesFileContent = 'android.library.reference.1=value1' + '\n' + 
 		'target=android-21';
 		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");	
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent).wait();
@@ -119,23 +119,23 @@ describe("Android project properties parser tests", () => {
 		let testInjector = createTestInjector();
 		let fs = testInjector.resolve("fs"); 
 		
-		let projectPropertiesFileContent = 'target=android-17' + os.EOL + 
-		'android.library.reference.1=value1' + os.EOL +
-		'android.library.reference.2=value2' + os.EOL + 
-		'android.library.reference.3=value3' + os.EOL +
-		'android.library.reference.4=value4' + os.EOL +
-		'android.library.reference.5=value5';
+		let projectPropertiesFileContent = ['target=android-17',
+		'android.library.reference.1=value1',
+		'android.library.reference.2=value2', 
+		'android.library.reference.3=value3',
+		'android.library.reference.4=value4',
+		'android.library.reference.5=value5'].join('\n');
 		let tempFolder = temp.mkdirSync("AndroidProjectPropertiesManager");	
 		fs.writeFile(path.join(tempFolder, "project.properties"), projectPropertiesFileContent).wait();
 		
 		let projectPropertiesManager: IAndroidProjectPropertiesManager = testInjector.resolve(ProjectPropertiesManagerLib.AndroidProjectPropertiesManager, {directoryPath: tempFolder});
 		projectPropertiesManager.removeProjectReference("value3").wait();
 		
-		let expectedContent = 'target=android-17' + os.EOL + 
-		'android.library.reference.1=value1' + os.EOL + 
-		'android.library.reference.2=value2' + os.EOL + 
-		'android.library.reference.3=value4' + os.EOL + 
-		'android.library.reference.4=value5' + os.EOL;
+		let expectedContent = ['target=android-17',
+		'android.library.reference.1=value1',
+		'android.library.reference.2=value2',
+		'android.library.reference.3=value4',
+		'android.library.reference.4=value5'].join('\n') + '\n';
 		let actualContent = fs.readText(path.join(tempFolder, "project.properties")).wait();
 		
 		assert.equal(expectedContent, actualContent);
