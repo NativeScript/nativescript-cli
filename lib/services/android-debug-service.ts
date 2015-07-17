@@ -84,7 +84,7 @@ class AndroidDebugService implements IDebugService {
             } else if (this.$options.stop) {
                 this.detachDebugger(packageName).wait();
             } else if (this.$options.debugBrk) {
-                this.startAppWithDebugger(packageFile, packageName);
+                this.startAppWithDebugger(packageFile, packageName).wait();
             } else {
                 this.$logger.info("Should specify at least one option: debug-brk, start, stop, get-port.");
             }
@@ -115,7 +115,7 @@ class AndroidDebugService implements IDebugService {
             }
         }
         if ((0 < port) && (port < 65536)) {
-            this.tcpForward(port, port);
+            this.tcpForward(port, port).wait();
             this.startDebuggerClient(port).wait();
             this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
         } else {
@@ -147,7 +147,7 @@ class AndroidDebugService implements IDebugService {
     
             let dbgPort = this.startAndGetPort(packageName).wait();
             if (dbgPort > 0) {
-                this.tcpForward(dbgPort, dbgPort);
+                this.tcpForward(dbgPort, dbgPort).wait();
                 this.startDebuggerClient(dbgPort).wait();
                 this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + dbgPort);
             }
