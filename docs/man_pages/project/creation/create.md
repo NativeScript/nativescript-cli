@@ -24,5 +24,5 @@ For projects that target iOS, you can use uppercase or lowercase letters, number
 Command | Description
 ----------|----------
 [init](init.html) | Initializes a project for development. The command prompts you to provide your project configuration interactively and uses the information to create a new package.json file or update the existing one.
-[install](install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
+[install](/lib-management/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 <% } %> 
