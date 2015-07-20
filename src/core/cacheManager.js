@@ -33,6 +33,7 @@ function isOutOfSpace(e) {
   if (isDefined(e) && e.name === 'QUOTA_EXCEEDED_ERR' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.name === 'QuotaExceededError') {
     return true;
   }
+
   return false;
 }
 
@@ -55,7 +56,7 @@ function expirationKey(key) {
 }
 
 function eachKey(bucket, fn) {
-  let prefixRegExp = new RegExp(`^${cachePrefix}${escapeRegExpSpecialCharacters(bucket)}(.*)`);
+  const prefixRegExp = new RegExp(`^${cachePrefix}${escapeRegExpSpecialCharacters(bucket)}(.*)`);
 
   // Loop in reverse as removing items will change indices of tail
   for (let i = localStorage.length - 1; i >= 0; --i) {
@@ -73,7 +74,7 @@ function eachKey(bucket, fn) {
  * @return {number}
  */
 function currentTime() {
-  return Math.floor((new Date().getTime()) / expiryUnits);
+  return Math.floor(new Date().getTime() / expiryUnits);
 }
 
 function getItem(bucket, key) {
@@ -91,18 +92,18 @@ function removeItem(bucket, key) {
 }
 
 function flushItem(bucket, key) {
-  var exprKey = expirationKey(key);
+  const exprKey = expirationKey(key);
 
   removeItem(bucket, key);
   removeItem(bucket, exprKey);
 }
 
 function flushExpiredItem(bucket, key) {
-  var exprKey = expirationKey(key);
-  var expr = getItem(bucket, exprKey);
+  const exprKey = expirationKey(key);
+  const expr = getItem(bucket, exprKey);
 
   if (expr) {
-    var expirationTime = parseInt(expr, expiryRadix);
+    const expirationTime = parseInt(expr, expiryRadix);
 
     // Check if we should actually kick item out of storage
     if (currentTime() >= expirationTime) {
@@ -122,7 +123,7 @@ class Cache extends NodeCache {
   }
 
   get(key) {
-    let hash = generateKeyHash(key);
+    const hash = generateKeyHash(key);
     let value = super.get(hash);
 
     // Try to retrieve the stored value
@@ -148,13 +149,13 @@ class Cache extends NodeCache {
   }
 
   static get(key) {
-    let cache = Cache.instance();
+    const cache = Cache.instance();
     return cache.get(key);
   }
 
   set(key, value, time) {
-    let hash = generateKeyHash(key);
-    let success = super.set(key, value);
+    const hash = generateKeyHash(key);
+    const success = super.set(key, value);
 
     if (success) {
       if (typeof value !== 'string') {
@@ -170,15 +171,14 @@ class Cache extends NodeCache {
 
       try {
         setItem(this.bucket, hash, value);
-      }
-      catch (e) {
+      } catch (e) {
         if (isOutOfSpace(e)) {
           // If we exceeded the quota, then we will sort
           // by the expire time, and then remove the N oldest
-          var storedKeys = [];
-          var storedKey;
+          const storedKeys = [];
+          let storedKey;
           eachKey(this.bucket, function(key, exprKey) {
-            var expiration = getItem(this.bucket, exprKey);
+            let expiration = getItem(this.bucket, exprKey);
 
             if (expiration) {
               expiration = parseInt(expiration, expiryRadix);
@@ -196,10 +196,10 @@ class Cache extends NodeCache {
 
           // Sorts the keys with oldest expiration time last
           storedKeys.sort(function(a, b) {
-            return (b.expiration - a.expiration);
+            return b.expiration - a.expiration;
           });
 
-          var targetSize = (value || '').length;
+          let targetSize = (value || '').length;
           while (storedKeys.length && targetSize > 0) {
             storedKey = storedKeys.pop();
             log.warn(`Cache is full, removing item with key ${'}${key}${'}.`);
@@ -209,8 +209,7 @@ class Cache extends NodeCache {
 
           try {
             setItem(this.bucket, key, value);
-          }
-          catch (e) {
+          } catch (e) {
             // value may be larger than total quota
             log.warn(`Could not add item with key ${'}${key}${'}, perhaps it is too big?`);
             this.remove(key);
@@ -238,19 +237,18 @@ class Cache extends NodeCache {
   }
 
   static set(key, value, time) {
-    let cache = Cache.instance();
+    const cache = Cache.instance();
     return cache.set(key, value, time);
   }
 
   del(key) {
-    let hash = generateKeyHash(key);
-
+    const hash = generateKeyHash(key);
     super.del(hash);
     flushItem(this.bucket, hash);
   }
 
   static del(key) {
-    let cache = Cache.instance();
+    const cache = Cache.instance();
     return cache.del(key);
   }
 
@@ -261,7 +259,7 @@ class Cache extends NodeCache {
   }
 
   static flush() {
-    let cache = Cache.instance();
+    const cache = Cache.instance();
     return cache.flush();
   }
 
@@ -272,7 +270,7 @@ class Cache extends NodeCache {
   }
 
   static flushExpired() {
-    let cache = Cache.instance();
+    const cache = Cache.instance();
     return cache.flushExpired();
   }
 }
@@ -280,10 +278,9 @@ class Cache extends NodeCache {
 class CacheManager extends CoreObject {
   static instance() {
     let cache = CacheManager[cacheSymbol];
-    let kinvey = Kinvey.instance();
 
     if (!isDefined(cache)) {
-      cache = new Cache(`${kinvey.appKey}-`);
+      cache = new Cache(`${Kinvey.appKey}-`);
       CacheManager[cacheSymbol] = cache;
     }
 

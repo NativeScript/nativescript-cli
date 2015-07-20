@@ -1,19 +1,12 @@
 import CoreObject from './object';
-<<<<<<< Updated upstream
-import {isDefined} from './utils';
-=======
 import {isDefined} from '../utils';
->>>>>>> Stashed changes
 import Query from './query';
 import Request from './request';
 import log from 'loglevel';
 import HttpMethod from '../enums/httpMethod';
 import AuthType from '../enums/authType';
 import Kinvey from '../kinvey';
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 // import isArray from 'lodash/lang/isArray';
 // const objectIdPrefix = 'local_';
 
@@ -32,11 +25,6 @@ import Kinvey from '../kinvey';
 class DataStore extends CoreObject {
 
   static find(collection, query, options = {}) {
-<<<<<<< Updated upstream
-    let kinvey = Kinvey.instance();
-
-=======
->>>>>>> Stashed changes
     // Validate arguments
     if (isDefined(query) && !(query instanceof Query)) {
       return Promise.reject('query argument must be of type: Kinvey.Query.');
@@ -46,11 +34,7 @@ class DataStore extends CoreObject {
     log.info('Retrieving documents by query.', arguments);
 
     // Create a request
-<<<<<<< Updated upstream
-    let request = new Request(HttpMethod.GET, `/appdata/${kinvey.appKey}/${collection}`, query);
-=======
     const request = new Request(HttpMethod.GET, `/appdata/${Kinvey.appKey}/${collection}`, query);
->>>>>>> Stashed changes
 
     // Set the auth type
     request.authType = AuthType.Default;
@@ -61,11 +45,7 @@ class DataStore extends CoreObject {
     }
 
     // Execute the request
-<<<<<<< Updated upstream
-    let promise = request.execute(options).then((response) => {
-=======
     const promise = request.execute(options).then((response) => {
->>>>>>> Stashed changes
       // Return the data
       return response.data;
     });

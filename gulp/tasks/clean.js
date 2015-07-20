@@ -1,11 +1,13 @@
-'use strict';
+const gulp = require('gulp');
+const del = require('del');
+const config = require('../config');
 
-var gulp = require('gulp');
-var $ = require('gulp-load-plugins')();
-var del = require('del');
-var platform = $.util.env.platform || 'node';
-var config = require('../' + platform + '.config');
-
+// Remove the built files
 gulp.task('clean', function(done) {
-  del([config.distDirectory], done);
+  del([config.paths.dist], done);
+});
+
+// Remove our temporary files
+gulp.task('clean-tmp', function(done) {
+  del([config.paths.tmp], done);
 });

@@ -4,11 +4,7 @@
     "strict": 0,
     "quotes": [2, "single"],
     "no-unused-expressions": 0,
-<<<<<<< Updated upstream
-    "new-cap": 0
-=======
     "func-names": 0
->>>>>>> Stashed changes
   },
   "env": {
     "browser": true,
@@ -18,16 +14,10 @@
   "globals": {
     "spy": true,
     "expect": true,
-<<<<<<< Updated upstream
-    "nock": true,
-    "sinon": true,
-    "should": true
-=======
     "chai": true,
     "sinon": true,
     "randomString": true,
     "stub": true,
     "spy": true
->>>>>>> Stashed changes
   }
 }

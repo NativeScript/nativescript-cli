@@ -1,14 +1,13 @@
-'use strict';
-
-var gulp = require('gulp');
-var $ = require('gulp-load-plugins')();
-var platform = $.util.env.platform || 'node';
-var config = require('../' + platform + '.config');
+const gulp = require('gulp');
+const $ = require('gulp-load-plugins')({
+  camelize: true
+});
+const config = require('../config');
 
 // Send a notification when JSRC fails,
 // so that you know your changes didn't build
 function jscsNotify(file) {
-  if (!file.jscs) { return false; }
+  if (!file.jscs) return;
   return file.jscs.success ? false : 'JSRC failed';
 }
 
@@ -25,7 +24,7 @@ function createLintTask(taskName, files) {
 }
 
 // Lint our source code
-createLintTask('lint-src', config.srcFiles);
+createLintTask('lint-src', config.files.src);
 
 // Lint our test code
-createLintTask('lint-test', config.testFiles);
+createLintTask('lint-test', config.files.test);

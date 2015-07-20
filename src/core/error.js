@@ -1,6 +1,6 @@
 import CoreObject from './object';
 
-class KinveyError extends CoreObject {
+class Error extends CoreObject {
   constructor(name = 'Error', msg = '') {
     super();
 
@@ -10,7 +10,7 @@ class KinveyError extends CoreObject {
   }
 
   static entityNotFound() {
-    let error = new KinveyError('EntityNotFound');
+    const error = new Error('EntityNotFound');
     return error;
   }
 }

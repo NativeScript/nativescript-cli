@@ -1,50 +1,16 @@
-'use strict';
+const gulp = require('gulp');
+const $ = require('gulp-load-plugins')({
+  camelize: true
+});
+const config = require('../config');
 
-var gulp = require('gulp');
-var $ = require('gulp-load-plugins')();
-var platform = $.util.env.platform || 'node';
-var config = require('../' + platform + '.config');
+const test = module.exports.test = function() {
+  return gulp.src(['test/setup/node.js', config.files.test], {read: false})
+    .pipe($.mocha(config.mocha));
+};
 
 // Lint and run our tests
-gulp.task('test', [], function() {
+gulp.task('test', ['lint-src', 'lint-test'], function() {
   require('babel/register');
-  return gulp.src(config.testFiles, {read: false})
-    .pipe($.mocha(config.mocha))
-    .once('error', function(err) {
-      console.error(err);
-      process.exit(1);
-    })
-    .once('end', function() {
-      process.exit();
-    });
-});
-
-gulp.task('watch-test', function() {
-  gulp.watch([config.srcFiles, config.testFiles], 'test');
-});
-
-gulp.task('test-request', ['lint-test'], function() {
-  require('babel/register');
-  return gulp.src('test/specs/request.spec.js', {read: false})
-    .pipe($.mocha(config.mocha))
-    .once('error', function(err) {
-      console.log(err);
-      process.exit(1);
-    })
-    .once('end', function() {
-      process.exit();
-    });
-});
-
-gulp.task('test-user', ['lint-test'], function() {
-  require('babel/register');
-  return gulp.src('test/specs/user.spec.js', {read: false})
-    .pipe($.mocha(config.mocha))
-    .once('error', function(err) {
-      console.log(err);
-      process.exit(1);
-    })
-    .once('end', function() {
-      process.exit();
-    });
+  return test();
 });

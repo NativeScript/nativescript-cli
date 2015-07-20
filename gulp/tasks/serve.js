@@ -7,7 +7,7 @@ const babelify = require('babelify');
 const browserify = require('browserify');
 const source = require('vinyl-source-stream');
 const browserSync = require('browser-sync');
-const config = require('./config');
+const config = require('../config');
 const errorHandler = config.errorHandler('serve');
 const watchFiles = ['src/**/*', 'test/**/*', 'package.json', '**/.eslintrc', '.jscsrc'];
 

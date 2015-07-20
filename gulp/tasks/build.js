@@ -1,36 +1,31 @@
-'use strict';
-
-var gulp = require('gulp');
-var $ = require('gulp-load-plugins')();
-var runSequence = require('run-sequence');
-var path = require('path');
-var browserify = require('browserify');
-var source = require('vinyl-source-stream');
-var babelify = require('babelify');
-var platform = $.util.env.platform || 'node';
-var config = require('../' + platform + '.config');
-
-gulp.task('build', function(done) {
-  runSequence(['lint-src', 'clean'], 'browserify', 'wrap', done);
+const gulp = require('gulp');
+const $ = require('gulp-load-plugins')({
+  camelize: true
 });
+const path = require('path');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const buffer = require('vinyl-buffer');
+const source = require('vinyl-source-stream');
+const transform = require('vinyl-transform');
+const exorcist = require('exorcist');
+const config = require('../config');
+const errorHandler = config.errorHandler('build');
 
-gulp.task('browserify', function() {
-  return browserify(path.join(config.srcDirectory, config.entryFile), config.browserify)
-    .transform(babelify.configure(config.babelify))
+// Build two versions of the library
+gulp.task('build', ['lint-src', 'clean'], function() {
+  return browserify(path.join(config.paths.src, config.files.entry.fileName + '.js'), config.browserify)
+    .transform(babelify.configure(config.babel))
     .bundle()
+    .on('error', errorHandler)
     .pipe($.plumber())
-    .pipe(source(config.outputFile))
-    // .pipe(gulp.dest(config.distDirectory))
-    // .pipe(buffer())
-    // .pipe($.sourcemaps.init({loadMaps: true}))
-    // .pipe($.uglify())
-    // .pipe($.rename(config.outputMinFile))
-    // .pipe($.sourcemaps.write('./'))
-    .pipe(gulp.dest(config.distDirectory));
-});
-
-gulp.task('wrap', function() {
-  return gulp.src(path.join(config.distDirectory, config.outputFile))
-    .pipe($.insert.wrap(config.intro, config.outro))
-    .pipe(gulp.dest(config.distDirectory));
+    .pipe(source(config.files.output.fileName + '.js'))
+    .pipe(transform(function() { return exorcist(path.join(config.paths.dist, config.files.output.fileName + '.js.map')); }))
+    .pipe(gulp.dest(config.paths.dist))
+    .pipe(buffer())
+    .pipe($.sourcemaps.init({ loadMaps: true }))
+    .pipe($.uglify())
+    .pipe($.rename(config.files.output.fileName + '.min.js'))
+    .pipe($.sourcemaps.write('./'))
+    .pipe(gulp.dest(config.paths.dist));
 });
