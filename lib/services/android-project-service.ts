@@ -202,12 +202,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	
 	private parseProjectProperties(projDir: string, destDir: string): IFuture<void> { // projDir is libraryPath, targetPath is the path to lib folder
 		return (() => {
-			let projProp = path.join(projDir, "project.properties");
-			if (!this.$fs.exists(projProp).wait()) {
-				this.$logger.warn("Warning: File %s does not exist", projProp);
-				return;
-			}
-			
 			let projectPropertiesManager = this.getProjectPropertiesManager(projDir);
 			let references = projectPropertiesManager.getProjectReferences().wait();
 			_.each(references, reference => {
@@ -233,7 +227,9 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let targetPath = path.dirname(targetLibPath);
 			this.$fs.ensureDirectoryExists(targetPath).wait();
 
-			this.parseProjectProperties(libraryPath, targetPath).wait();
+			if(this.$fs.exists(path.join(libraryPath, "project.properties")).wait()) {
+				this.parseProjectProperties(libraryPath, targetPath).wait();
+			}
 
 			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
 			let projectLibsDir = path.join(this.platformData.projectRoot, "libs");
