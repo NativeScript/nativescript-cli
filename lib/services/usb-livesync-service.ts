@@ -30,7 +30,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
-			platform = this.initialize(platform).wait();
+			platform = platform || this.initialize(platform).wait();
 			this.$platformService.preparePlatform(platform).wait();
 			
 			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
@@ -107,7 +107,9 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 				_.each(localToDevicePaths, localToDevicePath => {
 					let devicePath = this.$mobileHelper.correctDevicePath(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()));
-					commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
+					if(this.$fs.getFsStats(localToDevicePath.getLocalPath()).wait().isFile()) {
+						commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
+					}
 				});
 				
 				commands.push(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`);
