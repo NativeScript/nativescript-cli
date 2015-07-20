@@ -1,274 +1,293 @@
-require('../setup');
 import Request from '../../src/core/request';
 import Auth from '../../src/core/auth';
+import Kinvey from '../../src/kinvey';
+import DataPolicy from '../../src/enums/dataPolicy';
 
 describe('Request', function() {
   beforeEach(function() {
     this.request = new Request();
   });
 
-  it(`should be a class`, function() {
-    Request.should.be.a.Function();
-  });
-
-  describe('headers property', function() {
-    it('should not exist', function() {
-      should.not.exist(this.request.headers);
+  describe('headers', function() {
+    it('should be undefiend', function() {
+      expect(this.request.headers).to.be.undefined;
     });
   });
 
-  describe('method property', function() {
-    it('should exist', function() {
-      should.exist(this.request.method);
-    });
-
+  describe('method', function() {
     it('should be set to GET by default', function() {
-      this.request.method.should.equal('GET');
+      expect(this.request).to.have.property('method', 'GET');
     });
 
     it('should be set to the provided method in the constructor', function() {
-      let method = 'POST';
-      let request = new Request(method);
-      request.method.should.equal(method);
+      const method = 'POST';
+      const request = new Request(method);
+      expect(request.method).to.equal(method);
     });
 
     it('should be able to be set after creating a request', function() {
-      let method = 'POST';
+      const method = 'POST';
       this.request.method = method;
-      this.request.method.should.equal(method);
+      expect(this.request.method).to.equal(method);
     });
 
     it('should throw an error for an invalid method', function() {
-      (function() {
+      expect(function() {
         return new Request('foo');
-      }).should.throw('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
+      }).to.throw('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
     });
   });
 
-  describe('protocol property', function() {
-    it('should exist', function() {
-      should.exist(this.request.protocol);
-    });
-
-    it(`should be set to ${process.env.API_PROTOCOL} by default`, function() {
-      this.request.protocol.should.equal(this.kinvey.apiProtocol);
+  describe('protocol', function() {
+    it(`should be set to ${Kinvey.apiProtocol} by default`, function() {
+      expect(this.request).to.have.property('protocol', Kinvey.apiProtocol);
     });
 
     it('should be able to be set to a different value', function() {
-      let protocol = 'foo';
+      const protocol = 'foo';
       this.request.protocol = protocol;
-      this.request.protocol.should.equal(protocol);
+      expect(this.request.protocol).to.equal(protocol);
     });
   });
 
-  describe('hostname property', function() {
-    it('should exist', function() {
-      should.exist(this.request.hostname);
-    });
-
-    it(`should be set to ${process.env.API_HOSTNAME} by default`, function() {
-      this.request.hostname.should.equal(this.kinvey.apiHostname);
+  describe('hostname', function() {
+    it(`should be set to ${Kinvey.apiHostname} by default`, function() {
+      expect(this.request).to.have.property('hostname', Kinvey.apiHostname);
     });
 
     it('should be able to be set to a different value', function() {
-      let hostname = 'foo.com';
+      const hostname = 'foo.com';
       this.request.hostname = hostname;
-      this.request.hostname.should.equal(hostname);
+      expect(this.request.hostname).to.equal(hostname);
     });
   });
 
-  describe('auth property', function() {
-    it('should exist', function() {
-      should.exist(this.request.auth);
-    });
-
-    it('should be set to Auth.None by default', function() {
-      this.request.auth.should.equal(Auth.none);
+  describe('auth', function() {
+    it('should be set to Auth.none by default', function() {
+      expect(this.request).to.have.property('auth', Auth.none);
     });
 
     it('should be able to be set to a different value', function() {
-      let auth = {};
+      const auth = {};
       this.request.auth = auth;
-      should.deepEqual(this.request.auth, auth);
+      expect(this.request.auth).to.deep.equal(auth);
     });
   });
 
-  describe('path property', function() {
-    it('should exist', function() {
-      should.exist(this.request.path);
-    });
-
+  describe('path', function() {
     it('should be equal to an empty string by default', function() {
-      this.request.path.should.equal('');
+      expect(this.request).to.have.property('path', '');
     });
 
     it('should be set to the provided path in the constructor', function() {
-      let path = '/foo';
-      let request = new Request('GET', path);
-      request.path.should.equal(path);
+      const path = '/foo';
+      const request = new Request('GET', path);
+      expect(request.path).to.equal(path);
     });
 
     it('should be able to be set to a different value', function() {
-      let path = '/foo';
+      const path = '/foo';
       this.request.path = path;
-      should.deepEqual(this.request.path, path);
+      expect(this.request.path).to.equal(path);
     });
   });
 
-  describe('query property', function() {
-    it('should exist', function() {
-      should.exist(this.request.query);
-    });
+  describe('query', function() {
   });
 
-  describe('body property', function() {
-    it('should not exist', function() {
-      should.not.exist(this.request.body);
+  describe('body', function() {
+    it('should be undefined', function() {
+      expect(this.request).to.have.property('body', undefined);
     });
 
     it('should not be able to be set', function() {
-      (function() {
+      expect(function() {
         this.request.body = {};
-      }).should.throw();
+      }).to.throw(Error);
     });
   });
 
-  describe('response property', function() {
-    it('should not exist', function() {
-      should.not.exist(this.request.response);
+  describe('dataPolicy', function() {
+    it('should be equal to DataPolicy.CloudFirst by default', function() {
+      expect(this.request).to.have.property('dataPolicy', DataPolicy.CloudFirst);
+    });
+
+    it('should be able to be set to a data policy', function() {
+      this.request.dataPolicy = DataPolicy.LocalFirst;
+      expect(this.request.dataPolicy).to.equal(DataPolicy.LocalFirst);
+    });
+
+    it('should throw and error for an invalid data policy', function() {
+      const dataPolicy = 'foo';
+      expect(function() {
+        this.request.dataPolicy = dataPolicy;
+      }).to.throw(Error);
+    });
+  });
+
+  describe('url', function() {
+    it(`should be equal to ${Kinvey.apiUrl}`, function() {
+      expect(this.request).to.have.property('url', Kinvey.apiUrl);
     });
 
     it('should not be able to be set', function() {
-      (function() {
-        this.request.response = {};
-      }).should.throw();
+      expect(function() {
+        this.request.url = 'foo';
+      }).to.throw(Error);
     });
   });
 
-  describe('getHeader function', function() {
+  describe('response', function() {
+    it('should not exist', function() {
+      expect(this.request.response).to.be.undefined;
+    });
+
+    it('should not be able to be set', function() {
+      expect(function() {
+        this.request.response = {};
+      }).to.throw(Error);
+    });
+  });
+
+  describe('getHeader()', function() {
     it('should respond', function() {
-      this.request.getHeader.should.be.a.Function();
+      expect(this.request).to.respondTo('getHeader');
     });
 
     it('should have Accept header set to application/json by default', function() {
-      this.request.getHeader('Accept').should.equal('application/json');
+      expect(this.request.getHeader('Accept')).to.equal('application/json');
     });
 
     it('should have Content-Type header set to application/json by default', function() {
-      this.request.getHeader('Content-Type').should.equal('application/json');
+      expect(this.request.getHeader('Content-Type')).to.equal('application/json');
     });
 
-    it(`should have X-Kinvey-Api-Version header set to ${process.env.API_VERSION} by default`, function() {
-      this.request.getHeader('X-Kinvey-Api-Version').should.equal(this.kinvey.apiVersion);
+    it(`should have X-Kinvey-Api-Version header set to ${Kinvey.apiVersion} by default`, function() {
+      expect(this.request.getHeader('X-Kinvey-Api-Version')).to.equal(Kinvey.apiVersion);
     });
   });
 
-  describe('setHeader function', function() {
+  describe('setHeader()', function() {
     it('should respond', function() {
-      this.request.setHeader.should.be.a.Function();
+      expect(this.request).to.respondTo('setHeader');
     });
 
     it('should add the header', function() {
-      let header = 'foo';
-      let value = 'bar';
+      const header = 'foo';
+      const value = 'bar';
       this.request.setHeader(header, value);
-      this.request.getHeader(header).should.equal(value);
+      expect(this.request.getHeader(header)).to.equal(value);
     });
 
     it('should replace an existing header', function() {
-      let header = 'content-type';
-      let value = 'application/xml';
+      const header = 'content-type';
+      const value = 'application/xml';
       this.request.setHeader(header, value);
-      this.request.getHeader(header).should.equal(value);
+      expect(this.request.getHeader(header)).to.equal(value);
     });
 
     it('should throw an error if header value is not a string');
     it('should throw an error if the header value is to large');
   });
 
-  describe('addHeaders function', function() {
+  describe('addHeaders()', function() {
     it('should respond', function() {
-      this.request.addHeaders.should.be.a.Function();
+      expect(this.request).to.respondTo('addHeaders');
     });
 
     it('should add the headers', function() {
-      let headers = {
+      const headers = {
         foo: 'bar',
         hello: 'world'
       };
       this.request.addHeaders(headers);
-      this.request.getHeader('foo').should.equal(headers.foo);
-      this.request.getHeader('hello').should.equal(headers.hello);
+      expect(this.request.getHeader('foo')).to.equal(headers.foo);
+      expect(this.request.getHeader('hello')).to.equal(headers.hello);
     });
 
     it('should replace existing headers', function() {
-      let headers = {
+      const headers = {
         accept: 'application/xml'
       };
       this.request.addHeaders(headers);
-      this.request.getHeader('accept').should.equal(headers.accept);
+      expect(this.request.getHeader('accept')).to.equal(headers.accept);
     });
 
     it('should throw an error if header value is not a string');
     it('should throw an error if the header value is to large');
   });
 
-  describe('removeHeader function', function() {
+  describe('removeHeader()', function() {
     it('should respond', function() {
-      this.request.removeHeader.should.be.a.Function();
+      expect(this.request).to.respondTo('removeHeader');
     });
 
     it('should remove a header', function() {
       this.request.removeHeader('content-type');
-      should.not.exist(this.request.getHeader('content-type'));
+      expect(this.request.getHeader('content-type')).to.be.undefined;
     });
   });
 
-  describe('isCacheEnabled function', function() {
-    it('should be a function', function() {
-      this.request.isCacheEnabled.should.be.a.Function();
+  describe('isCacheEnabled()', function() {
+    it('should respond', function() {
+      expect(this.request).to.respondTo('isCacheEnabled');
     });
 
     it('should return a boolean', function() {
-      this.request.isCacheEnabled().should.be.a.Boolean();
+      expect(typeof this.request.isCacheEnabled()).to.equal('boolean');
     });
   });
 
-  describe('enabledCache function', function() {
-    it('should be a function', function() {
-      this.request.enableCache.should.be.a.Function();
+  describe('enableCache()', function() {
+    it('should respond', function() {
+      expect(this.request).to.respondTo('enableCache');
     });
 
     it('should enable the cache', function() {
       this.request.enableCache();
-      this.request.isCacheEnabled().should.be.true;
+      expect(this.request.isCacheEnabled()).to.be.true;
     });
   });
 
-  describe('disableCache function', function() {
-    it('should be a function', function() {
-      this.request.disableCache.should.be.a.Function();
+  describe('disableCache()', function() {
+    it('should respond', function() {
+      expect(this.request).to.respondTo('disableCache');
     });
 
     it('should disable the cache', function() {
       this.request.disableCache();
-      this.request.isCacheEnabled().should.be.false;
+      expect(this.request.isCacheEnabled()).to.be.false;
     });
   });
 
   describe('execute function', function() {
-    it('should be a function', function() {
-      this.request.execute.should.be.a.Function();
+    it('should respond', function() {
+      expect(this.request).to.respondTo('execute');
     });
 
-    it('should return a promise', function() {
-      this.request.execute().should.be.a.Promise();
-    });
+    it('should return a promise');
   });
 
-  describe('toJSON function', function() {
+  describe('toJSON()', function() {
     it('should respond', function() {
-      this.request.toJSON.should.be.a.Function();
+      expect(this.request).to.respondTo('toJSON');
+    });
+
+    it('should return an object', function() {
+      const json = this.request.toJSON();
+      expect(json).to.be.an('object');
+      expect(json).to.deep.equal({
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'x-kinvey-api-version': '3'
+        },
+        method: 'GET',
+        url: 'https://baas.kinvey.com',
+        body: undefined,
+        cacheKey: '"https://baas.kinvey.com"',
+        response: undefined
+      });
     });
   });
 });

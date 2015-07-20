@@ -302,7 +302,6 @@ class PrivateRequest extends CoreObject {
       method: this.method,
       url: this.url,
       body: this.body,
-      data: this.body,
       cacheKey: this.cacheKey,
       response: this.response
     };
@@ -388,7 +387,6 @@ class Request extends CoreObject {
   set body(body) {
     const privateRequest = this[privateRequestSymbol];
     privateRequest.body = body;
-    privateRequest.data = body;
   }
 
   get dataPolicy() {

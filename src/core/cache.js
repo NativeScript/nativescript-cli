@@ -176,7 +176,7 @@ class Cache extends NodeCache {
           const storedKeys = [];
           let storedKey;
 
-          eachKey(this.bucket, function(key, exprKey) {
+          eachKey(this.bucket, function each(key, exprKey) {
             let expiration = getItem(this.bucket, exprKey);
 
             if (expiration) {
@@ -194,7 +194,7 @@ class Cache extends NodeCache {
           });
 
           // Sorts the keys with oldest expiration time last
-          storedKeys.sort(function(a, b) {
+          storedKeys.sort(function sort(a, b) {
             return b.expiration - a.expiration;
           });
 

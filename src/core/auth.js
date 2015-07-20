@@ -31,8 +31,8 @@ class Auth extends CoreObject {
   }
 
   static default() {
-    return Auth.session().then(null, function(error) {
-      return Auth.master().then(null, function() {
+    return Auth.session().then(null).catch((error) => {
+      return Auth.master().then(null).catch(() => {
         // Most likely, the developer did not create a user. Return a useful error.
         return Promise.resolve(error);
       });

@@ -47,7 +47,7 @@ const paths = config.paths = assign(config.paths, platformConfig.paths);
  */
 config.files = {
   src: 'src/**/*.js',
-  test: 'test/unit/**/*.js',
+  test: 'test/**/*.spec.js',
   entry: {
     fileName: 'index'
   },
@@ -84,6 +84,10 @@ config.browserify = {
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
 
+/**
+ * BrowserySync is the lib used to automatically reload the browser
+ * whenever a file chances.
+ */
 config.browserSync = {
   server: {
     baseDir: [

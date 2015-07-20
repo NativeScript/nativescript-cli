@@ -1,56 +1,122 @@
-require('../setup');
 import User from '../../src/core/user';
+import nock from 'nock';
+import Kinvey from '../../src/kinvey';
 
 describe('User', function() {
+  const data = {
+    _id: randomString(),
+    _kmd: {
+      authtoken: randomString()
+    }
+  };
+
   beforeEach(function() {
-    // Create a user
-    this.user = new User({
-      _id: this.randomString(),
-      _kmd: {
-        authtoken: this.randomString()
-      }
+    this.user = new User(data);
+  });
+
+  afterEach(function() {
+    return User.logout();
+  });
+
+  describe('_id', function() {
+    it(`should be equal to ${data._id}`, function() {
+      expect(this.user._id).to.equal(data._id);
+    });
+
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user._id = 1;
+      }).to.throw(TypeError);
     });
   });
 
-  it('should be a class', function() {
-    User.should.be.a.Function();
+  describe('_kmd', function() {
+    it('should be an object', function() {
+      expect(this.user._kmd).to.deep.equal(data._kmd);
+      expect(this.user._kmd).to.be.an('object');
+    });
+
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user._kmd = 'foo';
+      }).to.throw(TypeError);
+    });
   });
 
-  describe('username property', function() {
+  describe('_authtoken', function() {
+    it(`should be equal to ${data._kmd.authtoken}`, function() {
+      expect(this.user.authtoken).to.equal(data._kmd.authtoken);
+    });
 
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user.authtoken = 'foo';
+      }).to.throw(TypeError);
+    });
   });
 
-  describe('password property', function() {
+  describe('getActive()', function() {
+    it('should respond', function() {
+      expect(User).itself.to.respondTo('getActive');
+    });
 
+    it('should return null when there is no active user', function() {
+      expect(User.getActive()).to.be.null;
+    });
+
+    it('should return the active user when there is an active user', function() {
+      User.setActive(this.user);
+      const activeUser = User.getActive();
+      expect(activeUser).to.deep.equal(this.user);
+      expect(activeUser.isActive()).to.be.true;
+    });
   });
 
-  describe('authtoken property', function() {
+  describe('setActive()', function() {
+    it('should respond', function() {
+      expect(User).itself.to.respondTo('setActive');
+    });
 
+    it('should set a user as active', function() {
+      User.setActive(this.user);
+      expect(this.user.isActive()).to.be.true;
+    });
+
+    it('should replace an already active user', function() {
+      User.setActive(this.user);
+      expect(this.user.isActive()).to.be.true;
+
+      const anotherUser = new User({
+        _id: global.randomString(),
+        _kmd: {
+          authtoken: global.randomString()
+        }
+      });
+      User.setActive(anotherUser);
+
+      expect(anotherUser.isActive()).to.be.true;
+      expect(this.user.isActive()).to.be.false;
+    });
   });
 
-  describe('isActive method', function() {
-
-    // afterEach(function() {
-    //   // Set the acvtive user to null
-    //   User.setActive(null);
-    // });
+  describe('isActive()', function() {
+    it('should respond', function() {
+      expect(User).to.respondTo('isActive');
+    });
 
     it('should return true for an active user', function() {
-      // Set the active user
-      //User.setActive(this.user);
-
-      // Expectations
-      this.user.isActive().should.be.true;
+      User.setActive(this.user);
+      expect(this.user.isActive()).to.be.true;
     });
 
     it('should return false for an inactive user', function() {
-      this.user.isActive().should.not.be.true;
+      expect(this.user.isActive()).to.be.false;
     });
   });
 
-  describe('logout method', function() {
+  describe('logout()', function() {
     before(function() {
-      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}/login`);
+      this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
 
     beforeEach(function() {
@@ -62,206 +128,196 @@ describe('User', function() {
     });
 
     it('should logout the active user', function() {
-      let user = User.getActive();
+      const user = User.getActive();
       return user.logout().then(() => {
-        user.isActive().should.be.false;
-        should.not.exist(User.getActive());
+        expect(user.isActive()).to.be.false;
+        expect(User.getActive()).to.be.null;
       });
     });
 
     it('should succeed when there is no active user', function() {
       User.setActive(null);
-      return User.logout().should.be.fulfilled();
+      const promise = User.logout();
+      expect(promise).to.be.fulfilled;
+      return promise;
     });
   });
 
-  describe('me method', function() {
-
+  describe('me()', function() {
     it('should fail when there is no active user');
     it('should return the user on a success');
   });
 
-  describe('signup method', function() {
-    let server;
-
+  describe('signup()', function() {
     before(function() {
-      server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}`);
+      this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}`);
     });
-
-    afterEach(function() {
-      // scope.post(`/user/${kinvey.appKey}/_logout`).reply(200);
-      return User.logout();
-    });
-
-    it('should return a promise', function() {
-      let apiResponse = {
+    it('should create a new user', function() {
+      // Create an API response
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
-          username: this.randomString(),
-          password: this.randomString(),
+          _id: randomString(),
+          username: randomString(),
+          password: randomString(),
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
+      // Setup response
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+
       // Signup
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
-      let promise = User.signup().then(() => {
+      const promise = User.signup().then((user) => {
+        // Expectations
+        expect(user).to.have.property('_id', apiResponse.data._id);
+        expect(user).to.have.property('username', apiResponse.data.username);
+        expect(user).to.have.property('password', apiResponse.data.password);
+        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
+
+        // Make sure the scope is done
         scope.done();
       });
 
       // Expectations
-      promise.should.be.a.Promise();
+      expect(promise).to.be.fulfilled;
 
       // Return the promise
       return promise;
     });
 
-    it('should create a new user', function() {
-      // Create an API response
-      let apiResponse = {
-        statusCode: 200,
-        headers: {
-          'content-type': 'application/json'
-        },
-        data: {
-          _id: this.randomString(),
-          username: this.randomString(),
-          password: this.randomString(),
-          _kmd: {
-            authtoken: this.randomString()
-          }
-        }
-      };
-
-      // Setup response
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
-
-      // Signup
-      return User.signup().then((user) => {
-        // Expectations
-        user.should.have.property('_id', apiResponse.data._id);
-        user.should.have.property('username', apiResponse.data.username);
-        user.should.have.property('password', apiResponse.data.password);
-        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
-
-        // Make sure the scope is done
-        scope.done();
-      });
-    });
-
     it('should create a new user with data provided', function() {
       // Create some data
-      let data = {
-        username: this.randomString(),
-        password: this.randomString(),
-        attribute: this.randomString()
+      const data = {
+        username: randomString(),
+        password: randomString(),
+        attribute: randomString()
       };
 
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
+          _id: randomString(),
           username: data.username,
           password: data.password,
           attribute: data.attribute,
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
       // Setup response
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Signup
-      return User.signup(data).then((user) => {
+      const promise = User.signup(data).then((user) => {
         // Expectations
-        user.username.should.equal(data.username);
-        user.password.should.equal(data.password);
-        user.attribute.should.equal(data.attribute);
+        expect(user).to.have.property('username', data.username);
+        expect(user).to.have.property('password', data.password);
+        expect(user).to.have.property('attribute', data.attribute);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should replace _id and _kmd', function() {
       // Create some data
-      let data = {
-        _id: this.randomString(),
-        _kmd: this.randomString()
+      const data = {
+        _id: randomString(),
+        _kmd: randomString()
       };
 
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
-          username: this.randomString(),
-          password: this.randomString(),
+          _id: randomString(),
+          username: randomString(),
+          password: randomString(),
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
       // Setup response
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Signup
-      return User.signup(data).then((user) => {
+      const promise = User.signup(data).then((user) => {
         // Expectations
-        user._id.should.not.equal(data._id);
-        user._kmd.should.not.equal(data._kmd);
+        expect(user).to.have.property('_id');
+        expect(user._id).to.not.equal(data._id);
+        expect(user).to.have.property('_kmd').that.is.an('object');
+        expect(user._kmd).to.not.equal(data._kmd);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should login the created user', function() {
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
-          username: this.randomString(),
-          password: this.randomString(),
+          _id: randomString(),
+          username: randomString(),
+          password: randomString(),
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
       // Setup response
-      let scope = server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Signup
-      return User.signup().then((user) => {
-        let activeUser = User.getActive();
+      const promise = User.signup().then((user) => {
+        const activeUser = User.getActive();
 
         // Expectations
-        should.deepEqual(user, activeUser.toJSON());
+        expect(user).to.deep.equal(activeUser.toJSON());
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should fail when there is already an active user', function() {
@@ -269,52 +325,54 @@ describe('User', function() {
       User.setActive(this.user);
 
       // Signup
-      return User.signup().catch((error) => {
-        error.message.should.equal('Already logged in.');
+      const promise = User.signup().catch((err) => {
+        expect(err.message).to.equal('Already logged in.');
       });
+
+      // Expectations
+      expect(promise).to.be.rejected;
+
+      // Return the promise
+      return promise;
     });
   });
 
-  describe('signupWithProvider method', function() {
+  describe('signupWithProvider()', function() {
     before(function() {
-      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}`);
-    });
-
-    afterEach(() => {
-      // scope.post(`/user/${kinvey.appKey}/_logout`).reply(200);
-      return User.logout();
+      this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}`);
     });
 
     it('should forward to the signup method', function() {
       // Stub the signup method
-      let stub = sinon.stub(User, 'signup', () => {
+      const signupStub = stub(User, 'signup', () => {
         return Promise.resolve();
       });
 
       // Signup
-      return User.signupWithProvider('testing', {}).then(() => {
+      const promise = User.signupWithProvider('testing', {}).then(() => {
         // Expectations
-        stub.should.be.calledOnce();
-
-        // Restore the signup method
-        User.signup.restore();
+        expect(signupStub).to.be.calledOnce;
       });
+
+      // Expectations
+      expect(promise).to.be.rejected;
+
+      // Return the promise
+      return promise;
     });
 
     it('should create a new user with data provided', function() {
-      let provider = this.randomString();
-      let tokens = {};
-
-      // Create an API response
-      let apiResponse = {
+      const provider = randomString();
+      const tokens = {};
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
+          _id: randomString(),
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           },
           _socialIdentity: {}
         }
@@ -322,110 +380,130 @@ describe('User', function() {
       apiResponse.data._socialIdentity[provider] = tokens;
 
       // Setup response
-      let scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Signup
-      return User.signupWithProvider(provider, tokens).then((user) => {
+      const promise = User.signupWithProvider(provider, tokens).then((user) => {
         // Expectations
-        user.should.have.property('_socialIdentity');
-        should.deepEqual(user._socialIdentity, apiResponse.data._socialIdentity);
+        expect(user).to.have.property('_socialIdentity');
+        expect(user._socialIdentity).to.deep.equal(apiResponse.data._socialIdentity);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.rejected;
+
+      // Return the promise
+      return promise;
     });
   });
 
-  describe('login method', function() {
+  describe('login()', function() {
     before(function() {
-      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}/login`);
-    });
-
-    afterEach(function() {
-      return User.logout();
+      this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
 
     it('should fail with invalid arguments', function() {
-      return User.login({
-        foo: this.randomString()
-      }).catch((e) => {
-        e.should.not.be.undefined;
+      const promise = User.login({
+        foo: randomString()
+      }).catch((err) => {
+        expect(err).to.not.be.undefined;
       });
+
+      // Expectations
+      expect(promise).to.be.rejected;
+
+      // Return the promise
+      return promise;
     });
 
     it('should login a user provided a username and password', function() {
-      let username = this.randomString();
-      let password = this.randomString();
+      const username = randomString();
+      const password = randomString();
 
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
+          _id: randomString(),
           username: username,
           password: password,
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
       // Setup response
-      let scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Login
-      return User.login(username, password).then((user) => {
+      const promise = User.login(username, password).then((user) => {
         // Expectations
-        user.should.have.property('_id', apiResponse.data._id);
-        user.should.have.property('username', apiResponse.data.username);
-        user.should.have.property('password', apiResponse.data.password);
-        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
+        expect(user).to.have.property('_id', apiResponse.data._id);
+        expect(user).to.have.property('username', apiResponse.data.username);
+        expect(user).to.have.property('password', apiResponse.data.password);
+        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should login a user provided an object with username and password', function() {
-      let username = this.randomString();
-      let password = this.randomString();
+      const username = randomString();
+      const password = randomString();
 
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
+          _id: randomString(),
           username: username,
           password: password,
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           }
         }
       };
 
       // Setup response
-      let scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Login
-      return User.login({
+      const promise = User.login({
         username: username,
         password: password
       }).then((user) => {
         // Expectations
-        user.should.have.property('_id', apiResponse.data._id);
-        user.should.have.property('username', apiResponse.data.username);
-        user.should.have.property('password', apiResponse.data.password);
-        user.should.have.propertyByPath('_kmd', 'authtoken').eql(apiResponse.data._kmd.authtoken);
+        expect(user).to.have.property('_id', apiResponse.data._id);
+        expect(user).to.have.property('username', apiResponse.data.username);
+        expect(user).to.have.property('password', apiResponse.data.password);
+        expect(user).to.have.deep.property('_kmd.authtoken', apiResponse.data._kmd.authtoken);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should fail when there is already an active user', function() {
@@ -433,54 +511,59 @@ describe('User', function() {
       User.setActive(this.user);
 
       // Login
-      return User.login().catch((e) => {
-        e.should.not.be.undefined();
+      const promise = User.login().catch((err) => {
+        expect(err).to.not.be.undefined;
       });
+
+      // Expectations
+      expect(promise).to.be.rejected;
+
+      // Return the promise
+      return promise;
     });
   });
 
-  describe('loginWithProvider method', function() {
+  describe('loginWithProvider()', function() {
     before(function() {
-      this.server = nock(this.apiUrl).post(`/user/${this.kinvey.appKey}/login`);
-    });
-
-    afterEach(function() {
-      return User.logout();
+      this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
 
     it('should forward to the login method', function() {
-      let provider = this.randomString();
-      let tokens = {};
+      const provider = randomString();
+      const tokens = {};
 
       // Stub the login method
-      let stub = sinon.stub(User, 'login', () => {
+      const loginStub = stub(User, 'login', () => {
         return Promise.resolve();
       });
 
       // Login
-      return User.loginWithProvider(provider, tokens).then(() => {
+      const promise = User.loginWithProvider(provider, tokens).then(() => {
         // Expectations
-        stub.should.be.calledOnce();
-
-        // Restore the login method
-        User.login.restore();
+        expect(loginStub).to.be.calledOnce;
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
 
     it('should login a user', function() {
-      let provider = this.randomString();
-      let tokens = {};
+      const provider = randomString();
+      const tokens = {};
 
       // Create an API response
-      let apiResponse = {
+      const apiResponse = {
         statusCode: 200,
         headers: {
           'content-type': 'application/json'
         },
         data: {
-          _id: this.randomString(),
+          _id: randomString(),
           _kmd: {
-            authtoken: this.randomString()
+            authtoken: randomString()
           },
           _socialIdentity: {}
         }
@@ -488,40 +571,47 @@ describe('User', function() {
       apiResponse.data._socialIdentity[provider] = tokens;
 
       // Setup response
-      let scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
+      const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
 
       // Signup
-      return User.loginWithProvider(provider, tokens).then((user) => {
+      const promise = User.loginWithProvider(provider, tokens).then((user) => {
         // Expectations
-        user.should.have.property('_socialIdentity', apiResponse.data._socialIdentity);
+        expect(user).to.have.property('_socialIdentity');
+        expect(user._socialIdentity).to.deep.equal(apiResponse.data._socialIdentity);
 
         // Make sure the scope is done
         scope.done();
       });
+
+      // Expectations
+      expect(promise).to.be.fulfilled;
+
+      // Return the promise
+      return promise;
     });
   });
 
-  describe('resetPassword method', function() {
+  describe('resetPassword()', function() {
 
   });
 
-  describe('verifyEmail method', function() {
+  describe('verifyEmail()', function() {
 
   });
 
-  describe('forgotUsername method', function() {
+  describe('forgotUsername()', function() {
 
   });
 
-  describe('exists', function() {
+  describe('#exists()', function() {
 
   });
 
-  describe('getActive', function() {
+  describe('#getActive()', function() {
 
   });
 
-  describe('setActive', function() {
+  describe('#setActive()', function() {
 
   });
 });
