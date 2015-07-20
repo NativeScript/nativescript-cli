@@ -244,7 +244,7 @@ class PrivateRequest extends CoreObject {
 
         // Add auth info to headers
         return promise.then((authInfo) => {
-          if (auth !== null) {
+          if (authInfo !== null) {
             // Format credentials
             let credentials = authInfo.credentials;
             if (isDefined(authInfo.username)) {
@@ -275,7 +275,7 @@ class PrivateRequest extends CoreObject {
 
         // Add auth info to headers
         return promise.then((authInfo) => {
-          if (auth !== null) {
+          if (authInfo !== null) {
             // Format credentials
             let credentials = authInfo.credentials;
             if (isDefined(authInfo.username)) {
@@ -313,7 +313,7 @@ class PrivateRequest extends CoreObject {
 }
 
 class Request extends CoreObject {
-  constructor(method = HttpMethod.GET, path = '', query = {}, body = {}) {
+  constructor(method = HttpMethod.GET, path = '', query, body) {
     super();
 
     // Create a private request

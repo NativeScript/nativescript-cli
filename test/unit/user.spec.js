@@ -3,20 +3,59 @@ import nock from 'nock';
 import Kinvey from '../../src/kinvey';
 
 describe('User', function() {
+  const data = {
+    _id: randomString(),
+    _kmd: {
+      authtoken: randomString()
+    }
+  };
+
   beforeEach(function() {
-    this.user = new User({
-      _id: randomString(),
-      _kmd: {
-        authtoken: randomString()
-      }
-    });
+    this.user = new User(data);
   });
 
   afterEach(function() {
     return User.logout();
   });
 
-  describe('#getActive', function() {
+  describe('_id', function() {
+    it(`should be equal to ${data._id}`, function() {
+      expect(this.user._id).to.equal(data._id);
+    });
+
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user._id = 1;
+      }).to.throw(TypeError);
+    });
+  });
+
+  describe('_kmd', function() {
+    it('should be an object', function() {
+      expect(this.user._kmd).to.deep.equal(data._kmd);
+      expect(this.user._kmd).to.be.an('object');
+    });
+
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user._kmd = 'foo';
+      }).to.throw(TypeError);
+    });
+  });
+
+  describe('_authtoken', function() {
+    it(`should be equal to ${data._kmd.authtoken}`, function() {
+      expect(this.user.authtoken).to.equal(data._kmd.authtoken);
+    });
+
+    it('should throw an error when trying to be set', function() {
+      expect(function() {
+        this.user.authtoken = 'foo';
+      }).to.throw(TypeError);
+    });
+  });
+
+  describe('getActive()', function() {
     it('should respond', function() {
       expect(User).itself.to.respondTo('getActive');
     });
@@ -33,7 +72,7 @@ describe('User', function() {
     });
   });
 
-  describe('#setActive', function() {
+  describe('setActive()', function() {
     it('should respond', function() {
       expect(User).itself.to.respondTo('setActive');
     });
@@ -60,7 +99,7 @@ describe('User', function() {
     });
   });
 
-  describe('#isActive', function() {
+  describe('isActive()', function() {
     it('should respond', function() {
       expect(User).to.respondTo('isActive');
     });
@@ -75,7 +114,7 @@ describe('User', function() {
     });
   });
 
-  describe('logout method', function() {
+  describe('logout()', function() {
     before(function() {
       this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
@@ -104,45 +143,15 @@ describe('User', function() {
     });
   });
 
-  describe('me method', function() {
+  describe('me()', function() {
     it('should fail when there is no active user');
     it('should return the user on a success');
   });
 
-  describe('signup method', function() {
+  describe('signup()', function() {
     before(function() {
       this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}`);
     });
-
-    // it('should return a promise', function() {
-    //   const apiResponse = {
-    //     statusCode: 200,
-    //     headers: {
-    //       'content-type': 'application/json'
-    //     },
-    //     data: {
-    //       _id: this.randomString(),
-    //       username: this.randomString(),
-    //       password: this.randomString(),
-    //       _kmd: {
-    //         authtoken: this.randomString()
-    //       }
-    //     }
-    //   };
-
-    //   // Signup
-    //   const scope = this.server.reply(apiResponse.statusCode, apiResponse.data, apiResponse.headers);
-    //   const promise = User.signup().then(() => {
-    //     scope.done();
-    //   });
-
-    //   // Expectations
-    //   expect(promise).to.be.fulfilled();
-
-    //   // Return the promise
-    //   return promise;
-    // });
-
     it('should create a new user', function() {
       // Create an API response
       const apiResponse = {
@@ -328,7 +337,7 @@ describe('User', function() {
     });
   });
 
-  describe('signupWithProvider method', function() {
+  describe('signupWithProvider()', function() {
     before(function() {
       this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}`);
     });
@@ -391,7 +400,7 @@ describe('User', function() {
     });
   });
 
-  describe('login method', function() {
+  describe('login()', function() {
     before(function() {
       this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
@@ -514,7 +523,7 @@ describe('User', function() {
     });
   });
 
-  describe('loginWithProvider method', function() {
+  describe('loginWithProvider()', function() {
     before(function() {
       this.server = nock(Kinvey.apiUrl).post(`/user/${Kinvey.appKey}/login`);
     });
@@ -582,27 +591,27 @@ describe('User', function() {
     });
   });
 
-  describe('resetPassword method', function() {
+  describe('resetPassword()', function() {
 
   });
 
-  describe('verifyEmail method', function() {
+  describe('verifyEmail()', function() {
 
   });
 
-  describe('forgotUsername method', function() {
+  describe('forgotUsername()', function() {
 
   });
 
-  describe('exists', function() {
+  describe('#exists()', function() {
 
   });
 
-  describe('getActive', function() {
+  describe('#getActive()', function() {
 
   });
 
-  describe('setActive', function() {
+  describe('#setActive()', function() {
 
   });
 });
