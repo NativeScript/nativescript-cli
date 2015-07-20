@@ -1,9 +1,16 @@
 import HttpMethod from '../enums/httpMethod';
 import Entity from './entity';
+<<<<<<< Updated upstream
 import {isDefined} from './utils';
 import Request from './request';
 import AuthType from '../enums/authType';
 import CacheManager from './cacheManager';
+=======
+import {isDefined} from '../utils';
+import Request from './request';
+import AuthType from '../enums/authType';
+import Cache from './cache';
+>>>>>>> Stashed changes
 import log from 'loglevel';
 import Kinvey from '../kinvey';
 import isFunction from 'lodash/lang/isFunction';
@@ -31,7 +38,11 @@ class User extends Entity {
    * @returns {Boolean} `true` if the user is active, `false` otherwise.
    */
   isActive() {
+<<<<<<< Updated upstream
     let activeUser = User.getActive();
+=======
+    const activeUser = User.getActive();
+>>>>>>> Stashed changes
 
     if (isDefined(activeUser)) {
       return this.data._id === activeUser.data._id;
@@ -46,8 +57,13 @@ class User extends Entity {
    * @param   {Options} [options] Options.
    * @returns {Promise}           The previous active user.
    */
+<<<<<<< Updated upstream
   logout () {
     let promise = Promise.resolve();
+=======
+  logout() {
+    const promise = Promise.resolve();
+>>>>>>> Stashed changes
 
     // If this is not the current user then just resolve
     if (!this.isActive()) {
@@ -110,7 +126,11 @@ class User extends Entity {
    * @returns {Promise}           The previous active user.
    */
   static logout() {
+<<<<<<< Updated upstream
     let user = User.getActive();
+=======
+    const user = User.getActive();
+>>>>>>> Stashed changes
 
     if (isDefined(user)) {
       return user.logout();
@@ -126,19 +146,30 @@ class User extends Entity {
    * @returns {Promise}           The active user.
    */
   me(options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Retrieving information on the active user.');
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.GET, `/user/${kinvey.appKey}/_me`);
+=======
+    const request = new Request(HttpMethod.GET, `/user/${Kinvey.appKey}/_me`);
+>>>>>>> Stashed changes
 
     // Set the auth type
     request.auth = AuthType.Session;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
+=======
+    const promise = request.execute(options).then((response) => {
+>>>>>>> Stashed changes
       // The response.data is a fresh copy of the active user. However, the response
       // does not contain `_kmd.authtoken`. Therefore, extract it from the
       // stale copy.
@@ -170,7 +201,11 @@ class User extends Entity {
    */
   static me(options = {}) {
     // Forward to `user.me()`.
+<<<<<<< Updated upstream
     let user = User.getActive();
+=======
+    const user = User.getActive();
+>>>>>>> Stashed changes
 
     if (isDefined(user)) {
       return user.me(options);
@@ -187,19 +222,30 @@ class User extends Entity {
    * @returns {Promise}           The response.
    */
   resetPassword(username, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Requesting a password reset.');
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/rpc/${kinvey.appKey}/${username}/user-password-reset-initiate`);
+=======
+    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/${username}/user-password-reset-initiate`);
+>>>>>>> Stashed changes
 
     // Set the auth type
     request.auth = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
+=======
+    const promise = request.execute(options).then((response) => {
+>>>>>>> Stashed changes
       // Return the data
       return response.data;
     });
@@ -245,7 +291,11 @@ class User extends Entity {
     log.info('Signing up a new user with a provider.');
 
     // Parse tokens
+<<<<<<< Updated upstream
     let data = {_socialIdentity: {}};
+=======
+    const data = {_socialIdentity: {}};
+>>>>>>> Stashed changes
     data._socialIdentity[provider] = tokens;
 
     // Forward to `User.signup()`.
@@ -262,19 +312,30 @@ class User extends Entity {
    * @returns {Promise}                       The new user.
    */
   static create(data = {}, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Creating a new user.');
 
     // Validate preconditions
     if (options.state !== false && isDefined(User.getActive())) {
+<<<<<<< Updated upstream
       let error = new Error('Already logged in.');
+=======
+      const error = new Error('Already logged in.');
+>>>>>>> Stashed changes
       return Promise.reject(error);
     }
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/user/${kinvey.appKey}`, null, data);
+=======
+    const request = new Request(HttpMethod.POST, `/user/${Kinvey.appKey}`, null, data);
+>>>>>>> Stashed changes
 
     // Set the data policy
     request.dataPolicy = DataPolicy.CloudFirst;
@@ -283,9 +344,15 @@ class User extends Entity {
     request.auth = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
       // Create a user from the response
       let user = new User(response.data);
+=======
+    const promise = request.execute(options).then((response) => {
+      // Create a user from the response
+      const user = new User(response.data);
+>>>>>>> Stashed changes
 
       // Set the user as the active
       if (options.state !== false) {
@@ -320,8 +387,11 @@ class User extends Entity {
    * @returns {Promise}                           The active user.
   */
   static login(usernameOrData, password, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Reject if a user is already active
     if (isDefined(User.getActive())) {
       return Promise.reject(new Error('Already logged in.'));
@@ -349,7 +419,11 @@ class User extends Entity {
     log.info(`Login in a user.`);
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/user/${kinvey.appKey}/login`, null, usernameOrData);
+=======
+    const request = new Request(HttpMethod.POST, `/user/${Kinvey.appKey}/login`, null, usernameOrData);
+>>>>>>> Stashed changes
 
     // Set the data policy
     request.dataPolicy = DataPolicy.CloudFirst;
@@ -358,9 +432,15 @@ class User extends Entity {
     request.auth = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
       // Create a user from the response
       let user = new User(response.data);
+=======
+    const promise = request.execute(options).then((response) => {
+      // Create a user from the response
+      const user = new User(response.data);
+>>>>>>> Stashed changes
 
       // Set the user as the active
       User.setActive(user);
@@ -395,7 +475,11 @@ class User extends Entity {
     // }
 
     // Parse tokens.
+<<<<<<< Updated upstream
     let data = {_socialIdentity: {}};
+=======
+    const data = {_socialIdentity: {}};
+>>>>>>> Stashed changes
     data._socialIdentity[provider] = tokens;
 
     // Forward to `User.login()`.
@@ -410,19 +494,30 @@ class User extends Entity {
    * @returns {Promise}           The response.
    */
   static verifyEmail(username, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Requesting email verification.');
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/rpc/${kinvey.appKey}/${username}/user-email-verification-initiate`);
+=======
+    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/${username}/user-email-verification-initiate`);
+>>>>>>> Stashed changes
 
     // Set the auth type
     request.authType = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
+=======
+    const promise = request.execute(options).then((response) => {
+>>>>>>> Stashed changes
       // Return the data
       return response.data;
     });
@@ -446,19 +541,30 @@ class User extends Entity {
    * @returns {Promise}           The response.
    */
   static forgotUsername(email, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Requesting a username reminder.');
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/rpc/${kinvey.appKey}/user-forgot-username`, null, {email: email});
+=======
+    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/user-forgot-username`, null, {email: email});
+>>>>>>> Stashed changes
 
     // Set the auth type
     request.authType = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
+=======
+    const promise = request.execute(options).then((response) => {
+>>>>>>> Stashed changes
       // Return the data
       return response.data;
     });
@@ -483,7 +589,11 @@ class User extends Entity {
    */
   static resetPassword() {
     // Forward to `user.resetPassword()`.
+<<<<<<< Updated upstream
     let user = User.getActive();
+=======
+    const user = User.getActive();
+>>>>>>> Stashed changes
     return user.resetPassword();
   }
 
@@ -495,19 +605,30 @@ class User extends Entity {
    * @returns {Promise}           `true` if username exists, `false` otherwise.
    */
   static exists(username, options = {}) {
+<<<<<<< Updated upstream
     let kinvey = Kinvey.instance();
 
+=======
+>>>>>>> Stashed changes
     // Debug
     log.info('Checking whether a username exists.');
 
     // Create a request
+<<<<<<< Updated upstream
     let request = new Request(HttpMethod.POST, `/rpc/${kinvey.appKey}/check-username-exists`, null, {username: username});
+=======
+    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/check-username-exists`, null, {username: username});
+>>>>>>> Stashed changes
 
     // Set the auth type
     request.authType = AuthType.App;
 
     // Execute the request
+<<<<<<< Updated upstream
     let promise = request.execute(options).then((response) => {
+=======
+    const promise = request.execute(options).then((response) => {
+>>>>>>> Stashed changes
       // Return the data
       return response.data;
     });
@@ -530,11 +651,19 @@ class User extends Entity {
    */
   static getActive() {
     let user = User[activeUserSymbol];
+<<<<<<< Updated upstream
     let cache = CacheManager.instance();
 
     // Check cache
     if (!isDefined(user)) {
       let cachedUser = cache.get(activeUserKey);
+=======
+    const cache = Cache.instance();
+
+    // Check cache
+    if (!isDefined(user)) {
+      const cachedUser = cache.get(activeUserKey);
+>>>>>>> Stashed changes
 
       if (isDefined(cachedUser)) {
         user = new User(cachedUser);
@@ -547,7 +676,11 @@ class User extends Entity {
 
   static setActive(user) {
     let activeUser = User.getActive();
+<<<<<<< Updated upstream
     let cache = CacheManager.instance();
+=======
+    const cache = Cache.instance();
+>>>>>>> Stashed changes
 
     // Remove the current user
     if (isDefined(activeUser)) {
@@ -571,8 +704,12 @@ class User extends Entity {
 
         // Create the user
         activeUser = new User(user);
+<<<<<<< Updated upstream
       }
       else {
+=======
+      } else {
+>>>>>>> Stashed changes
         activeUser = user;
       }
 
@@ -588,4 +725,10 @@ class User extends Entity {
   }
 }
 
+<<<<<<< Updated upstream
+=======
+// Set the active user to null initially
+User[activeUserSymbol] = null;
+
+>>>>>>> Stashed changes
 export default User;

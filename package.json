@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "name": "kinvey-javascript-sdk",
   "version": "0.9.0",
   "description": "Kinvey JavaScript SDK",
@@ -22,10 +23,67 @@
   "devDependencies": {
     "babel": "^5.6.14",
     "babel-eslint": "^3.1.23",
+=======
+  "name": "babel-library-boilerplate",
+  "version": "3.1.0",
+  "description": "Author libraries in ES2015 for Node and the browser.",
+  "main": "dist/kinvey.js",
+  "scripts": {
+    "test": "gulp",
+    "test-browser": "gulp test-browser",
+    "build": "gulp build",
+    "coverage": "gulp coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/babel/babel-library-boilerplate.git"
+  },
+  "keywords": [
+    "boilerplate",
+    "es6",
+    "es2015",
+    "node",
+    "starter",
+    "kit",
+    "transpile",
+    "6to5",
+    "babel"
+  ],
+  "author": "Jmeas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/babel/babel-library-boilerplate/issues"
+  },
+  "homepage": "https://github.com/babel/babel-library-boilerplate",
+  "dependencies": {
+    "clone": "^1.0.2",
+    "crypto-js": "^3.1.5",
+    "deep-merge": "*",
+    "dexie": "^1.1.0",
+    "fake-indexeddb": "^1.0.3",
+    "humble-localstorage": "^1.4.1",
+    "indexeddbshim": "^2.0.3",
+    "kinvey-http-angular": "git+ssh://git@bitbucket.org:kinveyjs/http-angular.git",
+    "kinvey-http-node": "git+ssh://git@bitbucket.org:kinveyjs/http-node.git",
+    "kinvey-http-xhr": "git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git",
+    "kinvey-rack": "git+ssh://git@bitbucket.org:kinveyjs/rack.git",
+    "lodash": "^3.10.0",
+    "loglevel": "^1.3.1",
+    "node-cache": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel": "^5.0.0",
+    "babel-core": "^5.2.17",
+    "babel-eslint": "^3.1.9",
+    "babel-runtime": "^5.7.0",
+>>>>>>> Stashed changes
     "babelify": "^6.0.0",
-    "browserify": "^8.1.1",
-    "chai": "^2.0.0",
+    "browser-sync": "^2.7.13",
+    "browserify": "^11.0.0",
+    "chai": "^3.1.0",
+    "chai-as-promised": "^5.1.0",
     "del": "^1.1.1",
+<<<<<<< Updated upstream
     "gulp": "^3.8.10",
     "gulp-eslint": "^0.12.0",
     "gulp-file": "^0.2.0",
@@ -34,9 +92,27 @@
     "gulp-istanbul": "^0.6.0",
     "gulp-jscs": "^1.4.0",
     "gulp-load-plugins": "^0.8.0",
+=======
+    "eslint": "^1.0.0-rc-1",
+    "eslint-plugin-react": "^2.7.1",
+    "exorcist": "^0.4.0",
+    "glob": "^4.0.5",
+    "gulp": "^3.8.10",
+    "gulp-babel": "^5.0.0",
+    "gulp-debug": "^2.0.1",
+    "gulp-eslint": "^0.15.0",
+    "gulp-file": "^0.2.0",
+    "gulp-filter": "^2.0.0",
+    "gulp-istanbul": "^0.10.0",
+    "gulp-jscs": "^1.4.0",
+    "gulp-livereload": "^3.4.0",
+    "gulp-load-plugins": "^1.0.0-rc.1",
+>>>>>>> Stashed changes
     "gulp-mocha": "^2.0.0",
+    "gulp-mocha-phantomjs": "^0.8.0",
     "gulp-notify": "^2.1.0",
     "gulp-plumber": "^1.0.1",
+<<<<<<< Updated upstream
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
     "gulp-util": "^3.0.6",
@@ -61,5 +137,25 @@
   "scripts": {
     "build": "gulp build",
     "test": "make test"
+=======
+    "gulp-rename": "^1.2.0",
+    "gulp-sourcemaps": "^1.3.0",
+    "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.6",
+    "isparta": "^3.0.3",
+    "mocha": "^2.1.0",
+    "mocha-phantomjs": "^3.6.0",
+    "nock": "^2.7.0",
+    "phantomjs": "^1.9.7-15",
+    "run-sequence": "^1.0.2",
+    "sinon": "^1.12.2",
+    "sinon-chai": "^2.7.0",
+    "uid": "0.0.2",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.0.0",
+    "vinyl-transform": "^1.0.0",
+    "wrench": "^1.5.8",
+    "yargs": "^3.15.0"
+>>>>>>> Stashed changes
   }
 }

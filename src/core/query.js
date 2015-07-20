@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import CoreObject from './object';
 import isArray from 'lodash/lang/isArray';
 import isNumber from 'lodash/lang/isNumber';
@@ -380,6 +381,10 @@ class Query extends CoreObject {
     let privateQuery = this[privateQuerySymbol];
     return privateQuery.toJSON();
   }
+=======
+class Query {
+
+>>>>>>> Stashed changes
 }
 
 export default Query;

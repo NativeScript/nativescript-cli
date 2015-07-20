@@ -3,9 +3,12 @@ import Kinvey from './kinvey';
 // DataStore
 Kinvey.DataStore = require('./core/datastore');
 
+<<<<<<< Updated upstream
 // Utils
 Kinvey.Log = require('./core/logger');
 
+=======
+>>>>>>> Stashed changes
 // Middleware
 Kinvey.Middleware = require('./middleware/middleware');
 Kinvey.Middleware.Cache = require('./middleware/cache');

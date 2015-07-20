@@ -1,4 +1,5 @@
 import CoreObject from './core/object';
+<<<<<<< Updated upstream
 import {isDefined} from './core/utils';
 import url from 'url';
 import User from './core/user';
@@ -27,6 +28,63 @@ class Kinvey extends CoreObject {
 
   static init(options = {}) {
     let kinvey = new Kinvey();
+=======
+import {isDefined} from './utils';
+import url from 'url';
+import User from './core/user';
+const shareSettingsSymbol = Symbol();
+
+class Kinvey extends CoreObject {
+  static get appKey() {
+    return Kinvey[shareSettingsSymbol].appKey;
+  }
+
+  static get appSecret() {
+    return Kinvey[shareSettingsSymbol].appSecret;
+  }
+
+  static get masterSecret() {
+    return Kinvey[shareSettingsSymbol].masterSecret;
+  }
+
+  static get encryptionKey() {
+    return Kinvey[shareSettingsSymbol].encryptionKey;
+  }
+
+  static get apiProtocol() {
+    return Kinvey[shareSettingsSymbol].apiProtocol;
+  }
+
+  static get apiHostname() {
+    return Kinvey[shareSettingsSymbol].apiHostname;
+  }
+
+  static get apiUrl() {
+    return url.format({
+      protocol: Kinvey.apiProtocol,
+      hostname: Kinvey.apiHostname
+    });
+  }
+
+  static get apiVersion() {
+    return Kinvey[shareSettingsSymbol].apiVersion;
+  }
+
+  static get micApiProtocol() {
+    return Kinvey[shareSettingsSymbol].micApiProtocol;
+  }
+
+  static get micApiHostname() {
+    return Kinvey[shareSettingsSymbol].micApiHostname;
+  }
+
+  static get micApiVersion() {
+    return Kinvey[shareSettingsSymbol].micApiVersion;
+  }
+
+  static init(options = {}) {
+    const sharedInfo = Kinvey[shareSettingsSymbol];
+>>>>>>> Stashed changes
     let apiUrl;
     let apiUrlComponents;
     let micApiUrl;
@@ -41,6 +99,7 @@ class Kinvey extends CoreObject {
     }
 
     // Parse the API url
+<<<<<<< Updated upstream
     apiUrl = options.apiUrl || `${kinvey.apiProtocol}://${kinvey.apiHostname}`;
     apiUrlComponents = url.parse(apiUrl);
 
@@ -68,6 +127,35 @@ class Kinvey extends CoreObject {
     // Set the MIC API protocol and hostname
     kinvey.micApiProtocol = micApiUrlComponents.protocol;
     kinvey.micApiHostname = micApiUrlComponents.hostname;
+=======
+    apiUrl = options.apiUrl || `${sharedInfo.apiProtocol}://${sharedInfo.apiHostname}`;
+    apiUrlComponents = url.parse(apiUrl);
+
+    // Check the protocol of the apiUrl
+    if (apiUrlComponents.protocol.indexOf(sharedInfo.apiProtocol) !== 0 && options.dev === false) {
+      apiUrlComponents.protocol = sharedInfo.apiProtocol;
+    }
+
+    // Set the API protocol and hostname
+    sharedInfo.apiProtocol = apiUrlComponents.protocol;
+    sharedInfo.apiHostname = apiUrlComponents.hostname;
+
+    // Set the MIC host name
+    sharedInfo.micHostName = options.micHostName || sharedInfo.MICHostName;
+
+    // Parse the MIC API url
+    micApiUrl = options.micApiUrl || `${sharedInfo.micApiProtocol}://${sharedInfo.micApiHostname}`;
+    micApiUrlComponents = url.parse(micApiUrl);
+
+    // Check the protocol of the micApiUrl
+    if (micApiUrlComponents.protocol.indexOf(sharedInfo.micApiProtocol) !== 0 && options.dev === false) {
+      micApiUrlComponents.protocol = sharedInfo.micApiProtocol;
+    }
+
+    // Set the MIC API protocol and hostname
+    sharedInfo.micApiProtocol = micApiUrlComponents.protocol;
+    sharedInfo.micApiHostname = micApiUrlComponents.hostname;
+>>>>>>> Stashed changes
 
     // // Set the Client App Version
     // if (options.clientAppVersion != null) {
@@ -80,6 +168,7 @@ class Kinvey extends CoreObject {
     // }
 
     // Save credentials.
+<<<<<<< Updated upstream
     kinvey.appKey = options.appKey;
     kinvey.appSecret = options.appSecret || undefined;
     kinvey.masterSecret = options.masterSecret || undefined;
@@ -118,4 +207,53 @@ class Kinvey extends CoreObject {
   }
 }
 
+=======
+    sharedInfo.appKey = options.appKey;
+    sharedInfo.appSecret = options.appSecret || undefined;
+    sharedInfo.masterSecret = options.masterSecret || undefined;
+
+    // Set the encryption key.
+    sharedInfo.encryptionKey = options.encryptionKey || undefined;
+
+    // Store the shared info
+    Kinvey[shareSettingsSymbol] = sharedInfo;
+  }
+
+  static getActiveUser() {
+    return User.getActive();
+  }
+
+  static setActiveUser(user) {
+    User.setActive(user);
+  }
+
+  static isCacheEnabled() {
+    return Kinvey[shareSettingsSymbol].cacheEnabled === true ? true : false;
+  }
+
+  static enabledCache() {
+    Kinvey[shareSettingsSymbol].cacheEnabled = true;
+  }
+
+  static disableCache() {
+    Kinvey[shareSettingsSymbol].cacheEnabled = false;
+  }
+}
+
+// Default settings
+Kinvey[shareSettingsSymbol] = {
+  appKey: undefined,
+  appSecret: undefined,
+  masterSecret: undefined,
+  encryptionKey: undefined,
+  apiProtocol: process.env.KINVEY_API_PROTOCOL || 'https',
+  apiHostname: process.env.KINVEY_API_HOSTNAME || 'baas.kinvey.com',
+  micApiProtocol: process.env.KINVEY_MIC_API_PROTOCOL || 'https',
+  micApiHostname: process.env.KINVEY_MIC_API_HOSTNAME || '',
+  micApiVersion: process.env.KINVEY_MIC_API_VERSION || undefined,
+  apiVersion: process.env.KINVEY_API_VERSION || 3,
+  cacheEnabled: false
+};
+
+>>>>>>> Stashed changes
 export default Kinvey;
