@@ -30,7 +30,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
-			platform = this.initialize(platform).wait();
+			platform = platform || this.initialize(platform).wait();
 			this.$platformService.preparePlatform(platform).wait();
 			
 			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
