@@ -38,6 +38,14 @@ export class ProjectDataService implements IProjectDataService {
 			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
 		}).future<void>()();
 	}
+	
+	public removeProperty(propertyName: string): IFuture<void> {
+		return (() => {
+			this.loadProjectFile().wait();
+			delete  this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][propertyName];
+			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
+		}).future<void>()();
+	}
 
 	private loadProjectFile(): IFuture<void> {
 		return (() => {

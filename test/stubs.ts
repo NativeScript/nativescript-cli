@@ -320,6 +320,10 @@ export class ProjectDataService implements IProjectDataService {
 	setValue(key: string, value: any): IFuture<void> {
 		return Future.fromResult();
 	}
+	
+	removeProperty(propertyName: string): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class ProjectHelperStub implements IProjectHelper {
