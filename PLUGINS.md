@@ -23,6 +23,8 @@ A NativeScript plugin is any npm package, published or not, that exposes a nativ
 * A `package.json` file which contains the following metadata: name, version, supported runtime versions, dependencies and others. For more information, see the [Package.json Specification](#packagejson-specification) section.
 * One or more CommonJS modules that expose a native API via a unified JavaScript API. For more information about Common JS modules, see the [CommonJS Wiki](http://wiki.commonjs.org/wiki/CommonJS).
 * `AndroidManifest.xml` and `Info.plist` which describe the permissions, features or other configurations required or used by your app for Android and iOS, respectively.
+* (Optional) Native Android libraries.
+* (Optional) Native iOS dynamic libraries.
 
 The plugin must have the directory structure, described in the [Directory Structure](#directory-structure) section.
 
@@ -31,7 +33,7 @@ The plugin must have the directory structure, described in the [Directory Struct
 If the NativeScript framework does not expose a native API that you need, you can develop a plugin which exposes the required functionality. When you develop a plugin, keep in mind the following requirements.
 
 * The plugin must be a valid npm package.
-* The plugin must expose a built-in native API. Currently, you cannot expose native APIs available via custom native libraries.
+* The plugin must expose a built-in native API or a native API available via custom native libraries.
 * The plugin must be written in JavaScript or TypeScript and must comply with the CommonJS specification. If written in TypeScript, make sure to include the compiled `JavaScript` file in your plugin.
 * The plugin directory structure must comply with the specification described below.
 * The plugin must contain a valid `package.json` which complies with the specification described below.
@@ -39,7 +41,7 @@ If the NativeScript framework does not expose a native API that you need, you ca
 
 ### Directory Structure
 
-NativeScript plugins which consist of one CommonJS module must have the following directory structure.
+NativeScript plugins which consist of one CommonJS module might have the following directory structure.
 
 ```
 my-plugin/
@@ -48,11 +50,11 @@ my-plugin/
 └── platforms/
     ├── android/
     │   └── AndroidManifest.xml
-    └── ios
+    └── ios/
         └── Info.plist
 ```
 
-NativeScript plugins which consist of multiple CommonJS modules must have the following directory structure.
+NativeScript plugins which consist of multiple CommonJS modules might have the following directory structure.
 
 ```
 my-plugin/
@@ -66,16 +68,36 @@ my-plugin/
 └── platforms/
     ├── android/
     │   └── AndroidManifest.xml
-    └── ios
+    └── ios/
         └── Info.plist
 ```
 
-* `index.js`: This file is the CommonJS module which exposes the native API. You can use platform-specific `*.platform.js` files. For example: `index.ios.js` and `index.android.js`. During the plugin installation, the NativeScript CLI will copy the platform resources to the `tns_modules` subdirectory in the correct platform destination in the `platforms` directory of your project.
+* `index.js`: This file is the CommonJS module which exposes the native API. You can use platform-specific `*.platform.js` files. For example: `index.ios.js` and `index.android.js`. During the plugin installation, the NativeScript CLI will copy the platform resources to the `tns_modules` subdirectory in the correct platform destination in the `platforms` directory of your project.<br/>Alternatively, you can give any name to this CommonJS module. In this case, however, you need to point to this file by setting the `main` key in the `package.json` for the plugin. For more information, see [Folders as Modules](https://nodejs.org/api/modules.html#modules_folders_as_modules). 
 * `package.json`: This file contains the metadata for your plugin. It sets the supported runtimes, the plugin name and version and any dependencies. The `package.json` specification is described in detail below.
 * `platforms\android\AndroidManifest.xml`: This file describes any specific configuration changes required for your plugin to work. For example: required permissions. For more information about the format of `AndroidManifest.xml`, see [App Manifest](http://developer.android.com/guide/topics/manifest/manifest-intro.html).<br/>During the plugin installation, the NativeScript CLI will merge the plugin `AndroidManifest.xml` with the `AndroidManifest.xml` for your project. The NativeScript CLI will not resolve any contradicting or duplicate entries during the merge. After the plugin is installed, you need to manually resolve such issues. 
 * `platforms\ios\Info.plist`: This file describes any specific configuration changes required for your plugin to work. For example: required permissions. For more information about the format of `Info.plist`, see [About Information Property List Files](https://developer.apple.com/library/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/AboutInformationPropertyListFiles.html).<br/>During the plugin installation, the NativeScript CLI will merge the plugin `Info.plist` with the `Info.plist` for your project. The NativeScript CLI will not resolve any contradicting or duplicate entries during the merge. After the plugin is installed, you need to manually resolve such issues. 
 
-> **IMPORTANT:** Currently, you cannot add any platform-specific resources other than `AndroidManifest.xml` and `Info.plist` in the `platforms` directory of the plugin.
+NativeScript plugins which contain both native Android and iOS libraries might have the following directory structure.
+
+```
+my-plugin/
+├── ...
+└── platforms/
+    ├── android/
+    │   ├── libs/
+    │   │   └── MyLibrary.jar
+    │   ├── MyAndroidLibrary/
+    │   │   ├── ...
+    │   │   └── project.properties
+    │   └── AndroidManifest.xml
+    └── ios/
+        ├── MyiOSLibrary.framework
+        └── Info.plist
+```
+
+* `platforms\android\libs`: This directory contains any native Android libraries packaged as `*.jar` packages. During the plugin installation, the NativeScript CLI will copy these files to `lib\Android` in your project and will configure the Android project in `platforms\android` to work with the library.
+* `platforms\android\MyAndroidLibrary`: This directory contains a native Android library with a `project.properties` file. During the plugin installation, the NativeScript CLI will copy these files to `lib\Android` in your project and will configure the Android project in `platforms\android` to work with the library.
+* `platforms\ios`: This directory contains native iOS dynamic libraries (`.framework`). During the plugin installation, the NativeScript CLI will copy these files to `lib\iOS` in your project and will configure the Android project in `platforms\ios` to work with the library.
 
 ### Package.json Specification
 
@@ -125,6 +147,8 @@ You can specify a plugin by name in the npm registry, local path or URL. The fol
 The installation of a NativeScript plugin mimics the installation of an npm module.
 
 The NativeScript CLI takes the plugin and installs it to the `node_modules` directory in the root of your project. During this process, the NativeScript CLI resolves any dependencies described in the plugin `package.json` file and adds the plugin to the project `package.json` file in the project root.
+
+If the NativeScript CLI detects any native libraries in the plugin, it copies the library files to the `lib/<platform>` folder in your project and configures the platform-specific projects in `platforms/<platform>` to work with the library.
 
 Next, the NativeScript CLI runs a partial `prepare` operation for the plugin for all platforms configured for the project. During this operation, the CLI copies only the plugin to the `tns_modules` subdirectories in the `platforms\android` and `platform\ios` directories in your project. If your plugin contains platform-specific `JS` files, the CLI copies them to the respective platform subdirectory and renames them by removing the platform modifier. 
 
@@ -257,13 +281,15 @@ You must specify the plugin by the value for the `name` key in the plugin `packa
 
 The removal of a NativeScript plugin mimics the removal of an npm module.
 
-The NativeScript CLI removes any plugin files from the `node_modules` directory in the root of your project. During this process, the NativeScript CLI removes any dependencies described in the plugin `package.json` file and removes the plugin from the project `package.json` file in the project root.
+The NativeScript CLI removes any plugin files from the `node_modules` directory in the root of your project and removes any native Android libraries which have been added during the plugin installation. During this process, the NativeScript CLI removes any dependencies described in the plugin `package.json` file and removes the plugin from the project `package.json` file in the project root.
 
-> **IMPROTANT:** This operation does not remove files from the `platforms\android` and `platforms\ios` directories and does not unmerge the `AndroidManifest.xml` and `Info.plist` files. 
+> **IMPORTANT:** This operation does not remove files from the `platforms\android` and `platforms\ios` directories and native iOS libraries, and does not unmerge the `AndroidManifest.xml` and `Info.plist` files. 
 
 ### Manual Steps After Removal
 
-After the plugin removal is complete, you need to run the following command.
+After the plugin removal is complete, make sure to remove any leftover native library files from the `<lib>` directory in the root of the project.Update the platform-specific projects in `platforms\<platform>` to remove any dependencies on the removed native libraries.
+
+Next, you need to run the following command.
 
 ```Shell
 tns prepare <Platform>

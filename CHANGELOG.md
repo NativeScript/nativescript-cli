@@ -11,7 +11,7 @@ NativeScript CLI Changelog
 * [Implemented #523](https://github.com/NativeScript/nativescript-cli/issues/523): Added the `$ tns livesync <Platform>` command. You can use it to quickly synchronize changes to connected devices without re-building and re-deploying your apps.
 * [Implemented #510](https://github.com/NativeScript/nativescript-cli/issues/510): Improvements and updates to the `$ tns plugin` sets of commands.
 	* You can create and work with custom NativeScript plugins which contain Android native libraries.
-	* You can create and work with custom NativeScript plugins which containg iOS dynamic native libraries.
+	* You can create and work with custom NativeScript plugins which contain iOS dynamic native libraries.
 	* The `$ tns plugin remove` command removes the Android native libraries carried by the plugin.
 * [Implemented #480](https://github.com/NativeScript/nativescript-cli/issues/480): Added the `$ tns doctor` command. You can use it to quickly check for any configuration issues which might prevent the NativeScript CLI from working properly.
 
