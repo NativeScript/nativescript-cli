@@ -6,6 +6,7 @@ import stream = require("stream");
 import path = require("path");
 import http = require("http");
 import Future = require("fibers/future");
+import semver = require("semver");
 
 module notification {
     function formatNotification(bundleId: string, notification: string) {
@@ -71,7 +72,8 @@ class IOSDebugService implements IDebugService {
         private $errors: IErrors,
         private $injector: IInjector,
         private $npmInstallationManager: INpmInstallationManager,
-        private $options: IOptions) { }
+        private $options: IOptions,
+        private $projectDataService: IProjectDataService) { }
 
     get platform(): string {
         return "ios";
@@ -142,6 +144,7 @@ class IOSDebugService implements IDebugService {
                     });
                     awaitNotification(npc, notification.readyForAttach(projectId), 5000).wait();
                 } catch(e) {
+                    this.$logger.trace(`Timeout error: ${e}`);
                     this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
                 }
                 
@@ -205,9 +208,19 @@ class IOSDebugService implements IDebugService {
     private openDebuggingClient(): IFuture<void> {
         return (() => {
             let inspectorPath = this.getInspectorPath().wait();
-            let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
             let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
-            let cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`;
+            let cmd: string = null;
+            
+            this.$projectDataService.initialize(this.$projectData.projectDir);
+            let platformData = this.$platformsData.getPlatformData(this.platform);
+            let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+            if(semver.lt(frameworkVersion, "1.2.0")) {
+                cmd = `open -a Safari "${inspectorSourceLocation}"`;                
+            } else {
+                let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
+                cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`; 
+            }
+            
             this.$childProcess.exec(cmd).wait();
         }).future<void>()();
     }
