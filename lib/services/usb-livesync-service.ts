@@ -118,7 +118,10 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commandsFileDevicePath = this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, AndroidUsbLiveSyncService.LIVESYNC_COMMANDS_FILE_NAME);
 				this.createCommandsFileOnDevice(commandsFileDevicePath, commands).wait();
 				
-				this.device.adb.executeShellCommand(`"cat ${commandsFileDevicePath} | run-as ${deviceAppData.appIdentifier}"`).wait();
+				let result = this.device.adb.executeShellCommand(`"cat ${commandsFileDevicePath} | run-as ${deviceAppData.appIdentifier}"`).wait();
+				if(result.indexOf("Permission denied") !== -1) {
+					this.device.adb.executeShellCommand(`${commandsFileDevicePath}`).wait();
+				}
 			}
 			
 			this.device.applicationManager.restartApplication(deviceAppData.appIdentifier).wait();
