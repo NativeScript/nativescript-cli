@@ -7,7 +7,8 @@ import Future = require("fibers/future");
 export class AddLibraryCommand implements ICommand {
     constructor(private $platformService: IPlatformService,
                 private $errors: IErrors,
-                private $logger: ILogger) { }
+                private $logger: ILogger,
+                private $fs: IFileSystem) { }
 
     allowedParameters: ICommandParameter[] = [];
 
@@ -21,12 +22,22 @@ export class AddLibraryCommand implements ICommand {
     }
 
     canExecute(args: string[]): IFuture<boolean> {
-        if (args.length !== 2) {
-            this.$errors.fail("This command needs two parameters.");
-        }
-
-        this.$platformService.validatePlatformInstalled(args[0]);
-        return Future.fromResult(true);
+        return (() => {
+            if (args.length !== 2) {
+                this.$errors.fail("This command needs two parameters.");
+            }
+    
+            let libraryPath = path.resolve(args[1]);
+            if(!this.$fs.exists(path.join(libraryPath, "project.properties")).wait()) {
+                let files = this.$fs.enumerateFilesInDirectorySync(libraryPath);
+                if(!_.any(files, file => path.extname(file) === ".jar")) {
+                    this.$errors.failWithoutHelp("Invalid library path. Ensure that the library path is the file path to a directory containing one or more `*.jar` files or to a directory containing the `project.properties` files.");
+                }
+            }
+            
+            this.$platformService.validatePlatformInstalled(args[0]);
+            return true;
+        }).future<boolean>()();
     }
 }
 $injector.registerCommand("library|add", AddLibraryCommand);
