@@ -3,12 +3,12 @@ livesync
 
 Usage | Synopsis
 ------|-------
-General | `$ tns livesync [<Platform>]`
+General | `$ tns livesync <Platform>`
 
-Synchronizes the latest changes in your project to devices. If no target platform is specified, changes are synchronized to all devices.
+Synchronizes the latest changes in your project to devices.
 
 ### Attributes
-`<Platform>` is the target mobile platform to which you want to synchronize your changes. You can set the following target platforms.
+`<Platform>` is the target mobile platform to which you want to synchronize your changes. <% if(isHtml) { %>If you have connected only Android or only iOS devices, you can omit setting the target platform. If you have connected devices of multiple platforms, you must specify the target platform. <% } %>You can set the following target platforms.
 * `android` - Synchronizes the latest changes in your project to connected Android devices. 
 * `ios` - Synchronizes the latest changes in your project to connected iOS devices.
 

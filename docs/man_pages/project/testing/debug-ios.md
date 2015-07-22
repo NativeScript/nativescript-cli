@@ -22,7 +22,7 @@ Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml)
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari.
 
 ### Attributes
-* `<Device ID>` is the index or name of the target device as listed by `$ tns list-devices`
+* `<Device ID>` is the index or name of the target device as listed by `$ tns device`
 * `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate ios`
 <% } %> 
 <% if(isHtml) { %> 

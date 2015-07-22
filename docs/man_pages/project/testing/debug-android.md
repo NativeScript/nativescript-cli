@@ -25,7 +25,7 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `--debug-port` - Sets a new port on which to attach the debug tools.
 
 ### Attributes
-* `<Device ID>` is the index or name of the target device as listed by `$ tns list-devices` 
+* `<Device ID>` is the index or name of the target device as listed by `$ tns device` 
 * `<Port>` is an accessible port on the device to which you want to attach the debugging tools.
 * `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate android`
 * `<GenyName>` is the name of the Genymotion virtual device that you want to use as listed by `$ genyshell -c "devices list"`
