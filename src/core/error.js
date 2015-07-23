@@ -1,18 +1,8 @@
-import CoreObject from './object';
-
-class Error extends CoreObject {
-  constructor(name = 'Error', msg = '') {
-    super();
-
-    this.name = name;
-    this.message = msg;
-    this.stack = (new Error()).stack;
-  }
-
-  static entityNotFound() {
-    const error = new Error('EntityNotFound');
-    return error;
+class KinveyError extends Error {
+  constructor(msg = '') {
+    super(msg);
+    Error.captureStackTrace(this, this.constructor);
   }
 }
 
-export default Error;
+export default KinveyError;

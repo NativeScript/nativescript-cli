@@ -17,5 +17,10 @@ Kinvey.Rack = require('./core/rack');
 // User
 Kinvey.User = require('./core/user');
 
+// Errors
+Kinvey.Error = require('./core/errors/error');
+Kinvey.ActiveUserError = require('./core/errors/activeUserError');
+Kinvey.NotFoundError = require('./core/errors/notFoundError');
+
 // Export
 export default Kinvey;
