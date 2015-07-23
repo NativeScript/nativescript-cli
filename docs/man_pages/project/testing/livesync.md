@@ -13,6 +13,10 @@ Synchronizes the latest changes in your project to devices.
 * `ios` - Synchronizes the latest changes in your project to connected iOS devices.
 
 <% if(isHtml) { %> 
+### Command Limitations
+
+* You cannot run this command on Android 4.3 devices and on some Samsung devices.
+
 ### Related Commands
 
 Command | Description

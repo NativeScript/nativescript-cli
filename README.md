@@ -265,6 +265,7 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 * `emulate <Platform>` builds the project for the selected target platform and runs it in the native emulator, if configured. 
 * `deploy <Platform> [--device <Device ID>]` deploys an already built application on connected device.
 * `run <Platform> [--device <Device ID>]` executes `prepare`, `build`, and `deploy`.
+* `livesync <Platform>` synchronizes changes from your project to an already deployed application on device.
 * `device` lists connected devices, including any running Android Virtual Devices or Genymotion virtual devices.
 * `device log` opens the log stream for the selected device.
 * `device run` runs a selected application on a connected device.
@@ -511,7 +512,9 @@ If addressing the configuration issues does not resolve your problem, you can [r
 Known Issues
 ===
 
-* On OS X systems with configured firewall or web proxy, when you run a command, the operation might not release the command line and you might not be able to run other commands until you break the current operation.<br/>If you have enabled feature usage tracking for the NativeScript CLI, but you have not authenticated with the firewall or web proxy on your OS X system, the NativeScript CLI might not release the command line after you run a command. To continue working with the NativeScript CLI, you need to break the current operation by pressing `Ctrl+C`.<br/>**Workaround:** Authenticate with the firewal or web proxy.
+* You cannot synchronize changes to apps on Android 4.3 devices and on some Samsung devices using the `livesync android` command.<br/>**Workaround:** Upgrade to a later version of Android to be able to use the `livesync` command. If you need to develop for Android 4.3 devices, re-build and re-deploy your app to get your latest changes on device.
+
+* On OS X systems with configured firewall or web proxy, when you run a command, the operation might not release the command line and you might not be able to run other commands until you break the current operation.<br/>If you have enabled feature usage tracking for the NativeScript CLI, but you have not authenticated with the firewall or web proxy on your OS X system, the NativeScript CLI might not release the command line after you run a command. To continue working with the NativeScript CLI, you need to break the current operation by pressing `Ctrl+C`.<br/>**Workaround:** Authenticate with the firewall or web proxy.
 	1. Close the terminal.
 	1. Run Safari.
 	1. Attempt to open a web page.
