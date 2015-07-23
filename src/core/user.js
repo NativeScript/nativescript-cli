@@ -1,28 +1,18 @@
-import HttpMethod from '../enums/httpMethod';
 import Entity from './entity';
 import {isDefined} from '../utils';
-import Request from './request';
 import AuthType from '../enums/authType';
 import Cache from './cache';
 import log from 'loglevel';
-import Kinvey from '../kinvey';
 import isFunction from 'lodash/lang/isFunction';
 import isObject from 'lodash/lang/isObject';
 import DataPolicy from '../enums/dataPolicy';
+import ActiveUserError from './errors/activeUserError';
 const activeUserSymbol = Symbol();
 const activeUserKey = 'activeUser';
 
 class User extends Entity {
-  get username() {
-    return this.data.username;
-  }
-
-  get password() {
-    return this.data.password;
-  }
-
   get authtoken() {
-    return this._kmd.authtoken;
+    return this.metadata.authtoken;
   }
 
   /**
@@ -34,7 +24,7 @@ class User extends Entity {
     const activeUser = User.getActive();
 
     if (isDefined(activeUser)) {
-      return this.data._id === activeUser.data._id;
+      return this._id === activeUser._id;
     }
 
     return false;
@@ -104,97 +94,6 @@ class User extends Entity {
   }
 
   /**
-   * Logs out the active user.
-   *
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The previous active user.
-   */
-  static logout() {
-    const user = User.getActive();
-
-    if (isDefined(user)) {
-      return user.logout();
-    }
-
-    return Promise.resolve();
-  }
-
-  /**
-   * Retrieves information on the active user.
-   *
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The active user.
-   */
-  me(options = {}) {
-    // Debug
-    log.info('Retrieving information on the active user.');
-
-    // Create a request
-    const request = new Request(HttpMethod.GET, `/user/${Kinvey.appKey}/_me`);
-
-    // Set the auth type
-    request.auth = AuthType.Session;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // The response.data is a fresh copy of the active user. However, the response
-      // does not contain `_kmd.authtoken`. Therefore, extract it from the
-      // stale copy.
-      response.data._kmd.authtoken = this.data._kmd.authtoken;
-
-      // Set the data for the user
-      this.data = response.data;
-
-      // Return the user
-      return this.toJSON();
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Retrieved information on the active user.`);
-    }).catch(() => {
-      log.error(`Failed to retrieve information on the active user.`);
-    });
-
-    // Return the promise
-    return promise;
-  }
-
-  /**
-   * Requests a password reset for a user.
-   *
-   * @param   {String}  username  Username.
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The response.
-   */
-  resetPassword(username, options = {}) {
-    // Debug
-    log.info('Requesting a password reset.');
-
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/${username}/user-password-reset-initiate`);
-
-    // Set the auth type
-    request.auth = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Return the data
-      return response.data;
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Requested a password reset.`);
-    }).catch(() => {
-      log.error(`Failed to request a password reset.`);
-    });
-
-    // Return the promise
-    return promise;
-  }
-
-  /**
    * Signs up a new user.
    *
    * @param   {Object}  [data]    User data.
@@ -246,23 +145,18 @@ class User extends Entity {
 
     // Validate preconditions
     if (options.state !== false && isDefined(User.getActive())) {
-      const error = new Error('Already logged in.');
+      const error = new ActiveUserError('A user is already logged in.');
       return Promise.reject(error);
     }
 
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/user/${Kinvey.appKey}`, null, data);
+    // Set options
+    options.dataPolicy = DataPolicy.CloudFirst;
+    options.authType = AuthType.App;
 
-    // Set the data policy
-    request.dataPolicy = DataPolicy.CloudFirst;
-
-    // Set the auth type
-    request.auth = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Create a user from the response
-      const user = new User(response.data);
+    // Create a new user
+    const promise = super.create(null, data, options).then((data) => {
+      // Set the user data
+      const user = new User(data);
 
       // Set the user as the active
       if (options.state !== false) {
@@ -271,13 +165,6 @@ class User extends Entity {
 
       // Return the user
       return user.toJSON();
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Created the new user.`);
-    }).catch(() => {
-      log.error(`Failed to create the new user.`);
     });
 
     // Return the promise
@@ -299,7 +186,8 @@ class User extends Entity {
   static login(usernameOrData, password, options = {}) {
     // Reject if a user is already active
     if (isDefined(User.getActive())) {
-      return Promise.reject(new Error('Already logged in.'));
+      const error = new ActiveUserError('A user is already logged in.');
+      return Promise.reject(error);
     }
 
     // Cast arguments
@@ -312,43 +200,25 @@ class User extends Entity {
       };
     }
 
-    // Default options
-    options = options || {};
-
     // Validate username and password
     if ((!isDefined(usernameOrData.username) || !isDefined(usernameOrData.password)) && !isDefined(usernameOrData._socialIdentity)) {
       return Promise.reject(new Error('Username and/or password missing. Please provide both a username and password to login.'));
     }
 
-    // Debug
-    log.info(`Login in a user.`);
+    // Set options
+    options.dataPolicy = DataPolicy.CloudOnly;
+    options.authType = AuthType.App;
 
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/user/${Kinvey.appKey}/login`, null, usernameOrData);
-
-    // Set the data policy
-    request.dataPolicy = DataPolicy.CloudFirst;
-
-    // Set the auth type
-    request.auth = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Create a user from the response
-      const user = new User(response.data);
+    // Create a new user
+    const promise = super.create('login', usernameOrData, options).then((data) => {
+      // Set the user data
+      const user = new User(data);
 
       // Set the user as the active
       User.setActive(user);
 
       // Return the user
-      return user.toJSON();
-    });
-
-    // Debug
-    promise.then((response) => {
-      log.info(`Logged in user ${response.data._id}.`);
-    }).catch(() => {
-      log.error(`Failed to login the user.`);
+      return user;
     });
 
     // Return the promise
@@ -364,11 +234,6 @@ class User extends Entity {
    * @returns {Promise}           The active user.
    */
   static loginWithProvider(provider, tokens, options) {
-    // Debug.
-    // if(KINVEY_DEBUG) {
-    //   log('Logging in with a provider.', arguments);
-    // }
-
     // Parse tokens.
     const data = {_socialIdentity: {}};
     data._socialIdentity[provider] = tokens;
@@ -377,119 +242,8 @@ class User extends Entity {
     return User.login(data, options);
   }
 
-  /**
-   * Requests email verification for a user.
-   *
-   * @param   {String}  username  Username.
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The response.
-   */
-  static verifyEmail(username, options = {}) {
-    // Debug
-    log.info('Requesting email verification.');
-
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/${username}/user-email-verification-initiate`);
-
-    // Set the auth type
-    request.authType = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Return the data
-      return response.data;
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Requested email verification.`);
-    }).catch(() => {
-      log.error(`Failed to request email verification.`);
-    });
-
-    // Return the promise
-    return promise;
-  }
-
-  /**
-   * Requests a username reminder for a user.
-   *
-   * @param   {String}  email     Email.
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The response.
-   */
-  static forgotUsername(email, options = {}) {
-    // Debug
-    log.info('Requesting a username reminder.');
-
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/user-forgot-username`, null, {email: email});
-
-    // Set the auth type
-    request.authType = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Return the data
-      return response.data;
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Requested a username reminder.`);
-    }).catch(() => {
-      log.error(`Failed to request a username reminder.`);
-    });
-
-    // Return the promise
-    return promise;
-  }
-
-  /**
-   * Requests a password reset for a user.
-   *
-   * @param   {String}  username  Username.
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The response.
-   */
-  static resetPassword() {
-    // Forward to `user.resetPassword()`.
-    const user = User.getActive();
-    return user.resetPassword();
-  }
-
-  /**
-   * Checks whether a username exists.
-   *
-   * @param   {String}  username  Username to check.
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           `true` if username exists, `false` otherwise.
-   */
-  static exists(username, options = {}) {
-    // Debug
-    log.info('Checking whether a username exists.');
-
-    // Create a request
-    const request = new Request(HttpMethod.POST, `/rpc/${Kinvey.appKey}/check-username-exists`, null, {username: username});
-
-    // Set the auth type
-    request.authType = AuthType.App;
-
-    // Execute the request
-    const promise = request.execute(options).then((response) => {
-      // Return the data
-      return response.data;
-    });
-
-    // Debug
-    promise.then(() => {
-      log.info(`Checked whether the username exists.`);
-    }).catch(() => {
-      log.error(`Failed to check whather the username exists.`);
-    });
-
-    // Return the promise
-    return promise;
+  static get(id, options = {}) {
+    return super.get('_lookup', id, options);
   }
 
   /**

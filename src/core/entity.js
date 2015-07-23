@@ -1,57 +1,94 @@
-import CoreObject from './object';
+import Datastore from './datastore';
+import isArray from 'lodash/lang/isArray';
+import Query from './query';
+import defaultsDeep from 'lodash/object/defaults';
+import Metadata from './metadata';
+import Acl from './acl';
+const dataSymbol = Symbol();
 
-class Entity extends CoreObject {
+class Entity extends Datastore {
   constructor(data = {}) {
     super();
-    this.data = data;
+    this[dataSymbol] = data;
+  }
+
+  get data() {
+    return this[dataSymbol];
   }
 
   get _id() {
     return this.data._id;
   }
 
-  get _kmd() {
-    return this.data._kmd;
+  get metadata() {
+    return new Metadata(this.data._kmd);
+  }
+
+  get acl() {
+    return new Acl(this.data._acl);
   }
 
   toJSON() {
     return this.data;
   }
 
-  static create() {
-    return Promise.resolve(this);
+  static get(collection, id, options = {}) {
+    const query = new Query();
+    query.equalTo('_id', id);
+    return this.find(query, options);
   }
 
-  save() {
-    return Promise.resolve(this);
+  static find(collection, query, options = {}) {
+    const promise = super.find(collection, query, options).then((array) => {
+      const entities = [];
+
+      if (!isArray(array)) {
+        array = [].push(array);
+      }
+
+      for (let i = 0, len = array.length; i < len; i++) {
+        const data = array[i];
+        entities.push(new this(data));
+      }
+
+      if (entities.length === 0) {
+        return null;
+      } else if (entities.length === 1) {
+        return entities[0];
+      }
+
+      return entities;
+    });
+
+    // Return the promise
+    return promise;
   }
 
-  static update() {
-    return Promise.resolve(this);
+  static create(collection, data, options = {}) {
+    const promise = super.create(collection, data, options).then((data) => {
+      const entity = new this(data);
+      return entity;
+    });
+
+    // Return the promise
+    return promise;
   }
 
-  static find() {
-    return Promise.resolve(this);
+  update(collection, data, options = {}) {
+    data = defaultsDeep(this.toJSON(), data);
+    const promise = super.update(collection, data, options).then((data) => {
+      this[dataSymbol] = data;
+    });
+
+    // Return the promise
+    return promise;
   }
 
-  static get() {
-    return Promise.resolve(this);
-  }
+  destroy(collection, options = {}) {
+    const promise = super.destroy(collection, this._id, options);
 
-  static destroy() {
-    return Promise.resolve(this);
-  }
-
-  static restore() {
-    return Promise.resolve(this);
-  }
-
-  static count() {
-    return Promise.resolve(this);
-  }
-
-  static group() {
-    return Promise.resolve(this);
+    // Return the promise
+    return promise;
   }
 }
 

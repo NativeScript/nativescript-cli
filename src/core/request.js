@@ -1,4 +1,3 @@
-import CoreObject from './object';
 import {isDefined} from '../utils';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
@@ -7,31 +6,28 @@ import Rack from './rack';
 import AuthType from '../enums/authType';
 import Auth from './auth';
 import url from 'url';
-import Query from './query';
 import Kinvey from '../kinvey';
 import DataPolicy from '../enums/dataPolicy';
 const privateRequestSymbol = Symbol();
 
-class PrivateRequest extends CoreObject {
-  constructor(method = HttpMethod.GET, path = '', query, body) {
-    super();
-
+class PrivateRequest {
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     // Set request info
     this.headers = {};
     this.method = method;
-    this.protocol = Kinvey.apiProtocol;
-    this.hostname = Kinvey.apiHostname;
+    this.protocol = options.protocol || Kinvey.apiProtocol;
+    this.hostname = options.hostname || Kinvey.apiHostname;
     this.path = path;
-    this.query = query instanceof Query ? query.toJSON() : query;
+    this.query = query;
     this.body = body;
-    this.auth = AuthType.None;
-    this.dataPolicy = DataPolicy.CloudFirst;
+    this.auth = options.authType || AuthType.None;
+    this.dataPolicy = options.dataPolicy || DataPolicy.CloudFirst;
 
     // Add default headers
     const headers = {};
     headers.Accept = 'application/json';
     headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = Kinvey.apiVersion;
+    headers['X-Kinvey-Api-Version'] = options.apiVersion || Kinvey.apiVersion;
     this.addHeaders(headers);
 
     // Set cache enabled to global setting
@@ -44,30 +40,30 @@ class PrivateRequest extends CoreObject {
 
   set auth(auth) {
     switch (auth) {
-      case AuthType.All:
-        this._auth = Auth.all;
-        break;
-      case AuthType.App:
-        this._auth = Auth.app;
-        break;
-      case AuthType.Basic:
-        this._auth = Auth.basic;
-        break;
-      case AuthType.Master:
-        this._auth = Auth.master;
-        break;
-      case AuthType.None:
-        this._auth = Auth.none;
-        break;
-      case AuthType.Session:
-        this._auth = Auth.session;
-        break;
-      case AuthType.Default:
-        this._auth = Auth.default;
-        break;
-      default:
-        this._auth = auth;
-        break;
+    case AuthType.All:
+      this._auth = Auth.all;
+      break;
+    case AuthType.App:
+      this._auth = Auth.app;
+      break;
+    case AuthType.Basic:
+      this._auth = Auth.basic;
+      break;
+    case AuthType.Master:
+      this._auth = Auth.master;
+      break;
+    case AuthType.None:
+      this._auth = Auth.none;
+      break;
+    case AuthType.Session:
+      this._auth = Auth.session;
+      break;
+    case AuthType.Default:
+      this._auth = Auth.default;
+      break;
+    default:
+      this._auth = auth;
+      break;
     }
   }
 
@@ -77,23 +73,23 @@ class PrivateRequest extends CoreObject {
 
   set method(method) {
     if (!isString(method)) {
-      method = method + '';
+      throw new Error('Invalid Http Method. It must be a string.');
     }
 
     // Make the method uppercase
     method = method.toUpperCase();
 
     switch (method) {
-      case HttpMethod.OPTIONS:
-      case HttpMethod.GET:
-      case HttpMethod.POST:
-      case HttpMethod.PATCH:
-      case HttpMethod.PUT:
-      case HttpMethod.DELETE:
-        this._method = method;
-        break;
-      default:
-        throw new Error('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
+    case HttpMethod.OPTIONS:
+    case HttpMethod.GET:
+    case HttpMethod.POST:
+    case HttpMethod.PATCH:
+    case HttpMethod.PUT:
+    case HttpMethod.DELETE:
+      this._method = method;
+      break;
+    default:
+      throw new Error('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 
@@ -109,7 +105,7 @@ class PrivateRequest extends CoreObject {
 
   get cacheKey() {
     if (!isDefined(this._cacheKey)) {
-      this._cacheKey = JSON.stringify(this.url);
+      this._cacheKey = this.url;
     }
 
     return this._cacheKey;
@@ -131,7 +127,6 @@ class PrivateRequest extends CoreObject {
 
   setHeader(header, value) {
     const headers = this.headers || {};
-    header = header.toLowerCase();
     headers[header] = value;
     this.headers = headers;
   }
@@ -311,12 +306,10 @@ class PrivateRequest extends CoreObject {
   }
 }
 
-class Request extends CoreObject {
-  constructor(method = HttpMethod.GET, path = '', query, body) {
-    super();
-
+class Request {
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     // Create a private request
-    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body);
+    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
   }
 
   get method() {

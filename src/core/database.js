@@ -1,4 +1,3 @@
-import CoreObject from './object';
 import Dexie from 'dexie';
 import utils from '../utils';
 import Kinvey from '../kinvey';
@@ -15,10 +14,22 @@ if (process.env.KINVEY_PLATFORM_ENV === 'node') {
 const version = 1;
 const datbaseSymbol = Symbol();
 
-class Database extends CoreObject {
-  constructor(name = 'Kinvey') {
-    super();
+// const objectIdPrefix = 'local_';
 
+// function generateObjectId(prefix = '', length = 24) {
+//   let chars = 'abcdef0123456789';
+//   let objectId = '';
+
+//   for (let i = 0, j = chars.length; i < length; i++) {
+//     let pos = Math.floor(Math.random() * j);
+//     objectId = objectId + chars.substring(pos, pos + 1);
+//   }
+
+//   return `${prefix}${objectId}`;
+// }
+
+class Database {
+  constructor(name = 'Kinvey') {
     // Set the database name
     this.name = name;
 
@@ -64,8 +75,8 @@ class Database extends CoreObject {
 
     // Open a read/write transaction
     return db.transaction('rw', db.data, () => {
-      // Add the document
-      db.data.add(doc);
+      // Save the document
+      db.data.put(doc);
     });
   }
 

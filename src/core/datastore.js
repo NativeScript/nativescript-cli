@@ -1,60 +1,104 @@
-import CoreObject from './object';
-import {isDefined} from '../utils';
-import Query from './query';
+import defaults from 'lodash/object/defaults';
 import Request from './request';
-import log from 'loglevel';
 import HttpMethod from '../enums/httpMethod';
 import AuthType from '../enums/authType';
 import Kinvey from '../kinvey';
+import User from './user';
+import {isDefined} from '../utils';
+const appDataPath = '/appdata';
+const userPath = '/user';
 
-// import isArray from 'lodash/lang/isArray';
-// const objectIdPrefix = 'local_';
+function defaultOptions(options = {}) {
+  return defaults(options, {
+    authType: AuthType.Default
+  });
+}
 
-// function generateObjectId(prefix = '', length = 24) {
-//   let chars = 'abcdef0123456789';
-//   let objectId = '';
+function getPath(collection, id) {
+  let path = '';
 
-//   for (let i = 0, j = chars.length; i < length; i++) {
-//     let pos = Math.floor(Math.random() * j);
-//     objectId = objectId + chars.substring(pos, pos + 1);
-//   }
+  // Namespace
+  if (this instanceof User || this === User) {
+    path = userPath;
+  } else {
+    path = appDataPath;
+  }
 
-//   return `${prefix}${objectId}`;
-// }
+  // App key
+  path = `${path}/${Kinvey.appKey}}`;
 
-class DataStore extends CoreObject {
+  // Collection
+  if (isDefined(collection)) {
+    path = `${path}/${collection}`;
+  }
 
+  // Id
+  if (isDefined(id)) {
+    path = `${path}/${id}`;
+  }
+
+  return path;
+}
+
+class DataStore {
   static find(collection, query, options = {}) {
-    // Validate arguments
-    if (isDefined(query) && !(query instanceof Query)) {
-      return Promise.reject('query argument must be of type: Kinvey.Query.');
-    }
-
-    // Debug
-    log.info('Retrieving documents by query.', arguments);
+    const path = getPath.call(this, collection);
+    options = defaultOptions(options);
 
     // Create a request
-    const request = new Request(HttpMethod.GET, `/appdata/${Kinvey.appKey}/${collection}`, query);
-
-    // Set the auth type
-    request.authType = AuthType.Default;
-
-    // Set the data policy
-    if (isDefined(options.dataPolicy)) {
-      request.dataPolicy = options.dataPolicy;
-    }
+    const request = new Request(HttpMethod.GET, path, query, null, options);
 
     // Execute the request
     const promise = request.execute(options).then((response) => {
-      // Return the data
       return response.data;
     });
 
-    // Debug
-    promise.then((docs) => {
-      log.info('Retrieved the documents by query.', docs);
-    }).catch((err) => {
-      log.error('Failed to retrieve the documents by query.', err);
+    // Return the promise
+    return promise;
+  }
+
+  static create(collection, data, options = {}) {
+    const path = getPath.call(this, collection);
+    options = defaultOptions(options);
+
+    // Create a request
+    const request = new Request(HttpMethod.POST, path, null, data, options);
+
+    // Execute the request
+    const promise = request.execute(options).then((response) => {
+      return response.data;
+    });
+
+    // Return the promise
+    return promise;
+  }
+
+  update(collection, data, options = {}) {
+    const path = getPath.call(this, collection);
+    options = defaultOptions(options);
+
+    // Create a request
+    const request = new Request(HttpMethod.PUT, path, null, data, options);
+
+    // Execute the request
+    const promise = request.execute(options).then((response) => {
+      return response.data;
+    });
+
+    // Return the promise
+    return promise;
+  }
+
+  destroy(collection, id, options = {}) {
+    const path = getPath.call(this, collection, id);
+    options = defaultOptions(options);
+
+    // Create a request
+    const request = new Request(HttpMethod.DELETE, path, null, null, options);
+
+    // Execute the request
+    const promise = request.execute(options).then((response) => {
+      return response.data;
     });
 
     // Return the promise

@@ -2,6 +2,7 @@ import Request from '../../src/core/request';
 import Auth from '../../src/core/auth';
 import Kinvey from '../../src/kinvey';
 import DataPolicy from '../../src/enums/dataPolicy';
+import HttpMethod from '../../src/enums/httpMethod';
 
 describe('Request', function() {
   beforeEach(function() {
@@ -15,20 +16,20 @@ describe('Request', function() {
   });
 
   describe('method', function() {
-    it('should be set to GET by default', function() {
-      expect(this.request).to.have.property('method', 'GET');
+    it('should be set to HttpMethod.GET by default', function() {
+      expect(this.request).to.have.property('method', HttpMethod.GET);
     });
 
-    it('should be set to the provided method in the constructor', function() {
-      const method = 'POST';
-      const request = new Request(method);
-      expect(request.method).to.equal(method);
-    });
-
-    it('should be able to be set after creating a request', function() {
-      const method = 'POST';
+    it('should be able to be changed', function() {
+      const method = HttpMethod.POST;
       this.request.method = method;
       expect(this.request.method).to.equal(method);
+    });
+
+    it('should throw an error if the method is not a string', function() {
+      expect(function() {
+        return new Request(1);
+      }).to.throw('Invalid Http Method. It must be a string.');
     });
 
     it('should throw an error for an invalid method', function() {
@@ -67,7 +68,7 @@ describe('Request', function() {
       expect(this.request).to.have.property('auth', Auth.none);
     });
 
-    it('should be able to be set to a different value', function() {
+    it('should be able to be set to a plain object', function() {
       const auth = {};
       this.request.auth = auth;
       expect(this.request.auth).to.deep.equal(auth);
@@ -100,10 +101,10 @@ describe('Request', function() {
       expect(this.request).to.have.property('body', undefined);
     });
 
-    it('should not be able to be set', function() {
-      expect(function() {
-        this.request.body = {};
-      }).to.throw(Error);
+    it('should be able to be set', function() {
+      const body = {};
+      this.request.body = {};
+      expect(this.request.body).to.deep.equal(body);
     });
   });
 
@@ -146,6 +147,27 @@ describe('Request', function() {
       expect(function() {
         this.request.response = {};
       }).to.throw(Error);
+    });
+  });
+
+  describe('constructor()', function() {
+    it('should accept a http method as the first parameter', function() {
+      const request = new Request(HttpMethod.POST);
+      expect(request.method).to.equal(HttpMethod.POST);
+    });
+
+    it('should accept a path as the second parameter', function() {
+      const path = '/foo';
+      const request = new Request(HttpMethod.GET, path);
+      expect(request.path).to.equal(path);
+    });
+
+    it('should accept a query as the third parameter');
+
+    it('should accept a body as the fourth parameter', function() {
+      const body = {};
+      const request = new Request(HttpMethod.GET, null, null, body);
+      expect(request.body).to.deep.equal(body);
     });
   });
 
@@ -280,12 +302,12 @@ describe('Request', function() {
         headers: {
           accept: 'application/json',
           'content-type': 'application/json',
-          'x-kinvey-api-version': '3'
+          'x-kinvey-api-version': Kinvey.apiVersion
         },
-        method: 'GET',
-        url: 'https://baas.kinvey.com',
+        method: HttpMethod.GET,
+        url: this.request.url,
         body: undefined,
-        cacheKey: '"https://baas.kinvey.com"',
+        cacheKey: this.request.url,
         response: undefined
       });
     });
