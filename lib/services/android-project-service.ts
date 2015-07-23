@@ -275,11 +275,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			// Handle *.jars inside libs folder
 			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
 			if(this.$fs.exists(libsFolderPath).wait()) {
-				let libsFolderContents = this.$fs.readDirectory(libsFolderPath).wait();
-				_(libsFolderContents)
-					.filter(libsFolderItem => path.extname(libsFolderItem) === ".jar")
-					.each(jar => this.addLibrary(path.join(libsFolderPath, jar)).wait())
-					.value();
+				this.addLibrary(libsFolderPath).wait();
 			}
 			
 			// Handle android libraries
