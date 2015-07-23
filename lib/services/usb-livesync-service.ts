@@ -36,6 +36,20 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			
+			let canLiveSyncAction = (device: Mobile.IDevice, appIdentifier: string): IFuture<boolean> => {
+				return (() => {
+					if(platform.toLowerCase() === "android") {
+						let output = (<Mobile.IAndroidDevice>device).adb.executeShellCommand(`"echo '' | run-as ${appIdentifier}"`).wait();
+						if(output.indexOf(`run-as: Package '${appIdentifier}' is unknown`) !== -1) {
+							this.$logger.warn(`Unable to livesync on device ${device.deviceInfo.identifier}. Consider upgrading your device OS.`);
+							return false;
+						}
+					}
+					
+					return true;
+				}).future<boolean>()();
+			}
+			
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
 				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
@@ -54,7 +68,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME) + "/**/*";
 			
-			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction).wait();
+			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
 		}).future<void>()();
 	}
 	
