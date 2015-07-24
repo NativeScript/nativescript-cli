@@ -14,6 +14,7 @@ interface IProjectDataService {
 	initialize(projectDir: string): void;
 	getValue(propertyName: string): IFuture<any>;
 	setValue(key: string, value: any): IFuture<void>;
+	removeProperty(propertyName: string): IFuture<void>;
 }
 
 interface IProjectTemplatesService {

@@ -214,11 +214,16 @@ export class PlatformService implements IPlatformService {
 
 	public removePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			
 			_.each(platforms, platform => {
 				this.validatePlatformInstalled(platform);
+				let platformData = this.$platformsData.getPlatformData(platform);				
 
 				var platformDir = path.join(this.$projectData.platformsDir, platform);
 				this.$fs.deleteDirectory(platformDir).wait();
+				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
+				
 				this.$logger.out(`Platform ${platform} successfully removed.`);
 			});
 

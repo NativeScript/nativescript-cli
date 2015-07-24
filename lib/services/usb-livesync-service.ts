@@ -30,11 +30,25 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
-			platform = this.initialize(platform).wait();
+			platform = platform || this.initialize(platform).wait();
 			this.$platformService.preparePlatform(platform).wait();
 			
 			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+			
+			let canLiveSyncAction = (device: Mobile.IDevice, appIdentifier: string): IFuture<boolean> => {
+				return (() => {
+					if(platform.toLowerCase() === "android") {
+						let output = (<Mobile.IAndroidDevice>device).adb.executeShellCommand(`"echo '' | run-as ${appIdentifier}"`).wait();
+						if(output.indexOf(`run-as: Package '${appIdentifier}' is unknown`) !== -1) {
+							this.$logger.warn(`Unable to livesync on device ${device.deviceInfo.identifier}. Consider upgrading your device OS.`);
+							return false;
+						}
+					}
+					
+					return true;
+				}).future<boolean>()();
+			}
 			
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
@@ -54,7 +68,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME) + "/**/*";
 			
-			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction).wait();
+			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
 		}).future<void>()();
 	}
 	
@@ -107,7 +121,9 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
 				_.each(localToDevicePaths, localToDevicePath => {
 					let devicePath = this.$mobileHelper.correctDevicePath(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()));
-					commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
+					if(this.$fs.getFsStats(localToDevicePath.getLocalPath()).wait().isFile()) {
+						commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
+					}
 				});
 				
 				commands.push(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`);
@@ -116,7 +132,10 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commandsFileDevicePath = this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, AndroidUsbLiveSyncService.LIVESYNC_COMMANDS_FILE_NAME);
 				this.createCommandsFileOnDevice(commandsFileDevicePath, commands).wait();
 				
-				this.device.adb.executeShellCommand(`"cat ${commandsFileDevicePath} | run-as ${deviceAppData.appIdentifier}"`).wait();
+				let result = this.device.adb.executeShellCommand(`"cat ${commandsFileDevicePath} | run-as ${deviceAppData.appIdentifier}"`).wait();
+				if(result.indexOf("Permission denied") !== -1) {
+					this.device.adb.executeShellCommand(`${commandsFileDevicePath}`).wait();
+				}
 			}
 			
 			this.device.applicationManager.restartApplication(deviceAppData.appIdentifier).wait();
