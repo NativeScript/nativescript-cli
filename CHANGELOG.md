@@ -1,12 +1,12 @@
 NativeScript CLI Changelog
 ================
 
-1.2.1 (2015, July 24)
+1.2.1 (2015, July 27)
 ==
 
 ### Fixed
 
-* [Fixed #690](https://github.com/NativeScript/nativescript-cli/issues/690): The `$ tns debug ios --debug-brk` command is not working.
+* [Fixed #690](https://github.com/NativeScript/nativescript-cli/issues/690): The `$ tns debug ios --debug-brk` command does not work.
 
 1.2.0 (2015, July 24)
 ==
