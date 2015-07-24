@@ -116,7 +116,8 @@ export class NpmInstallationManager {
 	private isPackageUnpacked(packagePath: string): IFuture<boolean> {
 		return (() => {
 			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
-				this.$fs.enumerateFilesInDirectorySync(packagePath).length > 1;
+				this.$fs.exists(path.join(packagePath, "framework")).wait() && 
+				this.$fs.enumerateFilesInDirectorySync(path.join(packagePath, "framework")).length > 1;
 		}).future<boolean>()();
 	}	
 }
