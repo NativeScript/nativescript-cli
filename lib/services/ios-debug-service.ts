@@ -218,6 +218,9 @@ class IOSDebugService implements IDebugService {
                 cmd = `open -a Safari "${inspectorSourceLocation}"`;                
             } else {
                 let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
+                if(!this.$fs.exists(inspectorApplicationPath).wait()) {
+                    this.$fs.unzip(path.join(inspectorPath, "NativeScript Inspector.zip"), inspectorPath).wait();
+                }
                 cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`; 
             }
             
