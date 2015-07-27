@@ -22,10 +22,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		private $projectData: IProjectData,
 		$deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		$logger: ILogger,
-		private $injector: IInjector,
+		$injector: IInjector,
 		private $platformService: IPlatformService,
 		$dispatcher: IFutureDispatcher) {
-			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher); 
+			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher, $injector); 
 	}
 	
 	public liveSync(platform: string): IFuture<void> {
@@ -50,11 +50,6 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				}).future<boolean>()();
 			}
 			
-			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
-				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
-				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
-			}
-			
 			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
 				return this.$platformService.deployOnDevice(platform);
 			}
@@ -67,21 +62,13 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			}
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME) + "/**/*";
-			
-			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
+			let platformSpecificLiveSyncServices: IDictionary<any> = {
+				android: AndroidUsbLiveSyncService,
+				ios: IOSUsbLiveSyncService
+			};
+			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, platformSpecificLiveSyncServices, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
 		}).future<void>()();
 	}
-	
-	private resolveUsbLiveSyncService(platform: string, device: Mobile.IDevice): IPlatformSpecificUsbLiveSyncService {
-		let platformSpecificUsbLiveSyncService: IPlatformSpecificUsbLiveSyncService = null;
-		if(platform.toLowerCase() === "android") {
-			platformSpecificUsbLiveSyncService = this.$injector.resolve(AndroidUsbLiveSyncService, {_device: device});
-		} else if(platform.toLowerCase() === "ios") {
-			platformSpecificUsbLiveSyncService = this.$injector.resolve(IOSUsbLiveSyncService, {_device: device});
-		}
-		
-		return platformSpecificUsbLiveSyncService;
-	} 
 }
 $injector.register("usbLiveSyncService", UsbLiveSyncService);
 
