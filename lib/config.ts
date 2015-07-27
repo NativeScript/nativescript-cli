@@ -28,6 +28,7 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public CLIENT_NAME_ALIAS = "NativeScript";
 	public ANALYTICS_API_KEY = "5752dabccfc54c4ab82aea9626b7338e";
 	public TRACK_FEATURE_USAGE_SETTING_NAME = "TrackFeatureUsage";
+	public ERROR_REPORT_SETTING_NAME = "TrackExceptions";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
 	public START_PACKAGE_ACTIVITY_NAME = "com.tns.NativeScriptActivity";
 	
