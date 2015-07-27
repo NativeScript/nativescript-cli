@@ -66,7 +66,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				}).future<string>()();
 			}
 			
-			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME) + "/**/*";
+			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			
 			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
 		}).future<void>()();
