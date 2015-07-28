@@ -195,6 +195,10 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 		return undefined;
 	}
 
+	addCleanCopyToCache(packageName: string, version: string): IFuture<void> {
+		return undefined;
+	}
+
 	cacheUnpack(packageName: string, version: string): IFuture<void> {
 		return undefined;
 	}

@@ -15,6 +15,7 @@ interface INpmInstallationManager {
 	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
 	getLatestVersion(packageName: string): IFuture<string>;
 	getCachedPackagePath(packageName: string, version: string): string;
+	addCleanCopyToCache(packageName: string, version: string): IFuture<void>;
 }
 
 interface INpmInstallOptions {

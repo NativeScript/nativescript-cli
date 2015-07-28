@@ -501,6 +501,12 @@ export class PlatformService implements IPlatformService {
 			if(!this.$fs.exists(cachedPackagePath).wait()) {
 				this.$npmInstallationManager.addToCache(packageName, version).wait();
 			}
+
+			if(!this.$fs.exists(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait()) {
+				// In some cases the package is not fully downloaded and the framework directory is missing
+				// Try removing the old package and add the real one to cache again
+				this.$npmInstallationManager.addCleanCopyToCache(packageName, version).wait();
+			}
 		}).future<void>()();
 	}
 
