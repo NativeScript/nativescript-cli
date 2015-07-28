@@ -6,7 +6,7 @@ import semver = require("semver");
 import npm = require("npm");
 import constants = require("./constants");
 
-export class NpmInstallationManager {
+export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";	
 	private versionsCache: IDictionary<string[]>;	
 	
@@ -35,6 +35,15 @@ export class NpmInstallationManager {
 			if(!this.isPackageUnpacked(packagePath).wait()) {
 				this.cacheUnpack(packageName, version).wait();
 			}
+		}).future<void>()();
+	}
+
+	public addCleanCopyToCache(packageName: string, version: string): IFuture<void> {
+		return (() => {
+			let packagePath = path.join(this.getCacheRootPath(), packageName, version);
+			this.$logger.trace(`Deleting: ${packagePath}.`);
+			this.$fs.deleteDirectory(packagePath).wait();
+			this.addToCache(packageName, version).wait();
 		}).future<void>()();
 	}
 
