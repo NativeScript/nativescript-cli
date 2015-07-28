@@ -6,7 +6,7 @@ import semver = require("semver");
 import npm = require("npm");
 import constants = require("./constants");
 
-export class NpmInstallationManager {
+export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";	
 	private versionsCache: IDictionary<string[]>;	
 	
@@ -27,13 +27,18 @@ export class NpmInstallationManager {
 	public getCachedPackagePath(packageName: string, version: string): string {
 		return path.join(this.getCacheRootPath(), packageName, version, "package");
 	}
-	
+
 	public addToCache(packageName: string, version: string): IFuture<void> {
 		return (() => {
-			this.$npm.cache(packageName, version).wait();
-			let packagePath = path.join(this.getCacheRootPath(), packageName, version, "package");
-			if(!this.isPackageUnpacked(packagePath).wait()) {
-				this.cacheUnpack(packageName, version).wait();
+			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
+			if(!this.$fs.exists(cachedPackagePath).wait()) {
+				this.addToCacheCore(packageName, version).wait();
+			}
+
+			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
+				// In some cases the package is not fully downloaded and the framework directory is missing
+				// Try removing the old package and add the real one to cache again
+				this.addCleanCopyToCache(packageName, version).wait();
 			}
 		}).future<void>()();
 	}
@@ -71,6 +76,43 @@ export class NpmInstallationManager {
 			}
 
 		}).future<string>()();
+	}
+
+	public addCleanCopyToCache(packageName: string, version: string): IFuture<void> {
+		return (() => {
+			let packagePath = path.join(this.getCacheRootPath(), packageName, version);
+			this.$logger.trace(`Deleting: ${packagePath}.`);
+			this.$fs.deleteDirectory(packagePath).wait();
+			this.addToCacheCore(packageName, version).wait();
+			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
+				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${version} to npm cache. Try cleaning your cache and execute the command again.`)
+			}
+		}).future<void>()();
+	}
+
+	private addToCacheCore(packageName: string, version: string): IFuture<void> {
+		return (() => {
+			this.$npm.cache(packageName, version).wait();
+			let packagePath = path.join(this.getCacheRootPath(), packageName, version, "package");
+			if(!this.isPackageUnpacked(packagePath).wait()) {
+				this.cacheUnpack(packageName, version).wait();
+			}
+		}).future<void>()();
+	}
+
+	private isShasumOfPackageCorrect(packageName: string, version: string): IFuture<boolean> {
+		return ((): boolean => {
+			let shasumProperty = "dist.shasum";
+			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
+			let realShasum = this.$npm.view(`${packageName}@${version}`, shasumProperty).wait()[version][shasumProperty];
+			let packageTgz = cachedPackagePath + ".tgz";
+			let currentShasum = "";
+			if(this.$fs.exists(packageTgz).wait()) {
+				currentShasum = this.$fs.getFileShasum(packageTgz).wait();
+			}
+			this.$logger.trace(`Checking shasum of package: ${packageName}@${version}: expected ${realShasum}, actual ${currentShasum}.`);
+			return realShasum === currentShasum;
+		}).future<boolean>()();
 	}
 
 	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
