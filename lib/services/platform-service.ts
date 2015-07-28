@@ -7,6 +7,7 @@ import util = require("util");
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 import semver = require("semver");
+import Future = require("fibers/future");
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
@@ -498,8 +499,11 @@ export class PlatformService implements IPlatformService {
 
 	private ensurePackageIsCached(cachedPackagePath: string, packageName: string, version: string): IFuture<void> {
 		return (() => {
-			if(!this.$fs.exists(cachedPackagePath).wait()) {
-				this.$npmInstallationManager.addToCache(packageName, version).wait();
+			this.$npmInstallationManager.addToCache(packageName, version).wait();
+			if(!this.$fs.exists(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait()) {
+				// In some cases the package is not fully downloaded and the framework directory is missing
+				// Try removing the old package and add the real one to cache again
+				this.$npmInstallationManager.addCleanCopyToCache(packageName, version).wait();
 			}
 		}).future<void>()();
 	}
