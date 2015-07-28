@@ -24,8 +24,11 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		$logger: ILogger,
 		private $injector: IInjector,
 		private $platformService: IPlatformService,
-		$dispatcher: IFutureDispatcher) {
-			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher); 
+		$dispatcher: IFutureDispatcher,
+		$childProcess: IChildProcess,
+		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
+			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher, $childProcess, $iOSEmulatorServices); 
 	}
 	
 	public liveSync(platform: string): IFuture<void> {
@@ -45,6 +48,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				return this.$platformService.deployOnDevice(platform);
 			}
 			
+			let notRunningiOSSimulatorAction = (): IFuture<void> => {
+				return this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
+			}
+						
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
 					this.$platformService.preparePlatform(platform).wait();
@@ -60,8 +67,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			}
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
 			
-			this.sync(platform, this.$projectData.projectId, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeLiveSyncAction, beforeBatchLiveSyncAction).wait();
+			this.sync(platform, this.$projectData.projectId, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, notRunningiOSSimulatorAction, localProjectRootPath, beforeLiveSyncAction, beforeBatchLiveSyncAction).wait();
 		}).future<void>()();
 	}
 	
