@@ -181,14 +181,15 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			this.validateDynamicFramework(libraryPath).wait();
 			var umbrellaHeader = this.getUmbrellaHeaderFromDynamicFramework(libraryPath).wait();
 
-			var frameworkName = path.basename(libraryPath, path.extname(libraryPath));
-			var targetPath = path.join(this.$projectData.projectDir, "lib", this.platformData.normalizedPlatformName, frameworkName);
-			this.$fs.ensureDirectoryExists(targetPath).wait();
-			shell.cp("-R", libraryPath, targetPath);
+			let frameworkName = path.basename(libraryPath, path.extname(libraryPath));
+			let targetPath = path.join("lib", this.platformData.normalizedPlatformName, frameworkName);
+			let fullTargetPath = path.join(this.$projectData.projectDir, targetPath);
+			this.$fs.ensureDirectoryExists(fullTargetPath).wait();
+			shell.cp("-R", libraryPath, fullTargetPath);
 
 			let project = this.createPbxProj();
-
-			project.addFramework(path.join(targetPath, frameworkName + ".framework"), { customFramework: true, embed: true });
+			let frameworkPath = path.relative("platforms/ios", path.join(targetPath, frameworkName + ".framework"));
+			project.addFramework(frameworkPath, { customFramework: true, embed: true });
 			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
 			this.savePbxProj(project).wait();
 			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
