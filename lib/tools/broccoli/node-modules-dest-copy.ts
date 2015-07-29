@@ -74,7 +74,6 @@ export class DestCopy implements IBroccoliPlugin {
 		let isPlugin = !!dependency.nativescript;
 		if(isPlugin) {
 			this.$pluginsService.prepare(dependency).wait();
-			shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "platforms"));
 		}
 	});
   }
