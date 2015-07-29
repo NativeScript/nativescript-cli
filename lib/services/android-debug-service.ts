@@ -24,7 +24,8 @@ class AndroidDebugService implements IDebugService {
         private $hostInfo: IHostInfo,
         private $errors: IErrors,
         private $opener: IOpener,
-        private $staticConfig: IStaticConfig) { }
+        private $staticConfig: IStaticConfig,
+        private $utils: IUtils) { }
 
 	private get platform() { return "android"; }
 	
@@ -195,8 +196,8 @@ class AndroidDebugService implements IDebugService {
     private startAndGetPort(packageName: string): IFuture<number> {
         return (() => {
             let port = -1;
-			let timeout = 60;
-
+			let timeout = this.$utils.getParsedTimeout(60);       
+             
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
             this.device.adb.executeShellCommand(`rm "${envDebugInFullpath}"`).wait();
