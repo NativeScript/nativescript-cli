@@ -60,6 +60,8 @@ function connectEventually(factory: () => net.Socket, handler: (socket: net.Sock
 }
 
 class IOSDebugService implements IDebugService {
+    private static TIMEOUT_SECONDS = 60;
+    
     constructor(
         private $platformService: IPlatformService,
         private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -73,15 +75,21 @@ class IOSDebugService implements IDebugService {
         private $injector: IInjector,
         private $npmInstallationManager: INpmInstallationManager,
         private $options: IOptions,
-        private $projectDataService: IProjectDataService) { }
+        private $projectDataService: IProjectDataService,
+        private $utils: IUtils) { }
 
     get platform(): string {
         return "ios";
     }
 
     public debug(): IFuture<void> {
-        if ((!this.$options.debugBrk && !this.$options.start) || (this.$options.debugBrk && this.$options.start)) {
+        if (this.$options.debugBrk && this.$options.start) {
             this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
+        }
+        
+        if(!this.$options.debugBrk && !this.$options.start) {
+            this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");
+            this.$options.debugBrk = true;
         }
 
         if (this.$options.emulator) {
@@ -137,12 +145,14 @@ class IOSDebugService implements IDebugService {
                 let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
                 
                 try {
-                    awaitNotification(npc, notification.appLaunching(projectId), 60000).wait();
+                    let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
+                    awaitNotification(npc, notification.appLaunching(projectId), timeout).wait();
                     process.nextTick(() => {
                         npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
                         npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
                     });
-                    awaitNotification(npc, notification.readyForAttach(projectId), 5000).wait();
+                    
+                    awaitNotification(npc, notification.readyForAttach(projectId), this.getReadyForAttachTimeout(timeout)).wait();
                 } catch(e) {
                     this.$logger.trace(`Timeout error: ${e}`);
                     this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
@@ -163,11 +173,12 @@ class IOSDebugService implements IDebugService {
                 let projectId = this.$projectData.projectId;
                 let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
                 
+                let timeout = this.getReadyForAttachTimeout();
                 let [alreadyConnected, readyForAttach, attachAvailable] = [
                     notification.alreadyConnected(projectId),
                     notification.readyForAttach(projectId),
                     notification.attachAvailable(projectId)
-                ].map((notification) => awaitNotification(npc, notification, 2000));
+                ].map((notification) => awaitNotification(npc, notification, timeout));
                 
                 npc.postNotificationAndAttachForData(notification.attachAvailabilityQuery(projectId));
                 
@@ -183,7 +194,7 @@ class IOSDebugService implements IDebugService {
                         this.$errors.failWithoutHelp("A debugger is already connected.");
                     case attachAvailable:
                         process.nextTick(() => npc.postNotificationAndAttachForData(notification.attachRequest(projectId)));
-                        try { awaitNotification(npc, notification.readyForAttach(projectId), 2000).wait(); }
+                        try { awaitNotification(npc, notification.readyForAttach(projectId), timeout).wait(); }
                         catch (e) {
                             this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
                         }
@@ -243,6 +254,14 @@ class IOSDebugService implements IDebugService {
             var inspectorPath = path.join(tnsIosPackage, "WebInspectorUI/");
             return inspectorPath;
         }).future<string>()();
+    }
+
+    
+    private getReadyForAttachTimeout(timeoutInMilliseconds?: number): number {
+        let timeout = timeoutInMilliseconds || this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
+        let readyForAttachTimeout = timeout / 10 ;
+        let defaultReadyForAttachTimeout = 5000;        
+        return readyForAttachTimeout > defaultReadyForAttachTimeout ? readyForAttachTimeout : defaultReadyForAttachTimeout;
     }
 }
 $injector.register("iOSDebugService", IOSDebugService);
@@ -306,7 +325,7 @@ function awaitNotification(npc: iOSProxyServices.NotificationProxyClient, notifi
     
     let timeoutObject = setTimeout(() => {
         detachObserver();
-        future.throw(new Error("Timeout receiving notification."));
+        future.throw(new Error(`Timeout receiving ${notification} notification.`));
     }, timeout);
     
     function notificationObserver(notification: string) {
