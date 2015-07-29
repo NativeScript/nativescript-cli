@@ -30,7 +30,7 @@ class Collection {
   constructor(name, models = [], options = {}) {
     // Set default options
     options = defaults({}, options, {
-      client: Kinvey.toJSON(),
+      client: Kinvey.sharedInstance(),
       model: Model
     });
 

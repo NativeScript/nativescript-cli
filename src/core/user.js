@@ -50,7 +50,7 @@ class User extends Model {
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       authType: AuthType.Session,
-      client: Kinvey.toJSON()
+      client: Kinvey.sharedInstance()
     }, options);
     const path = `${userPath}/${options.client.appKey}/_logout`;
 
@@ -106,7 +106,7 @@ class User extends Model {
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       authType: AuthType.App,
-      client: Kinvey.toJSON(),
+      client: Kinvey.sharedInstance(),
       parse: true
     }, options);
     const path = `${userPath}/${options.client.appKey}/login`;

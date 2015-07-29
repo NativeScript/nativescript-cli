@@ -91,7 +91,7 @@ class PrivateRequest {
 
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = defaults({}, options, {
-      client: Kinvey.toJSON(),
+      client: Kinvey.sharedInstance(),
       authType: AuthType.None,
       dataPolicy: DataPolicy.CloudFirst
     });
@@ -115,7 +115,7 @@ class PrivateRequest {
     this.addHeaders(headers);
 
     // Set cache enabled to global setting
-    this.cacheEnabled = options.client.cacheEnabled;
+    this.cacheEnabled = true; //options.client.cacheEnabled;
   }
 
   getHeader(header) {
@@ -134,7 +134,7 @@ class PrivateRequest {
 
   setHeader(header, value) {
     const headers = this.headers || {};
-    headers[header] = value;
+    headers[header.toLowerCase()] = value;
     this.headers = headers;
   }
 
@@ -148,7 +148,7 @@ class PrivateRequest {
   }
 
   removeHeader(header) {
-    delete this.headers[header];
+    delete this.headers[header.toLowerCase()];
   }
 
   isCacheEnabled() {

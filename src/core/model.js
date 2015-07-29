@@ -43,7 +43,7 @@ class Model {
   constructor(attributes = {}, options = {}) {
     // Set default options
     options = defaults({}, options, {
-      client: Kinvey.toJSON()
+      client: Kinvey.sharedInstance()
     });
 
     this.cid = uniqueId(this.cidPrefix);

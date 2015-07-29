@@ -284,7 +284,7 @@ class Cache {
     let cache = Cache[sharedInstanceSymbol];
 
     if (!isDefined(cache)) {
-      const client = Kinvey.toJSON();
+      const client = Kinvey.sharedInstance();
       cache = new Cache(`${client.appKey}`);
       Cache[sharedInstanceSymbol] = cache;
     }
