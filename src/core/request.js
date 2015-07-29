@@ -8,32 +8,10 @@ import Auth from './auth';
 import url from 'url';
 import Kinvey from '../kinvey';
 import DataPolicy from '../enums/dataPolicy';
+import defaults from 'lodash/object/defaults';
 const privateRequestSymbol = Symbol();
 
 class PrivateRequest {
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    // Set request info
-    this.headers = {};
-    this.method = method;
-    this.protocol = options.protocol || Kinvey.apiProtocol;
-    this.hostname = options.hostname || Kinvey.apiHostname;
-    this.path = path;
-    this.query = query;
-    this.body = body;
-    this.auth = options.authType || AuthType.None;
-    this.dataPolicy = options.dataPolicy || DataPolicy.CloudFirst;
-
-    // Add default headers
-    const headers = {};
-    headers.Accept = 'application/json';
-    headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = options.apiVersion || Kinvey.apiVersion;
-    this.addHeaders(headers);
-
-    // Set cache enabled to global setting
-    this.cacheEnabled = Kinvey.isCacheEnabled();
-  }
-
   get auth() {
     return this._auth;
   }
@@ -109,6 +87,35 @@ class PrivateRequest {
     }
 
     return this._cacheKey;
+  }
+
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
+    options = defaults({}, options, {
+      client: Kinvey.toJSON(),
+      authType: AuthType.None,
+      dataPolicy: DataPolicy.CloudFirst
+    });
+
+    // Set request info
+    this.headers = {};
+    this.method = method;
+    this.protocol = options.client.apiProtocol;
+    this.hostname = options.client.apiHostname;
+    this.path = path;
+    this.query = query;
+    this.body = body;
+    this.auth = options.authType;
+    this.dataPolicy = options.dataPolicy;
+
+    // Add default headers
+    const headers = {};
+    headers.Accept = 'application/json';
+    headers['Content-Type'] = 'application/json';
+    headers['X-Kinvey-Api-Version'] = options.client.apiVersion;
+    this.addHeaders(headers);
+
+    // Set cache enabled to global setting
+    this.cacheEnabled = options.client.cacheEnabled;
   }
 
   getHeader(header) {

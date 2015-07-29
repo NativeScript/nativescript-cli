@@ -13,7 +13,7 @@ class CacheMiddleware extends Middleware {
 
   handle(request) {
     if (isDefined(request)) {
-      const cache = Cache.instance();
+      const cache = Cache.sharedInstance();
       const key = request.cacheKey;
       let response;
 

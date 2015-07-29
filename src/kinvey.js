@@ -1,10 +1,10 @@
-import CoreObject from './core/object';
 import {isDefined} from './utils';
 import url from 'url';
 import User from './core/user';
+import clone from 'lodash/lang/clone';
 const shareSettingsSymbol = Symbol();
 
-class Kinvey extends CoreObject {
+class Kinvey {
   static get appKey() {
     return Kinvey[shareSettingsSymbol].appKey;
   }
@@ -126,16 +126,20 @@ class Kinvey extends CoreObject {
     User.setActive(user);
   }
 
-  static isCacheEnabled() {
-    return Kinvey[shareSettingsSymbol].cacheEnabled === true ? true : false;
-  }
+  // static isCacheEnabled() {
+  //   return Kinvey[shareSettingsSymbol].cacheEnabled === true ? true : false;
+  // }
 
-  static enabledCache() {
-    Kinvey[shareSettingsSymbol].cacheEnabled = true;
-  }
+  // static enabledCache() {
+  //   Kinvey[shareSettingsSymbol].cacheEnabled = true;
+  // }
 
-  static disableCache() {
-    Kinvey[shareSettingsSymbol].cacheEnabled = false;
+  // static disableCache() {
+  //   Kinvey[shareSettingsSymbol].cacheEnabled = false;
+  // }
+
+  static toJSON() {
+    return clone(Kinvey[shareSettingsSymbol]);
   }
 }
 

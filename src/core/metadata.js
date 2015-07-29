@@ -32,7 +32,7 @@ class PrivateMetadata {
     return undefined;
   }
 
-  get authToken() {
+  get authtoken() {
     return this.kmd.authtoken;
   }
 
@@ -58,7 +58,7 @@ class Metadata {
     return this[privateMetadataSymbol].lastModified;
   }
 
-  get authToken() {
+  get authtoken() {
     return this[privateMetadataSymbol].authtoken;
   }
 

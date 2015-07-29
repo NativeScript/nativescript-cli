@@ -1,9 +1,8 @@
-import CoreObject from './object';
 import User from './user';
 import {isDefined} from '../utils';
 import Kinvey from '../kinvey';
 
-class Auth extends CoreObject {
+class Auth {
   static all() {
     return Auth.session().then(null, Auth.Basic);
   }
@@ -62,7 +61,7 @@ class Auth extends CoreObject {
   }
 
   static session() {
-    const user = User.current;
+    const user = User.getActive();
     let error;
 
     if (!isDefined(user)) {
@@ -72,8 +71,8 @@ class Auth extends CoreObject {
 
     // Prepare the response.
     const promise = Promise.resolve({
-      scheme: 'kinvey',
-      credentials: user.authToken
+      scheme: 'Kinvey',
+      credentials: user.authtoken
     });
 
     // Return the response.

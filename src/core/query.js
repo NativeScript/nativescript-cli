@@ -383,9 +383,7 @@
 
 // export default Query;
 
-import CoreObject from './object';
-
-class Query extends CoreObject {
+class Query {
 
 }
 

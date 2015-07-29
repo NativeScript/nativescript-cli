@@ -1,7 +1,7 @@
 const DataPolicy = {
   None: 'None',
   Both: 'Both',
-  LocalFirst: 'LocalFirst',
+  LocalFirst: 'LocalFist',
   LocalOnly: 'LocalOnly',
   CloudFirst: 'CloudFirst',
   CloudOnly: 'CloudOnly'

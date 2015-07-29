@@ -1,7 +1,8 @@
 import Kinvey from './kinvey';
 
-// DataStore
-Kinvey.DataStore = require('./core/datastore');
+// Data
+Kinvey.Collection = require('./core/collection');
+Kinvey.Model = require('./core/model');
 
 // Middleware
 Kinvey.Middleware = require('./middleware/middleware');

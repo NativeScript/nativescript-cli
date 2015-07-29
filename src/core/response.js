@@ -1,11 +1,8 @@
-import CoreObject from './object';
 import StatusCode from '../enums/statusCode';
 const privateResponseSymbol = Symbol();
 
-class PrivateResponse extends CoreObject {
+class PrivateResponse {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
-    super();
-
     // Set response info
     this.statusCode = statusCode;
     this.headers = {};
@@ -61,10 +58,8 @@ class PrivateResponse extends CoreObject {
   }
 }
 
-class Response extends CoreObject {
+class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
-    super();
-
     // Create a private response
     this[privateResponseSymbol] = new PrivateResponse(statusCode, headers, data);
   }
