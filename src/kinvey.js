@@ -3,6 +3,13 @@ import url from 'url';
 const shareInstanceSymbol = Symbol();
 
 class Kinvey {
+  get apiUrl() {
+    return url.format({
+      protocol: this.apiProtocol,
+      hostname: this.apiHostname
+    });
+  }
+
   constructor(options = {}) {
     const apiProtocol = process.env.KINVEY_API_PROTOCOL || 'https';
     const apiHostname = process.env.KINVEY_API_HOSTNAME || 'baas.kinvey.com';

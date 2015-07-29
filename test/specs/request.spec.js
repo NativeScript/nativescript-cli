@@ -1,6 +1,5 @@
 import Request from '../../src/core/request';
 import Auth from '../../src/core/auth';
-import Kinvey from '../../src/kinvey';
 import DataPolicy from '../../src/enums/dataPolicy';
 import HttpMethod from '../../src/enums/httpMethod';
 
@@ -16,7 +15,7 @@ describe('Request', function() {
   });
 
   describe('method', function() {
-    it('should be set to HttpMethod.GET by default', function() {
+    it('should be set to `HttpMethod.GET` by default', function() {
       expect(this.request).to.have.property('method', HttpMethod.GET);
     });
 
@@ -40,8 +39,8 @@ describe('Request', function() {
   });
 
   describe('protocol', function() {
-    it(`should be set to ${Kinvey.apiProtocol} by default`, function() {
-      expect(this.request).to.have.property('protocol', Kinvey.apiProtocol);
+    it(`should be set to \`https\` by default`, function() {
+      expect(this.request).to.have.property('protocol', this.kinvey.apiProtocol);
     });
 
     it('should be able to be set to a different value', function() {
@@ -52,8 +51,8 @@ describe('Request', function() {
   });
 
   describe('hostname', function() {
-    it(`should be set to ${Kinvey.apiHostname} by default`, function() {
-      expect(this.request).to.have.property('hostname', Kinvey.apiHostname);
+    it(`should be set to \`baas.kinvey.com\` by default`, function() {
+      expect(this.request).to.have.property('hostname', this.kinvey.apiHostname);
     });
 
     it('should be able to be set to a different value', function() {
@@ -64,7 +63,7 @@ describe('Request', function() {
   });
 
   describe('auth', function() {
-    it('should be set to Auth.none by default', function() {
+    it('should be set to `Auth.none` by default', function() {
       expect(this.request).to.have.property('auth', Auth.none);
     });
 
@@ -109,7 +108,7 @@ describe('Request', function() {
   });
 
   describe('dataPolicy', function() {
-    it('should be equal to DataPolicy.CloudFirst by default', function() {
+    it('should be equal to `DataPolicy.CloudFirst` by default', function() {
       expect(this.request).to.have.property('dataPolicy', DataPolicy.CloudFirst);
     });
 
@@ -127,8 +126,8 @@ describe('Request', function() {
   });
 
   describe('url', function() {
-    it(`should be equal to ${Kinvey.apiUrl}`, function() {
-      expect(this.request).to.have.property('url', Kinvey.apiUrl);
+    it('should be equal to `https://baas.kinvey.com`', function() {
+      expect(this.request).to.have.property('url', this.kinvey.apiUrl);
     });
 
     it('should not be able to be set', function() {
@@ -176,16 +175,16 @@ describe('Request', function() {
       expect(this.request).to.respondTo('getHeader');
     });
 
-    it('should have Accept header set to application/json by default', function() {
+    it('should have Accept header set to `application/json` by default', function() {
       expect(this.request.getHeader('Accept')).to.equal('application/json');
     });
 
-    it('should have Content-Type header set to application/json by default', function() {
+    it('should have Content-Type header set to `application/json` by default', function() {
       expect(this.request.getHeader('Content-Type')).to.equal('application/json');
     });
 
-    it(`should have X-Kinvey-Api-Version header set to ${Kinvey.apiVersion} by default`, function() {
-      expect(this.request.getHeader('X-Kinvey-Api-Version')).to.equal(Kinvey.apiVersion);
+    it('should have X-Kinvey-Api-Version header set to `3` by default', function() {
+      expect(this.request.getHeader('X-Kinvey-Api-Version')).to.equal(this.kinvey.apiVersion);
     });
   });
 
@@ -302,7 +301,7 @@ describe('Request', function() {
         headers: {
           accept: 'application/json',
           'content-type': 'application/json',
-          'x-kinvey-api-version': Kinvey.apiVersion
+          'x-kinvey-api-version': this.kinvey.apiVersion
         },
         method: HttpMethod.GET,
         url: this.request.url,
