@@ -218,13 +218,14 @@ class IOSDebugService implements IDebugService {
 
     private openDebuggingClient(): IFuture<void> {
         return (() => {
-            let inspectorPath = this.getInspectorPath().wait();
-            let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
-            let cmd: string = null;
-            
             this.$projectDataService.initialize(this.$projectData.projectDir);
             let platformData = this.$platformsData.getPlatformData(this.platform);
             let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+            
+            let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
+            let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
+            let cmd: string = null;
+           
             if(semver.lt(frameworkVersion, "1.2.0")) {
                 cmd = `open -a Safari "${inspectorSourceLocation}"`;                
             } else {
@@ -239,7 +240,7 @@ class IOSDebugService implements IDebugService {
         }).future<void>()();
     }
 
-    private getInspectorPath(): IFuture<string> {
+    private getInspectorPath(frameworkVersion: string): IFuture<string> {
         return (() => {
             var tnsIosPackage = "";
             if (this.$options.frameworkPath) {
@@ -249,7 +250,7 @@ class IOSDebugService implements IDebugService {
                 tnsIosPackage = path.resolve(this.$options.frameworkPath);
             } else {
                 var platformData = this.$platformsData.getPlatformData(this.platform);
-                tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName).wait();
+                tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName, { version: frameworkVersion }).wait();
             }
             var inspectorPath = path.join(tnsIosPackage, "WebInspectorUI/");
             return inspectorPath;
