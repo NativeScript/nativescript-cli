@@ -255,6 +255,7 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 
 * `help` opens a new browser window and lists all available commands.
 * `create <App Name> [--path <Directory>] [--appid <App ID>] [--copy-from <Directory>]` creates a new project with the specified settings.
+* `init` initializes an existing project and prompts for project configuration.
 * `platform list` lists the current target platforms for your project.
 * `platform add <Platform>` adds a new target platform to your project.
 * `platform remove <Platform>` removes the selected platform from the target platforms of the project.
