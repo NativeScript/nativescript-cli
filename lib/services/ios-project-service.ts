@@ -188,7 +188,7 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			shell.cp("-R", libraryPath, fullTargetPath);
 
 			let project = this.createPbxProj();
-			let frameworkPath = path.relative("platforms/ios", path.join(targetPath, frameworkName + ".framework"));
+			let frameworkPath = this.getFrameworkRelativePath(libraryPath);
 			project.addFramework(frameworkPath, { customFramework: true, embed: true });
 			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
 			this.savePbxProj(project).wait();
@@ -271,6 +271,13 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 		return name.replace(/\\\"/g, "\"");
 	}
 	
+	private getFrameworkRelativePath(libraryPath: string): string {
+		let frameworkName = path.basename(libraryPath, path.extname(libraryPath));
+		let targetPath = path.join("lib", this.platformData.normalizedPlatformName, frameworkName);
+		let frameworkPath = path.relative("platforms/ios", path.join(targetPath, frameworkName + ".framework"));
+		return frameworkPath;
+	}
+	
 	private get pbxProjPath(): string {
 		return path.join(this.platformData.projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
 	}
@@ -298,7 +305,11 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			let project = this.createPbxProj();
 						
-			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => project.removeFramework(path.join(pluginPlatformsFolderPath, fileName + ".framework"), { customFramework: true, embed: true }));
+			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => {
+				let fullFrameworkPath = path.join(pluginPlatformsFolderPath, fileName);
+				let relativeFrameworkPath = this.getFrameworkRelativePath(fullFrameworkPath);
+				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true })
+			});
 			
 			this.savePbxProj(project).wait();
 		}).future<void>()();
