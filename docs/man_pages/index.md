@@ -19,6 +19,7 @@ Command | Description
 Command | Description
 ---|---
 [create](project/creation/create.html) | Creates a new project for native development with NativeScript.
+[init](project/creation/init.html) | Initializes an existing project for native development with NativeScript.
 [platform add `<Platform>`](project/configuration/platform-add.html) | Configures the current project to target the selected platform.
 [platform list](project/configuration/platform.html) | Lists all platforms that the project currently targets.
 [platform&nbsp;remove&nbsp;`<Platform>`](project/configuration/platform-remove.html) | Removes the selected platform from the platforms that the project currently targets. This operation deletes all platform-specific files and subdirectories from your project.
