@@ -25,7 +25,8 @@ class AndroidDebugService implements IDebugService {
         private $errors: IErrors,
         private $opener: IOpener,
         private $staticConfig: IStaticConfig,
-        private $utils: IUtils) { }
+        private $utils: IUtils,
+        private $config: IConfiguration) { }
 
 	private get platform() { return "android"; }
 	
@@ -169,7 +170,7 @@ class AndroidDebugService implements IDebugService {
     }
 
     private openDebuggerClient(url: string): void {
-		let chrome = this.$hostInfo.isDarwin ? "Google\ Chrome" : "chrome";
+		let chrome = this.$hostInfo.isDarwin ? this.$config.ANDROID_DEBUG_UI_MAC : "chrome";
 		let child = this.$opener.open(url, chrome);
 		if(!child) {
 			this.$errors.fail(`Unable to open ${chrome}.`);
