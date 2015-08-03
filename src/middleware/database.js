@@ -11,7 +11,7 @@ class DatabaseMiddleware extends Middleware {
 
   handle(request) {
     return super.handle(request).then(({ namespace, appKey, collection, id }) => {
-      const database = new Database(`${namespace}.${appKey}`);
+      const database = Database.sharedInstance();
       const method = request.method;
       let promise;
 

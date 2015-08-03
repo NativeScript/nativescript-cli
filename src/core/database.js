@@ -1,6 +1,8 @@
 import KinveyError from './errors/error';
+import Kinvey from '../kinvey';
 import isString from 'lodash/lang/isString';
 import isArray from 'lodash/lang/isArray';
+const sharedInstanceSymbol = Symbol();
 let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB);
 
 if (process.env.KINVEY_PLATFORM_ENV !== 'node') {
@@ -47,30 +49,6 @@ class Database {
         } catch (err) {
           return error(err);
         }
-
-        // // A 'abort' event will fire when the transaction is aborted.
-        // txn.onabort = () => {
-        //   if (this.db) {
-        //     this.db.close();
-        //     this.db = null;
-        //   }
-        // };
-
-        // // A 'timeout' event will fire when the transaction times out.
-        // txn.ontimeout = () => {
-        //   if (this.db) {
-        //     this.db.close();
-        //     this.db = null;
-        //   }
-        // };
-
-        // // A 'complete' event will fire when the transaction is completed.
-        // txn.oncomplete = () => {
-        //   if (this.db) {
-        //     this.db.close();
-        //     this.db = null;
-        //   }
-        // };
 
         const store = txn.objectStore(collection);
         return success(store);
@@ -298,6 +276,18 @@ class Database {
     });
 
     return promise;
+  }
+
+  static sharedInstance() {
+    let database = Database[sharedInstanceSymbol];
+
+    if (!database) {
+      const client = Kinvey.sharedInstance();
+      database = new Database(`${client.appKey}`);
+      Database[sharedInstanceSymbol] = database;
+    }
+
+    return database;
   }
 }
 

@@ -193,7 +193,7 @@ class PrivateRequest {
           privateRequest.auth = this.auth;
 
           if (method === HttpMethod.GET) {
-            privateRequest.method = HttpMethod.POST;
+            privateRequest.method = HttpMethod.PUT;
           }
 
           return privateRequest.execute().then(() => {
