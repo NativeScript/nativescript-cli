@@ -26,7 +26,9 @@ export class AndroidAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase
 	}
 	
 	public get deviceProjectRootPath(): string {
-		return `/data/local/tmp/12590FAA-5EDD-4B12-856D-F52A0A1599F2/${this.appIdentifier}`;
+		let options: IOptions = $injector.resolve("options");
+		let syncFolderName = options.watch ? "sync" : "fullsync";
+		return `/data/local/tmp/${this.appIdentifier}/${syncFolderName}`;		 
 	}
 	
 	public isLiveSyncSupported(device: Mobile.IDevice): IFuture<boolean> {

@@ -57,6 +57,7 @@ interface IUsbLiveSyncService {
 
 interface IPlatformSpecificUsbLiveSyncService {
 	restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void>;
+	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): IFuture<void>;
 }
 
 interface IOptions extends ICommonOptions {
