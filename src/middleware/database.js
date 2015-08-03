@@ -21,7 +21,7 @@ class DatabaseMiddleware extends Middleware {
         } else {
           promise = database.fetch(collection);
         }
-      } else if (method === HttpMethod.POST || HttpMethod.PUT) {
+      } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
         promise = database.save(collection, request.body);
       } else if (method === HttpMethod.DELETE) {
         promise = database.destroy(collection, id);

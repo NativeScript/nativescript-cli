@@ -1,5 +1,4 @@
 import KinveyError from './errors/error';
-import cloneDeep from 'lodash/lang/cloneDeep';
 import isString from 'lodash/lang/isString';
 import isArray from 'lodash/lang/isArray';
 let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB);
@@ -201,24 +200,92 @@ class Database {
     });
   }
 
-  get() {
-    return Promise.resolve(null);
+  get(collection, id) {
+    const promise = new Promise((resolve, reject) => {
+      this.transaction(collection, false, (store) => {
+        const request = store.get(id);
+
+        request.onsuccess = (evt) => {
+          resolve(evt.target.result);
+        };
+
+        request.onerror = (evt) => {
+          reject(new KinveyError(null, evt));
+        };
+      }, (err) => {
+        reject(err);
+      });
+    });
+
+    return promise;
   }
 
-  save(collection, docs = []) {
-    const singular = !isArray(docs);
-    const promises = [];
-    docs = singular ? [docs] : docs;
+  save(collection, doc = {}) {
+    if (isArray(doc)) {
+      return this.batch(collection, doc);
+    }
 
-    for (let i = 0, len = docs.length; i < len; i++) {
-      promises.push(new Promise((resolve, reject) => {
-        const doc = cloneDeep(docs[i]);
+    const promise = new Promise((resolve, reject) => {
+      this.transaction(collection, true, (store) => {
         doc._id = doc._id || this.objectID();
-        this.transaction(collection, true, (store) => {
-          const request = store.put(doc);
+        const request = store.put(doc);
 
-          request.onsuccess = (doc) => {
-            resolve(doc);
+        request.onsuccess = () => {
+          resolve(doc);
+        };
+
+        request.onerror = (evt) => {
+          reject(new KinveyError('Database error.', evt));
+        };
+      }, (err) => {
+        reject(err);
+      });
+    });
+
+    return promise;
+  }
+
+  batch(collection, docs = []) {
+    if (docs.length === 0) {
+      return Promise.resolve(docs);
+    }
+
+    const promise = new Promise((resolve, reject) => {
+      this.transaction(collection, true, (store) => {
+        const request = store.transaction;
+
+        docs.forEach((doc) => {
+          doc._id = doc._id || this.objectID();
+          store.put(doc);
+        });
+
+        request.oncomplete = () => {
+          resolve(docs);
+        };
+
+        request.onerror = (evt) => {
+          reject(new KinveyError('Database error.', evt));
+        };
+      }, (err) => {
+        reject(err);
+      });
+    });
+
+    return promise;
+  }
+
+  update(collection, doc) {
+    return this.save(collection, doc);
+  }
+
+  destroy(collection, id) {
+    const promise = this.get(collection, id).then(() => {
+      return new Promise((resolve, reject) => {
+        this.transaction(collection, true, (store) => {
+          const request = store.delete(id);
+
+          request.onsuccess = () => {
+            resolve({ count: 1 });
           };
 
           request.onerror = (evt) => {
@@ -227,16 +294,10 @@ class Database {
         }, (err) => {
           reject(err);
         });
-      }));
-    }
-
-    return Promise.all(promises).then((result) => {
-      if (singular) {
-        return result[0];
-      }
-
-      return result;
+      });
     });
+
+    return promise;
   }
 }
 

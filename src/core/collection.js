@@ -343,7 +343,7 @@ class Collection {
       }
 
       path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
-      const request = new Request(HttpMethod.DELETE, path, null, null, opts);
+      const request = new Request(HttpMethod.DELETE, path, null, model.toJSON(), opts);
       const promise = request.execute().then(() => {
         if (wait) {
           this.remove(model, opts);

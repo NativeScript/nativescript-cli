@@ -157,13 +157,26 @@ class PrivateRequest {
       promise = this.executeLocal();
     } else if (dataPolicy === DataPolicy.LocalFirst) {
       promise = this.executeLocal().then((response) => {
-        if (!response || !response.isSuccess() || method !== HttpMethod.GET) {
-          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
-            client: this.client,
-            dataPolicy: DataPolicy.CloudFirst
-          });
-          privateRequest.auth = this.auth;
-          return privateRequest.execute();
+        if (response && response.isSuccess()) {
+          if (this.method !== HttpMethod.GET) {
+            const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+              client: this.client,
+              dataPolicy: DataPolicy.CloudOnly
+            });
+            privateRequest.auth = this.auth;
+            return privateRequest.execute().then(() => {
+              return response;
+            });
+          }
+        } else {
+          if (this.method === HttpMethod.GET) {
+            const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+              client: this.client,
+              dataPolicy: DataPolicy.CloudFirst
+            });
+            privateRequest.auth = this.auth;
+            return privateRequest.execute();
+          }
         }
 
         return response;
@@ -186,6 +199,13 @@ class PrivateRequest {
           return privateRequest.execute().then(() => {
             return response;
           });
+        } else if (this.method === HttpMethod.GET) {
+          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            client: this.client,
+            dataPolicy: DataPolicy.LocalOnly
+          });
+          privateRequest.auth = this.auth;
+          return privateRequest.execute();
         }
 
         return response;
