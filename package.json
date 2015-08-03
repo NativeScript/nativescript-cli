@@ -71,7 +71,7 @@
     "vinyl-filter-since": "2.0.0",
     "winreg": "0.0.12",
     "ws": "0.7.1",
-    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.1.tar.gz",
+    "xcode": "https://github.com/NativeScript/node-xcode/archive/NativeScript-1.2.2.tar.gz",
     "xmldom": "0.1.19",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
     "xmlmerge-js": "0.2.4",
