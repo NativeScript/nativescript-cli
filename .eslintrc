@@ -116,6 +116,7 @@
     "vars-on-top": 2,                // http://eslint.org/docs/rules/vars-on-top
     "wrap-iife": [2, "any"],         // http://eslint.org/docs/rules/wrap-iife
     "yoda": 2,                       // http://eslint.org/docs/rules/yoda
+    "no-loop-func": 1,
 
 /**
  * Style
@@ -137,7 +138,6 @@
     }],
     "comma-style": [2, "last"],      // http://eslint.org/docs/rules/comma-style
     "eol-last": 2,                   // http://eslint.org/docs/rules/eol-last
-    "func-names": 1,                 // http://eslint.org/docs/rules/func-names
     "key-spacing": [2, {             // http://eslint.org/docs/rules/key-spacing
         "beforeColon": false,
         "afterColon": true

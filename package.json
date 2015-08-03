@@ -24,14 +24,15 @@
     "dexie": "^1.1.0",
     "fake-indexeddb": "^1.0.3",
     "humble-localstorage": "^1.4.1",
-    "indexeddbshim": "^2.0.3",
+    "indexeddbshim": "^2.0.4",
     "kinvey-http-angular": "git+ssh://git@bitbucket.org:kinveyjs/http-angular.git",
     "kinvey-http-node": "git+ssh://git@bitbucket.org:kinveyjs/http-node.git",
     "kinvey-http-xhr": "git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git",
     "kinvey-rack": "git+ssh://git@bitbucket.org:kinveyjs/rack.git",
     "lodash": "^3.10.0",
     "loglevel": "^1.3.1",
-    "node-cache": "^3.0.0"
+    "node-cache": "^3.0.0",
+    "url-pattern": "^0.9.0"
   },
   "devDependencies": {
     "babel": "^5.0.0",

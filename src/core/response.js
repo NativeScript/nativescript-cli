@@ -3,13 +3,9 @@ const privateResponseSymbol = Symbol();
 
 class PrivateResponse {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
-    // Set response info
     this.statusCode = statusCode;
-    this.headers = {};
-    this.data = data;
-
-    // Add headers
     this.addHeaders(headers);
+    this.data = data;
   }
 
   getHeader(header) {
@@ -28,12 +24,11 @@ class PrivateResponse {
 
   setHeader(header, value) {
     const headers = this.headers || {};
-    header = header.toLowerCase();
-    headers[header] = value;
+    headers[header.toLowerCase()] = value;
     this.headers = headers;
   }
 
-  addHeaders(headers) {
+  addHeaders(headers = {}) {
     const keys = Object.keys(headers);
 
     keys.forEach((header) => {
@@ -60,7 +55,6 @@ class PrivateResponse {
 
 class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
-    // Create a private response
     this[privateResponseSymbol] = new PrivateResponse(statusCode, headers, data);
   }
 

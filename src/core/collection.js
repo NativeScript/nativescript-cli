@@ -243,13 +243,12 @@ class Collection {
 
   fetch(options = {}) {
     options = assign({
-      path: this.path,
       dataPolicy: DataPolicy.CloudFirst,
       authType: AuthType.Session,
       parse: true
     }, options);
 
-    const request = new Request(HttpMethod.GET, options.path, null, null, options);
+    const request = new Request(HttpMethod.GET, this.path, null, null, options);
     const promise = request.execute().then((response) => {
       const data = response.data;
       const fn = options.reset ? 'reset' : 'set';
@@ -263,7 +262,6 @@ class Collection {
   save(models = [], options = {}) {
     // Set default options
     options = assign({
-      path: this.path,
       dataPolicy: DataPolicy.CloudFirst,
       authType: AuthType.Session
     }, options);
@@ -276,6 +274,7 @@ class Collection {
     for (let i = 0, len = models.length; i < len; i++) {
       const model = this._prepareModel(models[i], options);
       const opts = clone(options);
+      let path = this.path;
 
       if (!model) {
         promises.push(Promise.reject(new Error('Model required')));
@@ -288,7 +287,7 @@ class Collection {
 
       let method = HttpMethod.POST;
       if (!model.isNew()) {
-        opts.path = `${opts.path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
+        path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
 
         if (opts.patch) {
           method = HttpMethod.PATCH;
@@ -297,7 +296,7 @@ class Collection {
         }
       }
 
-      const request = new Request(method, opts.path, null, model.toJSON(), opts);
+      const request = new Request(method, path, null, model.toJSON(), opts);
       const promise = request.execute().then((response) => {
         const data = response.data;
         model.set(data, opts);
@@ -320,7 +319,6 @@ class Collection {
   destroy(models = [], options = {}) {
     // Set default options
     options = assign({
-      path: this.path,
       dataPolicy: DataPolicy.CloudFirst,
       authType: AuthType.Session
     }, options);
@@ -333,6 +331,7 @@ class Collection {
     for (let i = 0, len = models.length; i < len; i++) {
       const model = this._prepareModel(models[i], options);
       const opts = clone(options);
+      let path = this.path;
 
       if (!model) {
         promises.push(Promise.reject(new Error('Model required')));
@@ -343,8 +342,8 @@ class Collection {
         this.remove(model, options);
       }
 
-      opts.path = `${opts.path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
-      const request = new Request(HttpMethod.DELETE, opts.path, null, null, opts);
+      path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
+      const request = new Request(HttpMethod.DELETE, path, null, null, opts);
       const promise = request.execute().then(() => {
         if (wait) {
           this.remove(model, opts);
@@ -405,7 +404,7 @@ class Collection {
         continue;
       }
 
-      const index = this.indexOf(model);
+      const index = this.models.indexOf(model);
       this.models.splice(index, 1);
       this.length--;
 

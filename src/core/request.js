@@ -97,13 +97,13 @@ class PrivateRequest {
     });
 
     // Set request info
-    this.headers = {};
     this.method = method;
     this.protocol = options.client.apiProtocol;
     this.hostname = options.client.apiHostname;
     this.path = path;
     this.query = query;
     this.body = body;
+    this.client = options.client;
     this.auth = options.authType;
     this.dataPolicy = options.dataPolicy;
 
@@ -113,9 +113,6 @@ class PrivateRequest {
     headers['Content-Type'] = 'application/json';
     headers['X-Kinvey-Api-Version'] = options.client.apiVersion;
     this.addHeaders(headers);
-
-    // Set cache enabled to global setting
-    this.cacheEnabled = true; //options.client.cacheEnabled;
   }
 
   getHeader(header) {
@@ -138,7 +135,7 @@ class PrivateRequest {
     this.headers = headers;
   }
 
-  addHeaders(headers) {
+  addHeaders(headers = {}) {
     const keys = Object.keys(headers);
 
     keys.forEach((header) => {
@@ -151,119 +148,64 @@ class PrivateRequest {
     delete this.headers[header.toLowerCase()];
   }
 
-  isCacheEnabled() {
-    return this.cacheEnabled;
-  }
-
-  enableCache() {
-    this.cacheEnabled = true;
-  }
-
-  disableCache() {
-    this.cacheEnabled = false;
-  }
-
   execute() {
-    const promise = Promise.resolve();
+    const dataPolicy = this.dataPolicy;
+    const method = this.method;
+    let promise;
 
-    return promise.then(() => {
-      if (this.isCacheEnabled()) {
-        if (this.method === HttpMethod.GET) {
-          return this.executeCache();
+    if (dataPolicy === DataPolicy.LocalOnly) {
+      promise = this.executeLocal();
+    } else if (dataPolicy === DataPolicy.LocalFirst) {
+      promise = this.executeLocal().then((response) => {
+        if (!response || !response.isSuccess() || method !== HttpMethod.GET) {
+          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            client: this.client,
+            dataPolicy: DataPolicy.CloudFirst
+          });
+          privateRequest.auth = this.auth;
+          return privateRequest.execute();
         }
 
-        const originalMethod = this.method;
-        this.method = HttpMethod.DELETE;
-        return this.executeCache().then(() => {
-          this.method = originalMethod;
-        });
-      }
-    }).then((response) => {
-      if (!isDefined(response) || !response.isSuccess() || this.method !== HttpMethod.GET) {
-        if (this.dataPolicy === DataPolicy.LocalFirst || this.dataPolicy === DataPolicy.LocalOnly) {
-          return this.executeLocal();
-        } else if (this.dataPolicy === DataPolicy.CloudFirst || this.dataPolicy === DataPolicy.CloudOnly) {
-          return this.executeCloud();
-        }
-      }
+        return response;
+      });
+    } else if (dataPolicy === DataPolicy.CloudOnly) {
+      promise = this.executeCloud();
+    } else if (dataPolicy === DataPolicy.CloudFirst) {
+      promise = this.executeCloud().then((response) => {
+        if (response && response.isSuccess()) {
+          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            client: this.client,
+            dataPolicy: DataPolicy.LocalOnly
+          });
+          privateRequest.auth = this.auth;
 
-      return response;
-    }).then((response) => {
-      if (!isDefined(response) || !response.isSuccess() || this.method !== HttpMethod.GET) {
-        if (this.dataPolicy === DataPolicy.LocalFirst) {
-          return this.executeCloud();
-        } else if (this.dataPolicy === DataPolicy.CloudFirst) {
-          return response;// this.executeLocal();
-        }
-      }
+          if (method === HttpMethod.GET) {
+            privateRequest.method = HttpMethod.POST;
+          }
 
-      return response;
-    }).then((response) => {
+          return privateRequest.execute().then(() => {
+            return response;
+          });
+        }
+
+        return response;
+      });
+    }
+
+    return promise.then((response) => {
       this.response = response;
       return response;
     });
   }
 
   executeCache() {
-    const auth = this.auth;
     const cacheRack = Rack.cacheRack;
-    let promise = Promise.resolve();
-
-    return promise.then(() => {
-      if (isDefined(auth)) {
-        promise = isFunction(auth) ? auth() : Promise.resolve(auth);
-
-        // Add auth info to headers
-        return promise.then((authInfo) => {
-          if (isDefined(authInfo)) {
-            // Format credentials
-            let credentials = authInfo.credentials;
-            if (isDefined(authInfo.username)) {
-              credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-            }
-
-            // Set the header
-            this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-          }
-        });
-      }
-    }).then(() => {
-      return cacheRack.execute(this);
-    }).then((response) => {
-      this.cacheResponse = response;
-      return response;
-    });
+    return cacheRack.execute(this);
   }
 
   executeLocal() {
-    const auth = this.auth;
     const databaseRack = Rack.databaseRack;
-    let promise = Promise.resolve();
-
-    return promise.then(() => {
-      if (isDefined(auth)) {
-        promise = isFunction(auth) ? auth() : Promise.resolve(auth);
-
-        // Add auth info to headers
-        return promise.then((authInfo) => {
-          if (authInfo !== null) {
-            // Format credentials
-            let credentials = authInfo.credentials;
-            if (isDefined(authInfo.username)) {
-              credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-            }
-
-            // Set the header
-            this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-          }
-        });
-      }
-    }).then(() => {
-      return databaseRack.execute(this);
-    }).then((response) => {
-      this.localResponse = response;
-      return response;
-    });
+    return databaseRack.execute(this);
   }
 
   executeCloud() {
@@ -273,7 +215,7 @@ class PrivateRequest {
 
     return promise.then(() => {
       if (isDefined(auth)) {
-        promise = isFunction(auth) ? auth() : Promise.resolve(auth);
+        promise = isFunction(auth) ? auth(this.client) : Promise.resolve(auth);
 
         // Add auth info to headers
         return promise.then((authInfo) => {
@@ -291,9 +233,6 @@ class PrivateRequest {
       }
     }).then(() => {
       return networkRack.execute(this);
-    }).then((response) => {
-      this.cloudResponse = response;
-      return response;
     });
   }
 
@@ -315,7 +254,6 @@ class PrivateRequest {
 
 class Request {
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    // Create a private request
     this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
   }
 

@@ -41,7 +41,7 @@ class PrivateCache extends NodeCache {
     return Math.floor(new Date().getTime() / this.expiryUnits);
   }
 
-  constructor(name = '') {
+  constructor(name = 'Kinvey') {
     super();
     this.name = name;
   }

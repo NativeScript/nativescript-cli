@@ -1,15 +1,16 @@
 import User from './user';
-import {isDefined} from '../utils';
-import Kinvey from '../kinvey';
+import isDefined from '../utils/isDefined';
 
 class Auth {
-  static all() {
-    return Auth.session().then(null, Auth.Basic);
+  static all(client) {
+    return Auth.session(client).then(null, () => {
+      return Auth.basic(client);
+    });
   }
 
-  static app() {
+  static app(client) {
     // Validate preconditions.
-    if (!isDefined(Kinvey.appKey) || !isDefined(Kinvey.appSecret)) {
+    if (!isDefined(client.appKey) || !isDefined(client.appSecret)) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -17,30 +18,32 @@ class Auth {
     // Prepare the response.
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: Kinvey.appKey,
-      password: Kinvey.appSecret
+      username: client.appKey,
+      password: client.appSecret
     });
 
     // Return the response.
     return promise;
   }
 
-  static basic() {
-    return Auth.master().then(null, Auth.App);
+  static basic(client) {
+    return Auth.master(client).then(null, () => {
+      return Auth.app(client);
+    });
   }
 
-  static default() {
-    return Auth.session().then(null).catch((error) => {
-      return Auth.master().then(null).catch(() => {
+  static default(client) {
+    return Auth.session(client).then(null).catch((error) => {
+      return Auth.master(client).then(null).catch(() => {
         // Most likely, the developer did not create a user. Return a useful error.
         return Promise.resolve(error);
       });
     });
   }
 
-  static master() {
+  static master(client) {
     // Validate preconditions.
-    if (!isDefined(Kinvey.appKey) || !isDefined(Kinvey.masterSecret)) {
+    if (!isDefined(client.appKey) || !isDefined(client.masterSecret)) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -48,8 +51,8 @@ class Auth {
     // Prepare the response.
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: Kinvey.appKey,
-      password: Kinvey.masterSecret
+      username: client.appKey,
+      password: client.masterSecret
     });
 
     // Return the response.

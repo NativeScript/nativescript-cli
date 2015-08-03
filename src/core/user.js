@@ -122,6 +122,9 @@ class User extends Model {
         return false;
       }
 
+      // Set the active user
+      User.setActive(user);
+
       return user;
     });
 

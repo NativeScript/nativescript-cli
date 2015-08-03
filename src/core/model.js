@@ -11,26 +11,25 @@ import uniqueId from 'lodash/utility/uniqueId';
 import isEqual from 'lodash/lang/isEqual';
 import isEmpty from 'lodash/lang/isEmpty';
 import isDefined from '../utils/isDefined';
+const idAttribute = '_id';
+const aclAttribute = '_acl';
+const kmdAttribute = '_kmd';
 
 class Model {
   get cidPrefix() {
     return 'c';
   }
 
-  get idAttribute() {
-    return '_id';
-  }
-
   get id() {
-    return this.get(this.idAttribute);
+    return this.get(idAttribute);
   }
 
   get acl() {
-    return new Acl(this.get('_acl'));
+    return new Acl(this.get(aclAttribute));
   }
 
   get metadata() {
-    return new Metadata(this.get('_kmd'));
+    return new Metadata(this.get(kmdAttribute));
   }
 
   get defaults() {
@@ -182,7 +181,7 @@ class Model {
   }
 
   isNew() {
-    return !this.has(this.idAttribute);
+    return !this.has(idAttribute);
   }
 
   isValid(options = {}) {

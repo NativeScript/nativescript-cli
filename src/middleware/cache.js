@@ -26,7 +26,7 @@ class CacheMiddleware extends Middleware {
           response = new Response(StatusCode.NotFound);
         }
       } else if (request.method === HttpMethod.DELETE) {
-        cache.del(key);
+        cache.destroy(key);
         response = new Response(StatusCode.NoContent);
       } else {
         const data = isDefined(request.response) && isFunction(request.response.toJSON) ? request.response.toJSON() : request.response;
