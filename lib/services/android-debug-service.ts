@@ -60,7 +60,7 @@ class AndroidDebugService implements IDebugService {
 				this.$options.debugBrk = true;
 			}
 
-			if (this.$options.debugBrk) {
+			if (this.$options.debugBrk && !this.$options.emulator) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
 				this.$platformService.buildPlatform(this.platform).wait();
@@ -132,8 +132,10 @@ class AndroidDebugService implements IDebugService {
 
     private startAppWithDebugger(packageFile: string, packageName: string): IFuture<void> {
         return (() => {
-            this.device.applicationManager.uninstallApplication(packageName).wait();
-            this.device.applicationManager.installApplication(packageFile).wait();
+            if(!this.$options.emulator) {
+                this.device.applicationManager.uninstallApplication(packageName).wait();
+                this.device.applicationManager.installApplication(packageFile).wait();
+            }
             
             let port = this.$options.debugPort;
     
