@@ -36,22 +36,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			
-			let canLiveSyncAction = (device: Mobile.IDevice, appIdentifier: string): IFuture<boolean> => {
-				return (() => {
-					if(platform.toLowerCase() === "android") {
-						let output = (<Mobile.IAndroidDevice>device).adb.executeShellCommand(`"echo '' | run-as ${appIdentifier}"`).wait();
-						if(output.indexOf(`run-as: Package '${appIdentifier}' is unknown`) !== -1) {
-							this.$logger.warn(`Unable to livesync on device ${device.deviceInfo.identifier}. Consider upgrading your device OS.`);
-							return false;
-						}
-					}
-					
-					return true;
-				}).future<boolean>()();
-			}
-			
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
-				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
+				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);							
 				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
 			}
 			
@@ -66,9 +52,16 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				}).future<string>()();
 			}
 			
+			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
+				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
+				if(platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
+					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
+				}		
+			}
+			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			
-			this.sync(platform, this.$projectData.projectId, platformData.appDestinationDirectoryPath, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeBatchLiveSyncAction, canLiveSyncAction).wait();
+			this.sync(platform, this.$projectData.projectId, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, beforeLiveSyncAction, beforeBatchLiveSyncAction).wait();
 		}).future<void>()();
 	}
 	
@@ -114,31 +107,20 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commands = [ this.liveSyncCommands.SyncFilesCommand() ];			
 				this.livesync(deviceAppData.appIdentifier, deviceAppData.deviceProjectRootPath, commands).wait();
 			} else {
-				this.device.adb.executeShellCommand(`chmod 0777 ${this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, "app")}`).wait();
-				
-				let commands: string[] = [];
-				
-				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
-				_.each(localToDevicePaths, localToDevicePath => {
-					let devicePath = this.$mobileHelper.correctDevicePath(path.join(devicePathRoot, localToDevicePath.getRelativeToProjectBasePath()));
-					if(this.$fs.getFsStats(localToDevicePath.getLocalPath()).wait().isFile()) {
-						commands.push(`mv "${localToDevicePath.getDevicePath()}" "${devicePath}"`);
-					}
-				});
-				
-				commands.push(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`);
-				commands.push("exit");
-				
-				let commandsFileDevicePath = this.$mobileHelper.buildDevicePath(deviceAppData.deviceProjectRootPath, AndroidUsbLiveSyncService.LIVESYNC_COMMANDS_FILE_NAME);
-				this.createCommandsFileOnDevice(commandsFileDevicePath, commands).wait();
-				
-				let result = this.device.adb.executeShellCommand(`"cat ${commandsFileDevicePath} | run-as ${deviceAppData.appIdentifier}"`).wait();
-				if(result.indexOf("Permission denied") !== -1) {
-					this.device.adb.executeShellCommand(`${commandsFileDevicePath}`).wait();
-				}
+				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;				
+				this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`).wait();
 			}
 			
 			this.device.applicationManager.restartApplication(deviceAppData.appIdentifier).wait();
+		}).future<void>()();
+	}
+	
+	public beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
+		return (() => {
+			let deviceRootPath = `/data/local/tmp/${deviceAppData.appIdentifier}`;
+			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync")}`).wait();							
+			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "sync")}`).wait();
+			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")}`).wait();	
 		}).future<void>()();
 	}
 }
