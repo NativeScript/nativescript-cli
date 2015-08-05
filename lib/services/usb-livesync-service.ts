@@ -43,8 +43,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			if(platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
 				this.$projectDataService.initialize(this.$projectData.projectDir);
 				let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-				if(semver.lt(frameworkVersion, "1.2.2")) {
-					let shouldUpdate = this.$prompter.confirm("You need Android Runtime 1.2.2 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
+				if(semver.lt(frameworkVersion, "1.2.1")) {
+					let shouldUpdate = this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
 					if(shouldUpdate) {
 						this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]).wait();		
 					} else {
