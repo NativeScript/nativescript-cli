@@ -1,5 +1,8 @@
 # Changelog
 ### 1.4.3 (2015-07-16)
+* Bugfix(MLIBZ-493): Fix bug in IDBAdapter that would throw error when running two transactions at the same time.
+
+### 1.4.3 (2015-07-16)
 * Bugfix: Check if a table exists in SQLite before returning a generic error.
 
 ### 1.4.2 (2015-07-10)
