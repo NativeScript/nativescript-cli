@@ -130,7 +130,7 @@ var IDBAdapter = {
     write = write || false;
 
     // If there is a database handle, try to be smart.
-    if(null !== IDBAdapter.db) {
+    if(null !== IDBAdapter.db && (true === force || !IDBAdapter.inTransaction)) {
       // If the collection exists, obtain and return the transaction handle.
       if(IDBAdapter.db.objectStoreNames.contains(collection)) {
         var mode  = write ? 'readwrite' : 'readonly';
