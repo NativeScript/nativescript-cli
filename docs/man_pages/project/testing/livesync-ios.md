@@ -3,13 +3,14 @@ livesync ios
 
 Usage | Synopsis
 ------|-------
-General | `$ tns livesync ios [--device <Device ID>] [--watch]`
+General | `$ tns livesync ios [--device <Device ID>] [--watch] [--emulator]`
 
-Synchronizes the latest changes in your project to iOS devices. 
+Synchronizes the latest changes in your project to iOS devices or iOS simulator. 
 
 ### Options
 * `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
 * `--device` - Specifies the serial number or the index of the connected device to which you want to synchronize changes. To list all connected devices, grouped by platform, run `$ tns device`
+* `--emulator` - If set, changes are synchronized to iOS simulator.
 
 ### Attributes
 * `<Device ID>` is the device index or identifier as listed by `$ tns device`
