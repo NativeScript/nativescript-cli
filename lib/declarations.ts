@@ -15,6 +15,7 @@ interface INpmInstallationManager {
 	install(packageName: string, options?: INpmInstallOptions): IFuture<string>;
 	getLatestVersion(packageName: string): IFuture<string>;
 	getCachedPackagePath(packageName: string, version: string): string;
+	addCleanCopyToCache(packageName: string, version: string): IFuture<void>;
 }
 
 interface INpmInstallOptions {
@@ -56,6 +57,7 @@ interface IUsbLiveSyncService {
 
 interface IPlatformSpecificUsbLiveSyncService {
 	restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void>;
+	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): IFuture<void>;
 }
 
 interface IOptions extends ICommonOptions {
