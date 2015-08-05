@@ -23,7 +23,7 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `--stop` - Detaches the debug tools.
 * `--get-port` - Retrieves the port on which you are debugging your application.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
-* `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 60 seconds.
+* `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device` 
