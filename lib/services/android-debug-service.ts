@@ -55,7 +55,7 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let packageFile = "";
 
-			if(!this.$options.debugBrk && !this.$options.start) {
+			if(!this.$options.debugBrk && !this.$options.start && !this.$options.getPort && !this.$options.stop) {
 				this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");                
 				this.$options.debugBrk = true;
 			}
