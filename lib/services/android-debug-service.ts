@@ -200,7 +200,7 @@ class AndroidDebugService implements IDebugService {
     private startAndGetPort(packageName: string): IFuture<number> {
         return (() => {
             let port = -1;
-			let timeout = this.$utils.getParsedTimeout(60);       
+			let timeout = this.$utils.getParsedTimeout(90);       
              
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;

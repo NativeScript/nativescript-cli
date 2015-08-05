@@ -20,7 +20,7 @@ Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml)
 * `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
 * `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari.
-* `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 60 seconds.
+* `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`

@@ -60,7 +60,7 @@ function connectEventually(factory: () => net.Socket, handler: (socket: net.Sock
 }
 
 class IOSDebugService implements IDebugService {
-    private static TIMEOUT_SECONDS = 60;
+    private static TIMEOUT_SECONDS = 90;
     
     constructor(
         private $platformService: IPlatformService,
