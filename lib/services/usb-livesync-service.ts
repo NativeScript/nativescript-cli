@@ -6,6 +6,7 @@ import constants = require("../constants");
 import helpers = require("../common/helpers");
 import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
 import path = require("path");
+import semver = require("semver");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 	private excludedProjectDirsAndFiles = [
@@ -27,16 +28,33 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		$dispatcher: IFutureDispatcher,
 		$childProcess: IChildProcess,
 		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $projectDataService: IProjectDataService,
+		private $prompter: IPrompter) {
 			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher, $childProcess, $iOSEmulatorServices); 
 	}
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform || this.initialize(platform).wait();
+			let platformLowerCase = platform.toLowerCase();
+			let platformData = this.$platformsData.getPlatformData(platformLowerCase);	
+								
+			if(platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
+				this.$projectDataService.initialize(this.$projectData.projectDir);
+				let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+				if(semver.lt(frameworkVersion, "1.2.2")) {
+					let shouldUpdate = this.$prompter.confirm("You need Android Runtime 1.2.2 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
+					if(shouldUpdate) {
+						this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]).wait();		
+					} else {
+						return;
+					}
+				}
+			}
+			
 			this.$platformService.preparePlatform(platform).wait();
 			
-			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());			
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
