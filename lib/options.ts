@@ -18,7 +18,6 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			copyFrom: { type: OptionType.String },
 			linkTo: { type: OptionType.String  },
 			release: { type: OptionType.Boolean },
-			emulator: { type: OptionType.Boolean },
 			symlink: { type: OptionType.Boolean },
 			forDevice: { type: OptionType.Boolean },
 			client: { type: OptionType.Boolean, default: true},

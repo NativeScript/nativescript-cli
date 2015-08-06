@@ -154,6 +154,10 @@ export class FileSystemStub implements IFileSystem {
 	isRelativePath(path: string): boolean {
 		return false;
 	}
+
+	getFileShasum(fileName: string): IFuture<string> {
+		return undefined;
+	}
 }
 
 export class ErrorsStub implements IErrors {
@@ -192,6 +196,10 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 	}
 
 	addToCache(packageName: string, version: string): IFuture<void> {
+		return undefined;
+	}
+
+	addCleanCopyToCache(packageName: string, version: string): IFuture<void> {
 		return undefined;
 	}
 

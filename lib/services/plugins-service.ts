@@ -118,6 +118,8 @@ export class PluginsService implements IPluginsService {
 					pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);				
 					platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
 				
+					shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
+				
 					// Show message
 					this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
 			

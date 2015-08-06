@@ -24,7 +24,9 @@ class AndroidDebugService implements IDebugService {
         private $hostInfo: IHostInfo,
         private $errors: IErrors,
         private $opener: IOpener,
-        private $staticConfig: IStaticConfig) { }
+        private $staticConfig: IStaticConfig,
+        private $utils: IUtils,
+        private $config: IConfiguration) { }
 
 	private get platform() { return "android"; }
 	
@@ -53,9 +55,12 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let packageFile = "";
 
-			if (this.$options.debugBrk) {
-				this.$platformService.preparePlatform(this.platform).wait();
+			if(!this.$options.debugBrk && !this.$options.start && !this.$options.getPort && !this.$options.stop) {
+				this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");                
+				this.$options.debugBrk = true;
+			}
 
+			if (this.$options.debugBrk && !this.$options.emulator) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
 				this.$platformService.buildPlatform(this.platform).wait();
@@ -85,8 +90,6 @@ class AndroidDebugService implements IDebugService {
                 this.detachDebugger(packageName).wait();
             } else if (this.$options.debugBrk) {
                 this.startAppWithDebugger(packageFile, packageName).wait();
-            } else {
-                this.$logger.info("Should specify at least one option: debug-brk, start, stop, get-port.");
             }
         }).future<void>()();
     }
@@ -129,8 +132,10 @@ class AndroidDebugService implements IDebugService {
 
     private startAppWithDebugger(packageFile: string, packageName: string): IFuture<void> {
         return (() => {
-            this.device.applicationManager.uninstallApplication(packageName).wait();
-            this.device.applicationManager.installApplication(packageFile).wait();
+            if(!this.$options.emulator) {
+                this.device.applicationManager.uninstallApplication(packageName).wait();
+                this.device.applicationManager.installApplication(packageFile).wait();
+            }
             
             let port = this.$options.debugPort;
     
@@ -168,7 +173,7 @@ class AndroidDebugService implements IDebugService {
     }
 
     private openDebuggerClient(url: string): void {
-		let chrome = this.$hostInfo.isDarwin ? "Google\ Chrome" : "chrome";
+		let chrome = this.$hostInfo.isDarwin ? this.$config.ANDROID_DEBUG_UI_MAC : "chrome";
 		let child = this.$opener.open(url, chrome);
 		if(!child) {
 			this.$errors.fail(`Unable to open ${chrome}.`);
@@ -195,8 +200,8 @@ class AndroidDebugService implements IDebugService {
     private startAndGetPort(packageName: string): IFuture<number> {
         return (() => {
             let port = -1;
-			let timeout = 60;
-
+			let timeout = this.$utils.getParsedTimeout(90);       
+             
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
             this.device.adb.executeShellCommand(`rm "${envDebugInFullpath}"`).wait();

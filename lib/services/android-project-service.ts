@@ -8,6 +8,7 @@ import constants = require("../constants");
 import helpers = require("../common/helpers");
 import fs = require("fs");
 import os = require("os");
+import semver = require("semver");
 
 import androidProjectPropertiesManagerLib = require("./android-project-properties-manager");
 import projectServiceBaseLib = require("./platform-project-service-base");
@@ -21,7 +22,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static LIBS_FOLDER_NAME = "libs";
-	
+	private static MIN_JAVA_VERSION = "1.7.0";	
 
 	private targetApi: string;
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
@@ -35,6 +36,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $options: IOptions,
 		private $projectData: IProjectData,
 		private $propertiesParser: IPropertiesParser,
+		private $sysInfo: ISysInfo,
 		$fs: IFileSystem) {
 			super($fs);
 			this._androidProjectPropertiesManagers = Object.create(null);
@@ -73,7 +75,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			this.validatePackageName(this.$projectData.projectId);
 			this.validateProjectName(this.$projectData.projectName);
 
-			this.checkAnt().wait() && this.checkAndroid().wait();
+			this.checkJava().wait() && this.checkAnt().wait() && this.checkAndroid().wait();
 		}).future<void>()();
 	}
 
@@ -477,6 +479,19 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 			return this.targetApi;
 		}).future<string>()();
+	}
+	
+	private checkJava(): IFuture<void> {
+		return (() => {
+			try {
+				let javaVersion = this.$sysInfo.getSysInfo().javaVer;
+				if(semver.lt(javaVersion, AndroidProjectService.MIN_JAVA_VERSION)) {
+					this.$errors.failWithoutHelp(`Your current java version is ${javaVersion}. NativeScript CLI needs at least ${AndroidProjectService.MIN_JAVA_VERSION} version to work correctly. Ensure that you have at least ${AndroidProjectService.MIN_JAVA_VERSION} java version installed and try again.`);
+				}
+			} catch(error) {
+				this.$errors.failWithoutHelp("Error executing command 'java'. Make sure you have java installed and added to your PATH.");
+			}
+		}).future<void>()();
 	}
 
 	private checkAnt(): IFuture<void> {
