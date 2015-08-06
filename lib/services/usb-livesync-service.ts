@@ -7,6 +7,7 @@ import helpers = require("../common/helpers");
 import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
 import path = require("path");
 import semver = require("semver");
+import Future = require("fibers/future");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 	private excludedProjectDirsAndFiles = [
@@ -82,7 +83,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
 				if(platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
 					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
-				}		
+				}
+				return Future.fromResult();		
 			}
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
