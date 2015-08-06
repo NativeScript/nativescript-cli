@@ -30,14 +30,15 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter) {
-			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher, $childProcess, $iOSEmulatorServices); 
+		private $prompter: IPrompter,
+		$hostInfo: IHostInfo) {
+			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options, $deviceAppDataFactory, $fs, $dispatcher, $childProcess, $iOSEmulatorServices, $hostInfo); 
 	}
 	
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform || this.initialize(platform).wait();
-			let platformLowerCase = platform.toLowerCase();
+			let platformLowerCase = platform ? platform.toLowerCase() : null;
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);	
 								
 			if(platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
