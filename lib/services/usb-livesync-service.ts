@@ -7,6 +7,7 @@ import helpers = require("../common/helpers");
 import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
 import path = require("path");
 import semver = require("semver");
+import Future = require("fibers/future");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 	private excludedProjectDirsAndFiles = [
@@ -38,7 +39,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform || this.initialize(platform).wait();
-			let platformLowerCase = platform.toLowerCase();
+			let platformLowerCase = platform ? platform.toLowerCase() : null;
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);	
 								
 			if(platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
@@ -75,7 +76,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
 				if(platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
 					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
-				}		
+				}
+				return Future.fromResult();		
 			}
 						
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
