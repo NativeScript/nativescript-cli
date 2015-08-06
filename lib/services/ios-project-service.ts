@@ -127,15 +127,22 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			var basicArgs = [
-				"-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"),
-				"-target", this.$projectData.projectName,
+			let basicArgs = [
 				"-configuration", this.$options.release ? "Release" : "Debug",
 				"build",
 				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 			];
-			var args: string[] = [];
-
+			
+			let xcworkspacePath = path.join(projectRoot, this.$projectData.projectName + ".xcworkspace");
+			if(this.$fs.exists(xcworkspacePath).wait()) {
+				basicArgs.push("-workspace", xcworkspacePath);
+				basicArgs.push("-scheme", this.$projectData.projectName);			
+			} else {
+				basicArgs.push("-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"));
+				basicArgs.push("-target", this.$projectData.projectName);								
+			}
+			
+			let args: string[] = [];
 			if(this.$options.forDevice) {
 				args = basicArgs.concat([
 					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
@@ -151,7 +158,6 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 					"VALID_ARCHS=\"i386\"",
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator")
 				]);
-
 			}
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
