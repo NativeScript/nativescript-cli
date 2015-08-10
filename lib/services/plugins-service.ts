@@ -111,7 +111,6 @@ export class PluginsService implements IPluginsService {
 						this.validateXml(resultXml);
 						this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 					}
-					
 				
 					this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();						
 				

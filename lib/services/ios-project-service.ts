@@ -263,11 +263,22 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 				this.savePbxProj(project).wait();
 			}
 			
+			if(this.$fs.exists(this.projectPodFilePath).wait() && this.$fs.getFsStats(this.projectPodFilePath).wait().mtime < this.$fs.getFsStats(this.$projectData.projectFilePath).wait().mtime) {
+				try {
+					this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
+				} catch(e) {
+					this.$errors.failWithoutHelp("CocoaPods are not installed. Run `sudo gem install cocoapods` and try again.");
+				}
+			}
 		}).future<void>()();
 	}
 	
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return this.$fs.deleteDirectory(this.platformData.appResourcesDestinationDirectoryPath);
+	}
+	
+	private get projectPodFilePath(): string {
+		return path.join(this.platformData.projectRoot, "Podfile");
 	}
 	
 	private replace(name: string): string {
@@ -304,6 +315,12 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
+			
+			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			if(this.$fs.exists(pluginPodFilePath).wait()) {
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
+				this.$fs.appendFile(this.projectPodFilePath, pluginPodFileContent).wait();
+			}
 		}).future<void>()();
 	}
 	
@@ -319,6 +336,14 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			});
 			
 			this.savePbxProj(project).wait();
+			
+			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			if(this.$fs.exists(pluginPodFilePath).wait()) {
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
+				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
+				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, pluginPodFileContent, "");
+				this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
+			}
 		}).future<void>()();
 	}
 	
