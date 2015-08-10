@@ -1,0 +1,1186 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/tejas/.nvm/v0.8.28/bin/node',
+1 verbose cli   '/Users/tejas/.nvm/v0.8.28/bin/npm',
+1 verbose cli   'install' ]
+2 info using npm@1.2.30
+3 info using node@v0.8.28
+4 verbose read json /Users/tejas/codebase/js-library-dev/package.json
+5 verbose readDependencies using package.json deps
+6 verbose install where, deps [ '/Users/tejas/codebase/js-library-dev',
+6 verbose install   [ 'clone',
+6 verbose install     'crypto-js',
+6 verbose install     'deep-merge',
+6 verbose install     'dexie',
+6 verbose install     'fake-indexeddb',
+6 verbose install     'humble-localstorage',
+6 verbose install     'indexeddbshim',
+6 verbose install     'kinvey-http-angular',
+6 verbose install     'kinvey-http-node',
+6 verbose install     'kinvey-http-xhr',
+6 verbose install     'kinvey-rack',
+6 verbose install     'lodash',
+6 verbose install     'loglevel',
+6 verbose install     'node-cache',
+6 verbose install     'url-pattern',
+6 verbose install     'babel',
+6 verbose install     'babel-core',
+6 verbose install     'babel-eslint',
+6 verbose install     'babel-runtime',
+6 verbose install     'babelify',
+6 verbose install     'browser-sync',
+6 verbose install     'browserify',
+6 verbose install     'chai',
+6 verbose install     'chai-as-promised',
+6 verbose install     'del',
+6 verbose install     'eslint',
+6 verbose install     'eslint-plugin-react',
+6 verbose install     'exorcist',
+6 verbose install     'glob',
+6 verbose install     'gulp',
+6 verbose install     'gulp-babel',
+6 verbose install     'gulp-debug',
+6 verbose install     'gulp-eslint',
+6 verbose install     'gulp-file',
+6 verbose install     'gulp-filter',
+6 verbose install     'gulp-istanbul',
+6 verbose install     'gulp-jscs',
+6 verbose install     'gulp-livereload',
+6 verbose install     'gulp-load-plugins',
+6 verbose install     'gulp-mocha',
+6 verbose install     'gulp-mocha-phantomjs',
+6 verbose install     'gulp-notify',
+6 verbose install     'gulp-plumber',
+6 verbose install     'gulp-rename',
+6 verbose install     'gulp-sourcemaps',
+6 verbose install     'gulp-uglify',
+6 verbose install     'gulp-util',
+6 verbose install     'isparta',
+6 verbose install     'mocha',
+6 verbose install     'mocha-phantomjs',
+6 verbose install     'nock',
+6 verbose install     'phantomjs',
+6 verbose install     'run-sequence',
+6 verbose install     'sinon',
+6 verbose install     'sinon-chai',
+6 verbose install     'uid',
+6 verbose install     'vinyl-buffer',
+6 verbose install     'vinyl-source-stream',
+6 verbose install     'vinyl-transform',
+6 verbose install     'wrench',
+6 verbose install     'yargs' ] ]
+7 verbose from cache /Users/tejas/codebase/js-library-dev/package.json
+8 info preinstall kinvey-javascript-sdk@1.9.0
+9 verbose from cache /Users/tejas/codebase/js-library-dev/package.json
+10 verbose readDependencies using package.json deps
+11 verbose cache add [ 'clone@^1.0.2', null ]
+12 verbose cache add name=undefined spec="clone@^1.0.2" args=["clone@^1.0.2",null]
+13 verbose parsed url { pathname: 'clone@^1.0.2',
+13 verbose parsed url   path: 'clone@^1.0.2',
+13 verbose parsed url   href: 'clone@^1.0.2' }
+14 verbose cache add name="clone" spec="^1.0.2" args=["clone","^1.0.2"]
+15 verbose parsed url { pathname: '^1.0.2', path: '^1.0.2', href: '^1.0.2' }
+16 verbose addNamed [ 'clone', '^1.0.2' ]
+17 verbose addNamed [ null, null ]
+18 verbose cache add [ 'crypto-js@^3.1.5', null ]
+19 verbose cache add name=undefined spec="crypto-js@^3.1.5" args=["crypto-js@^3.1.5",null]
+20 verbose parsed url { pathname: 'crypto-js@^3.1.5',
+20 verbose parsed url   path: 'crypto-js@^3.1.5',
+20 verbose parsed url   href: 'crypto-js@^3.1.5' }
+21 verbose cache add name="crypto-js" spec="^3.1.5" args=["crypto-js","^3.1.5"]
+22 verbose parsed url { pathname: '^3.1.5', path: '^3.1.5', href: '^3.1.5' }
+23 verbose addNamed [ 'crypto-js', '^3.1.5' ]
+24 verbose addNamed [ null, null ]
+25 silly lockFile 17f7a866-clone-1-0-2 clone@^1.0.2
+26 verbose lock clone@^1.0.2 /Users/tejas/.npm/17f7a866-clone-1-0-2.lock
+27 silly lockFile fe7d6fcd-crypto-js-3-1-5 crypto-js@^3.1.5
+28 verbose lock crypto-js@^3.1.5 /Users/tejas/.npm/fe7d6fcd-crypto-js-3-1-5.lock
+29 verbose cache add [ 'deep-merge@*', null ]
+30 verbose cache add name=undefined spec="deep-merge@*" args=["deep-merge@*",null]
+31 verbose parsed url { pathname: 'deep-merge@*',
+31 verbose parsed url   path: 'deep-merge@*',
+31 verbose parsed url   href: 'deep-merge@*' }
+32 verbose cache add name="deep-merge" spec="*" args=["deep-merge","*"]
+33 verbose parsed url { pathname: '*', path: '*', href: '*' }
+34 verbose addNamed [ 'deep-merge', '*' ]
+35 verbose addNamed [ null, '' ]
+36 silly lockFile a0ba0262-deep-merge deep-merge@*
+37 verbose lock deep-merge@* /Users/tejas/.npm/a0ba0262-deep-merge.lock
+38 verbose cache add [ 'dexie@^1.1.0', null ]
+39 verbose cache add name=undefined spec="dexie@^1.1.0" args=["dexie@^1.1.0",null]
+40 verbose parsed url { pathname: 'dexie@^1.1.0',
+40 verbose parsed url   path: 'dexie@^1.1.0',
+40 verbose parsed url   href: 'dexie@^1.1.0' }
+41 verbose cache add name="dexie" spec="^1.1.0" args=["dexie","^1.1.0"]
+42 verbose parsed url { pathname: '^1.1.0', path: '^1.1.0', href: '^1.1.0' }
+43 verbose addNamed [ 'dexie', '^1.1.0' ]
+44 verbose addNamed [ null, null ]
+45 silly lockFile 84314ab7-dexie-1-1-0 dexie@^1.1.0
+46 verbose lock dexie@^1.1.0 /Users/tejas/.npm/84314ab7-dexie-1-1-0.lock
+47 verbose cache add [ 'fake-indexeddb@^1.0.3', null ]
+48 verbose cache add name=undefined spec="fake-indexeddb@^1.0.3" args=["fake-indexeddb@^1.0.3",null]
+49 verbose parsed url { pathname: 'fake-indexeddb@^1.0.3',
+49 verbose parsed url   path: 'fake-indexeddb@^1.0.3',
+49 verbose parsed url   href: 'fake-indexeddb@^1.0.3' }
+50 verbose cache add name="fake-indexeddb" spec="^1.0.3" args=["fake-indexeddb","^1.0.3"]
+51 verbose parsed url { pathname: '^1.0.3', path: '^1.0.3', href: '^1.0.3' }
+52 verbose addNamed [ 'fake-indexeddb', '^1.0.3' ]
+53 verbose addNamed [ null, null ]
+54 silly lockFile a0045ab3-fake-indexeddb-1-0-3 fake-indexeddb@^1.0.3
+55 verbose lock fake-indexeddb@^1.0.3 /Users/tejas/.npm/a0045ab3-fake-indexeddb-1-0-3.lock
+56 info addNameTag [ 'clone', '^1.0.2' ]
+57 info addNameTag [ 'crypto-js', '^3.1.5' ]
+58 silly addNameRange { name: 'deep-merge', range: '', hasData: false }
+59 info addNameTag [ 'dexie', '^1.1.0' ]
+60 info addNameTag [ 'fake-indexeddb', '^1.0.3' ]
+61 verbose url raw clone
+62 verbose url resolving [ 'https://registry.npmjs.org/', './clone' ]
+63 verbose url resolved https://registry.npmjs.org/clone
+64 info trying registry request attempt 1 at 11:40:45
+65 http GET https://registry.npmjs.org/clone
+66 verbose url raw crypto-js
+67 verbose url resolving [ 'https://registry.npmjs.org/', './crypto-js' ]
+68 verbose url resolved https://registry.npmjs.org/crypto-js
+69 info trying registry request attempt 1 at 11:40:45
+70 http GET https://registry.npmjs.org/crypto-js
+71 verbose url raw deep-merge
+72 verbose url resolving [ 'https://registry.npmjs.org/', './deep-merge' ]
+73 verbose url resolved https://registry.npmjs.org/deep-merge
+74 info trying registry request attempt 1 at 11:40:45
+75 http GET https://registry.npmjs.org/deep-merge
+76 verbose url raw dexie
+77 verbose url resolving [ 'https://registry.npmjs.org/', './dexie' ]
+78 verbose url resolved https://registry.npmjs.org/dexie
+79 info trying registry request attempt 1 at 11:40:45
+80 http GET https://registry.npmjs.org/dexie
+81 verbose url raw fake-indexeddb
+82 verbose url resolving [ 'https://registry.npmjs.org/', './fake-indexeddb' ]
+83 verbose url resolved https://registry.npmjs.org/fake-indexeddb
+84 info trying registry request attempt 1 at 11:40:45
+85 http GET https://registry.npmjs.org/fake-indexeddb
+86 verbose cache add [ 'humble-localstorage@^1.4.1', null ]
+87 verbose cache add name=undefined spec="humble-localstorage@^1.4.1" args=["humble-localstorage@^1.4.1",null]
+88 verbose parsed url { pathname: 'humble-localstorage@^1.4.1',
+88 verbose parsed url   path: 'humble-localstorage@^1.4.1',
+88 verbose parsed url   href: 'humble-localstorage@^1.4.1' }
+89 verbose cache add name="humble-localstorage" spec="^1.4.1" args=["humble-localstorage","^1.4.1"]
+90 verbose parsed url { pathname: '^1.4.1', path: '^1.4.1', href: '^1.4.1' }
+91 verbose addNamed [ 'humble-localstorage', '^1.4.1' ]
+92 verbose addNamed [ null, null ]
+93 silly lockFile 732cf21f-humble-localstorage-1-4-1 humble-localstorage@^1.4.1
+94 verbose lock humble-localstorage@^1.4.1 /Users/tejas/.npm/732cf21f-humble-localstorage-1-4-1.lock
+95 verbose cache add [ 'indexeddbshim@^2.0.4', null ]
+96 verbose cache add name=undefined spec="indexeddbshim@^2.0.4" args=["indexeddbshim@^2.0.4",null]
+97 verbose parsed url { pathname: 'indexeddbshim@^2.0.4',
+97 verbose parsed url   path: 'indexeddbshim@^2.0.4',
+97 verbose parsed url   href: 'indexeddbshim@^2.0.4' }
+98 verbose cache add name="indexeddbshim" spec="^2.0.4" args=["indexeddbshim","^2.0.4"]
+99 verbose parsed url { pathname: '^2.0.4', path: '^2.0.4', href: '^2.0.4' }
+100 verbose addNamed [ 'indexeddbshim', '^2.0.4' ]
+101 verbose addNamed [ null, null ]
+102 silly lockFile 732fd828-indexeddbshim-2-0-4 indexeddbshim@^2.0.4
+103 verbose lock indexeddbshim@^2.0.4 /Users/tejas/.npm/732fd828-indexeddbshim-2-0-4.lock
+104 verbose cache add [ 'kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git',
+104 verbose cache add   null ]
+105 verbose cache add name=undefined spec="kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git" args=["kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git",null]
+106 verbose parsed url { pathname: 'kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git',
+106 verbose parsed url   path: 'kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git',
+106 verbose parsed url   href: 'kinvey-http-angular@git+ssh://git@bitbucket.org:kinveyjs/http-angular.git' }
+107 verbose cache add name="kinvey-http-angular" spec="git+ssh://git@bitbucket.org:kinveyjs/http-angular.git" args=["kinvey-http-angular","git+ssh://git@bitbucket.org:kinveyjs/http-angular.git"]
+108 verbose parsed url { protocol: 'git+ssh:',
+108 verbose parsed url   slashes: true,
+108 verbose parsed url   auth: 'git',
+108 verbose parsed url   host: 'bitbucket.org',
+108 verbose parsed url   hostname: 'bitbucket.org',
+108 verbose parsed url   href: 'git+ssh://git@bitbucket.org/:kinveyjs/http-angular.git',
+108 verbose parsed url   pathname: '/:kinveyjs/http-angular.git',
+108 verbose parsed url   path: '/:kinveyjs/http-angular.git' }
+109 silly lockFile ecd3b97b-et-org-kinveyjs-http-angular-git git+ssh://git@bitbucket.org:kinveyjs/http-angular.git
+110 verbose lock git+ssh://git@bitbucket.org:kinveyjs/http-angular.git /Users/tejas/.npm/ecd3b97b-et-org-kinveyjs-http-angular-git.lock
+111 verbose cache add [ 'kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git',
+111 verbose cache add   null ]
+112 verbose cache add name=undefined spec="kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git" args=["kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git",null]
+113 verbose parsed url { pathname: 'kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git',
+113 verbose parsed url   path: 'kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git',
+113 verbose parsed url   href: 'kinvey-http-node@git+ssh://git@bitbucket.org:kinveyjs/http-node.git' }
+114 verbose cache add name="kinvey-http-node" spec="git+ssh://git@bitbucket.org:kinveyjs/http-node.git" args=["kinvey-http-node","git+ssh://git@bitbucket.org:kinveyjs/http-node.git"]
+115 verbose parsed url { protocol: 'git+ssh:',
+115 verbose parsed url   slashes: true,
+115 verbose parsed url   auth: 'git',
+115 verbose parsed url   host: 'bitbucket.org',
+115 verbose parsed url   hostname: 'bitbucket.org',
+115 verbose parsed url   href: 'git+ssh://git@bitbucket.org/:kinveyjs/http-node.git',
+115 verbose parsed url   pathname: '/:kinveyjs/http-node.git',
+115 verbose parsed url   path: '/:kinveyjs/http-node.git' }
+116 silly lockFile c3fee527-ucket-org-kinveyjs-http-node-git git+ssh://git@bitbucket.org:kinveyjs/http-node.git
+117 verbose lock git+ssh://git@bitbucket.org:kinveyjs/http-node.git /Users/tejas/.npm/c3fee527-ucket-org-kinveyjs-http-node-git.lock
+118 verbose cache add [ 'kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git',
+118 verbose cache add   null ]
+119 verbose cache add name=undefined spec="kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git" args=["kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git",null]
+120 verbose parsed url { pathname: 'kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git',
+120 verbose parsed url   path: 'kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git',
+120 verbose parsed url   href: 'kinvey-http-xhr@git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git' }
+121 verbose cache add name="kinvey-http-xhr" spec="git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git" args=["kinvey-http-xhr","git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git"]
+122 verbose parsed url { protocol: 'git+ssh:',
+122 verbose parsed url   slashes: true,
+122 verbose parsed url   auth: 'git',
+122 verbose parsed url   host: 'bitbucket.org',
+122 verbose parsed url   hostname: 'bitbucket.org',
+122 verbose parsed url   href: 'git+ssh://git@bitbucket.org/:kinveyjs/http-xhr.git',
+122 verbose parsed url   pathname: '/:kinveyjs/http-xhr.git',
+122 verbose parsed url   path: '/:kinveyjs/http-xhr.git' }
+123 silly lockFile cde137c6-bucket-org-kinveyjs-http-xhr-git git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git
+124 verbose lock git+ssh://git@bitbucket.org:kinveyjs/http-xhr.git /Users/tejas/.npm/cde137c6-bucket-org-kinveyjs-http-xhr-git.lock
+125 verbose cache add [ 'kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git',
+125 verbose cache add   null ]
+126 verbose cache add name=undefined spec="kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git" args=["kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git",null]
+127 verbose parsed url { pathname: 'kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git',
+127 verbose parsed url   path: 'kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git',
+127 verbose parsed url   href: 'kinvey-rack@git+ssh://git@bitbucket.org:kinveyjs/rack.git' }
+128 verbose cache add name="kinvey-rack" spec="git+ssh://git@bitbucket.org:kinveyjs/rack.git" args=["kinvey-rack","git+ssh://git@bitbucket.org:kinveyjs/rack.git"]
+129 verbose parsed url { protocol: 'git+ssh:',
+129 verbose parsed url   slashes: true,
+129 verbose parsed url   auth: 'git',
+129 verbose parsed url   host: 'bitbucket.org',
+129 verbose parsed url   hostname: 'bitbucket.org',
+129 verbose parsed url   href: 'git+ssh://git@bitbucket.org/:kinveyjs/rack.git',
+129 verbose parsed url   pathname: '/:kinveyjs/rack.git',
+129 verbose parsed url   path: '/:kinveyjs/rack.git' }
+130 silly lockFile 89889c7e--bitbucket-org-kinveyjs-rack-git git+ssh://git@bitbucket.org:kinveyjs/rack.git
+131 verbose lock git+ssh://git@bitbucket.org:kinveyjs/rack.git /Users/tejas/.npm/89889c7e--bitbucket-org-kinveyjs-rack-git.lock
+132 verbose cache add [ 'lodash@^3.10.0', null ]
+133 verbose cache add name=undefined spec="lodash@^3.10.0" args=["lodash@^3.10.0",null]
+134 verbose parsed url { pathname: 'lodash@^3.10.0',
+134 verbose parsed url   path: 'lodash@^3.10.0',
+134 verbose parsed url   href: 'lodash@^3.10.0' }
+135 verbose cache add name="lodash" spec="^3.10.0" args=["lodash","^3.10.0"]
+136 verbose parsed url { pathname: '^3.10.0', path: '^3.10.0', href: '^3.10.0' }
+137 verbose addNamed [ 'lodash', '^3.10.0' ]
+138 verbose addNamed [ null, null ]
+139 silly lockFile 06278f19-lodash-3-10-0 lodash@^3.10.0
+140 verbose lock lodash@^3.10.0 /Users/tejas/.npm/06278f19-lodash-3-10-0.lock
+141 verbose cache add [ 'loglevel@^1.3.1', null ]
+142 verbose cache add name=undefined spec="loglevel@^1.3.1" args=["loglevel@^1.3.1",null]
+143 verbose parsed url { pathname: 'loglevel@^1.3.1',
+143 verbose parsed url   path: 'loglevel@^1.3.1',
+143 verbose parsed url   href: 'loglevel@^1.3.1' }
+144 verbose cache add name="loglevel" spec="^1.3.1" args=["loglevel","^1.3.1"]
+145 verbose parsed url { pathname: '^1.3.1', path: '^1.3.1', href: '^1.3.1' }
+146 verbose addNamed [ 'loglevel', '^1.3.1' ]
+147 verbose addNamed [ null, null ]
+148 silly lockFile 9fd1c8db-loglevel-1-3-1 loglevel@^1.3.1
+149 verbose lock loglevel@^1.3.1 /Users/tejas/.npm/9fd1c8db-loglevel-1-3-1.lock
+150 verbose cache add [ 'node-cache@^3.0.0', null ]
+151 verbose cache add name=undefined spec="node-cache@^3.0.0" args=["node-cache@^3.0.0",null]
+152 verbose parsed url { pathname: 'node-cache@^3.0.0',
+152 verbose parsed url   path: 'node-cache@^3.0.0',
+152 verbose parsed url   href: 'node-cache@^3.0.0' }
+153 verbose cache add name="node-cache" spec="^3.0.0" args=["node-cache","^3.0.0"]
+154 verbose parsed url { pathname: '^3.0.0', path: '^3.0.0', href: '^3.0.0' }
+155 verbose addNamed [ 'node-cache', '^3.0.0' ]
+156 verbose addNamed [ null, null ]
+157 silly lockFile 98c65b60-node-cache-3-0-0 node-cache@^3.0.0
+158 verbose lock node-cache@^3.0.0 /Users/tejas/.npm/98c65b60-node-cache-3-0-0.lock
+159 verbose cache add [ 'url-pattern@^0.9.0', null ]
+160 verbose cache add name=undefined spec="url-pattern@^0.9.0" args=["url-pattern@^0.9.0",null]
+161 verbose parsed url { pathname: 'url-pattern@^0.9.0',
+161 verbose parsed url   path: 'url-pattern@^0.9.0',
+161 verbose parsed url   href: 'url-pattern@^0.9.0' }
+162 verbose cache add name="url-pattern" spec="^0.9.0" args=["url-pattern","^0.9.0"]
+163 verbose parsed url { pathname: '^0.9.0', path: '^0.9.0', href: '^0.9.0' }
+164 verbose addNamed [ 'url-pattern', '^0.9.0' ]
+165 verbose addNamed [ null, null ]
+166 silly lockFile c6971d81-url-pattern-0-9-0 url-pattern@^0.9.0
+167 verbose lock url-pattern@^0.9.0 /Users/tejas/.npm/c6971d81-url-pattern-0-9-0.lock
+168 verbose cache add [ 'babel@^5.0.0', null ]
+169 verbose cache add name=undefined spec="babel@^5.0.0" args=["babel@^5.0.0",null]
+170 verbose parsed url { pathname: 'babel@^5.0.0',
+170 verbose parsed url   path: 'babel@^5.0.0',
+170 verbose parsed url   href: 'babel@^5.0.0' }
+171 verbose cache add name="babel" spec="^5.0.0" args=["babel","^5.0.0"]
+172 verbose parsed url { pathname: '^5.0.0', path: '^5.0.0', href: '^5.0.0' }
+173 verbose addNamed [ 'babel', '^5.0.0' ]
+174 verbose addNamed [ null, null ]
+175 silly lockFile e75c02b9-babel-5-0-0 babel@^5.0.0
+176 verbose lock babel@^5.0.0 /Users/tejas/.npm/e75c02b9-babel-5-0-0.lock
+177 verbose cache add [ 'babel-core@^5.2.17', null ]
+178 verbose cache add name=undefined spec="babel-core@^5.2.17" args=["babel-core@^5.2.17",null]
+179 verbose parsed url { pathname: 'babel-core@^5.2.17',
+179 verbose parsed url   path: 'babel-core@^5.2.17',
+179 verbose parsed url   href: 'babel-core@^5.2.17' }
+180 verbose cache add name="babel-core" spec="^5.2.17" args=["babel-core","^5.2.17"]
+181 verbose parsed url { pathname: '^5.2.17', path: '^5.2.17', href: '^5.2.17' }
+182 verbose addNamed [ 'babel-core', '^5.2.17' ]
+183 verbose addNamed [ null, null ]
+184 silly lockFile 4676135d-babel-core-5-2-17 babel-core@^5.2.17
+185 verbose lock babel-core@^5.2.17 /Users/tejas/.npm/4676135d-babel-core-5-2-17.lock
+186 verbose cache add [ 'babel-eslint@^3.1.9', null ]
+187 verbose cache add name=undefined spec="babel-eslint@^3.1.9" args=["babel-eslint@^3.1.9",null]
+188 verbose parsed url { pathname: 'babel-eslint@^3.1.9',
+188 verbose parsed url   path: 'babel-eslint@^3.1.9',
+188 verbose parsed url   href: 'babel-eslint@^3.1.9' }
+189 verbose cache add name="babel-eslint" spec="^3.1.9" args=["babel-eslint","^3.1.9"]
+190 verbose parsed url { pathname: '^3.1.9', path: '^3.1.9', href: '^3.1.9' }
+191 verbose addNamed [ 'babel-eslint', '^3.1.9' ]
+192 verbose addNamed [ null, null ]
+193 silly lockFile b2b22938-babel-eslint-3-1-9 babel-eslint@^3.1.9
+194 verbose lock babel-eslint@^3.1.9 /Users/tejas/.npm/b2b22938-babel-eslint-3-1-9.lock
+195 verbose cache add [ 'babel-runtime@^5.7.0', null ]
+196 verbose cache add name=undefined spec="babel-runtime@^5.7.0" args=["babel-runtime@^5.7.0",null]
+197 verbose parsed url { pathname: 'babel-runtime@^5.7.0',
+197 verbose parsed url   path: 'babel-runtime@^5.7.0',
+197 verbose parsed url   href: 'babel-runtime@^5.7.0' }
+198 verbose cache add name="babel-runtime" spec="^5.7.0" args=["babel-runtime","^5.7.0"]
+199 verbose parsed url { pathname: '^5.7.0', path: '^5.7.0', href: '^5.7.0' }
+200 verbose addNamed [ 'babel-runtime', '^5.7.0' ]
+201 verbose addNamed [ null, null ]
+202 silly lockFile 14fb97a7-babel-runtime-5-7-0 babel-runtime@^5.7.0
+203 verbose lock babel-runtime@^5.7.0 /Users/tejas/.npm/14fb97a7-babel-runtime-5-7-0.lock
+204 verbose cache add [ 'babelify@^6.0.0', null ]
+205 verbose cache add name=undefined spec="babelify@^6.0.0" args=["babelify@^6.0.0",null]
+206 verbose parsed url { pathname: 'babelify@^6.0.0',
+206 verbose parsed url   path: 'babelify@^6.0.0',
+206 verbose parsed url   href: 'babelify@^6.0.0' }
+207 verbose cache add name="babelify" spec="^6.0.0" args=["babelify","^6.0.0"]
+208 verbose parsed url { pathname: '^6.0.0', path: '^6.0.0', href: '^6.0.0' }
+209 verbose addNamed [ 'babelify', '^6.0.0' ]
+210 verbose addNamed [ null, null ]
+211 silly lockFile d459700f-babelify-6-0-0 babelify@^6.0.0
+212 verbose lock babelify@^6.0.0 /Users/tejas/.npm/d459700f-babelify-6-0-0.lock
+213 verbose cache add [ 'browser-sync@^2.7.13', null ]
+214 verbose cache add name=undefined spec="browser-sync@^2.7.13" args=["browser-sync@^2.7.13",null]
+215 verbose parsed url { pathname: 'browser-sync@^2.7.13',
+215 verbose parsed url   path: 'browser-sync@^2.7.13',
+215 verbose parsed url   href: 'browser-sync@^2.7.13' }
+216 verbose cache add name="browser-sync" spec="^2.7.13" args=["browser-sync","^2.7.13"]
+217 verbose parsed url { pathname: '^2.7.13', path: '^2.7.13', href: '^2.7.13' }
+218 verbose addNamed [ 'browser-sync', '^2.7.13' ]
+219 verbose addNamed [ null, null ]
+220 silly lockFile 0b9f1f16-browser-sync-2-7-13 browser-sync@^2.7.13
+221 verbose lock browser-sync@^2.7.13 /Users/tejas/.npm/0b9f1f16-browser-sync-2-7-13.lock
+222 verbose cache add [ 'browserify@^11.0.0', null ]
+223 verbose cache add name=undefined spec="browserify@^11.0.0" args=["browserify@^11.0.0",null]
+224 verbose parsed url { pathname: 'browserify@^11.0.0',
+224 verbose parsed url   path: 'browserify@^11.0.0',
+224 verbose parsed url   href: 'browserify@^11.0.0' }
+225 verbose cache add name="browserify" spec="^11.0.0" args=["browserify","^11.0.0"]
+226 verbose parsed url { pathname: '^11.0.0', path: '^11.0.0', href: '^11.0.0' }
+227 verbose addNamed [ 'browserify', '^11.0.0' ]
+228 verbose addNamed [ null, null ]
+229 silly lockFile 7ce285d3-browserify-11-0-0 browserify@^11.0.0
+230 verbose lock browserify@^11.0.0 /Users/tejas/.npm/7ce285d3-browserify-11-0-0.lock
+231 verbose cache add [ 'chai@^3.1.0', null ]
+232 verbose cache add name=undefined spec="chai@^3.1.0" args=["chai@^3.1.0",null]
+233 verbose parsed url { pathname: 'chai@^3.1.0',
+233 verbose parsed url   path: 'chai@^3.1.0',
+233 verbose parsed url   href: 'chai@^3.1.0' }
+234 verbose cache add name="chai" spec="^3.1.0" args=["chai","^3.1.0"]
+235 verbose parsed url { pathname: '^3.1.0', path: '^3.1.0', href: '^3.1.0' }
+236 verbose addNamed [ 'chai', '^3.1.0' ]
+237 verbose addNamed [ null, null ]
+238 silly lockFile d3782756-chai-3-1-0 chai@^3.1.0
+239 verbose lock chai@^3.1.0 /Users/tejas/.npm/d3782756-chai-3-1-0.lock
+240 verbose cache add [ 'chai-as-promised@^5.1.0', null ]
+241 verbose cache add name=undefined spec="chai-as-promised@^5.1.0" args=["chai-as-promised@^5.1.0",null]
+242 verbose parsed url { pathname: 'chai-as-promised@^5.1.0',
+242 verbose parsed url   path: 'chai-as-promised@^5.1.0',
+242 verbose parsed url   href: 'chai-as-promised@^5.1.0' }
+243 verbose cache add name="chai-as-promised" spec="^5.1.0" args=["chai-as-promised","^5.1.0"]
+244 verbose parsed url { pathname: '^5.1.0', path: '^5.1.0', href: '^5.1.0' }
+245 verbose addNamed [ 'chai-as-promised', '^5.1.0' ]
+246 verbose addNamed [ null, null ]
+247 silly lockFile 66dd131f-chai-as-promised-5-1-0 chai-as-promised@^5.1.0
+248 verbose lock chai-as-promised@^5.1.0 /Users/tejas/.npm/66dd131f-chai-as-promised-5-1-0.lock
+249 verbose cache add [ 'del@^1.1.1', null ]
+250 verbose cache add name=undefined spec="del@^1.1.1" args=["del@^1.1.1",null]
+251 verbose parsed url { pathname: 'del@^1.1.1',
+251 verbose parsed url   path: 'del@^1.1.1',
+251 verbose parsed url   href: 'del@^1.1.1' }
+252 verbose cache add name="del" spec="^1.1.1" args=["del","^1.1.1"]
+253 verbose parsed url { pathname: '^1.1.1', path: '^1.1.1', href: '^1.1.1' }
+254 verbose addNamed [ 'del', '^1.1.1' ]
+255 verbose addNamed [ null, null ]
+256 silly lockFile 7493aa52-del-1-1-1 del@^1.1.1
+257 verbose lock del@^1.1.1 /Users/tejas/.npm/7493aa52-del-1-1-1.lock
+258 verbose cache add [ 'eslint@^1.0.0-rc-1', null ]
+259 verbose cache add name=undefined spec="eslint@^1.0.0-rc-1" args=["eslint@^1.0.0-rc-1",null]
+260 verbose parsed url { pathname: 'eslint@^1.0.0-rc-1',
+260 verbose parsed url   path: 'eslint@^1.0.0-rc-1',
+260 verbose parsed url   href: 'eslint@^1.0.0-rc-1' }
+261 verbose cache add name="eslint" spec="^1.0.0-rc-1" args=["eslint","^1.0.0-rc-1"]
+262 verbose parsed url { pathname: '^1.0.0-rc-1',
+262 verbose parsed url   path: '^1.0.0-rc-1',
+262 verbose parsed url   href: '^1.0.0-rc-1' }
+263 verbose addNamed [ 'eslint', '^1.0.0-rc-1' ]
+264 verbose addNamed [ null, null ]
+265 silly lockFile 7f7bc59e-eslint-1-0-0-rc-1 eslint@^1.0.0-rc-1
+266 verbose lock eslint@^1.0.0-rc-1 /Users/tejas/.npm/7f7bc59e-eslint-1-0-0-rc-1.lock
+267 verbose cache add [ 'eslint-plugin-react@^2.7.1', null ]
+268 verbose cache add name=undefined spec="eslint-plugin-react@^2.7.1" args=["eslint-plugin-react@^2.7.1",null]
+269 verbose parsed url { pathname: 'eslint-plugin-react@^2.7.1',
+269 verbose parsed url   path: 'eslint-plugin-react@^2.7.1',
+269 verbose parsed url   href: 'eslint-plugin-react@^2.7.1' }
+270 verbose cache add name="eslint-plugin-react" spec="^2.7.1" args=["eslint-plugin-react","^2.7.1"]
+271 verbose parsed url { pathname: '^2.7.1', path: '^2.7.1', href: '^2.7.1' }
+272 verbose addNamed [ 'eslint-plugin-react', '^2.7.1' ]
+273 verbose addNamed [ null, null ]
+274 silly lockFile 3bc205f2-eslint-plugin-react-2-7-1 eslint-plugin-react@^2.7.1
+275 verbose lock eslint-plugin-react@^2.7.1 /Users/tejas/.npm/3bc205f2-eslint-plugin-react-2-7-1.lock
+276 verbose cache add [ 'exorcist@^0.4.0', null ]
+277 verbose cache add name=undefined spec="exorcist@^0.4.0" args=["exorcist@^0.4.0",null]
+278 verbose parsed url { pathname: 'exorcist@^0.4.0',
+278 verbose parsed url   path: 'exorcist@^0.4.0',
+278 verbose parsed url   href: 'exorcist@^0.4.0' }
+279 verbose cache add name="exorcist" spec="^0.4.0" args=["exorcist","^0.4.0"]
+280 verbose parsed url { pathname: '^0.4.0', path: '^0.4.0', href: '^0.4.0' }
+281 verbose addNamed [ 'exorcist', '^0.4.0' ]
+282 verbose addNamed [ null, null ]
+283 silly lockFile e45cdbe6-exorcist-0-4-0 exorcist@^0.4.0
+284 verbose lock exorcist@^0.4.0 /Users/tejas/.npm/e45cdbe6-exorcist-0-4-0.lock
+285 verbose cache add [ 'glob@^4.0.5', null ]
+286 verbose cache add name=undefined spec="glob@^4.0.5" args=["glob@^4.0.5",null]
+287 verbose parsed url { pathname: 'glob@^4.0.5',
+287 verbose parsed url   path: 'glob@^4.0.5',
+287 verbose parsed url   href: 'glob@^4.0.5' }
+288 verbose cache add name="glob" spec="^4.0.5" args=["glob","^4.0.5"]
+289 verbose parsed url { pathname: '^4.0.5', path: '^4.0.5', href: '^4.0.5' }
+290 verbose addNamed [ 'glob', '^4.0.5' ]
+291 verbose addNamed [ null, null ]
+292 silly lockFile a8e851ff-glob-4-0-5 glob@^4.0.5
+293 verbose lock glob@^4.0.5 /Users/tejas/.npm/a8e851ff-glob-4-0-5.lock
+294 verbose cache add [ 'gulp@^3.8.10', null ]
+295 verbose cache add name=undefined spec="gulp@^3.8.10" args=["gulp@^3.8.10",null]
+296 verbose parsed url { pathname: 'gulp@^3.8.10',
+296 verbose parsed url   path: 'gulp@^3.8.10',
+296 verbose parsed url   href: 'gulp@^3.8.10' }
+297 verbose cache add name="gulp" spec="^3.8.10" args=["gulp","^3.8.10"]
+298 verbose parsed url { pathname: '^3.8.10', path: '^3.8.10', href: '^3.8.10' }
+299 verbose addNamed [ 'gulp', '^3.8.10' ]
+300 verbose addNamed [ null, null ]
+301 silly lockFile 25b88f7b-gulp-3-8-10 gulp@^3.8.10
+302 verbose lock gulp@^3.8.10 /Users/tejas/.npm/25b88f7b-gulp-3-8-10.lock
+303 verbose cache add [ 'gulp-babel@^5.0.0', null ]
+304 verbose cache add name=undefined spec="gulp-babel@^5.0.0" args=["gulp-babel@^5.0.0",null]
+305 verbose parsed url { pathname: 'gulp-babel@^5.0.0',
+305 verbose parsed url   path: 'gulp-babel@^5.0.0',
+305 verbose parsed url   href: 'gulp-babel@^5.0.0' }
+306 verbose cache add name="gulp-babel" spec="^5.0.0" args=["gulp-babel","^5.0.0"]
+307 verbose parsed url { pathname: '^5.0.0', path: '^5.0.0', href: '^5.0.0' }
+308 verbose addNamed [ 'gulp-babel', '^5.0.0' ]
+309 verbose addNamed [ null, null ]
+310 silly lockFile 622d23ca-gulp-babel-5-0-0 gulp-babel@^5.0.0
+311 verbose lock gulp-babel@^5.0.0 /Users/tejas/.npm/622d23ca-gulp-babel-5-0-0.lock
+312 verbose cache add [ 'gulp-debug@^2.0.1', null ]
+313 verbose cache add name=undefined spec="gulp-debug@^2.0.1" args=["gulp-debug@^2.0.1",null]
+314 verbose parsed url { pathname: 'gulp-debug@^2.0.1',
+314 verbose parsed url   path: 'gulp-debug@^2.0.1',
+314 verbose parsed url   href: 'gulp-debug@^2.0.1' }
+315 verbose cache add name="gulp-debug" spec="^2.0.1" args=["gulp-debug","^2.0.1"]
+316 verbose parsed url { pathname: '^2.0.1', path: '^2.0.1', href: '^2.0.1' }
+317 verbose addNamed [ 'gulp-debug', '^2.0.1' ]
+318 verbose addNamed [ null, null ]
+319 silly lockFile 571c6b7a-gulp-debug-2-0-1 gulp-debug@^2.0.1
+320 verbose lock gulp-debug@^2.0.1 /Users/tejas/.npm/571c6b7a-gulp-debug-2-0-1.lock
+321 verbose cache add [ 'gulp-eslint@^0.15.0', null ]
+322 verbose cache add name=undefined spec="gulp-eslint@^0.15.0" args=["gulp-eslint@^0.15.0",null]
+323 verbose parsed url { pathname: 'gulp-eslint@^0.15.0',
+323 verbose parsed url   path: 'gulp-eslint@^0.15.0',
+323 verbose parsed url   href: 'gulp-eslint@^0.15.0' }
+324 verbose cache add name="gulp-eslint" spec="^0.15.0" args=["gulp-eslint","^0.15.0"]
+325 verbose parsed url { pathname: '^0.15.0', path: '^0.15.0', href: '^0.15.0' }
+326 verbose addNamed [ 'gulp-eslint', '^0.15.0' ]
+327 verbose addNamed [ null, null ]
+328 silly lockFile ade29ac6-gulp-eslint-0-15-0 gulp-eslint@^0.15.0
+329 verbose lock gulp-eslint@^0.15.0 /Users/tejas/.npm/ade29ac6-gulp-eslint-0-15-0.lock
+330 verbose cache add [ 'gulp-file@^0.2.0', null ]
+331 verbose cache add name=undefined spec="gulp-file@^0.2.0" args=["gulp-file@^0.2.0",null]
+332 verbose parsed url { pathname: 'gulp-file@^0.2.0',
+332 verbose parsed url   path: 'gulp-file@^0.2.0',
+332 verbose parsed url   href: 'gulp-file@^0.2.0' }
+333 verbose cache add name="gulp-file" spec="^0.2.0" args=["gulp-file","^0.2.0"]
+334 verbose parsed url { pathname: '^0.2.0', path: '^0.2.0', href: '^0.2.0' }
+335 verbose addNamed [ 'gulp-file', '^0.2.0' ]
+336 verbose addNamed [ null, null ]
+337 silly lockFile 21c149cf-gulp-file-0-2-0 gulp-file@^0.2.0
+338 verbose lock gulp-file@^0.2.0 /Users/tejas/.npm/21c149cf-gulp-file-0-2-0.lock
+339 verbose cache add [ 'gulp-filter@^2.0.0', null ]
+340 verbose cache add name=undefined spec="gulp-filter@^2.0.0" args=["gulp-filter@^2.0.0",null]
+341 verbose parsed url { pathname: 'gulp-filter@^2.0.0',
+341 verbose parsed url   path: 'gulp-filter@^2.0.0',
+341 verbose parsed url   href: 'gulp-filter@^2.0.0' }
+342 verbose cache add name="gulp-filter" spec="^2.0.0" args=["gulp-filter","^2.0.0"]
+343 verbose parsed url { pathname: '^2.0.0', path: '^2.0.0', href: '^2.0.0' }
+344 verbose addNamed [ 'gulp-filter', '^2.0.0' ]
+345 verbose addNamed [ null, null ]
+346 silly lockFile f3226e69-gulp-filter-2-0-0 gulp-filter@^2.0.0
+347 verbose lock gulp-filter@^2.0.0 /Users/tejas/.npm/f3226e69-gulp-filter-2-0-0.lock
+348 verbose cache add [ 'gulp-istanbul@^0.10.0', null ]
+349 verbose cache add name=undefined spec="gulp-istanbul@^0.10.0" args=["gulp-istanbul@^0.10.0",null]
+350 verbose parsed url { pathname: 'gulp-istanbul@^0.10.0',
+350 verbose parsed url   path: 'gulp-istanbul@^0.10.0',
+350 verbose parsed url   href: 'gulp-istanbul@^0.10.0' }
+351 verbose cache add name="gulp-istanbul" spec="^0.10.0" args=["gulp-istanbul","^0.10.0"]
+352 verbose parsed url { pathname: '^0.10.0', path: '^0.10.0', href: '^0.10.0' }
+353 verbose addNamed [ 'gulp-istanbul', '^0.10.0' ]
+354 verbose addNamed [ null, null ]
+355 silly lockFile f5145170-gulp-istanbul-0-10-0 gulp-istanbul@^0.10.0
+356 verbose lock gulp-istanbul@^0.10.0 /Users/tejas/.npm/f5145170-gulp-istanbul-0-10-0.lock
+357 verbose cache add [ 'gulp-jscs@^1.4.0', null ]
+358 verbose cache add name=undefined spec="gulp-jscs@^1.4.0" args=["gulp-jscs@^1.4.0",null]
+359 verbose parsed url { pathname: 'gulp-jscs@^1.4.0',
+359 verbose parsed url   path: 'gulp-jscs@^1.4.0',
+359 verbose parsed url   href: 'gulp-jscs@^1.4.0' }
+360 verbose cache add name="gulp-jscs" spec="^1.4.0" args=["gulp-jscs","^1.4.0"]
+361 verbose parsed url { pathname: '^1.4.0', path: '^1.4.0', href: '^1.4.0' }
+362 verbose addNamed [ 'gulp-jscs', '^1.4.0' ]
+363 verbose addNamed [ null, null ]
+364 silly lockFile 45e97379-gulp-jscs-1-4-0 gulp-jscs@^1.4.0
+365 verbose lock gulp-jscs@^1.4.0 /Users/tejas/.npm/45e97379-gulp-jscs-1-4-0.lock
+366 verbose cache add [ 'gulp-livereload@^3.4.0', null ]
+367 verbose cache add name=undefined spec="gulp-livereload@^3.4.0" args=["gulp-livereload@^3.4.0",null]
+368 verbose parsed url { pathname: 'gulp-livereload@^3.4.0',
+368 verbose parsed url   path: 'gulp-livereload@^3.4.0',
+368 verbose parsed url   href: 'gulp-livereload@^3.4.0' }
+369 verbose cache add name="gulp-livereload" spec="^3.4.0" args=["gulp-livereload","^3.4.0"]
+370 verbose parsed url { pathname: '^3.4.0', path: '^3.4.0', href: '^3.4.0' }
+371 verbose addNamed [ 'gulp-livereload', '^3.4.0' ]
+372 verbose addNamed [ null, null ]
+373 silly lockFile 494f242e-gulp-livereload-3-4-0 gulp-livereload@^3.4.0
+374 verbose lock gulp-livereload@^3.4.0 /Users/tejas/.npm/494f242e-gulp-livereload-3-4-0.lock
+375 verbose cache add [ 'gulp-load-plugins@^1.0.0-rc.1', null ]
+376 verbose cache add name=undefined spec="gulp-load-plugins@^1.0.0-rc.1" args=["gulp-load-plugins@^1.0.0-rc.1",null]
+377 verbose parsed url { pathname: 'gulp-load-plugins@^1.0.0-rc.1',
+377 verbose parsed url   path: 'gulp-load-plugins@^1.0.0-rc.1',
+377 verbose parsed url   href: 'gulp-load-plugins@^1.0.0-rc.1' }
+378 verbose cache add name="gulp-load-plugins" spec="^1.0.0-rc.1" args=["gulp-load-plugins","^1.0.0-rc.1"]
+379 verbose parsed url { pathname: '^1.0.0-rc.1',
+379 verbose parsed url   path: '^1.0.0-rc.1',
+379 verbose parsed url   href: '^1.0.0-rc.1' }
+380 verbose addNamed [ 'gulp-load-plugins', '^1.0.0-rc.1' ]
+381 verbose addNamed [ null, null ]
+382 silly lockFile 09b743c1-gulp-load-plugins-1-0-0-rc-1 gulp-load-plugins@^1.0.0-rc.1
+383 verbose lock gulp-load-plugins@^1.0.0-rc.1 /Users/tejas/.npm/09b743c1-gulp-load-plugins-1-0-0-rc-1.lock
+384 verbose cache add [ 'gulp-mocha@^2.0.0', null ]
+385 verbose cache add name=undefined spec="gulp-mocha@^2.0.0" args=["gulp-mocha@^2.0.0",null]
+386 verbose parsed url { pathname: 'gulp-mocha@^2.0.0',
+386 verbose parsed url   path: 'gulp-mocha@^2.0.0',
+386 verbose parsed url   href: 'gulp-mocha@^2.0.0' }
+387 verbose cache add name="gulp-mocha" spec="^2.0.0" args=["gulp-mocha","^2.0.0"]
+388 verbose parsed url { pathname: '^2.0.0', path: '^2.0.0', href: '^2.0.0' }
+389 verbose addNamed [ 'gulp-mocha', '^2.0.0' ]
+390 verbose addNamed [ null, null ]
+391 silly lockFile a8a36098-gulp-mocha-2-0-0 gulp-mocha@^2.0.0
+392 verbose lock gulp-mocha@^2.0.0 /Users/tejas/.npm/a8a36098-gulp-mocha-2-0-0.lock
+393 verbose cache add [ 'gulp-mocha-phantomjs@^0.8.0', null ]
+394 verbose cache add name=undefined spec="gulp-mocha-phantomjs@^0.8.0" args=["gulp-mocha-phantomjs@^0.8.0",null]
+395 verbose parsed url { pathname: 'gulp-mocha-phantomjs@^0.8.0',
+395 verbose parsed url   path: 'gulp-mocha-phantomjs@^0.8.0',
+395 verbose parsed url   href: 'gulp-mocha-phantomjs@^0.8.0' }
+396 verbose cache add name="gulp-mocha-phantomjs" spec="^0.8.0" args=["gulp-mocha-phantomjs","^0.8.0"]
+397 verbose parsed url { pathname: '^0.8.0', path: '^0.8.0', href: '^0.8.0' }
+398 verbose addNamed [ 'gulp-mocha-phantomjs', '^0.8.0' ]
+399 verbose addNamed [ null, null ]
+400 silly lockFile b5c9deed-gulp-mocha-phantomjs-0-8-0 gulp-mocha-phantomjs@^0.8.0
+401 verbose lock gulp-mocha-phantomjs@^0.8.0 /Users/tejas/.npm/b5c9deed-gulp-mocha-phantomjs-0-8-0.lock
+402 verbose cache add [ 'gulp-notify@^2.1.0', null ]
+403 verbose cache add name=undefined spec="gulp-notify@^2.1.0" args=["gulp-notify@^2.1.0",null]
+404 verbose parsed url { pathname: 'gulp-notify@^2.1.0',
+404 verbose parsed url   path: 'gulp-notify@^2.1.0',
+404 verbose parsed url   href: 'gulp-notify@^2.1.0' }
+405 verbose cache add name="gulp-notify" spec="^2.1.0" args=["gulp-notify","^2.1.0"]
+406 verbose parsed url { pathname: '^2.1.0', path: '^2.1.0', href: '^2.1.0' }
+407 verbose addNamed [ 'gulp-notify', '^2.1.0' ]
+408 verbose addNamed [ null, null ]
+409 silly lockFile 06ce4f1d-gulp-notify-2-1-0 gulp-notify@^2.1.0
+410 verbose lock gulp-notify@^2.1.0 /Users/tejas/.npm/06ce4f1d-gulp-notify-2-1-0.lock
+411 verbose cache add [ 'gulp-plumber@^1.0.1', null ]
+412 verbose cache add name=undefined spec="gulp-plumber@^1.0.1" args=["gulp-plumber@^1.0.1",null]
+413 verbose parsed url { pathname: 'gulp-plumber@^1.0.1',
+413 verbose parsed url   path: 'gulp-plumber@^1.0.1',
+413 verbose parsed url   href: 'gulp-plumber@^1.0.1' }
+414 verbose cache add name="gulp-plumber" spec="^1.0.1" args=["gulp-plumber","^1.0.1"]
+415 verbose parsed url { pathname: '^1.0.1', path: '^1.0.1', href: '^1.0.1' }
+416 verbose addNamed [ 'gulp-plumber', '^1.0.1' ]
+417 verbose addNamed [ null, null ]
+418 silly lockFile b676d428-gulp-plumber-1-0-1 gulp-plumber@^1.0.1
+419 verbose lock gulp-plumber@^1.0.1 /Users/tejas/.npm/b676d428-gulp-plumber-1-0-1.lock
+420 verbose cache add [ 'gulp-rename@^1.2.0', null ]
+421 verbose cache add name=undefined spec="gulp-rename@^1.2.0" args=["gulp-rename@^1.2.0",null]
+422 verbose parsed url { pathname: 'gulp-rename@^1.2.0',
+422 verbose parsed url   path: 'gulp-rename@^1.2.0',
+422 verbose parsed url   href: 'gulp-rename@^1.2.0' }
+423 verbose cache add name="gulp-rename" spec="^1.2.0" args=["gulp-rename","^1.2.0"]
+424 verbose parsed url { pathname: '^1.2.0', path: '^1.2.0', href: '^1.2.0' }
+425 verbose addNamed [ 'gulp-rename', '^1.2.0' ]
+426 verbose addNamed [ null, null ]
+427 silly lockFile 31cef36d-gulp-rename-1-2-0 gulp-rename@^1.2.0
+428 verbose lock gulp-rename@^1.2.0 /Users/tejas/.npm/31cef36d-gulp-rename-1-2-0.lock
+429 verbose cache add [ 'gulp-sourcemaps@^1.3.0', null ]
+430 verbose cache add name=undefined spec="gulp-sourcemaps@^1.3.0" args=["gulp-sourcemaps@^1.3.0",null]
+431 verbose parsed url { pathname: 'gulp-sourcemaps@^1.3.0',
+431 verbose parsed url   path: 'gulp-sourcemaps@^1.3.0',
+431 verbose parsed url   href: 'gulp-sourcemaps@^1.3.0' }
+432 verbose cache add name="gulp-sourcemaps" spec="^1.3.0" args=["gulp-sourcemaps","^1.3.0"]
+433 verbose parsed url { pathname: '^1.3.0', path: '^1.3.0', href: '^1.3.0' }
+434 verbose addNamed [ 'gulp-sourcemaps', '^1.3.0' ]
+435 verbose addNamed [ null, null ]
+436 silly lockFile be840bb3-gulp-sourcemaps-1-3-0 gulp-sourcemaps@^1.3.0
+437 verbose lock gulp-sourcemaps@^1.3.0 /Users/tejas/.npm/be840bb3-gulp-sourcemaps-1-3-0.lock
+438 verbose cache add [ 'gulp-uglify@^1.2.0', null ]
+439 verbose cache add name=undefined spec="gulp-uglify@^1.2.0" args=["gulp-uglify@^1.2.0",null]
+440 verbose parsed url { pathname: 'gulp-uglify@^1.2.0',
+440 verbose parsed url   path: 'gulp-uglify@^1.2.0',
+440 verbose parsed url   href: 'gulp-uglify@^1.2.0' }
+441 verbose cache add name="gulp-uglify" spec="^1.2.0" args=["gulp-uglify","^1.2.0"]
+442 verbose parsed url { pathname: '^1.2.0', path: '^1.2.0', href: '^1.2.0' }
+443 verbose addNamed [ 'gulp-uglify', '^1.2.0' ]
+444 verbose addNamed [ null, null ]
+445 silly lockFile c20ad875-gulp-uglify-1-2-0 gulp-uglify@^1.2.0
+446 verbose lock gulp-uglify@^1.2.0 /Users/tejas/.npm/c20ad875-gulp-uglify-1-2-0.lock
+447 info addNameTag [ 'humble-localstorage', '^1.4.1' ]
+448 verbose addRemoteGit [ 'git@bitbucket.org:kinveyjs/http-angular.git', 'master' ]
+449 info addNameTag [ 'indexeddbshim', '^2.0.4' ]
+450 verbose addRemoteGit [ 'git@bitbucket.org:kinveyjs/http-node.git', 'master' ]
+451 verbose addRemoteGit [ 'git@bitbucket.org:kinveyjs/http-xhr.git', 'master' ]
+452 verbose addRemoteGit [ 'git@bitbucket.org:kinveyjs/rack.git', 'master' ]
+453 info addNameTag [ 'lodash', '^3.10.0' ]
+454 info addNameTag [ 'loglevel', '^1.3.1' ]
+455 info addNameTag [ 'node-cache', '^3.0.0' ]
+456 info addNameTag [ 'url-pattern', '^0.9.0' ]
+457 info addNameTag [ 'babel', '^5.0.0' ]
+458 info addNameTag [ 'babel-core', '^5.2.17' ]
+459 info addNameTag [ 'babel-eslint', '^3.1.9' ]
+460 info addNameTag [ 'babel-runtime', '^5.7.0' ]
+461 info addNameTag [ 'babelify', '^6.0.0' ]
+462 info addNameTag [ 'browser-sync', '^2.7.13' ]
+463 info addNameTag [ 'browserify', '^11.0.0' ]
+464 info addNameTag [ 'chai-as-promised', '^5.1.0' ]
+465 info addNameTag [ 'chai', '^3.1.0' ]
+466 info addNameTag [ 'del', '^1.1.1' ]
+467 info addNameTag [ 'eslint', '^1.0.0-rc-1' ]
+468 info addNameTag [ 'eslint-plugin-react', '^2.7.1' ]
+469 info addNameTag [ 'exorcist', '^0.4.0' ]
+470 info addNameTag [ 'glob', '^4.0.5' ]
+471 info addNameTag [ 'gulp', '^3.8.10' ]
+472 info addNameTag [ 'gulp-babel', '^5.0.0' ]
+473 info addNameTag [ 'gulp-debug', '^2.0.1' ]
+474 info addNameTag [ 'gulp-eslint', '^0.15.0' ]
+475 info addNameTag [ 'gulp-file', '^0.2.0' ]
+476 info addNameTag [ 'gulp-filter', '^2.0.0' ]
+477 info addNameTag [ 'gulp-istanbul', '^0.10.0' ]
+478 info addNameTag [ 'gulp-jscs', '^1.4.0' ]
+479 info addNameTag [ 'gulp-livereload', '^3.4.0' ]
+480 info addNameTag [ 'gulp-mocha-phantomjs', '^0.8.0' ]
+481 info addNameTag [ 'gulp-load-plugins', '^1.0.0-rc.1' ]
+482 info addNameTag [ 'gulp-mocha', '^2.0.0' ]
+483 info addNameTag [ 'gulp-plumber', '^1.0.1' ]
+484 info addNameTag [ 'gulp-notify', '^2.1.0' ]
+485 info addNameTag [ 'gulp-rename', '^1.2.0' ]
+486 verbose url raw humble-localstorage
+487 verbose url resolving [ 'https://registry.npmjs.org/', './humble-localstorage' ]
+488 verbose url resolved https://registry.npmjs.org/humble-localstorage
+489 info trying registry request attempt 1 at 11:40:45
+490 http GET https://registry.npmjs.org/humble-localstorage
+491 verbose url raw indexeddbshim
+492 verbose url resolving [ 'https://registry.npmjs.org/', './indexeddbshim' ]
+493 verbose url resolved https://registry.npmjs.org/indexeddbshim
+494 info trying registry request attempt 1 at 11:40:45
+495 http GET https://registry.npmjs.org/indexeddbshim
+496 verbose url raw lodash
+497 verbose url resolving [ 'https://registry.npmjs.org/', './lodash' ]
+498 verbose url resolved https://registry.npmjs.org/lodash
+499 info trying registry request attempt 1 at 11:40:45
+500 http GET https://registry.npmjs.org/lodash
+501 verbose url raw loglevel
+502 verbose url resolving [ 'https://registry.npmjs.org/', './loglevel' ]
+503 verbose url resolved https://registry.npmjs.org/loglevel
+504 info trying registry request attempt 1 at 11:40:45
+505 http GET https://registry.npmjs.org/loglevel
+506 verbose url raw node-cache
+507 verbose url resolving [ 'https://registry.npmjs.org/', './node-cache' ]
+508 verbose url resolved https://registry.npmjs.org/node-cache
+509 info trying registry request attempt 1 at 11:40:45
+510 http GET https://registry.npmjs.org/node-cache
+511 verbose url raw url-pattern
+512 verbose url resolving [ 'https://registry.npmjs.org/', './url-pattern' ]
+513 verbose url resolved https://registry.npmjs.org/url-pattern
+514 info trying registry request attempt 1 at 11:40:45
+515 http GET https://registry.npmjs.org/url-pattern
+516 verbose url raw babel
+517 verbose url resolving [ 'https://registry.npmjs.org/', './babel' ]
+518 verbose url resolved https://registry.npmjs.org/babel
+519 info trying registry request attempt 1 at 11:40:45
+520 http GET https://registry.npmjs.org/babel
+521 verbose url raw babel-core
+522 verbose url resolving [ 'https://registry.npmjs.org/', './babel-core' ]
+523 verbose url resolved https://registry.npmjs.org/babel-core
+524 info trying registry request attempt 1 at 11:40:45
+525 http GET https://registry.npmjs.org/babel-core
+526 verbose url raw babel-eslint
+527 verbose url resolving [ 'https://registry.npmjs.org/', './babel-eslint' ]
+528 verbose url resolved https://registry.npmjs.org/babel-eslint
+529 info trying registry request attempt 1 at 11:40:45
+530 http GET https://registry.npmjs.org/babel-eslint
+531 verbose url raw babel-runtime
+532 verbose url resolving [ 'https://registry.npmjs.org/', './babel-runtime' ]
+533 verbose url resolved https://registry.npmjs.org/babel-runtime
+534 info trying registry request attempt 1 at 11:40:45
+535 http GET https://registry.npmjs.org/babel-runtime
+536 verbose url raw babelify
+537 verbose url resolving [ 'https://registry.npmjs.org/', './babelify' ]
+538 verbose url resolved https://registry.npmjs.org/babelify
+539 info trying registry request attempt 1 at 11:40:45
+540 http GET https://registry.npmjs.org/babelify
+541 verbose url raw browser-sync
+542 verbose url resolving [ 'https://registry.npmjs.org/', './browser-sync' ]
+543 verbose url resolved https://registry.npmjs.org/browser-sync
+544 info trying registry request attempt 1 at 11:40:45
+545 http GET https://registry.npmjs.org/browser-sync
+546 info addNameTag [ 'gulp-sourcemaps', '^1.3.0' ]
+547 info addNameTag [ 'gulp-uglify', '^1.2.0' ]
+548 verbose url raw browserify
+549 verbose url resolving [ 'https://registry.npmjs.org/', './browserify' ]
+550 verbose url resolved https://registry.npmjs.org/browserify
+551 info trying registry request attempt 1 at 11:40:45
+552 http GET https://registry.npmjs.org/browserify
+553 verbose url raw chai-as-promised
+554 verbose url resolving [ 'https://registry.npmjs.org/', './chai-as-promised' ]
+555 verbose url resolved https://registry.npmjs.org/chai-as-promised
+556 info trying registry request attempt 1 at 11:40:45
+557 http GET https://registry.npmjs.org/chai-as-promised
+558 verbose url raw chai
+559 verbose url resolving [ 'https://registry.npmjs.org/', './chai' ]
+560 verbose url resolved https://registry.npmjs.org/chai
+561 info trying registry request attempt 1 at 11:40:45
+562 http GET https://registry.npmjs.org/chai
+563 verbose url raw del
+564 verbose url resolving [ 'https://registry.npmjs.org/', './del' ]
+565 verbose url resolved https://registry.npmjs.org/del
+566 info trying registry request attempt 1 at 11:40:45
+567 http GET https://registry.npmjs.org/del
+568 verbose url raw eslint
+569 verbose url resolving [ 'https://registry.npmjs.org/', './eslint' ]
+570 verbose url resolved https://registry.npmjs.org/eslint
+571 info trying registry request attempt 1 at 11:40:45
+572 http GET https://registry.npmjs.org/eslint
+573 verbose url raw eslint-plugin-react
+574 verbose url resolving [ 'https://registry.npmjs.org/', './eslint-plugin-react' ]
+575 verbose url resolved https://registry.npmjs.org/eslint-plugin-react
+576 info trying registry request attempt 1 at 11:40:45
+577 http GET https://registry.npmjs.org/eslint-plugin-react
+578 verbose url raw exorcist
+579 verbose url resolving [ 'https://registry.npmjs.org/', './exorcist' ]
+580 verbose url resolved https://registry.npmjs.org/exorcist
+581 info trying registry request attempt 1 at 11:40:45
+582 http GET https://registry.npmjs.org/exorcist
+583 verbose url raw glob
+584 verbose url resolving [ 'https://registry.npmjs.org/', './glob' ]
+585 verbose url resolved https://registry.npmjs.org/glob
+586 info trying registry request attempt 1 at 11:40:45
+587 http GET https://registry.npmjs.org/glob
+588 verbose url raw gulp
+589 verbose url resolving [ 'https://registry.npmjs.org/', './gulp' ]
+590 verbose url resolved https://registry.npmjs.org/gulp
+591 info trying registry request attempt 1 at 11:40:45
+592 http GET https://registry.npmjs.org/gulp
+593 verbose url raw gulp-babel
+594 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-babel' ]
+595 verbose url resolved https://registry.npmjs.org/gulp-babel
+596 info trying registry request attempt 1 at 11:40:45
+597 http GET https://registry.npmjs.org/gulp-babel
+598 verbose url raw gulp-debug
+599 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-debug' ]
+600 verbose url resolved https://registry.npmjs.org/gulp-debug
+601 info trying registry request attempt 1 at 11:40:45
+602 http GET https://registry.npmjs.org/gulp-debug
+603 verbose url raw gulp-eslint
+604 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-eslint' ]
+605 verbose url resolved https://registry.npmjs.org/gulp-eslint
+606 info trying registry request attempt 1 at 11:40:45
+607 http GET https://registry.npmjs.org/gulp-eslint
+608 verbose url raw gulp-file
+609 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-file' ]
+610 verbose url resolved https://registry.npmjs.org/gulp-file
+611 info trying registry request attempt 1 at 11:40:45
+612 http GET https://registry.npmjs.org/gulp-file
+613 verbose url raw gulp-filter
+614 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-filter' ]
+615 verbose url resolved https://registry.npmjs.org/gulp-filter
+616 info trying registry request attempt 1 at 11:40:45
+617 http GET https://registry.npmjs.org/gulp-filter
+618 verbose url raw gulp-istanbul
+619 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-istanbul' ]
+620 verbose url resolved https://registry.npmjs.org/gulp-istanbul
+621 info trying registry request attempt 1 at 11:40:45
+622 http GET https://registry.npmjs.org/gulp-istanbul
+623 verbose url raw gulp-jscs
+624 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-jscs' ]
+625 verbose url resolved https://registry.npmjs.org/gulp-jscs
+626 info trying registry request attempt 1 at 11:40:45
+627 http GET https://registry.npmjs.org/gulp-jscs
+628 verbose url raw gulp-livereload
+629 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-livereload' ]
+630 verbose url resolved https://registry.npmjs.org/gulp-livereload
+631 info trying registry request attempt 1 at 11:40:45
+632 http GET https://registry.npmjs.org/gulp-livereload
+633 verbose url raw gulp-mocha-phantomjs
+634 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-mocha-phantomjs' ]
+635 verbose url resolved https://registry.npmjs.org/gulp-mocha-phantomjs
+636 info trying registry request attempt 1 at 11:40:45
+637 http GET https://registry.npmjs.org/gulp-mocha-phantomjs
+638 verbose url raw gulp-load-plugins
+639 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-load-plugins' ]
+640 verbose url resolved https://registry.npmjs.org/gulp-load-plugins
+641 info trying registry request attempt 1 at 11:40:45
+642 http GET https://registry.npmjs.org/gulp-load-plugins
+643 verbose url raw gulp-mocha
+644 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-mocha' ]
+645 verbose url resolved https://registry.npmjs.org/gulp-mocha
+646 info trying registry request attempt 1 at 11:40:45
+647 http GET https://registry.npmjs.org/gulp-mocha
+648 verbose url raw gulp-plumber
+649 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-plumber' ]
+650 verbose url resolved https://registry.npmjs.org/gulp-plumber
+651 info trying registry request attempt 1 at 11:40:45
+652 http GET https://registry.npmjs.org/gulp-plumber
+653 verbose url raw gulp-notify
+654 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-notify' ]
+655 verbose url resolved https://registry.npmjs.org/gulp-notify
+656 info trying registry request attempt 1 at 11:40:45
+657 http GET https://registry.npmjs.org/gulp-notify
+658 verbose url raw gulp-rename
+659 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-rename' ]
+660 verbose url resolved https://registry.npmjs.org/gulp-rename
+661 info trying registry request attempt 1 at 11:40:45
+662 http GET https://registry.npmjs.org/gulp-rename
+663 verbose url raw gulp-sourcemaps
+664 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-sourcemaps' ]
+665 verbose url resolved https://registry.npmjs.org/gulp-sourcemaps
+666 info trying registry request attempt 1 at 11:40:45
+667 http GET https://registry.npmjs.org/gulp-sourcemaps
+668 verbose url raw gulp-uglify
+669 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-uglify' ]
+670 verbose url resolved https://registry.npmjs.org/gulp-uglify
+671 info trying registry request attempt 1 at 11:40:45
+672 http GET https://registry.npmjs.org/gulp-uglify
+673 verbose cache add [ 'gulp-util@^3.0.6', null ]
+674 verbose cache add name=undefined spec="gulp-util@^3.0.6" args=["gulp-util@^3.0.6",null]
+675 verbose parsed url { pathname: 'gulp-util@^3.0.6',
+675 verbose parsed url   path: 'gulp-util@^3.0.6',
+675 verbose parsed url   href: 'gulp-util@^3.0.6' }
+676 verbose cache add name="gulp-util" spec="^3.0.6" args=["gulp-util","^3.0.6"]
+677 verbose parsed url { pathname: '^3.0.6', path: '^3.0.6', href: '^3.0.6' }
+678 verbose addNamed [ 'gulp-util', '^3.0.6' ]
+679 verbose addNamed [ null, null ]
+680 silly lockFile e993f8f9-gulp-util-3-0-6 gulp-util@^3.0.6
+681 verbose lock gulp-util@^3.0.6 /Users/tejas/.npm/e993f8f9-gulp-util-3-0-6.lock
+682 verbose cache add [ 'isparta@^3.0.3', null ]
+683 verbose cache add name=undefined spec="isparta@^3.0.3" args=["isparta@^3.0.3",null]
+684 verbose parsed url { pathname: 'isparta@^3.0.3',
+684 verbose parsed url   path: 'isparta@^3.0.3',
+684 verbose parsed url   href: 'isparta@^3.0.3' }
+685 verbose cache add name="isparta" spec="^3.0.3" args=["isparta","^3.0.3"]
+686 verbose parsed url { pathname: '^3.0.3', path: '^3.0.3', href: '^3.0.3' }
+687 verbose addNamed [ 'isparta', '^3.0.3' ]
+688 verbose addNamed [ null, null ]
+689 silly lockFile 070a008b-isparta-3-0-3 isparta@^3.0.3
+690 verbose lock isparta@^3.0.3 /Users/tejas/.npm/070a008b-isparta-3-0-3.lock
+691 verbose cache add [ 'mocha@^2.1.0', null ]
+692 verbose cache add name=undefined spec="mocha@^2.1.0" args=["mocha@^2.1.0",null]
+693 verbose parsed url { pathname: 'mocha@^2.1.0',
+693 verbose parsed url   path: 'mocha@^2.1.0',
+693 verbose parsed url   href: 'mocha@^2.1.0' }
+694 verbose cache add name="mocha" spec="^2.1.0" args=["mocha","^2.1.0"]
+695 verbose parsed url { pathname: '^2.1.0', path: '^2.1.0', href: '^2.1.0' }
+696 verbose addNamed [ 'mocha', '^2.1.0' ]
+697 verbose addNamed [ null, null ]
+698 silly lockFile b4c3a29c-mocha-2-1-0 mocha@^2.1.0
+699 verbose lock mocha@^2.1.0 /Users/tejas/.npm/b4c3a29c-mocha-2-1-0.lock
+700 verbose cache add [ 'mocha-phantomjs@^3.6.0', null ]
+701 verbose cache add name=undefined spec="mocha-phantomjs@^3.6.0" args=["mocha-phantomjs@^3.6.0",null]
+702 verbose parsed url { pathname: 'mocha-phantomjs@^3.6.0',
+702 verbose parsed url   path: 'mocha-phantomjs@^3.6.0',
+702 verbose parsed url   href: 'mocha-phantomjs@^3.6.0' }
+703 verbose cache add name="mocha-phantomjs" spec="^3.6.0" args=["mocha-phantomjs","^3.6.0"]
+704 verbose parsed url { pathname: '^3.6.0', path: '^3.6.0', href: '^3.6.0' }
+705 verbose addNamed [ 'mocha-phantomjs', '^3.6.0' ]
+706 verbose addNamed [ null, null ]
+707 silly lockFile a6b91769-mocha-phantomjs-3-6-0 mocha-phantomjs@^3.6.0
+708 verbose lock mocha-phantomjs@^3.6.0 /Users/tejas/.npm/a6b91769-mocha-phantomjs-3-6-0.lock
+709 verbose cache add [ 'nock@^2.7.0', null ]
+710 verbose cache add name=undefined spec="nock@^2.7.0" args=["nock@^2.7.0",null]
+711 verbose parsed url { pathname: 'nock@^2.7.0',
+711 verbose parsed url   path: 'nock@^2.7.0',
+711 verbose parsed url   href: 'nock@^2.7.0' }
+712 verbose cache add name="nock" spec="^2.7.0" args=["nock","^2.7.0"]
+713 verbose parsed url { pathname: '^2.7.0', path: '^2.7.0', href: '^2.7.0' }
+714 verbose addNamed [ 'nock', '^2.7.0' ]
+715 verbose addNamed [ null, null ]
+716 silly lockFile 16e41947-nock-2-7-0 nock@^2.7.0
+717 verbose lock nock@^2.7.0 /Users/tejas/.npm/16e41947-nock-2-7-0.lock
+718 verbose cache add [ 'phantomjs@1.9.1 - 1.9.7-15', null ]
+719 verbose cache add name=undefined spec="phantomjs@1.9.1 - 1.9.7-15" args=["phantomjs@1.9.1 - 1.9.7-15",null]
+720 verbose parsed url { pathname: 'phantomjs@1.9.1%20-%201.9.7-15',
+720 verbose parsed url   path: 'phantomjs@1.9.1%20-%201.9.7-15',
+720 verbose parsed url   href: 'phantomjs@1.9.1%20-%201.9.7-15' }
+721 verbose cache add name="phantomjs" spec="1.9.1 - 1.9.7-15" args=["phantomjs","1.9.1 - 1.9.7-15"]
+722 verbose parsed url { pathname: '1.9.1%20-%201.9.7-15',
+722 verbose parsed url   path: '1.9.1%20-%201.9.7-15',
+722 verbose parsed url   href: '1.9.1%20-%201.9.7-15' }
+723 verbose addNamed [ 'phantomjs', '1.9.1 - 1.9.7-15' ]
+724 verbose addNamed [ null, '>=1.9.1 <=1.9.7-15' ]
+725 silly lockFile f1fb66a2-phantomjs-1-9-1-1-9-7-15 phantomjs@1.9.1 - 1.9.7-15
+726 verbose lock phantomjs@1.9.1 - 1.9.7-15 /Users/tejas/.npm/f1fb66a2-phantomjs-1-9-1-1-9-7-15.lock
+727 verbose cache add [ 'run-sequence@^1.0.2', null ]
+728 verbose cache add name=undefined spec="run-sequence@^1.0.2" args=["run-sequence@^1.0.2",null]
+729 verbose parsed url { pathname: 'run-sequence@^1.0.2',
+729 verbose parsed url   path: 'run-sequence@^1.0.2',
+729 verbose parsed url   href: 'run-sequence@^1.0.2' }
+730 verbose cache add name="run-sequence" spec="^1.0.2" args=["run-sequence","^1.0.2"]
+731 verbose parsed url { pathname: '^1.0.2', path: '^1.0.2', href: '^1.0.2' }
+732 verbose addNamed [ 'run-sequence', '^1.0.2' ]
+733 verbose addNamed [ null, null ]
+734 silly lockFile 95fa9867-run-sequence-1-0-2 run-sequence@^1.0.2
+735 verbose lock run-sequence@^1.0.2 /Users/tejas/.npm/95fa9867-run-sequence-1-0-2.lock
+736 verbose cache add [ 'sinon@^1.12.2', null ]
+737 verbose cache add name=undefined spec="sinon@^1.12.2" args=["sinon@^1.12.2",null]
+738 verbose parsed url { pathname: 'sinon@^1.12.2',
+738 verbose parsed url   path: 'sinon@^1.12.2',
+738 verbose parsed url   href: 'sinon@^1.12.2' }
+739 verbose cache add name="sinon" spec="^1.12.2" args=["sinon","^1.12.2"]
+740 verbose parsed url { pathname: '^1.12.2', path: '^1.12.2', href: '^1.12.2' }
+741 verbose addNamed [ 'sinon', '^1.12.2' ]
+742 verbose addNamed [ null, null ]
+743 silly lockFile 8d682f94-sinon-1-12-2 sinon@^1.12.2
+744 verbose lock sinon@^1.12.2 /Users/tejas/.npm/8d682f94-sinon-1-12-2.lock
+745 verbose cache add [ 'sinon-chai@^2.7.0', null ]
+746 verbose cache add name=undefined spec="sinon-chai@^2.7.0" args=["sinon-chai@^2.7.0",null]
+747 verbose parsed url { pathname: 'sinon-chai@^2.7.0',
+747 verbose parsed url   path: 'sinon-chai@^2.7.0',
+747 verbose parsed url   href: 'sinon-chai@^2.7.0' }
+748 verbose cache add name="sinon-chai" spec="^2.7.0" args=["sinon-chai","^2.7.0"]
+749 verbose parsed url { pathname: '^2.7.0', path: '^2.7.0', href: '^2.7.0' }
+750 verbose addNamed [ 'sinon-chai', '^2.7.0' ]
+751 verbose addNamed [ null, null ]
+752 silly lockFile 8744b6f3-sinon-chai-2-7-0 sinon-chai@^2.7.0
+753 verbose lock sinon-chai@^2.7.0 /Users/tejas/.npm/8744b6f3-sinon-chai-2-7-0.lock
+754 verbose cache add [ 'uid@0.0.2', null ]
+755 verbose cache add name=undefined spec="uid@0.0.2" args=["uid@0.0.2",null]
+756 verbose parsed url { pathname: 'uid@0.0.2', path: 'uid@0.0.2', href: 'uid@0.0.2' }
+757 verbose cache add name="uid" spec="0.0.2" args=["uid","0.0.2"]
+758 verbose parsed url { pathname: '0.0.2', path: '0.0.2', href: '0.0.2' }
+759 verbose addNamed [ 'uid', '0.0.2' ]
+760 verbose addNamed [ '0.0.2', '0.0.2' ]
+761 silly lockFile 09326036-uid-0-0-2 uid@0.0.2
+762 verbose lock uid@0.0.2 /Users/tejas/.npm/09326036-uid-0-0-2.lock
+763 verbose cache add [ 'vinyl-buffer@^1.0.0', null ]
+764 verbose cache add name=undefined spec="vinyl-buffer@^1.0.0" args=["vinyl-buffer@^1.0.0",null]
+765 verbose parsed url { pathname: 'vinyl-buffer@^1.0.0',
+765 verbose parsed url   path: 'vinyl-buffer@^1.0.0',
+765 verbose parsed url   href: 'vinyl-buffer@^1.0.0' }
+766 verbose cache add name="vinyl-buffer" spec="^1.0.0" args=["vinyl-buffer","^1.0.0"]
+767 verbose parsed url { pathname: '^1.0.0', path: '^1.0.0', href: '^1.0.0' }
+768 verbose addNamed [ 'vinyl-buffer', '^1.0.0' ]
+769 verbose addNamed [ null, null ]
+770 silly lockFile 55630f45-vinyl-buffer-1-0-0 vinyl-buffer@^1.0.0
+771 verbose lock vinyl-buffer@^1.0.0 /Users/tejas/.npm/55630f45-vinyl-buffer-1-0-0.lock
+772 verbose cache add [ 'vinyl-source-stream@^1.0.0', null ]
+773 verbose cache add name=undefined spec="vinyl-source-stream@^1.0.0" args=["vinyl-source-stream@^1.0.0",null]
+774 verbose parsed url { pathname: 'vinyl-source-stream@^1.0.0',
+774 verbose parsed url   path: 'vinyl-source-stream@^1.0.0',
+774 verbose parsed url   href: 'vinyl-source-stream@^1.0.0' }
+775 verbose cache add name="vinyl-source-stream" spec="^1.0.0" args=["vinyl-source-stream","^1.0.0"]
+776 verbose parsed url { pathname: '^1.0.0', path: '^1.0.0', href: '^1.0.0' }
+777 verbose addNamed [ 'vinyl-source-stream', '^1.0.0' ]
+778 verbose addNamed [ null, null ]
+779 silly lockFile c72c2afe-vinyl-source-stream-1-0-0 vinyl-source-stream@^1.0.0
+780 verbose lock vinyl-source-stream@^1.0.0 /Users/tejas/.npm/c72c2afe-vinyl-source-stream-1-0-0.lock
+781 verbose cache add [ 'vinyl-transform@^1.0.0', null ]
+782 verbose cache add name=undefined spec="vinyl-transform@^1.0.0" args=["vinyl-transform@^1.0.0",null]
+783 verbose parsed url { pathname: 'vinyl-transform@^1.0.0',
+783 verbose parsed url   path: 'vinyl-transform@^1.0.0',
+783 verbose parsed url   href: 'vinyl-transform@^1.0.0' }
+784 verbose cache add name="vinyl-transform" spec="^1.0.0" args=["vinyl-transform","^1.0.0"]
+785 verbose parsed url { pathname: '^1.0.0', path: '^1.0.0', href: '^1.0.0' }
+786 verbose addNamed [ 'vinyl-transform', '^1.0.0' ]
+787 verbose addNamed [ null, null ]
+788 silly lockFile 6539c91e-vinyl-transform-1-0-0 vinyl-transform@^1.0.0
+789 verbose lock vinyl-transform@^1.0.0 /Users/tejas/.npm/6539c91e-vinyl-transform-1-0-0.lock
+790 verbose cache add [ 'wrench@^1.5.8', null ]
+791 verbose cache add name=undefined spec="wrench@^1.5.8" args=["wrench@^1.5.8",null]
+792 verbose parsed url { pathname: 'wrench@^1.5.8',
+792 verbose parsed url   path: 'wrench@^1.5.8',
+792 verbose parsed url   href: 'wrench@^1.5.8' }
+793 verbose cache add name="wrench" spec="^1.5.8" args=["wrench","^1.5.8"]
+794 verbose parsed url { pathname: '^1.5.8', path: '^1.5.8', href: '^1.5.8' }
+795 verbose addNamed [ 'wrench', '^1.5.8' ]
+796 verbose addNamed [ null, null ]
+797 silly lockFile ea9b45f2-wrench-1-5-8 wrench@^1.5.8
+798 verbose lock wrench@^1.5.8 /Users/tejas/.npm/ea9b45f2-wrench-1-5-8.lock
+799 verbose cache add [ 'yargs@^3.15.0', null ]
+800 verbose cache add name=undefined spec="yargs@^3.15.0" args=["yargs@^3.15.0",null]
+801 verbose parsed url { pathname: 'yargs@^3.15.0',
+801 verbose parsed url   path: 'yargs@^3.15.0',
+801 verbose parsed url   href: 'yargs@^3.15.0' }
+802 verbose cache add name="yargs" spec="^3.15.0" args=["yargs","^3.15.0"]
+803 verbose parsed url { pathname: '^3.15.0', path: '^3.15.0', href: '^3.15.0' }
+804 verbose addNamed [ 'yargs', '^3.15.0' ]
+805 verbose addNamed [ null, null ]
+806 silly lockFile c4111d28-yargs-3-15-0 yargs@^3.15.0
+807 verbose lock yargs@^3.15.0 /Users/tejas/.npm/c4111d28-yargs-3-15-0.lock
+808 info addNameTag [ 'gulp-util', '^3.0.6' ]
+809 info addNameTag [ 'isparta', '^3.0.3' ]
+810 info addNameTag [ 'mocha', '^2.1.0' ]
+811 info addNameTag [ 'mocha-phantomjs', '^3.6.0' ]
+812 info addNameTag [ 'nock', '^2.7.0' ]
+813 silly addNameRange { name: 'phantomjs',
+813 silly addNameRange   range: '>=1.9.1 <=1.9.7-15',
+813 silly addNameRange   hasData: false }
+814 info addNameTag [ 'run-sequence', '^1.0.2' ]
+815 info addNameTag [ 'sinon', '^1.12.2' ]
+816 info addNameTag [ 'sinon-chai', '^2.7.0' ]
+817 info addNameTag [ 'vinyl-buffer', '^1.0.0' ]
+818 info addNameTag [ 'vinyl-source-stream', '^1.0.0' ]
+819 info addNameTag [ 'vinyl-transform', '^1.0.0' ]
+820 info addNameTag [ 'wrench', '^1.5.8' ]
+821 info addNameTag [ 'yargs', '^3.15.0' ]
+822 verbose url raw gulp-util
+823 verbose url resolving [ 'https://registry.npmjs.org/', './gulp-util' ]
+824 verbose url resolved https://registry.npmjs.org/gulp-util
+825 info trying registry request attempt 1 at 11:40:45
+826 http GET https://registry.npmjs.org/gulp-util
+827 verbose url raw isparta
+828 verbose url resolving [ 'https://registry.npmjs.org/', './isparta' ]
+829 verbose url resolved https://registry.npmjs.org/isparta
+830 info trying registry request attempt 1 at 11:40:45
+831 http GET https://registry.npmjs.org/isparta
+832 verbose url raw mocha
+833 verbose url resolving [ 'https://registry.npmjs.org/', './mocha' ]
+834 verbose url resolved https://registry.npmjs.org/mocha
+835 info trying registry request attempt 1 at 11:40:45
+836 http GET https://registry.npmjs.org/mocha
+837 verbose url raw mocha-phantomjs
+838 verbose url resolving [ 'https://registry.npmjs.org/', './mocha-phantomjs' ]
+839 verbose url resolved https://registry.npmjs.org/mocha-phantomjs
+840 info trying registry request attempt 1 at 11:40:45
+841 http GET https://registry.npmjs.org/mocha-phantomjs
+842 verbose url raw nock
+843 verbose url resolving [ 'https://registry.npmjs.org/', './nock' ]
+844 verbose url resolved https://registry.npmjs.org/nock
+845 info trying registry request attempt 1 at 11:40:45
+846 http GET https://registry.npmjs.org/nock
+847 verbose url raw phantomjs
+848 verbose url resolving [ 'https://registry.npmjs.org/', './phantomjs' ]
+849 verbose url resolved https://registry.npmjs.org/phantomjs
+850 info trying registry request attempt 1 at 11:40:45
+851 http GET https://registry.npmjs.org/phantomjs
+852 verbose url raw run-sequence
+853 verbose url resolving [ 'https://registry.npmjs.org/', './run-sequence' ]
+854 verbose url resolved https://registry.npmjs.org/run-sequence
+855 info trying registry request attempt 1 at 11:40:45
+856 http GET https://registry.npmjs.org/run-sequence
+857 verbose url raw sinon
+858 verbose url resolving [ 'https://registry.npmjs.org/', './sinon' ]
+859 verbose url resolved https://registry.npmjs.org/sinon
+860 info trying registry request attempt 1 at 11:40:45
+861 http GET https://registry.npmjs.org/sinon
+862 verbose url raw sinon-chai
+863 verbose url resolving [ 'https://registry.npmjs.org/', './sinon-chai' ]
+864 verbose url resolved https://registry.npmjs.org/sinon-chai
+865 info trying registry request attempt 1 at 11:40:45
+866 http GET https://registry.npmjs.org/sinon-chai
+867 verbose url raw uid/0.0.2
+868 verbose url resolving [ 'https://registry.npmjs.org/', './uid/0.0.2' ]
+869 verbose url resolved https://registry.npmjs.org/uid/0.0.2
+870 info trying registry request attempt 1 at 11:40:45
+871 http GET https://registry.npmjs.org/uid/0.0.2
+872 verbose url raw vinyl-buffer
+873 verbose url resolving [ 'https://registry.npmjs.org/', './vinyl-buffer' ]
+874 verbose url resolved https://registry.npmjs.org/vinyl-buffer
+875 info trying registry request attempt 1 at 11:40:45
+876 http GET https://registry.npmjs.org/vinyl-buffer
+877 verbose url raw vinyl-source-stream
+878 verbose url resolving [ 'https://registry.npmjs.org/', './vinyl-source-stream' ]
+879 verbose url resolved https://registry.npmjs.org/vinyl-source-stream
+880 info trying registry request attempt 1 at 11:40:45
+881 http GET https://registry.npmjs.org/vinyl-source-stream
+882 verbose url raw vinyl-transform
+883 verbose url resolving [ 'https://registry.npmjs.org/', './vinyl-transform' ]
+884 verbose url resolved https://registry.npmjs.org/vinyl-transform
+885 info trying registry request attempt 1 at 11:40:45
+886 http GET https://registry.npmjs.org/vinyl-transform
+887 verbose url raw wrench
+888 verbose url resolving [ 'https://registry.npmjs.org/', './wrench' ]
+889 verbose url resolved https://registry.npmjs.org/wrench
+890 info trying registry request attempt 1 at 11:40:45
+891 http GET https://registry.npmjs.org/wrench
+892 verbose url raw yargs
+893 verbose url resolving [ 'https://registry.npmjs.org/', './yargs' ]
+894 verbose url resolved https://registry.npmjs.org/yargs
+895 info trying registry request attempt 1 at 11:40:45
+896 http GET https://registry.npmjs.org/yargs
+897 http 200 https://registry.npmjs.org/deep-merge
+898 silly registry.get cb [ 200,
+898 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+898 silly registry.get     etag: '"3WZGN2S3HPIJ0ZBK9XCX8DR4K"',
+898 silly registry.get     'content-type': 'application/json',
+898 silly registry.get     'cache-control': 'max-age=60',
+898 silly registry.get     'content-length': '9374',
+898 silly registry.get     'accept-ranges': 'bytes',
+898 silly registry.get     date: 'Mon, 10 Aug 2015 15:40:46 GMT',
+898 silly registry.get     via: '1.1 varnish',
+898 silly registry.get     age: '0',
+898 silly registry.get     connection: 'keep-alive',
+898 silly registry.get     'x-served-by': 'cache-iad2132-IAD',
+898 silly registry.get     'x-cache': 'MISS',
+898 silly registry.get     'x-cache-hits': '0',
+898 silly registry.get     'x-timer': 'S1439221246.237520,VS0,VE14',
+898 silly registry.get     vary: 'Accept' } ]
+899 silly addNameRange number 2 { name: 'deep-merge', range: '', hasData: true }
+900 silly addNameRange versions [ 'deep-merge',
+900 silly addNameRange   [ '0.1.2', '0.1.3', '0.2.1', '0.3.1', '1.0.0' ] ]
+901 verbose addNamed [ 'deep-merge', '1.0.0' ]
+902 verbose addNamed [ '1.0.0', '1.0.0' ]
+903 silly lockFile 56ff4da1-deep-merge-1-0-0 deep-merge@1.0.0
+904 verbose lock deep-merge@1.0.0 /Users/tejas/.npm/56ff4da1-deep-merge-1-0-0.lock
+905 verbose read json /Users/tejas/.npm/deep-merge/1.0.0/package/package.json
+906 warn package.json deep-merge@1.0.0 No readme data.
+907 silly lockFile 56ff4da1-deep-merge-1-0-0 deep-merge@1.0.0
+908 silly lockFile 56ff4da1-deep-merge-1-0-0 deep-merge@1.0.0
+909 silly lockFile a0ba0262-deep-merge deep-merge@*
+910 silly lockFile a0ba0262-deep-merge deep-merge@*
+911 http 200 https://registry.npmjs.org/crypto-js
+912 silly registry.get cb [ 200,
+912 silly registry.get   { server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+912 silly registry.get     etag: '"2J282WJCCWG3XG1PAGUYBTTQU"',
+912 silly registry.get     'content-type': 'application/json',
+912 silly registry.get     'cache-control': 'max-age=60',
+912 silly registry.get     'content-length': '15876',
+912 silly registry.get     'accept-ranges': 'bytes',
+912 silly registry.get     date: 'Mon, 10 Aug 2015 15:40:46 GMT',
+912 silly registry.get     via: '1.1 varnish',
+912 silly registry.get     age: '10',
+912 silly registry.get     connection: 'keep-alive',
+912 silly registry.get     'x-served-by': 'cache-iad2125-IAD',
+912 silly registry.get     'x-cache': 'HIT',
+912 silly registry.get     'x-cache-hits': '1',
+912 silly registry.get     'x-timer': 'S1439221246.235207,VS0,VE0',
+912 silly registry.get     vary: 'Accept' } ]
+913 silly lockFile fe7d6fcd-crypto-js-3-1-5 crypto-js@^3.1.5
+914 silly lockFile fe7d6fcd-crypto-js-3-1-5 crypto-js@^3.1.5
+915 error Error: No compatible version found: crypto-js@'^3.1.5'
+915 error Valid install targets:
+915 error ["3.1.2","3.1.2-1","3.1.2-2","3.1.2-3","3.1.2-4","3.1.2-5","3.1.2-6","3.1.4","3.1.5"]
+915 error     at installTargetsError (/Users/tejas/.nvm/v0.8.28/lib/node_modules/npm/lib/cache.js:719:10)
+915 error     at /Users/tejas/.nvm/v0.8.28/lib/node_modules/npm/lib/cache.js:641:10
+915 error     at saved (/Users/tejas/.nvm/v0.8.28/lib/node_modules/npm/node_modules/npm-registry-client/lib/get.js:138:7)
+915 error     at Object.oncomplete (fs.js:302:15)
+916 error If you need help, you may report this log at:
+916 error     <http://github.com/isaacs/npm/issues>
+916 error or email it to:
+916 error     <npm-@googlegroups.com>
+917 error System Darwin 14.3.0
+918 error command "/Users/tejas/.nvm/v0.8.28/bin/node" "/Users/tejas/.nvm/v0.8.28/bin/npm" "install"
+919 error cwd /Users/tejas/codebase/js-library-dev
+920 error node -v v0.8.28
+921 error npm -v 1.2.30
+922 verbose exit [ 1, true ]
