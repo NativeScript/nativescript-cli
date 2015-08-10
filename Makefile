@@ -1,4 +1,5 @@
-clean: rm -rf node_modules
+clean: 
+	@echo "Cleaning"
 
 test: all
 
