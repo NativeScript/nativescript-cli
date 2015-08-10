@@ -21,7 +21,6 @@ Synchronizes the latest changes in your project to iOS devices or the iOS Simula
 ### Command Limitations
 
 * You cannot set `--device` and `--emulator` simultaneously.
-* For the iOS Simulator, you can synchronize changes only to iOS 8.x devices.
 
 ### Related Commands
 
