@@ -7,7 +7,7 @@ NativeScript CLI Changelog
 ### New
 * [Implemented #470](https://github.com/NativeScript/nativescript-cli/issues/470): Add `--timeout` option to `tns debug`.
 * [Implemented #682](https://github.com/NativeScript/nativescript-cli/issues/682): Set `--debug-brk` as the default option of `tns debug`.
-* [Implemented #706](https://github.com/NativeScript/nativescript-cli/issues/706): LiveSync to iOS Simulator devices running iOS 8.x.
+* [Implemented #706](https://github.com/NativeScript/nativescript-cli/issues/706): LiveSync to iOS Simulator.
 
 ### Fixed
 
