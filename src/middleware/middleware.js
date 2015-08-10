@@ -14,14 +14,8 @@ class Middleware extends Rack.Middleware {
   handle(request) {
     return new Promise((resolve, reject) => {
       if (request) {
-        let pattern = new UrlPattern('/:namespace/:appKey/:collection/:id');
-        let matches = pattern.match(request.path);
-
-        if (!matches) {
-          pattern = new UrlPattern('/:namespace/:appKey/:collection');
-          matches = pattern.match(request.path);
-        }
-
+        const pattern = new UrlPattern('/:namespace/:appKey/:collection(/)(:id)(/)');
+        const matches = pattern.match(request.path);
         return resolve(matches);
       }
 

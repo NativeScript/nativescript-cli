@@ -8,8 +8,13 @@ import Auth from './auth';
 import url from 'url';
 import Kinvey from '../kinvey';
 import DataPolicy from '../enums/dataPolicy';
+import UrlPattern from 'url-pattern';
 import defaults from 'lodash/object/defaults';
 const privateRequestSymbol = Symbol();
+
+class RequestQueue {
+
+}
 
 class PrivateRequest {
   get auth() {
@@ -89,11 +94,16 @@ class PrivateRequest {
     return this._cacheKey;
   }
 
+  get cacheTime() {
+    return 30; // 30 minutes
+  }
+
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = defaults({}, options, {
       client: Kinvey.sharedInstance(),
       authType: AuthType.None,
-      dataPolicy: DataPolicy.CloudFirst
+      dataPolicy: DataPolicy.CloudFirst,
+      cacheEnabled: true
     });
 
     // Set request info
@@ -106,6 +116,7 @@ class PrivateRequest {
     this.client = options.client;
     this.auth = options.authType;
     this.dataPolicy = options.dataPolicy;
+    this.cacheEnabled = options.cacheEnabled;
 
     // Add default headers
     const headers = {};
@@ -148,6 +159,18 @@ class PrivateRequest {
     delete this.headers[header.toLowerCase()];
   }
 
+  isCacheEnabled() {
+    return this.cacheEnabled;
+  }
+
+  enableCache() {
+    this.cacheEnabled = true;
+  }
+
+  disableCache() {
+    this.cacheEnabled = false;
+  }
+
   execute() {
     const dataPolicy = this.dataPolicy;
     const method = this.method;
@@ -159,6 +182,8 @@ class PrivateRequest {
       promise = this.executeLocal().then((response) => {
         if (response && response.isSuccess()) {
           if (this.method !== HttpMethod.GET) {
+            // Queue the request
+
             const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
               client: this.client,
               dataPolicy: DataPolicy.CloudOnly
@@ -224,8 +249,53 @@ class PrivateRequest {
   }
 
   executeLocal() {
+    const method = this.method;
     const databaseRack = Rack.databaseRack;
-    return databaseRack.execute(this);
+
+    if (method === HttpMethod.GET) {
+      return Promise.resolve().then(() => {
+        if (this.isCacheEnabled()) {
+          return this.executeCache();
+        }
+      }).then((response) => {
+        if (!response || !response.isSuccess()) {
+          return databaseRack.execute(this);
+        }
+
+        return response;
+      }).then((response) => {
+        if (response && response.isSuccess()) {
+          const privateRequest = new PrivateRequest(HttpMethod.PUT, this.path, this.query, response.data, {
+            client: this.client,
+            dataPolicy: DataPolicy.LocalOnly
+          });
+          privateRequest.auth = this.auth;
+          return privateRequest.executeCache().then(() => {
+            return response;
+          });
+        }
+
+        return response;
+      });
+    }
+
+    const privateRequest = new PrivateRequest(HttpMethod.DELETE, this.path, this.query, {
+      client: this.client,
+      dataPolicy: DataPolicy.LocalOnly
+    });
+    privateRequest.auth = this.auth;
+    return privateRequest.executeCache().then(() => {
+      // Parse the path
+      const pattern = new UrlPattern('/:namespace/:appKey/:collection(/)(:id)(/)');
+      const matches = pattern.match(this.path);
+
+      if (matches) {
+        privateRequest.path = `/${matches.namespace}/${matches.appKey}/${matches.collection}`;
+        return privateRequest.executeCache();
+      }
+    }).then(() => {
+      return databaseRack.execute(this);
+    });
   }
 
   executeCloud() {
@@ -264,6 +334,9 @@ class PrivateRequest {
       url: this.url,
       body: this.body,
       cacheKey: this.cacheKey,
+      authType: this.authType,
+      dataPolicy: this.dataPolicy,
+      client: this.client,
       response: this.response
     };
 

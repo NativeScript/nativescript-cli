@@ -68,7 +68,7 @@ class PrivateCache extends NodeCache {
   }
 
   eachKey(fn) {
-    const prefixRegExp = new RegExp(`^${this.cachePrefix}${this.escapeRegExpSpecialCharacters(this.bucket)}(.*)`);
+    const prefixRegExp = new RegExp(`^${this.cachePrefix}${this.escapeRegExpSpecialCharacters(this.name)}(.*)`);
 
     // Loop in reverse as removing items will change indices of tail
     for (let i = localStorage.length - 1; i >= 0; --i) {
@@ -108,7 +108,7 @@ class PrivateCache extends NodeCache {
   }
 
   getItem(key) {
-    return localStorage.getItem(`${this.cachePrefix}${this.bucket}${key}`);
+    return localStorage.getItem(`${this.cachePrefix}${this.name}${key}`);
   }
 
   set(key, value, time) {
@@ -197,8 +197,8 @@ class PrivateCache extends NodeCache {
 
   setItem(key, value) {
     // Fix for iPad issue - sometimes throws QUOTA_EXCEEDED_ERR on setItem.
-    localStorage.removeItem(`${this.cachePrefix}${this.bucket}${key}`);
-    return localStorage.setItem(`${this.cachePrefix}${this.bucket}${key}`, value);
+    localStorage.removeItem(`${this.cachePrefix}${this.name}${key}`);
+    return localStorage.setItem(`${this.cachePrefix}${this.name}${key}`, value);
   }
 
   destroy(key) {
@@ -208,7 +208,7 @@ class PrivateCache extends NodeCache {
   }
 
   removeItem(key) {
-    return localStorage.removeItem(`${this.cachePrefix}${this.bucket}${key}`);
+    return localStorage.removeItem(`${this.cachePrefix}${this.name}${key}`);
   }
 
   /**
