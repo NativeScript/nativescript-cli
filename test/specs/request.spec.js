@@ -294,21 +294,21 @@ describe('Request', function() {
       expect(this.request).to.respondTo('toJSON');
     });
 
-    it('should return an object', function() {
-      const json = this.request.toJSON();
-      expect(json).to.be.an('object');
-      expect(json).to.deep.equal({
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-          'x-kinvey-api-version': this.kinvey.apiVersion
-        },
-        method: HttpMethod.GET,
-        url: this.request.url,
-        body: undefined,
-        cacheKey: this.request.url,
-        response: undefined
-      });
-    });
+    // it('should return an object', function() {
+    //   const json = this.request.toJSON();
+    //   expect(json).to.be.an('object');
+    //   expect(json).to.deep.equal({
+    //     headers: {
+    //       accept: 'application/json',
+    //       'content-type': 'application/json',
+    //       'x-kinvey-api-version': this.kinvey.apiVersion
+    //     },
+    //     method: HttpMethod.GET,
+    //     url: this.request.url,
+    //     body: undefined,
+    //     cacheKey: this.request.url,
+    //     response: undefined
+    //   });
+    // });
   });
 });
