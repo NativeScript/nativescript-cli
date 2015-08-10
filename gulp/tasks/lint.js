@@ -29,3 +29,4 @@ createLintTask('lint-src', config.files.src);
 // Lint our test code
 createLintTask('lint-test', config.files.test);
 createLintTask('lint-test-request', 'test/specs/request.spec.js');
+createLintTask('lint-test-user', 'test/specs/user.spec.js');
