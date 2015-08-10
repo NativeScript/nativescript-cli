@@ -4,8 +4,7 @@ clean:
 install:
 	@echo "Install Dependencies" && npm install
 
-test:  test-request \
-	test-user
+test:  test-request
 
 test-request:
 	@./node_modules/.bin/gulp test-request
