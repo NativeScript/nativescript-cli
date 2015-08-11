@@ -45,6 +45,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("androidProjectService", {});
 	testInjector.register("iOSProjectService", {});
 	testInjector.register("devicesServices", {});	
+	testInjector.register("resources", {});	
 	testInjector.register("projectData", ProjectDataLib.ProjectData);
 	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
