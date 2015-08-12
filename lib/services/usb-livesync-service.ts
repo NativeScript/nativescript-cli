@@ -142,8 +142,9 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 				let commands = [ this.liveSyncCommands.SyncFilesCommand() ];			
 				this.livesync(deviceAppData.appIdentifier, deviceAppData.deviceProjectRootPath, commands).wait();
 			} else {
-				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;				
-				this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb")}`).wait();
+				let devicePathRoot = `/data/data/${deviceAppData.appIdentifier}/files`;
+				let devicePath = this.$mobileHelper.buildDevicePath(devicePathRoot, "code_cache", "secondary_dexes", "proxyThumb");
+				this.device.adb.executeShellCommand(["rm", "-rf", devicePath]).wait();
 			}
 			
 			this.device.applicationManager.restartApplication(deviceAppData.appIdentifier).wait();
@@ -153,9 +154,9 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 	public beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
 		return (() => {
 			let deviceRootPath = `/data/local/tmp/${deviceAppData.appIdentifier}`;
-			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync")}`).wait();							
-			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "sync")}`).wait();
-			this.device.adb.executeShellCommand(`rm -rf ${this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")}`).wait();	
+			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync")]).wait();
+			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "sync")]).wait();
+			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
 		}).future<void>()();
 	}
 }

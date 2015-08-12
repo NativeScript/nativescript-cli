@@ -96,21 +96,21 @@ class AndroidDebugService implements IDebugService {
 	
 	private printDebugPort(packageName: string): IFuture<void> {
         return (() => {
-            let res = this.$childProcess.spawnFromEvent(this.$staticConfig.getAdbFilePath().wait(), ["shell", "am", "broadcast", "-a", packageName + "-GetDgbPort"], "exit").wait();
-            this.$logger.info(res.stdout);
+            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-GetDgbPort"]).wait();
+            this.$logger.info(res);
         }).future<void>()();
     }
 	
 	private attachDebugger(packageName: string): void {
-        let startDebuggerCommand = `am broadcast -a \"${packageName}-Debug\" --ez enable true`;
+        let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-Debug\"', "--ez", "enable", "true"];
         let port = this.$options.debugPort;
 		
         if (port > 0) {
-            startDebuggerCommand += " --ei debuggerPort " + port;
+            startDebuggerCommand.push("--ei", "debuggerPort", port.toString());
             this.device.adb.executeShellCommand(startDebuggerCommand).wait();
         } else {
-            let res = this.$childProcess.spawnFromEvent(this.$staticConfig.getAdbFilePath().wait(), ["shell", "am", "broadcast", "-a", packageName + "-Debug", "--ez", "enable", "true"], "exit").wait();
-            let match = res.stdout.match(/result=(\d)+/);
+            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-Debug", "--ez", "enable", "true"]).wait();
+            let match = res.match(/result=(\d)+/);
             if (match) {
                 port = match[0].substring(7);
             } else {
@@ -127,7 +127,7 @@ class AndroidDebugService implements IDebugService {
     }
 
     private detachDebugger(packageName: string): IFuture<void> {
-        return this.device.adb.executeShellCommand(this.device.deviceInfo.identifier, `shell am broadcast -a \"${packageName}-Debug\" --ez enable false`);
+        return this.device.adb.executeShellCommand(["am", "broadcast", "-a", `${packageName}-Debug`, "--ez", "enable", "false"]);
     }
 
     private startAppWithDebugger(packageFile: string, packageName: string): IFuture<void> {
@@ -142,11 +142,11 @@ class AndroidDebugService implements IDebugService {
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
             
-            this.device.adb.executeShellCommand(`rm "${envDebugOutFullpath}"`).wait();
-            this.device.adb.executeShellCommand(`mkdir -p "${packageDir}"`).wait();
+            this.device.adb.executeShellCommand(["rm", `${envDebugOutFullpath}`]).wait();
+            this.device.adb.executeShellCommand(["mkdir", "-p", `${packageDir}`]).wait();
     
     		let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
-            this.device.adb.executeShellCommand(`"cat /dev/null > ${debugBreakPath}"`).wait();
+            this.device.adb.executeShellCommand([`cat /dev/null > ${debugBreakPath}`]).wait();
     		
             this.device.applicationManager.startApplication(packageName).wait();
     
@@ -160,7 +160,7 @@ class AndroidDebugService implements IDebugService {
     }
     
     private tcpForward(src: Number, dest: Number): IFuture<void> {
-        return this.device.adb.executeCommand(`forward tcp:${src.toString()} tcp:${dest.toString()}`);
+        return this.device.adb.executeCommand(["forward", `tcp:${src.toString()}`, `tcp:${dest.toString()}`]);
     }
 
     private startDebuggerClient(port: Number): IFuture<void> {
@@ -190,9 +190,8 @@ class AndroidDebugService implements IDebugService {
 
     private checkIfFileExists(filename: string): IFuture<boolean> {
         return (() => {
-            let args = ["shell", "test", "-f", filename, "&&", "echo 'yes'", "||", "echo 'no'"];
-            let res = this.$childProcess.spawnFromEvent(this.$staticConfig.getAdbFilePath().wait(), args, "exit").wait();
-            let exists = res.stdout.indexOf('yes') > -1;
+            let res = this.device.adb.executeShellCommand([`test -f ${filename} && echo 'yes' || echo 'no'`]).wait();
+            let exists = res.indexOf('yes') > -1;
             return exists;
         }).future<boolean>()();
     }
@@ -204,7 +203,7 @@ class AndroidDebugService implements IDebugService {
              
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
-            this.device.adb.executeShellCommand(`rm "${envDebugInFullpath}"`).wait();
+            this.device.adb.executeShellCommand(["rm", `${envDebugInFullpath}`]).wait();
 
             let isRunning = false;
             for (let i = 0; i < timeout; i++) {
@@ -215,15 +214,15 @@ class AndroidDebugService implements IDebugService {
             }
 			
             if (isRunning) {
-                this.device.adb.executeShellCommand(`"cat /dev/null > ${envDebugInFullpath}"`).wait();
+                this.device.adb.executeShellCommand([`cat /dev/null > ${envDebugInFullpath}`]).wait();
 
                 for (let i = 0; i < timeout; i++) {
                     helpers.sleep(1000 /* ms */);
                     let envDebugOutFullpath = packageDir + AndroidDebugService.ENV_DEBUG_OUT_FILENAME;
                     let exists = this.checkIfFileExists(envDebugOutFullpath).wait();
                     if (exists) {
-                        let res = this.$childProcess.spawnFromEvent(this.$staticConfig.getAdbFilePath().wait(), ["shell", "cat", envDebugOutFullpath], "exit").wait();
-                        let match = res.stdout.match(/PORT=(\d)+/);
+                        let res = this.device.adb.executeShellCommand(["cat", envDebugOutFullpath]).wait();
+                        let match = res.match(/PORT=(\d)+/);
                         if (match) {
                             port = parseInt(match[0].substring(5), 10);
                             break;
