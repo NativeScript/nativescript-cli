@@ -1,6 +1,28 @@
 NativeScript CLI Changelog
 ================
 
+1.2.2 (2015, August 11)
+==
+
+### New
+* [Implemented #470](https://github.com/NativeScript/nativescript-cli/issues/470): Add `--timeout` option to `tns debug`.
+* [Implemented #682](https://github.com/NativeScript/nativescript-cli/issues/682): Set `--debug-brk` as the default option of `tns debug`.
+* [Implemented #706](https://github.com/NativeScript/nativescript-cli/issues/706): LiveSync to iOS Simulator.
+
+### Fixed
+
+* [Fixed #470](https://github.com/NativeScript/nativescript-cli/issues/470): Command failed due to space in file path.
+* [Fixed #632](https://github.com/NativeScript/nativescript-cli/issues/632): Android debugger does not work on some OS X systems.
+* [Fixed #652](https://github.com/NativeScript/nativescript-cli/issues/652): `tns debug ios` does not load inspector from the added iOS runtime.
+* [Fixed #663](https://github.com/NativeScript/nativescript-cli/issues/663): Verify that Java is at least 1.7.
+* [Fixed #671](https://github.com/NativeScript/nativescript-cli/issues/671): `tns debug ios` doesn't work for projects created with framework versions earlier than 1.2.0.
+* [Fixed #679](https://github.com/NativeScript/nativescript-cli/issues/679): `tns library add ios` adds the framework with its full path in the Xcode project.
+* [Fixed #695](https://github.com/NativeScript/nativescript-cli/issues/695): Exceptions tracking is not correctly set in the user settings.
+* [Fixed #699](https://github.com/NativeScript/nativescript-cli/issues/699): Unable to update Android platform when npm cache is in an inconsistent state.
+* [Fixed #722](https://github.com/NativeScript/nativescript-cli/issues/722): `tns debug` builds and installs the app twice.
+* [Fixed #742](https://github.com/NativeScript/nativescript-cli/issues/742): `tns livesync android` doesn't work on some Android devices.
+* [Fixed #747](https://github.com/NativeScript/nativescript-cli/issues/747): New files are not respected by `tns livesync`.
+
 1.2.1 (2015, July 27)
 ==
 
