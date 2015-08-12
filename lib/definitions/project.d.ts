@@ -40,6 +40,7 @@ interface IPlatformProjectService {
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void>;
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
+	afterPrepareAllPlugins(): IFuture<void>;
 }
 
 interface IAndroidProjectPropertiesManager {

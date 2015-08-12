@@ -4,6 +4,7 @@ interface IPluginsService {
 	prepare(pluginData: IDependencyData): IFuture<void>;
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): IFuture<void>;
+	afterPrepareAllPlugins(): IFuture<void>;
 }
 
 interface IPluginData extends INodeModuleData {

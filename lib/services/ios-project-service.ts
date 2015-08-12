@@ -2,15 +2,16 @@
 "use strict";
 
 import Future = require("fibers/future");
-import path = require("path");
-import shell = require("shelljs");
-import util = require("util");
-import xcode = require("xcode");
+import * as path from "path";
+import * as shell from "shelljs";
+import * as util from "util";
+import * as os from "os";
+import * as xcode from "xcode";
 import constants = require("./../constants");
 import helpers = require("./../common/helpers");
 import projectServiceBaseLib = require("./platform-project-service-base");
 
-class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements  IPlatformProjectService {
+export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements  IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -262,14 +263,6 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 				
 				this.savePbxProj(project).wait();
 			}
-			
-			if(this.$fs.exists(this.projectPodFilePath).wait() && this.$fs.getFsStats(this.projectPodFilePath).wait().mtime < this.$fs.getFsStats(this.$projectData.projectFilePath).wait().mtime) {
-				try {
-					this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
-				} catch(e) {
-					this.$errors.failWithoutHelp("CocoaPods are not installed. Run `sudo gem install cocoapods` and try again.");
-				}
-			}
 		}).future<void>()();
 	}
 	
@@ -314,35 +307,31 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
-			
-			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			if(this.$fs.exists(pluginPodFilePath).wait()) {
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
-				this.$fs.appendFile(this.projectPodFilePath, pluginPodFileContent).wait();
-			}
+			this.prepareDynamicFrameworks(pluginPlatformsFolderPath, pluginData).wait();
+			this.prepareCocoapods(pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
 	
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			let project = this.createPbxProj();
-						
-			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => {
-				let fullFrameworkPath = path.join(pluginPlatformsFolderPath, fileName);
-				let relativeFrameworkPath = this.getFrameworkRelativePath(fullFrameworkPath);
-				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true })
-			});
-			
-			this.savePbxProj(project).wait();
-			
-			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			if(this.$fs.exists(pluginPodFilePath).wait()) {
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
-				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
-				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, pluginPodFileContent, "");
-				this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
+			this.removeDynamicFrameworks(pluginPlatformsFolderPath, pluginData).wait();
+			this.removeCocoapods(pluginPlatformsFolderPath).wait();
+		}).future<void>()();
+	}
+	
+	public afterPrepareAllPlugins(): IFuture<void> {
+		return (() => {
+			if(this.$fs.exists(this.projectPodFilePath).wait()) {
+				// Check availability
+				try {
+					this.$childProcess.exec("gem which cocoapods").wait();
+				} catch(e) {
+					this.$errors.failWithoutHelp("CocoaPods are not installed. Run `sudo gem install cocoapods` and try again.");					
+				}
+				
+				this.$logger.info("Installing pods...");
+				this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
 			}
 		}).future<void>()();
 	}
@@ -403,6 +392,58 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 
 			this.$fs.rename(path.join(fileRootLocation, oldFileName), path.join(fileRootLocation, newFileName)).wait();
 		}).future<void>()();
+	}
+	
+	private prepareDynamicFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
+		return (() => {
+			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());			
+		}).future<void>()();
+	}
+	
+	private prepareCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
+		return (() => {
+			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			if(this.$fs.exists(pluginPodFilePath).wait()) {
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
+				let contentToWrite = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
+				this.$fs.appendFile(this.projectPodFilePath, contentToWrite).wait();
+			}
+		}).future<void>()();
+	}
+	
+	private removeDynamicFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
+		return (() => {
+			let project = this.createPbxProj();
+						
+			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => {
+				let fullFrameworkPath = path.join(pluginPlatformsFolderPath, fileName);
+				let relativeFrameworkPath = this.getFrameworkRelativePath(fullFrameworkPath);
+				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true })
+			});
+			
+			this.savePbxProj(project).wait();
+		}).future<void>()();
+	}
+	
+	private removeCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
+		return (() => {
+			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
+			if(this.$fs.exists(pluginPodFilePath).wait()) {
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
+				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
+				let contentToRemove= this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
+				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
+				if(_.isEmpty(projectPodFileContent)) {
+					this.$fs.deleteFile(this.projectPodFilePath).wait();
+				} else {
+					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
+				}
+			}
+		}).future<void>()();
+	}
+	
+	private buildPodfileContent(pluginPodFilePath: string, pluginPodFileContent: string): string {
+		return `# Begin Podfile - ${pluginPodFilePath} ${os.EOL} ${pluginPodFileContent} ${os.EOL} # End Podfile ${os.EOL}`;
 	}
 }
 $injector.register("iOSProjectService", IOSProjectService);

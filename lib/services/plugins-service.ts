@@ -144,6 +144,14 @@ export class PluginsService implements IPluginsService {
 		}).future<IPluginData[]>()();
 	}
 	
+	public afterPrepareAllPlugins(): IFuture<void> {
+		let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
+			return platformData.platformProjectService.afterPrepareAllPlugins();
+		};
+		
+		return this.executeForAllInstalledPlatforms(action);
+	}
+	
 	private get nodeModulesPath(): string {
 		return path.join(this.$projectData.projectDir, "node_modules");
 	}

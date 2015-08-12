@@ -76,6 +76,10 @@ export class DestCopy implements IBroccoliPlugin {
 			this.$pluginsService.prepare(dependency).wait();
 		}
 	});
+	
+	if(!_.isEmpty(this.dependencies)) {
+		this.$pluginsService.afterPrepareAllPlugins().wait();
+	}
   }
 
   public rebuild(treeDiff: IDiffResult): void {	
