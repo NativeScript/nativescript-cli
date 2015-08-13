@@ -146,6 +146,7 @@ export class PlatformService implements IPlatformService {
 			this.validatePlatform(platform);
 			
 			platform = platform.toLowerCase();
+			this.ensurePlatformInstalled(platform).wait();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
@@ -233,13 +234,13 @@ export class PlatformService implements IPlatformService {
 
 	public updatePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			_.each(platforms, platform => {
-				var parts = platform.split("@");
-				platform = parts[0].toLowerCase();
-				var version = parts[1];
-
-				this.validatePlatformInstalled(platform);
-				this.updatePlatform(platform, version).wait();
+			_.each(platforms, platformParam => {
+				let [platform, version] = platformParam.split("@");
+				if(this.isPlatformInstalled(platform).wait()) {
+					this.updatePlatform(platform, version).wait();
+				} else {
+					this.addPlatform(platformParam).wait();
+				}
 			});
 		}).future<void>()();
 	}
@@ -247,7 +248,7 @@ export class PlatformService implements IPlatformService {
 	public deployOnDevice(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-
+			this.ensurePlatformInstalled(platform).wait();
 			var platformData = this.$platformsData.getPlatformData(platform);
 
 			var cachedDeviceOption = this.$options.forDevice;
@@ -276,7 +277,7 @@ export class PlatformService implements IPlatformService {
 
 	public deployOnEmulator(platform: string): IFuture<void> {
 		return (() => {
-			this.validatePlatformInstalled(platform);
+			this.ensurePlatformInstalled(platform).wait();
 			platform = platform.toLowerCase();
 
 			var platformData = this.$platformsData.getPlatformData(platform);
@@ -333,7 +334,15 @@ export class PlatformService implements IPlatformService {
 			}
 		}).future<void>()();
 	}
-	
+
+	private ensurePlatformInstalled(platform: string): IFuture<void> {
+		return (() => {
+			if(!this.isPlatformInstalled(platform).wait()) {
+				this.addPlatform(platform).wait();
+			}
+		}).future<void>()();
+	}
+
 	private isPlatformInstalled(platform: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(this.$projectData.platformsDir, platform.toLowerCase()));
 	}
