@@ -227,7 +227,11 @@ describe('Platform Service Tests', () => {
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
 					normalizedPlatformName: "iOS",
 					platformProjectService: {
-						prepareProject: () => Future.fromResult()
+						prepareProject: () => Future.fromResult(),
+						validate: () => Future.fromResult(),
+						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
+						interpolateData: (projectRoot: string) => Future.fromResult(),
+						afterCreateProject: (projectRoot: string) => Future.fromResult()
 					}
 				}	
 			};
@@ -281,7 +285,11 @@ describe('Platform Service Tests', () => {
 					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
 					normalizedPlatformName: "Android",
 					platformProjectService: {
-						prepareProject: () => Future.fromResult()
+						prepareProject: () => Future.fromResult(),
+						validate: () => Future.fromResult(),
+						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
+						interpolateData: (projectRoot: string) => Future.fromResult(),
+						afterCreateProject: (projectRoot: string) => Future.fromResult()
 					}
 				}	
 			};

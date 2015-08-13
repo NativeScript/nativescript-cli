@@ -6,7 +6,7 @@ export class PlatformCommandParameter implements ICommandParameter {
 	mandatory = true;
 	validate(value: string): IFuture<boolean> {
 		return (() => {
-			this.$platformService.validatePlatformInstalled(value);
+			this.$platformService.validatePlatform(value);
 			return true;
 		}).future<boolean>()();
 	}
