@@ -19,3 +19,6 @@
 
 // Use Angular’s `$q`.
 Kinvey.Defer.use({ deferred: $q.defer });
+
+// Setup Queue
+root.Queue.configure($q.defer);
