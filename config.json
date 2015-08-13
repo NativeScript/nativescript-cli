@@ -8,7 +8,8 @@
         "node_modules/angular/lib/angular.min.js"
       ],
       "externals": [
-        "node_modules/sift/sift.min.js"
+        "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js"
       ],
       "internals": [
         "src/internals/persistence/local/websql.js",
@@ -31,7 +32,8 @@
       ],
       "externals": [
         "node_modules/promiscuous/dist/promiscuous-browser.js",
-        "node_modules/sift/sift.min.js"
+        "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
@@ -55,7 +57,8 @@
       "dependencies": [ ],
       "externals": [
         "node_modules/promiscuous/dist/promiscuous-browser.js",
-        "node_modules/sift/sift.min.js"
+        "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
@@ -68,7 +71,9 @@
     },
     "nodejs": {
       "dependencies" : [ ],
-      "externals"    : [ ],
+      "externals"    : [
+        "node_modules/promise-queue/lib/index.js"
+      ],
       "internals"    : [
         "src/shims/nodejs/nodejs.js",
         "src/internals/deferreds/promiscuous-node.js",
@@ -80,7 +85,8 @@
       "dependencies": [ ],
       "externals": [
         "node_modules/promiscuous/dist/promiscuous-browser.js",
-        "node_modules/sift/sift.min.js"
+        "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
@@ -97,7 +103,8 @@
       "dependencies": [ ],
       "externals": [
         "node_modules/promiscuous/dist/promiscuous-browser.js",
-        "node_modules/sift/sift.min.js"
+        "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js"
       ],
       "internals": [
         "src/internals/deferreds/promiscuous.js",
@@ -118,6 +125,7 @@
         "src/shims/titanium/intro.txt",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
+        "node_modules/promise-queue/lib/index.js",
         "node_modules/jsOAuth/dist/jsOAuth-1.3.6.min.js",
         "node_modules/kinvey-tiplatformconnect/dist.js",
         "src/shims/titanium/outro.txt"
