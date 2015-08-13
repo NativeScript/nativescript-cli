@@ -87,10 +87,14 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				return Future.fromResult();		
 			}
 			
+			let iOSSimulatorRelativeToProjectBasePathAction = (projectFile: string): string => {
+				return path.join(constants.APP_FOLDER_NAME, path.dirname(projectFile.split(`/${constants.APP_FOLDER_NAME}/`)[1]));
+			}
+			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
 			
-			this.sync(platform, this.$projectData.projectId, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, notRunningiOSSimulatorAction, localProjectRootPath, beforeLiveSyncAction, beforeBatchLiveSyncAction).wait();
+			this.sync(platform, this.$projectData.projectId, projectFilesPath, this.excludedProjectDirsAndFiles, watchGlob, restartAppOnDeviceAction, notInstalledAppOnDeviceAction, notRunningiOSSimulatorAction, localProjectRootPath, beforeLiveSyncAction, beforeBatchLiveSyncAction, iOSSimulatorRelativeToProjectBasePathAction).wait();
 		}).future<void>()();
 	}
 	
