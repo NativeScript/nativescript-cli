@@ -576,7 +576,7 @@ var WebSqlAdapter = {
 
 function useWebSqlAdapter() {
   // Use WebSQL adapter.
-  if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift) {
+  if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift && 'undefined' !== typeof root.Queue) {
     // Normalize for Windows Phone 8.1
     root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
     Database.use(WebSqlAdapter);
