@@ -1,8 +1,8 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import path = require("path");
-import shelljs = require("shelljs");
-import semver = require("semver");
+import * as path from "path";
+import * as shelljs from "shelljs";
+import * as semver from "semver";
 import Future = require("fibers/future");
 import constants = require("./../constants");
 let xmlmerge = require("xmlmerge-js");
@@ -13,7 +13,7 @@ export class PluginsService implements IPluginsService {
 	private static UNINSTALL_COMMAND_NAME = "uninstall";
 	private static NPM_CONFIG = {
 		save: true
-	}
+	};
 	
 	constructor(private $platformsData: IPlatformsData,		
 		private $npm: INodePackageManager,

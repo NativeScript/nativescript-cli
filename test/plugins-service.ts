@@ -18,16 +18,14 @@ import PlatformsDataLib = require("../lib/platforms-data");
 import ProjectDataServiceLib = require("../lib/services/project-data-service");
 import helpers = require("../lib/common/helpers");
 import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
-import os = require("os");
-
+import { EOL } from "os";
 import PluginsServiceLib = require("../lib/services/plugins-service");
 import AddPluginCommandLib = require("../lib/commands/plugin/add-plugin");
-
-import path = require("path");
-import temp = require("temp");
+import { assert }  from "chai";
+import * as path from "path";
+import * as temp from "temp";
 temp.track();
 
-let assert = require("chai").assert;
 let isErrorThrown = false;	
 
 function createTestInjector() {
@@ -114,10 +112,10 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 				name: ""
 			}];
 		}).future<IPluginData[]>()();
-	}
+	};
 	pluginsService.ensureAllDependenciesAreInstalled = () => {
 		return (() => { }).future<void>()();
-	}
+	};
 				
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);				
 	
@@ -185,7 +183,7 @@ describe("Plugins service", () => {
 						name: "plugin1"
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');				
 	
@@ -224,7 +222,7 @@ describe("Plugins service", () => {
 			logger.warn = (message: string) => {
 				assert.equal(message, expectedWarningMessage);
 				isWarningMessageShown = true;
-			}
+			};
 			
 			// Mock pluginsService
 			let pluginsService = testInjector.resolve("pluginsService");
@@ -234,7 +232,7 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
@@ -243,10 +241,9 @@ describe("Plugins service", () => {
 					appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
 					frameworkPackageName: "tns-android"
 				}
-			}
+			};
 			
-			let commandsService = testInjector.resolve("commandsService");
-			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
+			pluginsService.add(pluginFolderPath).wait();
 			
 			assert.isTrue(isWarningMessageShown);
 		});
@@ -261,10 +258,9 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
-			commandsService.tryExecuteCommand("plugin|add", [pluginName]).wait();
+			pluginsService.add(pluginName).wait();
 			
 			let fs = testInjector.resolve("fs");
 			
@@ -283,10 +279,9 @@ describe("Plugins service", () => {
 			// Asserts that the plugin is added in package.json file
 			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
-			let expectedDependencies = {
-				"plugin1": "^1.0.3"
-			};
-			assert.deepEqual(actualDependencies, expectedDependencies); 
+			let expectedDependencies = { "plugin1": "^1.0.3" };
+			let expectedDependenciesExact = { "plugin1": "1.0.3" };
+			assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 		});
 		it("adds plugin by name and version", () => {
 			let pluginName = "plugin1";
@@ -299,10 +294,9 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
-			commandsService.tryExecuteCommand("plugin|add", [pluginName+"@1.0.0"]).wait();
+			pluginsService.add(pluginName+"@1.0.0").wait();
 			
 			let fs = testInjector.resolve("fs");
 			
@@ -321,10 +315,9 @@ describe("Plugins service", () => {
 			// Assert that the plugin is added in package.json file
 			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
-			let expectedDependencies = {
-				"plugin1": "^1.0.0"
-			};
-			assert.deepEqual(actualDependencies, expectedDependencies);
+			let expectedDependencies = { "plugin1": "^1.0.0" };
+			let expectedDependenciesExact = { "plugin1": "1.0.0" };
+			assert.isTrue(_.isEqual(actualDependencies, expectedDependencies) || _.isEqual(actualDependencies, expectedDependenciesExact));
 		});
 		it("adds plugin by local path", () => {
 			// Creates a plugin in tempFolder
@@ -350,10 +343,9 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
-			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
+			pluginsService.add(pluginFolderPath).wait();
 			
 			// Assert that the all plugin's content is successfully added to node_modules folder
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
@@ -395,14 +387,13 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			// Mock options
 			let options = testInjector.resolve("options");
 			options.production = true;
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
-			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
+			pluginsService.add(pluginFolderPath).wait();
 			
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")).wait());
@@ -437,7 +428,7 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			// Mock options
 			let options = testInjector.resolve("options");
@@ -481,7 +472,7 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 			
@@ -493,7 +484,7 @@ describe("Plugins service", () => {
 					frameworkPackageName: "tns-android",
 					configurationFileName: "AndroidManifest.xml"
 				}
-			}
+			};
 			
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
@@ -543,7 +534,7 @@ describe("Plugins service", () => {
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
-			}
+			};
 			
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 			
@@ -560,7 +551,7 @@ describe("Plugins service", () => {
 						preparePluginNativeCode: (pluginData: IPluginData) => (() => {}).future<void>()()
 					}
 				}
-			}
+			};
 			
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
@@ -577,7 +568,7 @@ describe("Plugins service", () => {
 			pluginsService.add(pluginFolderPath).wait();
 			
 			let expectedXml = '<?xmlversion="1.0"encoding="UTF-8"?><manifestxmlns:android="http://schemas.android.com/apk/res/android"package="com.example.android.basiccontactables"android:versionCode="1"android:versionName="1.0"><uses-permissionandroid:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.INTERNET"/><applicationandroid:allowBackup="true"android:icon="@drawable/ic_launcher"android:label="@string/app_name"android:theme="@style/Theme.Sample"><activityandroid:name="com.example.android.basiccontactables.MainActivity"android:label="@string/app_name"android:launchMode="singleTop"><meta-dataandroid:name="android.app.searchable"android:resource="@xml/searchable"/><intent-filter><actionandroid:name="android.intent.action.SEARCH"/></intent-filter><intent-filter><actionandroid:name="android.intent.action.MAIN"/></intent-filter></activity></application><uses-permissionandroid:name="android.permission.READ_CONTACTS"/></manifest>';
-			expectedXml = helpers.stringReplaceAll(expectedXml, os.EOL, "");
+			expectedXml = helpers.stringReplaceAll(expectedXml, EOL, "");
 			expectedXml = helpers.stringReplaceAll(expectedXml, " ", "");
 			
 			let actualXml = fs.readText(path.join(appDestinationDirectoryPath, "AndroidManifest.xml")).wait();
