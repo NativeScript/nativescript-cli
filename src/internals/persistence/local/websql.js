@@ -62,6 +62,12 @@ var WebSqlAdapter = {
   size: 5 * 1000 * 1000,
 
   /**
+   * Queue used to handle mutiple transactions.
+   * @type {Queue}
+   */
+  queue: new root.Queue(1, Infinity),
+
+  /**
    * Opens a database.
    *
    * @returns {Database}
@@ -275,43 +281,45 @@ var WebSqlAdapter = {
    * @augments {Database.clean}
    */
   clean: function(collection, query, options) {
-    var error;
+    return WebSqlAdapter.queue.add(function() {
+      var error;
 
-    // Deleting should not take the query sort, limit, and skip into account.
-    if(null != query) {// Reset.
-      query.sort(null).limit(null).skip(0);
-    }
-
-    // Obtain the documents to be deleted via `WebSqlAdapter.find`.
-    return WebSqlAdapter.find(collection, query, options).then(function(documents) {
-      // If there are no documents matching the query, return.
-      if(0 === documents.length) {
-        return { count: 0, documents: [] };
+      // Deleting should not take the query sort, limit, and skip into account.
+      if(null != query) {// Reset.
+        query.sort(null).limit(null).skip(0);
       }
 
-      // Build the query.
-      var infix      = [];
-      var parameters = documents.map(function(document) {
-        // Check document for property _id. Thrown error will reject promise.
-        if (document._id == null) {
-          error = new Kinvey.Error('Document does not have _id property defined. ' +
-                                   'Unable to clean database.');
-          throw error;
+      // Obtain the documents to be deleted via `WebSqlAdapter.find`.
+      return WebSqlAdapter.find(collection, query, options).then(function(documents) {
+        // If there are no documents matching the query, return.
+        if(0 === documents.length) {
+          return { count: 0, documents: [] };
         }
 
-        infix.push('?');// Add placeholder.
-        return document._id;
-      });
-      var sql = 'DELETE FROM #{collection} WHERE key IN(' + infix.join(',') + ')';
+        // Build the query.
+        var infix      = [];
+        var parameters = documents.map(function(document) {
+          // Check document for property _id. Thrown error will reject promise.
+          if (document._id == null) {
+            error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                     'Unable to clean database.');
+            throw error;
+          }
 
-      // Prepare the response.
-      var promise = WebSqlAdapter.transaction(collection, sql, parameters, true, options);
+          infix.push('?');// Add placeholder.
+          return document._id;
+        });
+        var sql = 'DELETE FROM #{collection} WHERE key IN(' + infix.join(',') + ')';
 
-      // Return the response.
-      return promise.then(function(response) {
-        // NOTE Some implementations do not return a `rowCount`.
-        response.rowCount = null != response.rowCount ? response.rowCount : documents.length;
-        return { count: response.rowCount, documents: documents };
+        // Prepare the response.
+        var promise = WebSqlAdapter.transaction(collection, sql, parameters, true, options);
+
+        // Return the response.
+        return promise.then(function(response) {
+          // NOTE Some implementations do not return a `rowCount`.
+          response.rowCount = null != response.rowCount ? response.rowCount : documents.length;
+          return { count: response.rowCount, documents: documents };
+        });
       });
     });
   },
@@ -335,32 +343,34 @@ var WebSqlAdapter = {
    * @augments {Database.destroy}
    */
   destroy: function(collection, id, options) {
-    // Prepare the response.
-    var promise = WebSqlAdapter.transaction(collection, [
-      [ 'SELECT value FROM #{collection} WHERE key = ?', [ id ] ],
-      [ 'DELETE       FROM #{collection} WHERE key = ?', [ id ] ]
-    ], null, true, options);
+    return WebSqlAdapter.queue.add(function() {
+      // Prepare the response.
+      var promise = WebSqlAdapter.transaction(collection, [
+        [ 'SELECT value FROM #{collection} WHERE key = ?', [ id ] ],
+        [ 'DELETE       FROM #{collection} WHERE key = ?', [ id ] ]
+      ], null, true, options);
 
-    // Return the response.
-    return promise.then(function(response) {
-      // Extract the response.
-      var count     = response[1].rowCount;
-      var documents = response[0].result;
+      // Return the response.
+      return promise.then(function(response) {
+        // Extract the response.
+        var count     = response[1].rowCount;
+        var documents = response[0].result;
 
-      // NOTE Some implementations do not return a `rowCount`.
-      count = null != count ? count : response[0].result.length;
+        // NOTE Some implementations do not return a `rowCount`.
+        count = null != count ? count : response[0].result.length;
 
-      // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
-      if(0 === count) {
-        var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-          description : 'This entity not found in the collection',
-          debug       : { collection: collection, id: id }
-        });
-        return Kinvey.Defer.reject(error);
-      }
+        // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
+        if(0 === count) {
+          var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+            description : 'This entity not found in the collection',
+            debug       : { collection: collection, id: id }
+          });
+          return Kinvey.Defer.reject(error);
+        }
 
-      // Return the count and the deleted document.
-      return { count: count, documents: documents };
+        // Return the count and the deleted document.
+        return { count: count, documents: documents };
+      });
     });
   },
 
@@ -368,29 +378,31 @@ var WebSqlAdapter = {
    * @augments {Database.destruct}
    */
   destruct: function(options) {
-    // Obtain a list of all tables in the database.
-    var query      = 'SELECT name AS value FROM #{collection} WHERE type = ?';
-    var parameters = [ 'table' ];
+    return WebSqlAdapter.queue.add(function() {
+      // Obtain a list of all tables in the database.
+      var query      = 'SELECT name AS value FROM #{collection} WHERE type = ?';
+      var parameters = [ 'table' ];
 
-    // Return the response.
-    var promise = WebSqlAdapter.transaction('sqlite_master', query, parameters, false, options);
-    return promise.then(function(response) {
-      // If there are no tables, return.
-      var tables = response.result;
-      if(0 === tables.length) {
+      // Return the response.
+      var promise = WebSqlAdapter.transaction('sqlite_master', query, parameters, false, options);
+      return promise.then(function(response) {
+        // If there are no tables, return.
+        var tables = response.result;
+        if(0 === tables.length) {
+          return null;
+        }
+
+        // Drop all tables. Filter tables first to avoid attempting to delete
+        // system tables (which will fail).
+        var queries = tables.filter(function(table) {
+          return (/^[a-zA-Z0-9\-]{1,128}/).test(table);
+        }).map(function(table) {
+          return [ 'DROP TABLE IF EXISTS \'' + table + '\'' ];
+        });
+        return WebSqlAdapter.transaction('sqlite_master', queries, null, true, options);
+      }).then(function() {
         return null;
-      }
-
-      // Drop all tables. Filter tables first to avoid attempting to delete
-      // system tables (which will fail).
-      var queries = tables.filter(function(table) {
-        return (/^[a-zA-Z0-9\-]{1,128}/).test(table);
-      }).map(function(table) {
-        return [ 'DROP TABLE IF EXISTS \'' + table + '\'' ];
       });
-      return WebSqlAdapter.transaction('sqlite_master', queries, null, true, options);
-    }).then(function() {
-      return null;
     });
   },
 
@@ -429,20 +441,22 @@ var WebSqlAdapter = {
    * @augments {Database.findAndModify}
    */
   findAndModify: function(collection, id, fn, options) {
-    // Obtain the document to be modified via `WebSqlAdapter.get`.
-    var promise = WebSqlAdapter.get(collection, id, options).then(null, function(error) {
-      // If `ENTITY_NOT_FOUND`, use an empty object and continue.
-      if(Kinvey.Error.ENTITY_NOT_FOUND === error.name) {
-        return null;
-      }
-      return Kinvey.Defer.reject(error);
-    });
+    return WebSqlAdapter.queue.add(function() {
+      // Obtain the document to be modified via `WebSqlAdapter.get`.
+      var promise = WebSqlAdapter.get(collection, id, options).then(null, function(error) {
+        // If `ENTITY_NOT_FOUND`, use an empty object and continue.
+        if(Kinvey.Error.ENTITY_NOT_FOUND === error.name) {
+          return null;
+        }
+        return Kinvey.Defer.reject(error);
+      });
 
-    // Return the response.
-    return promise.then(function(response) {
-      // Apply change function and update the document via `WebSqlAdapter.save`.
-      var document = fn(response);
-      return WebSqlAdapter.save(collection, document, options);
+      // Return the response.
+      return promise.then(function(response) {
+        // Apply change function and update the document via `WebSqlAdapter.save`.
+        var document = fn(response);
+        return WebSqlAdapter.save(collection, document, options);
+      });
     });
   },
 
