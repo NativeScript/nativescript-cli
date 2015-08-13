@@ -1,12 +1,11 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import path = require("path");
-import shell = require("shelljs");
-import util = require("util");
-import constants = require("./../constants");
-import helpers = require("./../common/helpers");
-import semver = require("semver");
+import * as path from "path";
+import * as shell from "shelljs";
+import * as constants from "../constants";
+import * as helpers from "../common/helpers";
+import * as semver from "semver";
 import Future = require("fibers/future");
 
 export class PlatformService implements IPlatformService {
@@ -29,7 +28,7 @@ export class PlatformService implements IPlatformService {
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
-			var platformsDir = this.$projectData.platformsDir;
+			let platformsDir = this.$projectData.platformsDir;
 			this.$fs.ensureDirectoryExists(platformsDir).wait();
 
 			_.each(platforms, platform => {
@@ -39,24 +38,22 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private addPlatform(platform: string): IFuture<void> {
+	private addPlatform(platformParam: string): IFuture<void> {
 		return(() => {
-			var parts = platform.split("@");
-			platform = parts[0];
-			var version = parts[1];
+			let [platform, version] = platformParam.split("@");
 
 			this.validatePlatform(platform);
 
-			var platformPath = path.join(this.$projectData.platformsDir, platform);
+			let platformPath = path.join(this.$projectData.platformsDir, platform);
 
 			if (this.$fs.exists(platformPath).wait()) {
 				this.$errors.fail("Platform %s already added", platform);
 			}
 
-			var platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 
 			// Copy platform specific files in platforms dir
-			var platformProjectService = platformData.platformProjectService;
+			let platformProjectService = platformData.platformProjectService;
 			platformProjectService.validate().wait();
 
 			// Log the values for project
@@ -67,8 +64,8 @@ export class PlatformService implements IPlatformService {
 
 			this.$logger.out("Copying template files...");
 
-			var packageToInstall = "";
-			var npmOptions: IStringDictionary = {
+			let packageToInstall = "";
+			let npmOptions: IStringDictionary = {
 				pathToSave: path.join(this.$projectData.platformsDir, platform)
 			};
 
@@ -79,8 +76,8 @@ export class PlatformService implements IPlatformService {
 				npmOptions["version"] = version;
 			}
 
-			var downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
-			var frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
+			let downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
+			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 			frameworkDir = path.resolve(frameworkDir);
 
 			try {
@@ -98,7 +95,7 @@ export class PlatformService implements IPlatformService {
 	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<void> {
 		return (() => {
 			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
-			var installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
+			let installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 
 			if(this.$options.frameworkPath && this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile() && !this.$options.symlink) {
 				// Need to remove unneeded node_modules folder
@@ -121,14 +118,14 @@ export class PlatformService implements IPlatformService {
 				return [];
 			}
 
-			var subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
+			let subDirs = this.$fs.readDirectory(this.$projectData.platformsDir).wait();
 			return _.filter(subDirs, p => this.$platformsData.platformsNames.indexOf(p) > -1);
 		}).future<string[]>()();
 	}
 
 	public getAvailablePlatforms(): IFuture<string[]> {
 		return (() => {
-			var installedPlatforms = this.getInstalledPlatforms().wait();
+			let installedPlatforms = this.getInstalledPlatforms().wait();
 			return _.filter(this.$platformsData.platformsNames, p => {
 				return installedPlatforms.indexOf(p) < 0 && this.isPlatformSupportedForOS(p); // Only those not already installed
 			});
@@ -148,14 +145,14 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
 
-			var platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? 
 				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			// Copy app folder to native project
 			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
-			var appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+			let appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			
 			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
 			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
@@ -168,7 +165,7 @@ export class PlatformService implements IPlatformService {
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
-			var appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
+			let appResourcesDirectoryPath = path.join(appDestinationDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME);
 			if (this.$fs.exists(appResourcesDirectoryPath).wait()) {
 				platformData.platformProjectService.prepareAppResources(appResourcesDirectoryPath).wait();
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
@@ -179,7 +176,7 @@ export class PlatformService implements IPlatformService {
 
 			// Process node_modules folder
 			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
-			var tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
+			let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
 			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
 			
 			// Process platform specific files
@@ -196,7 +193,7 @@ export class PlatformService implements IPlatformService {
 			platform = platform.toLowerCase();
 			this.preparePlatform(platform).wait();
 
-			var platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
 			this.$logger.out("Project successfully built");
 		}).future<void>()();
@@ -222,7 +219,7 @@ export class PlatformService implements IPlatformService {
 				this.validatePlatformInstalled(platform);
 				let platformData = this.$platformsData.getPlatformData(platform);				
 
-				var platformDir = path.join(this.$projectData.platformsDir, platform);
+				let platformDir = path.join(this.$projectData.platformsDir, platform);
 				this.$fs.deleteDirectory(platformDir).wait();
 				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
 				
@@ -249,19 +246,19 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
-			var platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 
-			var cachedDeviceOption = this.$options.forDevice;
+			let cachedDeviceOption = this.$options.forDevice;
 			this.$options.forDevice = true;
 			this.buildPlatform(platform).wait();
 			this.$options.forDevice = !!cachedDeviceOption;
 
 			// Get latest package that is produced from build
-			var packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+			let packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
 			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
-			var action = (device: Mobile.IDevice): IFuture<void> => {
+			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
 					device.deploy(packageFile, this.$projectData.projectId).wait(); 
 					
@@ -277,11 +274,12 @@ export class PlatformService implements IPlatformService {
 
 	public deployOnEmulator(platform: string): IFuture<void> {
 		return (() => {
+			let packageFile: string, logFilePath: string;
 			this.ensurePlatformInstalled(platform).wait();
 			platform = platform.toLowerCase();
 
-			var platformData = this.$platformsData.getPlatformData(platform);
-			var emulatorServices = platformData.emulatorServices;
+			let platformData = this.$platformsData.getPlatformData(platform);
+			let emulatorServices = platformData.emulatorServices;
 
 			emulatorServices.checkAvailability().wait();
 			emulatorServices.checkDependencies().wait();
@@ -289,10 +287,10 @@ export class PlatformService implements IPlatformService {
 			if(!this.$options.availableDevices) {
 				this.buildPlatform(platform).wait();
 
-				var packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
 
-				var logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+				logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
 			}
 
 			emulatorServices.startEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
@@ -304,8 +302,7 @@ export class PlatformService implements IPlatformService {
 			this.$errors.fail("No platform specified.")
 		}
 
-		var parts = platform.split("@");
-		platform = parts[0].toLowerCase();
+		platform = platform.split("@")[0].toLowerCase();
 
 		if (!this.isValidPlatform(platform)) {
 			this.$errors.fail("Invalid platform %s. Valid platforms are %s.", platform, helpers.formatListOfNames(this.$platformsData.platformsNames));
@@ -329,7 +326,7 @@ export class PlatformService implements IPlatformService {
 			if (!this.$fs.exists(libraryPath).wait()) {
 				this.$errors.failWithoutHelp("The path %s does not exist", libraryPath);
 			} else {
-				var platformData = this.$platformsData.getPlatformData(platform);
+				let platformData = this.$platformsData.getPlatformData(platform);
 				platformData.platformProjectService.addLibrary(libraryPath).wait();
 			}
 		}).future<void>()();
@@ -352,25 +349,21 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private isPlatformSupportedForOS(platform: string): boolean {
-		var targetedOS = this.$platformsData.getPlatformData(platform).targetedOS;
-
-		if(!targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0) {
-			return true;
-		}
-
-		return false;
+		let targetedOS = this.$platformsData.getPlatformData(platform).targetedOS;
+		let res = !targetedOS || targetedOS.indexOf("*") >= 0 || targetedOS.indexOf(process.platform) >= 0;
+		return res;
 	}
 
 	private isPlatformPrepared(platform: string): IFuture<boolean> {
-		var platformData = this.$platformsData.getPlatformData(platform);
+		let platformData = this.$platformsData.getPlatformData(platform);
 		return platformData.platformProjectService.isPlatformPrepared(platformData.projectRoot);
 	}
 
 	private getApplicationPackages(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage[]> {
 		return (() => {
 			// Get latest package that is produced from build
-			var candidates = this.$fs.readDirectory(buildOutputPath).wait();
-			var packages = _.filter(candidates, candidate => {
+			let candidates = this.$fs.readDirectory(buildOutputPath).wait();
+			let packages = _.filter(candidates, candidate => {
 				return _.contains(validPackageNames, candidate);
 			}).map(currentPackage => {
 					currentPackage = path.join(buildOutputPath, currentPackage);
@@ -387,9 +380,9 @@ export class PlatformService implements IPlatformService {
 
 	private getLatestApplicationPackage(buildOutputPath: string, validPackageNames: string[]): IFuture<IApplicationPackage> {
 		return (() => {
-			var packages = this.getApplicationPackages(buildOutputPath, validPackageNames).wait();
+			let packages = this.getApplicationPackages(buildOutputPath, validPackageNames).wait();
 			if (packages.length === 0) {
-				var packageExtName = path.extname(validPackageNames[0]);
+				let packageExtName = path.extname(validPackageNames[0]);
 				this.$errors.fail("No %s found in %s directory", packageExtName, buildOutputPath);
 			}
 
@@ -409,12 +402,12 @@ export class PlatformService implements IPlatformService {
 
 	private updatePlatform(platform: string, version: string): IFuture<void> {
 		return (() => {
-			var platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform);
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			var data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
-			var currentVersion = data && data.version ? data.version : "0.2.0";
-			var newVersion = version || this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
+			let data = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
+			let currentVersion = data && data.version ? data.version : "0.2.0";
+			let newVersion = version || this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
 
 			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
 
@@ -423,7 +416,7 @@ export class PlatformService implements IPlatformService {
 				}
 
 				if(semver.gt(currentVersion, newVersion)) { // Downgrade
-					var isUpdateConfirmed = this.$prompter.confirm(util.format("You are going to downgrade to android runtime v.%s. Are you sure?", newVersion), () => false).wait();
+					let isUpdateConfirmed = this.$prompter.confirm(`You are going to downgrade to android runtime v.${newVersion}. Are you sure?`, () => false).wait();
 					if(isUpdateConfirmed) {
 						this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 					}
@@ -433,7 +426,7 @@ export class PlatformService implements IPlatformService {
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
 				}
 			} else {
-				var isUpdateConfirmed = this.$prompter.confirm(util.format("We need to override xcodeproj file. The old one will be saved at %s. Are you sure?", this.$options.profileDir), () => true).wait();
+				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
 				if(isUpdateConfirmed) {
 					platformData.platformProjectService.updatePlatform(currentVersion, newVersion).wait();
 					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
@@ -446,34 +439,34 @@ export class PlatformService implements IPlatformService {
 	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string): IFuture<void> {
 		return (() => {
 			// Remove old framework files
-			var oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
+			let oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
 
 			_.each(oldFrameworkData.frameworkFiles, file => {
-				var fileToDelete = path.join(platformData.projectRoot, file);
+				let fileToDelete = path.join(platformData.projectRoot, file);
 				this.$logger.trace("Deleting %s", fileToDelete);
 				this.$fs.deleteFile(fileToDelete).wait();
 			});
 
 			_.each(oldFrameworkData.frameworkDirectories, dir => {
-				var dirToDelete = path.join(platformData.projectRoot, dir);
+				let dirToDelete = path.join(platformData.projectRoot, dir);
 				this.$logger.trace("Deleting %s", dirToDelete);
 				this.$fs.deleteDirectory(dirToDelete).wait();
 			});
 
 			// Add new framework files
-			var newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
-			var cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
+			let newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
+			let cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
 
 			_.each(newFrameworkData.frameworkFiles, file => {
-				var sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
-				var destinationFile = path.join(platformData.projectRoot, file);
+				let sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
+				let destinationFile = path.join(platformData.projectRoot, file);
 				this.$logger.trace("Replacing %s with %s", sourceFile, destinationFile);
 				shell.cp("-f", sourceFile, destinationFile);
 			});
 
 			_.each(newFrameworkData.frameworkDirectories, dir => {
-				var sourceDirectory = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir);
-				var destinationDirectory = path.join(platformData.projectRoot, dir);
+				let sourceDirectory = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir);
+				let destinationDirectory = path.join(platformData.projectRoot, dir);
 				this.$logger.trace("Copying %s to %s", sourceDirectory, destinationDirectory);
 				shell.cp("-fR", path.join(sourceDirectory, "*"), destinationDirectory);
 			});
@@ -489,14 +482,14 @@ export class PlatformService implements IPlatformService {
 
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
-			var cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
+			let cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
 			this.ensurePackageIsCached(cachedPackagePath, platformData.frameworkPackageName, version).wait();
 
-			var allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
-			var filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
+			let allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
+			let filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
 
-			var allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
-			var filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.contains(platformData.frameworkFilesExtensions, path.extname(dir)) || _.contains(platformData.frameworkDirectoriesNames, path.basename(dir))));
+			let allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
+			let filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.contains(platformData.frameworkFilesExtensions, path.extname(dir)) || _.contains(platformData.frameworkDirectoriesNames, path.basename(dir))));
 
 			return {
 				frameworkFiles: this.mapFrameworkFiles(cachedPackagePath, filteredFiles),

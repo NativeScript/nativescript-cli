@@ -1,17 +1,12 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import path = require("path");
-import shell = require("shelljs");
-import util = require("util");
+import * as path from "path";
+import * as shell from "shelljs";
 import Future = require("fibers/future");
-import constants = require("../constants");
-import helpers = require("../common/helpers");
-import fs = require("fs");
-import os = require("os");
-import semver = require("semver");
-
-import androidProjectPropertiesManagerLib = require("./android-project-properties-manager");
-import projectServiceBaseLib = require("./platform-project-service-base");
+import * as constants from "../constants";
+import * as semver from "semver";
+import * as androidProjectPropertiesManagerLib from "./android-project-properties-manager";
+import * as projectServiceBaseLib from "./platform-project-service-base";
 
 class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static MIN_SUPPORTED_VERSION = 17;
@@ -22,7 +17,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static LIBS_FOLDER_NAME = "libs";
-	private static MIN_JAVA_VERSION = "1.7.0";	
+	private static MIN_JAVA_VERSION = "1.7.0";
 
 	private targetApi: string;
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
@@ -57,8 +52,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
 				validPackageNamesForDevice: [
-					util.format("%s-%s.%s", this.$projectData.projectName, "debug", "apk"),
-					util.format("%s-%s.%s", this.$projectData.projectName, "release", "apk")
+					`${this.$projectData.projectName}-debug.apk`,
+					`${this.$projectData.projectName}-release.apk`
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
