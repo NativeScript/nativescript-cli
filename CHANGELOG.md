@@ -1,6 +1,9 @@
 # Changelog
-### 1.4.3 (2015-07-16)
-* Bugfix(MLIBZ-493): Fix bug in IDBAdapter that would throw error when running two transactions at the same time.
+### 1.4.5 (2015-08-14)
+* Bugfix(MLIBZ-512): Fix bug in the `WebSqlAdapter` that caused the `system.sync` table to be incorrectly updated when mutiple offline items are added to the data store at the same time.
+
+### 1.4.4 (2015-08-05)
+* Bugfix(MLIBZ-493): Fix bug in `IDBAdapter` that would throw error when running two transactions at the same time.
 
 ### 1.4.3 (2015-07-16)
 * Bugfix: Check if a table exists in SQLite before returning a generic error.
