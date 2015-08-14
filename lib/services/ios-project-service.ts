@@ -38,7 +38,7 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			frameworkPackageName: "tns-ios",
 			normalizedPlatformName: "iOS",
 			appDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName),
-			appResourcesDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName, "Resources", "icons"),
+			appResourcesDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName, "Resources"),
 			platformProjectService: this,
 			emulatorServices: this.$iOSEmulatorServices,
 			projectRoot: projectRoot,
