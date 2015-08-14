@@ -16,6 +16,17 @@
 
 /* jshint evil: true */
 
+// Configure Queue
+root.Queue.configure(function(handler) {
+  var deferred = Kinvey.Defer.deferred();
+  try {
+    handler(deferred.resolve, deferred.reject, deferred.progress);
+  } catch (err) {
+    deferred.reject(err);
+  }
+  return deferred.promise;
+});
+
 /**
  * `Database` adapter for [WebSql](http://dev.w3.org/html5/webdatabase/).
  *
@@ -343,34 +354,32 @@ var WebSqlAdapter = {
    * @augments {Database.destroy}
    */
   destroy: function(collection, id, options) {
-    return WebSqlAdapter.queue.add(function() {
-      // Prepare the response.
-      var promise = WebSqlAdapter.transaction(collection, [
-        [ 'SELECT value FROM #{collection} WHERE key = ?', [ id ] ],
-        [ 'DELETE       FROM #{collection} WHERE key = ?', [ id ] ]
-      ], null, true, options);
+    // Prepare the response.
+    var promise = WebSqlAdapter.transaction(collection, [
+      [ 'SELECT value FROM #{collection} WHERE key = ?', [ id ] ],
+      [ 'DELETE       FROM #{collection} WHERE key = ?', [ id ] ]
+    ], null, true, options);
 
-      // Return the response.
-      return promise.then(function(response) {
-        // Extract the response.
-        var count     = response[1].rowCount;
-        var documents = response[0].result;
+    // Return the response.
+    return promise.then(function(response) {
+      // Extract the response.
+      var count     = response[1].rowCount;
+      var documents = response[0].result;
 
-        // NOTE Some implementations do not return a `rowCount`.
-        count = null != count ? count : response[0].result.length;
+      // NOTE Some implementations do not return a `rowCount`.
+      count = null != count ? count : response[0].result.length;
 
-        // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
-        if(0 === count) {
-          var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-            description : 'This entity not found in the collection',
-            debug       : { collection: collection, id: id }
-          });
-          return Kinvey.Defer.reject(error);
-        }
+      // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
+      if(0 === count) {
+        var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+          description : 'This entity not found in the collection',
+          debug       : { collection: collection, id: id }
+        });
+        return Kinvey.Defer.reject(error);
+      }
 
-        // Return the count and the deleted document.
-        return { count: count, documents: documents };
-      });
+      // Return the count and the deleted document.
+      return { count: count, documents: documents };
     });
   },
 
