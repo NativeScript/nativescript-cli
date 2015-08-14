@@ -649,14 +649,25 @@ var IDBAdapter = {
   }
 };
 
-// Use IndexedDB adapter.
-if('undefined' !== typeof IDBAdapter.impl && 'undefined' !== typeof root.sift) {
-  Database.use(IDBAdapter);
+function useIndexedDBAdapter() {
+  // Use IndexedDB adapter.
+  if('undefined' !== typeof IDBAdapter.impl && 'undefined' !== typeof root.sift) {
+    Database.use(IDBAdapter);
 
-  // Add `Kinvey.Query` operators not supported by `sift`.
-  ['near', 'regex', 'within'].forEach(function(operator) {
-    root.sift.useOperator(operator, function() {
-      throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+    // Add `Kinvey.Query` operators not supported by `sift`.
+    ['near', 'regex', 'within'].forEach(function(operator) {
+      root.sift.useOperator(operator, function() {
+        throw new Kinvey.Error(operator + ' query operator is not supported locally.');
+      });
     });
-  });
+  }
+}
+
+
+if ('undefined' !== typeof root.cordova) {
+  // WebSql plugin won't register until after deviceready event is fired
+  document.addEventListener('deviceready', useIndexedDBAdapter, false);
+}
+else {
+  useIndexedDBAdapter();
 }
