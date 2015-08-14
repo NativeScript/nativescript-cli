@@ -17,5 +17,9 @@
 // Angular.js.
 // -----------
 
+// Outside of the Kinvey module, use $q out of scope.
+var angularDeferred = angular.injector(['ng']).get('$q');
+Kinvey.Defer.use({ deferred: angularDeferred.defer });
+
 // Define the Angular.js Kinvey module.
 var module = angular.module('kinvey', []);
