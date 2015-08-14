@@ -1,58 +1,65 @@
 {
-  "name"        : "kinvey",
-  "version"     : "1.4.4",
-  "description" : "Kinvey JavaScript Library",
-  "homepage"    : "http://www.kinvey.com",
-  "bugs"        : { "email": "support@kinvey.com" },
-  "licenses"    : [{
-    "type" : "Apache-2.0",
-    "url"  : "http://www.apache.org/licenses/LICENSE-2.0"
-  }],
-  "author"      : "Kinvey, Inc.",
-  "repository"  : {
-    "type" : "git",
-    "url"  : "https://github.com/Kinvey/js-library-dev.git"
+  "name": "kinvey",
+  "version": "1.4.5",
+  "description": "Kinvey JavaScript Library",
+  "homepage": "http://www.kinvey.com",
+  "bugs": {
+    "email": "support@kinvey.com"
   },
-  "scripts"     : {
-    "start" : "grunt server",
-    "test"  : "grunt build test"
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "author": "Kinvey, Inc.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kinvey/js-library-dev.git"
+  },
+  "scripts": {
+    "start": "grunt server",
+    "test": "grunt build test"
   },
   "dependencies": {
-    "angular"               : "~1.2",
-    "backbone"              : "~1.1",
-    "backbone-associations" : "~0.5",
-    "jquery-browser"        : "1.10.2-1",
-    "promiscuous"           : "~0.6",
-    "sift"                  : "~0.0",
-    "uglify-js"             : "~2.4",
-    "zepto"                 : "~0.0",
-    "tiplatformconnect"     : "git://github.com/Kinvey/TiPlatformConnect.git"
+    "angular": "~1.2",
+    "backbone": "~1.1",
+    "backbone-associations": "~0.5",
+    "jquery-browser": "1.10.2-1",
+    "promiscuous": "~0.6",
+    "promise-queue": "^2.1.1",
+    "sift": "~0.0",
+    "tiplatformconnect": "git://github.com/Kinvey/TiPlatformConnect.git",
+    "uglify-js": "~2.4",
+    "zepto": "~0.0"
   },
   "devDependencies": {
-    "chai"                  : "~1.8",
-    "chai-as-promised"      : "~4.1",
-    "grunt"                 : "~0.4",
-    "grunt-cli"             : "~0.1",
-    "grunt-contrib-clean"   : "~0.5",
-    "grunt-contrib-concat"  : "~0.3",
-    "grunt-contrib-connect" : "~0.5",
-    "grunt-contrib-copy"    : "~0.4",
-    "grunt-contrib-jshint"  : "~0.7",
-    "grunt-contrib-uglify"  : "~0.2",
-    "grunt-contrib-watch"   : "~0.5",
-    "grunt-jsbeautifier"    : "~0.2",
-    "grunt-jsdoc"           : "~0.4",
-    "grunt-jsonlint"        : "~1.0",
-    "grunt-karma"           : "~0.6",
-    "grunt-mocha"           : "~0.4",
-    "grunt-shell"           : "~0.6",
-    "grunt-simple-mocha"    : "~0.4",
-    "mocha"                 : "^2.2",
-    "nock"                  : "~1.5",
-    "promises-aplus-tests"  : "~2.0",
-    "sinon"                 : "~1.7",
-    "sinon-chai"            : "~2.4"
+    "chai": "~1.8",
+    "chai-as-promised": "~4.1",
+    "grunt": "~0.4",
+    "grunt-cli": "~0.1",
+    "grunt-contrib-clean": "~0.5",
+    "grunt-contrib-concat": "~0.3",
+    "grunt-contrib-connect": "~0.5",
+    "grunt-contrib-copy": "~0.4",
+    "grunt-contrib-jshint": "~0.7",
+    "grunt-contrib-uglify": "~0.2",
+    "grunt-contrib-watch": "~0.5",
+    "grunt-jsbeautifier": "~0.2",
+    "grunt-jsdoc": "~0.4",
+    "grunt-jsonlint": "~1.0",
+    "grunt-karma": "~0.6",
+    "grunt-mocha": "~0.4",
+    "grunt-shell": "~0.6",
+    "grunt-simple-mocha": "~0.4",
+    "mocha": "^2.2",
+    "nock": "~1.5",
+    "promises-aplus-tests": "~2.0",
+    "sinon": "~1.7",
+    "sinon-chai": "~2.4"
   },
-  "engines" : { "node": ">=0.10" },
-  "private" : true
+  "engines": {
+    "node": ">=0.10"
+  },
+  "private": true
 }
