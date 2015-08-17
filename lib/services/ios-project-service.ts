@@ -182,7 +182,7 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			var umbrellaHeader = this.getUmbrellaHeaderFromDynamicFramework(libraryPath).wait();
 
 			let frameworkName = path.basename(libraryPath, path.extname(libraryPath));
-			let targetPath = path.join("lib", this.platformData.normalizedPlatformName, frameworkName);
+			let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
 			let fullTargetPath = path.join(this.$projectData.projectDir, targetPath);
 			this.$fs.ensureDirectoryExists(fullTargetPath).wait();
 			shell.cp("-R", libraryPath, fullTargetPath);
@@ -273,7 +273,7 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 	
 	private getFrameworkRelativePath(libraryPath: string): string {
 		let frameworkName = path.basename(libraryPath, path.extname(libraryPath));
-		let targetPath = path.join("lib", this.platformData.normalizedPlatformName, frameworkName);
+		let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
 		let frameworkPath = path.relative("platforms/ios", path.join(targetPath, frameworkName + ".framework"));
 		return frameworkPath;
 	}
