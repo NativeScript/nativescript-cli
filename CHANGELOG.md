@@ -1,6 +1,15 @@
 NativeScript CLI Changelog
 ================
 
+1.2.3 (2015, August 18)
+==
+
+### Fixed
+
+* [Fixed #776](https://github.com/NativeScript/nativescript-cli/issues/776): `tns livesync ios --emulator --watch` doesn't sync changes.
+* [Fixed #777](https://github.com/NativeScript/nativescript-cli/issues/777): `tns library add ios` does not build correct relative paths to referenced frameworks for mdgenerator.
+* [Fixed #779](https://github.com/NativeScript/nativescript-cli/issues/779): Command failed due to space in library reference path. 
+
 1.2.2 (2015, August 11)
 ==
 
