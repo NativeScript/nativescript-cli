@@ -98,6 +98,7 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|remove", PlatformRemoveCommandLib.RemovePlatformCommand);
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
 	testInjector.register("lockfile", { });
+	testInjector.register("resources", {});	
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => {}
 	});

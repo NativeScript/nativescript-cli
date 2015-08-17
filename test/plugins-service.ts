@@ -1,27 +1,30 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import yok = require('../lib/common/yok');
-import stubs = require('./stubs');
-import NpmLib = require("../lib/node-package-manager");
-import FsLib = require("../lib/common/file-system");
-import ProjectDataLib = require("../lib/project-data");
-import ChildProcessLib = require("../lib/common/child-process");
-import PlatformServiceLib = require('../lib/services/platform-service');
-import OptionsLib = require("../lib/options");
-import CommandsServiceLib = require("../lib/common/services/commands-service");
-import StaticConfigLib = require("../lib/config");
-import HostInfoLib = require("../lib/common/host-info");
-import ErrorsLib = require("../lib/common/errors");
-import ProjectHelperLib = require("../lib/common/project-helper");
-import PlatformsDataLib = require("../lib/platforms-data");
-import ProjectDataServiceLib = require("../lib/services/project-data-service");
-import helpers = require("../lib/common/helpers");
-import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
-import { EOL } from "os";
-import PluginsServiceLib = require("../lib/services/plugins-service");
-import AddPluginCommandLib = require("../lib/commands/plugin/add-plugin");
-import { assert }  from "chai";
+import {Yok} from '../lib/common/yok';
+import * as stubs from './stubs';
+import {NodePackageManager} from "../lib/node-package-manager";
+import {FileSystem} from "../lib/common/file-system";
+import {ProjectData} from "../lib/project-data";
+import {ChildProcess} from "../lib/common/child-process";
+import {PlatformService} from '../lib/services/platform-service';
+import {Options} from "../lib/options";
+import {CommandsService} from "../lib/common/services/commands-service";
+import {StaticConfig} from "../lib/config";
+import {HostInfo} from "../lib/common/host-info";
+import {Errors} from "../lib/common/errors";
+import {ProjectHelper} from "../lib/common/project-helper";
+import {PlatformsData} from "../lib/platforms-data";
+import {ProjectDataService} from "../lib/services/project-data-service";
+import * as helpers from "../lib/common/helpers";
+import {ProjectFilesManager} from "../lib/services/project-files-manager";
+import {ResourceLoader} from "../lib/common/resource-loader";
+import {EOL} from "os";
+
+import {PluginsService} from "../lib/services/plugins-service";
+import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
+
+import {assert} from "chai"
 import * as path from "path";
 import * as temp from "temp";
 temp.track();
@@ -29,41 +32,42 @@ temp.track();
 let isErrorThrown = false;	
 
 function createTestInjector() {
-	let testInjector = new yok.Yok();
+	let testInjector = new Yok();
 	
-	testInjector.register("npm", NpmLib.NodePackageManager);
-	testInjector.register("fs", FsLib.FileSystem);
-	testInjector.register("projectData", ProjectDataLib.ProjectData);
+	testInjector.register("npm", NodePackageManager);
+	testInjector.register("fs", FileSystem);
+	testInjector.register("projectData", ProjectData);
 	testInjector.register("platforsmData", stubs.PlatformsDataStub);
-	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
-	testInjector.register("platformService", PlatformServiceLib.PlatformService);
-	testInjector.register("platformsData", PlatformsDataLib.PlatformsData);
+	testInjector.register("childProcess", ChildProcess);
+	testInjector.register("platformService", PlatformService);
+	testInjector.register("platformsData", PlatformsData);
 	testInjector.register("androidProjectService", {});
 	testInjector.register("iOSProjectService", {});
 	testInjector.register("devicesServices", {});
-	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
+	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});
+	testInjector.register("resources", ResourceLoader);	
 	testInjector.register("broccoliBuilder", {});
-	testInjector.register("options", OptionsLib.Options);
-	testInjector.register("errors", ErrorsLib.Errors);
+	testInjector.register("options", Options);
+	testInjector.register("errors", Errors);
 	testInjector.register("logger", stubs.LoggerStub);
-	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
-	testInjector.register("commandsService", CommandsServiceLib.CommandsService);
+	testInjector.register("commandsService", CommandsService);
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => {}
 	});
-	testInjector.register("hostInfo", HostInfoLib.HostInfo);
+	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("lockfile", { });
-	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
+	testInjector.register("projectHelper", ProjectHelper);
 	
-	testInjector.register("pluginsService", PluginsServiceLib.PluginsService);
+	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("analyticsService", {
 		trackException: () => { return (() => { }).future<void>()(); },
 		checkConsent: () => { return (() => { }).future<void>()(); },
 		trackFeature: () => { return (() => { }).future<void>()(); }
 	});
-	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
+	testInjector.register("projectFilesManager", ProjectFilesManager);
 	
 	return testInjector;
 }
@@ -120,7 +124,7 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);				
 	
 	isErrorThrown = false;			
-	let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
+	let commandsService = testInjector.resolve(CommandsService);
 	commandsService.tryExecuteCommand("plugin|add", [plugin]).wait();
 
 	assert.isTrue(isErrorThrown);
@@ -154,7 +158,7 @@ describe("Plugins service", () => {
 	let testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		testInjector.registerCommand("plugin|add", AddPluginCommandLib.AddPluginCommand);
+		testInjector.registerCommand("plugin|add", AddPluginCommand);
 	});
 	
 	describe("plugin add", () => {
@@ -188,7 +192,7 @@ describe("Plugins service", () => {
 			mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');				
 	
 			isErrorThrown = false;			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
+			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginName]).wait();
 			
 			assert.isTrue(isErrorThrown);
@@ -260,7 +264,8 @@ describe("Plugins service", () => {
 				}).future<IPluginData[]>()();
 			};
 			
-			pluginsService.add(pluginName).wait();
+			let commandsService = testInjector.resolve(CommandsService);
+			commandsService.tryExecuteCommand("plugin|add", [pluginName]).wait();
 			
 			let fs = testInjector.resolve("fs");
 			
@@ -296,7 +301,8 @@ describe("Plugins service", () => {
 				}).future<IPluginData[]>()();
 			};
 			
-			pluginsService.add(pluginName+"@1.0.0").wait();
+			let commandsService = testInjector.resolve(CommandsService);
+			commandsService.tryExecuteCommand("plugin|add", [pluginName+"@1.0.0"]).wait();
 			
 			let fs = testInjector.resolve("fs");
 			
@@ -345,7 +351,8 @@ describe("Plugins service", () => {
 				}).future<IPluginData[]>()();
 			};
 			
-			pluginsService.add(pluginFolderPath).wait();
+			let commandsService = testInjector.resolve(CommandsService);
+			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 			
 			// Assert that the all plugin's content is successfully added to node_modules folder
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
@@ -393,7 +400,8 @@ describe("Plugins service", () => {
 			let options = testInjector.resolve("options");
 			options.production = true;
 			
-			pluginsService.add(pluginFolderPath).wait();
+			let commandsService = testInjector.resolve(CommandsService);
+			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 			
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")).wait());
@@ -434,7 +442,7 @@ describe("Plugins service", () => {
 			let options = testInjector.resolve("options");
 			options.production = false;
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);
+			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 		});
 	});
@@ -443,7 +451,7 @@ describe("Plugins service", () => {
 		let testInjector: IInjector;
 		beforeEach(() => {
 			testInjector = createTestInjector();
-			testInjector.registerCommand("plugin|add", AddPluginCommandLib.AddPluginCommand);
+			testInjector.registerCommand("plugin|add", AddPluginCommand);
 		});
 		it("fails if the plugin contains incorrect xml", () => {
 			let pluginName = "mySamplePlugin";
@@ -504,7 +512,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);				
 			
-			let commandsService = testInjector.resolve(CommandsServiceLib.CommandsService);		
+			let commandsService = testInjector.resolve(CommandsService);		
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 		});
 		it("merges AndroidManifest.xml and produces correct xml", () => {
