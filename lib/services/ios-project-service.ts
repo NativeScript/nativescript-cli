@@ -54,8 +54,9 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			frameworkDirectoriesExtensions: [".framework"],
 			frameworkDirectoriesNames: ["Metadata"],
 			targetedOS: ['darwin'],
-			configurationFileName: this.$projectData.projectName+"-Info.plist",
-			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist")
+			configurationFileName: "Info.plist",
+			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
+			mergeXmlConfig: [{ "nodename": "plist", "attrname": "*" }, {"nodename": "dict", "attrname": "*"}]
 		};
 	}
 
