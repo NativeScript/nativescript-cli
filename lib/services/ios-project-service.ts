@@ -195,11 +195,9 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 			shell.cp("-R", libraryPath, fullTargetPath);
 
 			let project = this.createPbxProj();
-			let frameworkPath = this.getFrameworkRelativePath(libraryPath);
-			project.addFramework(frameworkPath, { customFramework: true, embed: true });
-			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+            let frameworkPath = "$(PROJECT_DIR)/" + this.getFrameworkRelativePath(libraryPath);
+			project.addFramework(frameworkPath, { customFramework: true, embed: true, weak: true });
 			this.savePbxProj(project).wait();
-			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
 		}).future<void>()();
 	}
 
@@ -314,7 +312,7 @@ class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase
 						
 			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => {
 				let fullFrameworkPath = path.join(pluginPlatformsFolderPath, fileName);
-				let relativeFrameworkPath = this.getFrameworkRelativePath(fullFrameworkPath);
+                let relativeFrameworkPath = "$(PROJECT_DIR)/" + this.getFrameworkRelativePath(fullFrameworkPath);
 				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true })
 			});
 			
