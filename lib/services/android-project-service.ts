@@ -199,6 +199,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	
 	private parseProjectProperties(projDir: string, destDir: string): IFuture<void> { // projDir is libraryPath, targetPath is the path to lib folder
 		return (() => {
+			projDir = projDir.trim();
 			let projProp = path.join(projDir, "project.properties");
 			if (!this.$fs.exists(projProp).wait()) {
 				this.$logger.warn("Warning: File %s does not exist", projProp);
