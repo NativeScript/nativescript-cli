@@ -163,6 +163,11 @@ export class PlatformService implements IPlatformService {
 
 			// Copy all files from app dir, but make sure to exclude tns_modules
 			let sourceFiles = this.$fs.readDirectory(appSourceDirectoryPath).wait();
+
+			if (this.$options.release) {
+				sourceFiles = sourceFiles.filter(source => source !== 'tests');
+			}
+
 			let hasTnsModulesInAppFolder = _.contains(sourceFiles, constants.TNS_MODULES_FOLDER_NAME);
 			if(hasTnsModulesInAppFolder && this.$projectData.dependencies && this.$projectData.dependencies[constants.TNS_CORE_MODULES_NAME]) {
 				this.$logger.warn("You have tns_modules dir in your app folder and tns-core-modules in your package.json file. Tns_modules dir in your app folder will not be used and you can safely remove it.");
@@ -285,7 +290,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
+	public installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
@@ -312,6 +317,12 @@ export class PlatformService implements IPlatformService {
 				}).future<void>()();
 			};
 			this.$devicesServices.execute(action).wait();
+		}).future<void>()();
+	}
+
+	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
+		return (() => {
+			this.installOnDevice(platform, buildConfig).wait();
 			this.$commandsService.tryExecuteCommand("device", ["run", this.$projectData.projectId]).wait();
 		}).future<void>()();
 	}

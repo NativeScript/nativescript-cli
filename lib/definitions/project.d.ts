@@ -61,3 +61,9 @@ interface IAndroidProjectPropertiesManager {
 	addProjectReference(referencePath: string): IFuture<void>;
 	removeProjectReference(referencePath: string): IFuture<void>;
 }
+
+interface ITestExecutionService {
+	startTestRunner(platform: string): IFuture<void>;
+	startKarmaServer(platform: string): IFuture<void>;
+}
+

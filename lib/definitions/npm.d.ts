@@ -6,7 +6,7 @@ declare module "npm" {
 	module config {
 		var loaded: boolean;
 		module sources {
-			var cli: { data: any };
+			var cli: { data: Object };
 		}
 	}
 }

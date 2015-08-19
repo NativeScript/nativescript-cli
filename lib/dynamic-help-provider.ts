@@ -1,6 +1,7 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
+import * as constants from './constants';
 import Future = require("fibers/future");
 
 export class DynamicHelpProvider implements IDynamicHelpProvider {
@@ -9,7 +10,9 @@ export class DynamicHelpProvider implements IDynamicHelpProvider {
 	}
 
 	public getLocalVariables(options: { isHtml: boolean }): IFuture<IDictionary<any>> {
-		let localVariables: IDictionary<any> = {};
+		let localVariables: IDictionary<any> = {
+			constants: constants
+		};
 		return Future.fromResult(localVariables);
 	}
 }

@@ -46,6 +46,13 @@ $injector.requireCommand("deploy", "./commands/deploy");
 $injector.requireCommand("emulate|android", "./commands/emulate");
 $injector.requireCommand("emulate|ios", "./commands/emulate");
 
+$injector.require("testExecutionService", "./services/test-execution-service");
+$injector.requireCommand("dev-test|android", "./commands/test");
+$injector.requireCommand("dev-test|ios", "./commands/test");
+$injector.requireCommand("test|android", "./commands/test");
+$injector.requireCommand("test|ios", "./commands/test");
+$injector.requireCommand("test|init", "./commands/test-init");
+
 $injector.require("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("lockfile", "./lockfile");
@@ -74,3 +81,6 @@ $injector.requireCommand("init", "./commands/init");
 $injector.require("projectFilesManager", "./services/project-files-manager");
 $injector.requireCommand("livesync", "./commands/livesync");
 $injector.require("androidToolsInfo", "./android-tools-info");
+
+$injector.require("iosUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
+$injector.require("androidUsbLiveSyncServiceLocator", "./services/usb-livesync-service");

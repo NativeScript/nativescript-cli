@@ -14,6 +14,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		super({
 			frameworkPath: { type: OptionType.String },
 			frameworkName: { type: OptionType.String },
+			framework: { type: OptionType.String },
 			frameworkVersion: { type: OptionType.String },
 			copyFrom: { type: OptionType.String },
 			linkTo: { type: OptionType.String  },
@@ -22,6 +23,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			forDevice: { type: OptionType.Boolean },
 			client: { type: OptionType.Boolean, default: true},
 			production: { type: OptionType.Boolean },
+			debugTransport: {type: OptionType.Boolean},
 			keyStorePath: { type: OptionType.String },
 			keyStorePassword: { type: OptionType.String,},
 			keyStoreAlias: { type: OptionType.String },
@@ -31,7 +33,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			tnsModulesVersion: { type: OptionType.String },
 			staticBindings: {type: OptionType.Boolean},
 			compileSdk: {type: OptionType.Number },
-			copyTo: { type: OptionType.String }
+			port: { type: OptionType.Number },
+			copyTo: { type: OptionType.String },
 		},
 		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);

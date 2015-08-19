@@ -66,6 +66,7 @@ interface IPlatformSpecificUsbLiveSyncService {
 interface IOptions extends ICommonOptions {
 	frameworkPath: string;
 	frameworkName: string;
+	framework: string;
 	frameworkVersion: string;
 	copyFrom: string;
 	linkTo: string;
@@ -80,10 +81,12 @@ interface IOptions extends ICommonOptions {
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
 	sdk: string;
+	debugTransport: boolean;
 	ignoreScripts: boolean;
 	tnsModulesVersion: string;
 	staticBindings: boolean;
 	compileSdk: number;
+	port: Number;
 	copyTo: string;
 }
 

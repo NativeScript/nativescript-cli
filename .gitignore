@@ -4,6 +4,7 @@
 !/*.js
 !bin/nativescript.js
 !vendor/*.js
+!resources/**
 *.js.map
 
 coverage
