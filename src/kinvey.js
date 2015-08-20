@@ -93,7 +93,7 @@ class Kinvey {
 
   static init(options = {}) {
     const kinvey = new Kinvey(options);
-    Kinvey[shareInstanceSymbol] = kinvey;
+    Kinvey[sharedInstanceSymbol] = kinvey;
     return kinvey;
   }
 
