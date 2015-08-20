@@ -3,6 +3,8 @@
 
 import yok = require('../lib/common/yok');
 import stubs = require('./stubs');
+import * as constants from "./../lib/constants";
+import * as ChildProcessLib from "../lib/common/child-process";
 
 import ProjectServiceLib = require("../lib/services/project-service");
 import ProjectDataServiceLib = require("../lib/services/project-data-service");
@@ -69,11 +71,14 @@ class ProjectIntegrationTest {
 			var appDirectoryPath = path.join(projectDir, "app");
 			var platformsDirectoryPath = path.join(projectDir, "platforms");
 			let tnsProjectFilePath = path.join(projectDir, "package.json");
+			let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
+
 			var options = this.testInjector.resolve("options");
 
 			assert.isTrue(fs.exists(appDirectoryPath).wait());
 			assert.isTrue(fs.exists(platformsDirectoryPath).wait());
 			assert.isTrue(fs.exists(tnsProjectFilePath).wait());
+			assert.isTrue(fs.exists(tnsModulesPath).wait());
 
 			assert.isFalse(fs.isEmptyDir(appDirectoryPath).wait());
 			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath).wait());
@@ -81,6 +86,9 @@ class ProjectIntegrationTest {
 			var actualAppId = fs.readJson(tnsProjectFilePath).wait()["nativescript"].id;
 			var expectedAppId = appId;
 			assert.equal(actualAppId, expectedAppId);
+
+			let tnsCoreModulesRecord = fs.readJson(tnsProjectFilePath).wait()["dependencies"][constants.TNS_CORE_MODULES_NAME];
+			assert.isTrue(tnsCoreModulesRecord !== null);
 
 			var actualFiles = fs.enumerateFilesInDirectorySync(options.copyFrom);
 			var expectedFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
@@ -99,7 +107,7 @@ class ProjectIntegrationTest {
 
 	private createTestInjector(): void {
 		this.testInjector = new yok.Yok();
-
+		this.testInjector.register("childProcess", ChildProcessLib.ChildProcess);	
 		this.testInjector.register("errors", stubs.ErrorsStub);
 		this.testInjector.register('logger', stubs.LoggerStub);
 		this.testInjector.register("projectService", ProjectServiceLib.ProjectService);
@@ -171,6 +179,8 @@ function createTestInjector() {
 	testInjector.register("httpClient", HttpClientLib.HttpClient);
 	testInjector.register("config", {});
 	testInjector.register("lockfile", stubs.LockFile);
+
+	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	
 	testInjector.register('projectData', ProjectDataLib.ProjectData);
 	testInjector.register("options", optionsLib.Options);

@@ -175,9 +175,15 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.prepareProject().wait();
 
 			// Process node_modules folder
-			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
-			let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
-			this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
+			try {
+				this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+				let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
+				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
+			} catch(error) {
+				this.$logger.debug(error);
+				this.$errors.fail(`Processing node_modules failed. Error:${error}`);
+				shell.rm("-rf", appResourcesDirectoryPath);
+			}
 			
 			// Process platform specific files
 			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);

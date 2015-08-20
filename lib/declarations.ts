@@ -6,6 +6,7 @@ interface INodePackageManager {
 	cache(packageName: string, version: string, cache?: any): IFuture<IDependencyData>;
 	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	view(packageName: string, propertyName: string): IFuture<any>;
+	executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any>;
 }
 
 interface INpmInstallationManager {
@@ -78,6 +79,7 @@ interface IOptions extends ICommonOptions {
 	keyStoreAliasPassword: string;
 	sdk: string;
 	ignoreScripts: boolean;
+	tnsModulesVersion: string;
 }
 
 interface IProjectFilesManager {
