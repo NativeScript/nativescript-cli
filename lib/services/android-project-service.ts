@@ -5,21 +5,19 @@ import * as shell from "shelljs";
 import Future = require("fibers/future");
 import * as constants from "../constants";
 import * as semver from "semver";
-import * as androidProjectPropertiesManagerLib from "./android-project-properties-manager";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 
 class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static MIN_SUPPORTED_VERSION = 17;
 	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22"]; // forbidden for now: "android-MNC"
 	private static ANDROID_TARGET_PREFIX = "android";
-	private static RES_DIRNAME = "res";
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static LIBS_FOLDER_NAME = "libs";
 	private static MIN_JAVA_VERSION = "1.7.0";
+	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
 
-	private targetApi: string;
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -30,6 +28,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $projectData: IProjectData,
+		private $projectDataService: IProjectDataService,
 		private $propertiesParser: IPropertiesParser,
 		private $sysInfo: ISysInfo,
 		$fs: IFileSystem) {
@@ -45,19 +44,21 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
-				appDestinationDirectoryPath: path.join(projectRoot, "assets"),
-				appResourcesDestinationDirectoryPath: path.join(projectRoot, "res"),
+				appDestinationDirectoryPath: path.join(projectRoot, "src", "main", "assets"),
+				appResourcesDestinationDirectoryPath: path.join(projectRoot, "src", "main", "res"),
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
-				deviceBuildOutputPath: path.join(this.$projectData.platformsDir, "android", "bin"),
+				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
 				validPackageNamesForDevice: [
 					`${this.$projectData.projectName}-debug.apk`,
-					`${this.$projectData.projectName}-release.apk`
+					`${this.$projectData.projectName}-release.apk`,
+					"android-debug.apk",
+					"android-release.apk"
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
-				configurationFilePath: path.join(this.$projectData.platformsDir, "android", "AndroidManifest.xml"),
+				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
 				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}]
 			};
 		}
@@ -71,47 +72,44 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			this.validateProjectName(this.$projectData.projectName);
 
 			this.checkJava().wait();
-			this.checkAnt().wait();
 			this.checkAndroid().wait();
 		}).future<void>()();
 	}
 
 	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return (() => {
+			let frameworkVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
+			if(semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+				this.$errors.fail(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
+			}
+
+			this.checkGradle().wait();
+
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
 
-			let newTarget = this.getAndroidTarget(frameworkDir).wait();
+			let newTarget = this.getAndroidTarget().wait();
 			this.$logger.trace(`Using Android SDK '${newTarget}'.`);
 			let versionNumber = _.last(newTarget.split("-"));
 			if(this.$options.symlink) {
-				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
-
-				this.symlinkDirectory("assets", projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("build-tools", projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("src", projectRoot, frameworkDir).wait();
+
+				this.$fs.symlink(path.join(frameworkDir, "build.gradle"), path.join(projectRoot, "build.gradle")).wait();
 			} else {
-				this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
-				this.copy(projectRoot, frameworkDir, "assets libs", "-R").wait();
-				this.copy(projectRoot, frameworkDir, ".project AndroidManifest.xml project.properties custom_rules.xml", "-f").wait();
+				this.copy(projectRoot, frameworkDir, "build-tools libs src", "-R");
+				this.copy(projectRoot, frameworkDir, "build.gradle", "-f");
 			}
 
-			if(newTarget) {
-				this.updateTarget(projectRoot, newTarget).wait();
-			}
-
-			// Create src folder
-			let packageName = this.$projectData.projectId;
-			let packageAsPath = packageName.replace(/\./g, path.sep);
-			let activityDir = path.join(projectRoot, 'src', packageAsPath);
-			this.$fs.createDirectory(activityDir).wait();
+			this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
 
 		}).future<any>()();
 	}
 
 	private copyResValues(projectRoot: string, frameworkDir: string, versionNumber: string): IFuture<void> {
 		return (() => {
-			let resSourceDir = path.join(frameworkDir, AndroidProjectService.RES_DIRNAME);
-			let resDestinationDir = path.join(projectRoot, AndroidProjectService.RES_DIRNAME);
+			let resSourceDir = path.join(frameworkDir, "src", "main", "res");
+			let resDestinationDir = this.platformData.appResourcesDestinationDirectoryPath;
 			this.$fs.createDirectory(resDestinationDir).wait();
 			let versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
 			let directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
@@ -133,43 +131,38 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				directoriesToCopy.push(versionDir);
 			}
 
-			this.copy(resDestinationDir, resSourceDir, directoriesToCopy.join(" "), "-R").wait();
+			this.copy(resDestinationDir, resSourceDir, directoriesToCopy.join(" "), "-Rf");
 		}).future<void>()();
 	}
 
 	public interpolateData(projectRoot: string): IFuture<void> {
 		return (() => {
 			// Interpolate the activity name and package
-			let manifestPath = path.join(projectRoot, "AndroidManifest.xml");
+			let manifestPath = this.platformData.configurationFilePath;
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
-			shell.sed('-i', /__APILEVEL__/, this.getTarget(projectRoot).wait().split('-')[1], manifestPath);
+			shell.sed('-i', /__APILEVEL__/, this.getApiLevel().wait(), manifestPath);
 
-			let stringsFilePath = path.join(projectRoot, 'res', 'values', 'strings.xml');
+			let stringsFilePath = path.join(this.platformData.appResourcesDestinationDirectoryPath, 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
-			shell.sed('-i', /__NAME__/, this.$projectData.projectName, path.join(projectRoot, '.project'));
 		}).future<void>()();
 	}
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
 		return (() => {
-			let targetApi = this.getTarget(projectRoot).wait();
-			this.$logger.trace("Android target: %s", targetApi);
-			this.runAndroidUpdate(projectRoot, targetApi).wait();
-			this.adjustMinSdk(projectRoot);
+			let targetApi = this.getAndroidTarget().wait();
+			this.$logger.trace(`Adroid target: ${targetApi}`);
+			this.adjustMinSdk(projectRoot).wait();
 		}).future<void>()();
 	}
 
-	private adjustMinSdk(projectRoot: string): void {
-		let manifestPath = path.join(projectRoot, "AndroidManifest.xml");
-		let apiLevel = this.getTarget(projectRoot).wait().split('-')[1];
-		if (apiLevel === "MNC") { // MNC SDK requires that minSdkVersion is set to "MNC"
-			shell.sed('-i', /android:minSdkVersion=".*?"/, `android:minSdkVersion="${apiLevel}"`, manifestPath);
-		}
-	}
-
-	public getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
-		return { };
+	private adjustMinSdk(projectRoot: string): IFuture<void> {
+		return (() => {
+			let apiLevel = this.getApiLevel().wait();
+			if (apiLevel === "MNC") { // MNC SDK requires that minSdkVersion is set to "MNC"
+				shell.sed('-i', /android:minSdkVersion=".*?"/, `android:minSdkVersion="${apiLevel}"`, this.platformData.configurationFilePath);
+			}
+		}).future<void>()();
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
@@ -181,47 +174,29 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
-		let buildConfiguration = this.$options.release ? "release" : "debug";
-		let args = this.getAntArgs(buildConfiguration, projectRoot);
-		return this.spawn('ant', args);
+		return (() => {
+			if(this.canUseGradle().wait()) {
+				let buildOptions = ["buildapk"];
+				if(this.$options.release) {
+					buildOptions.push("-Prelease");
+					buildOptions.push(`-PksPath=${this.$options.keyStorePath}`);
+					buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
+					buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
+					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
+				}
+
+				this.spawn("gradle", buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+			} else {
+				this.checkAnt().wait();
+
+				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
+				this.spawn('ant', args).wait();
+			}
+		}).future<void>()();
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
-		return this.$fs.exists(path.join(projectRoot, "assets", constants.APP_FOLDER_NAME));
-	}
-
-	private getProjectPropertiesManager(filePath: string): IAndroidProjectPropertiesManager {
-		if(!this._androidProjectPropertiesManagers[filePath]) {
-			this._androidProjectPropertiesManagers[filePath] = this.$injector.resolve(androidProjectPropertiesManagerLib.AndroidProjectPropertiesManager, { directoryPath: filePath });
-		}
-
-		return this._androidProjectPropertiesManagers[filePath];
-	}
-
-	private parseProjectProperties(projDir: string, destDir: string): IFuture<void> { // projDir is libraryPath, targetPath is the path to lib folder
-		return (() => {
-			projDir = projDir.trim();
-			let projProp = path.join(projDir, "project.properties");
-			if (!this.$fs.exists(projProp).wait()) {
-				this.$logger.warn("Warning: File %s does not exist", projProp);
-				return;
-			}
-
-			let projectPropertiesManager = this.getProjectPropertiesManager(projDir);
-			let references = projectPropertiesManager.getProjectReferences().wait();
-			_.each(references, reference => {
-				let adjustedPath = this.$fs.isRelativePath(reference.path) ? path.join(projDir, reference.path) : reference.path;
-				this.parseProjectProperties(adjustedPath, destDir).wait();
-			});
-
-			this.$logger.info("Copying %s", projDir);
-			shell.cp("-Rf", projDir, destDir);
-
-			let targetDir = path.join(destDir, path.basename(projDir));
-			let targetSdk = `android-${this.$options.sdk || AndroidProjectService.MIN_SUPPORTED_VERSION}`;
-			this.$logger.info("Generate build.xml for %s", targetDir);
-			this.runAndroidUpdate(targetDir, targetSdk).wait();
-		}).future<void>()();
+		return this.$fs.exists(path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 	}
 
 	public addLibrary(libraryPath: string): IFuture<void> {
@@ -232,20 +207,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let targetPath = path.dirname(targetLibPath);
 			this.$fs.ensureDirectoryExists(targetPath).wait();
 
-			if(this.$fs.exists(path.join(libraryPath, "project.properties")).wait()) {
-				this.parseProjectProperties(libraryPath, targetPath).wait();
-			}
-
 			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
 			let projectLibsDir = path.join(this.platformData.projectRoot, "libs");
 			this.$fs.ensureDirectoryExists(projectLibsDir).wait();
 			shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
-
-			let libProjProp = path.join(libraryPath, "project.properties");
-			if (this.$fs.exists(libProjProp).wait()) {
-				this.updateProjectReferences(this.platformData.projectRoot, targetLibPath).wait();
-				this.runAndroidUpdate(targetLibPath, this.getTarget(this.platformData.projectRoot).wait()).wait();
-			}
 		}).future<void>()();
 	}
 
@@ -277,25 +242,16 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			if(this.$fs.exists(libsFolderPath).wait()) {
 				this.addLibrary(libsFolderPath).wait();
 			}
-
-			// Handle android libraries
-			let librarries = this.getAllLibrariesForPlugin(pluginData).wait();
-			_.each(librarries, libraryName => this.addLibrary(path.join(pluginPlatformsFolderPath, libraryName)).wait());
 		}).future<void>()();
 	}
 
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			let projectPropertiesManager = this.getProjectPropertiesManager(this.platformData.projectRoot);
+			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			let pluginJars = this.$fs.enumerateFilesInDirectorySync(path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME));
 
-			let libraries = this.getAllLibrariesForPlugin(pluginData).wait();
-			_.each(libraries, libraryName => {
-				let libraryPath = this.getLibraryPath(libraryName);
-				let libraryRelativePath = this.getLibraryRelativePath(this.platformData.projectRoot, libraryPath);
-				projectPropertiesManager.removeProjectReference(libraryRelativePath).wait();
-				this.$fs.deleteDirectory(libraryPath).wait();
-			});
-
+			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
+			_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
 		}).future<void>()();
 	}
 
@@ -303,42 +259,30 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return Future.fromResult();
 	}
 
-	private getLibraryRelativePath(basePath: string, libraryPath: string): string {
-		return path.relative(basePath, libraryPath).split("\\").join("/");
+	private canUseGradle(): IFuture<boolean> {
+		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait().version;
+			return semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+		}).future<boolean>()();
 	}
 
 	private getLibraryPath(libraryName: string): string {
 		 return path.join(this.$projectData.projectDir, "lib", this.platformData.normalizedPlatformName, libraryName);
 	}
 
-	private updateProjectReferences(projDir: string, libraryPath: string): IFuture<void> {
-		let relLibDir = this.getLibraryRelativePath(projDir, libraryPath);
-
-		let projectPropertiesManager = this.getProjectPropertiesManager(projDir);
-		return projectPropertiesManager.addProjectReference(relLibDir);
+	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
+		let paths = files.split(' ').map(p => path.join(frameworkDir, p));
+		shell.cp(cpArg, paths, projectRoot);
 	}
 
-	private getAllLibrariesForPlugin(pluginData: IPluginData): IFuture<string[]> {
-		return (() => {
-			let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => fileName !== AndroidProjectService.LIBS_FOLDER_NAME && this.$fs.exists(path.join(pluginPlatformsFolderPath, fileName, "project.properties")).wait();
-			return this.getAllNativeLibrariesForPlugin(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME, filterCallback).wait();
-		}).future<string[]>()();
-	}
-
-	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): IFuture<void> {
-		return (() => {
-			let paths = files.split(' ').map(p => path.join(frameworkDir, p));
-			shell.cp(cpArg, paths, projectRoot);
-		}).future<void>()();
-	}
-
-	private spawn(command: string, args: string[]): IFuture<void> {
+	private spawn(command: string, args: string[], opts?: any): IFuture<void> {
 		if (this.$hostInfo.isWindows) {
 			args.unshift('/s', '/c', command);
 			command = process.env.COMSPEC || 'cmd.exe';
 		}
 
-		return this.$childProcess.spawnFromEvent(command, args, "close", {stdio: "inherit"});
+		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit"});
 	}
 
 	private getAntArgs(configuration: string, projectRoot: string): string[] {
@@ -367,16 +311,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return args;
 	}
 
-	private runAndroidUpdate(projectPath: string, targetApi: string): IFuture<void> {
-		let args = [
-			"--path", projectPath,
-			"--target", targetApi,
-			"--name", this.$projectData.projectName
-		];
-
-		return this.spawn("android", ['update', 'project'].concat(args));
-	}
-
 	private validatePackageName(packageName: string): void {
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
@@ -401,9 +335,9 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}
 	}
 
-	private getAndroidTarget(frameworkDir: string): IFuture<string> {
+	private getAndroidTarget(): IFuture<string> {
 		return ((): string => {
-			let newTarget = this.$options.sdk ? `${AndroidProjectService.ANDROID_TARGET_PREFIX}-${this.$options.sdk}` : this.getLatestValidAndroidTarget(frameworkDir).wait();
+			let newTarget = this.$options.sdk ? `${AndroidProjectService.ANDROID_TARGET_PREFIX}-${this.$options.sdk}` : this.getLatestValidAndroidTarget().wait();
 			if(!_.contains(this.SUPPORTED_TARGETS, newTarget)) {
 				let versionNumber = parseInt(_.last(newTarget.split("-")));
 				if(versionNumber && (versionNumber < AndroidProjectService.MIN_SUPPORTED_VERSION)) {
@@ -421,7 +355,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}).future<string>()();
 	}
 
-	private getLatestValidAndroidTarget(frameworkDir: string): IFuture<string> {
+	private getLatestValidAndroidTarget(): IFuture<string> {
 		return (() => {
 			let installedTargets = this.getInstalledTargets().wait();
 
@@ -437,22 +371,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}).future<string>()();
 	}
 
-	private updateTarget(projectRoot: string, newTarget: string): IFuture<void> {
+	private getApiLevel(): IFuture<string> {
 		return (() => {
-			let file = path.join(projectRoot, "project.properties");
-			let editor = this.$propertiesParser.createEditor(file).wait();
-			editor.set("target", newTarget);
-			let future = new Future<void>();
-			editor.save((err:any) => {
-				if (err) {
-					future.throw(err);
-				} else {
-					this.targetApi = null; // so that later we can repopulate the cache
-					future.return();
-				}
-			});
-			future.wait();
-		}).future<void>()();
+			return this.getAndroidTarget().wait().split('-')[1];
+		}).future<string>()();
 	}
 
 	private installedTargetsCache: string[] = null;
@@ -465,21 +387,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			}
 			return this.installedTargetsCache;
 		}).future<string[]>()();
-	}
-
-	private getTarget(projectRoot: string): IFuture<string> {
-		return (() => {
-			if(!this.targetApi) {
-				let projectPropertiesFilePath = path.join(projectRoot, "project.properties");
-
-				if (this.$fs.exists(projectPropertiesFilePath).wait()) {
-					let properties = this.$propertiesParser.createEditor(projectPropertiesFilePath).wait();
-					this.targetApi = properties.get("target");
-				}
-			}
-
-			return this.targetApi;
-		}).future<string>()();
 	}
 
 	private checkJava(): IFuture<void> {
@@ -501,6 +408,16 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				this.$childProcess.exec("ant -version").wait();
 			} catch(error) {
 				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
+			}
+		}).future<void>()();
+	}
+
+	private checkGradle(): IFuture<void> {
+		return (() => {
+			try {
+				this.$childProcess.exec("gradle -v").wait();
+			} catch(error) {
+				this.$errors.fail("Error executing commands 'gradle', make sure you have gradle installed and added to your PATH.");
 			}
 		}).future<void>()();
 	}
