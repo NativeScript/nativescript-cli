@@ -184,7 +184,7 @@ export class PluginsService implements IPluginsService {
 		let pluginData: any = {};
 		pluginData.name = cacheData.name;
 		pluginData.version = cacheData.version;
-		pluginData.fullPath = path.dirname(this.getPackageJsonFilePathForModule(cacheData.name));
+		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name));
 		pluginData.isPlugin = !!cacheData.nativescript;
 		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
 		
