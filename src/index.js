@@ -3,6 +3,7 @@ import Kinvey from './kinvey';
 // Data
 Kinvey.Collection = require('./core/collection');
 Kinvey.Model = require('./core/model');
+Kinvey.Query = require('./core/query');
 
 // Enums
 Kinvey.AuthType = require('./enums/authType');

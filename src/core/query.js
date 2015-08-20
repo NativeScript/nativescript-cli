@@ -1,3 +1,5 @@
+import nested from '../utils/nested';
+import sift from 'sift';
 import isArray from 'lodash/lang/isArray';
 import isNumber from 'lodash/lang/isNumber';
 import isString from 'lodash/lang/isString';
@@ -7,42 +9,40 @@ const privateQuerySymbol = Symbol();
 
 class PrivateQuery {
   constructor(options = {}) {
-    super();
-
     /**
      * Fields to select.
      *
      * @type {Array}
      */
-    this.fields = options.fields || [];
+    this._fields = options.fields || [];
 
     /**
      * The MongoDB query.
      *
      * @type {Object}
      */
-    this.filter = options.filter || {};
+    this._filter = options.filter || {};
 
     /**
      * The sorting order.
      *
      * @type {Object}
      */
-    this.sort = options.sort || {};
+    this._sort = options.sort || {};
 
     /**
      * Number of documents to select.
      *
      * @type {?Number}
      */
-    this.limit = options.limit || null;
+    this._limit = options.limit || null;
 
     /**
      * Number of documents to skip from the start.
      *
      * @type {Number}
      */
-    this.skip = options.skip || 0;
+    this._skip = options.skip || 0;
 
     /**
      * Maintain reference to the parent query in case the query is part of a
@@ -63,7 +63,7 @@ class PrivateQuery {
    * @returns {Query}                   The query.
    */
   equalTo(field, value) {
-    this.filter[field] = value;
+    this._filter[field] = value;
     return this;
   }
 
@@ -170,7 +170,7 @@ class PrivateQuery {
     return this.join('$nor', Array.prototype.slice.call(arguments));
   }
 
-  or(field, flag) {
+  or() {
     if (this.parent) {
       return this.parent.or.apply(this.parent, arguments);
     }
@@ -247,7 +247,7 @@ class PrivateQuery {
     coord[0] = parseFloat(coord[0]);
     coord[1] = parseFloat(coord[1]);
 
-    const result = this.addFilter(field, '$nearSphere', [ coord[0], coord[1] ]);
+    const result = this.addFilter(field, '$nearSphere', [coord[0], coord[1]]);
 
     if (maxDistance) {
       this.addFilter(field, '$maxDistance', maxDistance);
@@ -262,7 +262,7 @@ class PrivateQuery {
     }
 
     if (!isArray(upperRightCoord) || !upperRightCoord[0] || !upperRightCoord[1]) {
-      throw new Kinvey.Error('upperRightCoord argument must be of type: [number, number]');
+      throw new Error('upperRightCoord argument must be of type: [number, number]');
     }
 
     bottomLeftCoord[0] = parseFloat(bottomLeftCoord[0]);
@@ -271,8 +271,8 @@ class PrivateQuery {
     upperRightCoord[1] = parseFloat(upperRightCoord[1]);
 
     const coords = [
-      [ bottomLeftCoord[0], bottomLeftCoord[1] ],
-      [ upperRightCoord[0], upperRightCoord[1] ]
+      [bottomLeftCoord[0], bottomLeftCoord[1]],
+      [upperRightCoord[0], upperRightCoord[1]]
     ];
     return this.addFilter(field, '$within', {$box: coords});
   }
@@ -287,10 +287,10 @@ class PrivateQuery {
         throw new Error('coords argument must be of type: [number, number]');
       }
 
-      return [ parseFloat(coord[0]), parseFloat(coord[1]) ];
+      return [parseFloat(coord[0]), parseFloat(coord[1])];
     });
 
-    return this.addFilter(field, '$within', { $polygon: coords });
+    return this.addFilter(field, '$within', {$polygon: coords});
   }
 
   size(field, size) {
@@ -313,7 +313,7 @@ class PrivateQuery {
     if (this.parent) {
       this.parent.fields(fields);
     } else {
-      this.fields = fields;
+      this._fields = fields;
     }
 
     return this;
@@ -331,7 +331,7 @@ class PrivateQuery {
     if (this._parent) {
       this.parent.limit(limit);
     }else {
-      this.limit = limit;
+      this._limit = limit;
     }
 
     return this;
@@ -343,13 +343,13 @@ class PrivateQuery {
     }
 
     if (!isNumber(skip)) {
-      throw new Kinvey.Error('skip argument must be of type: number.');
+      throw new Error('skip argument must be of type: number.');
     }
 
     if (this.parent) {
       this.parent.skip(skip);
     } else {
-      this.skip = skip;
+      this._skip = skip;
     }
 
     return this;
@@ -359,7 +359,7 @@ class PrivateQuery {
     if (this.parent) {
       this.parent.ascending(field);
     } else {
-      this.sort[field] = 1;
+      this._sort[field] = 1;
     }
 
     return this;
@@ -369,7 +369,7 @@ class PrivateQuery {
     if (this.parent) {
       this.parent.descending(field);
     } else {
-      this.sort[field] = -1;
+      this._sort[field] = -1;
     }
 
     return this;
@@ -383,7 +383,7 @@ class PrivateQuery {
     if (this.parent) {
       this.parent.sort(sort);
     } else {
-      this.sort = sort || {};
+      this._sort = sort || {};
     }
 
     return this;
@@ -398,11 +398,11 @@ class PrivateQuery {
    * @returns {PrivateQuery}                The query.
    */
   addFilter(field, condition, values) {
-    if (!isObject(this.filter[field])) {
-      this.filter[field] = {};
+    if (!isObject(this._filter[field])) {
+      this._filter[field] = {};
     }
 
-    this.filter[field][condition] = values;
+    this._filter[field][condition] = values;
     return this;
   }
 
@@ -415,7 +415,7 @@ class PrivateQuery {
    * @returns {PrivateQuery}                          The query.
    */
   join(operator, queries) {
-    const result = this;
+    let _this = this;
     const currentQuery = {};
 
     // Cast, validate, and parse arguments. If `queries` are supplied, obtain
@@ -437,31 +437,31 @@ class PrivateQuery {
     // This query is the right-hand side of the join expression, and will be
     // returned to allow for a fluent interface.
     if (queries.length === 0) {
-      result = new PrivateQuery();
-      queries = [result.toJSON().filter];
-      result.parent = this; // Required for operator precedence and `toJSON`.
+      _this = new PrivateQuery();
+      queries = [_this.toJSON().filter];
+      _this.parent = this; // Required for operator precedence and `toJSON`.
     }
 
     // Join operators operate on the top-level of `filter`. Since the `toJSON`
     // magic requires `filter` to be passed by reference, we cannot simply re-
     // assign `filter`. Instead, empty it without losing the reference.
-    for (const member in this.filter) {
-      if (this.filter.hasOwnProperty(member)) {
-        currentQuery[member] = this.filter[member];
-        delete this.filter[member];
+    for (const member in this._filter) {
+      if (this._filter.hasOwnProperty(member)) {
+        currentQuery[member] = this._filter[member];
+        delete this._filter[member];
       }
     }
 
     // `currentQuery` is the left-hand side query. Join with `queries`.
-    this.filter[operator] = [currentQuery].concat(queries);
+    this._filter[operator] = [currentQuery].concat(queries);
 
     // Return the current query if there are `queries`, and the new (empty)
     // `PrivateQuery` otherwise.
-    return result;
+    return _this;
   }
 
   /**
-   * Post processes the raw response by applying sort, limit, and skip.
+   * Post processes the raw response by applying fields, sort, limit, and skip.
    *
    * @param   {Array}   response    The raw response.
    * @throws  {Error}               `response` must be of type: `Array`.
@@ -473,21 +473,32 @@ class PrivateQuery {
       throw new Error('response argument must be of type: Array.');
     }
 
+    // Remove fields
+    response = response.map((item) => {
+      for (const key in item) {
+        if (item.hasOwnProperty(key) && this._fields.indexOf(key) === -1) {
+          delete item[key];
+        }
+      }
+
+      return item;
+    });
+
     // Sorting.
     response = response.sort((a, b) => {
-      for (const field in this.sort) {
-        if (this.sort.hasOwnProperty(field)) {
+      for (const field in this._sort) {
+        if (this._sort.hasOwnProperty(field)) {
           // Find field in objects.
-          const aField = utils.nested(a, field);
-          const bField = utils.nested(b, field);
+          const aField = nested(a, field);
+          const bField = nested(b, field);
 
           // Elements which do not contain the field should always be sorted
           // lower.
-          if (utils.isDefined(aField) && !utils.isDefined(bField)) {
+          if (aField && !bField) {
             return -1;
           }
 
-          if (utils.isDefined(bField) && !utils.isDefined(aField)) {
+          if (bField && !aField) {
             return 1;
           }
 
@@ -495,7 +506,7 @@ class PrivateQuery {
           // (ascending (-1), or descending(1)). If the fields are equal,
           // continue sorting based on the next field (if any).
           if (aField !== bField) {
-            const modifier = this.sort[field]; // 1 or -1.
+            const modifier = this._sort[field]; // 1 or -1.
             return (aField < bField ? -1 : 1) * modifier;
           }
         }
@@ -505,11 +516,11 @@ class PrivateQuery {
     });
 
     // Limit and skip.
-    if (utils.isDefined(this.limit)) {
-      return response.slice(this.skip, this.skip + this.limit);
+    if (this._limit) {
+      return response.slice(this._skip, this._skip + this._limit);
     }
 
-    return response.slice(this.skip);
+    return response.slice(this._skip);
   }
 
   /**
@@ -524,11 +535,11 @@ class PrivateQuery {
 
     // Return set of parameters.
     return {
-      fields: this.fields,
-      filter: this.filter,
-      sort: this.sort,
-      skip: this.skip,
-      limit: this.limit
+      fields: this._fields,
+      filter: this._filter,
+      sort: this._sort,
+      skip: this._skip,
+      limit: this._limit
     };
   }
 }
@@ -632,8 +643,8 @@ class Query {
     return this;
   }
 
-  or(field, flag) {
-    this[privateQuerySymbol].or(field, flag);
+  or() {
+    this[privateQuerySymbol].or.apply(this[privateQuerySymbol], arguments);
     return this;
   }
 
@@ -700,6 +711,16 @@ class Query {
   sort(sort) {
     this[privateQuerySymbol].sort(sort);
     return this;
+  }
+
+  filter(response) {
+    if (response) {
+      const json = this.toJSON();
+      response = sift(json.filter, response);
+      response = this[privateQuerySymbol].postProcess(response);
+    }
+
+    return response;
   }
 
   /**
