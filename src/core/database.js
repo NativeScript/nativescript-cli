@@ -40,7 +40,7 @@ class Database {
     // If there is a database handle, try to be smart.
     if (this.db && (force || !this.inTransaction)) {
       // If the collection exists, obtain and return the transaction handle.
-      if (this.db.objectStoreNames.contains(collection)) {
+      if (this.db.objectStoreNames.indexOf(collection) >= 0) {
         const mode = write ? 'readwrite' : 'readonly';
         let txn;
 
@@ -173,8 +173,7 @@ class Database {
         return response;
       }
 
-      // TODO: apply query
-      return response;
+      return query.filter(response);
     });
   }
 
