@@ -3,6 +3,7 @@
 
 export class ProjectCommandParameter implements ICommandParameter {
 	constructor(private $errors: IErrors,
+		private $logger: ILogger,
 		private $projectNameValidator: IProjectNameValidator) { }
 
 	mandatory = true;
@@ -10,6 +11,10 @@ export class ProjectCommandParameter implements ICommandParameter {
 		return (() => {
 			if(!value) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
+			}
+
+			if (value.toUpperCase() === "APP") {
+				this.$logger.warn("You cannot build aplications named 'app' in Xcode. Consider creating a project with different name.");
 			}
 
 			return this.$projectNameValidator.validate(value);
@@ -20,6 +25,7 @@ export class ProjectCommandParameter implements ICommandParameter {
 export class CreateProjectCommand implements ICommand {
 	constructor(private $projectService: IProjectService,
 		private $errors: IErrors,
+		private $logger: ILogger,
 		private $projectNameValidator: IProjectNameValidator) { }
 
 	public enableHooks = false;
@@ -30,6 +36,6 @@ export class CreateProjectCommand implements ICommand {
 		}).future<void>()();
 	}
 
-	allowedParameters = [new ProjectCommandParameter(this.$errors, this.$projectNameValidator) ]
+	allowedParameters = [new ProjectCommandParameter(this.$errors, this.$logger, this.$projectNameValidator) ]
 }
 $injector.registerCommand("create", CreateProjectCommand);
