@@ -243,6 +243,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let libProjProp = path.join(libraryPath, "project.properties");
 			if (this.$fs.exists(libProjProp).wait()) {
 				this.updateProjectReferences(this.platformData.projectRoot, targetLibPath).wait();
+				this.runAndroidUpdate(targetLibPath, this.getTarget(this.platformData.projectRoot).wait()).wait();
 			}
 		}).future<void>()();
 	}
