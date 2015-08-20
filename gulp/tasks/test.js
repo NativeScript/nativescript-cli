@@ -15,6 +15,16 @@ gulp.task('test', ['lint-src', 'lint-test'], function() {
   return test(['test/setup/node.js', config.files.test]);
 });
 
+gulp.task('test-database', ['lint-src', 'lint-test-database'], function() {
+  require('babel/register');
+  return test(['test/setup/node.js', 'test/specs/database.spec.js']);
+});
+
+gulp.task('test-query', ['lint-src', 'lint-test-query'], function() {
+  require('babel/register');
+  return test(['test/setup/node.js', 'test/specs/query.spec.js']);
+});
+
 gulp.task('test-request', ['lint-src', 'lint-test-request'], function() {
   require('babel/register');
   return test(['test/setup/node.js', 'test/specs/request.spec.js']);
