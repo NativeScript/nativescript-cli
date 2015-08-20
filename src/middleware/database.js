@@ -10,9 +10,11 @@ class DatabaseMiddleware extends Middleware {
   }
 
   handle(request) {
-    return super.handle(request).then(({ namespace, appKey, collection, id }) => {
+    return super.handle(request).then((matches) => {
       const database = Database.sharedInstance();
       const method = request.method;
+      const collection = matches.collection;
+      const id = matches.id;
       let promise;
 
       if (method === HttpMethod.GET) {
