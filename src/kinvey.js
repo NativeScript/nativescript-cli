@@ -1,6 +1,5 @@
-import {isDefined} from './utils';
 import url from 'url';
-const shareInstanceSymbol = Symbol();
+const sharedInstanceSymbol = Symbol();
 
 class Kinvey {
   get apiUrl() {
@@ -22,11 +21,11 @@ class Kinvey {
     let micApiUrl;
     let micApiUrlComponents;
 
-    if (!isDefined(options.appKey)) {
+    if (!options.appKey) {
       throw new Error('No App Key was provided. Unable to initialize Kinvey without an App Key.');
     }
 
-    if (!isDefined(options.appSecret) && !isDefined(options.masterSecret)) {
+    if (!options.appSecret && !options.masterSecret) {
       throw new Error('No App Secret or Master Secret was provided. Unable to initialize Kinvey without an App Secret or Master Secret.');
     }
 
@@ -99,7 +98,13 @@ class Kinvey {
   }
 
   static sharedInstance() {
-    return Kinvey[shareInstanceSymbol];
+    const instance = Kinvey[sharedInstanceSymbol];
+
+    if (!instance) {
+      throw new Error('No shared instance has been created. Please call `Kinvey.init()` to create the shared instance.');
+    }
+
+    return instance;
   }
 }
 
