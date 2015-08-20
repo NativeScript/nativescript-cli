@@ -1,5 +1,4 @@
 import Middleware from './middleware';
-import {isDefined} from '../utils';
 import isObject from 'lodash/lang/isObject';
 
 class ParserMiddleware extends Middleware {
@@ -11,7 +10,7 @@ class ParserMiddleware extends Middleware {
     if (isObject(request)) {
       const response = request.response;
 
-      if (isDefined(response) && isDefined(response.data)) {
+      if (response && response.data) {
         const contentType = response.getHeader('Content-Type');
 
         if (contentType.indexOf('application/json') === 0) {

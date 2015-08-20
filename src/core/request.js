@@ -12,10 +12,6 @@ import UrlPattern from 'url-pattern';
 import defaults from 'lodash/object/defaults';
 const privateRequestSymbol = Symbol();
 
-class RequestQueue {
-
-}
-
 class PrivateRequest {
   get auth() {
     return this._auth;
@@ -182,8 +178,6 @@ class PrivateRequest {
       promise = this.executeLocal().then((response) => {
         if (response && response.isSuccess()) {
           if (this.method !== HttpMethod.GET) {
-            // Queue the request
-
             const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
               client: this.client,
               dataPolicy: DataPolicy.CloudOnly
