@@ -1,4 +1,3 @@
-// Modules
 import Kinvey from '../../src/kinvey';
 import log from 'loglevel';
 import uid from 'uid';

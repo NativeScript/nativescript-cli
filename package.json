@@ -69,6 +69,7 @@
     "gulp-util": "^3.0.6",
     "isparta": "^3.0.3",
     "mocha": "^2.1.0",
+    "mocha-jenkins-reporter": "^0.1.9",
     "nock": "^2.7.0",
     "run-sequence": "^1.0.2",
     "sinon": "^1.12.2",
