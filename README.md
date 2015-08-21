@@ -505,7 +505,7 @@ tns doctor
 
 This command prints warnings about current configuration issues and provides basic information about how to resolve them.
 
-If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript page in Google Groups](https://groups.google.com/forum/#!forum/nativescript).
+If addressing the configuration issues does not resolve your problem, you can [report an issue](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue) or [post in the NativeScript page in Google Groups](https://groups.google.com/forum/#!forum/nativescript).
 
 [Back to Top][1]
 
@@ -526,11 +526,11 @@ Known Issues
 How to Contribute
 ===
 
-To learn how to log a bug that you just discovered, click [here](https://github.com/NativeScript/nativescript-cli/CONTRIBUTING.md#report-an-issue).
+To learn how to log a bug that you just discovered, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#report-an-issue).
 
-To learn how to suggest a new feature or improvement, click [here](https://github.com/NativeScript/nativescript-cli/CONTRIBUTING.md#request-a-feature).
+To learn how to suggest a new feature or improvement, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#request-a-feature).
 
-To learn how to contribute to the code base, click [here](https://github.com/NativeScript/nativescript-cli/CONTRIBUTING.md#contribute-to-the-code-base).
+To learn how to contribute to the code base, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#contribute-to-the-code-base).
 
 [Back to Top][1]
 
