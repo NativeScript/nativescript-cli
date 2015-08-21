@@ -120,7 +120,8 @@ function setupProject(): IFuture<any> {
 				normalizedPlatformName: "Android",
 				platformProjectService: {
 					prepareProject: () => Future.fromResult(),
-					prepareAppResources: () => Future.fromResult()
+					prepareAppResources: () => Future.fromResult(),
+					afterPrepareAllPlugins: () => Future.fromResult()
 				}
 			}	
 		};

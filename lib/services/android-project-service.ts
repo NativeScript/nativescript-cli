@@ -298,6 +298,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}).future<void>()();
 	}
 	
+	public afterPrepareAllPlugins(): IFuture<void> {
+		return Future.fromResult();
+	}
+	
 	private getLibraryRelativePath(basePath: string, libraryPath: string): string {
 		return path.relative(basePath, libraryPath).split("\\").join("/");		
 	}

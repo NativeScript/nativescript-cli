@@ -250,7 +250,8 @@ export class PlatformsDataStub implements IPlatformsData {
 			appDestinationDirectoryPath: "",
 			appResourcesDestinationDirectoryPath: "",
 			preparePluginNativeCode: () => Future.fromResult(),
-			removePluginNativeCode: () => Future.fromResult()
+			removePluginNativeCode: () => Future.fromResult(),
+			afterPrepareAllPlugins: () => Future.fromResult()
 		};
 	}
 
@@ -271,7 +272,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
-			appResourcesDestinationDirectoryPath: ""
+			appResourcesDestinationDirectoryPath: "",
 		};
 	}
 	validate(): IFuture<void> {
@@ -316,6 +317,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void> { 
 		return Future.fromResult();
 	}
+	afterPrepareAllPlugins(): IFuture<void> {
+		return Future.fromResult();
+	} 	
 }
 
 export class ProjectDataService implements IProjectDataService {

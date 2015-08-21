@@ -111,7 +111,6 @@ export class PluginsService implements IPluginsService {
 						this.validateXml(resultXml);
 						this.$fs.writeFile(configurationFilePath, resultXml).wait();	
 					}
-					
 				
 					this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();						
 				
@@ -143,6 +142,14 @@ export class PluginsService implements IPluginsService {
 			let nodeModules = this.getAllInstalledModules().wait();
 			return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 		}).future<IPluginData[]>()();
+	}
+	
+	public afterPrepareAllPlugins(): IFuture<void> {
+		let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
+			return platformData.platformProjectService.afterPrepareAllPlugins();
+		};
+		
+		return this.executeForAllInstalledPlatforms(action);
 	}
 	
 	private get nodeModulesPath(): string {
