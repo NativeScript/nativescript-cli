@@ -6,8 +6,8 @@ const assign = require('lodash/object/assign');
 const config = require('../config');
 
 const test = module.exports.test = function(files) {
-  if (process.env.USER === 'Jenkins') {
-    config.mocha = assign(config.mocah, {
+  if (process.env.user === 'jenkins' || process.env.USER === 'jenkins') {
+    config.mocha = assign(config.mocha, {
       reporter: 'mocha-jenkins-reporter',
       reporterOptions: {
         'junit_report_name': 'Tests',
