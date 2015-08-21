@@ -14,7 +14,7 @@ class PrivateQuery {
      *
      * @type {Array}
      */
-    this._fields = options.fields || [];
+    this._fields = options.fields;
 
     /**
      * The MongoDB query.
@@ -461,66 +461,76 @@ class PrivateQuery {
   }
 
   /**
-   * Post processes the raw response by applying fields, sort, limit, and skip.
+   * Processes the response by applying fields, sort, limit, and skip.
    *
    * @param   {Array}   response    The raw response.
    * @throws  {Error}               `response` must be of type: `Array`.
    * @returns {Array}               The processed response.
    */
-  postProcess(response) {
-    // Validate arguments.
-    if (!isArray(response)) {
-      throw new Error('response argument must be of type: Array.');
-    }
-
-    // Remove fields
-    response = response.map((item) => {
-      for (const key in item) {
-        if (item.hasOwnProperty(key) && this._fields.indexOf(key) === -1) {
-          delete item[key];
-        }
+  process(response) {
+    if (response) {
+      // Validate arguments.
+      if (!isArray(response)) {
+        throw new Error('response argument must be of type: Array.');
       }
 
-      return item;
-    });
+      // Apply the query
+      const json = this.toJSON();
+      response = sift(json.filter, response);
 
-    // Sorting.
-    response = response.sort((a, b) => {
-      for (const field in this._sort) {
-        if (this._sort.hasOwnProperty(field)) {
-          // Find field in objects.
-          const aField = nested(a, field);
-          const bField = nested(b, field);
-
-          // Elements which do not contain the field should always be sorted
-          // lower.
-          if (aField && !bField) {
-            return -1;
+      // Remove fields
+      if (this._fields) {
+        response = response.map((item) => {
+          for (const key in item) {
+            if (item.hasOwnProperty(key) && this._fields.indexOf(key) === -1) {
+              delete item[key];
+            }
           }
 
-          if (bField && !aField) {
-            return 1;
-          }
-
-          // Sort on the current field. The modifier adjusts the sorting order
-          // (ascending (-1), or descending(1)). If the fields are equal,
-          // continue sorting based on the next field (if any).
-          if (aField !== bField) {
-            const modifier = this._sort[field]; // 1 or -1.
-            return (aField < bField ? -1 : 1) * modifier;
-          }
-        }
+          return item;
+        });
       }
 
-      return 0;
-    });
+      // Sorting.
+      response = response.sort((a, b) => {
+        for (const field in this._sort) {
+          if (this._sort.hasOwnProperty(field)) {
+            // Find field in objects.
+            const aField = nested(a, field);
+            const bField = nested(b, field);
 
-    // Limit and skip.
-    if (this._limit) {
-      return response.slice(this._skip, this._skip + this._limit);
+            // Elements which do not contain the field should always be sorted
+            // lower.
+            if (aField && !bField) {
+              return -1;
+            }
+
+            if (bField && !aField) {
+              return 1;
+            }
+
+            // Sort on the current field. The modifier adjusts the sorting order
+            // (ascending (-1), or descending(1)). If the fields are equal,
+            // continue sorting based on the next field (if any).
+            if (aField !== bField) {
+              const modifier = this._sort[field]; // 1 or -1.
+              return (aField < bField ? -1 : 1) * modifier;
+            }
+          }
+        }
+
+        return 0;
+      });
+
+      // Limit and skip.
+      if (this._limit) {
+        return response.slice(this._skip, this._skip + this._limit);
+      }
+
+      return response.slice(this._skip);
     }
 
-    return response.slice(this._skip);
+    return response;
   }
 
   /**
@@ -713,14 +723,8 @@ class Query {
     return this;
   }
 
-  filter(response) {
-    if (response) {
-      const json = this.toJSON();
-      response = sift(json.filter, response);
-      response = this[privateQuerySymbol].postProcess(response);
-    }
-
-    return response;
+  process(response) {
+    return this[privateQuerySymbol].process(response);
   }
 
   /**
