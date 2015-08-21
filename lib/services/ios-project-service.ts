@@ -16,6 +16,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
+	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
 	
 	private get $npmInstallationManager(): INpmInstallationManager {
 		return this.$injector.resolve("npmInstallationManager");
@@ -329,6 +330,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				} catch(e) {
 					this.$errors.failWithoutHelp("CocoaPods are not installed. Run `sudo gem install cocoapods` and try again.");					
 				}
+				
+				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath).wait(); 
+				this.$logger.trace("Project Podfile content");
+				this.$logger.trace(projectPodfileContent);
+				
+				let firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
+				if(firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
+					this.$logger.warn(`Podfile contains more than one post_install sections. You need to open ${this.projectPodFilePath} file and manually resolve this issue.`);
+				} 
 				
 				this.$logger.info("Installing pods...");
 				this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
