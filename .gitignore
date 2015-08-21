@@ -5,3 +5,4 @@ dist
 coverage
 tmp
 npm-debug.log
+report.xml

@@ -4,9 +4,8 @@ clean:
 install:
 	@echo "Install Dependencies" && npm install
 
-test: test-database \
-	test-query \
-	test-request
+test:
+	@./node_modules/.bin/gulp test
 
 test-database:
 	@./node_modules/.bin/gulp test-database
