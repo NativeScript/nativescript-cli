@@ -4,7 +4,7 @@ const collection = 'posts';
 
 describe('Database', function() {
   beforeEach(function() {
-    this.database = new Database();
+    this.database = Database.sharedInstance();
   });
 
   afterEach(function() {
@@ -19,17 +19,53 @@ describe('Database', function() {
 
   describe('fetch()', function() {
     before(function() {
-      const database = new Database();
+      const database = Database.sharedInstance();
       const promise = database.save(collection, {attribute: global.randomString()});
       return promise.then((doc) => {
         this.doc = doc;
       });
     });
 
-    it('should return all documents, with field selection through a query', function() {
+    before(function() {
+      const database = Database.sharedInstance();
+      const promise = database.save(collection, {attribute: global.randomString()});
+      return promise.then((doc) => {
+        this.doc2 = doc;
+      });
+    });
+
+    after(function() {
+      const query = new Query();
+      query.contains('_id', [this.doc._id, this.doc2._id]);
+      const database = Database.sharedInstance();
+      return database.clean(collection, query);
+    });
+
+    after(function() {
+      delete this.doc;
+      delete this.doc2;
+    });
+
+    it('should return all documents', function() {
+      const promise = this.database.find(collection).then((docs) => {
+        expect(docs).to.be.an('array');
+        expect(docs).to.have.length(2);
+
+        const docIds = docs.map(function(doc) {
+          return doc._id;
+        });
+        expect(docIds).to.contain(this.doc._id);
+        expect(docIds).to.contain(this.doc2._id);
+      });
+
+      return promise;
+    });
+
+    it('should return all documents with fields filtered by query', function() {
       const query = new Query();
       query.fields(['_id']);
-      const promise = this.database.fetch(collection, query).then(function(docs) {
+
+      const promise = this.database.find(collection, query).then(function(docs) {
         expect(docs).to.be.an('array');
         expect(docs).not.to.be.empty;
 
@@ -38,6 +74,7 @@ describe('Database', function() {
           expect(doc).not.to.have.property('attribute');
         });
       });
+
       return promise;
     });
   });

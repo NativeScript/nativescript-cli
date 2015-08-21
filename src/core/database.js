@@ -143,7 +143,7 @@ class Database {
     };
   }
 
-  fetch(collection, query) {
+  find(collection, query) {
     const promise = new Promise((resolve, reject) => {
       this.transaction(collection, false, (store) => {
         const request = store.openCursor();
@@ -169,11 +169,11 @@ class Database {
     });
 
     return promise.then((response) => {
-      if (!query) {
-        return response;
+      if (query) {
+        return query.process(response);
       }
 
-      return query.filter(response);
+      return response;
     });
   }
 
@@ -253,6 +253,46 @@ class Database {
 
   update(collection, doc) {
     return this.save(collection, doc);
+  }
+
+  clean(collection, query) {
+    // Cleaning should not take the query sort, limit, and skip into account.
+    if (query) {
+      query.sort(null).limit(null).skip(0);
+    }
+
+    const promise = this.find(collection, query).then((docs) => {
+      if (docs.length === 0) {
+        return {
+          count: 0,
+          documents: []
+        };
+      }
+
+      return new Promise((resolve, reject) => {
+        this.transaction(collection, true, (store) => {
+          const request = store.transaction;
+
+          docs.forEach((doc) => {
+            store.delete(doc._id);
+          });
+
+          request.oncomplete = function() {
+            resolve({
+              count: docs.length,
+              documents: docs
+            });
+          };
+
+          request.onerror = function() {
+            const error = new Error('Database error.');
+            reject(error);
+          };
+        });
+      });
+    });
+
+    return promise;
   }
 
   destroy(collection, id) {

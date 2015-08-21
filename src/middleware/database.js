@@ -13,6 +13,7 @@ class DatabaseMiddleware extends Middleware {
     return super.handle(request).then((matches) => {
       const database = Database.sharedInstance();
       const method = request.method;
+      const query = request.query;
       const collection = matches.collection;
       const id = matches.id;
       let promise;
@@ -21,7 +22,7 @@ class DatabaseMiddleware extends Middleware {
         if (id) {
           promise = database.get(collection, id);
         } else {
-          promise = database.fetch(collection);
+          promise = database.find(collection, query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
         promise = database.save(collection, request.body);
