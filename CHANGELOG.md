@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+1.2.4 (2015, August 24)
+==
+
+### Fixed
+
+* [Fixed #806](https://github.com/NativeScript/nativescript-cli/issues/806): `tns library add android` command does not execute android project update if target 17 is not installed.
+* [Fixed #807](https://github.com/NativeScript/nativescript-cli/issues/807): Android native libs are not respected correctly if the plugin is added as depedency to another plugin.
+
 1.2.3 (2015, August 18)
 ==
 
