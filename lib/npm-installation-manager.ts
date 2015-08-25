@@ -1,10 +1,10 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import path = require("path");
+import * as path from "path";
 import semver = require("semver");
-import npm = require("npm");
-import constants = require("./constants");
+import * as npm from "npm";
+import * as constants from "./constants";
 
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";	
@@ -63,9 +63,9 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			this.$lockfile.lock().wait();
 
 			try {
-				var packageToInstall = packageName;
-				var pathToSave = (opts && opts.pathToSave) || npm.cache;
-				var version = (opts && opts.version) || null;
+				let packageToInstall = packageName;
+				let pathToSave = (opts && opts.pathToSave) || npm.cache;
+				let version = (opts && opts.version) || null;
 
 				return this.installCore(packageToInstall, pathToSave, version).wait();
 			} catch(error) {
@@ -85,7 +85,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			this.$fs.deleteDirectory(packagePath).wait();
 			this.addToCacheCore(packageName, version).wait();
 			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
-				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${version} to npm cache. Try cleaning your cache and execute the command again.`)
+				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${version} to npm cache. Try cleaning your cache and execute the command again.`);
 			}
 		}).future<void>()();
 	}
@@ -120,14 +120,14 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			if (this.$options.frameworkPath) {
 				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
 					this.npmInstall(packageName, pathToSave, version).wait();
-					var pathToNodeModules = path.join(pathToSave, "node_modules");
-					var folders = this.$fs.readDirectory(pathToNodeModules).wait();
+					let pathToNodeModules = path.join(pathToSave, "node_modules");
+					let folders = this.$fs.readDirectory(pathToNodeModules).wait();
 					return path.join(pathToNodeModules, folders[0]);
 				}
 				return this.$options.frameworkPath;
 			} else {
 				version = version || this.getLatestVersion(packageName).wait();
-				var packagePath = this.getCachedPackagePath(packageName, version);
+				let packagePath = this.getCachedPackagePath(packageName, version);
 				if (!this.isPackageCached(packagePath).wait()) {
 					this.$npm.cache(packageName, version).wait();
 				}
@@ -143,7 +143,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	private npmInstall(packageName: string, pathToSave: string, version: string): IFuture<void> {
 		this.$logger.out("Installing ", packageName);
 
-		var incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
+		let incrementedVersion = semver.inc(version, constants.ReleaseType.MINOR);
 		if (!this.$options.frameworkPath && packageName.indexOf("@") < 0) {
 			packageName = packageName + "@<" + incrementedVersion;
 		}

@@ -8,9 +8,9 @@ export class EmulatorSettingsService implements Mobile.IEmulatorSettingsService 
 
 	public canStart(platform: string): IFuture<boolean> {
 		return (() => {
-			var platformService = this.$injector.resolve("platformService"); // this should be resolved here due to cyclic dependency
+			let platformService = this.$injector.resolve("platformService"); // this should be resolved here due to cyclic dependency
 
-			var installedPlatforms = platformService.getInstalledPlatforms().wait();
+			let installedPlatforms = platformService.getInstalledPlatforms().wait();
 			return _.contains(installedPlatforms, platform.toLowerCase());
 		}).future<boolean>()();
 	}

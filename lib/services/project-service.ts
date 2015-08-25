@@ -1,12 +1,10 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import constants = require("./../constants");
-import helpers = require("../common/helpers");
-import osenv = require("osenv");
-import path = require("path");
-import shell = require("shelljs");
-import util = require("util");
+import constants = require("../constants");
+import * as osenv from "osenv";
+import * as path from "path";
+import * as shell from "shelljs";
 
 export class ProjectService implements IProjectService {
 
@@ -27,12 +25,12 @@ export class ProjectService implements IProjectService {
 			}
 			this.$projectNameValidator.validate(projectName);
 
-			var projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
+			let projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 
-			var projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
+			let projectDir = path.join(path.resolve(this.$options.path || "."), projectName);
 			this.$fs.createDirectory(projectDir).wait();
 
-			var customAppPath = this.getCustomAppPath();
+			let customAppPath = this.getCustomAppPath();
 			if(customAppPath) {
 				customAppPath = path.resolve(customAppPath);
 				if(!this.$fs.exists(customAppPath).wait()) {
@@ -51,18 +49,18 @@ export class ProjectService implements IProjectService {
 
 			this.$logger.trace("Creating a new NativeScript project with name %s and id %s at location %s", projectName, projectId, projectDir);
 
-			var appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
-			var appPath: string = null;
+			let appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
+			let appPath: string = null;
 
 			if (customAppPath) {
 				this.$logger.trace("Using custom app from %s", customAppPath);
 
 				// Make sure that the source app/ is not a direct ancestor of a target app/
-				var relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
+				let relativePathFromSourceToTarget = path.relative(customAppPath, appDirectory);
 				// path.relative returns second argument if the paths are located on different disks
 				// so in this case we don't need to make the check for direct ancestor
 				if (relativePathFromSourceToTarget !== appDirectory) {
-					var doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
+					let doesRelativePathGoUpAtLeastOneDir = relativePathFromSourceToTarget.split(path.sep)[0] === "..";
 					if (!doesRelativePathGoUpAtLeastOneDir) {
 						this.$errors.fail("Project dir %s must not be created at/inside the template used to create the project %s.", projectDir, customAppPath);
 					}
@@ -72,7 +70,7 @@ export class ProjectService implements IProjectService {
 			} else {
 				// No custom app - use nativescript hello world application
 				this.$logger.trace("Using NativeScript hello world application");
-				var defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
+				let defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
 				this.$logger.trace("Copying NativeScript hello world application into %s", appDirectory);
 				appPath = defaultTemplatePath;
 			}
@@ -93,7 +91,7 @@ export class ProjectService implements IProjectService {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectDir).wait();
 
-			var appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+			let appDestinationPath = path.join(projectDir, constants.APP_FOLDER_NAME);
 			this.$fs.createDirectory(appDestinationPath).wait();
 
 			if(this.$options.symlink) {
@@ -124,7 +122,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	private getCustomAppPath(): string {
-		var customAppPath = this.$options.copyFrom || this.$options.linkTo;
+		let customAppPath = this.$options.copyFrom || this.$options.linkTo;
 		if(customAppPath) {
 			if(customAppPath.indexOf("http://") === 0) {
 				this.$errors.fail("Only local paths for custom app are supported.");
@@ -139,4 +137,3 @@ export class ProjectService implements IProjectService {
 	}
 }
 $injector.register("projectService", ProjectService);
-

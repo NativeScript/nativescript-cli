@@ -58,7 +58,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => {}
+		registerDynamicSubCommands: () => { /* intentionally left blank */ }
 	});
 	
 	return testInjector;
@@ -123,7 +123,7 @@ function setupProject(): IFuture<any> {
 					prepareAppResources: () => Future.fromResult(),
 					afterPrepareAllPlugins: () => Future.fromResult()
 				}
-			}	
+			};
 		};
 		
 		return {

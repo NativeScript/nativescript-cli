@@ -87,9 +87,11 @@
     "grunt-contrib-watch": "0.6.1",
     "grunt-shell": "1.1.2",
     "grunt-ts": "4.2.0",
+    "grunt-tslint": "2.4.0",
     "mocha": "2.2.5",
     "mocha-fibers": "https://github.com/Icenium/mocha-fibers/tarball/master",
     "should": "7.0.2",
+    "tslint": "2.4.2",
     "typescript": "1.5.3"
   },
   "license": "Apache-2.0",

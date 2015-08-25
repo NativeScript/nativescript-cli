@@ -1,8 +1,8 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-import fs = require('fs');
-import path = require('path');
+import * as fs from "fs";
+import * as path from "path";
 
 export class TreeDiffer {
   private rootDirName: string;

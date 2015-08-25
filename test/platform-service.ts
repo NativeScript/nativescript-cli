@@ -3,34 +3,21 @@
 
 import yok = require('../lib/common/yok');
 import stubs = require('./stubs');
-
 import PlatformServiceLib = require('../lib/services/platform-service');
-import ProjectServiceLib = require("../lib/services/project-service");
-import NodePackageManagerLib = require('../lib/node-package-manager');
-import ProjectDataServiceLib = require("../lib/services/project-data-service");
 import StaticConfigLib = require("../lib/config");
 import fsLib = require("../lib/common/file-system");
-import ProjectLib = require('../lib/services/project-service');
-import ProjectServiceTestLib = require('./project-service');
-import NpmLib = require("../lib/node-package-manager");
-import HttpClientLib = require("../lib/common/http-client");
-import ProjectDataLib = require("../lib/project-data");
-import ProjectHelperLib = require("../lib/common/project-helper");
 import optionsLib = require("../lib/options");
 import hostInfoLib = require("../lib/common/host-info");
 import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
-
-import path = require("path");
+import * as path from "path";
 import Future = require("fibers/future");
-
-var assert = require("chai").assert;
+import {assert} from "chai";
 require('should');
-
 let temp = require("temp");
 temp.track();
 
 function createTestInjector() {
-	var testInjector = new yok.Yok();
+	let testInjector = new yok.Yok();
 
 	testInjector.register('platformService', PlatformServiceLib.PlatformService);
 	testInjector.register('errors', stubs.ErrorsStub);
@@ -44,14 +31,14 @@ function createTestInjector() {
 	testInjector.register('prompter', {});
 	testInjector.register('lockfile', stubs.LockFile);
 	testInjector.register("commandsService", {
-		tryExecuteCommand: () => {}
+		tryExecuteCommand: () => { /* intentionally left blank */ }
 	});
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 	testInjector.register("broccoliBuilder", {
 		prepareNodeModules: () => {
-			return (() => { }).future<void>()();
+			return Future.fromResult();
 		}
 	});
 	testInjector.register("pluginsService", {
@@ -61,7 +48,7 @@ function createTestInjector() {
 			}).future<IPluginData[]>()();
 		},
 		ensureAllDependenciesAreInstalled: () => {
-			return (() => { }).future<void>()();
+			return Future.fromResult();
 		}
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
@@ -70,7 +57,7 @@ function createTestInjector() {
 }
 
 describe('Platform Service Tests', () => {
-	var platformService: IPlatformService, testInjector: IInjector;
+	let platformService: IPlatformService, testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		testInjector.register("fs", stubs.FileSystemStub);
@@ -80,7 +67,7 @@ describe('Platform Service Tests', () => {
 	describe("add platform unit tests", () => {
 		describe("#add platform()", () => {
 			it("should not fail if platform is not normalized", () => {
-				var fs = testInjector.resolve("fs");
+				let fs = testInjector.resolve("fs");
 				fs.exists = () => Future.fromResult(false);
 
 				platformService.addPlatforms(["Android"]).wait();
@@ -99,12 +86,12 @@ describe('Platform Service Tests', () => {
 				(() => platformService.addPlatforms(["ios"]).wait()).should.throw();
 			});
 			it("should fail if npm is unavalible", () => {
-				var fs = testInjector.resolve("fs");
+				let fs = testInjector.resolve("fs");
 				fs.exists = () => Future.fromResult(false);
 
-				var errorMessage = "Npm is unavalible";
-				var npmInstallationManager = testInjector.resolve("npmInstallationManager");
-				npmInstallationManager.install = () => { throw new Error(errorMessage) };
+				let errorMessage = "Npm is unavalible";
+				let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+				npmInstallationManager.install = () => { throw new Error(errorMessage); };
 
 				try {
 					platformService.addPlatforms(["android"]).wait();
@@ -115,12 +102,12 @@ describe('Platform Service Tests', () => {
 		});
 		describe("#add platform(ios)", () => {
 			it("should call validate method", () => {
-				var fs = testInjector.resolve("fs");
+				let fs = testInjector.resolve("fs");
 				fs.exists = () => Future.fromResult(false);
 
-				var errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
-				var platformsData = testInjector.resolve("platformsData");
-				var platformProjectService = platformsData.getPlatformData().platformProjectService;
+				let errorMessage = "Xcode is not installed or Xcode version is smaller that 5.0";
+				let platformsData = testInjector.resolve("platformsData");
+				let platformProjectService = platformsData.getPlatformData().platformProjectService;
 				platformProjectService.validate = () => {
 					throw new Error(errorMessage);
 				};
@@ -134,12 +121,12 @@ describe('Platform Service Tests', () => {
 		});
 		describe("#add platform(android)", () => {
 			it("should fail if java, ant or android are not installed", () => {
-				var fs = testInjector.resolve("fs");
+				let fs = testInjector.resolve("fs");
 				fs.exists = () => Future.fromResult(false);
 
-				var errorMessage = "Java, ant or android are not installed";
-				var platformsData = testInjector.resolve("platformsData");
-				var platformProjectService = platformsData.getPlatformData().platformProjectService;
+				let errorMessage = "Java, ant or android are not installed";
+				let platformsData = testInjector.resolve("platformsData");
+				let platformProjectService = platformsData.getPlatformData().platformProjectService;
 				platformProjectService.validate = () => {
 					throw new Error(errorMessage);
 				};
@@ -177,7 +164,7 @@ describe('Platform Service Tests', () => {
 	describe("update Platform", () => {
 		describe("#updatePlatform(platform)", () => {
 			it("should fail when the versions are the same", () => {
-				var npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
+				let npmInstallationManager: INpmInstallationManager = testInjector.resolve("npmInstallationManager");
 				npmInstallationManager.getLatestVersion = () => (() => "0.2.0").future<string>()();
 				npmInstallationManager.getCacheRootPath = () => "";
 
@@ -187,7 +174,7 @@ describe('Platform Service Tests', () => {
 	});
 	
 	describe("prepare platform unit tests", () => {
-		let testInjector: IInjector, fs: IFileSystem;
+		let fs: IFileSystem;
 		beforeEach(() => {
 			testInjector = createTestInjector();
 			testInjector.register("fs", fsLib.FileSystem);
@@ -233,13 +220,13 @@ describe('Platform Service Tests', () => {
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string) => Future.fromResult()
 					}
-				}	
+				};
 			};
 			
 			let projectData = testInjector.resolve("projectData");
 			projectData.projectDir = tempFolder;
 			
-			let platformService = testInjector.resolve("platformService");
+			platformService = testInjector.resolve("platformService");
 			platformService.preparePlatform("ios").wait();
 			
 			// Asserts that the files in app folder are process as platform specific
@@ -291,13 +278,13 @@ describe('Platform Service Tests', () => {
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string) => Future.fromResult()
 					}
-				}	
+				};	
 			};
 			
 			let projectData = testInjector.resolve("projectData");
 			projectData.projectDir = tempFolder;
 			
-			let platformService = testInjector.resolve("platformService");
+			platformService = testInjector.resolve("platformService");
 			platformService.preparePlatform("android").wait();
 			
 			// Asserts that the files in app folder are process as platform specific

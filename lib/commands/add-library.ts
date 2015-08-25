@@ -1,8 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import path = require("path");
-import Future = require("fibers/future");
+import * as path from "path";
 
 export class AddLibraryCommand implements ICommand {
     constructor(private $platformService: IPlatformService,
@@ -14,8 +13,8 @@ export class AddLibraryCommand implements ICommand {
 
     execute(args: string[]): IFuture<void> {
         return (() => {
-            var platform = args[0];
-            var libraryPath = path.resolve(args[1]);
+            let platform = args[0];
+            let libraryPath = path.resolve(args[1]);
             this.$platformService.addLibrary(platform, libraryPath).wait();
             this.$logger.info(`Library ${libraryPath} was successfully added for ${platform} platform.`);
         }).future<void>()();

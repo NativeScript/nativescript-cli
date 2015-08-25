@@ -1,12 +1,12 @@
 ///<reference path=".d.ts"/>
+/* tslint:disable:no-empty */
 "use strict";
 
 import Future = require("fibers/future");
-import util = require("util");
-import path = require("path");
+import * as util from "util";
 
 export class LoggerStub implements ILogger {
-	setLevel(level: string): void {}
+	setLevel(level: string): void { }
 	getLevel(): string { return undefined; }
 	fatal(...args: string[]): void {}
 	error(...args: string[]): void {}
@@ -37,7 +37,7 @@ export class FileSystemStub implements IFileSystem {
 	zipFiles(zipFile: string, files: string[], zipPathCallback: (path: string) => string): IFuture<void> {
 		return undefined;
 	}
-	
+
 	unzip(zipFile: string, destination: string): IFuture<void> {
 		return undefined;
 	}
@@ -161,7 +161,9 @@ export class FileSystemStub implements IFileSystem {
 }
 
 export class ErrorsStub implements IErrors {
-	private impl: IErrors = new (require("../lib/common/errors").Errors)();
+	constructor() {
+		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors	
+	}
 
 	fail(formatStr:string, ...args: any[]): void;
 	fail(opts:{formatStr?: string; errorCode?: number; suppressCommandHelp?: boolean}, ...args: any[]): void;
@@ -235,7 +237,7 @@ export class ProjectDataStub implements IProjectData {
 }
 
 export class PlatformsDataStub implements IPlatformsData {
-	public platformsNames: string[]; 
+	public platformsNames: string[];
 
 	public getPlatformData(platform: string): IPlatformData {
 		return {
@@ -308,13 +310,13 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> { 
+	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return Future.fromResult();
 	}
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return Future.fromResult();
 	}
-	removePluginNativeCode(pluginData: IPluginData): IFuture<void> { 
+	removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return Future.fromResult();
 	}
 	afterPrepareAllPlugins(): IFuture<void> {
@@ -332,7 +334,7 @@ export class ProjectDataService implements IProjectDataService {
 	setValue(key: string, value: any): IFuture<void> {
 		return Future.fromResult();
 	}
-	
+
 	removeProperty(propertyName: string): IFuture<void> {
 		return Future.fromResult();
 	}

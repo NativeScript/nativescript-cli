@@ -2,12 +2,11 @@
 "use strict";
 
 import fs = require("fs");
-import path = require('path');
+import * as path from "path";
 import semver = require("semver");
-import util = require("util");
 import shelljs = require("shelljs");
 import {wrapBroccoliPlugin} from './broccoli-plugin-wrapper-factory';
-import constants = require("./../../constants");
+import constants = require("../../constants");
 
 /**
  * Intercepts each directory as it is copied to the destination tempdir,
@@ -114,7 +113,7 @@ export class DestCopy implements IBroccoliPlugin {
 					foundFiles.push(packageJsonFilePath);
 				}
                 
-                var directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
+                let directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
                 if (fs.existsSync(directoryPath)) {
                     this.enumeratePackageJsonFilesSync(directoryPath, foundFiles);
                 }

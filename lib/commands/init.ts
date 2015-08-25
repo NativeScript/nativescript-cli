@@ -1,8 +1,6 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import Future = require("fibers/future");
-
 export class InitCommand implements ICommand {
 	constructor(private $initService: IInitService) { }
 		

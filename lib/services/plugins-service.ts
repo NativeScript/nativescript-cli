@@ -4,7 +4,7 @@ import * as path from "path";
 import * as shelljs from "shelljs";
 import * as semver from "semver";
 import Future = require("fibers/future");
-import constants = require("./../constants");
+import * as constants from "../constants";
 let xmlmerge = require("xmlmerge-js");
 let DOMParser = require('xmldom').DOMParser;
 
@@ -28,10 +28,10 @@ export class PluginsService implements IPluginsService {
 		
 	public add(plugin: string): IFuture<void> {
 		return (() => {
-			let dependencies = this.getAllInstalledModules().wait();
+			this.ensure().wait();
 			let dependencyData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
 			if(dependencyData.nativescript) {
-				let pluginName = this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
+				this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
 				this.prepare(dependencyData).wait();
 				this.$logger.out(`Successfully installed plugin ${dependencyData.name}.`);									
 			} else {
@@ -114,7 +114,7 @@ export class PluginsService implements IPluginsService {
 				
 					this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();						
 				
-					pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);				
+					pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);				
 					platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
 				
 					shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
@@ -202,10 +202,16 @@ export class PluginsService implements IPluginsService {
 		return pluginData;
 	}
 	
-	private getAllInstalledModules(): IFuture<INodeModuleData[]> {
+	private ensure(): IFuture<void> {
 		return (() => {
 			this.ensureAllDependenciesAreInstalled().wait();
 			this.$fs.ensureDirectoryExists(this.nodeModulesPath).wait();
+		}).future<void>()();
+	}
+	
+	private getAllInstalledModules(): IFuture<INodeModuleData[]> {
+		return (() => {
+			this.ensure().wait();
 			
 			let nodeModules = this.getDependencies();
 			return _.map(nodeModules, nodeModuleName => this.getNodeModuleData(nodeModuleName).wait());
@@ -230,7 +236,7 @@ export class PluginsService implements IPluginsService {
 		return npmCommandResult[0][0].split("@")[0]; // returns plugin name
 	}
 	
-	private executeForAllInstalledPlatforms(action: (pluginDestinationPath: string, pl: string, platformData: IPlatformData) => IFuture<void>): IFuture<void> {
+	private executeForAllInstalledPlatforms(action: (_pluginDestinationPath: string, pl: string, _platformData: IPlatformData) => IFuture<void>): IFuture<void> {
 		return (() => {
 			let availablePlatforms = _.keys(this.$platformsData.availablePlatforms);
 			_.each(availablePlatforms, platform => {
@@ -272,7 +278,7 @@ export class PluginsService implements IPluginsService {
 			locator: {},
 			errorHandler: (level: any, msg: string) => {
 				let errorMessage = xmlFilePath ? `Invalid xml file ${xmlFilePath}.` : `Invalid xml ${xml}.`;
-				this.$errors.fail(errorMessage + ` Additional technical information: ${msg}.` )
+				this.$errors.fail(errorMessage + ` Additional technical information: ${msg}.` );
 			}
 		});
 		doc.parseFromString(xml, 'text/xml');

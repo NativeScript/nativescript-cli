@@ -1,8 +1,6 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-import fs = require('fs');
-import path = require('path');
 import {TreeDiffer} from './tree-differ';
 
 export class BroccoliPluginWrapper implements BroccoliTree {

@@ -55,9 +55,20 @@ module.exports = function(grunt) {
 					sourceMap: false,
 					removeComments: true
 				}
-			}
+			},
 		},
-
+		
+		tslint: {
+            build: {
+                files: {
+                    src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!**/*.d.ts"]
+                },
+                options: {
+                    configuration: grunt.file.readJSON("./tslint.json")
+                }
+            }
+        },
+		
 		watch: {
 			devall: {
 				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts"],
@@ -119,9 +130,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-contrib-watch");
 	grunt.loadNpmTasks("grunt-shell");
 	grunt.loadNpmTasks("grunt-ts");
+	grunt.loadNpmTasks("grunt-tslint");
 
 	grunt.registerTask("set_package_version", function(version) {
-		var fs = require("fs");
 		var buildVersion = version !== undefined ? version : buildNumber;
 		if (process.env["BUILD_CAUSE_GHPRBCAUSE"]) {
 			buildVersion = "PR" + buildVersion;
@@ -150,7 +161,6 @@ module.exports = function(grunt) {
 		grunt.file.write("package.json", JSON.stringify(packageJson, null, "  "));
 	});
 
-
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
 	grunt.registerTask("pack", [
 		"clean",
@@ -162,6 +172,7 @@ module.exports = function(grunt) {
 		"copy:package_to_drop_folder",
 		"copy:package_to_qa_drop_folder"
 	]);
+	grunt.registerTask("lint", ["tslint:build"]);
 
 	grunt.registerTask("default", "ts:devlib");
 };

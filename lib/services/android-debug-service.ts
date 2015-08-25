@@ -1,9 +1,8 @@
-import iOSProxyServices = require("./../common/mobile/ios/ios-proxy-services");
-import iOSDevice = require("./../common/mobile/ios/ios-device");
-import helpers = require("../common/helpers");
-import net = require("net");
-import path = require("path");
-import util = require("util");
+///<reference path="../.d.ts"/>
+"use strict";
+import * as helpers from "../common/helpers";
+import * as path from "path";
+import * as util from "util";
 
 class AndroidDebugService implements IDebugService {
     private static ENV_DEBUG_IN_FILENAME = "envDebug.in";
@@ -72,7 +71,7 @@ class AndroidDebugService implements IDebugService {
 			}
 
 			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
-			let action = (device: Mobile.IAndroidDevice): IFuture<void> => { return this.debugCore(device, packageFile, this.$projectData.projectId) };
+			let action = (device: Mobile.IAndroidDevice): IFuture<void> => { return this.debugCore(device, packageFile, this.$projectData.projectId); };
 			this.$devicesServices.execute(action).wait();
 
 		}).future<void>()();
@@ -136,8 +135,6 @@ class AndroidDebugService implements IDebugService {
                 this.device.applicationManager.uninstallApplication(packageName).wait();
                 this.device.applicationManager.installApplication(packageFile).wait();
             }
-            
-            let port = this.$options.debugPort;
     
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
@@ -209,8 +206,9 @@ class AndroidDebugService implements IDebugService {
             for (let i = 0; i < timeout; i++) {
                 helpers.sleep(1000 /* ms */);
                 isRunning = this.checkIfRunning(packageName);
-                if (isRunning)
+                if (isRunning) {
                     break;
+                }
             }
 			
             if (isRunning) {

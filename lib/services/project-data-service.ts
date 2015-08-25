@@ -1,9 +1,8 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import constants = require("./../constants");
-import path = require("path");
-import assert = require("assert");
+import * as path from "path";
+import * as assert from "assert";
 
 export class ProjectDataService implements IProjectDataService {
 	private projectFilePath: string;

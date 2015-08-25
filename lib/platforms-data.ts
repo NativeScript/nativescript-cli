@@ -10,7 +10,7 @@ export class PlatformsData implements IPlatformsData {
 		this.platformsData = {
 			ios: $iOSProjectService.platformData,
 			android: $androidProjectService.platformData
-		}
+		};
 	}
 
 	public get platformsNames() {
