@@ -71,9 +71,7 @@
     },
     "nodejs": {
       "dependencies" : [ ],
-      "externals"    : [
-        "node_modules/promise-queue/lib/index.js"
-      ],
+      "externals"    : [],
       "internals"    : [
         "src/shims/nodejs/nodejs.js",
         "src/internals/deferreds/promiscuous-node.js",
