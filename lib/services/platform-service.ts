@@ -6,7 +6,6 @@ import * as shell from "shelljs";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
-import Future = require("fibers/future");
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
@@ -305,7 +304,7 @@ export class PlatformService implements IPlatformService {
 
 	public validatePlatform(platform: string): void {
 		if(!platform) {
-			this.$errors.fail("No platform specified.")
+			this.$errors.fail("No platform specified.");
 		}
 
 		platform = platform.split("@")[0].toLowerCase();
@@ -500,7 +499,7 @@ export class PlatformService implements IPlatformService {
 			return {
 				frameworkFiles: this.mapFrameworkFiles(cachedPackagePath, filteredFiles),
 				frameworkDirectories: this.mapFrameworkFiles(cachedPackagePath, filteredFrameworkDirectories)
-			}
+			};
 
 		}).future<any>()();
 	}
@@ -517,7 +516,7 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private mapFrameworkFiles(npmCacheDirectoryPath: string, files: string[]): string[] {
-		return _.map(files, file => file.substr(npmCacheDirectoryPath.length + constants.PROJECT_FRAMEWORK_FOLDER_NAME.length + 1))
+		return _.map(files, file => file.substr(npmCacheDirectoryPath.length + constants.PROJECT_FRAMEWORK_FOLDER_NAME.length + 1));
 	}
 }
 $injector.register("platformService", PlatformService);

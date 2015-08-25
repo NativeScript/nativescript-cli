@@ -1,6 +1,5 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import path = require("path");
 
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem) { }
@@ -9,7 +8,7 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		return pluginData.pluginPlatformsFolderPath(platform);
 	}
 	
-	public getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, pluginPlatformsFolderPath: string) => boolean): IFuture<string[]> {
+	public getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): IFuture<string[]> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
 				nativeLibraries: string[] = [];

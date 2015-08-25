@@ -23,7 +23,6 @@ export class BuildIosCommand extends BuildCommandBase implements  ICommand {
 }
 $injector.registerCommand("build|ios", BuildIosCommand);
 
-
 export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	constructor($platformService: IPlatformService,
 				private $platformsData: IPlatformsData) {

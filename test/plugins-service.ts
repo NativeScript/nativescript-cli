@@ -2,6 +2,7 @@
 "use strict";
 
 import {Yok} from '../lib/common/yok';
+import future = require("fibers/future");
 import * as stubs from './stubs';
 import {NodePackageManager} from "../lib/node-package-manager";
 import {FileSystem} from "../lib/common/file-system";
@@ -20,11 +21,9 @@ import * as helpers from "../lib/common/helpers";
 import {ProjectFilesManager} from "../lib/services/project-files-manager";
 import {ResourceLoader} from "../lib/common/resource-loader";
 import {EOL} from "os";
-
 import {PluginsService} from "../lib/services/plugins-service";
 import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
-
-import {assert} from "chai"
+import {assert} from "chai";
 import * as path from "path";
 import * as temp from "temp";
 temp.track();
@@ -55,7 +54,7 @@ function createTestInjector() {
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("commandsService", CommandsService);
 	testInjector.register("commandsServiceProvider", {
-		registerDynamicSubCommands: () => {}
+		registerDynamicSubCommands: () => { /* intentionally empty body */ }
 	});
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("lockfile", { });
@@ -63,9 +62,9 @@ function createTestInjector() {
 	
 	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("analyticsService", {
-		trackException: () => { return (() => { }).future<void>()(); },
-		checkConsent: () => { return (() => { }).future<void>()(); },
-		trackFeature: () => { return (() => { }).future<void>()(); }
+		trackException: () => { return future.fromResult(); },
+		checkConsent: () => { return future.fromResult(); },
+		trackFeature: () => { return future.fromResult(); }
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManager);
 	
@@ -118,7 +117,7 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 		}).future<IPluginData[]>()();
 	};
 	pluginsService.ensureAllDependenciesAreInstalled = () => {
-		return (() => { }).future<void>()();
+		return future.fromResult();
 	};
 				
 	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);				
@@ -244,7 +243,7 @@ describe("Plugins service", () => {
 				return {
 					appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
 					frameworkPackageName: "tns-android"
-				}
+				};
 			};
 			
 			pluginsService.add(pluginFolderPath).wait();
@@ -448,7 +447,6 @@ describe("Plugins service", () => {
 	});
 	
 	describe("merge xmls tests", () => {
-		let testInjector: IInjector;
 		beforeEach(() => {
 			testInjector = createTestInjector();
 			testInjector.registerCommand("plugin|add", AddPluginCommand);
@@ -491,7 +489,7 @@ describe("Plugins service", () => {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
 					frameworkPackageName: "tns-android",
 					configurationFileName: "AndroidManifest.xml"
-				}
+				};
 			};
 			
 			// Ensure the pluginDestinationPath folder exists
@@ -556,9 +554,9 @@ describe("Plugins service", () => {
 					configurationFilePath: path.join(appDestinationDirectoryPath, "AndroidManifest.xml"),
 					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }],
 					platformProjectService:  {
-						preparePluginNativeCode: (pluginData: IPluginData) => (() => {}).future<void>()()
+						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult()
 					}
-				}
+				};
 			};
 			
 			// Ensure the pluginDestinationPath folder exists

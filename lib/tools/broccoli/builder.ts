@@ -1,15 +1,13 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-let broccoli = require('broccoli');
-let path = require('path');
+import * as path from "path";
 import Future = require("fibers/future");
-import {TreeDiffer} from './tree-differ';
-import destCopyLib = require('./node-modules-dest-copy');
+import destCopyLib = require("./node-modules-dest-copy");
 
-var gulp = require("gulp");
-var vinylFilterSince = require('vinyl-filter-since')
-var through = require("through2"); 
+let gulp = require("gulp");
+let vinylFilterSince = require("vinyl-filter-since");
+let through = require("through2"); 
 
 export class Builder implements IBroccoliBuilder {
    private nodeModules: any = {};
@@ -60,7 +58,7 @@ export class Builder implements IBroccoliBuilder {
         let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath).wait();
         let tnsModulesInApp = this.$fs.readDirectory(path.join(projectDir, "app", "tns_modules")).wait();
         let modulesToDelete = _.difference(currentPreparedTnsModules, tnsModulesInApp);
-        _.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait())
+        _.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait());
       } 
       
       if(!lastModifiedTime || isNodeModulesModified) {
@@ -82,35 +80,6 @@ export class Builder implements IBroccoliBuilder {
       destCopy.rebuildChangedDirectories(_.keys(this.nodeModules));
       
     }).future<void>()();
-  }
-
-  private rebuildNodeModulesTree(outputPath: string, projectDir: string): IFuture<any> {
-    let nodeModulesBuilder = this.makeNodeModulesBuilder(outputPath, projectDir);
-    return this.rebuild(nodeModulesBuilder);
-  }
-
-  private makeNodeModulesBuilder(outputPath: string, projectDir: string): BroccoliBuilder {
-    let tree = this.$nodeModulesTree.makeNodeModulesTree(outputPath, projectDir);
-    return new broccoli.Builder(tree);
-  }
-
-  private rebuild(builder: any): IFuture<any> {
-    let future = new Future<any>();
-    builder.build()
-        .then((result: any) => {
-              future.return(result);
-        })
-        .catch((err: any) => {
-              if(err.file) {
-                this.$logger.error("File: " + err.file); 
-              }
-              if(err.stack) {
-                this.$logger.error(err.stack);
-              }
-              future.throw(err);                        
-        });
-    
-    return future;
   }
 }
 $injector.register("broccoliBuilder", Builder);

@@ -1,9 +1,8 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import constants = require("./constants");
-import path = require("path");
-import os = require("os");
+import * as path from "path";
+import * as os from "os";
 
 export class ProjectData implements IProjectData {
 	private static OLD_PROJECT_FILE_NAME = ".tnsproject";

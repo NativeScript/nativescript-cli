@@ -7,11 +7,11 @@ import projectFilesManagerLib = require("../lib/services/project-files-manager")
 import hostInfoLib = require("../lib/common/host-info");
 import StaticConfigLib = require("../lib/config");
 import ErrorsLib = require("../lib/common/errors");
-import path = require("path");
+import * as path from "path";
 import temp = require("temp");
 temp.track();
 
-var assert = require("chai").assert;
+let assert = require("chai").assert;
 
 function createTestInjector() {
 	let testInjector = new yok.Yok();

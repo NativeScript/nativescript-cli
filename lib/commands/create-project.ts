@@ -36,6 +36,6 @@ export class CreateProjectCommand implements ICommand {
 		}).future<void>()();
 	}
 
-	allowedParameters = [new ProjectCommandParameter(this.$errors, this.$logger, this.$projectNameValidator) ]
+	allowedParameters = [new ProjectCommandParameter(this.$errors, this.$logger, this.$projectNameValidator) ];
 }
 $injector.registerCommand("create", CreateProjectCommand);

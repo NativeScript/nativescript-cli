@@ -9,8 +9,8 @@ export class ProjectFilesManager implements IProjectFilesManager {
 	
 	public processPlatformSpecificFiles(directoryPath: string, platform: string, excludedDirs?: string[]): IFuture<void> {
 		return (() => {
-			var contents = this.$fs.readDirectory(directoryPath).wait();
-			var files: string[] = [];
+			let contents = this.$fs.readDirectory(directoryPath).wait();
+			let files: string[] = [];
 			
 			_.each(contents, fileName => {
 				let filePath = path.join(directoryPath, fileName);
@@ -30,8 +30,8 @@ export class ProjectFilesManager implements IProjectFilesManager {
 		// Renames the files that have `platform` as substring and removes the files from other platform
 		return (() => {
 			_.each(files, fileName => {
-				var platformInfo = ProjectFilesManager.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
-				var shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
+				let platformInfo = ProjectFilesManager.parsePlatformSpecificFileName(path.basename(fileName), this.$platformsData.platformsNames);
+				let shouldExcludeFile = platformInfo && platformInfo.platform !== platform;
 				if (shouldExcludeFile) {
 					this.$fs.deleteFile(fileName).wait();
 				} else if (platformInfo && platformInfo.onDeviceName) {
@@ -42,8 +42,8 @@ export class ProjectFilesManager implements IProjectFilesManager {
 	}
 	
 	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
-		var regex = util.format("^(.+?)\\.(%s)(\\..+?)$", platforms.join("|"));
-		var parsed = fileName.match(new RegExp(regex, "i"));
+		let regex = util.format("^(.+?)\\.(%s)(\\..+?)$", platforms.join("|"));
+		let parsed = fileName.match(new RegExp(regex, "i"));
 		if (parsed) {
 			return {
 				platform: parsed[2],

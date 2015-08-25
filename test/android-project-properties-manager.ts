@@ -1,24 +1,20 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import ProjectPropertiesParserLib = require("../lib/common/properties-parser");
-import FsLib = require("../lib/common/file-system");
-import ProjectPropertiesManagerLib = require("../lib/services/android-project-properties-manager");
-import HostInfoLib = require("../lib/common/host-info");
-import StaticConfigLib = require("../lib/config");
-import ErrorsLib = require("../lib/common/errors");
-import LoggerLib = require("../lib/common/logger");
-import ConfigLib = require("../lib/config");
-import OptionsLib = require("../lib/options");
+import * as ProjectPropertiesParserLib from "../lib/common/properties-parser";
+import * as FsLib from "../lib/common/file-system";
+import * as ProjectPropertiesManagerLib from "../lib/services/android-project-properties-manager";
+import * as HostInfoLib from "../lib/common/host-info";
+import * as StaticConfigLib from "../lib/config";
+import * as ErrorsLib from "../lib/common/errors";
+import * as LoggerLib from "../lib/common/logger";
+import * as ConfigLib from "../lib/config";
+import * as OptionsLib from "../lib/options";
 import yok = require("../lib/common/yok");
-
-import os = require("os");
-import path = require("path");
-
+import * as path from "path";
 import temp = require("temp");
 temp.track();
-
-let assert = require("chai").assert;
+import {assert} from "chai";
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();

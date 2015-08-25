@@ -2,8 +2,6 @@
 "use strict";
 
 export class InstallCommand implements ICommand {
-	private _projectData: any;
-	
 	constructor(private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,

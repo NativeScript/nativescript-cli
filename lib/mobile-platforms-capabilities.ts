@@ -24,7 +24,7 @@ export class MobilePlatformsCapabilities implements Mobile.IPlatformsCapabilitie
 				companion: false,
 				hostPlatformsForDeploy: ["win32", "darwin", "linux"]
 			}
-		}
+		};
 
 		return this.platformCapabilities;
 	}

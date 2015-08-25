@@ -1,11 +1,9 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import path = require("path");
+import * as path from "path";
 
 export class AndroidProjectPropertiesManager implements IAndroidProjectPropertiesManager {
-	private static LIBRARY_REFERENCE_KEY_PREFIX = "android.library.reference.";
-	
 	private _editor: IPropertiesParserEditor = null;
 	private filePath: string = null;
 	private projectReferences: ILibRef[];
@@ -77,7 +75,7 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 			key: referenceName,
 			path: referencePath,
 			adjustedPath: path.join(path.dirname(this.filePath), referencePath)
-		}
+		};
 	}
 	
 	private addToPropertyList(key: string, value: string): IFuture<void> {

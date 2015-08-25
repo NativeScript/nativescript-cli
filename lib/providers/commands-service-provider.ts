@@ -14,7 +14,7 @@ export class CommandsServiceProvider implements ICommandsServiceProvider {
 	}
 
 	public registerDynamicSubCommands(): void {
-
+		/* intentionally left blank */
 	}
 }
 $injector.register("commandsServiceProvider", CommandsServiceProvider);

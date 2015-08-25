@@ -1,10 +1,9 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import path = require("path");
-import util = require("util");
-import staticConfigBaseLibPath = require("./common/static-config-base");
-import configBaseLib = require("./common/config-base");
+import * as path from "path";
+import * as staticConfigBaseLibPath from "./common/static-config-base";
+import * as configBaseLib from "./common/config-base";
 
 export class Configuration extends configBaseLib.ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
@@ -37,7 +36,7 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	}
 	
 	public get SYS_REQUIREMENTS_LINK(): string {
-		var linkToSysRequirements: string;
+		let linkToSysRequirements: string;
 		switch(process.platform) {
 			case "linux":
 				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";

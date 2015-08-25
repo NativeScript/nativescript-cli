@@ -3,7 +3,7 @@
 
 import Future = require("fibers/future");
 import lockfile = require("lockfile");
-import path = require("path");
+import * as path from "path";
 
 export class LockFile implements ILockFile {
 	private lockFilePath: string;
@@ -20,7 +20,7 @@ export class LockFile implements ILockFile {
 	};
 
 	public lock(): IFuture<void> {
-		var future = new Future<void>();
+		let future = new Future<void>();
 		lockfile.lock(this.lockFilePath, LockFile.LOCK_PARAMS, (err: Error) => {
 			if(err) {
 				future.throw(err);
@@ -32,7 +32,7 @@ export class LockFile implements ILockFile {
 	}
 
 	public unlock(): IFuture<void> {
-		var future = new Future<void>();
+		let future = new Future<void>();
 		lockfile.unlock(this.lockFilePath, (err: Error) => {
 			if(err) {
 				future.throw(err);

@@ -1,7 +1,6 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import deviceAppDataBaseLib = require("../common/mobile/device-app-data/device-app-data-base");
-import constantsLib = require("../common/mobile/constants");
+import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-app-data-base";
 import Future = require("fibers/future");
 
 export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData  {
@@ -58,7 +57,7 @@ export class DeviceAppDataProvider implements Mobile.IDeviceAppDataProvider {
 				vanilla: AndroidAppIdentifier,
 				companion: AndroidCompanionAppIdentifier
 			}
-		}
+		};
 	}
 }
 $injector.register("deviceAppDataProvider", DeviceAppDataProvider);

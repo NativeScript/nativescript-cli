@@ -5,27 +5,23 @@ import yok = require('../lib/common/yok');
 import stubs = require('./stubs');
 import * as constants from "./../lib/constants";
 import * as ChildProcessLib from "../lib/common/child-process";
-
-import ProjectServiceLib = require("../lib/services/project-service");
-import ProjectDataServiceLib = require("../lib/services/project-data-service");
-import ProjectDataLib = require("../lib/project-data");
-import ProjectHelperLib = require("../lib/common/project-helper");
-import StaticConfigLib = require("../lib/config");
-import NpmLib = require("../lib/node-package-manager");
-import NpmInstallationManagerLib = require("../lib/npm-installation-manager");
-import HttpClientLib = require("../lib/common/http-client");
-import fsLib = require("../lib/common/file-system");
-import platformServiceLib = require("../lib/services/platform-service");
-
-import path = require("path");
+import * as ProjectServiceLib from "../lib/services/project-service";
+import * as ProjectDataServiceLib from "../lib/services/project-data-service";
+import * as ProjectDataLib from "../lib/project-data";
+import * as ProjectHelperLib from "../lib/common/project-helper";
+import * as StaticConfigLib from "../lib/config";
+import * as NpmLib from "../lib/node-package-manager";
+import * as NpmInstallationManagerLib from "../lib/npm-installation-manager";
+import * as HttpClientLib from "../lib/common/http-client";
+import * as fsLib from "../lib/common/file-system";
+import * as path from "path";
 import temp = require("temp");
-import util = require("util");
-import helpers = require("../lib/common/helpers");
+import * as helpers from "../lib/common/helpers";
+import {assert} from "chai";
+import * as optionsLib from "../lib/options";
+import * as hostInfoLib from "../lib/common/host-info";
 
-var assert = require("chai").assert;
-var optionsLib = require("../lib/options");
-var hostInfoLib = require("../lib/common/host-info");
-var mockProjectNameValidator = {
+let mockProjectNameValidator = {
 	validate: () => { return true; }
 };
 
@@ -39,19 +35,19 @@ class ProjectIntegrationTest {
 	}
 
 	public createProject(projectName: string): IFuture<void> {
-		var projectService = this.testInjector.resolve("projectService");
+		let projectService = this.testInjector.resolve("projectService");
 		return projectService.createProject(projectName);
 	}
 
 	public getDefaultTemplatePath(): IFuture<string> {
 		return (() => {
-			var npmInstallationManager = this.testInjector.resolve("npmInstallationManager");
-			var fs = this.testInjector.resolve("fs");
+			let npmInstallationManager = this.testInjector.resolve("npmInstallationManager");
+			let fs = this.testInjector.resolve("fs");
 
-			var defaultTemplatePackageName = "tns-template-hello-world";
-			var cacheRoot = npmInstallationManager.getCacheRootPath();
-			var defaultTemplatePath = path.join(cacheRoot, defaultTemplatePackageName);
-			var latestVersion = npmInstallationManager.getLatestVersion(defaultTemplatePackageName).wait();
+			let defaultTemplatePackageName = "tns-template-hello-world";
+			let cacheRoot = npmInstallationManager.getCacheRootPath();
+			let defaultTemplatePath = path.join(cacheRoot, defaultTemplatePackageName);
+			let latestVersion = npmInstallationManager.getLatestVersion(defaultTemplatePackageName).wait();
 
 			if(!fs.exists(path.join(defaultTemplatePath, latestVersion)).wait()) {
 				npmInstallationManager.addToCache(defaultTemplatePackageName, latestVersion).wait();
@@ -66,14 +62,14 @@ class ProjectIntegrationTest {
 
 	public assertProject(tempFolder: string, projectName: string, appId: string): IFuture<void> {
 		return (() => {
-			var fs: IFileSystem = this.testInjector.resolve("fs");
-			var projectDir = path.join(tempFolder, projectName);
-			var appDirectoryPath = path.join(projectDir, "app");
-			var platformsDirectoryPath = path.join(projectDir, "platforms");
+			let fs: IFileSystem = this.testInjector.resolve("fs");
+			let projectDir = path.join(tempFolder, projectName);
+			let appDirectoryPath = path.join(projectDir, "app");
+			let platformsDirectoryPath = path.join(projectDir, "platforms");
 			let tnsProjectFilePath = path.join(projectDir, "package.json");
 			let tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
 
-			var options = this.testInjector.resolve("options");
+			let options = this.testInjector.resolve("options");
 
 			assert.isTrue(fs.exists(appDirectoryPath).wait());
 			assert.isTrue(fs.exists(platformsDirectoryPath).wait());
@@ -83,19 +79,19 @@ class ProjectIntegrationTest {
 			assert.isFalse(fs.isEmptyDir(appDirectoryPath).wait());
 			assert.isTrue(fs.isEmptyDir(platformsDirectoryPath).wait());
 
-			var actualAppId = fs.readJson(tnsProjectFilePath).wait()["nativescript"].id;
-			var expectedAppId = appId;
+			let actualAppId = fs.readJson(tnsProjectFilePath).wait()["nativescript"].id;
+			let expectedAppId = appId;
 			assert.equal(actualAppId, expectedAppId);
 
 			let tnsCoreModulesRecord = fs.readJson(tnsProjectFilePath).wait()["dependencies"][constants.TNS_CORE_MODULES_NAME];
 			assert.isTrue(tnsCoreModulesRecord !== null);
 
-			var actualFiles = fs.enumerateFilesInDirectorySync(options.copyFrom);
-			var expectedFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
+			let actualFiles = fs.enumerateFilesInDirectorySync(options.copyFrom);
+			let expectedFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
 
 			assert.equal(actualFiles.length, expectedFiles.length);
 			_.each(actualFiles, file => {
-				var relativeToProjectDir = helpers.getRelativeToRootPath(options.copyFrom, file);
+				let relativeToProjectDir = helpers.getRelativeToRootPath(options.copyFrom, file);
 				assert.isTrue(fs.exists(path.join(appDirectoryPath, relativeToProjectDir)).wait());
 			});
 		}).future<void>()();
@@ -133,10 +129,10 @@ class ProjectIntegrationTest {
 describe("Project Service Tests", () => {
 	describe("project service integration tests", () => {
 		it("creates valid project from default template", () => {
-			var	projectIntegrationTest = new ProjectIntegrationTest();
-			var tempFolder = temp.mkdirSync("project");
-			var projectName = "myapp";
-			var options = projectIntegrationTest.testInjector.resolve("options");
+			let	projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("project");
+			let projectName = "myapp";
+			let options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
 			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath().wait();
@@ -145,10 +141,10 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp").wait();
 		});
 		it("creates valid project with specified id from default template", () => {
-			var	projectIntegrationTest = new ProjectIntegrationTest();
-			var tempFolder = temp.mkdirSync("project1");
-			var projectName = "myapp";
-			var options = projectIntegrationTest.testInjector.resolve("options");
+			let	projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("project1");
+			let projectName = "myapp";
+			let options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
 			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath().wait();
@@ -161,7 +157,7 @@ describe("Project Service Tests", () => {
 });
 
 function createTestInjector() {
-	var testInjector = new yok.Yok();
+	let testInjector = new yok.Yok();
 	
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
@@ -191,90 +187,90 @@ function createTestInjector() {
 
 describe("project upgrade procedure tests", () => {
 	it("should throw error when no nativescript project folder specified", () => {
-		var testInjector = createTestInjector();
-		var tempFolder = temp.mkdirSync("project upgrade");
-		var options = testInjector.resolve("options");
+		let testInjector = createTestInjector();
+		let tempFolder = temp.mkdirSync("project upgrade");
+		let options = testInjector.resolve("options");
 		options.path = tempFolder;
-		var isErrorThrown = false;
+		let isErrorThrown = false;
 		
 		try {
 			testInjector.resolve("projectData"); // This should trigger upgrade procedure
 		} catch(err) {
 			isErrorThrown = true;
-			var expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
+			let expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
 			assert.equal(expectedErrorMessage, err.toString());
 		}
 		
 		assert.isTrue(isErrorThrown);
 	});
 	it("should upgrade project when .tnsproject file exists but package.json file doesn't exist", () => {
-		var testInjector = createTestInjector();
-		var fs: IFileSystem = testInjector.resolve("fs");
+		let testInjector = createTestInjector();
+		let fs: IFileSystem = testInjector.resolve("fs");
 		
-		var tempFolder = temp.mkdirSync("projectUpgradeTest2");	
-		var options = testInjector.resolve("options");
+		let tempFolder = temp.mkdirSync("projectUpgradeTest2");	
+		let options = testInjector.resolve("options");
 		options.path = tempFolder;	
-		var tnsProjectData = {
+		let tnsProjectData = {
 			"id": "org.nativescript.Test",
 			"tns-ios": {
 				"version": "1.0.0"
 			}	
 		};
-		var tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
+		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
 		
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 		
-		var packageJsonFilePath = path.join(tempFolder, "package.json");
-		var packageJsonFileContent = require(packageJsonFilePath);
+		let packageJsonFilePath = path.join(tempFolder, "package.json");
+		let packageJsonFileContent = require(packageJsonFilePath);
 		assert.isTrue(fs.exists(packageJsonFilePath).wait());
 		assert.isFalse(fs.exists(tnsProjectFilePath).wait());
 		assert.deepEqual(tnsProjectData, packageJsonFileContent["nativescript"]);
 	}); 
 	it("should upgrade project when .tnsproject and package.json exist but nativescript key is not presented in package.json file", () => {
-		var testInjector = createTestInjector();
-		var fs: IFileSystem = testInjector.resolve("fs");
+		let testInjector = createTestInjector();
+		let fs: IFileSystem = testInjector.resolve("fs");
 		
-		var tempFolder = temp.mkdirSync("projectUpgradeTest3");	
-		var options = testInjector.resolve("options");
+		let tempFolder = temp.mkdirSync("projectUpgradeTest3");	
+		let options = testInjector.resolve("options");
 		options.path = tempFolder;	
-		var tnsProjectData = {
+		let tnsProjectData = {
 			"id": "org.nativescript.Test",
 			"tns-ios": {
 				"version": "1.0.1"
 			}	
 		};
-		var packageJsonData = {
+		let packageJsonData = {
 			"name": "testModuleName",
 			"version": "0.0.0",
 			"dependencies": {
 				"myFirstDep": "0.0.1"
 			}
-		}
+		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
 		
-		var packageJsonFilePath = path.join(tempFolder, "package.json");
+		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		fs.writeJson(packageJsonFilePath, packageJsonData).wait();
 		
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 		
-		var packageJsonFileContent = require(packageJsonFilePath);
-		var expectedPackageJsonContent: any = packageJsonData;
+		let packageJsonFileContent = require(packageJsonFilePath);
+		let expectedPackageJsonContent: any = packageJsonData;
 		expectedPackageJsonContent["nativescript"] = tnsProjectData;
 		assert.deepEqual(expectedPackageJsonContent, packageJsonFileContent);
 	});
 	it("shouldn't upgrade project when .tnsproject and package.json exist and nativescript key is presented in package.json file", () => {
-		var testInjector = createTestInjector();
-		var fs: IFileSystem = testInjector.resolve("fs");
+		let testInjector = createTestInjector();
+		let fs: IFileSystem = testInjector.resolve("fs");
 		
-		var tempFolder = temp.mkdirSync("projectUpgradeTest4");	
-		var options = testInjector.resolve("options");
+		let tempFolder = temp.mkdirSync("projectUpgradeTest4");	
+		let options = testInjector.resolve("options");
 		options.path = tempFolder;	
-		var tnsProjectData = {
+		let tnsProjectData = {
 			
 		};
-		var packageJsonData = {
+		let packageJsonData = {
 			"name": "testModuleName",
 			"version": "0.0.0",
 			"dependencies": {
@@ -286,15 +282,15 @@ describe("project upgrade procedure tests", () => {
 					"version": "1.0.2"
 				}	
 			}
-		}
+		};
 		
 		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData).wait();
 		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
 		
-		var packageJsonFilePath = path.join(tempFolder, "package.json");
-		var packageJsonFileContent = require(packageJsonFilePath);
+		let packageJsonFilePath = path.join(tempFolder, "package.json");
+		let packageJsonFileContent = require(packageJsonFilePath);
 		
 		assert.deepEqual(packageJsonData, packageJsonFileContent);
 	});
-}); 
+});

@@ -70,7 +70,9 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			this.validatePackageName(this.$projectData.projectId);
 			this.validateProjectName(this.$projectData.projectName);
 
-			this.checkJava().wait() && this.checkAnt().wait() && this.checkAndroid().wait();
+			this.checkJava().wait();
+			this.checkAnt().wait();
+			this.checkAndroid().wait();
 		}).future<void>()();
 	}
 
@@ -121,7 +123,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 					return {
 						dirName: dir,
 						sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
-					}
+					};
 				})
 				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX) && dir.sdkNum && (!integerFrameworkVersion || (integerFrameworkVersion >= dir.sdkNum)))
 				.max(dir => dir.sdkNum)
@@ -139,7 +141,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return (() => {
 			// Interpolate the activity name and package
 			let manifestPath = path.join(projectRoot, "AndroidManifest.xml");
-			let safeActivityName = this.$projectData.projectName.replace(/\W/g, '');
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
 			shell.sed('-i', /__APILEVEL__/, this.getTarget(projectRoot).wait().split('-')[1], manifestPath);
 
@@ -176,7 +177,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
-		return (() => { }).future<void>()();
+		return Future.fromResult();
 	}
 
 	public buildProject(projectRoot: string): IFuture<void> {
@@ -253,7 +254,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 	
 	public prepareProject(): IFuture<void> {
-		return (() => { }).future<void>()();
+		return Future.fromResult();
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
@@ -356,7 +357,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			}
 
 			if(this.$options.keyStoreAliasPassword) {
-				args = args.concat(["-Dkey.alias.password", this.$options.keyStoreAliasPassword])
+				args = args.concat(["-Dkey.alias.password", this.$options.keyStoreAliasPassword]);
 			}
 		}
 
@@ -422,15 +423,14 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	private getLatestValidAndroidTarget(frameworkDir: string): IFuture<string> {
 		return (() => {
-			let validTarget = this.getTarget(frameworkDir).wait();
 			let installedTargets = this.getInstalledTargets().wait();
 
 			// adjust to the latest available version
-			var newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
+			let newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
 			if (!newTarget) {
 				this.$errors.failWithoutHelp(`Could not find supported Android target. Please install one of the following: ${this.SUPPORTED_TARGETS.join(", ")}.` + 
 					" Make sure you have the latest Android tools installed as well." + 
-					' Run "android" from your command-line to install/update any missing SDKs or tools.')
+					' Run "android" from your command-line to install/update any missing SDKs or tools.');
 			}
 
 			return newTarget;

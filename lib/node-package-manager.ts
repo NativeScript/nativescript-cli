@@ -17,7 +17,7 @@ export class NodePackageManager implements INodePackageManager {
 	}
 	
 	public load(config?: any): IFuture<void> {
-		var future = new Future<void>();
+		let future = new Future<void>();
 		npm.load(config, (err) => {
 			if(err) {
 				future.throw(err);
@@ -75,7 +75,7 @@ export class NodePackageManager implements INodePackageManager {
 			} else {
 				future.return(data);
 			}
-		}
+		};
 		args.push(callback);
 		
 		let command = subCommandName ? npm.commands[commandName][subCommandName] : npm.commands[commandName];

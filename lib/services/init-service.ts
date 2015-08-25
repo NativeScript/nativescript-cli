@@ -1,9 +1,9 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import constants = require("./../constants");
-import helpers = require("./../common/helpers");
-import path = require("path");
+import constants = require("../constants");
+import * as helpers from "../common/helpers";
+import * as path from "path";
 import semver = require("semver");
 
 export class InitService implements IInitService {

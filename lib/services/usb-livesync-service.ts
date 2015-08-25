@@ -1,12 +1,11 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import androidLiveSyncServiceLib = require("../common/mobile/android/android-livesync-service");
-import constants = require("../constants");
-import helpers = require("../common/helpers");
-import usbLivesyncServiceBaseLib = require("../common/services/usb-livesync-service-base");
-import path = require("path");
-import semver = require("semver");
+import * as androidLiveSyncServiceLib from "../common/mobile/android/android-livesync-service";
+import * as constants from "../constants";
+import * as usbLivesyncServiceBaseLib from "../common/services/usb-livesync-service-base";
+import * as path from "path";
+import * as semver from "semver";
 import Future = require("fibers/future");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
@@ -62,15 +61,15 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);							
 				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
-			}
+			};
 			
 			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
 				return this.$platformService.deployOnDevice(platform);
-			}
+			};
 			
 			let notRunningiOSSimulatorAction = (): IFuture<void> => {
 				return this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
-			}
+			};
 			
 			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
@@ -78,18 +77,18 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
 				}
 				return Future.fromResult();		
-			}
+			};
 						
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
 					this.$platformService.preparePlatform(platform).wait();
 					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
 				}).future<string>()();
-			}
+			};
 			
 			let iOSSimulatorRelativeToProjectBasePathAction = (projectFile: string): string => {
 				return path.join(constants.APP_FOLDER_NAME, path.dirname(projectFile.split(`/${constants.APP_FOLDER_NAME}/`)[1]));
-			}
+			};
 			
 			let watchGlob = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
 			
@@ -143,8 +142,6 @@ export class IOSUsbLiveSyncService implements IPlatformSpecificUsbLiveSyncServic
 }
 
 export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.AndroidLiveSyncService implements IPlatformSpecificUsbLiveSyncService {
-	private static LIVESYNC_COMMANDS_FILE_NAME = "nativescript.livesync.commands.sh";
-	
 	constructor(_device: Mobile.IDevice,
 		$fs: IFileSystem,
 		$mobileHelper: Mobile.IMobileHelper,
