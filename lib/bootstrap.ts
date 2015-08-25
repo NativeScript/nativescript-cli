@@ -11,6 +11,7 @@ $injector.require("androidProjectService", "./services/android-project-service")
 $injector.require("iOSProjectService", "./services/ios-project-service");
 
 $injector.require("projectTemplatesService", "./services/project-templates-service");
+$injector.require("tnsModulesService", "./services/tns-modules-service");
 
 $injector.require("platformsData", "./platforms-data");
 $injector.require("platformService", "./services/platform-service");

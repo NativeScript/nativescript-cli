@@ -10,7 +10,8 @@ import util = require("util");
 
 export class ProjectService implements IProjectService {
 
-	constructor(private $errors: IErrors,
+	constructor(private $npm: INodePackageManager,
+		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
@@ -83,13 +84,12 @@ export class ProjectService implements IProjectService {
 				throw err;
 			}
 
-
 			this.$logger.out("Project %s was successfully created", projectName);
 
 		}).future<void>()();
 	}
 
-	private createProjectCore(projectDir: string, appSourcePath: string,  projectId: string): IFuture<void> {
+	private createProjectCore(projectDir: string, appSourcePath: string, projectId: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(projectDir).wait();
 
@@ -101,6 +101,7 @@ export class ProjectService implements IProjectService {
 			} else {
 				shell.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
 			}
+
 			this.createBasicProjectStructure(projectDir,  projectId).wait();
 		}).future<void>()();
 	}
@@ -111,6 +112,14 @@ export class ProjectService implements IProjectService {
 
 			this.$projectDataService.initialize(projectDir);
 			this.$projectDataService.setValue("id", projectId).wait();
+			
+			let tnsModulesVersion = this.$options.tnsModulesVersion;
+			let packageName = constants.TNS_CORE_MODULES_NAME;
+			if (tnsModulesVersion) {
+				packageName = `${packageName}@${tnsModulesVersion}`;
+			}
+
+			this.$npm.executeNpmCommand(`npm install ${packageName} --save --save-exact`, projectDir).wait();
 		}).future<void>()();
 	}
 

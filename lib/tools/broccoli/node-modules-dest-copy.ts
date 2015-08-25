@@ -75,6 +75,12 @@ export class DestCopy implements IBroccoliPlugin {
 		if(isPlugin) {
 			this.$pluginsService.prepare(dependency).wait();
 		}
+
+		if (dependency.name === constants.TNS_CORE_MODULES_NAME) {
+			let tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
+			shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
+			this.$fs.deleteDirectory(tnsCoreModulesResourcePath).wait();
+		} 
 	});
 	
 	if(!_.isEmpty(this.dependencies)) {

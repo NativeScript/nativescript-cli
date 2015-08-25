@@ -5,7 +5,8 @@ import Future = require("fibers/future");
 import npm = require("npm");
 
 export class NodePackageManager implements INodePackageManager {
-	constructor(private $logger: ILogger,
+	constructor(private $childProcess: IChildProcess,
+		private $logger: ILogger,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $lockfile: ILockFile,
@@ -52,6 +53,10 @@ export class NodePackageManager implements INodePackageManager {
 	
 	public view(packageName: string, propertyName: string): IFuture<any> {
 		return this.loadAndExecute("view", [[packageName, propertyName], [false]]);
+	}
+
+	public executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any> {
+		return this.$childProcess.exec(npmCommandName, { cwd: currentWorkingDirectory });
 	}
 	
 	private loadAndExecute(commandName: string, args: any[], opts?: { config?: any, subCommandName?: string }): IFuture<any> {
