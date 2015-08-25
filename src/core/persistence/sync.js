@@ -205,7 +205,10 @@ var Sync = /** @lends Sync */{
         ).then(null, function(response) {
           // Rejection occurs when a conflict could not be resolved. Append the
           // id to the errors, and resolve.
-          result.error.push(response.id);
+          result.error.push({
+            id: response.id,
+            error: response
+          });
           return null;
         });
       });
@@ -375,8 +378,11 @@ var Sync = /** @lends Sync */{
 
       return Kinvey.Defer.all(promises).then(function() {
         return { success: [id], error: [] };
-      }, function() {
-        return { success: [], error: [id] };
+      }, function(err) {
+        return { success: [], error: [{
+          id: id,
+          error: err
+        }]};
       });
     });
 
@@ -485,11 +491,14 @@ var Sync = /** @lends Sync */{
           return Database.destroy(collection, originalId).then(function() {
             return createdDoc;
           });
-        }, function() {
+        }, function(err) {
           document._id = originalId;
           // Rejection should not break the entire synchronization. Instead,
           // append the document id to `error`, and resolve.
-          error.push(document._id);
+          error.push({
+            id: document._id,
+            error: err
+          });
           return null;
         });
       }
@@ -501,10 +510,13 @@ var Sync = /** @lends Sync */{
         id         : document._id,
         data       : document,
         auth       : Auth.Default
-      }, requestOptions).then(null, function() {
+      }, requestOptions).then(null, function(err) {
         // Rejection should not break the entire synchronization. Instead,
         // append the document id to `error`, and resolve.
-        error.push(document._id);
+        error.push({
+          id: document._id,
+          error: err
+        });
         return null;
       });
     });
@@ -524,12 +536,15 @@ var Sync = /** @lends Sync */{
         }),
         error: error
       };
-    }, function() {
+    }, function(err) {
       // Build the final response.
       return {
         success: [],
         error: documents.map(function(document) {
-          return document._id;
+          return {
+            id: document._id,
+            error: err
+          };
         })
       };
     });
