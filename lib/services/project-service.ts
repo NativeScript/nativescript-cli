@@ -34,15 +34,15 @@ export class ProjectService implements IProjectService {
 			if(customAppPath) {
 				customAppPath = path.resolve(customAppPath);
 				if(!this.$fs.exists(customAppPath).wait()) {
-					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" doesn't exist. Check that you specified the path correctly and try again.`);	
+					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" doesn't exist. Check that you specified the path correctly and try again.`);
 				}
-				
+
 				let customAppContents = this.$fs.enumerateFilesInDirectorySync(customAppPath);
 				if(customAppContents.length === 0) {
 					this.$errors.failWithoutHelp(`The specified path "${customAppPath}" is empty directory.`);
 				}
 			}
- 
+
 			if(this.$fs.exists(projectDir).wait() && !this.$fs.isEmptyDir(projectDir).wait()) {
 				this.$errors.fail("Path already exists and is not empty %s", projectDir);
 			}
@@ -110,7 +110,7 @@ export class ProjectService implements IProjectService {
 
 			this.$projectDataService.initialize(projectDir);
 			this.$projectDataService.setValue("id", projectId).wait();
-			
+
 			let tnsModulesVersion = this.$options.tnsModulesVersion;
 			let packageName = constants.TNS_CORE_MODULES_NAME;
 			if (tnsModulesVersion) {

@@ -4,7 +4,7 @@
 import fs = require("fs");
 import * as path from "path";
 import semver = require("semver");
-import shelljs = require("shelljs");
+import * as shelljs from "shelljs";
 import {wrapBroccoliPlugin} from './broccoli-plugin-wrapper-factory';
 import constants = require("../../constants");
 
@@ -15,10 +15,10 @@ import constants = require("../../constants");
 export class DestCopy implements IBroccoliPlugin {
 	private dependencies:  IDictionary<any>  = null;
 	private devDependencies:  IDictionary<any>  = null;
-	
-  constructor(private inputPath: string, 
-	  private cachePath: string, 
-	  private outputRoot: string, 
+
+  constructor(private inputPath: string,
+	  private cachePath: string,
+	  private outputRoot: string,
 	  private projectDir: string,
 	  private platform: string,
 	  private $fs: IFileSystem,
@@ -27,7 +27,7 @@ export class DestCopy implements IBroccoliPlugin {
 	this.dependencies = Object.create(null);
 	this.devDependencies = this.getDevDependencies(projectDir);
   }
-  
+
   public rebuildChangedDirectories(changedDirectories: string[], platform: string): void {
 	_.each(changedDirectories, changedDirectoryAbsolutePath => {
 		if(!this.devDependencies[path.basename(changedDirectoryAbsolutePath)]) {
@@ -35,10 +35,10 @@ export class DestCopy implements IBroccoliPlugin {
 			let packageJsonFiles = fs.existsSync(pathToPackageJson) ? [pathToPackageJson] : [];
 			let nodeModulesFolderPath = path.join(changedDirectoryAbsolutePath, constants.NODE_MODULES_FOLDER_NAME);
 			packageJsonFiles = packageJsonFiles.concat(this.enumeratePackageJsonFilesSync(nodeModulesFolderPath));
-				
+
 			_.each(packageJsonFiles, packageJsonFilePath => {
 				let fileContent = require(packageJsonFilePath);
-		
+
 				if(!this.devDependencies[fileContent.name]) { // Don't flatten dev dependencies
 					let currentDependency = {
 						name: fileContent.name,
@@ -46,17 +46,17 @@ export class DestCopy implements IBroccoliPlugin {
 						directory: path.dirname(packageJsonFilePath),
 						nativescript: fileContent.nativescript
 					};
-					
+
 					let addedDependency = this.dependencies[currentDependency.name];
 					if (addedDependency) {
 						if (semver.gt(currentDependency.version, addedDependency.version)) {
 							let currentDependencyMajorVersion = semver.major(currentDependency.version);
 							let addedDependencyMajorVersion = semver.major(addedDependency.version);
-			
+
 							let message = `The depedency located at ${addedDependency.directory} with version  ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
 							let logger = $injector.resolve("$logger");
 							currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
-			
+
 							this.dependencies[currentDependency.name] = currentDependency;
 						}
 					} else {
@@ -66,7 +66,7 @@ export class DestCopy implements IBroccoliPlugin {
 			});
 		}
 	});
-	
+
 	_.each(this.dependencies, dependency => {
 		shelljs.cp("-Rf", dependency.directory, this.outputRoot);
 		shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
@@ -79,30 +79,30 @@ export class DestCopy implements IBroccoliPlugin {
 			let tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
 			shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
 			this.$fs.deleteDirectory(tnsCoreModulesResourcePath).wait();
-		} 
+		}
 	});
-	
+
 	if(!_.isEmpty(this.dependencies)) {
 		this.$pluginsService.afterPrepareAllPlugins().wait();
 	}
   }
 
-  public rebuild(treeDiff: IDiffResult): void {	
+  public rebuild(treeDiff: IDiffResult): void {
 	this.rebuildChangedDirectories(treeDiff.changedDirectories, "");
-	
+
 	// Cache input tree
-	let projectFilePath = path.join(this.projectDir, constants.PACKAGE_JSON_FILE_NAME);	
+	let projectFilePath = path.join(this.projectDir, constants.PACKAGE_JSON_FILE_NAME);
 	let projectFileContent = require(projectFilePath);
-	projectFileContent[constants.NATIVESCRIPT_KEY_NAME][constants.NODE_MODULE_CACHE_PATH_KEY_NAME] = this.inputPath;	
-	fs.writeFileSync(projectFilePath, JSON.stringify(projectFileContent, null, "\t"), { encoding: "utf8" });	
+	projectFileContent[constants.NATIVESCRIPT_KEY_NAME][constants.NODE_MODULE_CACHE_PATH_KEY_NAME] = this.inputPath;
+	fs.writeFileSync(projectFilePath, JSON.stringify(projectFileContent, null, "\t"), { encoding: "utf8" });
   }
-  
+
   private getDevDependencies(projectDir: string): IDictionary<any> {
-	let projectFilePath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);	
+	let projectFilePath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
 	let projectFileContent = require(projectFilePath);
-	return projectFileContent.devDependencies || {}; 
+	return projectFileContent.devDependencies || {};
   }
-  
+
   private enumeratePackageJsonFilesSync(nodeModulesDirectoryPath: string, foundFiles?: string[]): string[] {
 		foundFiles = foundFiles || [];
 		if(fs.existsSync(nodeModulesDirectoryPath)) {
@@ -112,7 +112,7 @@ export class DestCopy implements IBroccoliPlugin {
 				if (fs.existsSync(packageJsonFilePath)) {
 					foundFiles.push(packageJsonFilePath);
 				}
-                
+
                 let directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
                 if (fs.existsSync(directoryPath)) {
                     this.enumeratePackageJsonFilesSync(directoryPath, foundFiles);

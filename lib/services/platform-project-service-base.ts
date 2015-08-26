@@ -3,11 +3,11 @@
 
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem) { }
-	
+
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string) {
 		return pluginData.pluginPlatformsFolderPath(platform);
 	}
-	
+
 	public getAllNativeLibrariesForPlugin(pluginData: IPluginData, platform: string, filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean): IFuture<string[]> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, platform),
@@ -18,7 +18,7 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 								.filter(platformItemName => filter(platformItemName, pluginPlatformsFolderPath))
 								.value();
 			}
-			
+
 			return nativeLibraries;
 		}).future<string[]>()();
 	}

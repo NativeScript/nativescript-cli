@@ -49,7 +49,7 @@ class ErrorsNoFailStub implements IErrors {
 				/* intentionally left blank */
 			}
 
-			return result;			
+			return result;
 		}).future<boolean>()();
 	}
 
@@ -72,7 +72,7 @@ class PlatformsData implements IPlatformsData {
 
 		return null;
 	}
-	
+
 	public get availablePlatforms(): any {
 		return undefined;
 	}
@@ -98,7 +98,7 @@ function createTestInjector() {
 	testInjector.registerCommand("platform|remove", PlatformRemoveCommandLib.RemovePlatformCommand);
 	testInjector.registerCommand("platform|update", PlatformUpdateCommandLib.UpdatePlatformCommand);
 	testInjector.register("lockfile", { });
-	testInjector.register("resources", {});	
+	testInjector.register("resources", {});
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally left blank */ }
 	});

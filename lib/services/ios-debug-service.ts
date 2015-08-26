@@ -14,7 +14,7 @@ module notification {
     function formatNotification(bundleId: string, notification: string) {
         return `${bundleId}:NativeScript.Debug.${notification}`;
     }
-    
+
     export function waitForDebug(bundleId: string): string {
         return formatNotification(bundleId, "WaitForDebugger");
     }
@@ -30,15 +30,15 @@ module notification {
     export function readyForAttach(bundleId: string): string {
         return formatNotification(bundleId, "ReadyForAttach");
     }
-    
+
     export function attachAvailabilityQuery(bundleId: string) {
         return formatNotification(bundleId, "AttachAvailabilityQuery");
     }
-    
+
     export function alreadyConnected(bundleId: string) {
         return formatNotification(bundleId, "AlreadyConnected");
     }
-    
+
     export function attachAvailable(bundleId: string) {
         return formatNotification(bundleId, "AttachAvailable");
     }
@@ -63,7 +63,7 @@ function connectEventually(factory: () => net.Socket, handler: (_socket: net.Soc
 
 class IOSDebugService implements IDebugService {
     private static TIMEOUT_SECONDS = 90;
-    
+
     constructor(
         private $platformService: IPlatformService,
         private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -88,7 +88,7 @@ class IOSDebugService implements IDebugService {
         if (this.$options.debugBrk && this.$options.start) {
             this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
         }
-        
+
         if(!this.$options.debugBrk && !this.$options.start) {
             this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");
             this.$options.debugBrk = true;
@@ -129,7 +129,7 @@ class IOSDebugService implements IDebugService {
             this.executeOpenDebuggerClient().wait();
             let projectId = this.$projectData.projectId;
             let attachRequestMessage = notification.attachRequest(projectId);
-            
+
             let iOSEmulator = <Mobile.IiOSSimulatorService>this.$iOSEmulatorServices;
             iOSEmulator.postDarwinNotification(attachRequestMessage).wait();
         }).future<void>()();
@@ -141,11 +141,11 @@ class IOSDebugService implements IDebugService {
             this.$devicesServices.execute(device => (() => {
                 // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
                 let deploy = this.$platformService.deployOnDevice(this.platform);
-                
+
                 let iosDevice = <iOSDevice.IOSDevice>device;
                 let projectId = this.$projectData.projectId;
                 let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
-                
+
                 try {
                     let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
                     awaitNotification(npc, notification.appLaunching(projectId), timeout).wait();
@@ -153,13 +153,13 @@ class IOSDebugService implements IDebugService {
                         npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
                         npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
                     });
-                    
+
                     awaitNotification(npc, notification.readyForAttach(projectId), this.getReadyForAttachTimeout(timeout)).wait();
                 } catch(e) {
                     this.$logger.trace(`Timeout error: ${e}`);
                     this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
                 }
-                
+
                 createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
                 this.executeOpenDebuggerClient().wait();
                 deploy.wait();
@@ -174,31 +174,32 @@ class IOSDebugService implements IDebugService {
                 let iosDevice = <iOSDevice.IOSDevice>device;
                 let projectId = this.$projectData.projectId;
                 let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
-                
+
                 let timeout = this.getReadyForAttachTimeout();
                 let [alreadyConnected, readyForAttach, attachAvailable] = [
                     notification.alreadyConnected(projectId),
                     notification.readyForAttach(projectId),
                     notification.attachAvailable(projectId)
                 ].map((notification) => awaitNotification(npc, notification, timeout));
-                
+
                 npc.postNotificationAndAttachForData(notification.attachAvailabilityQuery(projectId));
-                
+
                 let receivedNotification: IFuture<string>;
                 try {
                     receivedNotification = whenAny(alreadyConnected, readyForAttach, attachAvailable).wait();
                 } catch (e) {
                     this.$errors.failWithoutHelp(`The application ${projectId} does not appear to be running on ${device.deviceInfo.displayName} or is not built with debugging enabled.`);
                 }
-                
+
                 switch (receivedNotification) {
                     case alreadyConnected:
                         this.$errors.failWithoutHelp("A debugger is already connected.");
                         break;
                     case attachAvailable:
                         process.nextTick(() => npc.postNotificationAndAttachForData(notification.attachRequest(projectId)));
-                        try { awaitNotification(npc, notification.readyForAttach(projectId), timeout).wait(); }
-                        catch (e) {
+                        try {
+                            awaitNotification(npc, notification.readyForAttach(projectId), timeout).wait();
+                        } catch (e) {
                             this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
                         }
                         break;
@@ -226,21 +227,21 @@ class IOSDebugService implements IDebugService {
             this.$projectDataService.initialize(this.$projectData.projectDir);
             let platformData = this.$platformsData.getPlatformData(this.platform);
             let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-            
+
             let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
             let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
             let cmd: string = null;
-           
+
             if(semver.lt(frameworkVersion, "1.2.0")) {
-                cmd = `open -a Safari "${inspectorSourceLocation}"`;                
+                cmd = `open -a Safari "${inspectorSourceLocation}"`;
             } else {
                 let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
                 if(!this.$fs.exists(inspectorApplicationPath).wait()) {
                     this.$fs.unzip(path.join(inspectorPath, "NativeScript Inspector.zip"), inspectorPath).wait();
                 }
-                cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`; 
+                cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`;
             }
-            
+
             this.$childProcess.exec(cmd).wait();
         }).future<void>()();
     }
@@ -262,11 +263,10 @@ class IOSDebugService implements IDebugService {
         }).future<string>()();
     }
 
-    
     private getReadyForAttachTimeout(timeoutInMilliseconds?: number): number {
         let timeout = timeoutInMilliseconds || this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
         let readyForAttachTimeout = timeout / 10 ;
-        let defaultReadyForAttachTimeout = 5000;        
+        let defaultReadyForAttachTimeout = 5000;
         return readyForAttachTimeout > defaultReadyForAttachTimeout ? readyForAttachTimeout : defaultReadyForAttachTimeout;
     }
 }
@@ -328,29 +328,29 @@ function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (_socke
 
 function awaitNotification(npc: iOSProxyServices.NotificationProxyClient, notification: string, timeout: number): IFuture<string> {
     let future = new Future<string>();
-    
+
     let timeoutObject = setTimeout(() => {
         detachObserver();
         future.throw(new Error(`Timeout receiving ${notification} notification.`));
     }, timeout);
-    
+
     function notificationObserver(_notification: string) {
         clearTimeout(timeoutObject);
         detachObserver();
         future.return(_notification);
     }
-    
+
     function detachObserver() {
         process.nextTick(() => npc.removeObserver(notification, notificationObserver));
     }
-    
+
     npc.addObserver(notification, notificationObserver);
-    
+
     return future;
 }
 
 function whenAny<T>(...futures: IFuture<T>[]): IFuture<IFuture<T>> {
-    let resultFuture = new Future<IFuture<T>>();    
+    let resultFuture = new Future<IFuture<T>>();
     let futuresLeft = futures.length;
     let futureLocal: IFuture<T>;
 
@@ -358,7 +358,7 @@ function whenAny<T>(...futures: IFuture<T>[]): IFuture<IFuture<T>> {
         futureLocal = future;
         future.resolve((error, result?) => {
             futuresLeft--;
-            
+
             if (!resultFuture.isResolved()) {
                 if (typeof error === "undefined") {
                     resultFuture.return(futureLocal);
@@ -368,7 +368,7 @@ function whenAny<T>(...futures: IFuture<T>[]): IFuture<IFuture<T>> {
             }
         });
     }
-    
+
     return resultFuture;
 }
 

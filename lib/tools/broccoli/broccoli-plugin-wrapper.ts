@@ -18,7 +18,7 @@ export class BroccoliPluginWrapper implements BroccoliTree {
   cachePath: string = null;
   outputPath: string = null;
 
-  constructor(private pluginClass: any, wrappedPluginArguments: any) { 
+  constructor(private pluginClass: any, wrappedPluginArguments: any) {
       this.inputTree = wrappedPluginArguments[0];
       this.description = this.pluginClass.name;
       this.absoluteOutputPath = wrappedPluginArguments[1];
@@ -30,10 +30,10 @@ export class BroccoliPluginWrapper implements BroccoliTree {
   rebuild(): void {
       try {
         this.init();
-  
-        let diffResult = this.treeDiffer.diffTree(this.absoluteOutputPath, this.treeRootDirName);        
+
+        let diffResult = this.treeDiffer.diffTree(this.absoluteOutputPath, this.treeRootDirName);
         this.wrappedPlugin.rebuild(diffResult);
-  
+
       } catch (e) {
         e.message = `[${this.description}]: ${e.message}`;
         throw e;
@@ -42,10 +42,10 @@ export class BroccoliPluginWrapper implements BroccoliTree {
 
   private init() {
       this.treeDiffer = new TreeDiffer(this.inputPath);
-      this.wrappedPlugin = this.$injector.resolve(this.pluginClass, 
-        { inputPath: this.inputPath, 
-          cachePath: this.cachePath, 
-          outputRoot: this.absoluteOutputPath, 
+      this.wrappedPlugin = this.$injector.resolve(this.pluginClass,
+        { inputPath: this.inputPath,
+          cachePath: this.cachePath,
+          outputRoot: this.absoluteOutputPath,
           projectDir: this.projectDir });
   }
 

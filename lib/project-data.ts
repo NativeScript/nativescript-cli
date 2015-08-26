@@ -47,7 +47,7 @@ export class ProjectData implements IProjectData {
 					} else { // This is the case when we have package.json file but nativescipt key is not presented in it
 						this.tryToUpgradeProject().wait();
 					}
-				} 
+				}
 			} else { // This is the case when no project file found
 				this.tryToUpgradeProject().wait();
 			}

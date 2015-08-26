@@ -9,7 +9,7 @@ import * as semver from "semver";
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
-	
+
 	constructor(private $devicesServices: Mobile.IDevicesServices,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -140,27 +140,27 @@ export class PlatformService implements IPlatformService {
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			this.validatePlatform(platform);
-			
+
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
-			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ? 
+			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ?
 				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
 
 			// Copy app folder to native project
 			this.$fs.ensureDirectoryExists(appDestinationDirectoryPath).wait();
 			let appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
-			
+
 			// Delete the destination app in order to prevent EEXIST errors when symlinks are used.
 			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
-			
+
 			_(contents)
 				.filter(directoryName => directoryName !== "tns_modules")
 				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
 				.value();
-			shell.cp("-Rf", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);			
+			shell.cp("-Rf", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.appResourcesDestinationDirectoryPath).wait(); // Should be deleted
@@ -170,7 +170,7 @@ export class PlatformService implements IPlatformService {
 				shell.cp("-Rf", path.join(appResourcesDirectoryPath, platformData.normalizedPlatformName, "*"), platformData.appResourcesDestinationDirectoryPath);
 				this.$fs.deleteDirectory(appResourcesDirectoryPath).wait();
 			}
-			
+
 			platformData.platformProjectService.prepareProject().wait();
 
 			// Process node_modules folder
@@ -183,16 +183,16 @@ export class PlatformService implements IPlatformService {
 				this.$errors.fail(`Processing node_modules failed. Error:${error}`);
 				shell.rm("-rf", appResourcesDirectoryPath);
 			}
-			
+
 			// Process platform specific files
 			let directoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
-			this.$logger.out("Project successfully prepared"); 
+			this.$logger.out("Project successfully prepared");
 		}).future<void>()();
 	}
-	
+
 	public buildPlatform(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
@@ -219,15 +219,15 @@ export class PlatformService implements IPlatformService {
 	public removePlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			
+
 			_.each(platforms, platform => {
 				this.validatePlatformInstalled(platform);
-				let platformData = this.$platformsData.getPlatformData(platform);				
+				let platformData = this.$platformsData.getPlatformData(platform);
 
 				let platformDir = path.join(this.$projectData.platformsDir, platform);
 				this.$fs.deleteDirectory(platformDir).wait();
 				this.$projectDataService.removeProperty(platformData.frameworkPackageName).wait();
-				
+
 				this.$logger.out(`Platform ${platform} successfully removed.`);
 			});
 
@@ -265,12 +265,12 @@ export class PlatformService implements IPlatformService {
 			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
-					device.deploy(packageFile, this.$projectData.projectId).wait(); 
-					
+					device.deploy(packageFile, this.$projectData.projectId).wait();
+
 					if (!this.$options.justlaunch) {
 						device.openDeviceLogStream();
 					}
-				}).future<void>()(); 
+				}).future<void>()();
 			};
 			this.$devicesServices.execute(action).wait();
 			this.$commandsService.tryExecuteCommand("device", ["run", this.$projectData.projectId]).wait();

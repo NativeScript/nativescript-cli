@@ -26,9 +26,9 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("errors", ErrorsLib.Errors);
 	testInjector.register("fs", FileSystemLib.FileSystem);
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
-	testInjector.register("injector", testInjector);	
+	testInjector.register("injector", testInjector);
 	testInjector.register("iOSEmulatorServices", {});
-	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);	
+	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("projectData", {
@@ -37,7 +37,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	});
 	testInjector.register("projectHelper", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
-	
+
 	return testInjector;
 }
 
@@ -47,11 +47,11 @@ describe("Cocoapods support", () => {
 	} else {
 		it("adds plugin with Podfile", () => {
 			let projectName = "projectDirectory";
-			let projectPath = temp.mkdirSync(projectName);		
-			
+			let projectPath = temp.mkdirSync(projectName);
+
 			let testInjector = createTestInjector(projectPath, projectName);
 			let fs: IFileSystem = testInjector.resolve("fs");
-			
+
 			let packageJsonData = {
 				"name": "myProject",
 				"version": "0.1.0",
@@ -63,43 +63,46 @@ describe("Cocoapods support", () => {
 				}
 			};
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
-			
+
 			let platformsFolderPath = path.join(projectPath, "ios");
 			fs.createDirectory(platformsFolderPath).wait();
-			
+
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
-			
+
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'",  "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();		
-			
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return pluginPlatformsFolderPath;
 				}
 			};
-			
+
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
-			
+
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
-			
+
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `, ` ${pluginPodfileContent} `, " # End Podfile \n"].join("\n"); 
+			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `,
+				` ${pluginPodfileContent} `,
+				" # End Podfile \n"]
+				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
-		}); 
+		});
 		it("adds and removes plugin with Podfile", () => {
 			let projectName = "projectDirectory2";
-			let projectPath = temp.mkdirSync(projectName);		
-			
+			let projectPath = temp.mkdirSync(projectName);
+
 			let testInjector = createTestInjector(projectPath, projectName);
 			let fs: IFileSystem = testInjector.resolve("fs");
-			
+
 			let packageJsonData = {
 				"name": "myProject2",
 				"version": "0.1.0",
@@ -111,10 +114,10 @@ describe("Cocoapods support", () => {
 				}
 			};
 			fs.writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
-			
+
 			let platformsFolderPath = path.join(projectPath, "ios");
 			fs.createDirectory(platformsFolderPath).wait();
-			
+
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 			iOSProjectService.prepareDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
@@ -122,31 +125,34 @@ describe("Cocoapods support", () => {
 			iOSProjectService.removeDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
-			
+
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
 			let pluginPodfilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			let pluginPodfileContent = ["source 'https://github.com/CocoaPods/Specs.git'",  "platform :ios, '8.1'", "pod 'GoogleMaps'"].join("\n");
-			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();		
-			
+			fs.writeFile(pluginPodfilePath, pluginPodfileContent).wait();
+
 			let pluginData = {
 				pluginPlatformsFolderPath(platform: string): string {
 					return pluginPlatformsFolderPath;
 				}
 			};
-			
+
 			iOSProjectService.preparePluginNativeCode(pluginData).wait();
-			
+
 			let projectPodfilePath = path.join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
-			
+
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `, ` ${pluginPodfileContent} `, " # End Podfile \n"].join("\n"); 
+			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `,
+				` ${pluginPodfileContent} `,
+				" # End Podfile \n"]
+				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
-			
+
 			iOSProjectService.removePluginNativeCode(pluginData).wait();
-			
+
 			assert.isFalse(fs.exists(projectPodfilePath).wait());
-		}); 
+		});
 	}
 });

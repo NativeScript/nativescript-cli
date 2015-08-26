@@ -1,17 +1,17 @@
 ///<reference path="../.d.ts"/>
 "use strict";
-import path = require("path");
-import util = require("util");
+import * as path from "path";
+import * as util from "util";
 
 export class ProjectFilesManager implements IProjectFilesManager {
 	constructor(private $fs: IFileSystem,
 		private $platformsData: IPlatformsData) { }
-	
+
 	public processPlatformSpecificFiles(directoryPath: string, platform: string, excludedDirs?: string[]): IFuture<void> {
 		return (() => {
 			let contents = this.$fs.readDirectory(directoryPath).wait();
 			let files: string[] = [];
-			
+
 			_.each(contents, fileName => {
 				let filePath = path.join(directoryPath, fileName);
 				let fsStat = this.$fs.getFsStats(filePath).wait();
@@ -22,10 +22,10 @@ export class ProjectFilesManager implements IProjectFilesManager {
 				}
 			});
 			this.processPlatformSpecificFilesCore(platform, files).wait();
-			
+
 		}).future<void>()();
 	}
-	
+
 	private processPlatformSpecificFilesCore(platform: string, files: string[]): IFuture<void> {
 		// Renames the files that have `platform` as substring and removes the files from other platform
 		return (() => {
@@ -40,7 +40,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 			});
 		}).future<void>()();
 	}
-	
+
 	private static parsePlatformSpecificFileName(fileName: string, platforms: string[]): any {
 		let regex = util.format("^(.+?)\\.(%s)(\\..+?)$", platforms.join("|"));
 		let parsed = fileName.match(new RegExp(regex, "i"));

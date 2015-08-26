@@ -1,9 +1,9 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import commonOptionsLibPath = require("./common/options");
-import osenv = require("osenv");
-import path = require("path");
+import * as commonOptionsLibPath from "./common/options";
+import * as osenv from "osenv";
+import * as path from "path";
 
 let OptionType = commonOptionsLibPath.OptionType;
 
@@ -28,7 +28,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			keyStoreAliasPassword: { type: OptionType.String },
 			sdk: { type: OptionType.String },
 			ignoreScripts: {type: OptionType.Boolean },
-			tnsModulesVersion: { type: OptionType.String } 
+			tnsModulesVersion: { type: OptionType.String }
 		},
 		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);

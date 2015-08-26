@@ -9,9 +9,9 @@ class AndroidDebugService implements IDebugService {
 	private static ENV_DEBUG_OUT_FILENAME = "envDebug.out";
     private static DEFAULT_NODE_INSPECTOR_URL = "http://127.0.0.1:8080/debug";
     private static PACKAGE_EXTERNAL_DIR_TEMPLATE = "/sdcard/Android/data/%s/files/";
-    
+
 	private _device: Mobile.IAndroidDevice = null;
-	
+
 	constructor(private $devicesServices: Mobile.IDevicesServices,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
@@ -28,15 +28,15 @@ class AndroidDebugService implements IDebugService {
         private $config: IConfiguration) { }
 
 	private get platform() { return "android"; }
-	
+
 	private get device(): Mobile.IAndroidDevice {
 		return this._device;
 	}
-	
+
 	private set device(newDevice) {
 		this._device = newDevice;
 	}
-    
+
 	public debug(): IFuture<void> {
 		return this.$options.emulator
 			? this.debugOnEmulator()
@@ -55,7 +55,7 @@ class AndroidDebugService implements IDebugService {
 			let packageFile = "";
 
 			if(!this.$options.debugBrk && !this.$options.start && !this.$options.getPort && !this.$options.stop) {
-				this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");                
+				this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");
 				this.$options.debugBrk = true;
 			}
 
@@ -76,11 +76,11 @@ class AndroidDebugService implements IDebugService {
 
 		}).future<void>()();
 	}
-	
+
 	 private debugCore(device: Mobile.IAndroidDevice, packageFile: string, packageName: string): IFuture<void> {
         return (() => {
 			this.device = device;
-			
+
             if (this.$options.getPort) {
                 this.printDebugPort(packageName).wait();
             } else if (this.$options.start) {
@@ -92,18 +92,18 @@ class AndroidDebugService implements IDebugService {
             }
         }).future<void>()();
     }
-	
+
 	private printDebugPort(packageName: string): IFuture<void> {
         return (() => {
             let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-GetDgbPort"]).wait();
             this.$logger.info(res);
         }).future<void>()();
     }
-	
+
 	private attachDebugger(packageName: string): void {
         let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-Debug\"', "--ez", "enable", "true"];
         let port = this.$options.debugPort;
-		
+
         if (port > 0) {
             startDebuggerCommand.push("--ei", "debuggerPort", port.toString());
             this.device.adb.executeShellCommand(startDebuggerCommand).wait();
@@ -135,18 +135,18 @@ class AndroidDebugService implements IDebugService {
                 this.device.applicationManager.uninstallApplication(packageName).wait();
                 this.device.applicationManager.installApplication(packageFile).wait();
             }
-    
+
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
-            
+
             this.device.adb.executeShellCommand(["rm", `${envDebugOutFullpath}`]).wait();
             this.device.adb.executeShellCommand(["mkdir", "-p", `${packageDir}`]).wait();
-    
+
     		let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
             this.device.adb.executeShellCommand([`cat /dev/null > ${debugBreakPath}`]).wait();
-    		
+
             this.device.applicationManager.startApplication(packageName).wait();
-    
+
             let dbgPort = this.startAndGetPort(packageName).wait();
             if (dbgPort > 0) {
                 this.tcpForward(dbgPort, dbgPort).wait();
@@ -155,7 +155,7 @@ class AndroidDebugService implements IDebugService {
             }
         }).future<void>()();
     }
-    
+
     private tcpForward(src: Number, dest: Number): IFuture<void> {
         return this.device.adb.executeCommand(["forward", `tcp:${src.toString()}`, `tcp:${dest.toString()}`]);
     }
@@ -196,8 +196,8 @@ class AndroidDebugService implements IDebugService {
     private startAndGetPort(packageName: string): IFuture<number> {
         return (() => {
             let port = -1;
-			let timeout = this.$utils.getParsedTimeout(90);       
-             
+			let timeout = this.$utils.getParsedTimeout(90);
+
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
             this.device.adb.executeShellCommand(["rm", `${envDebugInFullpath}`]).wait();
@@ -210,7 +210,7 @@ class AndroidDebugService implements IDebugService {
                     break;
                 }
             }
-			
+
             if (isRunning) {
                 this.device.adb.executeShellCommand([`cat /dev/null > ${envDebugInFullpath}`]).wait();
 

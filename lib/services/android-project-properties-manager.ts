@@ -8,16 +8,14 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 	private filePath: string = null;
 	private projectReferences: ILibRef[];
 	private dirty = false;
-	
+
 	constructor(private $propertiesParser: IPropertiesParser,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		directoryPath: string) {
 			this.filePath = path.join(directoryPath, "project.properties");
 	}
-	
-	
-	
+
 	public getProjectReferences(): IFuture<ILibRef[]> {
 		return (() => {
 			if(!this.projectReferences || this.dirty) {
@@ -28,11 +26,11 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 					.map(key => this.createLibraryReference(key, allProjectProperties[key]))
 					.value();
 			}
-			
+
 			return this.projectReferences;
 		}).future<ILibRef[]>()();
 	}
-	
+
 	public addProjectReference(referencePath: string): IFuture<void> {
 		return (() => {
 			let references = this.getProjectReferences().wait();
@@ -42,7 +40,7 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 			}
 		}).future<void>()();
 	}
-	
+
 	public removeProjectReference(referencePath: string): IFuture<void> {
 		return (() => {
 			let references = this.getProjectReferences().wait();
@@ -54,21 +52,21 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 			}
 		}).future<void>()();
 	}
-	
+
 	private createEditor(): IFuture<any> {
 		return (() => {
 			return this._editor || this.$propertiesParser.createEditor(this.filePath).wait();
 		}).future<any>()();
 	}
-	
+
 	private buildKeyName(key: string, index: number): string {
 		return `${key}.${index}`;
 	}
-	
+
 	private getAllProjectProperties(): IFuture<IStringDictionary> {
 		return this.$propertiesParser.read(this.filePath);
 	}
-	
+
 	private createLibraryReference(referenceName: string, referencePath: string): ILibRef {
 		return {
 			idx: parseInt(referenceName.split("android.library.reference.")[1]),
@@ -77,7 +75,7 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 			adjustedPath: path.join(path.dirname(this.filePath), referencePath)
 		};
 	}
-	
+
 	private addToPropertyList(key: string, value: string): IFuture<void> {
 		return (() => {
 			let editor = this.createEditor().wait();
@@ -85,13 +83,13 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
     		while (editor.get(this.buildKeyName(key, i))) {
         		i++;
 			}
-			
+
 			editor.set(this.buildKeyName(key, i), value);
 			this.$propertiesParser.saveEditor().wait();
 			this.dirty = true;
 		}).future<void>()();
 	}
-	
+
 	private removeFromPropertyList(key: string, value: string): IFuture<void> {
 		return (() => {
 			let editor = this.createEditor().wait();
@@ -101,7 +99,7 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 		 	while (currentValue = editor.get(this.buildKeyName(key, i))) {
 		    	if (currentValue.toLowerCase() === valueLowerCase) {
 		            while (currentValue = editor.get(this.buildKeyName(key, i+1))) {
-		                editor.set(this.buildKeyName(key, i), currentValue); 
+		                editor.set(this.buildKeyName(key, i), currentValue);
 		                i++;
 		            }
 		            editor.set(this.buildKeyName(key, i));
@@ -111,6 +109,6 @@ export class AndroidProjectPropertiesManager implements IAndroidProjectPropertie
 		    }
 			this.$propertiesParser.saveEditor().wait();
 			this.dirty = true;
-		}).future<void>()();		
+		}).future<void>()();
 	}
 }

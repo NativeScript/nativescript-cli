@@ -16,13 +16,15 @@
 		"no-empty": true,
         "no-eval": true,
 		"no-switch-case-fall-through": true,
+		"no-trailing-whitespace": true,
 		"no-unreachable": true,
 		"no-unused-expression": true,
 		"no-unused-variable": true,
 		"no-use-before-declare": true,
 		"no-var-keyword": true,
+		"no-var-requires": false,
 		"one-line": [
-			false,
+			true,
 			"check-open-brace",
 			"check-catch",
 			"check-else"
@@ -42,11 +44,6 @@
 			"check-separator",
 			"check-type",
 			"check-typecast"
-		],
-	
-		
-		
-		"no-var-requires": false,
-		"no-trailing-whitespace": false
+		]
 	}
 }
