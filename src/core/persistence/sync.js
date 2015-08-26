@@ -553,9 +553,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   count: function(collection, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Counting the number of documents pending synchronization.', arguments);
-    }
+    logger.debug('Counting the number of documents pending synchronization.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -564,13 +562,11 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
     var promise = Sync.count(collection, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Counted the number of documents pending synchronization.', response);
-      }, function(error) {
-        log('Failed to count the number of documents pending synchronization.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Counted the number of documents pending synchronization.', response);
+    }, function(error) {
+      logger.error('Failed to count the number of documents pending synchronization.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -585,9 +581,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   destruct: function(options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Deleting the local database.', arguments);
-    }
+    logger.debug('Deleting the local database.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -596,13 +590,11 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
     var promise = Database.destruct(options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Deleted the local database.', response);
-      }, function(error) {
-        log('Failed to delete the local database.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Deleted the local database.', response);
+    }, function(error) {
+      logger.error('Failed to delete the local database.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -619,9 +611,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   execute: function(options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Synchronizing the application.', arguments);
-    }
+    logger.debug('Synchronizing the application.', arguments);
 
     // Validate preconditions.
     if(!Kinvey.Sync.isOnline()) {
@@ -638,9 +628,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
     var promise;
     if(null != options.user) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Attempting to login with a user context.', options.user);
-      }
+      logger.debug('Attempting to login with a user context.', options.user);
 
       // Prepare the response.
       promise = Kinvey.User.login(options.user).then(function() {
@@ -650,11 +638,9 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
       });
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        promise.then(null, function(error) {
-          log('Failed to login with the user context.', error);
-        });
-      }
+      promise.then(null, function(error) {
+        logger.error('Failed to login with the user context.', error);
+      });
 
       // Return the response.
       delete options.success;
@@ -665,13 +651,11 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
     promise = Sync.execute(options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Synchonized the application.', response);
-      }, function(error) {
-        log('Failed to synchronize the application.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Synchonized the application.', response);
+    }, function(error) {
+      logger.error('Failed to synchronize the application.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -687,9 +671,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   init: function(options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initializing the synchronization functionality.', arguments);
-    }
+    logger.debug('Initializing the synchronization functionality.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -727,9 +709,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   offline: function() {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Switching the application state to offline.');
-    }
+    logger.debug('Switching the application state to offline.');
 
     // Validate preconditions.
     if(!Kinvey.Sync.isEnabled()) {
@@ -756,9 +736,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
    */
   online: function(options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Switching the application state to online.', arguments);
-    }
+    logger.debug('Switching the application state to online.', arguments);
 
     // Validate preconditions.
     if(!Kinvey.Sync.isEnabled()) {

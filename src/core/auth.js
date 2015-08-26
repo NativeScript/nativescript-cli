@@ -64,11 +64,9 @@ var Auth = /** @lends Auth */{
     });
 
     // Debug
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Authenticating through App Secret.', response);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Authenticating through App Secret.', response);
+    });
 
     // Return the response.
     return promise;
@@ -118,11 +116,9 @@ var Auth = /** @lends Auth */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Authenticating through Master Secret.', response);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Authenticating through Master Secret.', response);
+    });
 
     // Return the response.
     return promise;
@@ -167,11 +163,9 @@ var Auth = /** @lends Auth */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Authenticating through user credentials.', response);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Authenticating through user credentials.', response);
+    });
 
     // Return the response.
     return promise;

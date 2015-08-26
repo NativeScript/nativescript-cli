@@ -27,9 +27,7 @@
  */
 Kinvey.execute = function(id, args, options) {
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Executing custom command.', arguments);
-  }
+  logger.debug('Executing custom command.', arguments);
 
   // Cast arguments.
   options = options || {};
@@ -50,13 +48,11 @@ Kinvey.execute = function(id, args, options) {
   });
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    promise.then(function(response) {
-      log('Executed the custom command.', response);
-    }, function(error) {
-      log('Failed to execute the custom command.', error);
-    });
-  }
+  promise.then(function(response) {
+    logger.debug('Executed the custom command.', response);
+  }, function(error) {
+    logger.error('Failed to execute the custom command.', error);
+  });
 
   // Return the response.
   return wrapCallbacks(promise, options);

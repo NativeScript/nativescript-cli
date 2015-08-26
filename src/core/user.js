@@ -36,9 +36,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   signup: function(data, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Signing up a new user.', arguments);
-    }
+    logger.debug('Signing up a new user.', arguments);
 
     // Forward to `Kinvey.User.create`. Signup, however, always marks the
     // created user as the active user.
@@ -57,9 +55,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   signupWithProvider: function(provider, tokens, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Signing up a new user with a provider.', arguments);
-    }
+    logger.debug('Signing up a new user with a provider.', arguments);
 
     // Parse tokens.
     var data = { _socialIdentity: { } };
@@ -84,9 +80,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Logging in an existing user.', arguments);
-    }
+    logger.debug('Logging in an existing user.', arguments);
 
     // Cast arguments.
     if(isObject(usernameOrData)) {
@@ -124,13 +118,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Logged in the user.', response);
-      }, function(error) {
-        log('Failed to login the user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Logged in the user.', response);
+    }, function(error) {
+      logger.error('Failed to login the user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -146,9 +138,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   loginWithProvider: function(provider, tokens, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Logging in with a provider.', arguments);
-    }
+    logger.debug('Logging in with a provider.', arguments);
 
     // Parse tokens.
     var data = { _socialIdentity: { } };
@@ -175,9 +165,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     }
     else {// Otherwise, attempt to logout the active user.
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Logging out the active user.', arguments);
-      }
+      logger.debug('Logging out the active user.', arguments);
 
       // Prepare the response.
       promise = Kinvey.Persistence.create({
@@ -188,9 +176,7 @@ Kinvey.User = /** @lends Kinvey.User */{
         // Clear the active user on `INVALID_CREDENTIALS`.
         if (Kinvey.Error.INVALID_CREDENTIALS === error.name || Kinvey.Error.EMAIL_VERIFICATION_REQUIRED === error.name) {
           // Debug.
-          if(KINVEY_DEBUG) {
-            log('The user credentials are invalid. Returning success because of the force flag.');
-          }
+          logger.error('The user credentials are invalid. Returning success because of the force flag.');
           return null;
         }
         return Kinvey.Defer.reject(error);
@@ -219,13 +205,11 @@ Kinvey.User = /** @lends Kinvey.User */{
       });
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        promise.then(function(response) {
-          log('Logged out the active user.', response);
-        }, function(error) {
-          log('Failed to logout the active user.', error);
-        });
-      }
+      promise.then(function(response) {
+        logger.debug('Logged out the active user.', response);
+      }, function(error) {
+        logger.error('Failed to logout the active user.', error);
+      });
     }
 
     // Return the response.
@@ -240,9 +224,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   me: function(options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving information on the active user.', arguments);
-    }
+    logger.debug('Retrieving information on the active user.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -268,13 +250,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved information on the active user.', response);
-      }, function(error) {
-        log('Failed to retrieve information on the active user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved information on the active user.', response);
+    }, function(error) {
+      logger.error('Failed to retrieve information on the active user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -289,9 +269,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   verifyEmail: function(username, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Requesting e-mail verification.', arguments);
-    }
+    logger.debug('Requesting e-mail verification.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -305,13 +283,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Requested e-mail verification.', response);
-      }, function(error) {
-        log('Failed to request e-mail verification.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Requested e-mail verification.', response);
+    }, function(error) {
+      logger.error('Failed to request e-mail verification.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -326,9 +302,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   forgotUsername: function(email, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Requesting a username reminder.', arguments);
-    }
+    logger.debug('Requesting a username reminder.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -342,13 +316,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Requested a username reminder.', response);
-      }, function(error) {
-        log('Failed to request a username reminder.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Requested a username reminder.', response);
+    }, function(error) {
+      logger.error('Failed to request a username reminder.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -363,9 +335,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   resetPassword: function(username, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Requesting a password reset.', arguments);
-    }
+    logger.debug('Requesting a password reset.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -379,13 +349,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Requested a password reset.', response);
-      }, function(error) {
-        log('Failed to request a password reset.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Requested a password reset.', response);
+    }, function(error) {
+      logger.error('Failed to request a password reset.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -400,9 +368,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   exists: function(username, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Checking whether a username exists.', arguments);
-    }
+    logger.debug('Checking whether a username exists.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -418,13 +384,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Checked whether the username exists.', response);
-      }, function(error) {
-        log('Failed to check whether the username exists.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Checked whether the username exists.', response);
+    }, function(error) {
+      logger.error('Failed to check whether the username exists.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -441,9 +405,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   create: function(data, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Creating a new user.', arguments);
-    }
+    logger.debug('Creating a new user.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -468,13 +430,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Created the new user.', response);
-      }, function(error) {
-        log('Failed to create the new user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Created the new user.', response);
+    }, function(error) {
+      logger.error('Failed to create the new user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -494,9 +454,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Updating a user.', arguments);
-    }
+    logger.debug('Updating a user.', arguments);
 
     // Validate arguments.
     if(null == data._id) {
@@ -563,11 +521,8 @@ Kinvey.User = /** @lends Kinvey.User */{
         }
 
         if (activeUser._id === user._id) {
-            // Debug.
-          if(KINVEY_DEBUG) {
-            log('Updating the active user because the updated user was the active user.');
-          }
-
+          // Debug.
+          logger.debug('Updating the active user because the updated user was the active user.');
           Kinvey.setActiveUser(user);
         }
       }
@@ -576,13 +531,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Updated the user.', response);
-      }, function(error) {
-        log('Failed to update the user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Updated the user.', response);
+    }, function(error) {
+      logger.error('Failed to update the user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -601,9 +554,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving users by query.', arguments);
-    }
+    logger.debug('Retrieving users by query.', arguments);
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
@@ -620,9 +571,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var promise;
     if(options.discover) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Using User Discovery because of the discover flag.');
-      }
+      logger.debug('Using User Discovery because of the discover flag.');
 
       // Prepare the response.
       promise = Kinvey.Persistence.create({
@@ -644,13 +593,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved the users by query.', response);
-      }, function(error) {
-        log('Failed to retrieve the users by query.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved the users by query.', response);
+    }, function(error) {
+      logger.error('Failed to retrieve the users by query.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -665,9 +612,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   get: function(id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving a user.', arguments);
-    }
+    logger.debug('Retrieving a user.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -681,13 +626,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved the user.', response);
-      }, function(error) {
-        log('Failed to return the user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved the user.', response);
+    }, function(error) {
+      logger.error('Failed to return the user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -707,9 +650,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Deleting a user.', arguments);
-    }
+    logger.debug('Deleting a user.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -734,10 +675,7 @@ Kinvey.User = /** @lends Kinvey.User */{
 
         if (activeUser._id === id) {
           // Debug.
-          if(KINVEY_DEBUG) {
-            log('Deleting the active user because the deleted user was the active user.');
-          }
-
+          logger.debug('Deleting the active user because the deleted user was the active user.');
           Kinvey.setActiveUser(null);
         }
       }
@@ -747,23 +685,18 @@ Kinvey.User = /** @lends Kinvey.User */{
       // If `options.silent`, treat `USER_NOT_FOUND` as success.
       if(options.silent && Kinvey.Error.USER_NOT_FOUND === error.name) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('The user does not exist. Returning success because of the silent flag.');
-        }
-
+        logger.debug('The user does not exist. Returning success because of the silent flag.');
         return null;
       }
       return Kinvey.Defer.reject(error);
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Deleted the user.', response);
-      }, function(error) {
-        log('Failed to delete the user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Deleted the user.', response);
+    }, function(error) {
+      logger.error('Failed to delete the user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -778,9 +711,7 @@ Kinvey.User = /** @lends Kinvey.User */{
    */
   restore: function(id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Restoring a previously disabled user.', arguments);
-    }
+    logger.debug('Restoring a previously disabled user.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -794,13 +725,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Restored the previously disabled user.', response);
-      }, function(error) {
-        log('Failed to restore the previously disabled user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Restored the previously disabled user.', response);
+    }, function(error) {
+      logger.error('Failed to restore the previously disabled user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -817,9 +746,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Counting the number of users.', arguments);
-    }
+    logger.debug('Counting the number of users.', arguments);
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
@@ -842,13 +769,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Counted the number of users.', response);
-      }, function(error) {
-        log('Failed to count the number of users.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Counted the number of users.', response);
+    }, function(error) {
+      logger.error('Failed to count the number of users.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -865,9 +790,7 @@ Kinvey.User = /** @lends Kinvey.User */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Grouping users.', arguments);
-    }
+    logger.debug('Grouping users.', arguments);
 
     // Validate arguments.
     if(!(aggregation instanceof Kinvey.Group)) {
@@ -891,13 +814,11 @@ Kinvey.User = /** @lends Kinvey.User */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Grouped the users.', response);
-      }, function(error) {
-        log('Failed to group the users.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Grouped the users.', response);
+    }, function(error) {
+      logger.error('Failed to group the users.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);

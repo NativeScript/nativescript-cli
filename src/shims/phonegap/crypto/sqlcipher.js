@@ -29,9 +29,7 @@ WebSqlAdapter.open = function() {
   }
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Enabled encrypted data storage.');
-  }
+  logger.debug('Enabled encrypted data storage.');
 
   // Open the database.
   return root.sqlitePlugin.openDatabase({

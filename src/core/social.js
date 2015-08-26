@@ -64,9 +64,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Linking a social identity to a Kinvey user.', arguments);
-    }
+    logger.debug('Linking a social identity to a Kinvey user.', arguments);
 
     // Cast and validate arguments.
     options        = options || {};
@@ -126,13 +124,11 @@ Kinvey.Social = /** @lends Kinvey.Social */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Linked the social identity to the Kinvey user.', response);
-      }, function(error) {
-        log('Failed to link a social identity to a Kinvey user.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Linked the social identity to the Kinvey user.', response);
+    }, function(error) {
+      logger.error('Failed to link a social identity to a Kinvey user.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -150,9 +146,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Unlinking a social identity from a Kinvey user.', arguments);
-    }
+    logger.debug('Unlinking a social identity from a Kinvey user.', arguments);
 
     // Cast and validate arguments.
     if(!Kinvey.Social.isSupported(provider)) {
@@ -182,9 +176,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    */
   facebook: function(user, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Linking a Facebook identity to a Kinvey user.', arguments);
-    }
+    logger.debug('Linking a Facebook identity to a Kinvey user.', arguments);
 
     // Forward to `Kinvey.Social.connect`.
     return Kinvey.Social.connect(user, 'facebook', options);
@@ -199,9 +191,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    */
   google: function(user, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Linking a Google+ identity to a Kinvey user.', arguments);
-    }
+    logger.debug('Linking a Google+ identity to a Kinvey user.', arguments);
 
     // Forward to `Kinvey.Social.connect`.
     return Kinvey.Social.connect(user, 'google', options);
@@ -226,9 +216,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    */
   linkedIn: function(user, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Linking a LinkedIn identity to a Kinvey user.', arguments);
-    }
+    logger.debug('Linking a LinkedIn identity to a Kinvey user.', arguments);
 
     // Forward to `Kinvey.Social.connect`.
     return Kinvey.Social.connect(user, 'linkedIn', options);
@@ -243,9 +231,7 @@ Kinvey.Social = /** @lends Kinvey.Social */{
    */
   twitter: function(user, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Linking a Twitter identity to a Kinvey user.', arguments);
-    }
+    logger.debug('Linking a Twitter identity to a Kinvey user.', arguments);
 
     // Forward to `Kinvey.Social.connect`.
     return Kinvey.Social.connect(user, 'twitter', options);

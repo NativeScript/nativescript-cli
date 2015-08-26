@@ -138,9 +138,7 @@ var use = function(nsInterface) {
     var namespace = this;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Applying an adapter.', namespace, adapter);
-    }
+    logger.debug('Applying an adapter.', namespace, adapter);
 
     // Validate adapter.
     adapter = adapter || {};

@@ -38,9 +38,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     var platform;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Registering a device to receive push notifications.', arguments);
-    }
+    logger.debug('Registering a device to receive push notifications.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -78,13 +76,11 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Registered the device to receive push notifications.', response);
-      }, function(error) {
-        log('Failed to register the device to receive push notifications.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Registered the device to receive push notifications.', response);
+    }, function(error) {
+      logger.error('Failed to register the device to receive push notifications.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -104,9 +100,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     var platform;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Registering a device to receive push notifications.', arguments);
-    }
+    logger.debug('Registering a device to receive push notifications.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -144,13 +138,11 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Unregistered the device from receiving push notifications.', response);
-      }, function(error) {
-        log('Failed to unregister the device from receiving push notifications.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Unregistered the device from receiving push notifications.', response);
+    }, function(error) {
+      logger.error('Failed to unregister the device from receiving push notifications.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);

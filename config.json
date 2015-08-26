@@ -8,6 +8,7 @@
         "node_modules/angular/lib/angular.min.js"
       ],
       "externals": [
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
       ],
@@ -31,6 +32,7 @@
         "node_modules/backbone-associations/backbone-associations-min.js"
       ],
       "externals": [
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
@@ -56,6 +58,7 @@
     "html5": {
       "dependencies": [ ],
       "externals": [
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
@@ -71,7 +74,9 @@
     },
     "nodejs": {
       "dependencies" : [ ],
-      "externals"    : [],
+      "externals"    : [
+        "node_modules/loglevel/dist/loglevel.js"
+      ],
       "internals"    : [
         "src/shims/nodejs/nodejs.js",
         "src/internals/deferreds/promiscuous-node.js",
@@ -82,6 +87,7 @@
     "phonegap": {
       "dependencies": [ ],
       "externals": [
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
@@ -100,6 +106,7 @@
     "phonegap-crypto": {
       "dependencies": [ ],
       "externals": [
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
@@ -121,6 +128,7 @@
       "dependencies" : [ ],
       "externals"    : [
         "src/shims/titanium/intro.txt",
+        "node_modules/loglevel/dist/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js",

@@ -85,6 +85,9 @@ module.exports = function(grunt) {
         },
         dest: 'dist/<%= env %>/dist.js',
         src: [
+          // Logging
+          'src/core/logger.js',
+
           // Setup.
           'src/kinvey.js',
           'src/core/error.js',

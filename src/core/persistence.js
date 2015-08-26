@@ -153,18 +153,14 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     // If `options.offline`, use local.
     if(request.local.req && options.offline) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Using local persistence.');
-      }
+      logger.debug('Using local persistence.');
 
       return Kinvey.Persistence.Local.create(request, options).then(null, function(error) {
         // On rejection, if `options.fallback`, perform aggregation requests
         // against net.
         if(options.fallback && '_group' === request.id) {
           // Debug.
-          if(KINVEY_DEBUG) {
-            log('Local persistence failed. Use net persistence because of the fallback flag.');
-          }
+          logger.debug('Local persistence failed. Use net persistence because of the fallback flag.');
 
           options.offline = false;// Overwrite to avoid infinite recursion.
           return Kinvey.Persistence.create(request, options);
@@ -174,17 +170,13 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Using net persistence.');
-    }
+    logger.debug('Using net persistence.');
 
     // Use net. If `options.refresh`, persist the response locally.
     var promise = Kinvey.Persistence.Net.create(request, options);
     if(request.local.res && options.refresh) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Persisting the response locally.');
-      }
+      logger.debug('Persisting the response locally.');
 
       return promise.then(function(response) {
         // The request `data` is the response from the network.
@@ -213,18 +205,14 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     // If `options.offline`, use local.
     if(request.local.req && options.offline) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Using local persistence.');
-      }
+      logger.debug('Using local persistence.');
 
       return Kinvey.Persistence.Local.read(request, options).then(null, function(error) {
         // On rejection, if `options.fallback`, perform the request against
         // net.
         if(options.fallback) {
           // Debug.
-          if(KINVEY_DEBUG) {
-            log('Local persistence failed. Use net persistence because of the fallback flag.');
-          }
+          logger.debug('Local persistence failed. Use net persistence because of the fallback flag.');
 
           options.offline = false;// Overwrite to avoid infinite recursion.
           return Kinvey.Persistence.read(request, options);
@@ -234,9 +222,7 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Using net persistence.');
-    }
+    logger.debug('Using net persistence.');
 
     // Use net.
     var promise = Kinvey.Persistence.Net.read(request, options);
@@ -246,9 +232,7 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     if(request.local.res && options.refresh && !fieldSelection) {
       return promise.then(function(response) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Persisting the response locally.');
-        }
+        logger.debug('Persisting the response locally.');
 
         // Add support for references.
         var promise;
@@ -308,25 +292,19 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     // If `options.offline`, use local.
     if(request.local.req && options.offline) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Using local persistence.');
-      }
+      logger.debug('Using local persistence.');
 
       return Kinvey.Persistence.Local.update(request, options);
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Using net persistence..');
-    }
+    logger.debug('Using net persistence..');
 
     // Use net. If `options.refresh`, persist the response locally.
     var promise = Kinvey.Persistence.Net.update(request, options);
     if(request.local.res && options.refresh) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Persisting the response locally.');
-      }
+      logger.debug('Persisting the response locally.');
 
       return promise.then(function(response) {
         // The request `data` is the response from the network.
@@ -355,25 +333,19 @@ Kinvey.Persistence = /** @lends Kinvey.Persistence */{
     // If `options.offline`, use local.
     if(request.local.req && options.offline) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Using local persistence.');
-      }
+      logger.debug('Using local persistence.');
 
       return Kinvey.Persistence.Local.destroy(request, options);
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Using net persistence.');
-    }
+    logger.debug('Using net persistence.');
 
     // Use net. If `options.refresh`, persist the response locally.
     var promise = Kinvey.Persistence.Net.destroy(request, options);
     if(request.local.res && options.refresh) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Persisting the response locally.');
-      }
+      logger.debug('Persisting the response locally.');
 
       return promise.then(function(response) {
         // Initiate the same request against local.

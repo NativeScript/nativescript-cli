@@ -97,9 +97,7 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
         var value = properties[name];
 
         // Debug
-        if (KINVEY_DEBUG) {
-          log('Adding custom request property ' + name + ' as ' + value + '.');
-        }
+        logger.debug('Adding custom request property ' + name + ' as ' + value + '.');
 
         customRequestProperties[name] = value;
       });
@@ -111,9 +109,7 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
    */
   clear: function() {
     // Debug
-    if (KINVEY_DEBUG) {
-      log('Clearing the custom request properties.');
-    }
+    logger.debug('Clearing the custom request properties.');
 
     clearCustomRequestProperties();
   },
@@ -125,9 +121,7 @@ Kinvey.CustomRequestProperties = /** @lends Kinvey.CustomRequestProperties */ {
    */
   clearProperty: function(name) {
     // Debug
-    if (KINVEY_DEBUG) {
-      log('Clearing the custom request property ' + name + '.');
-    }
+    logger.debug('Clearing the custom request property ' + name + '.');
 
     clearCustomRequestProperty(name);
   }
