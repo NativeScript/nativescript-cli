@@ -75,11 +75,11 @@ export class PlatformService implements IPlatformService {
 				npmOptions["version"] = version;
 			}
 
-			let downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
-			let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
-			frameworkDir = path.resolve(frameworkDir);
-
 			try {
+				let downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
+				let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
+				frameworkDir = path.resolve(frameworkDir);
+
 				this.addPlatformCore(platformData, frameworkDir).wait();
 			} catch(err) {
 				this.$fs.deleteDirectory(platformPath).wait();

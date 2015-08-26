@@ -6,10 +6,6 @@ import * as npm from "npm";
 
 export class NodePackageManager implements INodePackageManager {
 	constructor(private $childProcess: IChildProcess,
-		private $logger: ILogger,
-		private $errors: IErrors,
-		private $fs: IFileSystem,
-		private $lockfile: ILockFile,
 		private $options: IOptions) { }
 
 	public getCache(): string {
@@ -18,7 +14,7 @@ export class NodePackageManager implements INodePackageManager {
 
 	public load(config?: any): IFuture<void> {
 		let future = new Future<void>();
-		npm.load(config, (err) => {
+		npm.load(config, (err: Error) => {
 			if(err) {
 				future.throw(err);
 			} else {
