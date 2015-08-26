@@ -30,7 +30,6 @@ let assert = require("chai").assert;
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();
-	
 	testInjector.register("fs", FsLib.FileSystem);
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("errors", ErrorsLib.Errors);
@@ -44,8 +43,8 @@ function createTestInjector(): IInjector {
 	testInjector.register("prompter", {});
 	testInjector.register("androidProjectService", {});
 	testInjector.register("iOSProjectService", {});
-	testInjector.register("devicesServices", {});	
-	testInjector.register("resources", {});	
+	testInjector.register("devicesServices", {});
+	testInjector.register("resources", {});
 	testInjector.register("projectData", ProjectDataLib.ProjectData);
 	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
@@ -60,19 +59,19 @@ function createTestInjector(): IInjector {
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally left blank */ }
 	});
-	
+
 	return testInjector;
 }
 
 function createProject(testInjector: IInjector, dependencies?: any): string {
-	let tempFolder = temp.mkdirSync("npmSupportTests");	
+	let tempFolder = temp.mkdirSync("npmSupportTests");
 	let options = testInjector.resolve("options");
-	options.path = tempFolder;	
-	
+	options.path = tempFolder;
+
 	dependencies = dependencies || {
 		"lodash": "3.9.3"
 	};
-	
+
 	let packageJsonData: any = {
 		"name": "testModuleName",
 		"version": "0.1.0",
@@ -85,7 +84,7 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 	};
 	packageJsonData["dependencies"] = dependencies;
 	packageJsonData["devDependencies"] = {};
-	
+
 	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
 	return tempFolder;
 }
@@ -94,21 +93,21 @@ function setupProject(): IFuture<any> {
 	return (() => {
 		let testInjector = createTestInjector();
 		let projectFolder = createProject(testInjector);
-		
-		let fs = testInjector.resolve("fs");		
-		
+
+		let fs = testInjector.resolve("fs");
+
 		// Creates app folder
 		let appFolderPath = path.join(projectFolder, "app");
 		fs.createDirectory(appFolderPath).wait();
-		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources"); 
+		let appResourcesFolderPath = path.join(appFolderPath, "App_Resources");
 		fs.createDirectory(appResourcesFolderPath).wait();
 		fs.createDirectory(path.join(appResourcesFolderPath, "Android")).wait();
 		fs.createDirectory(path.join(appFolderPath, "tns_modules")).wait();
-		
+
 		// Creates platforms/android folder
 		let androidFolderPath = path.join(projectFolder, "platforms", "android");
 		fs.ensureDirectoryExists(androidFolderPath).wait();
-		
+
 		// Mock platform data
 		let appDestinationFolderPath = path.join(androidFolderPath, "assets");
 		let platformsData = testInjector.resolve("platformsData");
@@ -125,7 +124,7 @@ function setupProject(): IFuture<any> {
 				}
 			};
 		};
-		
+
 		return {
 			testInjector: testInjector,
 			projectFolder: projectFolder,
@@ -139,10 +138,10 @@ function addDependencies(testInjector: IInjector, projectFolder: string, depende
 		let fs = testInjector.resolve("fs");
 		let packageJsonPath = path.join(projectFolder, "package.json");
 		let packageJsonData = fs.readJson(packageJsonPath).wait();
-		
+
 		let currentDependencies = packageJsonData.dependencies;
 		_.extend(currentDependencies, dependencies);
-		
+
 		if(devDependencies) {
 			let currentDevDependencies = packageJsonData.devDependencies;
 			_.extend(currentDevDependencies, devDependencies);
@@ -167,18 +166,18 @@ describe("Npm support tests", () => {
 	it("Ensures that the installed dependencies are prepared correctly", () => {
 		// Setup
 		addDependencies(testInjector, projectFolder, {"bplist": "0.0.4"}).wait();
-		
+
 		// Act
 		preparePlatform(testInjector).wait();
-		
+
 		// Assert
-		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");		
+		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 		let lodashFolderPath = path.join(tnsModulesFolderPath, "lodash");
 		let bplistFolderPath = path.join(tnsModulesFolderPath, "bplist");
 		let bplistCreatorFolderPath = path.join(tnsModulesFolderPath, "bplist-creator");
 		let bplistParserFolderPath = path.join(tnsModulesFolderPath, "bplist-parser");
-		
-		let fs = testInjector.resolve("fs");		
+
+		let fs = testInjector.resolve("fs");
 		assert.isTrue(fs.exists(lodashFolderPath).wait());
 		assert.isTrue(fs.exists(bplistFolderPath).wait());
 		assert.isTrue(fs.exists(bplistCreatorFolderPath).wait());
@@ -192,49 +191,49 @@ describe("Flatten npm modules tests", () => {
 		let testInjector = projectSetup.testInjector;
 		let projectFolder = projectSetup.projectFolder;
 		let appDestinationFolderPath = projectSetup.appDestinationFolderPath;
-		
+
 		let devDependencies = {
 			"gulp": "3.9.0",
 			"gulp-jscs": "1.6.0",
 			"gulp-jshint": "1.11.0"
 		};
-		
+
 		addDependencies(testInjector, projectFolder, {}, devDependencies).wait();
-		
+
 		preparePlatform(testInjector).wait();
-		
+
 		// Assert
 		let fs = testInjector.resolve("fs");
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
-		
+
 		let lodashFolderPath = path.join(tnsModulesFolderPath, "lodash");
 		assert.isTrue(fs.exists(lodashFolderPath).wait());
-		
+
 		let gulpFolderPath = path.join(tnsModulesFolderPath, "gulp");
 		assert.isFalse(fs.exists(gulpFolderPath).wait());
-		
+
 		let gulpJscsFolderPath = path.join(tnsModulesFolderPath, "gulp-jscs");
 		assert.isFalse(fs.exists(gulpJscsFolderPath).wait());
-		
+
 		let gulpJshint = path.join(tnsModulesFolderPath, "gulp-jshint");
 		assert.isFalse(fs.exists(gulpJshint).wait());
-		
+
 		// Get  all gulp dependencies
 		let gulpDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp", "node_modules")).wait();
 		_.each(gulpDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
 		});
-		
+
 		// Get all gulp-jscs dependencies
 		let gulpJscsDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp-jscs", "node_modules")).wait();
 		_.each(gulpJscsDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
 		});
-		
+
 		// Get all gulp-jshint dependencies
 		let gulpJshintDependencies = fs.readDirectory(path.join(projectFolder, "node_modules", "gulp-jshint", "node_modules")).wait();
 		_.each(gulpJshintDependencies, dependency => {
 			assert.isFalse(fs.exists(path.join(tnsModulesFolderPath, dependency)).wait());
-		}); 
+		});
 	});
 });

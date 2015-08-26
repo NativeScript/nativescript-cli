@@ -27,7 +27,7 @@ interface INpmInstallOptions {
 interface IDependencyData {
 	name: string;
 	version: string;
-	nativescript: any;	
+	nativescript: any;
 	dependencies?: IStringDictionary;
 	devDependencies?: IStringDictionary;
 }

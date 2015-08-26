@@ -22,10 +22,9 @@ export class TreeDiffer {
     let result = new DirtyCheckingDiffResult();
     let cachedDirectories = fs.existsSync(rootDir) ?  fs.readdirSync(rootDir) : []; // rootPath is funnel_output-path
     let currentDirectories = fs.existsSync(absoluteOutputPath) ? fs.readdirSync(absoluteOutputPath) : []; // the node_modules in output directory
-    
-    result.changedDirectories = _.difference(cachedDirectories, currentDirectories); 
+
+    result.changedDirectories = _.difference(cachedDirectories, currentDirectories);
     result.removedDirectories = _.difference(currentDirectories, cachedDirectories);
-    
     return result;
   }
 }

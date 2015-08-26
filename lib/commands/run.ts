@@ -28,7 +28,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 		private $platformsData: IPlatformsData) {
 		super($platformService);
 	}
-	
+
 	public allowedParameters: ICommandParameter[] = [];
 
 	public execute(args: string[]): IFuture<void> {

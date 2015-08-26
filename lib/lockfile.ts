@@ -7,11 +7,11 @@ import * as path from "path";
 
 export class LockFile implements ILockFile {
 	private lockFilePath: string;
-	
+
 	constructor(private $options: IOptions) {
 		this.lockFilePath = path.join(this.$options.profileDir, ".lock");
 	}
-	
+
 	private static LOCK_EXPIRY_PERIOD_SEC = 180;
 	private static LOCK_PARAMS = {
 		retryWait: 100,

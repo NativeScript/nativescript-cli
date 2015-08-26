@@ -28,11 +28,11 @@ import * as path from "path";
 import * as temp from "temp";
 temp.track();
 
-let isErrorThrown = false;	
+let isErrorThrown = false;
 
 function createTestInjector() {
 	let testInjector = new Yok();
-	
+
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("fs", FileSystem);
 	testInjector.register("projectData", ProjectData);
@@ -45,7 +45,7 @@ function createTestInjector() {
 	testInjector.register("devicesServices", {});
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});
-	testInjector.register("resources", ResourceLoader);	
+	testInjector.register("resources", ResourceLoader);
 	testInjector.register("broccoliBuilder", {});
 	testInjector.register("options", Options);
 	testInjector.register("errors", Errors);
@@ -59,7 +59,7 @@ function createTestInjector() {
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("lockfile", { });
 	testInjector.register("projectHelper", ProjectHelper);
-	
+
 	testInjector.register("pluginsService", PluginsService);
 	testInjector.register("analyticsService", {
 		trackException: () => { return future.fromResult(); },
@@ -67,15 +67,15 @@ function createTestInjector() {
 		trackFeature: () => { return future.fromResult(); }
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManager);
-	
+
 	return testInjector;
 }
 
 function createProjectFile(testInjector: IInjector): string {
-	let tempFolder = temp.mkdirSync("pluginsService");	
+	let tempFolder = temp.mkdirSync("pluginsService");
 	let options = testInjector.resolve("options");
-	options.path = tempFolder;	
-	
+	options.path = tempFolder;
+
 	let packageJsonData = {
 		"name": "testModuleName",
 		"version": "0.1.0",
@@ -86,7 +86,7 @@ function createProjectFile(testInjector: IInjector): string {
 			}
 		}
 	};
-	
+
 	testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
 	return tempFolder;
 }
@@ -107,9 +107,9 @@ function mockBeginCommand(testInjector: IInjector, expectedErrorMessage: string)
 
 function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, expectedErrorMessage: string) {
 	createProjectFile(testInjector);
-	
+
 	let pluginsService = testInjector.resolve("pluginsService");
-	pluginsService.getAllInstalledPlugins = () => { 
+	pluginsService.getAllInstalledPlugins = () => {
 		return (() => {
 			return [{
 				name: ""
@@ -119,10 +119,10 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 	pluginsService.ensureAllDependenciesAreInstalled = () => {
 		return future.fromResult();
 	};
-				
-	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);				
-	
-	isErrorThrown = false;			
+
+	mockBeginCommand(testInjector, "Exception: " + expectedErrorMessage);
+
+	isErrorThrown = false;
 	let commandsService = testInjector.resolve(CommandsService);
 	commandsService.tryExecuteCommand("plugin|add", [plugin]).wait();
 
@@ -131,23 +131,23 @@ function addPluginWhenExpectingToFail(testInjector: IInjector, plugin: string, e
 
 function createAndroidManifestFile(projectFolder: string, fs:IFileSystem): void {
 	let manifest = '<?xml version="1.0" encoding="UTF-8"?>' +
-	'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' + 
+	'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
     '<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>' +
   	'<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>' +
   	'<uses-permission android:name="android.permission.INTERNET"/>' +
     '<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
-        '<activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">' + 
+        '<activity android:name="com.example.android.basiccontactables.MainActivity" android:label="@string/app_name" android:launchMode="singleTop">' +
             '<meta-data android:name="android.app.searchable" android:resource="@xml/searchable" />' +
             '<intent-filter>' +
                 '<action android:name="android.intent.action.SEARCH" />' +
-            '</intent-filter>' + 
-            '<intent-filter>' + 
+            '</intent-filter>' +
+            '<intent-filter>' +
                 '<action android:name="android.intent.action.MAIN" />' +
-            '</intent-filter>' + 
-        '</activity>' + 
-    '</application>' + 
+            '</intent-filter>' +
+        '</activity>' +
+    '</application>' +
 '</manifest>';
-	
+
 	fs.createDirectory(path.join(projectFolder, "platforms")).wait();
 	fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();
 	fs.writeFile(path.join(projectFolder, "platforms", "android", "AndroidManifest.xml"), manifest).wait();
@@ -159,11 +159,11 @@ describe("Plugins service", () => {
 		testInjector = createTestInjector();
 		testInjector.registerCommand("plugin|add", AddPluginCommand);
 	});
-	
+
 	describe("plugin add", () => {
 		it("fails when no param is specified to plugin add command", () => {
 			addPluginWhenExpectingToFail(testInjector, null, "You must specify plugin name.");
-		}); 
+		});
 		it("fails when invalid nativescript plugin name is specified", () => {
 			addPluginWhenExpectingToFail(testInjector, "lodash", "lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.");
 		});
@@ -171,36 +171,36 @@ describe("Plugins service", () => {
 			let pluginName = "plugin1";
 			let projectFolder = createProjectFile(testInjector);
 			let fs = testInjector.resolve("fs");
-			
-			// Add plugin			
+
+			// Add plugin
 			let projectFilePath = path.join(projectFolder, "package.json");
 			let projectData = require(projectFilePath);
 			projectData.dependencies = { };
 			projectData.dependencies[pluginName] = "^1.0.0";
 			fs.writeJson(projectFilePath, projectData).wait();
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: "plugin1"
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
-			mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');				
-	
-			isErrorThrown = false;			
+
+			mockBeginCommand(testInjector, "Exception: " + 'Plugin "plugin1" is already installed.');
+
+			isErrorThrown = false;
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginName]).wait();
-			
+
 			assert.isTrue(isErrorThrown);
 		});
 		it("fails when the plugin does not support the installed framework", () => {
 			let isWarningMessageShown = false;
 			let expectedWarningMessage = "mySamplePlugin 1.0.1 for android is not compatible with the currently installed framework version 1.0.0.";
-			
-			// Creates plugin in temp folder			
+
+			// Creates plugin in temp folder
 			let pluginName = "mySamplePlugin";
 			let projectFolder = createProjectFile(testInjector);
 			let pluginFolderPath = path.join(projectFolder, pluginName);
@@ -215,28 +215,28 @@ describe("Plugins service", () => {
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			// Adds android platform
 			fs.createDirectory(path.join(projectFolder, "platforms")).wait();
 			fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();
-			
+
 			// Mock logger.warn
 			let logger = testInjector.resolve("logger");
 			logger.warn = (message: string) => {
 				assert.equal(message, expectedWarningMessage);
 				isWarningMessageShown = true;
 			};
-			
+
 			// Mock pluginsService
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.getPlatformData = (platform: string) => {
@@ -245,41 +245,41 @@ describe("Plugins service", () => {
 					frameworkPackageName: "tns-android"
 				};
 			};
-			
+
 			pluginsService.add(pluginFolderPath).wait();
-			
+
 			assert.isTrue(isWarningMessageShown);
 		});
 		it("adds plugin by name", () => {
 			let pluginName = "plugin1";
 			let projectFolder = createProjectFile(testInjector);
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginName]).wait();
-			
+
 			let fs = testInjector.resolve("fs");
-			
+
 			// Asserts that the all plugin's content is successfully added to node_modules folder
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
-			
+
 			let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
 			assert.isTrue(fs.exists(pluginFolderPath).wait());
-			
+
 			let pluginFiles = ["injex.js", "main.js", "package.json"];
 			_.each(pluginFiles, pluginFile => {
 				assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)).wait());
 			});
-			
+
 			// Asserts that the plugin is added in package.json file
 			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
@@ -290,33 +290,33 @@ describe("Plugins service", () => {
 		it("adds plugin by name and version", () => {
 			let pluginName = "plugin1";
 			let projectFolder = createProjectFile(testInjector);
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginName+"@1.0.0"]).wait();
-			
+
 			let fs = testInjector.resolve("fs");
-			
+
 			// Assert that the all plugin's content is successfully added to node_modules folder
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
-			
+
 			let pluginFolderPath = path.join(nodeModulesFolderPath, pluginName);
 			assert.isTrue(fs.exists(pluginFolderPath).wait());
-			
+
 			let pluginFiles = ["injex.js", "main.js", "package.json"];
 			_.each(pluginFiles, pluginFile => {
 				assert.isTrue(fs.exists(path.join(pluginFolderPath, pluginFile)).wait());
 			});
-			
+
 			// Assert that the plugin is added in package.json file
 			let packageJsonContent = fs.readJson(path.join(projectFolder, "package.json")).wait();
 			let actualDependencies = packageJsonContent.dependencies;
@@ -334,30 +334,30 @@ describe("Plugins service", () => {
 				"version": "0.0.1",
 				"nativescript": {
 					"platforms": {
-						
+
 					}
 				},
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
-			
+
 			// Assert that the all plugin's content is successfully added to node_modules folder
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isTrue(fs.exists(nodeModulesFolderPath).wait());
 			assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName)).wait());
-			
+
 			let pluginFiles = ["package.json"];
 			_.each(pluginFiles, pluginFile => {
 				assert.isTrue(fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile)).wait());
@@ -376,7 +376,7 @@ describe("Plugins service", () => {
 				"version": "0.0.1",
 				"nativescript": {
 					"platforms": {
-						
+
 					}
 				},
 				"devDependencies": {
@@ -385,23 +385,23 @@ describe("Plugins service", () => {
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			// Mock options
 			let options = testInjector.resolve("options");
 			options.production = true;
-			
+
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
-			
+
 			let nodeModulesFolderPath = path.join(projectFolder, "node_modules");
 			assert.isFalse(fs.exists(path.join(nodeModulesFolderPath, pluginName, "node_modules", "grunt")).wait());
 		});
@@ -415,7 +415,7 @@ describe("Plugins service", () => {
 				"version": "0.0.1",
 				"nativescript": {
 					"platforms": {
-						
+
 					}
 				},
 				"dependencies": {
@@ -427,25 +427,25 @@ describe("Plugins service", () => {
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			// Mock options
 			let options = testInjector.resolve("options");
 			options.production = false;
-			
+
 			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 		});
 	});
-	
+
 	describe("merge xmls tests", () => {
 		beforeEach(() => {
 			testInjector = createTestInjector();
@@ -466,22 +466,22 @@ describe("Plugins service", () => {
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			// Adds AndroidManifest.xml file in platforms/android folder
-			createAndroidManifestFile(projectFolder, fs);		
-			
+			createAndroidManifestFile(projectFolder, fs);
+
 			// Mock plugins service
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
-			
+
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.getPlatformData = (platform: string) => {
@@ -491,26 +491,26 @@ describe("Plugins service", () => {
 					configurationFileName: "AndroidManifest.xml"
 				};
 			};
-			
+
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
 			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
-			
+
 			// Creates invalid plugin's AndroidManifest.xml file
 			let xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' + 
+				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
     			'<uses-permission android:name="android.permission.READ_CONTACTS"/>';
 			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
 			fs.writeFile(pluginConfigurationFilePath, xml).wait();
-				
+
 			// Expected error message. The assertion happens in mockBeginCommand
-			let expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` + 
-				`${pluginConfigurationFilePath}. Additional technical information: unclosed xml attribute` + 
-				`\n@#[line:1,col:39].` + 
+			let expectedErrorMessage = `Exception: Invalid xml file ${pluginConfigurationFilePath}. Additional technical information: element parse error: Exception: Invalid xml file ` +
+				`${pluginConfigurationFilePath}. Additional technical information: unclosed xml attribute` +
+				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
-			mockBeginCommand(testInjector, expectedErrorMessage);				
-			
-			let commandsService = testInjector.resolve(CommandsService);		
+			mockBeginCommand(testInjector, expectedErrorMessage);
+
+			let commandsService = testInjector.resolve(CommandsService);
 			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
 		});
 		it("merges AndroidManifest.xml and produces correct xml", () => {
@@ -528,22 +528,22 @@ describe("Plugins service", () => {
 			};
 			let fs = testInjector.resolve("fs");
 			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-			
+
 			// Adds AndroidManifest.xml file in platforms/android folder
-			createAndroidManifestFile(projectFolder, fs);		
-			
+			createAndroidManifestFile(projectFolder, fs);
+
 			// Mock plugins service
 			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => { 
+			pluginsService.getAllInstalledPlugins = () => {
 				return (() => {
 					return [{
 						name: ""
 					}];
 				}).future<IPluginData[]>()();
 			};
-			
+
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
-			
+
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.getPlatformData = (platform: string) => {
@@ -558,29 +558,29 @@ describe("Plugins service", () => {
 					}
 				};
 			};
-			
+
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
 			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
-			
+
 			// Creates valid plugin's AndroidManifest.xml file
 			let xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' + 
-				'<uses-permission android:name="android.permission.READ_CONTACTS"/>' + 
+				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
+				'<uses-permission android:name="android.permission.READ_CONTACTS"/>' +
 				'</manifest>';
 			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
 			fs.writeFile(pluginConfigurationFilePath, xml).wait();
-				
+
 			pluginsService.add(pluginFolderPath).wait();
-			
+
 			let expectedXml = '<?xmlversion="1.0"encoding="UTF-8"?><manifestxmlns:android="http://schemas.android.com/apk/res/android"package="com.example.android.basiccontactables"android:versionCode="1"android:versionName="1.0"><uses-permissionandroid:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.INTERNET"/><applicationandroid:allowBackup="true"android:icon="@drawable/ic_launcher"android:label="@string/app_name"android:theme="@style/Theme.Sample"><activityandroid:name="com.example.android.basiccontactables.MainActivity"android:label="@string/app_name"android:launchMode="singleTop"><meta-dataandroid:name="android.app.searchable"android:resource="@xml/searchable"/><intent-filter><actionandroid:name="android.intent.action.SEARCH"/></intent-filter><intent-filter><actionandroid:name="android.intent.action.MAIN"/></intent-filter></activity></application><uses-permissionandroid:name="android.permission.READ_CONTACTS"/></manifest>';
 			expectedXml = helpers.stringReplaceAll(expectedXml, EOL, "");
 			expectedXml = helpers.stringReplaceAll(expectedXml, " ", "");
-			
+
 			let actualXml = fs.readText(path.join(appDestinationDirectoryPath, "AndroidManifest.xml")).wait();
 			actualXml = helpers.stringReplaceAll(actualXml, "\n", "");
 			actualXml = helpers.stringReplaceAll(actualXml, " ", "");
-			
+
 			assert.equal(expectedXml, actualXml);
 		});
 	});

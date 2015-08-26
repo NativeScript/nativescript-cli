@@ -103,7 +103,7 @@ class ProjectIntegrationTest {
 
 	private createTestInjector(): void {
 		this.testInjector = new yok.Yok();
-		this.testInjector.register("childProcess", ChildProcessLib.ChildProcess);	
+		this.testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 		this.testInjector.register("errors", stubs.ErrorsStub);
 		this.testInjector.register('logger', stubs.LoggerStub);
 		this.testInjector.register("projectService", ProjectServiceLib.ProjectService);
@@ -120,7 +120,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("httpClient", HttpClientLib.HttpClient);
 		this.testInjector.register("config", {});
 		this.testInjector.register("lockfile", stubs.LockFile);
-		
+
 		this.testInjector.register("options", optionsLib.Options);
 		this.testInjector.register("hostInfo", hostInfoLib.HostInfo);
 	}
@@ -158,7 +158,7 @@ describe("Project Service Tests", () => {
 
 function createTestInjector() {
 	let testInjector = new yok.Yok();
-	
+
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register('logger', stubs.LoggerStub);
 	testInjector.register("projectService", ProjectServiceLib.ProjectService);
@@ -168,7 +168,7 @@ function createTestInjector() {
 
 	testInjector.register("fs", fsLib.FileSystem);
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
-	
+
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
 
 	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
@@ -177,11 +177,11 @@ function createTestInjector() {
 	testInjector.register("lockfile", stubs.LockFile);
 
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
-	
+
 	testInjector.register('projectData', ProjectDataLib.ProjectData);
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
-	
+
 	return testInjector;
 }
 
@@ -192,7 +192,7 @@ describe("project upgrade procedure tests", () => {
 		let options = testInjector.resolve("options");
 		options.path = tempFolder;
 		let isErrorThrown = false;
-		
+
 		try {
 			testInjector.resolve("projectData"); // This should trigger upgrade procedure
 		} catch(err) {
@@ -200,45 +200,45 @@ describe("project upgrade procedure tests", () => {
 			let expectedErrorMessage = "No project found at or above '%s' and neither was a --path specified.," + tempFolder;
 			assert.equal(expectedErrorMessage, err.toString());
 		}
-		
+
 		assert.isTrue(isErrorThrown);
 	});
 	it("should upgrade project when .tnsproject file exists but package.json file doesn't exist", () => {
 		let testInjector = createTestInjector();
 		let fs: IFileSystem = testInjector.resolve("fs");
-		
-		let tempFolder = temp.mkdirSync("projectUpgradeTest2");	
+
+		let tempFolder = temp.mkdirSync("projectUpgradeTest2");
 		let options = testInjector.resolve("options");
-		options.path = tempFolder;	
+		options.path = tempFolder;
 		let tnsProjectData = {
 			"id": "org.nativescript.Test",
 			"tns-ios": {
 				"version": "1.0.0"
-			}	
+			}
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
-		
+
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
-		
+
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		let packageJsonFileContent = require(packageJsonFilePath);
 		assert.isTrue(fs.exists(packageJsonFilePath).wait());
 		assert.isFalse(fs.exists(tnsProjectFilePath).wait());
 		assert.deepEqual(tnsProjectData, packageJsonFileContent["nativescript"]);
-	}); 
+	});
 	it("should upgrade project when .tnsproject and package.json exist but nativescript key is not presented in package.json file", () => {
 		let testInjector = createTestInjector();
 		let fs: IFileSystem = testInjector.resolve("fs");
-		
-		let tempFolder = temp.mkdirSync("projectUpgradeTest3");	
+
+		let tempFolder = temp.mkdirSync("projectUpgradeTest3");
 		let options = testInjector.resolve("options");
-		options.path = tempFolder;	
+		options.path = tempFolder;
 		let tnsProjectData = {
 			"id": "org.nativescript.Test",
 			"tns-ios": {
 				"version": "1.0.1"
-			}	
+			}
 		};
 		let packageJsonData = {
 			"name": "testModuleName",
@@ -249,12 +249,12 @@ describe("project upgrade procedure tests", () => {
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
-		
+
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		fs.writeJson(packageJsonFilePath, packageJsonData).wait();
-		
+
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
-		
+
 		let packageJsonFileContent = require(packageJsonFilePath);
 		let expectedPackageJsonContent: any = packageJsonData;
 		expectedPackageJsonContent["nativescript"] = tnsProjectData;
@@ -263,12 +263,12 @@ describe("project upgrade procedure tests", () => {
 	it("shouldn't upgrade project when .tnsproject and package.json exist and nativescript key is presented in package.json file", () => {
 		let testInjector = createTestInjector();
 		let fs: IFileSystem = testInjector.resolve("fs");
-		
-		let tempFolder = temp.mkdirSync("projectUpgradeTest4");	
+
+		let tempFolder = temp.mkdirSync("projectUpgradeTest4");
 		let options = testInjector.resolve("options");
-		options.path = tempFolder;	
+		options.path = tempFolder;
 		let tnsProjectData = {
-			
+
 		};
 		let packageJsonData = {
 			"name": "testModuleName",
@@ -280,17 +280,17 @@ describe("project upgrade procedure tests", () => {
 				"id": "org.nativescript.Test",
 				"tns-ios": {
 					"version": "1.0.2"
-				}	
+				}
 			}
 		};
-		
+
 		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData).wait();
 		fs.writeJson(path.join(tempFolder, "package.json"), packageJsonData).wait();
 		testInjector.resolve("projectData"); // This should trigger upgrade procedure
-		
+
 		let packageJsonFilePath = path.join(tempFolder, "package.json");
 		let packageJsonFileContent = require(packageJsonFilePath);
-		
+
 		assert.deepEqual(packageJsonData, packageJsonFileContent);
 	});
 });

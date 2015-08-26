@@ -162,7 +162,7 @@ export class FileSystemStub implements IFileSystem {
 
 export class ErrorsStub implements IErrors {
 	constructor() {
-		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors	
+		new (require("../lib/common/errors").Errors)(); // we need the side effect of require'ing errors
 	}
 
 	fail(formatStr:string, ...args: any[]): void;
@@ -321,7 +321,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	}
 	afterPrepareAllPlugins(): IFuture<void> {
 		return Future.fromResult();
-	} 	
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {

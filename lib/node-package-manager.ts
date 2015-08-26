@@ -2,7 +2,7 @@
 "use strict";
 
 import Future = require("fibers/future");
-import npm = require("npm");
+import * as npm from "npm";
 
 export class NodePackageManager implements INodePackageManager {
 	constructor(private $childProcess: IChildProcess,
@@ -15,7 +15,7 @@ export class NodePackageManager implements INodePackageManager {
 	public getCache(): string {
 		return npm.cache;
 	}
-	
+
 	public load(config?: any): IFuture<void> {
 		let future = new Future<void>();
 		npm.load(config, (err) => {
@@ -27,7 +27,7 @@ export class NodePackageManager implements INodePackageManager {
 		});
 		return future;
 	}
-	
+
 	public install(packageName: string, pathToSave: string, config?: any): IFuture<any> {
 		if(this.$options.ignoreScripts) {
 			config = config || {};
@@ -36,7 +36,7 @@ export class NodePackageManager implements INodePackageManager {
 
 		return this.loadAndExecute("install", [pathToSave, packageName], { config: config });
 	}
-	
+
 	public uninstall(packageName: string, config?: any): IFuture<any> {
 		return this.loadAndExecute("uninstall", [[packageName]], { config: config });
 	}
@@ -45,12 +45,12 @@ export class NodePackageManager implements INodePackageManager {
 		// function cache (pkg, ver, where, scrub, cb)
 		return this.loadAndExecute("cache", [packageName, version, undefined, false], { subCommandName: "add", config: config });
 	}
-	
+
 	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
 		// function unpack (pkg, ver, unpackTarget, dMode, fMode, uid, gid, cb)
 		return this.loadAndExecute("cache", [packageName, version, unpackTarget, null, null, null, null], { subCommandName: "unpack" });
 	}
-	
+
 	public view(packageName: string, propertyName: string): IFuture<any> {
 		return this.loadAndExecute("view", [[packageName, propertyName], [false]]);
 	}
@@ -58,7 +58,7 @@ export class NodePackageManager implements INodePackageManager {
 	public executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any> {
 		return this.$childProcess.exec(npmCommandName, { cwd: currentWorkingDirectory });
 	}
-	
+
 	private loadAndExecute(commandName: string, args: any[], opts?: { config?: any, subCommandName?: string }): IFuture<any> {
 		return (() => {
 			opts = opts || {};
@@ -66,7 +66,7 @@ export class NodePackageManager implements INodePackageManager {
 			return this.executeCore(commandName, args, opts.subCommandName).wait();
 		}).future<any>()();
 	}
-	
+
 	private executeCore(commandName: string, args: any[], subCommandName?: string): IFuture<any> {
 		let future = new Future<any>();
 		let callback = (err: Error, data: any) => {
@@ -77,10 +77,10 @@ export class NodePackageManager implements INodePackageManager {
 			}
 		};
 		args.push(callback);
-		
+
 		let command = subCommandName ? npm.commands[commandName][subCommandName] : npm.commands[commandName];
 		command.apply(this, args);
-		
+
 		return future;
 	}
 }

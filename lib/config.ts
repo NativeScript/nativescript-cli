@@ -30,11 +30,11 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public ERROR_REPORT_SETTING_NAME = "TrackExceptions";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
 	public START_PACKAGE_ACTIVITY_NAME = "com.tns.NativeScriptActivity";
-	
+
 	constructor($injector: IInjector) {
-		super($injector);	 
+		super($injector);
 	}
-	
+
 	public get SYS_REQUIREMENTS_LINK(): string {
 		let linkToSysRequirements: string;
 		switch(process.platform) {
@@ -63,7 +63,7 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public get HTML_CLI_HELPERS_DIR(): string {
 		return path.join(__dirname, "../docs/helpers");
 	}
-	
+
 	public get pathToPackageJson(): string {
 		return path.join(__dirname, "..", "package.json");
 	}

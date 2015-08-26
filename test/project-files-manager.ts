@@ -23,17 +23,17 @@ function createTestInjector() {
 	testInjector.register("platformsData", {
 		platformsNames: ["ios", "android"]
 	});
-	
+
 	return testInjector;
 }
 
 function createFiles(testInjector: IInjector, filesToCreate: string[]): IFuture<string> {
 	return (() => {
 		let fs = testInjector.resolve("fs");
-		let directoryPath = temp.mkdirSync("Project Files Manager Tests");	
-		
+		let directoryPath = temp.mkdirSync("Project Files Manager Tests");
+
 		_.each(filesToCreate, file => fs.writeFile(path.join(directoryPath, file), "").wait());
-		
+
 		return directoryPath;
 	}).future<string>()();
 }
@@ -47,9 +47,9 @@ describe('Project Files Manager Tests', () => {
 	it("filters android specific files", () => {
 		let files = ["test.ios.x", "test.android.x"];
 		let directoryPath = createFiles(testInjector, files).wait();
-		
+
 		projectFilesManager.processPlatformSpecificFiles(directoryPath, "android").wait();
-		
+
 		let fs = testInjector.resolve("fs");
 		assert.isFalse(fs.exists(path.join(directoryPath, "test.ios.x")).wait());
 		assert.isTrue(fs.exists(path.join(directoryPath, "test.x")).wait());
@@ -58,9 +58,9 @@ describe('Project Files Manager Tests', () => {
 	it("filters ios specific files", () => {
 		let files = ["index.ios.html", "index1.android.html", "a.test"];
 		let directoryPath = createFiles(testInjector, files).wait();
-		
+
 		projectFilesManager.processPlatformSpecificFiles(directoryPath, "ios").wait();
-		
+
 		let fs = testInjector.resolve("fs");
 		assert.isFalse(fs.exists(path.join(directoryPath, "index1.android.html")).wait());
 		assert.isFalse(fs.exists(path.join(directoryPath, "index1.html")).wait());
@@ -69,10 +69,10 @@ describe('Project Files Manager Tests', () => {
 	});
 	it("doesn't filter non platform specific files", () => {
 		let files = ["index1.js", "index2.js", "index3.js"];
-		let directoryPath = createFiles(testInjector, files).wait();	
-		
+		let directoryPath = createFiles(testInjector, files).wait();
+
 		projectFilesManager.processPlatformSpecificFiles(directoryPath, "ios").wait();
-		
+
 		let fs = testInjector.resolve("fs");
 		assert.isTrue(fs.exists(path.join(directoryPath, "index1.js")).wait());
 		assert.isTrue(fs.exists(path.join(directoryPath, "index2.js")).wait());
