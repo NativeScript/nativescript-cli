@@ -52,9 +52,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
 				validPackageNamesForDevice: [
 					`${this.$projectData.projectName}-debug.apk`,
-					`${this.$projectData.projectName}-release.apk`,
-					"android-debug.apk",
-					"android-release.apk"
+					`${this.$projectData.projectName}-release.apk`
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
@@ -96,9 +94,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				this.symlinkDirectory("src", projectRoot, frameworkDir).wait();
 
 				this.$fs.symlink(path.join(frameworkDir, "build.gradle"), path.join(projectRoot, "build.gradle")).wait();
+				this.$fs.symlink(path.join(frameworkDir, "settings.gradle"), path.join(projectRoot, "settings.gradle")).wait();
 			} else {
 				this.copy(projectRoot, frameworkDir, "build-tools libs src", "-R");
-				this.copy(projectRoot, frameworkDir, "build.gradle", "-f");
+				this.copy(projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 			}
 
 			this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
@@ -145,6 +144,9 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let stringsFilePath = path.join(this.platformData.appResourcesDestinationDirectoryPath, 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
+
+			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
+			shell.sed('-i', /__PROJECT_NAME__/,  this.$projectData.projectName, gradleSettingsFilePath);
 		}).future<void>()();
 	}
 
