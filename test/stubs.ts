@@ -301,9 +301,6 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
     addLibrary(libraryPath: string): IFuture<void> {
         return Future.fromResult();
     }
-	getDebugOnDeviceSetup(): Mobile.IDebugOnDeviceSetup {
-		return null;
-	}
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
