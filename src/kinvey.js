@@ -315,7 +315,7 @@ Kinvey.init = function(options) {
     // Initialize the synchronization namespace and restore the active user.
     return Kinvey.Sync.init(options.sync);
   }).then(function() {
-    log('Kinvey initialized, running version: js-<%= build %>/<%= pkg.version %>');
+    logger.debug('Kinvey initialized, running version: js-<%= build %>/<%= pkg.version %>');
     return restoreActiveUser(options);
   });
 

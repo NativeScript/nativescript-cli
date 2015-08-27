@@ -168,7 +168,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     }
 
     // Cast arguments.
-    options.trace = options.trace || (Kinvey.log.getLevel() === Kinvey.log.levels.TRACE && false !== options.trace);
+    options.trace = options.trace || (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE && false !== options.trace);
     options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Build, escape, and join URL segments.
@@ -293,7 +293,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     }
 
     // Debug.
-    if (Kinvey.log.getLevel() === Kinvey.log.levels.TRACE) {
+    if (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE) {
       headers['X-Kinvey-Trace-Request'] = 'true';
     }
 

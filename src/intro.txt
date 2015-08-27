@@ -33,9 +33,6 @@
      * @exports Kinvey
      */
     var Kinvey = function(options) {
-      // Debug.
-      logger.debug('Obtaining a fresh copy of the library.', arguments);
-
       // Create a fresh copy of the library.
       var Kinvey = kinveyFn();
 
