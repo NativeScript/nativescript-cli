@@ -414,6 +414,8 @@ export class PlatformService implements IPlatformService {
 			let currentVersion = data && data.version ? data.version : "0.2.0";
 			let newVersion = version || this.$npmInstallationManager.getLatestVersion(platformData.frameworkPackageName).wait();
 
+			this.ensurePackageIsCached(platformData.frameworkPackageName, newVersion).wait();
+
 			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
 
 				if(!semver.valid(newVersion)) {
@@ -488,7 +490,6 @@ export class PlatformService implements IPlatformService {
 	private getFrameworkFiles(platformData: IPlatformData, version: string): IFuture<any> {
 		return (() => {
 			let cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
-			this.ensurePackageIsCached(cachedPackagePath, platformData.frameworkPackageName, version).wait();
 
 			let allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
 			let filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
@@ -504,9 +505,10 @@ export class PlatformService implements IPlatformService {
 		}).future<any>()();
 	}
 
-	private ensurePackageIsCached(cachedPackagePath: string, packageName: string, version: string): IFuture<void> {
+	private ensurePackageIsCached(packageName: string, version: string): IFuture<void> {
 		return (() => {
 			this.$npmInstallationManager.addToCache(packageName, version).wait();
+			let cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(packageName, version);
 			if(!this.$fs.exists(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait()) {
 				// In some cases the package is not fully downloaded and the framework directory is missing
 				// Try removing the old package and add the real one to cache again
