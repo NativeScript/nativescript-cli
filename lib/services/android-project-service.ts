@@ -178,7 +178,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public buildProject(projectRoot: string): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
-				let buildOptions = ["buildapk"];
+				let buildOptions = ["buildapk", `-PcompileSdk=${this.getAndroidTarget().wait()}`];
 				if(this.$options.release) {
 					buildOptions.push("-Prelease");
 					buildOptions.push(`-PksPath=${this.$options.keyStorePath}`);
