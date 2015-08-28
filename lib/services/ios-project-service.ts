@@ -186,7 +186,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public addLibrary(libraryPath: string): IFuture<void> {
 		return (() => {
-			this.validateDynamicFramework(libraryPath).wait();
+			this.validateFramework(libraryPath).wait();
 
 			let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
 			let fullTargetPath = path.join(this.$projectData.projectDir, targetPath);
@@ -194,11 +194,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			shell.cp("-R", libraryPath, fullTargetPath);
 
 			let project = this.createPbxProj();
+
+			let frameworkName = path.basename(libraryPath, path.extname(libraryPath));
+			let frameworkBinaryPath = path.join(libraryPath, frameworkName);
+			let isDynamic = _.contains(this.$childProcess.exec(`otool -Vh ${frameworkBinaryPath}`).wait(), " DYLIB ");
+
+			let frameworkAddOptions: xcode.FrameworkOptions = { customFramework: true };
+
+			if(isDynamic) {
+				frameworkAddOptions["embed"] = true;
+				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
+			}
+
 			let frameworkPath = this.getFrameworkRelativePath(libraryPath);
-			project.addFramework(frameworkPath, { customFramework: true, embed: true });
-			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+			project.addFramework(frameworkPath, frameworkAddOptions);
 			this.savePbxProj(project).wait();
-			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
 		}).future<void>()();
 	}
 
@@ -305,7 +316,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			this.prepareDynamicFrameworks(pluginPlatformsFolderPath, pluginData).wait();
+			this.prepareFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.prepareCocoapods(pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
@@ -313,7 +324,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			this.removeDynamicFrameworks(pluginPlatformsFolderPath, pluginData).wait();
+			this.removeFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.removeCocoapods(pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
@@ -343,7 +354,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private getAllDynamicFrameworksForPlugin(pluginData: IPluginData): IFuture<string[]> {
+	private getAllFrameworksForPlugin(pluginData: IPluginData): IFuture<string[]> {
 		let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === ".framework";
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	}
@@ -352,7 +363,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
 	}
 
-	private validateDynamicFramework(libraryPath: string): IFuture<void> {
+	private validateFramework(libraryPath: string): IFuture<void> {
 		return (() => {
 			let infoPlistPath = path.join(libraryPath, "Info.plist");
 			if (!this.$fs.exists(infoPlistPath).wait()) {
@@ -383,9 +394,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private prepareDynamicFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
+	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
+			_.each(this.getAllFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
 
@@ -400,11 +411,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private removeDynamicFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
+	private removeFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let project = this.createPbxProj();
 
-			_.each(this.getAllDynamicFrameworksForPlugin(pluginData).wait(), fileName => {
+			_.each(this.getAllFrameworksForPlugin(pluginData).wait(), fileName => {
 				let fullFrameworkPath = path.join(pluginPlatformsFolderPath, fileName);
 				let relativeFrameworkPath = this.getFrameworkRelativePath(fullFrameworkPath);
 				project.removeFramework(relativeFrameworkPath, { customFramework: true, embed: true });
