@@ -159,3 +159,70 @@ describe("Cocoapods support", () => {
 		});
 	}
 });
+
+describe("Static libraries support", () => {
+	if (require("os").platform() !== "darwin") {
+		console.log("Skipping static library tests. They cannot work on windows.");
+	} else {
+		it("checks static libraries support", () => {
+			let projectName = "projectDirectory";
+			let projectPath = temp.mkdirSync(projectName);
+			let libraryName = "testLibrary1";
+			let headers = ["TestHeader1.h", "TestHeader2.h"];
+			
+			let testInjector = createTestInjector(projectPath, projectName);
+			let fs: IFileSystem = testInjector.resolve("fs");
+			let iOSProjectService = testInjector.resolve("iOSProjectService");
+
+			let staticLibraryPath = path.join(path.join(temp.mkdirSync("pluginDirectory"), "platforms", "ios"));
+			let staticLibraryHeadersPath = path.join(staticLibraryPath,"include", libraryName);
+			fs.createDirectory(staticLibraryHeadersPath).wait();
+			
+			_.each(headers, header => { fs.writeFile(path.join(staticLibraryHeadersPath, header), "").wait(); });
+			// Add all header files.
+			fs.writeFile(path.join(staticLibraryHeadersPath, libraryName + ".a"), "").wait();
+			
+			try {
+				iOSProjectService.validateStaticLibrary(path.join(staticLibraryPath, libraryName + ".a")).wait();
+			} catch(error) {
+				// Expect to fail, the .a file is not a static library. 
+				assert.isTrue(error !== null);
+			}
+			
+			iOSProjectService.generateMobulemap(staticLibraryHeadersPath, libraryName);
+			let modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+			let headerCommands: string[] = [];
+			headers.forEach(function(currentValue, index, array) {
+  				headerCommands.push("header \"" + currentValue + "\"");
+			});
+			
+			let modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(" ")} } }`;
+			assert.equal(modulemap, modulemapExpectation);
+			
+			// Delete all header files. 
+			_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)).wait(); });
+			iOSProjectService.generateMobulemap(staticLibraryHeadersPath, libraryName);
+			try {
+				modulemap = fs.readFile(path.join(staticLibraryHeadersPath, "module.modulemap")).wait();
+			} catch(error) {
+				// Expect to fail, there shouldn't be a module.modulemap file. 
+				assert.isTrue(error !== null);
+			}
+		});
+	}
+});
+
+describe("Relative paths", () => {
+		it("checks for correct calculation of relative paths", () => {
+			let projectName = "projectDirectory";
+			let projectPath = temp.mkdirSync(projectName);
+			let subpath = "sub/path"; 
+			
+			let testInjector = createTestInjector(projectPath, projectName);
+			let fs: IFileSystem = testInjector.resolve("fs");
+			let iOSProjectService = testInjector.resolve("iOSProjectService");
+			
+			let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);
+			assert.equal(result, path.join("../../lib/iOS/", subpath));
+		});
+});

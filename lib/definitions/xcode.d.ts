@@ -1,12 +1,12 @@
 declare module "xcode" {
-    interface FrameworkOptions {
+    interface Options {
         [key: string]: any;
 
         customFramework?: boolean;
-
         embed?: boolean;
+        relativePath?: string;
     }
-
+        
     class project {
         constructor(filename: string);
 
@@ -15,9 +15,13 @@ declare module "xcode" {
 
         writeSync(): string;
 
-        addFramework(filepath: string, options?: FrameworkOptions): void;
-        removeFramework(filePath: string, options?: FrameworkOptions): void;
-
+        addFramework(filepath: string, options?: Options): void;
+        removeFramework(filePath: string, options?: Options): void;
+        
+        addPbxGroup(filePathsArray: any[], name: string, path: string, sourceTree: string): void;
+        
+        addToHeaderSearchPaths(options?: Options): void;
+        removeFromHeaderSearchPaths(options?: Options): void;
         updateBuildProperty(key: string, value: any): void;
     }
 }
