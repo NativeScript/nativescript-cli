@@ -4,6 +4,12 @@
 import Future = require("fibers/future");
 import * as npm from "npm";
 
+interface INpmOpts {
+	config?: any;
+	subCommandName?: string;
+	path?: string;
+}
+
 export class NodePackageManager implements INodePackageManager {
 	constructor(private $childProcess: IChildProcess,
 		private $options: IOptions) { }
@@ -33,8 +39,8 @@ export class NodePackageManager implements INodePackageManager {
 		return this.loadAndExecute("install", [pathToSave, packageName], { config: config });
 	}
 
-	public uninstall(packageName: string, config?: any): IFuture<any> {
-		return this.loadAndExecute("uninstall", [[packageName]], { config: config });
+	public uninstall(packageName: string, config?: any, path?: string): IFuture<any> {
+		return this.loadAndExecute("uninstall", [[packageName]], { config, path});
 	}
 
 	public cache(packageName: string, version: string, config?: any): IFuture<IDependencyData> {
@@ -55,17 +61,22 @@ export class NodePackageManager implements INodePackageManager {
 		return this.$childProcess.exec(npmCommandName, { cwd: currentWorkingDirectory });
 	}
 
-	private loadAndExecute(commandName: string, args: any[], opts?: { config?: any, subCommandName?: string }): IFuture<any> {
+	private loadAndExecute(commandName: string, args: any[], opts?: INpmOpts): IFuture<any> {
 		return (() => {
 			opts = opts || {};
 			this.load(opts.config).wait();
-			return this.executeCore(commandName, args, opts.subCommandName).wait();
+			return this.executeCore(commandName, args, opts).wait();
 		}).future<any>()();
 	}
 
-	private executeCore(commandName: string, args: any[], subCommandName?: string): IFuture<any> {
+	private executeCore(commandName: string, args: any[], opts?: INpmOpts): IFuture<any> {
 		let future = new Future<any>();
+		let oldNpmPath: string = undefined;
 		let callback = (err: Error, data: any) => {
+			if (oldNpmPath) {
+				npm.prefix = oldNpmPath;
+			}
+
 			if(err) {
 				future.throw(err);
 			} else {
@@ -74,6 +85,12 @@ export class NodePackageManager implements INodePackageManager {
 		};
 		args.push(callback);
 
+		if (opts && opts.path) {
+			oldNpmPath = npm.prefix;
+			npm.prefix = opts.path;
+		}
+
+		let subCommandName: string = opts.subCommandName;
 		let command = subCommandName ? npm.commands[commandName][subCommandName] : npm.commands[commandName];
 		command.apply(this, args);
 

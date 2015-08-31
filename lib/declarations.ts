@@ -2,7 +2,7 @@ interface INodePackageManager {
 	getCache(): string;
 	load(config?: any): IFuture<void>;
 	install(packageName: string, pathToSave: string, config?: any): IFuture<any>;
-	uninstall(packageName: string, config?: any): IFuture<any>;
+	uninstall(packageName: string, config?: any, path?: string): IFuture<any>;
 	cache(packageName: string, version: string, cache?: any): IFuture<IDependencyData>;
 	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	view(packageName: string, propertyName: string): IFuture<any>;

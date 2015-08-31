@@ -24,7 +24,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $injector: IInjector,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $projectData: IProjectData,
@@ -259,12 +258,20 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
-			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
+			try {
+				let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+				let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
 
-			if(this.$fs.exists(libsFolderPath).wait()) {
-				let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
-				_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
+				if(this.$fs.exists(libsFolderPath).wait()) {
+					let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
+					_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
+				}
+			} catch(e) {
+				if (e.code === "ENOENT") {
+					this.$logger.debug("No native code jars found: " + e.message);
+				} else {
+					throw e;
+				}
 			}
 		}).future<void>()();
 	}
