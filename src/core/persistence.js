@@ -31,6 +31,7 @@ var persistenceOptions = function(options) {
   options.fallback = isEnabled && isOnline && false !== options.fallback;
   options.offline  = isEnabled && (!isOnline || options.offline);
   options.refresh  = isEnabled && isOnline && false !== options.refresh;
+  options.handler = typeof options.handler === 'function' ? options.handler : function() {};
   return options;
 };
 

@@ -177,6 +177,15 @@ var NodeHttp = {
       });
     }
 
+    // Create a proxy request
+    var aborted = false;
+    var requestProxy = {
+      cancel: function() {
+        aborted = true;
+        request.abort();
+      }
+    };
+
     // Listen for request errors.
     request.on('error', function(msg) {// Client-side error.
       // Debug.
@@ -184,8 +193,14 @@ var NodeHttp = {
         log('The network request failed.', msg);
       }
 
+      if (timedOut) {
+        return deferred.reject('timeout');
+      } else if (aborted) {
+        return deferred.reject('canceled');
+      }
+
       // Reject the promise.
-      deferred.reject(timedOut ? 'timeout' : msg);
+      deferred.reject(msg);
     });
 
     // Debug.
@@ -198,6 +213,9 @@ var NodeHttp = {
       request.write(body);
     }
     request.end();
+
+    // Send the proxy request
+    options.handler(requestProxy);
 
     // Return the promise.
     return deferred.promise;
