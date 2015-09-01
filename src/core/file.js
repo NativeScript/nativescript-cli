@@ -37,9 +37,7 @@ Kinvey.File = /** @lends Kinvey.File */{
    */
   destroy: function(id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Deleting a file.', arguments);
-    }
+    logger.debug('Deleting a file.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -53,9 +51,7 @@ Kinvey.File = /** @lends Kinvey.File */{
       // If `options.silent`, treat `BLOB_NOT_FOUND` as success.
       if(options.silent && Kinvey.Error.BLOB_NOT_FOUND === error.name) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('The file does not exist. Returning success because of the silent flag.');
-        }
+        logger.debug('The file does not exist. Returning success because of the silent flag.');
 
         // Return the response.
         return { count: 0 };
@@ -64,13 +60,11 @@ Kinvey.File = /** @lends Kinvey.File */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Deleted the file.', response);
-      }, function(error) {
-        log('Failed to delete the file.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Deleted the file.', response);
+    }, function(error) {
+      logger.error('Failed to delete the file.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -90,9 +84,7 @@ Kinvey.File = /** @lends Kinvey.File */{
    */
   download: function(id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Downloading a file.', arguments);
-    }
+    logger.debug('Downloading a file.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -116,9 +108,7 @@ Kinvey.File = /** @lends Kinvey.File */{
       // If `options.stream`, return the file metadata instead of the resource.
       if(options.stream) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Returning the file metadata only because of the stream flag.');
-        }
+        logger.debug('Returning the file metadata only because of the stream flag.');
         return response;
       }
 
@@ -144,13 +134,11 @@ Kinvey.File = /** @lends Kinvey.File */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Downloaded the file.', response);
-      }, function(error) {
-        log('Failed to download the file.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Downloaded the file.', response);
+    }, function(error) {
+      logger.error('Failed to download the file.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -166,9 +154,7 @@ Kinvey.File = /** @lends Kinvey.File */{
    */
   downloadByUrl: function(metadataOrUrl, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Downloading a file by URL.', arguments);
-    }
+    logger.debug('Downloading a file by URL.', arguments);
 
     // Cast arguments.
     var metadata    = isObject(metadataOrUrl) ? metadataOrUrl : { _downloadURL: metadataOrUrl };
@@ -194,13 +180,11 @@ Kinvey.File = /** @lends Kinvey.File */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      download.then(function(response) {
-        log('Downloaded the file by URL.', response);
-      }, function(error) {
-        log('Failed to download a file by URL.', error);
-      });
-    }
+    download.then(function(response) {
+      logger.debug('Downloaded the file by URL.', response);
+    }, function(error) {
+      logger.error('Failed to download a file by URL.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(download, options);
@@ -221,9 +205,7 @@ Kinvey.File = /** @lends Kinvey.File */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving files by query.', arguments);
-    }
+    logger.debug('Retrieving files by query.', arguments);
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
@@ -253,9 +235,7 @@ Kinvey.File = /** @lends Kinvey.File */{
       // If `options.download`, download the file resources.
       if(options.download) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Obtaining the file resources.', response);
-        }
+        logger.debug('Obtaining the file resources.', response);
 
         // Temporarily reset some options to avoid invoking the callbacks
         // multiple times.
@@ -285,13 +265,11 @@ Kinvey.File = /** @lends Kinvey.File */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved the files by query.', response);
-      }, function(error) {
-        log('Failed to retrieve the files by query.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved the files by query.', response);
+    }, function(error) {
+      logger.error('Failed to retrieve the files by query.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -309,9 +287,7 @@ Kinvey.File = /** @lends Kinvey.File */{
    */
   stream: function(name, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Streaming a file.', arguments);
-    }
+    logger.debug('Streaming a file.', arguments);
 
     // Forward to `Kinvey.File.download`, with the `stream` flag set.
     options = options || {};
@@ -332,9 +308,7 @@ Kinvey.File = /** @lends Kinvey.File */{
    */
   upload: function(file, data, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Uploading a file.', arguments);
-    }
+    logger.debug('Uploading a file.', arguments);
 
     // Cast arguments.
     file    = file    || {};
@@ -390,13 +364,11 @@ Kinvey.File = /** @lends Kinvey.File */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Uploaded the file.', response);
-      }, function(error) {
-        log('Failed to upload the file.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Uploaded the file.', response);
+    }, function(error) {
+      logger.error('Failed to upload the file.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);

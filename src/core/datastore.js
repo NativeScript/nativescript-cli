@@ -36,9 +36,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving documents by query.', arguments);
-    }
+    logger.debug('Retrieving documents by query.', arguments);
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
@@ -59,13 +57,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved the documents by query.', response);
-      }, function(error) {
-        log('Failed to retrieve the documents by query.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved the documents by query.', response);
+    }, function(error) {
+      logger.error('Failed to retrieve the documents by query.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -81,9 +77,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    */
   get: function(collection, id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving a document.', arguments);
-    }
+    logger.debug('Retrieving a document.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -98,13 +92,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Retrieved the document.', response);
-      }, function(error) {
-        log('Failed to retrieve the document.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Retrieved the document.', response);
+    }, function(error) {
+      logger.error('Failed to retrieve the document.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -120,9 +112,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    */
   save: function(collection, document, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Saving a (new) document.', arguments);
-    }
+    logger.debug('Saving a (new) document.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -130,9 +120,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     // If the document has an `_id`, perform an update instead.
     if(null != document._id) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The document has an _id, updating instead.', arguments);
-      }
+      logger.debug('The document has an _id, updating instead.', arguments);
 
       return Kinvey.DataStore.update(collection, document, options);
     }
@@ -147,13 +135,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Saved the new document.', response);
-      }, function(error) {
-        log('Failed to save the new document.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Saved the new document.', response);
+    }, function(error) {
+      logger.error('Failed to save the new document.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -172,9 +158,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Updating a document.', arguments);
-    }
+    logger.debug('Updating a document.', arguments);
 
     // Validate arguments.
     if(null == document._id) {
@@ -196,13 +180,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Updated the document.', response);
-      }, function(error) {
-        log('Failed to update the document.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Updated the document.', response);
+    }, function(error) {
+      logger.error('Failed to update the document.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -221,9 +203,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Deleting documents by query.', arguments);
-    }
+    logger.debug('Deleting documents by query.', arguments);
 
     // Cast and validate arguments.
     options = options || {};
@@ -243,13 +223,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     }, options);
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Deleted the documents.', response);
-      }, function(error) {
-        log('Failed to delete the documents.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Deleted the documents.', response);
+    }, function(error) {
+      logger.error('Failed to delete the documents.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -267,9 +245,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
    */
   destroy: function(collection, id, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Deleting a document.', arguments);
-    }
+    logger.debug('Deleting a document.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -285,23 +261,18 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
       // If `options.silent`, treat `ENTITY_NOT_FOUND` as success.
       if(options.silent && Kinvey.Error.ENTITY_NOT_FOUND === error.name) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('The document does not exist. Returning success because of the silent flag.');
-        }
-
+        logger.debug('The document does not exist. Returning success because of the silent flag.');
         return { count: 0 };// The response.
       }
       return Kinvey.Defer.reject(error);
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Deleted the document.', response);
-      }, function(error) {
-        log('Failed to delete the document.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Deleted the document.', response);
+    }, function(error) {
+      logger.error('Failed to delete the document.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -319,9 +290,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Counting the number of documents.', arguments);
-    }
+    logger.debug('Counting the number of documents.', arguments);
 
     // Validate arguments.
     if(null != query && !(query instanceof Kinvey.Query)) {
@@ -345,13 +314,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Counted the number of documents.', response);
-      }, function(error) {
-        log('Failed to count the number of documents.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Counted the number of documents.', response);
+    }, function(error) {
+      logger.error('Failed to count the number of documents.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);
@@ -369,9 +336,7 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Grouping documents', arguments);
-    }
+    logger.debug('Grouping documents', arguments);
 
     // Validate arguments.
     if(!(aggregation instanceof Kinvey.Group)) {
@@ -396,13 +361,11 @@ Kinvey.DataStore = /** @lends Kinvey.DataStore */{
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      promise.then(function(response) {
-        log('Grouped the documents.', response);
-      }, function(error) {
-        log('Failed to group the documents.', error);
-      });
-    }
+    promise.then(function(response) {
+      logger.debug('Grouped the documents.', response);
+    }, function(error) {
+      logger.error('Failed to group the documents.', error);
+    });
 
     // Return the response.
     return wrapCallbacks(promise, options);

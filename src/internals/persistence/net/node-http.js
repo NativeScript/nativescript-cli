@@ -81,9 +81,7 @@ var NodeHttp = {
       // Listen for request completion.
       response.on('end', function() {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('The network request completed.', response);
-        }
+        logger.debug('The network request completed.', response);
 
         // Parse response.
         var responseData = Buffer.concat(data);
@@ -189,9 +187,7 @@ var NodeHttp = {
     // Listen for request errors.
     request.on('error', function(msg) {// Client-side error.
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request failed.', msg);
-      }
+      logger.error('The network request failed.', msg);
 
       if (timedOut) {
         return deferred.reject('timeout');
@@ -204,9 +200,7 @@ var NodeHttp = {
     });
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, path, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, path, body, headers, options);
 
     // Initiate request.
     if(null != body) {

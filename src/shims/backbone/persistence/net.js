@@ -71,9 +71,7 @@ var BackboneAjax = {
     // Listen for request completion.
     var onComplete = function(request, textStatus) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', xhr);
-      }
+      logger.debug('The network request completed.', xhr);
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = request.status;
@@ -153,9 +151,7 @@ var BackboneAjax = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     if(isObject(body) && !(

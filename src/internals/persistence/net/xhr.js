@@ -104,9 +104,7 @@ var Xhr = {
       }
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', request);
-      }
+      logger.debug('The network request completed.', request);
 
       // Extract the response.
       var responseData = request.response || null;
@@ -198,9 +196,7 @@ var Xhr = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     if(isObject(body) && !(

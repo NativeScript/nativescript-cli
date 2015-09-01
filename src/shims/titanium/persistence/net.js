@@ -87,9 +87,7 @@ var TiHttp = {
     // Listen for request completion.
     xhr.onerror = xhr.onload = function(e) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', this);
-      }
+      logger.debug('The network request completed.', this);
 
       // Titanium does not provide a clear error code on timeout. Patch here.
       e = e || {};
@@ -180,9 +178,7 @@ var TiHttp = {
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     xhr.send(body);

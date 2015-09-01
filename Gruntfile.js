@@ -85,6 +85,10 @@ module.exports = function(grunt) {
         },
         dest: 'dist/<%= env %>/dist.js',
         src: [
+          // Log
+          build === 'nodejs' ? 'src/internals/log/logger-node.js' : 'src/internals/log/logger.js',
+          'src/core/log.js',
+
           // Setup.
           'src/kinvey.js',
           'src/core/error.js',

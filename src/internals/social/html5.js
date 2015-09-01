@@ -53,9 +53,7 @@ var SocialAdapter = {
    */
   oAuth1: function(provider, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Obtaining OAuth1.0a credentials for a provider.', arguments);
-    }
+    logger.debug('Obtaining OAuth1.0a credentials for a provider.', arguments);
 
     // Step 1: obtain a request token.
     return SocialAdapter.requestToken(provider, options).then(function(tokens) {
@@ -95,9 +93,7 @@ var SocialAdapter = {
    */
   oAuth2: function(provider, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Obtaining OAuth2.0 credentials for a provider.', arguments);
-    }
+    logger.debug('Obtaining OAuth2.0 credentials for a provider.', arguments);
 
     // Generate a unique token to protect against CSRF.
     options.state = Math.random().toString(36).substr(2);
