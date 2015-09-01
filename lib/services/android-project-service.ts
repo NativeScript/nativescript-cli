@@ -139,7 +139,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			// Interpolate the activity name and package
 			let manifestPath = this.platformData.configurationFilePath;
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
-			shell.sed('-i', /__APILEVEL__/, this.getApiLevel().wait(), manifestPath);
 
 			let stringsFilePath = path.join(this.platformData.appResourcesDestinationDirectoryPath, 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
@@ -178,7 +177,13 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
-				let buildOptions = ["buildapk", `-PcompileSdk=${this.getAndroidTarget().wait()}`];
+				// note, compileSdk and targetSdk should be the same
+				let targetSdk = this.getAndroidTarget().wait().replace("android-", "");
+				let buildOptions = ["buildapk",
+					`-PcompileSdk=${this.getAndroidTarget().wait()}`,
+					`-PtargetSdk=${targetSdk}`
+				];
+
 				if(this.$options.release) {
 					buildOptions.push("-Prelease");
 					buildOptions.push(`-PksPath=${this.$options.keyStorePath}`);
