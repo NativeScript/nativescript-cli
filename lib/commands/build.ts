@@ -4,8 +4,8 @@
 export class BuildCommandBase {
 	constructor(private $platformService: IPlatformService) { }
 
-	executeCore(args: string[]): IFuture<void> {
-		return this.$platformService.buildPlatform(args[0]);
+	executeCore(args: string[], buildConfig?: IBuildConfig): IFuture<void> {
+		return this.$platformService.buildPlatform(args[0], buildConfig);
 	}
 }
 
@@ -25,14 +25,16 @@ $injector.registerCommand("build|ios", BuildIosCommand);
 
 export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	constructor($platformService: IPlatformService,
-				private $platformsData: IPlatformsData) {
+				private $platformsData: IPlatformsData,
+				private $options: IOptions) {
 		super($platformService);
 	}
 
-	public allowedParameters: ICommandParameter[] = [];
-
 	public execute(args: string[]): IFuture<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
+		return this.executeCore([this.$platformsData.availablePlatforms.Android], config);
 	}
+
+	public allowedParameters: ICommandParameter[] = [];
 }
 $injector.registerCommand("build|android", BuildAndroidCommand);

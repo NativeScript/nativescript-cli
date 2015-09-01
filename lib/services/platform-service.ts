@@ -193,13 +193,13 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public buildPlatform(platform: string): IFuture<void> {
+	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.preparePlatform(platform).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
-			platformData.platformProjectService.buildProject(platformData.projectRoot).wait();
+			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
 			this.$logger.out("Project successfully built");
 		}).future<void>()();
 	}

@@ -26,13 +26,17 @@ interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string): string;
 }
 
+interface IBuildConfig {
+	runSbGenerator?: boolean;
+}
+
 interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
 	interpolateData(projectRoot: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
-	buildProject(projectRoot: string): IFuture<void>;
+	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
