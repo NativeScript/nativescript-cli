@@ -17,7 +17,7 @@ Builds and deploys the project to a connected physical or virtual device. <% if(
 
 ### Options<% if(isMacOS) { %> for Android<% } %>
 * `--device` - Deploys the project on the specified connected physical or virtual device.
-* `--release` - If set, produces a release build. Otherwise, produces a debug build. When the `--key-store-*` options are specified, produces a signed release build.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
@@ -30,6 +30,7 @@ Builds and deploys the project to a connected physical or virtual device. <% if(
 ### Command Limitations
 
 * You can run `$ tns deploy ios` only on OS X systems.
+* When the `--release` flag is set for an Android build, you must also specify all `--key-store-*` options.
 
 ### Related Commands
 

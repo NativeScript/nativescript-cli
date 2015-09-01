@@ -12,7 +12,7 @@ Runs your project on a connected Android device or in a native Android emulator,
 ### Options
 * `--device` - Specifies a connected device on which to run the app. 
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate android`. 
-* `--release` - If set, produces a release build. Otherwise, produces a debug build. When the `--key-store-*` options are specified, produces a signed release build.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
@@ -24,7 +24,7 @@ Runs your project on a connected Android device or in a native Android emulator,
 * `<Emulator Options>` is any valid combination of options as listed by `$ tns help emulate android`
 
 <% if(isHtml) { %> 
-###Prerequisites:
+### Prerequisites:
 Before running your app in the Android emulator from the Android SDK, verify that your system meets the following requirements.
 * Verify that you have installed the Android SDK.
 * Verify that you have added the following Android SDK directories to the `PATH` environment variable:
@@ -40,6 +40,7 @@ Before running your app in the Android emulator from the Android SDK, verify tha
 ### Command Limitations
 
 * You cannot use `--device` and `--emulator` simultaneously.
+* When the `--release` flag is set, you must also specify all `--key-store-*` options.
 
 ### Related Commands
 
