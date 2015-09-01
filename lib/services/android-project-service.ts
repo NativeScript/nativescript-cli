@@ -175,7 +175,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return Future.fromResult();
 	}
 
-	public buildProject(projectRoot: string): IFuture<void> {
+	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
 				let buildOptions = ["buildapk", `-PcompileSdk=${this.getAndroidTarget().wait()}`];
@@ -185,6 +185,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 					buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
 					buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
 					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
+				}
+
+				if (buildConfig && buildConfig.runSbGenerator) {
+					buildOptions.push("-PrunSBGenerator");
 				}
 
 				this.spawn("gradle", buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();

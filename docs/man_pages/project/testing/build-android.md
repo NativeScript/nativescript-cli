@@ -3,7 +3,7 @@ build android
 
 Usage | Synopsis
 ---|---
-General | `$ tns build android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release]`
+General | `$ tns build android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings]`
 
 Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
 
@@ -13,6 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
+* `--static-bindings` - If set, generates static bindings from your JavaScript code to corresponding native Android APIs during build. This static bindings speed up app loading.
 
 <% if(isHtml) { %> 
 ### Related Commands

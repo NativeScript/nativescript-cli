@@ -80,6 +80,7 @@ interface IOptions extends ICommonOptions {
 	sdk: string;
 	ignoreScripts: boolean;
 	tnsModulesVersion: string;
+	staticBindings: boolean;
 }
 
 interface IProjectFilesManager {
