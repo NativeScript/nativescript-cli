@@ -14,7 +14,7 @@ Builds the specified project and runs it in the native emulator from the Android
 * `--avd` - Sets the Android virtual device on which you want to run your app. You can set only one device at a time. You cannot use `--avd` and `--geny` simultaneously.
 * `--geny` - Sets the Genymotion virtual device on which you want to run your app. You can set only one device at a time. You cannot use `--avd` and `--geny` simultaneously.      
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the virtual device to boot before quitting the operation and releasing the console. If not set, the default timeout is 120 seconds. To wait indefinitely, set 0.
-* `--release` - If set, produces a release build. Otherwise, produces a debug build. When the `--key-store-*` options are specified, produces a signed release build.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with --key-store-path. You can use the `--key-store-*` options along with --release to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
@@ -42,6 +42,7 @@ Before running your app in the Android emulator from the Android SDK, verify tha
 ### Command Limitations
 
 * You can run this command for one virtual device at a time. To test your app on multiple Android virtual devices, run `$ tns emulate android --avd <Name>` or `$ tns emulate android --geny <GenyName>` for each virtual device. 
+* When the `--release` flag is set, you must also specify all `--key-store-*` options.
 
 ### Related Commands
 

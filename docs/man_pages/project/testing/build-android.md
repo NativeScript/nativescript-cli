@@ -8,7 +8,7 @@ General | `$ tns build android [--key-store-path <File Path> --key-store-passwor
 Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
 
 ### Options
-* `--release` - If set, produces a release build. Otherwise, produces a debug build. When the `--key-store-*` options are specified, produces a signed release build.
+* `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
@@ -16,6 +16,10 @@ Builds the project for Android and produces an APK that you can manually deploy 
 * `--static-bindings` - If set, generates static bindings from your JavaScript code to corresponding native Android APIs during build. This static bindings speed up app loading.
 
 <% if(isHtml) { %> 
+### Command Limitations
+
+* When the `--release` flag is set, you must also specify all `--key-store-*` options.
+
 ### Related Commands
 
 Command | Description
