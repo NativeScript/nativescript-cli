@@ -4,8 +4,8 @@
 export class RunCommandBase {
 	constructor(private $platformService: IPlatformService) { }
 
-	public executeCore(args: string[]): IFuture<void> {
-		return this.$platformService.runPlatform(args[0]);
+	public executeCore(args: string[], buildConfig?: IBuildConfig): IFuture<void> {
+		return this.$platformService.runPlatform(args[0], buildConfig);
 	}
 }
 
@@ -34,7 +34,8 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	public execute(args: string[]): IFuture<void> {
-		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
+		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
+		return this.executeCore([this.$platformsData.availablePlatforms.Android], config);
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {

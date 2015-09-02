@@ -8,7 +8,8 @@ export class DeployOnDeviceCommand implements ICommand {
 				private $errors: IErrors) { }
 
 	execute(args: string[]): IFuture<void> {
-		return this.$platformService.deployOnDevice(args[0]);
+		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
+		return this.$platformService.deployOnDevice(args[0], config);
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {
