@@ -8,9 +8,6 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 
 class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
-	private static MIN_SUPPORTED_VERSION = 17;
-	private SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22"]; // forbidden for now: "android-MNC"
-	private static ANDROID_TARGET_PREFIX = "android";
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
@@ -21,6 +18,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
@@ -86,13 +84,13 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				this.$errors.fail(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
 
+			// TODO: Move these check to validate method once we do not support ant.
 			this.checkGradle().wait();
 
 			this.$fs.ensureDirectoryExists(projectRoot).wait();
-
-			let newTarget = this.getAndroidTarget().wait();
+			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
+			let newTarget = androidToolsInfo.targetSdkVersion;
 			this.$logger.trace(`Using Android SDK '${newTarget}'.`);
-			let versionNumber = _.last(newTarget.split("-"));
 			if(this.$options.symlink) {
 				this.symlinkDirectory("build-tools", projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
@@ -105,16 +103,15 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				this.copy(projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 			}
 
-			this.cleanResValues(versionNumber).wait();
+			this.cleanResValues(newTarget).wait();
 
 		}).future<any>()();
 	}
 
-	private cleanResValues(versionNumber: string): IFuture<void> {
+	private cleanResValues(versionNumber: number): IFuture<void> {
 		return (() => {
 			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath().wait();
 			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir).wait();
- 			let integerFrameworkVersion = parseInt(versionNumber);
 			let directoriesToClean = directoriesInResFolder
 				.map(dir => { return {
 						dirName: dir,
@@ -123,7 +120,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				})
 				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
 								&& dir.sdkNum
-								&& (!integerFrameworkVersion || (integerFrameworkVersion < dir.sdkNum)))
+								&& (!versionNumber || (versionNumber < dir.sdkNum)))
 				.map(dir => path.join(resDestinationDir, dir.dirName));
 			this.$logger.trace("Directories to clean:");
 			this.$logger.trace(directoriesToClean);
@@ -143,24 +140,12 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
 			shell.sed('-i', /__PROJECT_NAME__/,  this.$projectData.projectName, gradleSettingsFilePath);
+			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
 		}).future<void>()();
 	}
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
-		return (() => {
-			let targetApi = this.getAndroidTarget().wait();
-			this.$logger.trace(`Adroid target: ${targetApi}`);
-			this.adjustMinSdk(projectRoot).wait();
-		}).future<void>()();
-	}
-
-	private adjustMinSdk(projectRoot: string): IFuture<void> {
-		return (() => {
-			let apiLevel = this.getApiLevel().wait();
-			if (apiLevel === "MNC") { // MNC SDK requires that minSdkVersion is set to "MNC"
-				shell.sed('-i', /android:minSdkVersion=".*?"/, `android:minSdkVersion="${apiLevel}"`, this.platformData.configurationFilePath);
-			}
-		}).future<void>()();
+		return Future.fromResult();
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
@@ -174,11 +159,17 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
-				// note, compileSdk and targetSdk should be the same
-				let targetSdk = this.getAndroidTarget().wait().replace("android-", "");
+				this.checkGradle().wait();
+				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
+				let compileSdk = androidToolsInfo.compileSdkVersion;
+				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
+				let buildToolsVersion = androidToolsInfo.buildToolsVersion;
+				let appCompatVersion = androidToolsInfo.supportLibraryVersion;
 				let buildOptions = ["buildapk",
-					`-PcompileSdk=${this.getAndroidTarget().wait()}`,
-					`-PtargetSdk=${targetSdk}`
+					`-PcompileSdk=android-${compileSdk}`,
+					`-PtargetSdk=${targetSdk}`,
+					`-PbuildToolsVersion=${buildToolsVersion}`,
+					`-PsupportVersion=${appCompatVersion}`,
 				];
 
 				if(this.$options.release) {
@@ -349,58 +340,21 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}
 	}
 
-	private getAndroidTarget(): IFuture<string> {
+	private getTargetFromAndroidManifest(): IFuture<string> {
 		return ((): string => {
-			let newTarget = this.$options.sdk ? `${AndroidProjectService.ANDROID_TARGET_PREFIX}-${this.$options.sdk}` : this.getLatestValidAndroidTarget().wait();
-			if(!_.contains(this.SUPPORTED_TARGETS, newTarget)) {
-				let versionNumber = parseInt(_.last(newTarget.split("-")));
-				if(versionNumber && (versionNumber < AndroidProjectService.MIN_SUPPORTED_VERSION)) {
-					this.$errors.failWithoutHelp(`The selected target SDK ${newTarget} is not supported. You should target at least ${AndroidProjectService.MIN_SUPPORTED_VERSION}.`);
+			let versionInManifest: string;
+			if (this.$fs.exists(this.platformData.configurationFilePath).wait()) {
+				let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath).wait();
+				if(targetFromAndroidManifest) {
+					let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
+					if(match && match[1]) {
+						versionInManifest = match[1];
+					}
 				}
-
-				if(!_.contains(this.getInstalledTargets().wait(), newTarget)) {
-					this.$errors.failWithoutHelp(`You have selected to use ${newTarget}, but it is not currently installed.`+
-						' Run \"android\" from your command-line to install/update any missing SDKs or tools.');
-				}
-				this.$logger.warn(`The selected Android target '${newTarget}' is not verified as supported. Some functionality may not work as expected.`);
 			}
 
-			return newTarget;
+			return versionInManifest;
 		}).future<string>()();
-	}
-
-	private getLatestValidAndroidTarget(): IFuture<string> {
-		return (() => {
-			let installedTargets = this.getInstalledTargets().wait();
-
-			// adjust to the latest available version
-			let newTarget = _(this.SUPPORTED_TARGETS).sort().findLast(supportedTarget => _.contains(installedTargets, supportedTarget));
-			if (!newTarget) {
-				this.$errors.failWithoutHelp(`Could not find supported Android target. Please install one of the following: ${this.SUPPORTED_TARGETS.join(", ")}.` +
-					" Make sure you have the latest Android tools installed as well." +
-					' Run "android" from your command-line to install/update any missing SDKs or tools.');
-			}
-
-			return newTarget;
-		}).future<string>()();
-	}
-
-	private getApiLevel(): IFuture<string> {
-		return (() => {
-			return this.getAndroidTarget().wait().split('-')[1];
-		}).future<string>()();
-	}
-
-	private installedTargetsCache: string[] = null;
-	private getInstalledTargets(): IFuture<string[]> {
-		return (() => {
-			if (!this.installedTargetsCache) {
-				this.installedTargetsCache = [];
-				let output = this.$childProcess.exec('android list targets').wait();
-				output.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
-			}
-			return this.installedTargetsCache;
-		}).future<string[]>()();
 	}
 
 	private checkJava(): IFuture<void> {
@@ -428,11 +382,11 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	private checkGradle(): IFuture<void> {
 		return (() => {
-			try {
-				this.$childProcess.exec("gradle -v").wait();
-			} catch(error) {
+			if(!this.$sysInfo.getSysInfo().gradleVer) {
 				this.$errors.fail("Error executing commands 'gradle', make sure you have gradle installed and added to your PATH.");
 			}
+
+			this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
 		}).future<void>()();
 	}
 

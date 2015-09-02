@@ -90,3 +90,53 @@ interface IProjectFilesManager {
 interface IInitService {
 	initialize(): IFuture<void>;
 }
+
+/**
+ * Provides access to information about installed Android tools and SDKs versions.
+ */
+interface IAndroidToolsInfo {
+	/**
+	 * Provides information about installed Android SDKs, Build Tools, Support Library
+	 * and ANDROID_HOME environement variable.
+	 * @return {IAndroidToolsInfoData} Information about installed Android Tools and SDKs.
+	 */
+	getToolsInfo(): IFuture<IAndroidToolsInfoData>;
+
+	/**
+	 * Validates the information about required Android tools and SDK versions.
+	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
+	 * @return {void}
+	 */
+	validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<void>;
+}
+
+/**
+ * Describes information about installed Android tools and SDKs.
+ */
+interface IAndroidToolsInfoData {
+	/**
+	 * The value of ANDROID_HOME environment variable.
+	 */
+	androidHomeEnvVar: string;
+
+	/**
+	 * The latest installed version of Android Build Tools that satisfies CLI's requirements.
+	 */
+	buildToolsVersion: string;
+
+	/**
+	 * The latest installed version of Android SDK that satisfies CLI's requirements.
+	 */
+	compileSdkVersion: number;
+
+	/**
+	 * The latest installed version of Android Support Library that satisfies CLI's requirements.
+	 */
+	supportLibraryVersion: string;
+
+	/**
+	 * The Android targetSdkVersion specified by the user.
+	 * In case it is not specified, compileSdkVersion will be used for targetSdkVersion.
+	 */
+	targetSdkVersion: number;
+}
