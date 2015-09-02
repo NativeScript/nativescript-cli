@@ -250,7 +250,6 @@ export class PlatformsDataStub implements IPlatformsData {
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
-			appResourcesDestinationDirectoryPath: "",
 			preparePluginNativeCode: () => Future.fromResult(),
 			removePluginNativeCode: () => Future.fromResult(),
 			afterPrepareAllPlugins: () => Future.fromResult()
@@ -273,9 +272,11 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			appDestinationDirectoryPath: "",
-			appResourcesDestinationDirectoryPath: "",
+			appDestinationDirectoryPath: ""
 		};
+	}
+	getAppResourcesDestinationDirectoryPath(): IFuture<string>{
+		return Future.fromResult("");
 	}
 	validate(): IFuture<void> {
 		return Future.fromResult();

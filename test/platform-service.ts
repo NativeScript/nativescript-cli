@@ -218,7 +218,8 @@ describe('Platform Service Tests', () => {
 						validate: () => Future.fromResult(),
 						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
 						interpolateData: (projectRoot: string) => Future.fromResult(),
-						afterCreateProject: (projectRoot: string) => Future.fromResult()
+						afterCreateProject: (projectRoot: string) => Future.fromResult(),
+						getAppResourcesDestinationDirectoryPath: () => Future.fromResult("")
 					}
 				};
 			};
@@ -276,7 +277,8 @@ describe('Platform Service Tests', () => {
 						validate: () => Future.fromResult(),
 						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
 						interpolateData: (projectRoot: string) => Future.fromResult(),
-						afterCreateProject: (projectRoot: string) => Future.fromResult()
+						afterCreateProject: (projectRoot: string) => Future.fromResult(),
+						getAppResourcesDestinationDirectoryPath: () => Future.fromResult("")
 					}
 				};
 			};

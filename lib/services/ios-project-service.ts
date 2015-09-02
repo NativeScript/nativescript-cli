@@ -5,6 +5,7 @@ import * as path from "path";
 import * as shell from "shelljs";
 import * as util from "util";
 import * as os from "os";
+import * as semver from "semver";
 import * as xcode from "xcode";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
@@ -28,7 +29,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $options: IOptions,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		private $projectDataService: IProjectDataService) {
 			super($fs);
 		}
 
@@ -39,7 +41,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			frameworkPackageName: "tns-ios",
 			normalizedPlatformName: "iOS",
 			appDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName),
-			appResourcesDestinationDirectoryPath: path.join(projectRoot, this.$projectData.projectName, "Resources"),
 			platformProjectService: this,
 			emulatorServices: this.$iOSEmulatorServices,
 			projectRoot: projectRoot,
@@ -59,6 +60,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
 			mergeXmlConfig: [{ "nodename": "plist", "attrname": "*" }, {"nodename": "dict", "attrname": "*"}]
 		};
+	}
+
+	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
+		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait()["version"];
+
+			if(semver.lt(frameworkVersion, "1.3.0")) {
+				return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
+			}
+
+			return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources");
+		}).future<string>()();
 	}
 
 	public validate(): IFuture<void> {
@@ -258,17 +272,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$logger.trace("Images from Xcode project");
 				this.$logger.trace(xcodeProjectImages);
 
-				let appResourcesImages = this.$fs.readDirectory(this.platformData.appResourcesDestinationDirectoryPath).wait();
+				let appResourcesImages = this.$fs.readDirectory(this.getAppResourcesDestinationDirectoryPath().wait()).wait();
 				this.$logger.trace("Current images from App_Resources");
 				this.$logger.trace(appResourcesImages);
 
 				let imagesToAdd = _.difference(appResourcesImages, xcodeProjectImages);
 				this.$logger.trace(`New images to add into xcode project: ${imagesToAdd.join(", ")}`);
-				_.each(imagesToAdd, image => project.addResourceFile(path.relative(this.platformData.projectRoot, path.join( this.platformData.appResourcesDestinationDirectoryPath, image))));
+				_.each(imagesToAdd, image => project.addResourceFile(path.relative(this.platformData.projectRoot, path.join(this.getAppResourcesDestinationDirectoryPath().wait(), image))));
 
 				let imagesToRemove = _.difference(xcodeProjectImages, appResourcesImages);
 				this.$logger.trace(`Images to remove from xcode project: ${imagesToRemove.join(", ")}`);
-				_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.platformData.appResourcesDestinationDirectoryPath, image)));
+				_.each(imagesToRemove, image => project.removeResourceFile(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), image)));
 
 				this.savePbxProj(project).wait();
 			}
@@ -276,7 +290,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
-		return this.$fs.deleteDirectory(this.platformData.appResourcesDestinationDirectoryPath);
+		return (() => {
+			this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath().wait()).wait();
+		}).future<void>()();
 	}
 
 	private get projectPodFilePath(): string {

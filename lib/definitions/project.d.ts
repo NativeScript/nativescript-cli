@@ -46,10 +46,11 @@ interface IPlatformProjectService {
 	preparePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
+	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
 }
 
 interface IAndroidProjectPropertiesManager {
 	getProjectReferences(): IFuture<ILibRef[]>;
 	addProjectReference(referencePath: string): IFuture<void>;
-	removeProjectReference(referencePath: string): IFuture<void>;	
+	removeProjectReference(referencePath: string): IFuture<void>;
 }

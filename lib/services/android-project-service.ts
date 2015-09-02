@@ -45,7 +45,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
 				appDestinationDirectoryPath: path.join(projectRoot, "src", "main", "assets"),
-				appResourcesDestinationDirectoryPath: path.join(projectRoot, "src", "main", "res"),
 				platformProjectService: this,
 				emulatorServices: this.$androidEmulatorServices,
 				projectRoot: projectRoot,
@@ -62,6 +61,12 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}
 
 		return this._platformData;
+	}
+
+	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
+		return (() => {
+			return path.join(this.platformData.projectRoot, "src", "main", "res");
+		}).future<string>()();
 	}
 
 	public validate(): IFuture<void> {
@@ -108,7 +113,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	private copyResValues(projectRoot: string, frameworkDir: string, versionNumber: string): IFuture<void> {
 		return (() => {
 			let resSourceDir = path.join(frameworkDir, "src", "main", "res");
-			let resDestinationDir = this.platformData.appResourcesDestinationDirectoryPath;
+			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath().wait();
 			this.$fs.createDirectory(resDestinationDir).wait();
 			let versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
 			let directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
@@ -140,7 +145,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let manifestPath = this.platformData.configurationFilePath;
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
 
-			let stringsFilePath = path.join(this.platformData.appResourcesDestinationDirectoryPath, 'values', 'strings.xml');
+			let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath().wait(), 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 
@@ -239,7 +244,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			let valuesDirRegExp = /^values/;
 			let resourcesDirs = this.$fs.readDirectory(resourcesDirPath).wait().filter(resDir => !resDir.match(valuesDirRegExp));
 			_.each(resourcesDirs, resourceDir => {
-				this.$fs.deleteDirectory(path.join(this.platformData.appResourcesDestinationDirectoryPath, resourceDir)).wait();
+				this.$fs.deleteDirectory(path.join(this.getAppResourcesDestinationDirectoryPath().wait(), resourceDir)).wait();
 			});
 		}).future<void>()();
 	}
