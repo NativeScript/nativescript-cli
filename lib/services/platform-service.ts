@@ -247,7 +247,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public deployOnDevice(platform: string): IFuture<void> {
+	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
@@ -255,7 +255,7 @@ export class PlatformService implements IPlatformService {
 
 			let cachedDeviceOption = this.$options.forDevice;
 			this.$options.forDevice = true;
-			this.buildPlatform(platform).wait();
+			this.buildPlatform(platform, buildConfig).wait();
 			this.$options.forDevice = !!cachedDeviceOption;
 
 			// Get latest package that is produced from build
@@ -277,7 +277,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public deployOnEmulator(platform: string): IFuture<void> {
+	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			let packageFile: string, logFilePath: string;
 			this.ensurePlatformInstalled(platform).wait();
@@ -290,7 +290,7 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkDependencies().wait();
 
 			if(!this.$options.availableDevices) {
-				this.buildPlatform(platform).wait();
+				this.buildPlatform(platform, buildConfig).wait();
 
 				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 				this.$logger.out("Using ", packageFile);
