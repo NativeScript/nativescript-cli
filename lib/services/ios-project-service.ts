@@ -347,7 +347,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if(firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
 					this.$logger.warn(`Podfile contains more than one post_install sections. You need to open ${this.projectPodFilePath} file and manually resolve this issue.`);
 				}
-
+				
+				let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcuserdata");
+				if(!this.$fs.exists(pbxprojFilePath).wait()) {
+					this.$logger.info("Creating project scheme...");
+					let createScheme_rb = `echo \"require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save\" | ruby`;
+					this.$childProcess.exec(createScheme_rb, { cwd: this.platformData.projectRoot }).wait();
+				}
+				
 				this.$logger.info("Installing pods...");
 				this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
 			}
