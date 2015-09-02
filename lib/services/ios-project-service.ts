@@ -335,8 +335,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				// Check availability
 				try {
 					this.$childProcess.exec("gem which cocoapods").wait();
+					this.$childProcess.exec("gem which xcodeproj").wait();
 				} catch(e) {
-					this.$errors.failWithoutHelp("CocoaPods are not installed. Run `sudo gem install cocoapods` and try again.");
+					this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 				}
 
 				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath).wait();
@@ -351,8 +352,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcuserdata");
 				if(!this.$fs.exists(pbxprojFilePath).wait()) {
 					this.$logger.info("Creating project scheme...");
-					let createScheme_rb = `echo \"require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save\" | ruby`;
-					this.$childProcess.exec(createScheme_rb, { cwd: this.platformData.projectRoot }).wait();
+					let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
+					this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot }).wait();
 				}
 				
 				this.$logger.info("Installing pods...");
