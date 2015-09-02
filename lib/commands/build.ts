@@ -26,7 +26,8 @@ $injector.registerCommand("build|ios", BuildIosCommand);
 export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	constructor($platformService: IPlatformService,
 				private $platformsData: IPlatformsData,
-				private $options: IOptions) {
+				private $options: IOptions,
+				private $errors: IErrors) {
 		super($platformService);
 	}
 
@@ -36,5 +37,14 @@ export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
+
+	public canExecute(args: string[]): IFuture<boolean> {
+		return (() => {
+			if (this.$options.release && (!this.$options.keyStorePath || !this.$options.keyStorePassword || !this.$options.keyStoreAlias || !this.$options.keyStoreAliasPassword)) {
+				this.$errors.fail("When producing a release build, you need to specify all --key-store-* options.");
+			}
+			return args.length === 0;
+		}).future<boolean>()();
+	}
 }
 $injector.registerCommand("build|android", BuildAndroidCommand);
