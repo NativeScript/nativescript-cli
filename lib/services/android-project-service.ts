@@ -209,6 +209,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	public addLibrary(libraryPath: string): IFuture<void> {
 		return (() => {
+			if(this.$fs.exists(path.join(libraryPath, "project.properties")).wait()) {
+				this.$errors.failWithoutHelp("Unable to add android library. You can use `library add` command only with path to folder containing one or more .jar files.");
+			}
+
 			let name = path.basename(libraryPath);
 			let targetLibPath = this.getLibraryPath(name);
 
