@@ -105,37 +105,29 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				this.copy(projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 			}
 
-			this.copyResValues(projectRoot, frameworkDir, versionNumber).wait();
+			this.cleanResValues(versionNumber).wait();
 
 		}).future<any>()();
 	}
 
-	private copyResValues(projectRoot: string, frameworkDir: string, versionNumber: string): IFuture<void> {
+	private cleanResValues(versionNumber: string): IFuture<void> {
 		return (() => {
-			let resSourceDir = path.join(frameworkDir, "src", "main", "res");
 			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath().wait();
-			this.$fs.createDirectory(resDestinationDir).wait();
-			let versionDirName = AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX + versionNumber;
-			let directoriesToCopy = [AndroidProjectService.VALUES_DIRNAME];
-			let directoriesInResFolder = this.$fs.readDirectory(resSourceDir).wait();
-			let integerFrameworkVersion = parseInt(versionNumber);
-			let versionDir = _.find(directoriesInResFolder, dir => dir === versionDirName) ||
-				_(directoriesInResFolder)
-				.map(dir => {
-					return {
+			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir).wait();
+ 			let integerFrameworkVersion = parseInt(versionNumber);
+			let directoriesToClean = directoriesInResFolder
+				.map(dir => { return {
 						dirName: dir,
 						sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
 					};
 				})
-				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX) && dir.sdkNum && (!integerFrameworkVersion || (integerFrameworkVersion >= dir.sdkNum)))
-				.max(dir => dir.sdkNum)
-				.dirName;
-
-			if(versionDir) {
-				directoriesToCopy.push(versionDir);
-			}
-
-			this.copy(resDestinationDir, resSourceDir, directoriesToCopy.join(" "), "-Rf");
+				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
+								&& dir.sdkNum
+								&& (!integerFrameworkVersion || (integerFrameworkVersion < dir.sdkNum)))
+				.map(dir => path.join(resDestinationDir, dir.dirName));
+			this.$logger.trace("Directories to clean:");
+			this.$logger.trace(directoriesToClean);
+			Future.wait(_.map(directoriesToClean, dir => this.$fs.deleteDirectory(dir)));
 		}).future<void>()();
 	}
 
