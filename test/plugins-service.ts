@@ -219,6 +219,7 @@ describe("Plugins service", () => {
 			// Adds android platform
 			fs.createDirectory(path.join(projectFolder, "platforms")).wait();
 			fs.createDirectory(path.join(projectFolder, "platforms", "android")).wait();
+			fs.createDirectory(path.join(projectFolder, "platforms", "android", "app")).wait();
 
 			// Mock logger.warn
 			let logger = testInjector.resolve("logger");
