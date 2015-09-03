@@ -426,6 +426,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private prepareCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
 		return (() => {
+			if(!this.$fs.exists(this.projectPodFilePath).wait()) {
+				this.$fs.writeFile(this.projectPodFilePath, "use_frameworks!\n").wait();
+			}
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			if(this.$fs.exists(pluginPodFilePath).wait()) {
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
