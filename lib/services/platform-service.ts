@@ -189,8 +189,8 @@ export class PlatformService implements IPlatformService {
 				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
 			} catch(error) {
 				this.$logger.debug(error);
-				this.$errors.fail(`Processing node_modules failed. Error:${error}`);
 				shell.rm("-rf", appResourcesDirectoryPath);
+				this.$errors.fail(`Processing node_modules failed. Error:${error}`);
 			}
 
 			// Process platform specific files
