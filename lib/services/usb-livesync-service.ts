@@ -85,7 +85,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
 					this.$platformService.preparePlatform(platform).wait();
-					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
+					let projectFileInfo = this.getProjectFileInfo(filePath);
+					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), projectFileInfo.onDeviceName));
 				}).future<string>()();
 			};
 
