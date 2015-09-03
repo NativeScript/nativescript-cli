@@ -116,7 +116,7 @@ export class PluginsService implements IPluginsService {
 						this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
 
 						pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
-						platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
+						platformData.platformProjectService.preparePluginNativeCode(pluginData, {executePodInstall: true }).wait();
 
 						shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
 

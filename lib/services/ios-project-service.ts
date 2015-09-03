@@ -329,11 +329,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		 return this.$fs.writeFile(this.pbxProjPath, project.writeSync());
 	}
 
-	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
+	public preparePluginNativeCode(pluginData: IPluginData, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
 			this.prepareFrameworks(pluginPlatformsFolderPath, pluginData).wait();
-			this.prepareCocoapods(pluginPlatformsFolderPath).wait();
+			this.prepareCocoapods(pluginPlatformsFolderPath, opts).wait();
 		}).future<void>()();
 	}
 
@@ -372,8 +372,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot }).wait();
 				}
 
-				this.$logger.info("Installing pods...");
-				this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot }).wait();
+				this.executePodInstall().wait();
 			}
 		}).future<void>()();
 	}
@@ -418,22 +417,32 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	private executePodInstall(): IFuture<any> {
+		this.$logger.info("Installing pods...");
+		return this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot });
+	}
+
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			_.each(this.getAllFrameworksForPlugin(pluginData).wait(), fileName => this.addLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
 
-	private prepareCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
+	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): IFuture<void> {
 		return (() => {
-			if(!this.$fs.exists(this.projectPodFilePath).wait()) {
-				this.$fs.writeFile(this.projectPodFilePath, "use_frameworks!\n").wait();
-			}
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
 			if(this.$fs.exists(pluginPodFilePath).wait()) {
+				if(!this.$fs.exists(this.projectPodFilePath).wait()) {
+					this.$fs.writeFile(this.projectPodFilePath, "use_frameworks!\n").wait();
+				}
+
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
 				let contentToWrite = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				this.$fs.appendFile(this.projectPodFilePath, contentToWrite).wait();
+			}
+
+			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
+				this.executePodInstall().wait();
 			}
 		}).future<void>()();
 	}

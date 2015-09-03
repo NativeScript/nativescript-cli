@@ -43,7 +43,7 @@ interface IPlatformProjectService {
 	addLibrary(libraryPath: string): IFuture<void>;
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean>;
 	updatePlatform(currentVersion: string, newVersion: string): IFuture<void>;
-	preparePluginNativeCode(pluginData: IPluginData): IFuture<void>;
+	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
