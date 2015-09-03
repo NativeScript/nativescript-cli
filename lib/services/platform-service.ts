@@ -160,7 +160,16 @@ export class PlatformService implements IPlatformService {
 				.filter(directoryName => directoryName !== "tns_modules")
 				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
 				.value();
-			shell.cp("-Rf", appSourceDirectoryPath, platformData.appDestinationDirectoryPath);
+
+			// Copy all files from app dir, but make sure to exclude tns_modules
+			let sourceFiles = this.$fs.readDirectory(appSourceDirectoryPath).wait();
+			if(_.contains(sourceFiles, "tns_modules")) {
+				this.$logger.warn("You have tns_modules dir in your app folder. It will not be used and you can safely remove it.");
+			}
+
+			sourceFiles.filter(source => source !== "tns_modules")
+				.map(source => path.join(appSourceDirectoryPath, source))
+				.forEach(source => shell.cp("-Rf", source, appDestinationDirectoryPath));
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait()).wait(); // Should be deleted
