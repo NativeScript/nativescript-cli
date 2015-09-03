@@ -256,10 +256,12 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			let pluginJars = this.$fs.enumerateFilesInDirectorySync(path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME));
-
 			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
-			_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
+
+			if(this.$fs.exists(libsFolderPath).wait()) {
+				let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
+				_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
+			}
 		}).future<void>()();
 	}
 
