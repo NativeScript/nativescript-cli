@@ -97,7 +97,7 @@ var TiHttp = {
       }
 
       if (aborted === true) {
-        e.type = 'cancelled'
+        e.type = 'cancelled';
       }
 
       // Success implicates 2xx (Successful), or 304 (Not Modified).
