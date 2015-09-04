@@ -75,11 +75,29 @@ var AngularHTTP = {
       body = null != angular.toJson ? angular.toJson(body) : JSON.stringify(body);
     }
 
+    // Create a proxy request
+    var cancelDeferred = Kinvey.Defer.deferred();
+    var requestProxy = {
+      cancel: function() {
+        cancelDeferred.resolve();
+      }
+    };
+
+    // Setup the timeout
+    if (options.timeout) {
+      setTimeout(function() {
+        requestProxy.cancel();
+      }, options.timeout);
+    }
+
+    // Send the proxy request
+    options.handler(requestProxy);
+
     return $http({
       data    : body,
       headers : headers,
       method  : method,
-      timeout : options.timeout,
+      timeout : cancelPromise,
       url     : url
     }).then(function(response) {
       var _response = response;

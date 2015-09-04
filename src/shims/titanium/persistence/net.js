@@ -45,6 +45,7 @@ var TiHttp = {
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
     var xhr;
+    var aborted = false;
 
     // Stringify if not Titanium.Blob.
     if(isObject(body) && !isFunction(body.getLength)) {
@@ -95,8 +96,12 @@ var TiHttp = {
         e.type = 'timeout';
       }
 
+      if (aborted === true) {
+        e.type = 'cancelled'
+      }
+
       // Success implicates 2xx (Successful), or 304 (Not Modified).
-      var status = 'timeout' === e.type ? 0 : this.status;
+      var status = 'timeout' === e.type || e.type === 'cancelled' ? 0 : this.status;
 
       if(2 === parseInt(status / 100, 10) || 304 === this.status) {
         var response;
@@ -195,6 +200,17 @@ var TiHttp = {
         subject.trigger('request', subject, xhr, options);
       }
     }
+
+    // Create a proxy request
+    var requestProxy = {
+      cancel: function() {
+        aborted = true;
+        xhr.abort();
+      }
+    };
+
+    // Send the proxy request
+    options.handler(requestProxy);
 
     // Return the response.
     return deferred.promise;

@@ -58,6 +58,7 @@ var BackboneAjax = {
 
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
+    var aborted = false;
 
     // Append header for compatibility with Android 2.2, 2.3.3, and 3.2.
 // http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
@@ -138,7 +139,7 @@ var BackboneAjax = {
         }).then(function(response) {
           deferred.resolve(response);
         }, function() {
-          var error = request.responseText || textStatus || null;
+          var error = aborted === true ? 'canceled' : request.responseText || textStatus || null;
 
           if (Array.isArray(error)) {
             error = new Kinvey.Error('Received an array as a response with a status code of ' + status + '. A JSON ' +
@@ -189,6 +190,17 @@ var BackboneAjax = {
         subject.trigger('request', subject, xhr, options);
       }
     }
+
+    // Create a proxy request
+    var requestProxy = {
+      cancel: function() {
+        aborted = true;
+        xhr.abort();
+      }
+    };
+
+    // Send the proxy request
+    options.handler(requestProxy);
 
     // Return the response.
     return deferred.promise;
