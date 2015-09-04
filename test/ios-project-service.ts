@@ -37,12 +37,13 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	});
 	testInjector.register("projectHelper", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
+	testInjector.register("projectDataService", {});
 
 	return testInjector;
 }
 
 describe("Cocoapods support", () => {
-	if (require("os").platform !== "darwin") {
+	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
 		it("adds plugin with Podfile", () => {
@@ -68,7 +69,7 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath).wait();
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
+			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
 
@@ -90,7 +91,8 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `,
+			let expectedProjectPodfileContent = ["use_frameworks!",
+				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
 				" # End Podfile \n"]
 				.join("\n");
@@ -119,10 +121,10 @@ describe("Cocoapods support", () => {
 			fs.createDirectory(platformsFolderPath).wait();
 
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
-			iOSProjectService.prepareDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
+			iOSProjectService.prepareFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
-			iOSProjectService.removeDynamicFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
+			iOSProjectService.removeFrameworks = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
 
@@ -144,7 +146,8 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = [`# Begin Podfile - ${pluginPodfilePath} `,
+			let expectedProjectPodfileContent = ["use_frameworks!",
+				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
 				" # End Podfile \n"]
 				.join("\n");
