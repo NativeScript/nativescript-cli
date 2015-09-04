@@ -74,22 +74,23 @@ export class PluginsService implements IPluginsService {
 
 			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
-					if(this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
-						// Process .js files
-						let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
-						let pluginPlatformsData = pluginData.platformsData;
-						if(pluginPlatformsData) {
-							let pluginVersion = (<any>pluginPlatformsData)[platform];
-							if(!pluginVersion) {
-								this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
-								return;
-							}
-
-							if(semver.gt(pluginVersion, installedFrameworkVersion)) {
-								this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
-								return;
-							}
+					// Process .js files
+					let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
+					let pluginPlatformsData = pluginData.platformsData;
+					if(pluginPlatformsData) {
+						let pluginVersion = (<any>pluginPlatformsData)[platform];
+						if(!pluginVersion) {
+							this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
+							return;
 						}
+
+						if(semver.gt(pluginVersion, installedFrameworkVersion)) {
+							this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
+							return;
+						}
+					}
+
+					if(this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
 
 						this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 						shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
