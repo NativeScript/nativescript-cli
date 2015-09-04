@@ -54,7 +54,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			],
 			frameworkFilesExtensions: [".a", ".framework", ".bin"],
 			frameworkDirectoriesExtensions: [".framework"],
-			frameworkDirectoriesNames: ["Metadata"],
+			frameworkDirectoriesNames: ["Metadata", "metadataGenerator"],
 			targetedOS: ['darwin'],
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
