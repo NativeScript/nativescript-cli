@@ -461,7 +461,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
 				let contentToRemove= this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
-				if(_.isEmpty(projectPodFileContent)) {
+				if(projectPodFileContent.trim() === "use_frameworks!") {
 					this.$fs.deleteFile(this.projectPodFilePath).wait();
 				} else {
 					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
