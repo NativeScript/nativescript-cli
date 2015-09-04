@@ -97,7 +97,7 @@ var AngularHTTP = {
       data    : body,
       headers : headers,
       method  : method,
-      timeout : cancelPromise,
+      timeout : cancelDeferred,
       url     : url
     }).then(function(response) {
       var _response = response;
