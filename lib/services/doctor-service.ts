@@ -6,10 +6,10 @@ import * as helpers from "../common/helpers";
 class DoctorService implements IDoctorService {
 	private static MIN_SUPPORTED_GRADLE_VERSION = "2.3";
 
-	constructor(
+	constructor(private $androidToolsInfo: IAndroidToolsInfo,
 		private $hostInfo: IHostInfo,
-		private $sysInfo: ISysInfo,
-		private $logger: ILogger) {	}
+		private $logger: ILogger,
+		private $sysInfo: ISysInfo) {	}
 
 	public printWarnings(): boolean {
 		let result = false;
@@ -84,6 +84,7 @@ class DoctorService implements IDoctorService {
 				" described in https://github.com/NativeScript/nativescript-cli#system-requirements.");
 		}
 
+		this.$androidToolsInfo.validateInfo().wait();
 		return result;
 	}
 

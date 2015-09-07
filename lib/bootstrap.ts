@@ -72,3 +72,4 @@ $injector.requireCommand("init", "./commands/init");
 
 $injector.require("projectFilesManager", "./services/project-files-manager");
 $injector.requireCommand("livesync", "./commands/livesync");
+$injector.require("androidToolsInfo", "./android-tools-info");
