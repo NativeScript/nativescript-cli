@@ -93,8 +93,8 @@ export class PlatformService implements IPlatformService {
 
 	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<void> {
 		return (() => {
-			platformData.platformProjectService.createProject(platformData.projectRoot, frameworkDir).wait();
 			let installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
+			platformData.platformProjectService.createProject(frameworkDir, installedVersion).wait();
 
 			if(this.$options.frameworkPath && this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile() && !this.$options.symlink) {
 				// Need to remove unneeded node_modules folder
