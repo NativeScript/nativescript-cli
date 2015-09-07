@@ -213,14 +213,14 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public runPlatform(platform: string): IFuture<void> {
+	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 
 			if (this.$options.emulator) {
-				this.deployOnEmulator(platform).wait();
+				this.deployOnEmulator(platform, buildConfig).wait();
 			} else {
-				this.deployOnDevice(platform).wait();
+				this.deployOnDevice(platform, buildConfig).wait();
 			}
 		}).future<void>()();
 	}
