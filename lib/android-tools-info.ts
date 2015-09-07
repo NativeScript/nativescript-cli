@@ -146,10 +146,14 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getBuildToolsVersion(): IFuture<string> {
 		return ((): string => {
-			let pathToBuildTools = path.join(this.androidHome, "build-tools");
-			let buildToolsRange = this.getBuildToolsRange();
+			let buildToolsVersion: string;
+			if(this.androidHome) {
+				let pathToBuildTools = path.join(this.androidHome, "build-tools");
+				let buildToolsRange = this.getBuildToolsRange();
+				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+			}
 
-			return this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+			return buildToolsVersion;
 		}).future<string>()();
 	}
 
@@ -167,9 +171,13 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getAndroidSupportLibVersion(): IFuture<string> {
 		return ((): string => {
-			let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
+			let selectedAppCompatVersion: string;
 			let requiredAppCompatRange = this.getAppCompatRange().wait();
-			let selectedAppCompatVersion = requiredAppCompatRange ? this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait() : undefined;
+			if(this.androidHome && requiredAppCompatRange) {
+				let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
+				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait();
+			}
+
 			this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);
 			return selectedAppCompatVersion;
 		}).future<string>()();
