@@ -63,7 +63,11 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
 		return (() => {
-			return path.join(this.platformData.projectRoot, "src", "main", "res");
+			if(this.canUseGradle().wait()) {
+				return path.join(this.platformData.projectRoot, "src", "main", "res");
+			}
+
+			return path.join(this.platformData.projectRoot, "res");
 		}).future<string>()();
 	}
 
