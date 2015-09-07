@@ -20,7 +20,9 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
+		private $commandsService: ICommandsService,
 		private $errors: IErrors,
+		$fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $injector: IInjector,
 		private $logger: ILogger,
@@ -28,8 +30,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $propertiesParser: IPropertiesParser,
-		private $sysInfo: ISysInfo,
-		$fs: IFileSystem) {
+		private $sysInfo: ISysInfo) {
 			super($fs);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -152,11 +153,19 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
-		return Future.fromResult<boolean>(true);
+		return Future.fromResult(true);
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
-		return Future.fromResult();
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
+		return (() => {
+			if(semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+				this.$commandsService.tryExecuteCommand(process.argv[2], ["remove"].concat(process.argv.slice(4))).wait();
+				this.$commandsService.tryExecuteCommand(process.argv[2], process.argv.slice(3)).wait();
+				return false;
+			}
+
+			return true;
+		}).future<boolean>()();
 	}
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {

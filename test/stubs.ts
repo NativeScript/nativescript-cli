@@ -307,8 +307,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
-	updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
-		return Future.fromResult();
+	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
+		return Future.fromResult(true);
 	}
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return Future.fromResult();

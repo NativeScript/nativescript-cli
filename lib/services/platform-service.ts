@@ -425,74 +425,72 @@ export class PlatformService implements IPlatformService {
 
 			this.ensurePackageIsCached(platformData.frameworkPackageName, newVersion).wait();
 
-			if(platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait()) {
-
+			let canUpdate = platformData.platformProjectService.canUpdatePlatform(currentVersion, newVersion).wait();
+			if(canUpdate) {
 				if(!semver.valid(newVersion)) {
 					this.$errors.fail("The version %s is not valid. The version should consists from 3 parts separated by dot.", newVersion);
 				}
 
 				if(semver.gt(currentVersion, newVersion)) { // Downgrade
-					let isUpdateConfirmed = this.$prompter.confirm(`You are going to downgrade to android runtime v.${newVersion}. Are you sure?`, () => false).wait();
+					let isUpdateConfirmed = this.$prompter.confirm(`You are going to downgrade to runtime v.${newVersion}. Are you sure?`, () => false).wait();
 					if(isUpdateConfirmed) {
-						this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+						this.updatePlatformCore(platformData, currentVersion, newVersion, canUpdate).wait();
 					}
 				} else if(semver.eq(currentVersion, newVersion)) {
 					this.$errors.fail("Current and new version are the same.");
 				} else {
-					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
+					this.updatePlatformCore(platformData, currentVersion, newVersion, canUpdate).wait();
 				}
 			} else {
-				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
-				if(isUpdateConfirmed) {
-					platformData.platformProjectService.updatePlatform(currentVersion, newVersion).wait();
-					this.updatePlatformCore(platformData, currentVersion, newVersion).wait();
-				}
+				this.updatePlatformCore(platformData, currentVersion, newVersion, canUpdate).wait();
 			}
 
 		}).future<void>()();
 	}
 
-	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string): IFuture<void> {
+	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<void> {
 		return (() => {
-			// Remove old framework files
-			let oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
+			let update = platformData.platformProjectService.updatePlatform(currentVersion, newVersion, canUpdate).wait();
+			if(update) {
+				// Remove old framework files
+				let oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
 
-			_.each(oldFrameworkData.frameworkFiles, file => {
-				let fileToDelete = path.join(platformData.projectRoot, file);
-				this.$logger.trace("Deleting %s", fileToDelete);
-				this.$fs.deleteFile(fileToDelete).wait();
-			});
+				_.each(oldFrameworkData.frameworkFiles, file => {
+					let fileToDelete = path.join(platformData.projectRoot, file);
+					this.$logger.trace("Deleting %s", fileToDelete);
+					this.$fs.deleteFile(fileToDelete).wait();
+				});
 
-			_.each(oldFrameworkData.frameworkDirectories, dir => {
-				let dirToDelete = path.join(platformData.projectRoot, dir);
-				this.$logger.trace("Deleting %s", dirToDelete);
-				this.$fs.deleteDirectory(dirToDelete).wait();
-			});
+				_.each(oldFrameworkData.frameworkDirectories, dir => {
+					let dirToDelete = path.join(platformData.projectRoot, dir);
+					this.$logger.trace("Deleting %s", dirToDelete);
+					this.$fs.deleteDirectory(dirToDelete).wait();
+				});
 
-			// Add new framework files
-			let newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
-			let cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
+				// Add new framework files
+				let newFrameworkData = this.getFrameworkFiles(platformData, newVersion).wait();
+				let cacheDirectoryPath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, newVersion);
 
-			_.each(newFrameworkData.frameworkFiles, file => {
-				let sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
-				let destinationFile = path.join(platformData.projectRoot, file);
-				this.$logger.trace("Replacing %s with %s", sourceFile, destinationFile);
-				shell.cp("-f", sourceFile, destinationFile);
-			});
+				_.each(newFrameworkData.frameworkFiles, file => {
+					let sourceFile = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, file);
+					let destinationFile = path.join(platformData.projectRoot, file);
+					this.$logger.trace("Replacing %s with %s", sourceFile, destinationFile);
+					shell.cp("-f", sourceFile, destinationFile);
+				});
 
-			_.each(newFrameworkData.frameworkDirectories, dir => {
-				let sourceDirectory = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir);
-				let destinationDirectory = path.join(platformData.projectRoot, dir);
-				this.$logger.trace("Copying %s to %s", sourceDirectory, destinationDirectory);
-				shell.cp("-fR", path.join(sourceDirectory, "*"), destinationDirectory);
-			});
+				_.each(newFrameworkData.frameworkDirectories, dir => {
+					let sourceDirectory = path.join(cacheDirectoryPath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir);
+					let destinationDirectory = path.join(platformData.projectRoot, dir);
+					this.$logger.trace("Copying %s to %s", sourceDirectory, destinationDirectory);
+					shell.cp("-fR", path.join(sourceDirectory, "*"), destinationDirectory);
+				});
 
-			// Update .tnsproject file
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			this.$projectDataService.setValue(platformData.frameworkPackageName, {version: newVersion}).wait();
+				// Update .tnsproject file
+				this.$projectDataService.initialize(this.$projectData.projectDir);
+				this.$projectDataService.setValue(platformData.frameworkPackageName, {version: newVersion}).wait();
 
-			this.$logger.out("Successfully updated to version ", newVersion);
-
+				this.$logger.out("Successfully updated to version ", newVersion);
+			}
 		}).future<void>()();
 	}
 
