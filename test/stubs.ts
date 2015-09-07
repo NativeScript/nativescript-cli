@@ -31,6 +31,8 @@ export class LoggerStub implements ILogger {
 	printMsgWithTimeout(message: string, timeout: number): IFuture<void> {
 		return null;
 	}
+
+	printMarkdown(message: string): void { }
 }
 
 export class FileSystemStub implements IFileSystem {
