@@ -56,7 +56,11 @@ export class Builder implements IBroccoliBuilder {
 
       if(isNodeModulesModified && this.$fs.exists(absoluteOutputPath).wait()) {
         let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath).wait();
-        let tnsModulesInApp = this.$fs.readDirectory(path.join(projectDir, "app", "tns_modules")).wait();
+        let tnsModulesPath = path.join(projectDir, "app", "tns_modules");
+        if(!this.$fs.exists(tnsModulesPath).wait()) {
+            tnsModulesPath = path.join(projectDir, "node_modules", "tns-core-modules");
+        }
+        let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath).wait();
         let modulesToDelete = _.difference(currentPreparedTnsModules, tnsModulesInApp);
         _.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait());
       }
