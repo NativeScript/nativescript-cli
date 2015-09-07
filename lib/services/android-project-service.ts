@@ -63,7 +63,11 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
 		return (() => {
-			return path.join(this.platformData.projectRoot, "src", "main", "res");
+			if(this.canUseGradle().wait()) {
+				return path.join(this.platformData.projectRoot, "src", "main", "res");
+			}
+
+			return path.join(this.platformData.projectRoot, "res");
 		}).future<string>()();
 	}
 
@@ -190,6 +194,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
 				this.spawn('ant', args).wait();
+
+				this.platformData.deviceBuildOutputPath = path.join(this.platformData.projectRoot, "bin");
 			}
 		}).future<void>()();
 	}
