@@ -96,23 +96,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
+	public createProject(frameworkDir: string, frameworkVersion: string): IFuture<void> {
 		return (() => {
-			this.$fs.ensureDirectoryExists(path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
+			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
 			if(this.$options.symlink) {
 				let xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 
-				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), projectRoot);
+				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), this.platformData.projectRoot);
 
 				let directoryContent = this.$fs.readDirectory(frameworkDir).wait();
 				let frameworkFiles = _.difference(directoryContent, [IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, xcodeProjectName]);
 				_.each(frameworkFiles, (file: string) => {
-					this.$fs.symlink(path.join(frameworkDir, file), path.join(projectRoot, file)).wait();
+					this.$fs.symlink(path.join(frameworkDir, file), path.join(this.platformData.projectRoot, file)).wait();
 				});
 
 			}  else {
-				shell.cp("-R", path.join(frameworkDir, "*"), projectRoot);
+				shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
 			}
 		}).future<void>()();
 	}
