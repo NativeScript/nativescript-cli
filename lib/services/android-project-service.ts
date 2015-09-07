@@ -190,6 +190,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
 				this.spawn('ant', args).wait();
+
+				this.platformData.deviceBuildOutputPath = path.join(this.platformData.projectRoot, "bin");
 			}
 		}).future<void>()();
 	}
