@@ -247,17 +247,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
 				if(isUpdateConfirmed) {
 					// Copy old file to options["profile-dir"]
-					let sourceFile = path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName));
-					let destinationFile = path.join(this.$options.profileDir, "xcodeproj");
-					this.$fs.deleteDirectory(destinationFile).wait();
-					shell.cp("-R", path.join(sourceFile, "*"), destinationFile);
-					this.$logger.info("Backup file %s at location %s", sourceFile, destinationFile);
-					this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName))).wait();
+					let sourceDir = path.join(this.platformData.projectRoot, `${this.$projectData.projectName}.xcodeproj`);
+					let destinationDir = path.join(this.$options.profileDir, "xcodeproj");
+					this.$fs.deleteDirectory(destinationDir).wait();
+					shell.cp("-R", path.join(sourceDir, "*"), destinationDir);
+					this.$logger.info(`Backup file ${sourceDir} at location ${destinationDir}`);
+					this.$fs.deleteDirectory(sourceDir).wait();
 
 					// Copy xcodeProject file
 					let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-					shell.cp("-R", path.join(cachedPackagePath, "*"), path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName)));
-					this.$logger.info("Copied from %s at %s.", cachedPackagePath, this.platformData.projectRoot);
+					shell.cp("-R", path.join(cachedPackagePath, "*"), sourceDir);
+					this.$logger.info(`Copied from ${cachedPackagePath} at ${this.platformData.projectRoot}.`);
 
 					let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
 					this.replaceFileContent(pbxprojFilePath).wait();

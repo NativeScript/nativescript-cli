@@ -20,7 +20,6 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
-		private $commandsService: ICommandsService,
 		private $errors: IErrors,
 		$fs: IFileSystem,
 		private $hostInfo: IHostInfo,
@@ -156,11 +155,12 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return Future.fromResult(true);
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
 		return (() => {
 			if(semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-				this.$commandsService.tryExecuteCommand(process.argv[2], ["remove"].concat(process.argv.slice(4))).wait();
-				this.$commandsService.tryExecuteCommand(process.argv[2], process.argv.slice(3)).wait();
+				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
+				removePlatforms([platformLowercase.split("@")[0]]).wait();
+				addPlatform(platformLowercase).wait();
 				return false;
 			}
 

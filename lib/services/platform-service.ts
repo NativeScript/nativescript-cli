@@ -450,7 +450,7 @@ export class PlatformService implements IPlatformService {
 
 	private updatePlatformCore(platformData: IPlatformData, currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<void> {
 		return (() => {
-			let update = platformData.platformProjectService.updatePlatform(currentVersion, newVersion, canUpdate).wait();
+			let update = platformData.platformProjectService.updatePlatform(currentVersion, newVersion, canUpdate, this.addPlatform.bind(this), this.removePlatforms.bind(this)).wait();
 			if(update) {
 				// Remove old framework files
 				let oldFrameworkData =  this.getFrameworkFiles(platformData, currentVersion).wait();
