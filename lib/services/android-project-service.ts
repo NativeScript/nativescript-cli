@@ -84,7 +84,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public createProject(frameworkDir: string, frameworkVersion: string): IFuture<void> {
 		return (() => {
 			if(semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
-				this.$errors.fail(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
+				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
 
 			// TODO: Move these check to validate method once we do not support ant.
@@ -405,7 +405,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	private checkGradle(): IFuture<void> {
 		return (() => {
 			if(!this.$sysInfo.getSysInfo().gradleVer) {
-				this.$errors.fail("Error executing commands 'gradle', make sure you have gradle installed and added to your PATH.");
+				this.$errors.failWithoutHelp("Error executing commands 'gradle'. Make sure you have Gradle installed and its bin directory added to your PATH.");
 			}
 
 			this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
