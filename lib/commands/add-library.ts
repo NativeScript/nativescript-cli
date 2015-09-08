@@ -13,6 +13,7 @@ export class AddLibraryCommand implements ICommand {
 
     execute(args: string[]): IFuture<void> {
         return (() => {
+            this.$logger.warn("IMPORTANT: The `tns library add` command is deprecated and will be removed in a future release. Use the plugin set of commands instead. For more information, run `tns help plugin`.");
             let platform = args[0];
             let libraryPath = path.resolve(args[1]);
             this.$platformService.addLibrary(platform, libraryPath).wait();
