@@ -21,6 +21,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
+		$fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $injector: IInjector,
 		private $logger: ILogger,
@@ -28,8 +29,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $propertiesParser: IPropertiesParser,
-		private $sysInfo: ISysInfo,
-		$fs: IFileSystem) {
+		private $sysInfo: ISysInfo) {
 			super($fs);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -152,11 +152,20 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
-		return Future.fromResult<boolean>(true);
+		return Future.fromResult(true);
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
-		return Future.fromResult();
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
+		return (() => {
+			if(semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
+				removePlatforms([platformLowercase.split("@")[0]]).wait();
+				addPlatform(platformLowercase).wait();
+				return false;
+			}
+
+			return true;
+		}).future<boolean>()();
 	}
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {

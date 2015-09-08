@@ -11,7 +11,7 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 
-export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements  IPlatformProjectService {
+export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -30,7 +30,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $options: IOptions,
 		private $injector: IInjector,
-		private $projectDataService: IProjectDataService) {
+		private $projectDataService: IProjectDataService,
+		private $prompter: IPrompter) {
 			super($fs);
 		}
 
@@ -240,24 +241,33 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<boolean>()();
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
 		return (() => {
-			// Copy old file to options["profile-dir"]
-			let sourceFile = path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName));
-			let destinationFile = path.join(this.$options.profileDir, "xcodeproj");
-			this.$fs.deleteDirectory(destinationFile).wait();
-			shell.cp("-R", path.join(sourceFile, "*"), destinationFile);
-			this.$logger.info("Backup file %s at location %s", sourceFile, destinationFile);
-			this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName))).wait();
+			if(!canUpdate) {
+				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
+				if(isUpdateConfirmed) {
+					// Copy old file to options["profile-dir"]
+					let sourceDir = path.join(this.platformData.projectRoot, `${this.$projectData.projectName}.xcodeproj`);
+					let destinationDir = path.join(this.$options.profileDir, "xcodeproj");
+					this.$fs.deleteDirectory(destinationDir).wait();
+					shell.cp("-R", path.join(sourceDir, "*"), destinationDir);
+					this.$logger.info(`Backup file ${sourceDir} at location ${destinationDir}`);
+					this.$fs.deleteDirectory(sourceDir).wait();
 
-			// Copy xcodeProject file
-			let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
-			shell.cp("-R", path.join(cachedPackagePath, "*"), path.join(this.platformData.projectRoot, util.format("%s.xcodeproj", this.$projectData.projectName)));
-			this.$logger.info("Copied from %s at %s.", cachedPackagePath, this.platformData.projectRoot);
+					// Copy xcodeProject file
+					let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+					shell.cp("-R", path.join(cachedPackagePath, "*"), sourceDir);
+					this.$logger.info(`Copied from ${cachedPackagePath} at ${this.platformData.projectRoot}.`);
 
-			let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
-			this.replaceFileContent(pbxprojFilePath).wait();
-		}).future<void>()();
+					let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
+					this.replaceFileContent(pbxprojFilePath).wait();
+				}
+
+				return isUpdateConfirmed;
+			}
+
+			return true;
+		}).future<boolean>()();
 	}
 
 	public prepareProject(): IFuture<void> {
