@@ -232,7 +232,7 @@ export class PluginsService implements IPluginsService {
 			if(npmCommandName === PluginsService.INSTALL_COMMAND_NAME) {
 				result = this.$npm.install(npmCommandArguments, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait();
 			} else if(npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
-				result = this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG).wait();
+				result = this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
 			}
 
 			return this.parseNpmCommandResult(result);
