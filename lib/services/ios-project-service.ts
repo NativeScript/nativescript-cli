@@ -197,22 +197,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
-	
+
 	public addLibrary(libraryPath: string): IFuture<void> {
 		return (() => {
 			let extension = path.extname(libraryPath);
 			if (extension === ".framework") {
 				this.addDynamicFramework(libraryPath);
 			} else {
-				this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework package.", libraryPath);
+				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not appear to be a dynamic framework package.`);
 			}
 		}).future<void>()();
 	}
-	
+
 	private addDynamicFramework(frameworkPath: string): IFuture<void> {
 		return (() => {
 			this.validateFramework(frameworkPath).wait();
-			
+
 			let targetPath = path.join("lib", this.platformData.normalizedPlatformName);
 			let fullTargetPath = path.join(this.$projectData.projectDir, targetPath);
 			this.$fs.ensureDirectoryExists(fullTargetPath).wait();
@@ -232,33 +232,34 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			let frameworkRelativePath = this.getLibSubpathRelativeToProjectPath(path.basename(frameworkPath));
-			project.addFramework(frameworkRelativePath, { customFramework: true, embed: true });
+			project.addFramework(frameworkRelativePath, frameworkAddOptions);
 			this.savePbxProj(project).wait();
 		}).future<void>()();
 	}
-	
+
 	private addStaticLibrary(staticLibPath: string): IFuture<void> {
 		return (() => {
-			this.validateStaticLibrary(staticLibPath).wait(); 
+			this.validateStaticLibrary(staticLibPath).wait();
 			// Copy files to lib folder.
+			let libraryName = path.basename(staticLibPath, ".a");
 			let libDestinationPath = path.join(this.$projectData.projectDir, path.join("lib", this.platformData.normalizedPlatformName));
-			let headersSubpath = path.join("include", path.basename(staticLibPath, ".a"));
+			let headersSubpath = path.join("include", libraryName);
 			this.$fs.ensureDirectoryExists(path.join(libDestinationPath, headersSubpath)).wait();
 			shell.cp("-Rf", staticLibPath, libDestinationPath);
 			shell.cp("-Rf", path.join(path.dirname(staticLibPath), headersSubpath), path.join(libDestinationPath, "include"));
-			
+
 			// Add static library to project file and setup header search paths
 			let project = this.createPbxProj();
 			let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(path.basename(staticLibPath));
 			project.addFramework(relativeStaticLibPath);
-			
+
 			let relativeHeaderSearchPath = path.join(this.getLibSubpathRelativeToProjectPath(headersSubpath));
 			project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
-			
-			this.generateMobulemap(path.join(libDestinationPath, headersSubpath), path.basename(staticLibPath, ".a"));
+
+			this.generateMobulemap(path.join(libDestinationPath, headersSubpath), libraryName);
 			this.savePbxProj(project).wait();
-			}).future<void>()();
-		}
+		}).future<void>()();
+	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
 		return (() => {
@@ -364,7 +365,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public preparePluginNativeCode(pluginData: IPluginData, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			
+
 			this.prepareFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData).wait();
 			this.prepareCocoapods(pluginPlatformsFolderPath).wait();
@@ -374,7 +375,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
-			
+
 			this.removeFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.removeStaticLibs(pluginPlatformsFolderPath, pluginData).wait();
 			this.removeCocoapods(pluginPlatformsFolderPath).wait();
@@ -417,7 +418,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		let filterCallback = (fileName: string, pluginPlatformsFolderPath: string) => path.extname(fileName) === fileExtension;
 		return this.getAllNativeLibrariesForPlugin(pluginData, IOSProjectService.IOS_PLATFORM_NAME, filterCallback);
 	};
-	
+
 	private buildPathToXcodeProjectFile(version: string): string {
 		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
 	}
@@ -435,19 +436,20 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}).future<void>()();
 	}
-	
+
 	private validateStaticLibrary(libraryPath: string): IFuture<void> {
 		return (() => {
 			if (path.extname(libraryPath) !== ".a") {
-				this.$errors.failWithoutHelp("The bundle at %s does not contain valid '.a' extension.", libraryPath);
+				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
 			}
-			
-			let expectedArchs = ["armv7", "arm64", "x86_64", "i386"]; 
+
+			let expectedArchs = ["armv7", "arm64", "i386"];
 			let archsInTheFatFile = this.$childProcess.exec("lipo -i " + libraryPath).wait();
-			
-			expectedArchs.forEach(expectedArch => { 
+
+			expectedArchs.forEach(expectedArch => {
 				if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-					this.$errors.failWithoutHelp("The static library at %s is not build for all required architectures - %s.", libraryPath, expectedArchs);
+					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: 
+						${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
 				}
 			});
 		}).future<void>()();
@@ -480,7 +482,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".framework").wait(), fileName => this.addDynamicFramework(path.join(pluginPlatformsFolderPath, fileName)).wait());
 		}).future<void>()();
 	}
-	
+
 	private prepareStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a").wait(), fileName => this.addStaticLibrary(path.join(pluginPlatformsFolderPath, fileName)).wait());
@@ -490,7 +492,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			
+
 			if(this.$fs.exists(pluginPodFilePath).wait()) {
 				if(!this.$fs.exists(this.projectPodFilePath).wait()) {
 					this.$fs.writeFile(this.projectPodFilePath, "use_frameworks!\n").wait();
@@ -518,16 +520,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.savePbxProj(project).wait();
 		}).future<void>()();
 	}
-	
+
 	private removeStaticLibs(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let project = this.createPbxProj();
-			
+
 			_.each(this.getAllLibsForPluginWithFileExtension(pluginData, ".a").wait(), fileName => {
 				let staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
 				let relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(path.basename(staticLibPath));
-				project.removeFramework(relativeStaticLibPath);	
-				
+				project.removeFramework(relativeStaticLibPath);
+
 				let headersSubpath = path.join("include", path.basename(staticLibPath, ".a"));
 				let relativeHeaderSearchPath = path.join(this.getLibSubpathRelativeToProjectPath(headersSubpath));
 				project.removeFromHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
@@ -557,23 +559,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private buildPodfileContent(pluginPodFilePath: string, pluginPodFileContent: string): string {
 		return `# Begin Podfile - ${pluginPodFilePath} ${os.EOL} ${pluginPodFileContent} ${os.EOL} # End Podfile ${os.EOL}`;
 	}
-	
+
 	private generateMobulemap(headersFolderPath: string, libraryName: string): void {
 		let headersFilter = (fileName: string, containingFolderPath: string) => (path.extname(fileName) === ".h" && this.$fs.getFsStats(path.join(containingFolderPath, fileName)).wait().isFile());
 		let headersFolderContents = this.$fs.readDirectory(headersFolderPath).wait();
-		let	headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
-		
+		let headers = _(headersFolderContents).filter(item => headersFilter(item, headersFolderPath)).value();
+
 		if (!headers.length) {
 			this.$fs.deleteFile(path.join(headersFolderPath, "module.modulemap")).wait();
 			return;
 		}
-		
-		headers.forEach(function(currentValue, index, array) {
-			array[index] = "header \"" + currentValue + "\"";
-		});
-		
+
+		headers = _.map(headers, value => `header "${value}"`);
+
 		let modulemap = `module ${libraryName} { explicit module ${libraryName} { ${headers.join(" ")} } }`;
-		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap, "utf8").wait();
+		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap).wait();
 	}
 }
 

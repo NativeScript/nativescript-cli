@@ -6,7 +6,7 @@ declare module "xcode" {
         embed?: boolean;
         relativePath?: string;
     }
-        
+
     class project {
         constructor(filename: string);
 
