@@ -156,6 +156,8 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 
 	public restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
+			this.device.adb.executeShellCommand(["chmod", "777", deviceAppData.deviceProjectRootPath]).wait();
+
 			if(this.$options.companion) {
 				let commands = [ this.liveSyncCommands.SyncFilesCommand() ];
 				this.livesync(deviceAppData.appIdentifier, deviceAppData.deviceProjectRootPath, commands).wait();
