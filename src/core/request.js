@@ -1,4 +1,4 @@
-import {isDefined} from '../utils';
+import isDefined from '../utils/isDefined';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
 import HttpMethod from '../enums/httpMethod';
