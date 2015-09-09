@@ -186,7 +186,7 @@ export class PlatformService implements IPlatformService {
 			try {
 				this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 				let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, PlatformService.TNS_MODULES_FOLDER_NAME);
-				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, this.$projectData.projectDir, platform, lastModifiedTime).wait();
+				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 			} catch(error) {
 				this.$logger.debug(error);
 				shell.rm("-rf", appResourcesDirectoryPath);

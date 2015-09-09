@@ -5,6 +5,8 @@ import * as path from "path";
 import * as assert from "assert";
 
 export class ProjectDataService implements IProjectDataService {
+	private static DEPENDENCIES_KEY_NAME = "dependencies";
+
 	private projectFilePath: string;
 	private projectData: IDictionary<any>;
 
@@ -46,9 +48,17 @@ export class ProjectDataService implements IProjectDataService {
 		}).future<void>()();
 	}
 
+	public removeDependency(dependencyName: string): IFuture<void> {
+		return (() => {
+			this.loadProjectFile().wait();
+			delete this.projectData[ProjectDataService.DEPENDENCIES_KEY_NAME][dependencyName];
+			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
+		}).future<void>()();
+	}
+
 	private loadProjectFile(): IFuture<void> {
 		return (() => {
-			assert.ok(this.projectFilePath, "Initialize method of projectDataService is not called");
+			assert.ok(this.projectFilePath, "Initialize method of projectDataService is not called.");
 
 			if(!this.projectData) {
 				if(!this.$fs.exists(this.projectFilePath).wait()) {
