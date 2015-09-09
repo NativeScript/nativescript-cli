@@ -15,7 +15,8 @@ export class PluginsService implements IPluginsService {
 		save: true
 	};
 
-	constructor(private $platformsData: IPlatformsData,
+	constructor(private $broccoliBuilder: IBroccoliBuilder,
+		private $platformsData: IPlatformsData,
 		private $npm: INodePackageManager,
 		private $fs: IFileSystem,
 		private $projectData: IProjectData,
@@ -24,15 +25,37 @@ export class PluginsService implements IPluginsService {
 		private $options: IOptions,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $projectFilesManager: IProjectFilesManager) { }
+		private $pluginVariablesService: IPluginVariablesService,
+		private $projectFilesManager: IProjectFilesManager,
+		private $injector: IInjector) { }
 
 	public add(plugin: string): IFuture<void> {
 		return (() => {
 			this.ensure().wait();
 			let dependencyData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
 			if(dependencyData.nativescript) {
-				this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
-				this.prepare(dependencyData).wait();
+				let pluginData = this.convertToPluginData(dependencyData);
+
+				// Validate
+				let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
+					return (() => {
+						this.isPluginDataValidForPlatform(pluginData, platform).wait();
+					}).future<void>()();
+				};
+				this.executeForAllInstalledPlatforms(action).wait();
+
+				try {
+					this.$pluginVariablesService.savePluginVariablesInProjectFile(pluginData).wait();
+					this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
+				} catch(err) {
+					// Revert package.json
+					this.$projectDataService.initialize(this.$projectData.projectDir);
+					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData)).wait();
+					this.$projectDataService.removeDependency(pluginData.name).wait();
+
+					throw err;
+				}
+
 				this.$logger.out(`Successfully installed plugin ${dependencyData.name}.`);
 			} else {
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
@@ -43,14 +66,56 @@ export class PluginsService implements IPluginsService {
 
 	public remove(pluginName: string): IFuture<void> {
 		return (() => {
+			let isUninstallCommandExecuted = false;
+
+			let executeUninstallCommand = () => {
+				return (() => {
+					if(!isUninstallCommandExecuted) {
+						this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
+						isUninstallCommandExecuted = true;
+					}
+				}).future<void>()();
+			};
+
 			let removePluginNativeCodeAction = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
-				let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName).wait());
-				pluginData.isPlugin = true;
-				return platformData.platformProjectService.removePluginNativeCode(pluginData);
+				return (() => {
+					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName).wait());
+
+					platformData.platformProjectService.removePluginNativeCode(pluginData).wait();
+
+					// Remove the plugin and call merge for another plugins that have configuration file
+					let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
+					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
+						let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
+						let nodeModules = this.$broccoliBuilder.getChangedNodeModules(tnsModulesDestinationPath, platform).wait();
+
+						_(nodeModules)
+							.map(nodeModule => this.getNodeModuleData(pluginName).wait())
+							.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
+							.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
+							.forEach((data, index) => {
+								executeUninstallCommand().wait();
+
+								if(index === 0) {
+									this.initializeConfigurationFileFromCache(platformData).wait();
+								}
+
+								if(data.name !== pluginName) {
+									this.merge(data, platformData).wait();
+								}
+							})
+							.value();
+					}
+
+					if(pluginData.pluginVariables) {
+						this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginData).wait();
+					}
+				}).future<void>()();
 			};
 			this.executeForAllInstalledPlatforms(removePluginNativeCodeAction).wait();
 
-			this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
+			executeUninstallCommand().wait();
+
 			let showMessage = true;
 			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
@@ -68,50 +133,40 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 
+	private initializeConfigurationFileFromCache(platformData: IPlatformData): IFuture<void> {
+		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+			this.$npm.cache(platformData.frameworkPackageName, frameworkVersion).wait();
+
+			let relativeConfigurationFilePath = path.relative(platformData.projectRoot, platformData.configurationFilePath);
+			// We need to resolve this manager here due to some restrictions from npm api and in order to load PluginsService.NPM_CONFIG config
+			let npmInstallationManager: INpmInstallationManager = this.$injector.resolve("npmInstallationManager");
+			let cachedPackagePath = npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, frameworkVersion);
+			let cachedConfigurationFilePath = path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, relativeConfigurationFilePath);
+
+			shelljs.cp("-f", cachedConfigurationFilePath, path.dirname(platformData.configurationFilePath));
+		}).future<void>()();
+	}
+
 	public prepare(dependencyData: IDependencyData): IFuture<void> {
 		return (() => {
 			let pluginData = this.convertToPluginData(dependencyData);
 
 			let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
-					// Process .js files
-					let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
-					let pluginPlatformsData = pluginData.platformsData;
-					if(pluginPlatformsData) {
-						let pluginVersion = (<any>pluginPlatformsData)[platform];
-						if(!pluginVersion) {
-							this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
-							return;
-						}
-
-						if(semver.gt(pluginVersion, installedFrameworkVersion)) {
-							this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
-							return;
-						}
+					if(!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
+						return;
 					}
 
 					if(this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
-
 						this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 						shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
 
-						let pluginPlatformsFolderPath = path.join(pluginDestinationPath, pluginData.name, "platforms", platform);
-						let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
-						let configurationFilePath = platformData.configurationFilePath;
+						let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
 
 						if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-							// Validate plugin configuration file
-							let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-							this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
-
-							// Validate configuration file
-							let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
-							this.validateXml(configurationFileContent, configurationFilePath);
-
-							// Merge xml
-							let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
-							this.validateXml(resultXml);
-							this.$fs.writeFile(configurationFilePath, resultXml).wait();
+							this.merge(pluginData, platformData).wait();
 						}
 
 						this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
@@ -176,21 +231,20 @@ export class PluginsService implements IPluginsService {
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
 
-	private getNodeModuleData(moduleName: string): IFuture<INodeModuleData> {
+	private getNodeModuleData(module: string): IFuture<INodeModuleData> { // module can be  modulePath or moduleName
 		return (() => {
-			let packageJsonFilePath = this.getPackageJsonFilePathForModule(moduleName);
-			if(this.$fs.exists(packageJsonFilePath).wait()) {
-				let data = require(packageJsonFilePath);
-				return {
-					name: data.name,
-					version: data.version,
-					fullPath: path.dirname(packageJsonFilePath),
-					isPlugin: data.nativescript !== undefined,
-					moduleInfo: data.nativescript
-				};
+			if(!this.$fs.exists(module).wait()) {
+				module = this.getPackageJsonFilePathForModule(module);
 			}
 
-			return null;
+			let data = this.$fs.readJson(module).wait();
+			return {
+				name: data.name,
+				version: data.version,
+				fullPath: path.dirname(module),
+				isPlugin: data.nativescript !== undefined,
+				moduleInfo: data.nativescript
+			};
 		}).future<INodeModuleData>()();
 	}
 
@@ -199,11 +253,13 @@ export class PluginsService implements IPluginsService {
 		pluginData.name = cacheData.name;
 		pluginData.version = cacheData.version;
 		pluginData.fullPath = cacheData.directory || path.dirname(this.getPackageJsonFilePathForModule(cacheData.name));
-		pluginData.isPlugin = !!cacheData.nativescript;
+		pluginData.isPlugin = !!cacheData.nativescript || !!cacheData.moduleInfo;
 		pluginData.pluginPlatformsFolderPath = (platform: string) => path.join(pluginData.fullPath, "platforms", platform);
+		let data = cacheData.nativescript || cacheData.moduleInfo;
 
 		if(pluginData.isPlugin) {
-			pluginData.platformsData = cacheData.nativescript.platforms;
+			pluginData.platformsData = data.platforms;
+			pluginData.pluginVariables = data.variables;
 		}
 
 		return pluginData;
@@ -289,6 +345,57 @@ export class PluginsService implements IPluginsService {
 			}
 		});
 		doc.parseFromString(xml, 'text/xml');
+	}
+
+	private merge(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
+		return (() => {
+			let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
+			let configurationFilePath = platformData.configurationFilePath;
+
+			// Validate plugin configuration file
+			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
+			pluginConfigurationFileContent = this.$pluginVariablesService.interpolatePluginVariables(pluginData, pluginConfigurationFileContent).wait();
+			this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
+
+			// Validate configuration file
+			let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
+			this.validateXml(configurationFileContent, configurationFilePath);
+
+			// Merge xml
+			let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
+			this.validateXml(resultXml);
+			this.$fs.writeFile(configurationFilePath, resultXml).wait();
+		}).future<void>()();
+	}
+
+	private getPluginConfigurationFilePath(pluginData: IPluginData, platformData: IPlatformData): string {
+		 let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(platformData.normalizedPlatformName.toLowerCase());
+		 let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
+		 return pluginConfigurationFilePath;
+	}
+
+	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string): IFuture<boolean> {
+		return (() => {
+			let isValid = true;
+
+			let installedFrameworkVersion = this.getInstalledFrameworkVersion(platform).wait();
+			let pluginPlatformsData = pluginData.platformsData;
+			if(pluginPlatformsData) {
+				let pluginVersion = (<any>pluginPlatformsData)[platform];
+				if(!pluginVersion) {
+					this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
+					isValid = false;
+				}
+
+				if(semver.gt(pluginVersion, installedFrameworkVersion)) {
+					this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
+					isValid = false;
+				}
+			}
+
+			return isValid;
+
+		}).future<boolean>()();
 	}
 }
 $injector.register("pluginsService", PluginsService);

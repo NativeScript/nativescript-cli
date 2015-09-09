@@ -344,6 +344,10 @@ export class ProjectDataService implements IProjectDataService {
 	removeProperty(propertyName: string): IFuture<void> {
 		return Future.fromResult();
 	}
+
+	removeDependency(dependencyName: string): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class ProjectHelperStub implements IProjectHelper {

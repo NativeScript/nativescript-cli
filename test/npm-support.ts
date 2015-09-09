@@ -59,6 +59,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally left blank */ }
 	});
+	testInjector.register("pluginVariablesService", {});
 
 	return testInjector;
 }
