@@ -113,6 +113,7 @@ class PrivateRequest {
     this.auth = options.authType;
     this.dataPolicy = options.dataPolicy;
     this.cacheEnabled = options.cacheEnabled;
+    this.executing = false;
 
     // Add default headers
     const headers = {};
@@ -168,9 +169,16 @@ class PrivateRequest {
   }
 
   execute() {
+    if (this.executing) {
+      return Promise.reject(new Error('Request is executing.'));
+    }
+
     const dataPolicy = this.dataPolicy;
     const method = this.method;
     let promise;
+
+    // Switch the executing flag
+    this.executing = true;
 
     if (dataPolicy === DataPolicy.LocalOnly) {
       promise = this.executeLocal();
@@ -232,8 +240,21 @@ class PrivateRequest {
     }
 
     return promise.then((response) => {
+      // Store the response
       this.response = response;
+
+      // Switch the executing flag
+      this.executing = false;
+
+      // Return the response
       return response;
+    }).catch((err) => {
+      // Switch the executing flag
+      this.executing = false;
+
+      // Throw the err to allow it to
+      // be caught later in the promise chain
+      throw err;
     });
   }
 
@@ -318,6 +339,10 @@ class PrivateRequest {
     }).then(() => {
       return networkRack.execute(this);
     });
+  }
+
+  cancel() {
+
   }
 
   toJSON() {
@@ -472,6 +497,11 @@ class Request {
   execute() {
     const privateRequest = this[privateRequestSymbol];
     return privateRequest.execute();
+  }
+
+  cancel() {
+    const privateRequest = this[privateRequestSymbol];
+    privateRequest.cancel();
   }
 
   toJSON() {
