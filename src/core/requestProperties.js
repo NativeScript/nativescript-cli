@@ -55,6 +55,9 @@ class PrivateRequestProperties {
   }
 }
 
+/**
+ * Request Properties class
+ */
 class RequestProperties {
   /**
    * Return the request properties.
@@ -112,6 +115,11 @@ class RequestProperties {
     this.setProperty(appVersionKey, appVersion);
   }
 
+  /**
+   * THis is the constructor.
+   *
+   * @param  {Object} properties Request properties
+   */
   constructor(properties = {}) {
     this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
   }

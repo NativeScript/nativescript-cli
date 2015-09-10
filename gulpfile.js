@@ -31,5 +31,8 @@ gulp.task('watch', function cb() {
   gulp.watch(watchFiles, ['test']);
 });
 
+// Release
+gulp.task('release', ['build-in-sequence', 'docs']);
+
 // An alias of test
 gulp.task('default', ['test']);

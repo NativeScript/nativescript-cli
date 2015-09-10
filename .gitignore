@@ -6,3 +6,4 @@ coverage
 tmp
 npm-debug.log
 report.xml
+docs
