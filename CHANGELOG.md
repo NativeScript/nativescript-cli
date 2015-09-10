@@ -1,6 +1,29 @@
 NativeScript CLI Changelog
 ================
 
+1.3.0 (2015, September 16)
+==
+
+### New
+* [Implemented #390](https://github.com/NativeScript/nativescript-cli/issues/390): Support tns_modules from npm.
+* [Implemented #686](https://github.com/NativeScript/nativescript-cli/issues/686): Support building of XCode workspaces.
+* [Implemented #687](https://github.com/NativeScript/nativescript-cli/issues/687): Android build with Gradle.
+* [Implemented #729](https://github.com/NativeScript/nativescript-cli/issues/729): CocoaPods support from plugins.
+* [Implemented #785](https://github.com/NativeScript/nativescript-cli/issues/785): Add platform on each platform related command.
+* [Implemented #875](https://github.com/NativeScript/nativescript-cli/issues/875): Init command configure tns-core-modules version.
+
+### Fixed
+* [Fixed #662](https://github.com/NativeScript/nativescript-cli/issues/662): Failed `tns platform add android` command leaves the project in inconsistent state.
+* [Fixed #730](https://github.com/NativeScript/nativescript-cli/issues/730): `tns livesync android` throws stdout maxBuffer exceeded.
+* [Fixed #772](https://github.com/NativeScript/nativescript-cli/issues/772): `tns platform update ios` command does not update metadata generator.
+* [Fixed #793](https://github.com/NativeScript/nativescript-cli/issues/793): The NativeScript CLI writes errors on stdout.
+* [Fixed #797](https://github.com/NativeScript/nativescript-cli/issues/797): Plugin add does not merge plugins's Info.plist file.
+* [Fixed #811](https://github.com/NativeScript/nativescript-cli/issues/811): `tns livesync <Platform> --watch` reports an error when platform specific file is changed.
+* [Fixed #826](https://github.com/NativeScript/nativescript-cli/issues/826): Failed `tns prepare <Platform>` command leaves the project in inconsistent state.
+* [Fixed #829](https://github.com/NativeScript/nativescript-cli/issues/829): Fail to build the project when `nativescript-telerik-ui` plugin is added before the platform.
+* [Fixed #866](https://github.com/NativeScript/nativescript-cli/issues/866): The NativeScript CLI is not able to detect java on Ubuntu.
+* [Fixed #896](https://github.com/NativeScript/nativescript-cli/issues/896): `tns run <Platform>` after `tns livesync <Platform>` starts the last synced app on the device.
+
 1.2.4 (2015, August 24)
 ==
 
