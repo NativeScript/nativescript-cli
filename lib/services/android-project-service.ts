@@ -417,7 +417,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			try {
 				this.$childProcess.exec('android list targets').wait();
 			} catch(error) {
-				if (error.match(/command\snot\sfound/)) {
+				if (error.message.match(/command\snot\sfound/)) {
 					this.$errors.fail("The command \"android\" failed. Make sure you have the latest Android SDK installed, and the \"android\" command (inside the tools/ folder) is added to your path.");
 				} else {
 					this.$errors.fail("An error occurred while listing Android targets");
