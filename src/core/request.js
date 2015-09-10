@@ -8,7 +8,6 @@ import Auth from './auth';
 import url from 'url';
 import Kinvey from '../kinvey';
 import DataPolicy from '../enums/dataPolicy';
-import UrlPattern from 'url-pattern';
 import defaults from 'lodash/object/defaults';
 const privateRequestSymbol = Symbol();
 
@@ -82,24 +81,11 @@ class PrivateRequest {
     });
   }
 
-  get cacheKey() {
-    if (!isDefined(this._cacheKey)) {
-      this._cacheKey = this.url;
-    }
-
-    return this._cacheKey;
-  }
-
-  get cacheTime() {
-    return 30; // 30 minutes
-  }
-
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = defaults({}, options, {
       client: Kinvey.sharedInstance(),
       authType: AuthType.None,
-      dataPolicy: DataPolicy.CloudFirst,
-      cacheEnabled: true
+      dataPolicy: DataPolicy.CloudFirst
     });
 
     // Set request info
@@ -112,7 +98,6 @@ class PrivateRequest {
     this.client = options.client;
     this.auth = options.authType;
     this.dataPolicy = options.dataPolicy;
-    this.cacheEnabled = options.cacheEnabled;
     this.executing = false;
 
     // Add default headers
@@ -154,18 +139,6 @@ class PrivateRequest {
 
   removeHeader(header) {
     delete this.headers[header.toLowerCase()];
-  }
-
-  isCacheEnabled() {
-    return this.cacheEnabled;
-  }
-
-  enableCache() {
-    this.cacheEnabled = true;
-  }
-
-  disableCache() {
-    this.cacheEnabled = false;
   }
 
   execute() {
@@ -258,59 +231,9 @@ class PrivateRequest {
     });
   }
 
-  executeCache() {
-    const cacheRack = Rack.cacheRack;
-    return cacheRack.execute(this);
-  }
-
   executeLocal() {
-    const method = this.method;
     const databaseRack = Rack.databaseRack;
-
-    if (method === HttpMethod.GET) {
-      return Promise.resolve().then(() => {
-        if (this.isCacheEnabled()) {
-          return this.executeCache();
-        }
-      }).then((response) => {
-        if (!response || !response.isSuccess()) {
-          return databaseRack.execute(this);
-        }
-
-        return response;
-      }).then((response) => {
-        if (response && response.isSuccess()) {
-          const privateRequest = new PrivateRequest(HttpMethod.PUT, this.path, this.query, response.data, {
-            client: this.client,
-            dataPolicy: DataPolicy.LocalOnly
-          });
-          privateRequest.auth = this.auth;
-          return privateRequest.executeCache().then(() => {
-            return response;
-          });
-        }
-
-        return response;
-      });
-    }
-
-    const privateRequest = new PrivateRequest(HttpMethod.DELETE, this.path, this.query, {
-      client: this.client,
-      dataPolicy: DataPolicy.LocalOnly
-    });
-    privateRequest.auth = this.auth;
-    return privateRequest.executeCache().then(() => {
-      // Parse the path
-      const pattern = new UrlPattern('/:namespace/:appKey/:collection(/)(:id)(/)');
-      const matches = pattern.match(this.path);
-
-      if (matches) {
-        privateRequest.path = `/${matches.namespace}/${matches.appKey}/${matches.collection}`;
-        return privateRequest.executeCache();
-      }
-    }).then(() => {
-      return databaseRack.execute(this);
-    });
+    return databaseRack.execute(this);
   }
 
   executeCloud() {
@@ -352,7 +275,6 @@ class PrivateRequest {
       method: this.method,
       url: this.url,
       body: this.body,
-      cacheKey: this.cacheKey,
       authType: this.authType,
       dataPolicy: this.dataPolicy,
       client: this.client,
@@ -477,21 +399,6 @@ class Request {
   removeHeader(header) {
     const privateRequest = this[privateRequestSymbol];
     privateRequest.removeHeader(header);
-  }
-
-  isCacheEnabled() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.isCacheEnabled();
-  }
-
-  enableCache() {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.enableCache();
-  }
-
-  disableCache() {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.disableCache();
   }
 
   execute() {
