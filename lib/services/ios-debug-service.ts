@@ -202,14 +202,19 @@ class IOSDebugService implements IDebugService {
                         } catch (e) {
                             this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
                         }
+                        this.readyForAttachAction(iosDevice).wait();
                         break;
                     case readyForAttach:
-                        createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
-                        this.executeOpenDebuggerClient().wait();
+                        this.readyForAttachAction(iosDevice).wait();
                         break;
                 }
             }).future<void>()()).wait();
         }).future<void>()();
+    }
+
+    private readyForAttachAction(iosDevice: iOSDevice.IOSDevice): IFuture<void> {
+        createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
+        return this.executeOpenDebuggerClient();
     }
 
     public executeOpenDebuggerClient(): IFuture<void> {
