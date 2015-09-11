@@ -39,8 +39,9 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<IAndroidToolsInfoData>()();
 	}
 
-	public validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<void> {
-		return (() => {
+	public validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<boolean> {
+		return (() : boolean => {
+			let detectedErrors = false;
 			this.showWarningsAsErrors = options && options.showWarningsAsErrors;
 			let toolsInfoData = this.getToolsInfo().wait();
 			if(!toolsInfoData.androidHomeEnvVar || !this.$fs.exists(toolsInfoData.androidHomeEnvVar).wait()) {
@@ -51,6 +52,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if(!toolsInfoData.compileSdkVersion) {
 				this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
 							"Run `$ android` to manage your Android SDK versions.");
+				detectedErrors = true;
 			}
 
 			if(!toolsInfoData.buildToolsVersion) {
@@ -65,11 +67,13 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 				this.printMessage("You need to have the Android SDK Build-tools installed on your system. " + message,
 					'Run "android" from your command-line to install required Android Build Tools.');
+				detectedErrors = true;
 			}
 
 			if(!toolsInfoData.supportRepositoryVersion) {
 				this.printMessage(`You need to have the latest Android Support Repository installed on your system.`,
 					'Run `$ android`  to manage the Android Support Repository.');
+				detectedErrors = true;
 			}
 
 			if(options && options.validateTargetSdk) {
@@ -81,12 +85,15 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 					if(targetSdk && (targetSdk < minSupportedVersion)) {
 						this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`);
+						detectedErrors = true;
 					} else if(!targetSdk || targetSdk > this.getMaxSupportedVersion()) {
 						this.$logger.warn(`Support for the selected Android target SDK ${newTarget} is not verified. Your Android app might not work as expected.`);
 					}
 				}
 			}
-		}).future<void>()();
+
+			return detectedErrors;
+		}).future<boolean>()();
 	}
 
 	/**

@@ -69,12 +69,14 @@ class DoctorService implements IDoctorService {
 			this.$logger.warn("WARNING: Gradle is not installed or is not configured properly.");
 			this.$logger.out("You will not be able to build your projects for Android or run them in the emulator or on a connected device." + EOL
 				+ "To be able to build for Android and run apps in the emulator or on a connected device, verify that you have installed Gradle.");
+			result = true;
 		}
 
 		if(sysInfo.gradleVer && helpers.versionCompare(sysInfo.gradleVer, DoctorService.MIN_SUPPORTED_GRADLE_VERSION) === -1) {
 			this.$logger.warn(`WARNING: Gradle version is lower than ${DoctorService.MIN_SUPPORTED_GRADLE_VERSION}.`);
 			this.$logger.out("You will not be able to build your projects for Android or run them in the emulator or on a connected device." + EOL
 				+ `To be able to build for Android and run apps in the emulator or on a connected device, verify thqt you have at least ${DoctorService.MIN_SUPPORTED_GRADLE_VERSION} version installed.`);
+			result = true;
 		}
 
 		if(!sysInfo.javacVersion) {
@@ -82,10 +84,11 @@ class DoctorService implements IDoctorService {
 			this.$logger.out("You will not be able to build your projects for Android." + EOL
 				+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 				" described in https://github.com/NativeScript/nativescript-cli#system-requirements.");
+			result = true;
 		}
 
-		this.$androidToolsInfo.validateInfo().wait();
-		return result;
+		let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();
+		return result || androidToolsIssues;
 	}
 
 	private printPackageManagerTip() {
