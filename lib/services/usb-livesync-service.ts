@@ -13,8 +13,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		"app_resources"
 	];
 
-	constructor(private $commandsService: ICommandsService,
-		$devicesServices: Mobile.IDevicesServices,
+	constructor($devicesServices: Mobile.IDevicesServices,
 		$fs: IFileSystem,
 		$mobileHelper: Mobile.IMobileHelper,
 		$localToDevicePathDataFactory: Mobile.ILocalToDevicePathDataFactory,
@@ -42,10 +41,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let platformLowerCase = platform ? platform.toLowerCase() : null;
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
 
-			if(platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
+			if (platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
 				this.$projectDataService.initialize(this.$projectData.projectDir);
 				let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-				if(semver.lt(frameworkVersion, "1.2.1")) {
+				if (semver.lt(frameworkVersion, "1.2.1")) {
 					let shouldUpdate = this.$prompter.confirm(
 						"You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?"
 					).wait();
@@ -61,11 +60,6 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let restartAppOnDeviceAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
-				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
-				return platformSpecificUsbLiveSyncService.restartApplication(deviceAppData, localToDevicePaths);
-			};
-
 			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
 				return this.$platformService.deployOnDevice(platform);
 			};
@@ -76,7 +70,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
-				if(platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
+				if (platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
 					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
 				}
 				return Future.fromResult();
@@ -109,7 +103,6 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				this.excludedProjectDirsAndFiles,
 				watchGlob,
 				platformSpecificLiveSyncServices,
-				restartAppOnDeviceAction,
 				notInstalledAppOnDeviceAction,
 				notRunningiOSSimulatorAction,
 				localProjectRootPath,
