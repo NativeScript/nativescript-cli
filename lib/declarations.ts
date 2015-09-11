@@ -130,9 +130,9 @@ interface IAndroidToolsInfoData {
 	compileSdkVersion: number;
 
 	/**
-	 * The latest installed version of Android Support Library that satisfies CLI's requirements.
+	 * The latest installed version of Android Support Repository that satisfies CLI's requirements.
 	 */
-	supportLibraryVersion: string;
+	supportRepositoryVersion: string;
 
 	/**
 	 * The Android targetSdkVersion specified by the user.

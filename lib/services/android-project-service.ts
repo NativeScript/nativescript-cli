@@ -176,7 +176,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				let compileSdk = androidToolsInfo.compileSdkVersion;
 				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
 				let buildToolsVersion = androidToolsInfo.buildToolsVersion;
-				let appCompatVersion = androidToolsInfo.supportLibraryVersion;
+				let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
 				let buildOptions = ["buildapk",
 					`-PcompileSdk=android-${compileSdk}`,
 					`-PtargetSdk=${targetSdk}`,
