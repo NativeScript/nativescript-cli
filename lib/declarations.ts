@@ -105,9 +105,9 @@ interface IAndroidToolsInfo {
 	/**
 	 * Validates the information about required Android tools and SDK versions.
 	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
-	 * @return {void}
+	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<void>;
+	validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<boolean>;
 }
 
 /**
