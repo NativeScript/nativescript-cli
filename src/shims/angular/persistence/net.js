@@ -91,7 +91,9 @@ var AngularHTTP = {
     }
 
     // Send the proxy request
-    options.handler(requestProxy);
+    if (options.handler && typeof options.handler === 'function') {
+      options.handler(requestProxy);
+    }
 
     return $http({
       data    : body,

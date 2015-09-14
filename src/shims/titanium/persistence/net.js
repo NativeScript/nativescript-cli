@@ -210,7 +210,9 @@ var TiHttp = {
     };
 
     // Send the proxy request
-    options.handler(requestProxy);
+    if (options.handler && typeof options.handler === 'function') {
+      options.handler(requestProxy);
+    }
 
     // Return the response.
     return deferred.promise;
