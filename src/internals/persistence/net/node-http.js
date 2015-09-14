@@ -209,7 +209,9 @@ var NodeHttp = {
     request.end();
 
     // Send the proxy request
-    options.handler(requestProxy);
+    if (options.handler && typeof options.handler === 'function') {
+      options.handler(requestProxy);
+    }
 
     // Return the promise.
     return deferred.promise;

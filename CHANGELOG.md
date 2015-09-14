@@ -1,4 +1,7 @@
 # Changelog
+### 1.5.1 (2015-09-14)
+* Bugfix: Check if `options.handler` is defined and is a function for network operations. 
+
 ### 1.5.0 (2015-09-04)
 * Enhancement(MLIBZ-498): Pending requests can be canceled by providing a `options.handler` that is called with a request object that contains a cancel function.
 * Enhancement(MLIBZ-363): Replaced `console.log` statements in favor of [loglevel](https://github.com/pimterry/loglevel). Logs are now contained within log levels and can be persisted and turned on and off.
