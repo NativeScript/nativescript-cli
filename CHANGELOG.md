@@ -1,4 +1,9 @@
 # Changelog
+### 1.5.0 (2015-09-04)
+* Enhancement(MLIBZ-498): Pending requests can be canceled by providing a `options.handler` that is called with a request object that contains a cancel function.
+* Enhancement(MLIBZ-363): Replaced `console.log` statements in favor of [loglevel](https://github.com/pimterry/loglevel). Logs are now contained within log levels and can be persisted and turned on and off.
+* Enhancement(MLIBZ-48): When an error occurs during a sync operation, the `_id` of the document that caused the error along with an error message is now returned.
+
 ### 1.4.5 (2015-08-14)
 * Bugfix(MLIBZ-512): Fix bug in the `WebSqlAdapter` that caused the `system.sync` table to be incorrectly updated when mutiple offline items are added to the data store at the same time.
 
