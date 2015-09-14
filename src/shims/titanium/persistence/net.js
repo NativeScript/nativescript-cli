@@ -45,6 +45,7 @@ var TiHttp = {
     // Prepare the response.
     var deferred = Kinvey.Defer.deferred();
     var xhr;
+    var aborted = false;
 
     // Stringify if not Titanium.Blob.
     if(isObject(body) && !isFunction(body.getLength)) {
@@ -87,9 +88,7 @@ var TiHttp = {
     // Listen for request completion.
     xhr.onerror = xhr.onload = function(e) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', this);
-      }
+      logger.debug('The network request completed.', this);
 
       // Titanium does not provide a clear error code on timeout. Patch here.
       e = e || {};
@@ -97,8 +96,12 @@ var TiHttp = {
         e.type = 'timeout';
       }
 
+      if (aborted === true) {
+        e.type = 'cancelled';
+      }
+
       // Success implicates 2xx (Successful), or 304 (Not Modified).
-      var status = 'timeout' === e.type ? 0 : this.status;
+      var status = 'timeout' === e.type || e.type === 'cancelled' ? 0 : this.status;
 
       if(2 === parseInt(status / 100, 10) || 304 === this.status) {
         var response;
@@ -180,9 +183,7 @@ var TiHttp = {
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     xhr.send(body);
@@ -199,6 +200,17 @@ var TiHttp = {
         subject.trigger('request', subject, xhr, options);
       }
     }
+
+    // Create a proxy request
+    var requestProxy = {
+      cancel: function() {
+        aborted = true;
+        xhr.abort();
+      }
+    };
+
+    // Send the proxy request
+    options.handler(requestProxy);
 
     // Return the response.
     return deferred.promise;

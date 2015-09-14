@@ -250,7 +250,7 @@ var MIC = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
+    if (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE) {
       request.headers['X-Kinvey-Trace-Request'] = 'true';
       request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
     }
@@ -592,7 +592,7 @@ var MIC = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
+    if (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE) {
       request.headers['X-Kinvey-Trace-Request'] = 'true';
       request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
     }
@@ -656,7 +656,7 @@ var MIC = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
+    if (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE) {
       request.headers['X-Kinvey-Trace-Request'] = 'true';
       request.headers['X-Kinvey-Force-Debug-Log-Credentials'] = 'true';
     }

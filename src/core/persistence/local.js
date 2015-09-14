@@ -36,9 +36,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
    */
   create: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a create request.', arguments);
-    }
+    logger.debug('Initiating a create request.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -63,9 +61,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       // If `options.offline`, the request is subject to synchronization.
       if(options.offline && false !== options.track) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', collection, response);
-        }
+        logger.debug('Notifying the synchronization functionality.', collection, response);
 
         return Sync.notify(collection, response, options).then(function() {
           // Return the original response.
@@ -87,9 +83,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a read request.', arguments);
-    }
+    logger.debug('Initiating a read request.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -177,9 +171,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
    */
   update: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating an update request.', arguments);
-    }
+    logger.debug('Initiating an update request.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -197,9 +189,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       // If `options.offline`, the response is subject to synchronization.
       if(options.offline && false !== options.track) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', collection, response);
-        }
+        logger.debug('Notifying the synchronization functionality.', collection, response);
 
         return Sync.notify(collection, response, options).then(function() {
           // Return the original response.
@@ -219,9 +209,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
    */
   destroy: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a delete request.', arguments);
-    }
+    logger.debug('Initiating a delete request.', arguments);
 
     // Cast arguments.
     options = options || {};
@@ -242,9 +230,7 @@ Kinvey.Persistence.Local = /** @lends Kinvey.Persistence.Local */{
       // If `options.offline`, the request is subject to synchronization.
       if(options.offline && false !== options.track) {
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Notifying the synchronization functionality.', collection, response);
-        }
+        logger.debug('Notifying the synchronization functionality.', collection, response);
 
         return Sync.notify(collection, response.documents, options).then(function() {
           // Return the original response.

@@ -77,6 +77,7 @@ var Xhr = {
       request.timeout = options.timeout;
     }
     var timer = null;
+    var aborted = false;
 
     // Append header for compatibility with Android 2.2, 2.3.3, and 3.2.
 // http://www.kinvey.com/blog/item/179-how-to-build-a-service-that-supports-every-android-browser
@@ -103,9 +104,7 @@ var Xhr = {
       }
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', request);
-      }
+      logger.debug('The network request completed.', request);
 
       // Extract the response.
       var responseData = request.response || null;
@@ -160,7 +159,7 @@ var Xhr = {
         }).then(function(response) {
           deferred.resolve(response);
         }, function() {
-          var type = null !== timer ? 'timeout' : event.type;
+          var type = null !== timer ? 'timeout' : aborted === true ? 'canceled' : event.type;
           var response = 0 !== status ? responseData : type;
 
           // If `options.file`, parse the response to obtain the error.
@@ -197,9 +196,7 @@ var Xhr = {
     };
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     if(isObject(body) && !(
@@ -217,6 +214,17 @@ var Xhr = {
         request.abort();
       }, request.timeout);
     }
+
+    // Create a proxy request
+    var requestProxy = {
+      cancel: function() {
+        aborted = true;
+        request.abort();
+      }
+    };
+
+    // Send the proxy request
+    options.handler(requestProxy);
 
     // Return the response.
     return deferred.promise;

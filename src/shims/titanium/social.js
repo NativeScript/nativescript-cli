@@ -19,9 +19,7 @@
 // social identity.
 var tiPlatformConnect = function(provider, options) {
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Obtaining a social identity.', arguments);
-  }
+  logger.debug('Obtaining a social identity.', arguments);
 
   // Validate arguments.
   options = options || {};
@@ -60,13 +58,11 @@ var tiPlatformConnect = function(provider, options) {
   adapter.authorize();
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    deferred.promise.then(function(response) {
-      log('Obtained the social identity.', response);
-    }, function(error) {
-      log('Failed to obtain a social identity.', error);
-    });
-  }
+  deferred.promise.then(function(response) {
+    logger.debug('Obtained the social identity.', response);
+  }, function(error) {
+    logger.error('Failed to obtain a social identity.', error);
+  });
 
   // Return the response.
   return deferred.promise;
@@ -88,9 +84,7 @@ var TiSocialAdapter = {
     var error;
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating the Facebook OAuth2.0 flow.', arguments);
-    }
+    logger.debug('Initiating the Facebook OAuth2.0 flow.', arguments);
 
     // Validate arguments.
     options = options || {};
@@ -112,9 +106,7 @@ var TiSocialAdapter = {
       TiFacebook.removeEventListener('login', listener);// Cleanup.
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Received the Facebook login response.', event);
-      }
+      logger.debug('Received the Facebook login response.', event);
 
       // On success, fulfill with the obtained oAuth2.0 token.
       if(event.success) {
@@ -140,13 +132,11 @@ var TiSocialAdapter = {
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      deferred.promise.then(function(response) {
-        log('Obtained the Facebook OAuth2.0 tokens.', response);
-      }, function(error) {
-        log('Failed to obtain the Facebook OAuth2.0 tokens.', error);
-      });
-    }
+    deferred.promise.then(function(response) {
+      logger.debug('Obtained the Facebook OAuth2.0 tokens.', response);
+    }, function(error) {
+      logger.error('Failed to obtain the Facebook OAuth2.0 tokens.', error);
+    });
 
     // Return the response.
     return deferred.promise;

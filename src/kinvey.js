@@ -128,9 +128,7 @@ var restoreActiveUser = function(options) {
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Restoring the active user.');
-    }
+    logger.debug('Restoring the active user.');
 
     // Set the active user to a near-empty user with only id and authtoken set.
     var previous = Kinvey.setActiveUser({ _id: user[0], _kmd: { authtoken: user[1] } });
@@ -150,9 +148,7 @@ var restoreActiveUser = function(options) {
     // active user. If `INVALID_CREDENTIALS`, reset the active user.
     return Kinvey.User.me(options).then(function(response) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Restored the active user.', response);
-      }
+      logger.debug('Restored the active user.', response);
 
       // Restore the options and return the response.
       options.success = fnSuccess;
@@ -160,9 +156,7 @@ var restoreActiveUser = function(options) {
       return response;
     }, function(error) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Failed to restore the active user.', error);
-      }
+      logger.error('Failed to restore the active user.', error);
 
       // Reset the active user.
       if(Kinvey.Error.INVALID_CREDENTIALS === error.name) {
@@ -205,9 +199,7 @@ Kinvey.getActiveUser = function() {
  */
 Kinvey.setActiveUser = function(user) {
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Setting the active user.', arguments);
-  }
+  logger.debug('Setting the active user.', arguments);
 
   // Validate arguments.
   if(null != user && !(null != user._id && null != user._kmd && null != user._kmd.authtoken)) {
@@ -256,9 +248,7 @@ Kinvey.init = function(options) {
   var error;
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Initializing the copy of the library.', arguments);
-  }
+  logger.debug('Initializing the copy of the library.', arguments);
 
   // Validate arguments.
   options = options || {};
@@ -325,7 +315,7 @@ Kinvey.init = function(options) {
     // Initialize the synchronization namespace and restore the active user.
     return Kinvey.Sync.init(options.sync);
   }).then(function() {
-    log('Kinvey initialized, running version: js-<%= build %>/<%= pkg.version %>');
+    logger.debug('Kinvey initialized, running version: js-<%= build %>/<%= pkg.version %>');
     return restoreActiveUser(options);
   });
 
@@ -340,9 +330,7 @@ Kinvey.init = function(options) {
  */
 Kinvey.ping = function(options) {
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('Pinging the Kinvey service.', arguments);
-  }
+  logger.debug('Pinging the Kinvey service.', arguments);
 
   // Cast arguments.
   options = options || {};
@@ -358,13 +346,11 @@ Kinvey.ping = function(options) {
   }, options);
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    promise.then(function(response) {
-      log('Pinged the Kinvey service.', response);
-    }, function(error) {
-      log('Failed to ping the Kinvey service.', error);
-    });
-  }
+  promise.then(function(response) {
+    logger.debug('Pinged the Kinvey service.', response);
+  }, function(error) {
+    logger.error('Failed to ping the Kinvey service.', error);
+  });
 
   // Return the response.
   return wrapCallbacks(promise, options);

@@ -651,7 +651,7 @@ var IDBAdapter = {
 
 function useIndexedDBAdapter() {
   // Use IndexedDB adapter.
-  if('undefined' !== typeof IDBAdapter.impl && 'undefined' !== typeof root.sift) {
+  if ('undefined' !== typeof IDBAdapter.impl && 'undefined' !== typeof root.sift) {
     Database.use(IDBAdapter);
 
     // Add `Kinvey.Query` operators not supported by `sift`.
@@ -663,11 +663,4 @@ function useIndexedDBAdapter() {
   }
 }
 
-
-if ('undefined' !== typeof root.cordova) {
-  // WebSql plugin won't register until after deviceready event is fired
-  document.addEventListener('deviceready', useIndexedDBAdapter, false);
-}
-else {
-  useIndexedDBAdapter();
-}
+useIndexedDBAdapter();

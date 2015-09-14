@@ -22,29 +22,6 @@
   // server.
   var root = this;
 
-  // Disable debug mode unless declared already.
-  if('undefined' === typeof KINVEY_DEBUG) {
-    /**
-     * Debug mode. This is a global variable, which can be set anywhere,
-     * anytime. Not available in the minified version of the library.
-     *
-     * @global
-     * @type {boolean}
-     * @default
-     */
-    KINVEY_DEBUG = false;
-  }
-
-  // Lightweight wrapper for `console.log` for easy debugging.
-  // http://paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
-  var log = function() {
-    log.history = log.history || [];// Store logs to an array for reference.
-    log.history.push(arguments);
-    if(root.console) {
-      root.console.log.call(root.console, Array.prototype.slice.call(arguments));
-    }
-  };
-
   // Define a function which returns a fresh copy of the library. Copies are
   // fully isolated from each other, making it very easy to communicate with
   // different apps within the same JavaScript-context.
@@ -56,11 +33,6 @@
      * @exports Kinvey
      */
     var Kinvey = function(options) {
-      // Debug.
-      if(KINVEY_DEBUG) {
-        log('Obtaining a fresh copy of the library.', arguments);
-      }
-
       // Create a fresh copy of the library.
       var Kinvey = kinveyFn();
 

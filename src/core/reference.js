@@ -43,9 +43,7 @@ var KinveyReference = /** @lends KinveyReference */{
    */
   get: function(document, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Retrieving relations for a document.', document, options);
-    }
+    logger.debug('Retrieving relations for a document.', document, options);
 
     // If a list of documents was passed in, retrieve all relations in parallel.
     if(isArray(document)) {
@@ -176,9 +174,7 @@ var KinveyReference = /** @lends KinveyReference */{
     // All documents are retrieved.
     return promise.then(function() {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Retrieved relations for the document.', document);
-      }
+      logger.debug('Retrieved relations for the document.', document);
 
       // Restore the options and return the response.
       options.error = error;
@@ -187,9 +183,7 @@ var KinveyReference = /** @lends KinveyReference */{
       return document;
     }, function(reason) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Failed to retrieve relations for the document.', document);
-      }
+      logger.error('Failed to retrieve relations for the document.', document);
 
       // Restore the options and return the error.
       options.error = error;
@@ -212,9 +206,7 @@ var KinveyReference = /** @lends KinveyReference */{
    */
   save: function(collection, document, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Saving a document with relations.', collection, document, options);
-    }
+    logger.debug('Saving a document with relations.', collection, document, options);
 
     // If a list of documents was passed in, retrieve all relations in parallel.
     if(isArray(document)) {
@@ -332,9 +324,7 @@ var KinveyReference = /** @lends KinveyReference */{
       });
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Saved the document with relations.', response);
-      }
+      logger.debug('Saved the document with relations.', response);
 
       // Restore the options and return the response.
       delete relations[''];// Remove the added top-level document.
@@ -344,9 +334,7 @@ var KinveyReference = /** @lends KinveyReference */{
       return response;
     }, function(reason) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Failed to save the document with relations.', error);
-      }
+      logger.error('Failed to save the document with relations.', error);
 
       // Restore the options and return the error.
       delete relations[''];// Remove the added top-level document.

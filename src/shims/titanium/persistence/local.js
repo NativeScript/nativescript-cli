@@ -87,9 +87,7 @@ var TiDatabaseAdapter = {
         var sql = parts[0].replace('#{collection}', escapedCollection);
 
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Executing a query.', sql, parts[1]);
-        }
+        logger.debug('Executing a query.', sql, parts[1]);
 
         // Prepare the response.
         var res = db.execute(sql, parts[1]);
@@ -112,9 +110,7 @@ var TiDatabaseAdapter = {
         }
 
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Executed the query.', response);
-        }
+        logger.debug('Executed the query.', response);
 
         // Return the response.
         return response;
@@ -131,9 +127,7 @@ var TiDatabaseAdapter = {
     }
     catch(e) {// Low-level database error.
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Failed to execute the query.', e.message);
-      }
+      logger.error('Failed to execute the query.', e.message);
 
       // Return the rejection.
       var error = clientError(Kinvey.Error.DATABASE_ERROR, { debug: e.message });

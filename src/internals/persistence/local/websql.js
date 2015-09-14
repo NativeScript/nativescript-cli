@@ -142,9 +142,7 @@ var WebSqlAdapter = {
         var sql = parts[0].replace('#{collection}', escapedCollection);
 
         // Debug.
-        if(KINVEY_DEBUG) {
-          log('Executing a query.', sql, parts[1]);
-        }
+        logger.debug('Executing a query.', sql, parts[1]);
 
         // Execute the query, and append the result to the response.
         tx.executeSql(sql, parts[1], function(_, resultSet) {
@@ -160,9 +158,7 @@ var WebSqlAdapter = {
           responses.push(response);
 
           // Debug.
-          if(KINVEY_DEBUG) {
-            log('Executed the query.', sql, parts[1], response);
-          }
+          logger.debug('Executed the query.', sql, parts[1], response);
 
           // When all queries are processed, resolve.
           // NOTE Some implementations fire the `txn` success callback at the
@@ -175,9 +171,7 @@ var WebSqlAdapter = {
       });
     }, function(err) {
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('Failed to execute the query.', err);
-      }
+      logger.error('Failed to execute the query.', err);
 
       // NOTE Some implementations return the error message as only argument.
       err = isString(err) ? err : err.message;
@@ -585,7 +579,7 @@ var WebSqlAdapter = {
 
 function useWebSqlAdapter() {
   // Use WebSQL adapter.
-  if(('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift && 'undefined' !== typeof root.Queue) {
+  if (('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift && 'undefined' !== typeof root.Queue) {
     // Normalize for Windows Phone 8.1
     root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
     Database.use(WebSqlAdapter);

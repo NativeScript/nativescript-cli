@@ -37,9 +37,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
    */
   create: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a create request.', arguments);
-    }
+    logger.debug('Initiating a create request.', arguments);
 
     // Strip maxAge metadata.
     request.data = maxAge.removeMetadata(request.data);
@@ -58,9 +56,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
    */
   read: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a read request.', arguments);
-    }
+    logger.debug('Initiating a read request.', arguments);
 
     // Cast arguments.
     request.flags = request.flags || {};
@@ -109,9 +105,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
    */
   update: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating an update request.', arguments);
-    }
+    logger.debug('Initiating an update request.', arguments);
 
     // Strip maxAge metadata.
     request.data = maxAge.removeMetadata(request.data);
@@ -130,9 +124,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
    */
   destroy: function(request, options) {
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a delete request.', arguments);
-    }
+    logger.debug('Initiating a delete request.', arguments);
 
     // Initiate the network request.
     request.method = 'DELETE';
@@ -176,7 +168,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     }
 
     // Cast arguments.
-    options.trace = options.trace || (KINVEY_DEBUG && false !== options.trace);
+    options.trace = options.trace || (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE && false !== options.trace);
     options.attemptMICRefresh = false === options.attemptMICRefresh ? false : true;
 
     // Build, escape, and join URL segments.
@@ -301,8 +293,8 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      headers['X-Kinvey-Trace-Request']               = 'true';
+    if (Kinvey.Log.getLevel() === Kinvey.Log.levels.TRACE) {
+      headers['X-Kinvey-Trace-Request'] = 'true';
     }
 
     // Authorization.
@@ -339,8 +331,8 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
         catch(e) { }
 
         // Debug.
-        if(KINVEY_DEBUG && options.trace && isObject(response)) {
-          log('Obtained the request ID.', response.headers['X-Kinvey-Request-Id']);
+        if (options.trace && isObject(response)) {
+          logger.debug('Obtained the request ID.', response.headers['X-Kinvey-Request-Id']);
         }
 
         // Check response to GET request that we receive a
@@ -395,9 +387,7 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
             response.requestId = requestId;
 
             // Debug.
-            if(KINVEY_DEBUG) {
-              log('Obtained the request ID.', requestId);
-            }
+            logger.debug('Obtained the request ID.', requestId);
           }
         }
         else {// Client-side error.

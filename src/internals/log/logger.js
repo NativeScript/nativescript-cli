@@ -14,26 +14,19 @@
  * limitations under the License.
  */
 
-// Patch `WebSqlAdapter` to use SQLCipher over WebSQL.
-var originalOpen = WebSqlAdapter.open;
+var logger = {};
 
-/**
- * Opens a database.
- *
- * @returns {Database}
- */
-WebSqlAdapter.open = function() {
-  // Use original if SQLCipher is not available, or not desired.
-  if('undefined' === typeof root.sqlitePlugin || null == Kinvey.encryptionKey) {
-    originalOpen.apply(WebSqlAdapter, arguments);
-  }
+if (typeof root.log !== 'undefined') {
+  logger = root.log.noConflict();
 
-  // Debug.
-  logger.debug('Enabled encrypted data storage.');
+  // Prepend all log messages with 'Kinvey: '
+  var originalFactory = logger.methodFactory;
+  logger.methodFactory = function(methodName, logLevel) {
+    var rawMethod = originalFactory(methodName, logLevel);
 
-  // Open the database.
-  return root.sqlitePlugin.openDatabase({
-    name : WebSqlAdapter.dbName(),
-    key  : Kinvey.encryptionKey
-  });
-};
+    return function(message, args) {
+      message = 'Kinvey: ' + message;
+      rawMethod(message, args);
+    };
+  };
+}

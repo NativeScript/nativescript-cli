@@ -34,9 +34,7 @@ Kinvey.Error = function(msg) {
   this.stack   = (new Error()).stack;
 
   // Debug.
-  if(KINVEY_DEBUG) {
-    log('A Kinvey.Error was thrown.', this.message, this.stack);
-  }
+  logger.error('A Kinvey.Error was thrown.', this.message, this.stack);
 };
 Kinvey.Error.prototype = new Error();
 Kinvey.Error.prototype.constructor = Kinvey.Error;

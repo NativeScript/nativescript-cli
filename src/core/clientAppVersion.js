@@ -85,9 +85,7 @@ Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
     Kinvey.ClientAppVersion.clear();
 
     // Debug
-    if (KINVEY_DEBUG) {
-      log('Setting the client app version.', arguments);
-    }
+    logger.debug('Setting the client app version.', arguments);
 
     clientAppVersion = parseAppVersion.apply(root, arguments);
   },
@@ -97,9 +95,7 @@ Kinvey.ClientAppVersion = /** @lends Kinvey.ClientAppVersion */ {
    */
   clear: function() {
     // Debug
-    if (KINVEY_DEBUG) {
-      log('Clearing the client app version.');
-    }
+    logger.debug('Clearing the client app version.');
 
     clearClientAppVersion();
   }

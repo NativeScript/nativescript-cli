@@ -65,9 +65,7 @@ var AngularHTTP = {
     }
 
     // Debug.
-    if(KINVEY_DEBUG) {
-      log('Initiating a network request.', method, url, body, headers, options);
-    }
+    logger.debug('Initiating a network request.', method, url, body, headers, options);
 
     // Initiate the request.
     if(isObject(body) && !(
@@ -77,19 +75,35 @@ var AngularHTTP = {
       body = null != angular.toJson ? angular.toJson(body) : JSON.stringify(body);
     }
 
+    // Create a proxy request
+    var cancelDeferred = Kinvey.Defer.deferred();
+    var requestProxy = {
+      cancel: function() {
+        cancelDeferred.resolve();
+      }
+    };
+
+    // Setup the timeout
+    if (options.timeout) {
+      setTimeout(function() {
+        requestProxy.cancel();
+      }, options.timeout);
+    }
+
+    // Send the proxy request
+    options.handler(requestProxy);
+
     return $http({
       data    : body,
       headers : headers,
       method  : method,
-      timeout : options.timeout,
+      timeout : cancelDeferred,
       url     : url
     }).then(function(response) {
       var _response = response;
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request completed.', response);
-      }
+      logger.debug('The network request completed.', response);
 
       // If `options.file`, convert the response to `Blob` object.
       response = response.data;
@@ -142,9 +156,7 @@ var AngularHTTP = {
       var originalRequest = options._originalRequest;
 
       // Debug.
-      if(KINVEY_DEBUG) {
-        log('The network request failed.', response);
-      }
+      logger.error('The network request failed.', response);
 
       if (401 === response.status && options.attemptMICRefresh) {
         promise = MIC.refresh(options);
