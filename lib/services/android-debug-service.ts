@@ -95,7 +95,7 @@ class AndroidDebugService implements IDebugService {
 
 	private printDebugPort(packageName: string): IFuture<void> {
         return (() => {
-            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-GetDgbPort"]).wait();
+            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-GetDbgPort"]).wait();
             this.$logger.info(res);
         }).future<void>()();
     }

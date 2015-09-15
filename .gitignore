@@ -27,6 +27,7 @@ results
 scratch/
 .idea/
 .settings/
+.vscode/
 test-reports.xml
 
 npm-debug.log
