@@ -23,8 +23,6 @@ export class LoggerStub implements ILogger {
 
 	write(...args: string[]): void { }
 
-	printMarkdown(...args: string[]): void { }
-
 	prepare(item: any): string {
 		return "";
 	}
