@@ -1,16 +1,20 @@
 import Kinvey from './kinvey';
 
-// Data
-Kinvey.Collection = require('./core/collection');
-Kinvey.Model = require('./core/model');
+// Core
+Kinvey.Acl = require('./core/acl');
+Kinvey.Aggregation = require('./core/aggregation');
+Kinvey.Datastore = require('./core/datastore');
+Kinvey.Group = require('./core/group');
+Kinvey.Metadata = require('./core/metadata');
 Kinvey.Query = require('./core/query');
+Kinvey.User = require('./core/user');
 
 // Enums
-Kinvey.AuthType = require('./enums/authType');
-Kinvey.DataPolicy = require('./enums/dataPolicy');
-Kinvey.HttpMethod = require('./enums/httpMethod');
-Kinvey.RackType = require('./enums/rackType');
-Kinvey.StatusCode = require('./enums/statusCode');
+Kinvey.AuthType = require('./core/enums/authType');
+Kinvey.DataPolicy = require('./core/enums/dataPolicy');
+Kinvey.HttpMethod = require('./core/enums/httpMethod');
+Kinvey.RackType = require('./core/enums/rackType');
+Kinvey.StatusCode = require('./core/enums/statusCode');
 
 // Errors
 Kinvey.Error = require('./core/errors/error');
@@ -27,9 +31,6 @@ Kinvey.Middleware.Serializer = require('./middleware/serializer');
 
 // Rack
 Kinvey.Rack = require('./core/rack');
-
-// User
-Kinvey.User = require('./core/user');
 
 // Export
 export default Kinvey;
