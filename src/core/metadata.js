@@ -1,6 +1,6 @@
-import clone from 'clone';
+import clone from 'lodash/lang/clone';
 import isPlainObject from 'lodash/lang/isPlainObject';
-import {isDefined} from '../utils';
+import isDefined from '../utils/isDefined';
 const privateMetadataSymbol = Symbol();
 
 class PrivateMetadata {

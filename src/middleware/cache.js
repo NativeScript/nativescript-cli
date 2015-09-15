@@ -1,6 +1,6 @@
 import Middleware from './middleware';
-import HttpMethod from '../enums/httpMethod';
-import StatusCode from '../enums/statusCode';
+import HttpMethod from '../core/enums/httpMethod';
+import StatusCode from '../core/enums/statusCode';
 import Cache from '../core/cache';
 import Response from '../core/response';
 

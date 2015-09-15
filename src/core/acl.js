@@ -1,22 +1,19 @@
+import KinveyError from './errors/error';
 import isPlainObject from 'lodash/lang/isPlainObject';
-import clone from 'clone';
+import clone from 'lodash/lang/clone';
 const privateAclSymbol = Symbol();
 
 class PrivateAcl {
-  constructor(acl = {}) {
-    if (!isPlainObject(acl)) {
-      throw new Error('acl argument must be an object');
-    }
-
-    this.acl = acl;
-  }
-
   get creator() {
     return this.acl.creator;
   }
 
   get readers() {
     return this.acl.r || [];
+  }
+
+  get writers() {
+    return this.acl.w || [];
   }
 
   get readerGroups() {
@@ -27,18 +24,20 @@ class PrivateAcl {
     return this.acl.groups ? this.acl.groups.w : [];
   }
 
-  get writers() {
-    return this.acl.w || [];
-  }
-
   set globallyReadable(gr) {
     this.acl.gr = gr || false;
-    return this;
   }
 
   set globallyWritable(gw) {
     this.acl.gw = gw || false;
-    return this;
+  }
+
+  constructor(acl = {}) {
+    if (!isPlainObject(acl)) {
+      throw new KinveyError('acl argument must be an object');
+    }
+
+    this.acl = acl;
   }
 
   addReader(user) {
@@ -49,7 +48,6 @@ class PrivateAcl {
     }
 
     this.acl.r = r;
-
     return this;
   }
 
@@ -63,7 +61,6 @@ class PrivateAcl {
 
     groups.w = w;
     this.acl.groups = groups;
-
     return this;
   }
 
@@ -75,7 +72,6 @@ class PrivateAcl {
     }
 
     this.acl.w = w;
-
     return this;
   }
 
@@ -96,7 +92,6 @@ class PrivateAcl {
     }
 
     this.acl.r = r;
-
     return this;
   }
 
@@ -111,7 +106,6 @@ class PrivateAcl {
 
     groups.r = r;
     this.acl.groups = groups;
-
     return this;
   }
 
@@ -124,7 +118,6 @@ class PrivateAcl {
     }
 
     this.acl.w = w;
-
     return this;
   }
 
@@ -139,7 +132,6 @@ class PrivateAcl {
 
     groups.w = w;
     this.acl.groups = groups;
-
     return this;
   }
 
@@ -149,10 +141,6 @@ class PrivateAcl {
 }
 
 class Acl {
-  constructor(acl) {
-    this[privateAclSymbol] = new PrivateAcl(acl);
-  }
-
   get creator() {
     return this[privateAclSymbol].creator;
   }
@@ -175,12 +163,14 @@ class Acl {
 
   set globallyReadable(gr) {
     this[privateAclSymbol].globallyReadable = gr;
-    return this;
   }
 
   set globallyWritable(gw) {
     this[privateAclSymbol].globallyWritable = gw;
-    return this;
+  }
+
+  constructor(acl) {
+    this[privateAclSymbol] = new PrivateAcl(acl);
   }
 
   addReader(user) {

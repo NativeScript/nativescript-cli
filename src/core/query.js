@@ -1,5 +1,6 @@
 import nested from '../utils/nested';
 import sift from 'sift';
+import clone from 'lodash/lang/clone';
 import isArray from 'lodash/lang/isArray';
 import isNumber from 'lodash/lang/isNumber';
 import isString from 'lodash/lang/isString';
@@ -544,13 +545,15 @@ class PrivateQuery {
     }
 
     // Return set of parameters.
-    return {
+    const json = {
       fields: this._fields,
       filter: this._filter,
       sort: this._sort,
       skip: this._skip,
       limit: this._limit
     };
+
+    return clone(json);
   }
 }
 

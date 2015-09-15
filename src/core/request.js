@@ -1,13 +1,13 @@
 import isDefined from '../utils/isDefined';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
-import HttpMethod from '../enums/httpMethod';
+import HttpMethod from './enums/httpMethod';
 import Rack from './rack';
-import AuthType from '../enums/authType';
+import AuthType from './enums/authType';
 import Auth from './auth';
 import url from 'url';
 import Kinvey from '../kinvey';
-import DataPolicy from '../enums/dataPolicy';
+import DataPolicy from './enums/dataPolicy';
 import defaults from 'lodash/object/defaults';
 const privateRequestSymbol = Symbol();
 
@@ -287,10 +287,6 @@ class PrivateRequest {
 }
 
 class Request {
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
-  }
-
   get method() {
     const privateRequest = this[privateRequestSymbol];
     return privateRequest.method;
@@ -379,6 +375,10 @@ class Request {
   get url() {
     const privateRequest = this[privateRequestSymbol];
     return privateRequest.url;
+  }
+
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
+    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
   }
 
   getHeader(header) {

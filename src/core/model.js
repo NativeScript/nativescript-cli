@@ -3,7 +3,7 @@ import Acl from './acl';
 import Metadata from './metadata';
 import defaults from 'lodash/object/defaults';
 import result from 'lodash/object/result';
-import cloneDeep from 'lodash/lang/cloneDeep';
+import clone from 'lodash/lang/clone';
 import assign from 'lodash/object/assign';
 import has from 'lodash/object/has';
 import size from 'lodash/collection/size';
@@ -61,7 +61,7 @@ class Model {
   }
 
   toJSON() {
-    return cloneDeep(this.attributes);
+    return clone(this.attributes);
   }
 
   get(attr) {
@@ -98,7 +98,7 @@ class Model {
     this._changing = true;
 
     if (!changing) {
-      this._previousAttributes = cloneDeep(this.attributes);
+      this._previousAttributes = clone(this.attributes);
       this.changed = {};
     }
 
@@ -147,7 +147,7 @@ class Model {
 
   changedAttributes(diff) {
     if (!diff) {
-      return this.hasChanged() ? cloneDeep(this.changed) : false;
+      return this.hasChanged() ? clone(this.changed) : false;
     }
 
     const old = this._changing ? this._previousAttributes : this.attributes;

@@ -1,7 +1,7 @@
 import Middleware from './middleware';
 import Database from '../core/database';
-import HttpMethod from '../enums/httpMethod';
-import StatusCode from '../enums/statusCode';
+import HttpMethod from '../core/enums/httpMethod';
+import StatusCode from '../core/enums/statusCode';
 import Response from '../core/response';
 
 class DatabaseMiddleware extends Middleware {

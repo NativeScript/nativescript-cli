@@ -1,5 +1,5 @@
 import NodeCache from 'node-cache';
-import {isDefined} from '../utils';
+import isDefined from '../utils/isDefined';
 import sha1 from 'crypto-js/sha1';
 import log from 'loglevel';
 import Kinvey from '../kinvey';

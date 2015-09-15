@@ -65,7 +65,7 @@ class RequestProperties {
    * @return {Object} Request properties
    */
   get properties() {
-    const privateRequestProperties = this[PrivateRequestPropertiesSymbol];
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
     return clone(privateRequestProperties.properties);
   }
 
@@ -75,7 +75,7 @@ class RequestProperties {
    * @param {Object} properties Request properties
    */
   set properties(properties) {
-    const privateRequestProperties = this[PrivateRequestPropertiesSymbol];
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
     privateRequestProperties.properties = properties;
   }
 
@@ -94,7 +94,8 @@ class RequestProperties {
    *
    * @param  {Any} version  App version.
    */
-  set appVersion(...version) {
+  set appVersion(version) {
+    version = Array.prototype.slice.call(arguments, 1);
     const major = version[0];
     const minor = version[1];
     const patch = version[2];
@@ -116,7 +117,7 @@ class RequestProperties {
   }
 
   /**
-   * THis is the constructor.
+   * This is the constructor.
    *
    * @param  {Object} properties Request properties
    */
@@ -160,7 +161,7 @@ class RequestProperties {
    * @param {Object} properties Custom request properties
    */
   addProperties(properties = {}) {
-    const privateRequestProperties = this[PrivateRequestPropertiesSymbol];
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
     privateRequestProperties.addProperties(properties);
   }
 
@@ -168,7 +169,7 @@ class RequestProperties {
    * Clears all the request properties.
    */
   clear() {
-    const privateRequestProperties = this[PrivateRequestPropertiesSymbol];
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
     privateRequestProperties.clear();
   }
 
@@ -178,7 +179,7 @@ class RequestProperties {
    * @param  {String} key Request property key
    */
   clearProperty(key) {
-    const privateRequestProperties = this[PrivateRequestPropertiesSymbol];
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
     privateRequestProperties.clearProperty(key);
   }
 

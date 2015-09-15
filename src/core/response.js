@@ -1,4 +1,4 @@
-import StatusCode from '../enums/statusCode';
+import StatusCode from './enums/statusCode';
 const privateResponseSymbol = Symbol();
 
 class PrivateResponse {
