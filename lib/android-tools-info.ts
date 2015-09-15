@@ -30,7 +30,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				infoData.compileSdkVersion = this.getCompileSdk().wait();
 				infoData.buildToolsVersion = this.getBuildToolsVersion().wait();
 				infoData.targetSdkVersion = this.getTargetSdk().wait();
-				infoData.supportLibraryVersion = this.getAndroidSupportLibVersion().wait();
+				infoData.supportRepositoryVersion = this.getAndroidSupportRepositoryVersion().wait();
 
 				this.toolsInfo = infoData;
 			}
@@ -39,8 +39,9 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<IAndroidToolsInfoData>()();
 	}
 
-	public validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<void> {
-		return (() => {
+	public validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<boolean> {
+		return (() : boolean => {
+			let detectedErrors = false;
 			this.showWarningsAsErrors = options && options.showWarningsAsErrors;
 			let toolsInfoData = this.getToolsInfo().wait();
 			if(!toolsInfoData.androidHomeEnvVar || !this.$fs.exists(toolsInfoData.androidHomeEnvVar).wait()) {
@@ -51,16 +52,28 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if(!toolsInfoData.compileSdkVersion) {
 				this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
 							"Run `$ android` to manage your Android SDK versions.");
+				detectedErrors = true;
 			}
 
 			if(!toolsInfoData.buildToolsVersion) {
-				this.printMessage(`You need to have the Android SDK Build-tools installed on your system. You can install any version in the following range: '${this.getBuildToolsRange()}'.`,
+				let buildToolsRange = this.getBuildToolsRange();
+				let versionRangeMatches = buildToolsRange.match(/^.*?([\d\.]+)\s+.*?([\d\.]+)$/);
+				let message = `You can install any version in the following range: '${buildToolsRange}'.`;
+
+				// Improve message in case buildToolsRange is something like: ">=22.0.0 <=22.0.0" - same numbers on both sides
+				if(versionRangeMatches && versionRangeMatches[1] && versionRangeMatches[2] && versionRangeMatches[1] === versionRangeMatches[2]) {
+					message = `You have to install version ${versionRangeMatches[1]}.`;
+				}
+
+				this.printMessage("You need to have the Android SDK Build-tools installed on your system. " + message,
 					'Run "android" from your command-line to install required Android Build Tools.');
+				detectedErrors = true;
 			}
 
-			if(!toolsInfoData.supportLibraryVersion) {
-				this.printMessage(`You need to have the Android Support Library installed on your system. You can install any version in the following range: ${this.getAppCompatRange().wait() || ">=" + AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET}}.`,
-					'Run `$ android`  to manage the Android Support Library.');
+			if(!toolsInfoData.supportRepositoryVersion) {
+				this.printMessage(`You need to have the latest Android Support Repository installed on your system.`,
+					'Run `$ android`  to manage the Android Support Repository.');
+				detectedErrors = true;
 			}
 
 			if(options && options.validateTargetSdk) {
@@ -71,13 +84,16 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 					let minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
 
 					if(targetSdk && (targetSdk < minSupportedVersion)) {
-						this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You пкяш target ${minSupportedVersion} or later.`);
+						this.printMessage(`The selected Android target SDK ${newTarget} is not supported. You must target ${minSupportedVersion} or later.`);
+						detectedErrors = true;
 					} else if(!targetSdk || targetSdk > this.getMaxSupportedVersion()) {
 						this.$logger.warn(`Support for the selected Android target SDK ${newTarget} is not verified. Your Android app might not work as expected.`);
 					}
 				}
 			}
-		}).future<void>()();
+
+			return detectedErrors;
+		}).future<boolean>()();
 	}
 
 	/**
@@ -146,10 +162,14 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getBuildToolsVersion(): IFuture<string> {
 		return ((): string => {
-			let pathToBuildTools = path.join(this.androidHome, "build-tools");
-			let buildToolsRange = this.getBuildToolsRange();
+			let buildToolsVersion: string;
+			if(this.androidHome) {
+				let pathToBuildTools = path.join(this.androidHome, "build-tools");
+				let buildToolsRange = this.getBuildToolsRange();
+				buildToolsVersion = this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+			}
 
-			return this.getMatchingDir(pathToBuildTools, buildToolsRange).wait();
+			return buildToolsVersion;
 		}).future<string>()();
 	}
 
@@ -165,11 +185,15 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<string>()();
 	}
 
-	private getAndroidSupportLibVersion(): IFuture<string> {
+	private getAndroidSupportRepositoryVersion(): IFuture<string> {
 		return ((): string => {
-			let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
+			let selectedAppCompatVersion: string;
 			let requiredAppCompatRange = this.getAppCompatRange().wait();
-			let selectedAppCompatVersion = requiredAppCompatRange ? this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait() : undefined;
+			if(this.androidHome && requiredAppCompatRange) {
+				let pathToAppCompat = path.join(this.androidHome, "extras", "android", "m2repository", "com", "android", "support", "appcompat-v7");
+				selectedAppCompatVersion = this.getMatchingDir(pathToAppCompat, requiredAppCompatRange).wait();
+			}
+
 			this.$logger.trace(`Selected AppCompat version is: ${selectedAppCompatVersion}`);
 			return selectedAppCompatVersion;
 		}).future<string>()();

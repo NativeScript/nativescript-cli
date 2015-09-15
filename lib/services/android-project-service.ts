@@ -21,14 +21,14 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
+		$fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $propertiesParser: IPropertiesParser,
-		private $sysInfo: ISysInfo,
-		$fs: IFileSystem) {
+		private $sysInfo: ISysInfo) {
 			super($fs);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -60,9 +60,13 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return this._platformData;
 	}
 
-	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
+	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): IFuture<string> {
 		return (() => {
-			return path.join(this.platformData.projectRoot, "src", "main", "res");
+			if(this.canUseGradle(frameworkVersion).wait()) {
+				return path.join(this.platformData.projectRoot, "src", "main", "res");
+			}
+
+			return path.join(this.platformData.projectRoot, "res");
 		}).future<string>()();
 	}
 
@@ -76,9 +80,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}).future<void>()();
 	}
 
-	public createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
+	public createProject(frameworkDir: string, frameworkVersion: string): IFuture<void> {
 		return (() => {
-			let frameworkVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 			if(semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
@@ -86,30 +89,30 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			// TODO: Move these check to validate method once we do not support ant.
 			this.checkGradle().wait();
 
-			this.$fs.ensureDirectoryExists(projectRoot).wait();
+			this.$fs.ensureDirectoryExists(this.platformData.projectRoot).wait();
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
-			let newTarget = androidToolsInfo.targetSdkVersion;
-			this.$logger.trace(`Using Android SDK '${newTarget}'.`);
+			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
+			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 			if(this.$options.symlink) {
-				this.symlinkDirectory("build-tools", projectRoot, frameworkDir).wait();
-				this.symlinkDirectory("libs", projectRoot, frameworkDir).wait();
-				this.symlinkDirectory("src", projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("build-tools", this.platformData.projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("libs", this.platformData.projectRoot, frameworkDir).wait();
+				this.symlinkDirectory("src", this.platformData.projectRoot, frameworkDir).wait();
 
-				this.$fs.symlink(path.join(frameworkDir, "build.gradle"), path.join(projectRoot, "build.gradle")).wait();
-				this.$fs.symlink(path.join(frameworkDir, "settings.gradle"), path.join(projectRoot, "settings.gradle")).wait();
+				this.$fs.symlink(path.join(frameworkDir, "build.gradle"), path.join(this.platformData.projectRoot, "build.gradle")).wait();
+				this.$fs.symlink(path.join(frameworkDir, "settings.gradle"), path.join(this.platformData.projectRoot, "settings.gradle")).wait();
 			} else {
-				this.copy(projectRoot, frameworkDir, "build-tools libs src", "-R");
-				this.copy(projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
+				this.copy(this.platformData.projectRoot, frameworkDir, "build-tools libs src", "-R");
+				this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 			}
 
-			this.cleanResValues(newTarget).wait();
+			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
 
 		}).future<any>()();
 	}
 
-	private cleanResValues(versionNumber: number): IFuture<void> {
+	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): IFuture<void> {
 		return (() => {
-			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath().wait();
+			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion).wait();
 			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir).wait();
 			let directoriesToClean = directoriesInResFolder
 				.map(dir => { return {
@@ -119,7 +122,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				})
 				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
 								&& dir.sdkNum
-								&& (!versionNumber || (versionNumber < dir.sdkNum)))
+								&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
 				.map(dir => path.join(resDestinationDir, dir.dirName));
 			this.$logger.trace("Directories to clean:");
 			this.$logger.trace(directoriesToClean);
@@ -148,11 +151,20 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	public canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
-		return Future.fromResult<boolean>(true);
+		return Future.fromResult(true);
 	}
 
-	public updatePlatform(currentVersion: string, newVersion: string): IFuture<void> {
-		return Future.fromResult();
+	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
+		return (() => {
+			if(semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
+				removePlatforms([platformLowercase.split("@")[0]]).wait();
+				addPlatform(platformLowercase).wait();
+				return false;
+			}
+
+			return true;
+		}).future<boolean>()();
 	}
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
@@ -163,7 +175,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				let compileSdk = androidToolsInfo.compileSdkVersion;
 				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
 				let buildToolsVersion = androidToolsInfo.buildToolsVersion;
-				let appCompatVersion = androidToolsInfo.supportLibraryVersion;
+				let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
 				let buildOptions = ["buildapk",
 					`-PcompileSdk=android-${compileSdk}`,
 					`-PtargetSdk=${targetSdk}`,
@@ -189,6 +201,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
 				this.spawn('ant', args).wait();
+
+				this.platformData.deviceBuildOutputPath = path.join(this.platformData.projectRoot, "bin");
 			}
 		}).future<void>()();
 	}
@@ -271,11 +285,19 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return Future.fromResult();
 	}
 
-	private canUseGradle(): IFuture<boolean> {
+	private _canUseGradle: boolean;
+	private canUseGradle(frameworkVersion?: string): IFuture<boolean> {
 		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait().version;
-			return semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+			if(!this._canUseGradle) {
+				if(!frameworkVersion) {
+					this.$projectDataService.initialize(this.$projectData.projectDir);
+					frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait().version;
+				}
+
+				this._canUseGradle = semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+			}
+
+			return this._canUseGradle;
 		}).future<boolean>()();
 	}
 
@@ -402,7 +424,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			try {
 				this.$childProcess.exec('android list targets').wait();
 			} catch(error) {
-				if (error.match(/command\snot\sfound/)) {
+				if (error.message.match(/command\snot\sfound/)) {
 					this.$errors.fail("The command \"android\" failed. Make sure you have the latest Android SDK installed, and the \"android\" command (inside the tools/ folder) is added to your path.");
 				} else {
 					this.$errors.fail("An error occurred while listing Android targets");

@@ -33,7 +33,7 @@ interface IBuildConfig {
 interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
-	createProject(projectRoot: string, frameworkDir: string): IFuture<void>;
+	createProject(frameworkDir: string, frameworkVersion: string): IFuture<void>;
 	interpolateData(projectRoot: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
@@ -42,7 +42,11 @@ interface IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
 	addLibrary(libraryPath: string): IFuture<void>;
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean>;
-	updatePlatform(currentVersion: string, newVersion: string): IFuture<void>;
+	/**
+	* Provides a platform specific update logic for the specified runtime versions.
+	* @return true in cases when the update procedure should continue.
+	*/
+	updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatform?: (platforms: string[]) => IFuture<void>): IFuture<boolean>;
 	preparePluginNativeCode(pluginData: IPluginData, options?: any): IFuture<void>;
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;

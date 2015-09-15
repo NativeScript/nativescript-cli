@@ -9,7 +9,8 @@ import semver = require("semver");
 export class InitService implements IInitService {
 	private static MIN_SUPPORTED_FRAMEWORK_VERSIONS: IStringDictionary = {
 		"tns-ios": "1.1.0",
-		"tns-android": "1.1.0"
+		"tns-android": "1.1.0",
+		"tns-core-modules": "1.2.0"
 	};
 
 	private _projectFilePath: string;
@@ -55,6 +56,12 @@ export class InitService implements IInitService {
 						}
 					});
 				}
+
+				let dependencies = projectData.dependencies;
+				if(!dependencies) {
+					projectData.dependencies = Object.create(null);
+				}
+				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
 
 				this.$fs.writeJson(this.projectFilePath, projectData).wait();
 			} catch(err) {

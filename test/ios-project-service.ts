@@ -38,6 +38,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("projectHelper", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", {});
+	testInjector.register("prompter", {});
 
 	return testInjector;
 }
@@ -215,7 +216,7 @@ describe("Static libraries support", () => {
 
 		assert.equal(modulemap, modulemapExpectation);
 
-		// Delete all header files. And try to regenerate modulemap. 
+		// Delete all header files. And try to regenerate modulemap.
 		_.each(headers, header => { fs.deleteFile(path.join(staticLibraryHeadersPath, header)).wait(); });
 		iOSProjectService.generateMobulemap(staticLibraryHeadersPath, libraryName);
 
