@@ -69,24 +69,26 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
+* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
-* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
-* [Android SDK 19][Android SDK 19] or a later stable official release
+* [Gradle 2.3][Gradle 2.3] or a later stable official release
+* [Android SDK 21][Android SDK 21] or a later stable official release
+* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
+* [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
 
 ```
-Path to the bin directory in the Apache Ant installation folder
+Path to the bin directory in the Gradle installation folder
 Path to tools directory in the Android SDK installation folder
 Path to platform-tools directory in the Android SDK installation folder
 ```
 
-For example: PATH=...;...;C:\tools\apache-ant-1.9.4\bin;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
+For example: PATH=...;...;C:\tools\gradle\bin;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
 
-If you have installed Chocolatey, you can complete these steps to set up JDK, Apache Ant, and Android SDK.
+If you have installed Chocolatey, you can complete these steps to set up JDK, Gradle, and Android SDK.
 
 1. Run a Windows command prompt.
 1. To install JDK, run the following command.
@@ -94,27 +96,33 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 	```Shell
 	choco install java.jdk
 	```
-1. If not present, create the following environment variable.
+1. If not present, create the following environment variables.
 
 	```
 	JAVA_HOME=Path to the jdk* install folder
 	```
 
 	For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_11
-1. To install Apache Ant, run the following command.
+
+	```
+	ANDROID_HOME=Path to Android installation directory
+	```
+
+	For example: ANDROID_HOME=C:\Android\android-sdk
+1. To install Gradle, run the following command.
 
 	```Shell
-	choco install ant
+	choco install gradle
 	```
 1. If not present, add the following file path to the `PATH` system environment variable.
 
 	```
-	Path to the bin directory in the Apache Ant installation folder
+	Path to the bin directory in the Gradle installation folder
 	```
 
-	For example: PATH=...;...;C:\tools\apache-ant-1.9.4\bin
+	For example: PATH=...;...;C:\tools\gradle\bin
 1. To install the Android SDK, run the following command.
-	
+
 	```Shell
 	choco install android-sdk
 	```
@@ -126,39 +134,67 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Ap
 	```
 
 	For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools
-1. To update the Android SDK to 19 or later, run the following command.
+1. To update the Android SDK to 21 or later, run the following command.
 
 	```Shell
 	android update sdk
 	```
-1. Select all packages for the Android 19 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
+1. Select all packages for the Android 21 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
+1. Select Android SDK Build-tools 22.0.0 or later stable version, click **Install** and wait for the installation to complete.
+1. Select Extras/Android Support Repository, click **Install** and wait for the installation to complete.
+
+> NOTE: You can install required Android Tools with the following command:
+```Shell
+android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+```
 
 ## OS X
 
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
+* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
 * For Android development
-	* [JDK 8][JDK 8] or a later stable official release 
-	* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
-	* [Android SDK 19][Android SDK 19] or a later stable official release 
+	* [JDK 8][JDK 8] or a later stable official release
+	* [Gradle 2.3][Gradle 2.3] or a later stable official release
+	* [Android SDK 21][Android SDK 21] or a later stable official release
+	* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
+	* [Android Support Repository][Android Support Repository]
 	* (Optional) [Genymotion][Genymotion]
 
 If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
 
 ```
-Path to the bin subdirectory in the Apache Ant installation directory
+Path to the bin subdirectory in the Gradle installation directory
 Path to the tools subdirectory in the Android SDK installation directory
 Path to the platform-tools subdirectory in the Android SDK installation directory
 ```
 
 For example:
 ```
-export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
+export PATH=${PATH}:/gradle/bin:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
+```
+
+If not present, create the following environment variables.
+
+```
+JAVA_HOME=Path to the jdk* install folder
+```
+
+For example: JAVA_HOME=/usr/bin/java
+
+```
+ANDROID_HOME=Path to Android installation directory
+```
+
+For example: ANDROID_HOME=/Applications/Android\ Studio.app/sdk/
+
+> NOTE: You can install required Android Tools with the following command:
+```Shell
+echo yes | android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## Linux
@@ -166,10 +202,10 @@ export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android\ Studio.app/
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* [Node.js 0.10.26][Node.js 0.10.26] or a later stable official release
+* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
 
 	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
-	
+
 * G++ compiler
 
 	```Shell
@@ -182,21 +218,42 @@ export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android\ Studio.app/
 		sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
 		```
 * [JDK 8][JDK 8] or a later stable official release
-* [Apache Ant 1.8][Apache Ant 1.8] or a later stable official release
-* [Android SDK 19][Android SDK 19] or a later stable official release 
+* [Gradle 2.3][Gradle 2.3] or a later stable official release
+* [Android SDK 21][Android SDK 21] or a later stable official release
+* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
+* [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
 
 Verify that you have added the following paths in your `PATH`.
 
 ```
-Path to the bin subdirectory in the Apache Ant installation directory
+Path to the bin subdirectory in the Gradle installation directory
 Path to the tools subdirectory in the Android SDK installation directory
 Path to the platform-tools subdirectory in the Android SDK installation directory
 ```
 
 For example:
 ```
-export PATH=${PATH}:/ant/apache-ant-1.9.4/bin:/Applications/Android Studio.app/sdk/tools:/Applications/Android Studio.app/sdk/platform-tools
+export PATH=${PATH}:/gradle/bin:/home/user/android-sdk/tools:/home/user/android-sdk/platform-tools
+```
+
+If not present, create the following environment variables.
+
+```
+JAVA_HOME=Path to the jdk* install folder
+```
+
+For example: JAVA_HOME=/usr/bin/java
+
+```
+ANDROID_HOME=Path to Android installation directory
+```
+
+For example: ANDROID_HOME=/home/user/android-sdk
+
+> NOTE: You can install required Android Tools with the following command:
+```Shell
+echo yes | android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 [Back to Top][1]
@@ -263,7 +320,7 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 * `library add <Platform> <Library Path>` adds a locally stored native library to the current project.
 * `prepare <Platform>` copies cross-platform and selected platform-specific content to the subdirectory for the target platform.
 * `build <Platform>` builds the project for the selected target platform.
-* `emulate <Platform>` builds the project for the selected target platform and runs it in the native emulator, if configured. 
+* `emulate <Platform>` builds the project for the selected target platform and runs it in the native emulator, if configured.
 * `deploy <Platform> [--device <Device ID>]` deploys an already built application on connected device.
 * `run <Platform> [--device <Device ID>]` executes `prepare`, `build`, and `deploy`.
 * `livesync <Platform>` synchronizes changes from your project to an already deployed application on device.
@@ -314,8 +371,8 @@ MyApp/
     └── ...
 ```
 
-* The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
-* The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.<br/>In the `platforms` directory, you can safely modify configuration files such as `AndroidManifest.xml` and `Info.plist`. 
+* The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform.
+* The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.<br/>In the `platforms` directory, you can safely modify configuration files such as `AndroidManifest.xml` and `Info.plist`.
 
 [Back to Top][1]
 
@@ -330,7 +387,7 @@ tns platform add android
 tns platform add ios
 ```
 
-`platform add` creates the `android` and the `ios` subdirectories in the `platforms` directory. These subdirectories have the platform-specific project structure required for native development with the native SDKs for the platform. 
+`platform add` creates the `android` and the `ios` subdirectories in the `platforms` directory. These subdirectories have the platform-specific project structure required for native development with the native SDKs for the platform.
 
 ```
 ...
@@ -380,9 +437,9 @@ For more information about working with NativeScript, see the following resource
 
 ### Development in `app`
 
-The `app` directory in the root of the project is the development space for your project. **Place all your common and platform-specific code in this directory.** When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform. 
+The `app` directory in the root of the project is the development space for your project. **Place all your common and platform-specific code in this directory.** When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform.
 
-In the `app` directory, you can use **platform-specific files** to provide customized functionality and design for each target platform. To indicate that a file is platform-specific, make sure that the file name is in the following format: `name.ios.extension` or `name.android.extension`. For example: `main.ios.js` or `main.android.js`. 
+In the `app` directory, you can use **platform-specific files** to provide customized functionality and design for each target platform. To indicate that a file is platform-specific, make sure that the file name is in the following format: `name.ios.extension` or `name.android.extension`. For example: `main.ios.js` or `main.android.js`.
 
 You can develop shared functionality or design in common files. To indicate that a file is common, make sure that the file name does not contain a `.android.` or `.ios.` string.
 
@@ -420,7 +477,7 @@ tns build android
 tns build ios
 ```
 
-The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. 
+The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally.
 
 When you build for Android, the NativeScript CLI saves the application package as an `APK` in `platforms` &#8594; `android` &#8594; `bin`.
 
@@ -450,7 +507,7 @@ tns deploy android
 tns deploy ios
 ```
 
-The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. After the build is complete, the NativeScript CLI downloads and installs the application package on your connected devices. 
+The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally. After the build is complete, the NativeScript CLI downloads and installs the application package on your connected devices.
 
 On Android devices, the app runs automatically.
 
@@ -473,7 +530,7 @@ This operation calls the SDK for the selected target platform, builds your app l
 
 For Android, the NativeScript CLI runs your app in the earliest created virtual device or the currently running Android Virtual Device. Before running your app in the Android native emulator, make sure that you have configured at least one virtual device in the Android Virtual Device manager.
 
-For iOS, the NativeScript CLI runs your app in the iOS Simulator. 
+For iOS, the NativeScript CLI runs your app in the iOS Simulator.
 
 [Back to Top][1]
 
@@ -553,9 +610,9 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [10]: http://developer.telerik.com/featured/nativescript-android/
 [11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
 [12]: https://developer.apple.com/xcode/downloads/
-[Node.js 0.10.26]: http://nodejs.org/download/
+[Node.js 0.10.35]: https://nodejs.org/dist/v0.10.35/
 [Chocolatey]: https://chocolatey.org/
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
-[Apache Ant 1.8]: http://ant.apache.org/bindownload.cgi
-[Android SDK 19]: http://developer.android.com/sdk/index.html
+[Gradle 2.3]: https://gradle.org/gradle-download/
+[Android SDK 21]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
