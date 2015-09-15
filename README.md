@@ -157,6 +157,7 @@ android update sdk --filter tools,platform-tools,android-22,android-17,build-too
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
+	* (Optional) [CocoaPods 0.38.2][CocoaPods 0.38.2]
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Gradle 2.3][Gradle 2.3] or a later stable official release
