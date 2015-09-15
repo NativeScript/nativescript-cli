@@ -28,6 +28,7 @@ createLintTask('lint-src', config.files.src);
 
 // Lint our test code
 createLintTask('lint-test', config.files.test);
+createLintTask('lint-test-acl', 'test/specs/acl.spec.js');
 createLintTask('lint-test-database', 'test/specs/database.spec.js');
 createLintTask('lint-test-query', 'test/specs/query.spec.js');
 createLintTask('lint-test-request', 'test/specs/request.spec.js');

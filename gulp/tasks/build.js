@@ -26,6 +26,7 @@ gulp.task('build', ['lint-src', 'clean'], function() {
     .pipe($.sourcemaps.init({ loadMaps: true }))
     .pipe($.uglify())
     .pipe($.rename(config.files.output.fileName + '.min.js'))
+    .pipe($.size({ showFiles: true }))
     .pipe($.sourcemaps.write('./'))
     .pipe(gulp.dest(config.paths.dist));
 });

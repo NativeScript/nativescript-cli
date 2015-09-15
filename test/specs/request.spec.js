@@ -1,7 +1,7 @@
 import Request from '../../src/core/request';
 import Auth from '../../src/core/auth';
-import DataPolicy from '../../src/enums/dataPolicy';
-import HttpMethod from '../../src/enums/httpMethod';
+import DataPolicy from '../../src/core/enums/dataPolicy';
+import HttpMethod from '../../src/core/enums/httpMethod';
 
 describe('Request', function() {
   beforeEach(function() {
@@ -9,7 +9,7 @@ describe('Request', function() {
   });
 
   describe('headers', function() {
-    it('should be undefiend', function() {
+    it('should be undefined', function() {
       expect(this.request.headers).to.be.undefined;
     });
   });
@@ -246,38 +246,6 @@ describe('Request', function() {
     it('should remove a header', function() {
       this.request.removeHeader('content-type');
       expect(this.request.getHeader('content-type')).to.be.undefined;
-    });
-  });
-
-  describe('isCacheEnabled()', function() {
-    it('should respond', function() {
-      expect(this.request).to.respondTo('isCacheEnabled');
-    });
-
-    it('should return a boolean', function() {
-      expect(typeof this.request.isCacheEnabled()).to.equal('boolean');
-    });
-  });
-
-  describe('enableCache()', function() {
-    it('should respond', function() {
-      expect(this.request).to.respondTo('enableCache');
-    });
-
-    it('should enable the cache', function() {
-      this.request.enableCache();
-      expect(this.request.isCacheEnabled()).to.be.true;
-    });
-  });
-
-  describe('disableCache()', function() {
-    it('should respond', function() {
-      expect(this.request).to.respondTo('disableCache');
-    });
-
-    it('should disable the cache', function() {
-      this.request.disableCache();
-      expect(this.request.isCacheEnabled()).to.be.false;
     });
   });
 

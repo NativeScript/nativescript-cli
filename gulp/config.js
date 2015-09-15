@@ -49,7 +49,7 @@ config.files = {
   src: 'src/**/*.js',
   test: 'test/**/*.spec.js',
   entry: {
-    fileName: 'index'
+    fileName: 'export'
   },
   output: {
     fileName: 'kinvey'

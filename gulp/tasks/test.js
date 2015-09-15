@@ -27,6 +27,11 @@ gulp.task('test', ['lint-src', 'lint-test'], function() {
   return test(['test/setup/node.js', config.files.test]);
 });
 
+gulp.task('test-acl', ['lint-src', 'lint-test-acl'], function() {
+  require('babel/register');
+  return test(['test/setup/node.js', 'test/specs/acl.spec.js']);
+});
+
 gulp.task('test-database', ['lint-src', 'lint-test-database'], function() {
   require('babel/register');
   return test(['test/setup/node.js', 'test/specs/database.spec.js']);
