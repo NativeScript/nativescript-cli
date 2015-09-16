@@ -78,7 +78,6 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
-					this.$platformService.preparePlatform(platform).wait();
 					let projectFileInfo = this.getProjectFileInfo(filePath);
 					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), projectFileInfo.onDeviceName));
 				}).future<string>()();
@@ -113,6 +112,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		}).future<void>()();
 	}
 
+	protected preparePlatformForSync(platform: string) {
+		this.$platformService.preparePlatform(platform).wait();
+	}
 	private resolveUsbLiveSyncService(platform: string, device: Mobile.IDevice): IPlatformSpecificUsbLiveSyncService {
 		let platformSpecificUsbLiveSyncService: IPlatformSpecificUsbLiveSyncService = null;
 		if(platform.toLowerCase() === "android") {
