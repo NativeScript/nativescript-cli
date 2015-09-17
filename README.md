@@ -69,7 +69,7 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
 * [Gradle 2.3][Gradle 2.3] or a later stable official release
@@ -153,7 +153,7 @@ android update sdk --filter tools,platform-tools,android-22,android-17,build-too
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
@@ -193,7 +193,8 @@ ANDROID_HOME=Path to Android installation directory
 
 For example: ANDROID_HOME=/Applications/Android\ Studio.app/sdk/
 
-> NOTE: You can install required Android Tools with the following command:
+You can install the required Android tools with the following command:
+
 ```Shell
 echo yes | android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
@@ -203,7 +204,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,android-1
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* [Node.js 0.10.35][Node.js 0.10.35] or a later stable 0.x release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
 
 	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
@@ -252,7 +253,8 @@ ANDROID_HOME=Path to Android installation directory
 
 For example: ANDROID_HOME=/home/user/android-sdk
 
-> NOTE: You can install required Android Tools with the following command:
+You can install required Android Tools with the following command.
+
 ```Shell
 echo yes | android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
@@ -611,7 +613,6 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [10]: http://developer.telerik.com/featured/nativescript-android/
 [11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
 [12]: https://developer.apple.com/xcode/downloads/
-[Node.js 0.10.35]: https://nodejs.org/dist/v0.10.35/
 [Chocolatey]: https://chocolatey.org/
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Gradle 2.3]: https://gradle.org/gradle-download/
