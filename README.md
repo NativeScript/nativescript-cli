@@ -617,3 +617,6 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Gradle 2.3]: https://gradle.org/gradle-download/
 [Android SDK 21]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
+[CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
+[Android SDK Build-tools 22.0.0]: http://developer.android.com/sdk/index.html
+[Android Support Repository]: http://developer.android.com/sdk/index.html

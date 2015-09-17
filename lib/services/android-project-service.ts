@@ -141,7 +141,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 
 			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
-			shell.sed('-i', /__PROJECT_NAME__/,  this.$projectData.projectName, gradleSettingsFilePath);
+			shell.sed('-i', /__PROJECT_NAME__/, this.$projectData.projectId.split(".")[2], gradleSettingsFilePath);
 			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
 		}).future<void>()();
 	}

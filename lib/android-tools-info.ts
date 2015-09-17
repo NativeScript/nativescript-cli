@@ -6,7 +6,7 @@ import * as semver from "semver";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
-	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22"];
+	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22", "android-23"];
 	private static MIN_REQUIRED_COMPILE_TARGET = 21;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=22";
 	private static VERSION_REGEX = /^(\d+\.){2}\d+$/;
