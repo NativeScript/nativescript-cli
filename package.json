@@ -10,7 +10,7 @@
   },
   "main": "./lib/nativescript-cli.js",
   "scripts": {
-    "test": "node_modules\\.bin\\_mocha --ui mocha-fibers --recursive --reporter spec --require test/test-bootstrap.js --timeout 60000 test/ lib/common/test/unit-tests",
+    "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha -- --ui mocha-fibers --recursive --reporter spec --require test/test-bootstrap.js --timeout 60000 test/ lib/common/test/unit-tests",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js"
   },
@@ -88,6 +88,7 @@
     "grunt-shell": "1.1.2",
     "grunt-ts": "4.2.0",
     "grunt-tslint": "2.4.0",
+    "istanbul": "0.3.19",
     "mocha": "2.2.5",
     "mocha-fibers": "https://github.com/Icenium/mocha-fibers/tarball/master",
     "should": "7.0.2",
