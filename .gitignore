@@ -6,6 +6,7 @@
 !vendor/*.js
 *.js.map
 
+coverage
 lib-cov
 *.seed
 *.log
