@@ -119,13 +119,13 @@ class IOSDebugService implements IDebugService {
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
             this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
-            this.wireDebuggerClinet(() => net.connect(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
         }).future<void>()();
     }
 
     private emulatorStart(): IFuture<void> {
         return (() => {
-            this.wireDebuggerClinet(() => net.connect(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
 
             let projectId = this.$projectData.projectId;
             let attachRequestMessage = notification.attachRequest(projectId);
@@ -160,7 +160,7 @@ class IOSDebugService implements IDebugService {
                     this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
                 }
 
-                this.wireDebuggerClinet(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
+                this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                 deploy.wait();
             }).future<void>()()).wait();
         }).future<void>()();
@@ -201,23 +201,22 @@ class IOSDebugService implements IDebugService {
                         } catch (e) {
                             this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
                         }
-                        this.wireDebuggerClinet(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
+                        this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                         break;
                     case readyForAttach:
-                        this.wireDebuggerClinet(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
+                        this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                         break;
                 }
             }).future<void>()()).wait();
         }).future<void>()();
     }
     
-    private wireDebuggerClinet(factory: () => net.Socket): IFuture<void> {
+    private wireDebuggerClient(factory: () => net.Socket): IFuture<void> {
         return (() => {
             let frameworkVersion = this.getProjectFrameworkVersion().wait();
             let socketFileLocation = "";
             if (semver.gte(frameworkVersion, "1.4.0")) {
-                socketFileLocation = temp.path({ suffix: ".sock" });
-                createTcpSocketProxy(socketFileLocation, this.$logger, (callback) => connectEventually(factory, callback));
+                socketFileLocation = createTcpSocketProxy(this.$logger, (callback) => connectEventually(factory, callback));
             } else {
                 createWebSocketProxy(this.$logger, (callback) => connectEventually(factory, callback));
             }
@@ -291,15 +290,13 @@ class IOSDebugService implements IDebugService {
 }
 $injector.register("iOSDebugService", IOSDebugService);
 
-function createTcpSocketProxy(socketFileLocation: string, $logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): net.Server {
+function createTcpSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): string {
     $logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
     
-    var server = net.createServer({
+    let server = net.createServer({
         allowHalfOpen: true
     });
     
-    server.listen(socketFileLocation);
-
     server.on("connection", (frontendSocket: net.Socket) => {
         $logger.info("Frontend client connected.");
            
@@ -321,8 +318,11 @@ function createTcpSocketProxy(socketFileLocation: string, $logger: ILogger, sock
             frontendSocket.resume();
         }); 
     });
+    
+    let socketFileLocation = temp.path({ suffix: ".sock" });
+    server.listen(socketFileLocation);
 
-    return server;
+    return socketFileLocation;
 }
     
 function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
