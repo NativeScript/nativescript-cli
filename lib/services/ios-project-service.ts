@@ -200,7 +200,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return (() => {
 			let extension = path.extname(libraryPath);
 			if (extension === ".framework") {
-				this.addDynamicFramework(libraryPath);
+				this.addDynamicFramework(libraryPath).wait();
 			} else {
 				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not appear to be a dynamic framework package.`);
 			}
@@ -461,7 +461,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			expectedArchs.forEach(expectedArch => {
 				if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: 
+					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures:
 						${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
 				}
 			});
