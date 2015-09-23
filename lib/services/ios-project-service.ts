@@ -55,7 +55,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			],
 			frameworkFilesExtensions: [".a", ".framework", ".bin"],
 			frameworkDirectoriesExtensions: [".framework"],
-			frameworkDirectoriesNames: ["Metadata", "metadataGenerator"],
+			frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
 			targetedOS: ['darwin'],
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
@@ -129,9 +129,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			let pbxprojFilePath = path.join(projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
 			this.replaceFileContent(pbxprojFilePath).wait();
-
-			let mainFilePath = path.join(projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "main.m");
-			this.replaceFileContent(mainFilePath).wait();
 		}).future<void>()();
 	}
 
