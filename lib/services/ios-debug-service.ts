@@ -210,7 +210,7 @@ class IOSDebugService implements IDebugService {
             }).future<void>()()).wait();
         }).future<void>()();
     }
-    
+
     private wireDebuggerClient(factory: () => net.Socket): IFuture<void> {
         return (() => {
             let frameworkVersion = this.getProjectFrameworkVersion().wait();
@@ -237,7 +237,7 @@ class IOSDebugService implements IDebugService {
 
     private openDebuggingClient(fileDescriptor: string): IFuture<void> {
         return (() => {
-            let frameworkVersion = this.getProjectFrameworkVersion().wait();            
+            let frameworkVersion = this.getProjectFrameworkVersion().wait();
             let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
             let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
             let cmd: string = null;
@@ -255,7 +255,7 @@ class IOSDebugService implements IDebugService {
             this.$childProcess.exec(cmd).wait();
         }).future<void>()();
     }
-    
+
     private getProjectFrameworkVersion(): IFuture<string> {
         return (() => {
             this.$projectDataService.initialize(this.$projectData.projectDir);
@@ -292,39 +292,39 @@ $injector.register("iOSDebugService", IOSDebugService);
 
 function createTcpSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): string {
     $logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
-    
+
     let server = net.createServer({
         allowHalfOpen: true
     });
-    
+
     server.on("connection", (frontendSocket: net.Socket) => {
         $logger.info("Frontend client connected.");
-           
+
         frontendSocket.on("end", function() {
             $logger.info('Frontend socket closed!');
             process.exit(0);
-        }); 
-          
+        });
+
         socketFactory((backendSocket) => {
             $logger.info("Backend socket created.");
-            
+
             backendSocket.on("end", () => {
                 $logger.info("Backend socket closed!");
                 process.exit(0);
             });
-        
+
             backendSocket.pipe(frontendSocket);
             frontendSocket.pipe(backendSocket);
             frontendSocket.resume();
-        }); 
+        });
     });
-    
+
     let socketFileLocation = temp.path({ suffix: ".sock" });
     server.listen(socketFileLocation);
 
     return socketFileLocation;
 }
-    
+
 function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
     // NOTE: We will try to provide command line options to select ports, at least on the localhost.
     let localPort = 8080;
@@ -340,9 +340,9 @@ function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket
         port: localPort,
         verifyClient: (info: any, callback: any) => {
             $logger.info("Frontend client connected.");
-            socketFactory((socket) => {
+            socketFactory((_socket: any) => {
                 $logger.info("Backend socket created.");
-                info.req["__deviceSocket"] = socket;
+                info.req["__deviceSocket"] = _socket;
                 callback(true);
             });
         }
