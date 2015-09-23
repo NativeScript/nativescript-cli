@@ -9,6 +9,7 @@ import * as stream from "stream";
 import * as path from "path";
 import Future = require("fibers/future");
 import semver = require("semver");
+import temp = require("temp");
 
 module notification {
     function formatNotification(bundleId: string, notification: string) {
@@ -118,15 +119,14 @@ class IOSDebugService implements IDebugService {
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
             this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
-            createWebSocketProxy(this.$logger, (callback) => connectEventually(() => net.connect(InspectorBackendPort), callback));
-            this.executeOpenDebuggerClient().wait();
+            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
         }).future<void>()();
     }
 
     private emulatorStart(): IFuture<void> {
         return (() => {
-            createWebSocketProxy(this.$logger, (callback) => connectEventually(() => net.connect(InspectorBackendPort), callback));
-            this.executeOpenDebuggerClient().wait();
+            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
+
             let projectId = this.$projectData.projectId;
             let attachRequestMessage = notification.attachRequest(projectId);
 
@@ -160,8 +160,7 @@ class IOSDebugService implements IDebugService {
                     this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
                 }
 
-                createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
-                this.executeOpenDebuggerClient().wait();
+                this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                 deploy.wait();
             }).future<void>()()).wait();
         }).future<void>()();
@@ -202,24 +201,33 @@ class IOSDebugService implements IDebugService {
                         } catch (e) {
                             this.$errors.failWithoutHelp(`The application ${projectId} timed out when performing the NativeScript debugger handshake.`);
                         }
-                        this.readyForAttachAction(iosDevice).wait();
+                        this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                         break;
                     case readyForAttach:
-                        this.readyForAttachAction(iosDevice).wait();
+                        this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
                         break;
                 }
             }).future<void>()()).wait();
         }).future<void>()();
     }
+    
+    private wireDebuggerClient(factory: () => net.Socket): IFuture<void> {
+        return (() => {
+            let frameworkVersion = this.getProjectFrameworkVersion().wait();
+            let socketFileLocation = "";
+            if (semver.gte(frameworkVersion, "1.4.0")) {
+                socketFileLocation = createTcpSocketProxy(this.$logger, (callback) => connectEventually(factory, callback));
+            } else {
+                createWebSocketProxy(this.$logger, (callback) => connectEventually(factory, callback));
+            }
 
-    private readyForAttachAction(iosDevice: iOSDevice.IOSDevice): IFuture<void> {
-        createWebSocketProxy(this.$logger, (callback) => connectEventually(() => iosDevice.connectToPort(InspectorBackendPort), callback));
-        return this.executeOpenDebuggerClient();
+            this.executeOpenDebuggerClient(socketFileLocation).wait();
+        }).future<void>()();
     }
 
-    public executeOpenDebuggerClient(): IFuture<void> {
+    public executeOpenDebuggerClient(fileDescriptor: string): IFuture<void> {
         if (this.$options.client) {
-            return this.openDebuggingClient();
+            return this.openDebuggingClient(fileDescriptor);
         } else {
             return (() => {
                 this.$logger.info("Supressing debugging client.");
@@ -227,12 +235,9 @@ class IOSDebugService implements IDebugService {
         }
     }
 
-    private openDebuggingClient(): IFuture<void> {
+    private openDebuggingClient(fileDescriptor: string): IFuture<void> {
         return (() => {
-            this.$projectDataService.initialize(this.$projectData.projectDir);
-            let platformData = this.$platformsData.getPlatformData(this.platform);
-            let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-
+            let frameworkVersion = this.getProjectFrameworkVersion().wait();            
             let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
             let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
             let cmd: string = null;
@@ -244,11 +249,19 @@ class IOSDebugService implements IDebugService {
                 if(!this.$fs.exists(inspectorApplicationPath).wait()) {
                     this.$fs.unzip(path.join(inspectorPath, "NativeScript Inspector.zip"), inspectorPath).wait();
                 }
-                cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}'`;
+                cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
             }
 
             this.$childProcess.exec(cmd).wait();
         }).future<void>()();
+    }
+    
+    private getProjectFrameworkVersion(): IFuture<string> {
+        return (() => {
+            this.$projectDataService.initialize(this.$projectData.projectDir);
+            let platformData = this.$platformsData.getPlatformData(this.platform);
+            return this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+        }).future<string>()();
     }
 
     private getInspectorPath(frameworkVersion: string): IFuture<string> {
@@ -277,7 +290,42 @@ class IOSDebugService implements IDebugService {
 }
 $injector.register("iOSDebugService", IOSDebugService);
 
-function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (_socket: net.Socket) => void) => void): ws.Server {
+function createTcpSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): string {
+    $logger.info("\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n");
+    
+    let server = net.createServer({
+        allowHalfOpen: true
+    });
+    
+    server.on("connection", (frontendSocket: net.Socket) => {
+        $logger.info("Frontend client connected.");
+           
+        frontendSocket.on("end", function() {
+            $logger.info('Frontend socket closed!');
+            process.exit(0);
+        }); 
+          
+        socketFactory((backendSocket) => {
+            $logger.info("Backend socket created.");
+            
+            backendSocket.on("end", () => {
+                $logger.info("Backend socket closed!");
+                process.exit(0);
+            });
+        
+            backendSocket.pipe(frontendSocket);
+            frontendSocket.pipe(backendSocket);
+            frontendSocket.resume();
+        }); 
+    });
+    
+    let socketFileLocation = temp.path({ suffix: ".sock" });
+    server.listen(socketFileLocation);
+
+    return socketFileLocation;
+}
+    
+function createWebSocketProxy($logger: ILogger, socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
     // NOTE: We will try to provide command line options to select ports, at least on the localhost.
     let localPort = 8080;
 
