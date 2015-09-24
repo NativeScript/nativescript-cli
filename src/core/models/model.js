@@ -1,4 +1,3 @@
-import Kinvey from '../kinvey';
 import Acl from './acl';
 import Metadata from './metadata';
 import defaults from 'lodash/object/defaults';
@@ -10,12 +9,26 @@ import size from 'lodash/collection/size';
 import uniqueId from 'lodash/utility/uniqueId';
 import isEqual from 'lodash/lang/isEqual';
 import isEmpty from 'lodash/lang/isEmpty';
-import isDefined from '../utils/isDefined';
 const idAttribute = '_id';
 const aclAttribute = '_acl';
 const kmdAttribute = '_kmd';
 
-class Model {
+export default class Model {
+  constructor(attributes = {}, options = {}) {
+    this.cid = uniqueId(this.cidPrefix);
+    this.attributes = {};
+    this.changed = {};
+    this.validationError = null;
+
+    let attrs = attributes;
+    if (options.parse) {
+      attrs = this.parse(attrs, options) || {};
+    }
+
+    attrs = defaults({}, attrs, result(this, 'defaults', {}));
+    this.set(attrs, options);
+  }
+
   get cidPrefix() {
     return 'c';
   }
@@ -39,29 +52,8 @@ class Model {
     };
   }
 
-  constructor(attributes = {}, options = {}) {
-    // Set default options
-    options = defaults({}, options, {
-      client: Kinvey.sharedInstance()
-    });
-
-    this.cid = uniqueId(this.cidPrefix);
-    this.client = options.client;
-    this.attributes = {};
-    this.changed = {};
-    this.validationError = null;
-
-    let attrs = attributes;
-    if (options.parse) {
-      attrs = this.parse(attrs, options) || {};
-    }
-
-    attrs = defaults({}, attrs, result(this, 'defaults', {}));
-    this.set(attrs, options);
-  }
-
   toJSON() {
-    return clone(this.attributes);
+    return clone(this.attributes, true);
   }
 
   get(attr) {
@@ -69,11 +61,11 @@ class Model {
   }
 
   has(attr) {
-    return isDefined(this.get(attr));
+    return this.get(attr) ? true : false;
   }
 
   set(key, val, options = {}) {
-    if (!isDefined(key)) {
+    if (!key) {
       return this;
     }
 
@@ -98,7 +90,7 @@ class Model {
     this._changing = true;
 
     if (!changing) {
-      this._previousAttributes = clone(this.attributes);
+      this._previousAttributes = clone(this.attributes, true);
       this.changed = {};
     }
 
@@ -138,7 +130,7 @@ class Model {
   }
 
   hasChanged(attr) {
-    if (!isDefined(attr)) {
+    if (!attr) {
       return !isEmpty(this.changed);
     }
 
@@ -147,7 +139,7 @@ class Model {
 
   changedAttributes(diff) {
     if (!diff) {
-      return this.hasChanged() ? clone(this.changed) : false;
+      return this.hasChanged() ? clone(this.changed, true) : false;
     }
 
     const old = this._changing ? this._previousAttributes : this.attributes;
@@ -169,7 +161,7 @@ class Model {
   }
 
   previousAttribute(attr) {
-    if (!isDefined(attr) || !this._previousAttributes) {
+    if (!attr || !this._previousAttributes) {
       return null;
     }
 
@@ -203,5 +195,3 @@ class Model {
     return true;
   }
 }
-
-export default Model;

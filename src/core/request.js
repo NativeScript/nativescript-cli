@@ -2,13 +2,16 @@ import isDefined from '../utils/isDefined';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
 import HttpMethod from './enums/httpMethod';
-import Rack from './rack';
+import Rack from '../rack/rack';
 import AuthType from './enums/authType';
 import Auth from './auth';
+import Query from './query';
 import url from 'url';
 import Kinvey from '../kinvey';
 import DataPolicy from './enums/dataPolicy';
+import KinveyError from './errors/error';
 import defaults from 'lodash/object/defaults';
+import merge from 'lodash/object/merge';
 const privateRequestSymbol = Symbol();
 
 class PrivateRequest {
@@ -88,12 +91,23 @@ class PrivateRequest {
       dataPolicy: DataPolicy.CloudFirst
     });
 
+    // Validate options
+    if (!(options.client instanceof Kinvey)) {
+      throw new KinveyError('options.client must be of type Kinvey');
+    }
+
+    // Validate query
+    if (query && !(query instanceof Query)) {
+      throw new KinveyError('query argument must be an instance of Kinvey.Query');
+    }
+
     // Set request info
     this.method = method;
+    this.headers = {};
     this.protocol = options.client.apiProtocol;
     this.hostname = options.client.apiHostname;
     this.path = path;
-    this.query = query;
+    this.query = merge({}, options.flags, query.toJSON());
     this.body = body;
     this.client = options.client;
     this.auth = options.authType;
@@ -123,7 +137,7 @@ class PrivateRequest {
   }
 
   setHeader(header, value) {
-    const headers = this.headers || {};
+    const headers = this.headers;
     headers[header.toLowerCase()] = value;
     this.headers = headers;
   }
@@ -143,7 +157,7 @@ class PrivateRequest {
 
   execute() {
     if (this.executing) {
-      return Promise.reject(new Error('Request is executing.'));
+      return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
     const dataPolicy = this.dataPolicy;
@@ -277,8 +291,7 @@ class PrivateRequest {
       body: this.body,
       authType: this.authType,
       dataPolicy: this.dataPolicy,
-      client: this.client,
-      response: this.response
+      client: this.client.toJSON()
     };
 
     // Return the json object

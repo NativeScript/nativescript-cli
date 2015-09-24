@@ -124,4 +124,8 @@ describe('ACL', function() {
       }).to.throw(KinveyError, 'acl argument must be an object');
     });
   });
+
+  describe('addReader()', function() {
+
+  });
 });

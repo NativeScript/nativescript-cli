@@ -4,6 +4,10 @@ import Request from './request';
 import HttpMethod from './enums/httpMethod';
 import DataPolicy from './enums/dataPolicy';
 import AuthType from './enums/authType';
+import Query from './query';
+import Aggregation from './aggregation';
+import KinveyError from './errors/error';
+import when from 'when';
 import map from 'lodash/collection/map';
 import defaults from 'lodash/object/defaults';
 import clone from 'lodash/lang/clone';
@@ -17,34 +21,32 @@ const setOptions = {add: true, remove: true, merge: true};
 const addOptions = {add: true, remove: false};
 
 class Collection {
-  get path() {
-    let path = `/appdata/${this.client.appKey}`;
-
-    if (isDefined(this.name)) {
-      path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(this.name)}`;
-    }
-
-    return path;
-  }
-
   constructor(name, models = [], options = {}) {
-    // Set default options
     options = defaults({}, options, {
       client: Kinvey.sharedInstance(),
       model: Model
     });
 
     this.client = options.client;
+    this.namespace = 'appdata';
     this.name = name;
     this.model = options.model;
     this.comparator = options.comparator;
-
-    // Reset the collection
     this._reset();
 
     if (models) {
       this.reset(models, assign({ silent: true }, options));
     }
+  }
+
+  get path() {
+    let path = `/${this.namespace}/${this.client.appKey}`;
+
+    if (isDefined(this.name)) {
+      path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(this.name)}`;
+    }
+
+    return path;
   }
 
   toJSON() {
@@ -241,29 +243,119 @@ class Collection {
     return this;
   }
 
-  fetch(options = {}) {
+  find(query, options = {}) {
+    if (query && !(query instanceof Query)) {
+      return when.reject(new KinveyError('query argument must be of type Kinvey.Query'));
+    }
+
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Session,
+      authType: AuthType.Default,
       parse: true
     }, options);
 
-    const request = new Request(HttpMethod.GET, this.path, null, null, options);
+    const request = new Request(HttpMethod.GET, this.path, query, null, options);
+    const promise = request.execute().then((response) => {
+      let data = response.data;
+
+      if (options.parse) {
+        data = this.parse(data);
+      }
+
+      const fn = options.reset ? 'reset' : 'set';
+      return this[fn](data, options);
+    });
+
+    return promise;
+  }
+
+  get(models = [], options = {}) {
+    options = assign({
+      dataPolicy: DataPolicy.CloudFirst,
+      authType: AuthType.Default,
+      parse: true
+    }, options);
+
+    const singular = !isArray(models);
+    models = singular ? [models] : models.slice();
+    const promises = [];
+
+    for (let i = 0, len = models.length; i < len; i++) {
+      const model = this._prepareModel(models[i], options);
+      const opts = clone(options, true);
+
+      if (!model) {
+        promises.push(Promise.reject(new Error('Model required')));
+        continue;
+      }
+
+      const request = new Request(HttpMethod.GET, `${this.path}/${model.id}`, null, null, opts);
+      const promise = request.execute().then((response) => {
+        let data = response.data;
+
+        if (opts.parse) {
+          data = this.parse(data);
+        }
+
+        const fn = options.reset ? 'reset' : 'set';
+        return this[fn](data, options);
+      });
+
+      promises.push(promise);
+    }
+
+    return Promise.all(promises).then((responses) => {
+      return singular ? responses[0] : responses;
+    });
+  }
+
+  count(query, options = {}) {
+    if (query && !(query instanceof Query)) {
+      return when.reject(new KinveyError('query argument must be of type Kinvey.Query'));
+    }
+
+    options = assign({
+      dataPolicy: DataPolicy.CloudFirst,
+      authType: AuthType.Default
+    }, options);
+
+    const request = new Request(HttpMethod.GET, `${this.path}/_count`, query, null, options);
     const promise = request.execute().then((response) => {
       const data = response.data;
-      const fn = options.reset ? 'reset' : 'set';
-      this[fn](data, options);
-      return this;
+
+      if (data) {
+        return data.count;
+      }
+
+      return {count: 0};
+    });
+
+    return promise;
+  }
+
+  group(aggregation, options = {}) {
+    if (!(aggregation instanceof Aggregation)) {
+      return when.reject(new KinveyError('aggregation argument must be of type Kinvey.Group'));
+    }
+
+    options = assign({
+      dataPolicy: DataPolicy.CloudFirst,
+      authType: AuthType.Default
+    }, options);
+
+    const request = new Request(HttpMethod.GET, `${this.path}/_group`, null, aggregation.toJSON(), options);
+    const promise = request.execute().then((response) => {
+      const data = response.data;
+      return aggregation.process(data);
     });
 
     return promise;
   }
 
   save(models = [], options = {}) {
-    // Set default options
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Session
+      authType: AuthType.Default
     }, options);
 
     const singular = !isArray(models);
@@ -273,7 +365,7 @@ class Collection {
 
     for (let i = 0, len = models.length; i < len; i++) {
       const model = this._prepareModel(models[i], options);
-      const opts = clone(options);
+      const opts = clone(options, true);
       let path = this.path;
 
       if (!model) {
@@ -287,7 +379,7 @@ class Collection {
 
       let method = HttpMethod.POST;
       if (!model.isNew()) {
-        path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
+        path = `${path}/${model.id}`;
 
         if (opts.patch) {
           method = HttpMethod.PATCH;
@@ -305,22 +397,21 @@ class Collection {
           this.add(model, opts);
         }
 
-        return this;
+        return model;
       });
 
       promises.push(promise);
     }
 
-    return Promise.all(promises).then(() => {
-      return this;
+    return Promise.all(promises).then((models) => {
+      return singular ? models[0] : models;
     });
   }
 
   destroy(models = [], options = {}) {
-    // Set default options
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Session
+      authType: AuthType.Default
     }, options);
 
     const singular = !isArray(models);
@@ -330,8 +421,7 @@ class Collection {
 
     for (let i = 0, len = models.length; i < len; i++) {
       const model = this._prepareModel(models[i], options);
-      const opts = clone(options);
-      let path = this.path;
+      const opts = clone(options, true);
 
       if (!model) {
         promises.push(Promise.reject(new Error('Model required')));
@@ -342,21 +432,20 @@ class Collection {
         this.remove(model, options);
       }
 
-      path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(model.id)}`;
-      const request = new Request(HttpMethod.DELETE, path, null, model.toJSON(), opts);
-      const promise = request.execute().then(() => {
+      const request = new Request(HttpMethod.DELETE, `${this.path}/${model.id}`, null, null, opts);
+      const promise = request.execute().then((response) => {
         if (wait) {
           this.remove(model, opts);
         }
 
-        return this;
+        return response.data;
       });
 
       promises.push(promise);
     }
 
-    return Promise.all(promises).then(() => {
-      return this;
+    return Promise.all(promises).then((responses) => {
+      return singular ? responses[0] : responses;
     });
   }
 
@@ -383,7 +472,7 @@ class Collection {
       return attrs;
     }
 
-    options = clone(options);
+    options = clone(options, true);
     options.collection = this;
     const model = new this.model(attrs, options);
 
