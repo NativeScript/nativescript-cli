@@ -25,15 +25,7 @@ class DoctorService implements IDoctorService {
 			this.printPackageManagerTip();
 			result = true;
 		}
-		if (!sysInfo.antVer) {
-			this.$logger.warn("WARNING: Apache Ant is not installed or is not configured properly.");
-			this.$logger.out("You will not be able to build your projects for Android." + EOL
-			+ "To be able to build for Android, download and install Apache Ant and" + EOL
-			+ "its dependencies as described in http://ant.apache.org/manual/index.html" + EOL);
 
-			this.printPackageManagerTip();
-			result = true;
-		}
 		if (!sysInfo.androidInstalled) {
 			this.$logger.warn("WARNING: The Android SDK is not installed or is not configured properly.");
 			this.$logger.out("You will not be able to build your projects for Android and run them in the native emulator." + EOL
