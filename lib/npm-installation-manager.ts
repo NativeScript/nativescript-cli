@@ -9,6 +9,11 @@ import * as constants from "./constants";
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 	private versionsCache: IDictionary<string[]>;
+	private packageSpecificDirectories: IStringDictionary = {
+		"tns-android": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
+		"tns-ios": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
+		"tns-template-hello-world": constants.APP_RESOURCES_FOLDER_NAME
+	};
 
 	constructor(private $npm: INodePackageManager,
 		private $logger: ILogger,
@@ -36,7 +41,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			}
 
 			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
-				// In some cases the package is not fully downloaded and the framework directory is missing
+				// In some cases the package is not fully downloaded and there are missing directories
 				// Try removing the old package and add the real one to cache again
 				this.addCleanCopyToCache(packageName, version).wait();
 			}
@@ -94,7 +99,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return (() => {
 			this.$npm.cache(packageName, version).wait();
 			let packagePath = path.join(this.getCacheRootPath(), packageName, version, "package");
-			if(!this.isPackageUnpacked(packagePath).wait()) {
+			if(!this.isPackageUnpacked(packagePath, packageName).wait()) {
 				this.cacheUnpack(packageName, version).wait();
 			}
 		}).future<void>()();
@@ -128,13 +133,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			} else {
 				version = version || this.getLatestVersion(packageName).wait();
 				let packagePath = this.getCachedPackagePath(packageName, version);
-				if (!this.isPackageCached(packagePath).wait()) {
-					this.$npm.cache(packageName, version).wait();
-				}
-
-				if(!this.isPackageUnpacked(packagePath).wait()) {
-					this.cacheUnpack(packageName, version).wait();
-				}
+				this.addToCache(packageName, version).wait();
 				return packagePath;
 			}
 		}).future<string>()();
@@ -151,15 +150,17 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return this.$npm.install(packageName, pathToSave);
 	}
 
-	private isPackageCached(packagePath: string): IFuture<boolean> {
-		return this.$fs.exists(packagePath);
+	private isPackageUnpacked(packagePath: string, packageName: string): IFuture<boolean> {
+		return (() => {
+			let additionalDirectoryToCheck = this.packageSpecificDirectories[packageName];
+			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
+					(!additionalDirectoryToCheck || this.hasFilesInDirectory(path.join(packagePath, additionalDirectoryToCheck)).wait());
+		}).future<boolean>()();
 	}
 
-	private isPackageUnpacked(packagePath: string): IFuture<boolean> {
-		return (() => {
-			return this.$fs.getFsStats(packagePath).wait().isDirectory() &&
-				this.$fs.exists(path.join(packagePath, "framework")).wait() &&
-				this.$fs.enumerateFilesInDirectorySync(path.join(packagePath, "framework")).length > 1;
+	private hasFilesInDirectory(directory: string): IFuture<boolean> {
+		return ((): boolean => {
+			return this.$fs.exists(directory).wait() &&	this.$fs.enumerateFilesInDirectorySync(directory).length > 0;
 		}).future<boolean>()();
 	}
 }
