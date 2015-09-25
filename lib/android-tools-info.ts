@@ -7,7 +7,7 @@ import * as semver from "semver";
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
 	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22", "android-23"];
-	private static MIN_REQUIRED_COMPILE_TARGET = 21;
+	private static MIN_REQUIRED_COMPILE_TARGET = 22;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=22";
 	private static VERSION_REGEX = /^(\d+\.){2}\d+$/;
 	private showWarningsAsErrors: boolean;
@@ -120,12 +120,23 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private getCompileSdk(): IFuture<number> {
 		return ((): number => {
 			if(!this.selectedCompileSdk) {
-				let latestValidAndroidTarget = this.getLatestValidAndroidTarget().wait();
-				if(latestValidAndroidTarget) {
-					let integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
+				let userSpecifiedCompileSdk = this.$options.compileSdk;
+				if(userSpecifiedCompileSdk) {
+					let installedTargets = this.getInstalledTargets().wait();
+					let androidCompileSdk = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${userSpecifiedCompileSdk}`;
+					if(!_.contains(installedTargets, androidCompileSdk)) {
+						this.$errors.failWithoutHelp(`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`);
+					}
 
-					if(integerVersion && integerVersion >= AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET) {
-						this.selectedCompileSdk = integerVersion;
+					this.selectedCompileSdk = userSpecifiedCompileSdk;
+				} else {
+					let latestValidAndroidTarget = this.getLatestValidAndroidTarget().wait();
+					if(latestValidAndroidTarget) {
+						let integerVersion = this.parseAndroidSdkString(latestValidAndroidTarget);
+
+						if(integerVersion && integerVersion >= AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET) {
+							this.selectedCompileSdk = integerVersion;
+						}
 					}
 				}
 			}
