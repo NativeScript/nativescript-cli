@@ -15,6 +15,44 @@ import merge from 'lodash/object/merge';
 const privateRequestSymbol = Symbol();
 
 class PrivateRequest {
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
+    options = defaults({}, options, {
+      client: Kinvey.sharedClientInstance(),
+      authType: AuthType.None,
+      dataPolicy: DataPolicy.CloudFirst
+    });
+
+    // Validate options
+    if (!(options.client instanceof Kinvey)) {
+      throw new KinveyError('options.client must be of type Kinvey');
+    }
+
+    // Validate query
+    if (query && !(query instanceof Query)) {
+      throw new KinveyError('query argument must be an instance of Kinvey.Query');
+    }
+
+    // Set request info
+    this.method = method;
+    this.headers = {};
+    this.protocol = options.client.apiProtocol;
+    this.hostname = options.client.apiHostname;
+    this.path = path;
+    this.query = merge({}, options.flags, query.toJSON());
+    this.body = body;
+    this.client = options.client;
+    this.auth = options.authType;
+    this.dataPolicy = options.dataPolicy;
+    this.executing = false;
+
+    // Add default headers
+    const headers = {};
+    headers.Accept = 'application/json';
+    headers['Content-Type'] = 'application/json';
+    headers['X-Kinvey-Api-Version'] = options.client.apiVersion;
+    this.addHeaders(headers);
+  }
+
   get auth() {
     return this._auth;
   }
@@ -82,44 +120,6 @@ class PrivateRequest {
       query: this.query,
       hash: this.hash
     });
-  }
-
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    options = defaults({}, options, {
-      client: Kinvey.sharedInstance(),
-      authType: AuthType.None,
-      dataPolicy: DataPolicy.CloudFirst
-    });
-
-    // Validate options
-    if (!(options.client instanceof Kinvey)) {
-      throw new KinveyError('options.client must be of type Kinvey');
-    }
-
-    // Validate query
-    if (query && !(query instanceof Query)) {
-      throw new KinveyError('query argument must be an instance of Kinvey.Query');
-    }
-
-    // Set request info
-    this.method = method;
-    this.headers = {};
-    this.protocol = options.client.apiProtocol;
-    this.hostname = options.client.apiHostname;
-    this.path = path;
-    this.query = merge({}, options.flags, query.toJSON());
-    this.body = body;
-    this.client = options.client;
-    this.auth = options.authType;
-    this.dataPolicy = options.dataPolicy;
-    this.executing = false;
-
-    // Add default headers
-    const headers = {};
-    headers.Accept = 'application/json';
-    headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = options.client.apiVersion;
-    this.addHeaders(headers);
   }
 
   getHeader(header) {
@@ -246,8 +246,8 @@ class PrivateRequest {
   }
 
   executeLocal() {
-    const databaseRack = Rack.databaseRack;
-    return databaseRack.execute(this);
+    const storageRack = Rack.storageRack;
+    return storageRack.execute(this);
   }
 
   executeCloud() {

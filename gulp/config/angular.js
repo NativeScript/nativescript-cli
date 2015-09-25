@@ -6,7 +6,6 @@ const config = {};
  * Environment variables for the project.
  */
 config.env = {
-  KINVEY_INDEXEDDB_LIB: 'indexeddbshim',
   KINVEY_HTTP_LIB: 'kinvey-http-angular',
   KINVEY_PLATFORM_ENV: 'angular'
 };

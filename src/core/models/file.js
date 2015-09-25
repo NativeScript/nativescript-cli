@@ -1,9 +1,10 @@
-import AuthType from './enums/authType';
-import DataPolicy from './enums/dataPolicy';
+import AuthType from '../enums/authType';
+import DataPolicy from '../enums/dataPolicy';
+import Model from './model';
 import assign from 'lodash/object/assign';
 const filesNamespace = 'blob';
 
-class Files {
+class Files extends Model {
   find(query, options = {}) {
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {

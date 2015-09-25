@@ -29,6 +29,7 @@
     "kinvey-http-node": "git://github.com/ThomasConner/kinvey-http-node.git",
     "kinvey-http-xhr": "git://github.com/ThomasConner/kinvey-http-xhr.git",
     "kinvey-rack": "git://github.com/ThomasConner/kinvey-rack.git",
+    "localforage": "^1.2.10",
     "lodash": "^3.10.0",
     "loglevel": "^1.3.1",
     "node-cache": "^3.0.0",

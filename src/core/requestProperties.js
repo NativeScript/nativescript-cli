@@ -1,29 +1,19 @@
-import Cache from './cache';
 import clone from 'lodash/lang/clone';
-import merge from 'lodash/object/merge';
 const privateRequestPropertiesSymbol = Symbol();
 const sharedInstanceSymbol = Symbol();
-const requestPropertiesKey = 'requestProperties';
 const appVersionKey = 'appVersion';
 
 class PrivateRequestProperties {
+  constructor(properties = {}) {
+    this.properties = properties;
+  }
+
   get properties() {
     return this._properties;
   }
 
   set properties(properties) {
     this._properties = clone(properties, true);
-  }
-
-  constructor(properties = {}) {
-    const cache = Cache.sharedInstance();
-    const savedProperties = cache.get(requestPropertiesKey);
-
-    // Merge the saved properties
-    merge(properties, savedProperties);
-
-    // Set the properties
-    this.properties = properties;
   }
 
   addProperties(properties = {}) {

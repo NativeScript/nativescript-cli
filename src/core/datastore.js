@@ -24,7 +24,7 @@ class Datastore {
    *
    * @param  {Kinvey}       [client=Kinvey.sharedInstance()]            Client
    */
-  constructor(client = Kinvey.sharedInstance) {
+  constructor(client = Kinvey.sharedClientInstance()) {
     /**
      * @type {Kinvey}
      */

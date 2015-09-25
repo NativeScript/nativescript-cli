@@ -46,14 +46,27 @@ export default class Model {
   }
 
   get defaults() {
-    return {
-      _acl: {},
-      _kmd: {}
-    };
+    const defaults = {};
+    defaults[idAttribute] = this.generateObjectId();
+    defaults[aclAttribute] = {};
+    defaults[kmdAttribute] = {};
+    return defaults;
   }
 
-  toJSON() {
-    return clone(this.attributes, true);
+  get objectIdPrefix() {
+    return 'local_';
+  }
+
+  generateObjectId(length = 24) {
+    const chars = 'abcdef0123456789';
+    let result = '';
+
+    for (let i = 0, j = chars.length; i < length; i += 1) {
+      const pos = Math.floor(Math.random() * j);
+      result += chars.substring(pos, pos + 1);
+    }
+
+    return `${this.objectIdPrefix}${result}`;
   }
 
   get(attr) {
@@ -126,7 +139,7 @@ export default class Model {
   }
 
   unset(attr, options = {}) {
-    return this.set(attr, undefined, assign({}, options, { unset: true }));
+    return this.set(attr, undefined, assign({}, options, {unset: true}));
   }
 
   hasChanged(attr) {
@@ -173,11 +186,16 @@ export default class Model {
   }
 
   isNew() {
-    return !this.has(idAttribute);
+    const id = this.id;
+    return !this.has(idAttribute) || id.indexOf(this.objectIdPrefix) === 0;
   }
 
   isValid(options = {}) {
-    return this._validate({}, defaults({ validate: true }, options));
+    return this._validate({}, defaults({validate: true}, options));
+  }
+
+  toJSON() {
+    return clone(this.attributes, true);
   }
 
   _validate(attrs, options = {}) {

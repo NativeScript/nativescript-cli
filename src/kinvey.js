@@ -27,8 +27,7 @@ Kinvey.NotFoundError = require('./core/errors/notFoundError');
 
 // Middleware
 Kinvey.Middleware = require('./rack/middleware/middleware');
-Kinvey.Middleware.Cache = require('./rack/middleware/cache');
-Kinvey.Middleware.Database = require('./rack/middleware/database');
+Kinvey.Middleware.Storage = require('./rack/middleware/storage');
 Kinvey.Middleware.Http = require('./rack/middleware/http');
 Kinvey.Middleware.Parser = require('./rack/middleware/parser');
 Kinvey.Middleware.Serializer = require('./rack/middleware/serializer');

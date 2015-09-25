@@ -1,10 +1,15 @@
 import ActiveUserError from '../errors/activeUserError';
-import Storage from '../storage';
+import LocalStorage from '../storage/local';
 import Model from './model';
 import Users from '../collections/users';
+import StorageDriver from '../enums/storageDriver';
 import when from 'when';
 const activeUserSymbol = Symbol();
 const activeUserKey = 'activeUser';
+const store = new LocalStorage({
+  collection: 'users',
+  driver: StorageDriver.LocalStorage
+});
 
 export default class User extends Model {
   get authtoken() {
@@ -18,10 +23,9 @@ export default class User extends Model {
    */
   static get active() {
     let user = User[activeUserSymbol];
-    const storage = Storage.sharedInstance();
 
     if (!user) {
-      const storedUser = storage.get(activeUserKey);
+      const storedUser = store.get(activeUserKey);
 
       if (storedUser) {
         user = new User(storedUser);
@@ -34,26 +38,20 @@ export default class User extends Model {
 
   static set active(user) {
     let activeUser = User.active;
-    const storage = Storage.sharedInstance();
 
     if (activeUser) {
-      storage.delete(activeUserKey);
+      store.destroy(activeUserKey);
       User[activeUserSymbol] = null;
     }
 
     if (user) {
       if (!(user instanceof User)) {
-        if (isFunction(user.toJSON)) {
-          user = user.toJSON();
-        }
-
-        activeUser = new User(user);
-      } else {
-        activeUser = user;
+        user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
       }
 
-      storage.set(activeUserKey, activeUser.toJSON());
-      User[activeUserSymbol] = currentUser;
+      activeUser = user;
+      store.save(activeUserKey, activeUser.toJSON());
+      User[activeUserSymbol] = activeUser;
     }
   }
 

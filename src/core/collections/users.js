@@ -4,7 +4,6 @@ import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Kinvey from '../../kinvey';
 import ActiveUserError from '../errors/activeUserError';
-import Storage from '../storage';
 import Model from '../models/model';
 import Collection from '../collection';
 import when from 'when';

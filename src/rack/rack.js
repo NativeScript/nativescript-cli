@@ -3,9 +3,9 @@ import KinveyRack from 'kinvey-rack';
 import SerializerMiddleware from './middleware/serializer';
 import HttpMiddleware from './middleware/http';
 import ParserMiddleware from './middleware/parser';
-import DatabaseMiddleware from './middleware/database';
+import StorageMiddleware from './middleware/storage';
 const networkRackSymbol = Symbol();
-const databaseRackSymbol = Symbol();
+const storageRackySymbol = Symbol();
 
 class Rack extends KinveyRack {
 
@@ -25,22 +25,23 @@ class Rack extends KinveyRack {
     Rack[networkRackSymbol] = rack;
   }
 
-  static get databaseRack() {
-    if (!Rack[databaseRackSymbol]) {
-      const rack = new Rack('Kinvey Database Rack');
-      rack.use(new DatabaseMiddleware());
-      Rack[databaseRackSymbol] = rack;
+  static get storageRack() {
+    if (!Rack[storageRackySymbol]) {
+      const rack = new Rack('Kinvey Storage Rack');
+      rack.use(new StorageMiddleware);
+      Rack[storageRackySymbol] = rack;
     }
 
-    return Rack[databaseRackSymbol];
+    return Rack[storageRackySymbol];
   }
 
-  static set databaseRack(rack) {
-    Rack[databaseRackSymbol] = rack;
+  static set storageRack(rack) {
+    Rack[storageRackySymbol] = rack;
   }
 
   execute(request) {
-    return super.execute(clone(request.toJSON(), true)).then((request) => {
+    const requestClone = clone(request.toJSON(), true);
+    return super.execute(requestClone).then((request) => {
       return request.response;
     });
   }

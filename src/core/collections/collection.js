@@ -23,7 +23,7 @@ const addOptions = {add: true, remove: false};
 class Collection {
   constructor(name, models = [], options = {}) {
     options = defaults({}, options, {
-      client: Kinvey.sharedInstance(),
+      client: Kinvey.sharedClientInstance(),
       model: Model
     });
 

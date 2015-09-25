@@ -1,7 +1,6 @@
 const RackType = {
   Network: 'Network',
-  Cache: 'Cache',
-  Database: 'Database'
+  Storage: 'Storage'
 };
 Object.freeze(RackType);
 export default RackType;
