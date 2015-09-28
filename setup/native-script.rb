@@ -27,6 +27,9 @@ system('brew cask install java')
 `echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.bash_profile`
 `echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.bash_profile`
 
+puts "Installing node.js 0.12"
+system('brew install homebrew/versions/node012')
+
 puts "Creating Homebrew formula for NativeScript."
 File.open("/usr/local/Library/Formula/native-script.rb", "w:utf-8") do |f|
   f.write DATA.read
@@ -46,8 +49,7 @@ class NativeScript < Formula
 
   depends_on :macos => :yosemite
   depends_on "pkg-config" => :build
-  depends_on "node"
-  depends_on "ant"
+#  depends_on "node" # currently we do not work with latest node, and we manually install 0.12 (see above)
   depends_on "android-sdk"
   depends_on "gradle"
 
