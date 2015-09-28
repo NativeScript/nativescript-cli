@@ -145,7 +145,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Gr
 
 > NOTE: You can install required Android Tools with the following command:
 ```Shell
-android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## OS X
