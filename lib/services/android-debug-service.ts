@@ -170,12 +170,19 @@ class AndroidDebugService implements IDebugService {
     }
 
     private openDebuggerClient(url: string): void {
-		let chrome = this.$hostInfo.isDarwin ? this.$config.ANDROID_DEBUG_UI_MAC : "chrome";
-		let child = this.$opener.open(url, chrome);
+        let defaultDebugUI = "chrome";
+        if(this.$hostInfo.isDarwin) {
+            defaultDebugUI = "Google Chrome";
+        }
+        if(this.$hostInfo.isLinux) {
+            defaultDebugUI = "google-chrome";
+        }
+
+		let debugUI = this.$config.ANDROID_DEBUG_UI || defaultDebugUI;
+		let child = this.$opener.open(url, debugUI);
 		if(!child) {
-			this.$errors.fail(`Unable to open ${chrome}.`);
+			this.$errors.failWithoutHelp(`Unable to open ${debugUI}.`);
 		}
-		return child;
     }
 
     private checkIfRunning(packageName: string): boolean {
