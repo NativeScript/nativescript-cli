@@ -10,7 +10,7 @@ export class Configuration extends configBaseLib.ConfigBase implements IConfigur
 	DEBUG = false;
 	TYPESCRIPT_COMPILER_OPTIONS = {};
 	USE_PROXY = false;
-	ANDROID_DEBUG_UI_MAC = "Google Chrome";
+	ANDROID_DEBUG_UI: string = null;
 
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
 	constructor(protected $fs: IFileSystem) {
