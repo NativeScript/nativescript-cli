@@ -58,7 +58,7 @@ class NativeScript < Formula
     system "/usr/local/bin/npm install -g nativescript"
 
     ohai "Configuring your system for Android development... This might take some time, please, be patient."
-    system "echo yes | android update sdk --filter tools,platform-tools,android-22,android-17,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui"
+    system "echo yes | android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui"
 
     ohai "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile. Restart the terminal to use them."
   end
