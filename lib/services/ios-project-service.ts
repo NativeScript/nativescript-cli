@@ -429,7 +429,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private executePodInstall(): IFuture<any> {
 		this.$logger.info("Installing pods...");
-		return this.$childProcess.exec("pod install", { cwd: this.platformData.projectRoot });
+		return this.$childProcess.spawnFromEvent("pod",  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' });
 	}
 
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
