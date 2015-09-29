@@ -1,7 +1,7 @@
 interface IPluginsService {
 	add(plugin: string): IFuture<void>; // adds plugin by name, github url, local path and et.
 	remove(pluginName: string): IFuture<void>; // removes plugin only by name
-	prepare(pluginData: IDependencyData): IFuture<void>;
+	prepare(pluginData: IDependencyData, opts?: { cleanGradle?: boolean }): IFuture<void>;
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
@@ -9,7 +9,7 @@ interface IPluginsService {
 
 interface IPluginData extends INodeModuleData {
 	platformsData: IPluginPlatformsData;
-	pluginPlatformsFolderPath(platform: string): string; 
+	pluginPlatformsFolderPath(platform: string): string;
 }
 
 interface INodeModuleData {

@@ -32,7 +32,7 @@ export class PluginsService implements IPluginsService {
 			let dependencyData = this.$npm.cache(plugin, undefined, PluginsService.NPM_CONFIG).wait();
 			if(dependencyData.nativescript) {
 				this.executeNpmCommand(PluginsService.INSTALL_COMMAND_NAME, plugin).wait();
-				this.prepare(dependencyData).wait();
+				this.prepare(dependencyData, { cleanGradle: true }).wait();
 				this.$logger.out(`Successfully installed plugin ${dependencyData.name}.`);
 			} else {
 				this.$errors.failWithoutHelp(`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`);
@@ -54,6 +54,8 @@ export class PluginsService implements IPluginsService {
 			let showMessage = true;
 			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
+					this.cleanGradle(platform).wait();
+
 					shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 
 					this.$logger.out(`Successfully removed plugin ${pluginName} for ${platform}.`);
@@ -68,7 +70,7 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 
-	public prepare(dependencyData: IDependencyData): IFuture<void> {
+	public prepare(dependencyData: IDependencyData, opts?: { cleanGradle?: boolean }): IFuture<void> {
 		return (() => {
 			let pluginData = this.convertToPluginData(dependencyData);
 
@@ -88,6 +90,10 @@ export class PluginsService implements IPluginsService {
 							this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
 							return;
 						}
+					}
+
+					if(opts && opts.cleanGradle) {
+						this.cleanGradle(platform).wait();
 					}
 
 					if(this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
@@ -264,6 +270,14 @@ export class PluginsService implements IPluginsService {
 			let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 			return frameworkData.version;
 		}).future<string>()();
+	}
+
+	private cleanGradle(platform: string): IFuture<void> {
+		if(platform.toLowerCase() === "android") {
+			return this.$childProcess.spawnFromEvent("gradle", ["clean"], "close");
+		}
+
+		return Future.fromResult();
 	}
 
 	private mergeXml(xml1: string, xml2: string, config: any[]): IFuture<string> {
