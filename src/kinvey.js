@@ -1,4 +1,5 @@
 import Client from './core/client';
+import KinveyError from './core/errors/error';
 import when from 'when';
 const sharedClientInstanceSymbol = Symbol();
 const Kinvey = {};
@@ -8,7 +9,7 @@ Kinvey.Acl = require('./core/acl');
 Kinvey.Aggregation = require('./core/aggregation');
 Kinvey.Client = Client;
 Kinvey.Datastore = require('./core/datastore');
-Kinvey.Group = require('./core/group');
+Kinvey.Group = require('./core/aggregation');
 Kinvey.Metadata = require('./core/metadata');
 Kinvey.Query = require('./core/query');
 Kinvey.User = require('./core/models/user');
@@ -27,7 +28,7 @@ Kinvey.NotFoundError = require('./core/errors/notFoundError');
 
 // Middleware
 Kinvey.Middleware = require('./rack/middleware/middleware');
-Kinvey.Middleware.Storage = require('./rack/middleware/storage');
+Kinvey.Middleware.cache = require('./rack/middleware/cache');
 Kinvey.Middleware.Http = require('./rack/middleware/http');
 Kinvey.Middleware.Parser = require('./rack/middleware/parser');
 Kinvey.Middleware.Serializer = require('./rack/middleware/serializer');

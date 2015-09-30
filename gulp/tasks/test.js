@@ -32,9 +32,14 @@ gulp.task('test-acl', ['lint-src', 'lint-test-acl'], function() {
   return test(['test/setup/node.js', 'test/specs/acl.spec.js']);
 });
 
-gulp.task('test-database', ['lint-src', 'lint-test-database'], function() {
+gulp.task('test-datastore', ['lint-src', 'lint-test-datastore'], function() {
   require('babel/register');
-  return test(['test/setup/node.js', 'test/specs/database.spec.js']);
+  return test(['test/setup/node.js', 'test/specs/datastore.spec.js']);
+});
+
+gulp.task('test-indexeddb', ['lint-src', 'lint-test-indexeddb'], function() {
+  require('babel/register');
+  return test(['test/setup/node.js', 'test/specs/indexeddb.spec.js']);
 });
 
 gulp.task('test-query', ['lint-src', 'lint-test-query'], function() {

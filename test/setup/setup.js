@@ -21,9 +21,11 @@ global.randomString = function(size) {
 module.exports = function() {
   before(function() {
     // Initialize Kinvey
-    this.kinvey = Kinvey.init({
+    return Kinvey.init({
       appKey: global.randomString(),
       appSecret: global.randomString()
+    }).then(client => {
+      this.kinvey = client;
     });
   });
 

@@ -22,6 +22,7 @@ config.env = {
   KINVEY_API_PROTOCOL: 'https',
   KINVEY_API_HOSTNAME: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
+  KINVEY_INDEXEDDB_LIB: 'fake-indexeddb',
   KINVEY_HTTP_LIB: 'kinvey-http-node',
   KINVEY_PLATFORM_ENV: 'node'
 };
@@ -57,7 +58,7 @@ config.files = {
 config.files = assign(config.files, platformConfig.files);
 
 /**
- * Babel is the lib used to transpile ES2015 and beyond into ES5.
+ * Babel is the lib used to transpile ES6 and beyond into ES5.
  */
 config.babel = {
   blacklist: [
@@ -83,21 +84,21 @@ config.browserify = {
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
 
-/**
- * BrowserySync is the lib used to automatically reload the browser
- * whenever a file chances.
- */
-config.browserSync = {
-  server: {
-    baseDir: [
-      './test/',
-      './tmp',
-      './'
-    ],
-    index: 'runner.html'
-  }
-};
-config.browserSync = assign(config.browserSync, platformConfig.browserSync);
+// /**
+//  * BrowserySync is the lib used to automatically reload the browser
+//  * whenever a file changes.
+//  */
+// config.browserSync = {
+//   server: {
+//     baseDir: [
+//       './test/',
+//       './tmp',
+//       './'
+//     ],
+//     index: 'runner.html'
+//   }
+// };
+// config.browserSync = assign(config.browserSync, platformConfig.browserSync);
 
 /**
  * Istanbul is the lib used to create a coverage report the details how

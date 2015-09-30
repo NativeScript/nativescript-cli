@@ -76,7 +76,9 @@ class Datastore {
 
     // Create and execute a request
     const request = new Request(HttpMethod.GET, path, query, null, options);
-    const promise = request.execute();
+    const promise = request.execute().then(function(response) {
+      return response.data;
+    });
 
     // Log
     promise.then(function(response) {
@@ -141,7 +143,7 @@ class Datastore {
    * saved document or rejected with an error.
    *
    * @param   {string}       collection                                   Collection
-   * @param   {string}       doc                                          Document
+   * @param   {Object}       doc                                          Document
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -177,7 +179,9 @@ class Datastore {
 
     // Create and execute a request
     const request = new Request(HttpMethod.POST, path, null, doc, options);
-    const promise = request.execute();
+    const promise = request.execute().then(function(response) {
+      return response.data;
+    });
 
     // Log
     promise.then(function(response) {

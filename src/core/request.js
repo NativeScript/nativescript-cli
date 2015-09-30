@@ -8,6 +8,7 @@ import Auth from './auth';
 import Query from './query';
 import url from 'url';
 import Kinvey from '../kinvey';
+import Client from './client';
 import DataPolicy from './enums/dataPolicy';
 import KinveyError from './errors/error';
 import defaults from 'lodash/object/defaults';
@@ -23,7 +24,7 @@ class PrivateRequest {
     });
 
     // Validate options
-    if (!(options.client instanceof Kinvey)) {
+    if (!(options.client instanceof Client)) {
       throw new KinveyError('options.client must be of type Kinvey');
     }
 
@@ -38,7 +39,7 @@ class PrivateRequest {
     this.protocol = options.client.apiProtocol;
     this.hostname = options.client.apiHostname;
     this.path = path;
-    this.query = merge({}, options.flags, query.toJSON());
+    this.query = merge({}, options.flags, query ? query.toJSON() : {});
     this.body = body;
     this.client = options.client;
     this.auth = options.authType;
@@ -49,7 +50,7 @@ class PrivateRequest {
     const headers = {};
     headers.Accept = 'application/json';
     headers['Content-Type'] = 'application/json';
-    headers['X-Kinvey-Api-Version'] = options.client.apiVersion;
+    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION;
     this.addHeaders(headers);
   }
 
@@ -246,13 +247,13 @@ class PrivateRequest {
   }
 
   executeLocal() {
-    const storageRack = Rack.storageRack;
-    return storageRack.execute(this);
+    const rack = Rack.cacheRack;
+    return rack.execute(this);
   }
 
   executeCloud() {
     const auth = this.auth;
-    const networkRack = Rack.networkRack;
+    const rack = Rack.networkRack;
     let promise = Promise.resolve();
 
     return promise.then(() => {
@@ -274,7 +275,7 @@ class PrivateRequest {
         });
       }
     }).then(() => {
-      return networkRack.execute(this);
+      return rack.execute(this);
     });
   }
 
@@ -288,6 +289,8 @@ class PrivateRequest {
       headers: this.headers,
       method: this.method,
       url: this.url,
+      path: this.path,
+      query: this.query,
       body: this.body,
       authType: this.authType,
       dataPolicy: this.dataPolicy,

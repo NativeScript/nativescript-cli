@@ -1,5 +1,4 @@
-import User from './user';
-import isDefined from '../utils/isDefined';
+import User from './models/user';
 
 class Auth {
   static all(client) {
@@ -10,7 +9,7 @@ class Auth {
 
   static app(client) {
     // Validate preconditions.
-    if (!isDefined(client.appKey) || !isDefined(client.appSecret)) {
+    if (!client.appKey || !client.appSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -43,7 +42,7 @@ class Auth {
 
   static master(client) {
     // Validate preconditions.
-    if (!isDefined(client.appKey) || !isDefined(client.masterSecret)) {
+    if (!client.appKey || !client.masterSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -64,22 +63,16 @@ class Auth {
   }
 
   static session() {
-    const user = User.getActive();
-    let error;
+    return User.getActive().then(user => {
+      if (!user) {
+        throw new Error('There is not an active user.');
+      }
 
-    if (!isDefined(user)) {
-      error = new Error('There is not an active user.');
-      return Promise.reject(error);
-    }
-
-    // Prepare the response.
-    const promise = Promise.resolve({
-      scheme: 'Kinvey',
-      credentials: user.authtoken
+      return {
+        scheme: 'Kinvey',
+        credentials: user.authtoken
+      };
     });
-
-    // Return the response.
-    return promise;
   }
 }
 

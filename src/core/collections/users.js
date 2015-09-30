@@ -2,15 +2,10 @@ import AuthType from '../enums/authType';
 import DataPolicy from '../enums/dataPolicy';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
-import Kinvey from '../../kinvey';
-import ActiveUserError from '../errors/activeUserError';
-import Model from '../models/model';
-import Collection from '../collection';
+import Collection from './collection';
 import when from 'when';
 import assign from 'lodash/object/assign';
 import isObject from 'lodash/lang/isObject';
-const activeUserSymbol = Symbol();
-const activeUserKey = 'activeUser';
 const userNamespace = 'user';
 const rpcNamespace = 'rpc';
 
@@ -20,7 +15,7 @@ export default class Users extends Collection {
     this.namespace = userNamespace;
   }
 
- login(usernameOrData, password, options = {}) {
+  login(usernameOrData, password, options = {}) {
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       authType: AuthType.App
@@ -43,9 +38,10 @@ export default class Users extends Collection {
     this.name = 'login';
     const path = this.path;
     const request = new Request(HttpMethod.POST, path, null, usernameOrData, options);
-    const promise = request.execute();
+    let promise = request.execute();
 
     promise = promise.then((response) => {
+      this.name = prevName;
       return this.add(response.data, options);
     });
 
@@ -62,7 +58,12 @@ export default class Users extends Collection {
     this.name = '_logout';
     const path = this.path;
     const request = new Request(HttpMethod.POST, path, null, null, options);
-    const promise = request.execute();
+    let promise = request.execute();
+
+    promise = promise.then((response) => {
+      this.name = prevName;
+    });
+
     return promise;
   }
 
@@ -167,7 +168,7 @@ export default class Users extends Collection {
         const prevNamespace = this.namespace;
         this.namespace = rpcNamespace;
         const path = this.path;
-        const request = new Request(HttpMethod.POST, `${path}/user-forgot-username`, null, {email: model.get('email'), opts);
+        const request = new Request(HttpMethod.POST, `${path}/user-forgot-username`, null, {email: model.get('email')}, opts);
 
         promise = request.execute().then((response) => {
           return response.data;

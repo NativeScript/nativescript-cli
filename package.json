@@ -4,9 +4,9 @@
   "description": "Kinvey JavaScript SDK",
   "main": "dist/kinvey.js",
   "scripts": {
-    "test": "gulp",
-    "build": "gulp build",
-    "coverage": "gulp coverage"
+    "test": "./node_modules/.bin/gulp",
+    "build": "./node_modules/.bin/gulp build",
+    "coverage": "./node_modules/.bin/gulp coverage"
   },
   "repository": {
     "type": "git",
@@ -18,21 +18,17 @@
     "url": "https://github.com/Kinvey/js-library-dev/issues"
   },
   "dependencies": {
-    "clone": "^1.0.2",
     "crypto-js": "^3.1.5",
-    "deep-merge": "*",
-    "dexie": "^1.1.0",
     "fake-indexeddb": "^1.0.3",
-    "humble-localstorage": "^1.4.1",
+    "humble-localstorage": "^1.4.2",
     "indexeddbshim": "^2.0.4",
     "kinvey-http-angular": "git://github.com/ThomasConner/kinvey-http-angular.git",
     "kinvey-http-node": "git://github.com/ThomasConner/kinvey-http-node.git",
     "kinvey-http-xhr": "git://github.com/ThomasConner/kinvey-http-xhr.git",
     "kinvey-rack": "git://github.com/ThomasConner/kinvey-rack.git",
-    "localforage": "^1.2.10",
     "lodash": "^3.10.0",
     "loglevel": "^1.3.1",
-    "node-cache": "^3.0.0",
+    "promise-queue": "^2.1.1",
     "sift": "^2.0.4",
     "url-pattern": "^0.9.0",
     "when": "^3.7.3"
@@ -53,7 +49,7 @@
     "eslint-plugin-react": "^2.7.1",
     "exorcist": "^0.4.0",
     "glob": "^4.0.5",
-    "gulp": "^3.8.10",
+    "gulp": "^3.9.0",
     "gulp-babel": "^5.0.0",
     "gulp-debug": "^2.0.1",
     "gulp-eslint": "^0.15.0",

@@ -1,21 +1,22 @@
 import Middleware from './middleware';
-import LocalStorage from '../core/storage/local';
-import HttpMethod from '../core/enums/httpMethod';
-import StatusCode from '../core/enums/statusCode';
+import Store from '../../core/cache/store';
+import HttpMethod from '../../core/enums/httpMethod';
+import StatusCode from '../../core/enums/statusCode';
+import StoreAdapter from '../../core/enums/storeAdapter';
 
-export default class StorageMiddleware extends Middleware {
+export default class CacheMiddleware extends Middleware {
   constructor() {
-    super('Kinvey Storage Middleware');
+    super('Kinvey Cache Middleware');
   }
 
   handle(request) {
     return super.handle(request).then((matches) => {
       const method = request.method;
       const query = request.query;
-      const collection = matches.collection;
       const id = matches.id;
-      const store = new LocalStorage({
-        collection: collection
+      const store = new Store([StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.LocalStorage, StoreAdapter.Memory], {
+        name: matches.appKey,
+        collection: matches.collection
       });
       let promise;
 
@@ -31,7 +32,7 @@ export default class StorageMiddleware extends Middleware {
         promise = store.destroy(id);
       }
 
-      return promise.then((result) => {
+      return promise.then(result => {
         let statusCode = StatusCode.OK;
 
         if (method === HttpMethod.POST) {
@@ -45,12 +46,13 @@ export default class StorageMiddleware extends Middleware {
         };
 
         return request;
-      }).catch((err) => {
+      }).catch(err => {
         request.response = {
           statusCode: StatusCode.ServerError,
           headers: {},
           data: err
         };
+
         return request;
       });
     });

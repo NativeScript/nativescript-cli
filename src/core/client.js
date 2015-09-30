@@ -1,6 +1,6 @@
 import url from 'url';
 import clone from 'lodash/lang/clone';
-import KinveyError from './core/errors/error';
+import KinveyError from './errors/error';
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients

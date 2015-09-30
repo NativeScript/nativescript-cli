@@ -1,12 +1,12 @@
-import Kinvey from '../kinvey';
-import Model from './model';
-import Request from './request';
-import HttpMethod from './enums/httpMethod';
-import DataPolicy from './enums/dataPolicy';
-import AuthType from './enums/authType';
-import Query from './query';
-import Aggregation from './aggregation';
-import KinveyError from './errors/error';
+import Kinvey from '../../kinvey';
+import Model from '../models/model';
+import Request from '../request';
+import HttpMethod from '../enums/httpMethod';
+import DataPolicy from '../enums/dataPolicy';
+import AuthType from '../enums/authType';
+import Query from '../query';
+import Aggregation from '../aggregation';
+import KinveyError from '../errors/error';
 import when from 'when';
 import map from 'lodash/collection/map';
 import defaults from 'lodash/object/defaults';
@@ -14,7 +14,7 @@ import clone from 'lodash/lang/clone';
 import assign from 'lodash/object/assign';
 import bind from 'lodash/function/bind';
 import isFunction from 'lodash/lang/isFunction';
-import isDefined from '../utils/isDefined';
+import isDefined from '../../utils/isDefined';
 import isArray from 'lodash/lang/isArray';
 import isString from 'lodash/lang/isString';
 const setOptions = {add: true, remove: true, merge: true};
@@ -42,7 +42,7 @@ class Collection {
   get path() {
     let path = `/${this.namespace}/${this.client.appKey}`;
 
-    if (isDefined(this.name)) {
+    if (this.name) {
       path = `${path.replace(/[^\/]$/, '$&/')}${encodeURIComponent(this.name)}`;
     }
 

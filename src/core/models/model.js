@@ -1,5 +1,5 @@
-import Acl from './acl';
-import Metadata from './metadata';
+import Acl from '../acl';
+import Metadata from '../metadata';
 import defaults from 'lodash/object/defaults';
 import result from 'lodash/object/result';
 import clone from 'lodash/lang/clone';

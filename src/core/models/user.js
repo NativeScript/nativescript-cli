@@ -1,15 +1,13 @@
 import ActiveUserError from '../errors/activeUserError';
-import LocalStorage from '../storage/local';
 import Model from './model';
 import Users from '../collections/users';
-import StorageDriver from '../enums/storageDriver';
+import StoreAdapter from '../enums/storeAdapter';
+import Store from '../cache/store';
+import Kinvey from '../../kinvey';
+import isFunction from 'lodash/lang/isFunction';
 import when from 'when';
 const activeUserSymbol = Symbol();
-const activeUserKey = 'activeUser';
-const store = new LocalStorage({
-  collection: 'users',
-  driver: StorageDriver.LocalStorage
-});
+const activeUserCollection = 'activeUser';
 
 export default class User extends Model {
   get authtoken() {
@@ -21,38 +19,55 @@ export default class User extends Model {
    *
    * @return {User} The current user.
    */
-  static get active() {
+  static getActive() {
     let user = User[activeUserSymbol];
 
     if (!user) {
-      const storedUser = store.get(activeUserKey);
-
-      if (storedUser) {
-        user = new User(storedUser);
-        User[activeUserSymbol] = user;
-      }
+      return when.resolve(user);
     }
 
-    return user;
+    const client = Kinvey.sharedClientInstance();
+    const store = new Store(StoreAdapter.LocalStorage, {
+      name: client.appKey,
+      collection: activeUserCollection
+    });
+    return store.find().then(users => {
+      if (users.length === 0) {
+        return null;
+      }
+
+      user = new User(users[0]);
+      User[activeUserSymbol] = user;
+      return user;
+    });
   }
 
-  static set active(user) {
-    let activeUser = User.active;
+  static setActive(user) {
+    const client = Kinvey.sharedClientInstance();
+    const store = new Store(StoreAdapter.LocalStorage, {
+      name: client.appKey,
+      collection: activeUserCollection
+    });
 
-    if (activeUser) {
-      store.destroy(activeUserKey);
-      User[activeUserSymbol] = null;
-    }
-
-    if (user) {
-      if (!(user instanceof User)) {
-        user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
+    const promise = User.getActive().then(activeUser => {
+      if (activeUser) {
+        return store.delete(activeUser.id).then(() => {
+          User[activeUserSymbol] = null;
+        });
       }
+    }).then(() => {
+      if (user) {
+        if (!(user instanceof User)) {
+          user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
+        }
 
-      activeUser = user;
-      store.save(activeUserKey, activeUser.toJSON());
-      User[activeUserSymbol] = activeUser;
-    }
+        return store.save(user.toJSON()).then(() => {
+          User[activeUserSymbol] = user;
+        });
+      }
+    });
+
+    return promise;
   }
 
   /**
@@ -61,13 +76,13 @@ export default class User extends Model {
    * @returns {Boolean} `true` if the user is active, `false` otherwise.
    */
   isActive() {
-    const activeUser = User.active;
+    return User.getActive().then(user => {
+      if (user) {
+        return this.id === user.id;
+      }
 
-    if (activeUser) {
-      return this.id === activeUser.id;
-    }
-
-    return false;
+      return false;
+    });
   }
 
   /**
@@ -83,16 +98,17 @@ export default class User extends Model {
    * @returns {Promise}                           The active user.
   */
   static login(usernameOrData, password, options = {}) {
-    if (User.active) {
-      return when.reject(new ActiveUserError('A user is already logged in.'));
-    }
+    const promise = User.getActive().then(user => {
+      if (user) {
+        throw new ActiveUserError('A user is already logged in.');
+      }
 
-    const collection = new Users();
-    const promise = collection.login(usernameOrData, password, options);
-
-    promise = promise.then((user) => {
-      User.active = user;
-      return user;
+      const collection = new Users();
+      return collection.login(usernameOrData, password, options);
+    }).then((user) => {
+      return User.setActive(user).then(() => {
+        return user;
+      });
     });
 
     return promise;
@@ -105,15 +121,15 @@ export default class User extends Model {
    * @returns {Promise}           The previous active user.
    */
   logout(options = {}) {
-    if (!this.isActive()) {
-      return when.resolve();
-    }
+    const promise = this.isActive().then(active => {
+      if (!active) {
+        return null;
+      }
 
-    const collection = new Users();
-    const promise = collection.logout(options);
-
-    promise = promise.then(() => {
-      User.active = null;
+      const collection = new Users();
+      return collection.logout(options);
+    }).then(() => {
+      return User.setActive(null);
     });
 
     return promise;

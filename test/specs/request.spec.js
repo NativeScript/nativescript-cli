@@ -184,7 +184,7 @@ describe('Request', function() {
     });
 
     it('should have X-Kinvey-Api-Version header set to `3` by default', function() {
-      expect(this.request.getHeader('X-Kinvey-Api-Version')).to.equal(this.kinvey.apiVersion);
+      expect(this.request.getHeader('X-Kinvey-Api-Version')).to.equal(process.env.KINVEY_API_VERSION);
     });
   });
 

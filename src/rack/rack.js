@@ -3,9 +3,9 @@ import KinveyRack from 'kinvey-rack';
 import SerializerMiddleware from './middleware/serializer';
 import HttpMiddleware from './middleware/http';
 import ParserMiddleware from './middleware/parser';
-import StorageMiddleware from './middleware/storage';
+import CacheMiddleware from './middleware/cache';
 const networkRackSymbol = Symbol();
-const storageRackySymbol = Symbol();
+const cacheRackSymbol = Symbol();
 
 class Rack extends KinveyRack {
 
@@ -25,18 +25,18 @@ class Rack extends KinveyRack {
     Rack[networkRackSymbol] = rack;
   }
 
-  static get storageRack() {
-    if (!Rack[storageRackySymbol]) {
-      const rack = new Rack('Kinvey Storage Rack');
-      rack.use(new StorageMiddleware);
-      Rack[storageRackySymbol] = rack;
+  static get cacheRack() {
+    if (!Rack[cacheRackSymbol]) {
+      const rack = new Rack('Kinvey Cache Rack');
+      rack.use(new CacheMiddleware());
+      Rack[cacheRackSymbol] = rack;
     }
 
-    return Rack[storageRackySymbol];
+    return Rack[cacheRackSymbol];
   }
 
-  static set storageRack(rack) {
-    Rack[storageRackySymbol] = rack;
+  static set cacheRack(rack) {
+    Rack[cacheRackSymbol] = rack;
   }
 
   execute(request) {
