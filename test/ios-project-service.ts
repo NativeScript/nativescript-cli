@@ -76,6 +76,12 @@ describe("Cocoapods support", () => {
 			iOSProjectService.prepareStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
+			iOSProjectService.createPbxProj = () => {
+				return {
+					updateBuildProperty: () => { return {}; }
+				};
+			};
+			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();
 
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
@@ -137,6 +143,12 @@ describe("Cocoapods support", () => {
 			iOSProjectService.removeStaticLibs = (pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> => {
 				return Future.fromResult();
 			};
+			iOSProjectService.createPbxProj = () => {
+				return {
+					updateBuildProperty: () => { return {}; }
+				};
+			};
+			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();
 
 			let pluginPath = temp.mkdirSync("pluginDirectory");
 			let pluginPlatformsFolderPath = path.join(pluginPath, "platforms", "ios");
