@@ -10,6 +10,7 @@ import * as xcode from "xcode";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
+import Future = require("fibers/future");
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -205,6 +206,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not appear to be a dynamic framework package.`);
 			}
 		}).future<void>()();
+	}
+
+	public deploy(device: Mobile.IDevice, appIdentifier: string): IFuture<void> {
+		return Future.fromResult();
 	}
 
 	private addDynamicFramework(frameworkPath: string): IFuture<void> {
