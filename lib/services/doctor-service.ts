@@ -66,7 +66,7 @@ class DoctorService implements IDoctorService {
 			result = true;
 		}
 
-		if(sysInfo.gradleVer && helpers.versionCompare(sysInfo.gradleVer, DoctorService.MIN_SUPPORTED_GRADLE_VERSION) === -1) {
+		if(sysInfo.gradleVer && !this.isGradleVersionSupported(sysInfo.gradleVer)) {
 			this.$logger.warn(`WARNING: Gradle version is lower than ${DoctorService.MIN_SUPPORTED_GRADLE_VERSION}.`);
 			this.$logger.out("You will not be able to build your projects for Android or run them in the emulator or on a connected device." + EOL
 				+ `To be able to build for Android and run apps in the emulator or on a connected device, verify that you have at least ${DoctorService.MIN_SUPPORTED_GRADLE_VERSION} version installed.`);
@@ -105,6 +105,15 @@ class DoctorService implements IDoctorService {
 		} else if (this.$hostInfo.isDarwin) {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
 		}
+	}
+
+	private isGradleVersionSupported(gradleVersion: string): boolean {
+		let minSupportedVersion = DoctorService.MIN_SUPPORTED_GRADLE_VERSION;
+		let requiredLength = _.max([gradleVersion.split(".").length, minSupportedVersion.split(".").length]);
+		gradleVersion = helpers.appendZeroesToVersion(gradleVersion, requiredLength);
+		minSupportedVersion = helpers.appendZeroesToVersion(minSupportedVersion, requiredLength);
+
+		return helpers.versionCompare(gradleVersion, minSupportedVersion) !== -1;
 	}
 }
 $injector.register("doctorService", DoctorService);
