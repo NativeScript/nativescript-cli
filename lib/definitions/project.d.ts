@@ -9,6 +9,7 @@ interface IProjectData {
 	platformsDir: string;
 	projectFilePath: string;
 	projectId?: string;
+	dependencies: any;
 }
 
 interface IProjectDataService {

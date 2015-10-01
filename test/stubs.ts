@@ -236,6 +236,7 @@ export class ProjectDataStub implements IProjectData {
 	}
 	projectFilePath: string;
 	projectId: string;
+	dependencies: any;
 }
 
 export class PlatformsDataStub implements IPlatformsData {
