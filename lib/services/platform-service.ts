@@ -274,6 +274,7 @@ export class PlatformService implements IPlatformService {
 			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
+					platformData.platformProjectService.deploy(device, this.$projectData.projectId).wait();
 					device.deploy(packageFile, this.$projectData.projectId).wait();
 
 					if (!this.$options.justlaunch) {

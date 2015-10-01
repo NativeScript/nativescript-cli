@@ -28,7 +28,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $propertiesParser: IPropertiesParser,
-		private $sysInfo: ISysInfo) {
+		private $sysInfo: ISysInfo,
+		private $mobileHelper: Mobile.IMobileHelper) {
 			super($fs);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -283,6 +284,15 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 	public afterPrepareAllPlugins(): IFuture<void> {
 		return Future.fromResult();
+	}
+
+	public deploy(device: Mobile.IAndroidDevice, appIdentifier: string): IFuture<void> {
+		return (() => {
+			let deviceRootPath = `/data/local/tmp/${appIdentifier}`;
+			device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
+				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
+				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
+		}).future<void>()();
 	}
 
 	private _canUseGradle: boolean;

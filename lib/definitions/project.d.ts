@@ -51,6 +51,7 @@ interface IPlatformProjectService {
 	removePluginNativeCode(pluginData: IPluginData): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
+	deploy(device: Mobile.IDevice, appIdentifier: string): IFuture<void>;
 }
 
 interface IAndroidProjectPropertiesManager {
