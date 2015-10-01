@@ -157,19 +157,21 @@ export class PlatformService implements IPlatformService {
 			let contents = this.$fs.readDirectory(appDestinationDirectoryPath).wait();
 
 			_(contents)
-				.filter(directoryName => directoryName !== "tns_modules")
+				.filter(directoryName => directoryName !== constants.TNS_MODULES_FOLDER_NAME)
 				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
 				.value();
 
 			// Copy all files from app dir, but make sure to exclude tns_modules
 			let sourceFiles = this.$fs.readDirectory(appSourceDirectoryPath).wait();
-			if(_.contains(sourceFiles, "tns_modules")) {
-				this.$logger.warn("You have tns_modules dir in your app folder. It will not be used and you can safely remove it.");
+			let hasTnsModulesInAppFolder = _.contains(sourceFiles, constants.TNS_MODULES_FOLDER_NAME);
+			if(hasTnsModulesInAppFolder && this.$projectData.dependencies && this.$projectData.dependencies[constants.TNS_CORE_MODULES_NAME]) {
+				this.$logger.warn("You have tns_modules dir in your app folder and tns-core-modules in your package.json file. Tns_modules dir in your app folder will not be used and you can safely remove it.");
+				sourceFiles.filter(source => source !== constants.TNS_MODULES_FOLDER_NAME)
+					.map(source => path.join(appSourceDirectoryPath, source))
+					.forEach(source => shell.cp("-Rf", source, appDestinationDirectoryPath));
+			} else {
+				shell.cp("-Rf", path.join(appSourceDirectoryPath, "*"), appDestinationDirectoryPath);
 			}
-
-			sourceFiles.filter(source => source !== "tns_modules")
-				.map(source => path.join(appSourceDirectoryPath, source))
-				.forEach(source => shell.cp("-Rf", source, appDestinationDirectoryPath));
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait()).wait(); // Should be deleted
