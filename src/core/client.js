@@ -29,7 +29,7 @@ class Client {
    */
   constructor(options = {}) {
     const apiProtocol = process.env.KINVEY_API_PROTOCOL || 'https';
-    const apiHostname = process.env.KINVEY_API_HOSTNAME || 'baas.kinvey.com';
+    const apiHost = process.env.KINVEY_API_HOST || 'baas.kinvey.com';
     let apiUrl;
     let apiUrlComponents;
 
@@ -42,11 +42,11 @@ class Client {
     }
 
     // Parse the API url
-    apiUrl = options.apiUrl || `${apiProtocol}://${apiHostname}`;
+    apiUrl = options.apiUrl || `${apiProtocol}://${apiHost}`;
     apiUrlComponents = url.parse(apiUrl);
 
     // Check the protocol of the apiUrl
-    if (apiUrlComponents.protocol.indexOf(apiProtocol) !== 0 && options.dev === false) {
+    if (apiUrlComponents.protocol.indexOf(apiProtocol) !== 0 && options.allowHttp === false) {
       apiUrlComponents.protocol = apiProtocol;
     }
 
@@ -58,7 +58,7 @@ class Client {
     /**
      * @type {string}
      */
-    this.apiHostname = apiUrlComponents.hostname;
+    this.apiHost = apiUrlComponents.host;
 
     /**
      * @type {string}
@@ -87,7 +87,7 @@ class Client {
   get apiUrl() {
     return url.format({
       protocol: this.apiProtocol,
-      hostname: this.apiHostname
+      host: this.apiHost
     });
   }
 
@@ -99,7 +99,7 @@ class Client {
   toJSON() {
     const json = {
       apiProtocol: this.apiProtocol,
-      apiHostname: this.apiHostname,
+      apiHost: this.apiHost,
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,

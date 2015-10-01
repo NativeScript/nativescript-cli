@@ -8,38 +8,59 @@ import Query from './query';
 import AuthType from './enums/authType';
 import assign from 'lodash/object/assign';
 import log from 'loglevel';
+import isFunction from 'lodash/lang/isFunction';
 const datastoreNamespace = 'appdata';
+const pathReplaceRegex = /[^\/]$/;
 
 /**
  * The Datastore class is used to retrieve, create, update, destroy, count and group documents
  * in collections.
- *
+ * a
  * @example
- * var datastore = new Kinvey.Datastore();
+ * var datastore = new Kinvey.Datastore('books');
  */
-class Datastore {
+export default class Datastore {
   /**
-   * Create a new instance of the Datastore class. You can optionally provide a client that
-   * will be used to perform all the datastore operations.
+   * Creates a new instance of the Datastore class.
    *
-   * @param  {Kinvey}       [client=Kinvey.sharedInstance()]            Client
+   * @param   {string}    [collection]                                Collection
+   * @param   {Client}    [client=Kinvey.sharedInstance()]            Client
    */
-  constructor(client = Kinvey.sharedClientInstance()) {
+  constructor(collection, client = Kinvey.sharedClientInstance()) {
     /**
-     * @type {Kinvey}
+     * @type {string}
+     */
+    this.collection = collection;
+
+    /**
+     * @type {Client}
      */
     this.client = client;
   }
 
   /**
-   * Finds documents in a collection. A query can be optionally provided to return
-   * a subset of all documents in a collection or omitted to return all documents in
-   * a collection. The number of documents return will adhere to the limits specified
+   * The path for the datastore where requests will be sent.
+   *
+   * @return   {string}    Path
+   */
+  get path() {
+    let path = `/${datastoreNamespace}/${this.client.appKey}`;
+
+    if (this.collection) {
+      path = `${path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(this.collection)}`;
+    }
+
+    return path;
+  }
+
+  /**
+   * Finds all documents in the collection. A query can be optionally provided to return
+   * a subset of all documents in the collection or omitted to return all documents in
+   * the collection. The number of documents returned will adhere to the limits specified
    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
-   * promise will be returned that will be resolved with the documents or reject with
+   * promise will be returned that will be resolved with the documents or rejected with
    * an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -47,17 +68,17 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
+   * var datastore = new Kinvey.Datastore('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.find('books', query).then(function(books) {
+   * datastore.find(query).then(function(books) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  find(collection, query, options = {}) {
-    log.debug(`Retrieving the documents in the ${collection} collection.`, query);
+  find(query, options = {}) {
+    log.debug(`Retrieving the documents in the ${this.collection} collection.`, query);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -68,23 +89,20 @@ class Datastore {
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('query argument must be of type Kinvey.Query'));
+      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
     }
 
-    // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.GET, path, query, null, options);
+    const request = new Request(HttpMethod.GET, this.path, query, null, options);
     const promise = request.execute().then(function(response) {
       return response.data;
     });
 
     // Log
-    promise.then(function(response) {
-      log.info(`Retrieved the documents in the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to retrieve the documents in the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Retrieved the documents in the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to retrieve the documents in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -92,10 +110,9 @@ class Datastore {
   }
 
   /**
-   * Retrieves a single document in a collection by id. A promise will be returned that will
+   * Retrieves a single document in the collection by id. A promise will be returned that will
    * be resolved with the document or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -103,15 +120,15 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
-   * datastore.get('books', '507f191e810c19729de860ea').then(function(book) {
+   * var datastore = new Kinvey.Datastore('books');
+   * datastore.get('507f191e810c19729de860ea').then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  get(collection, id, options = {}) {
-    log.debug(`Retrieving a document in the ${collection} collection with id = ${id}.`);
+  get(id, options = {}) {
+    log.debug(`Retrieving a document in the ${this.collection} collection with id = ${id}.`);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -121,17 +138,17 @@ class Datastore {
     }, options);
 
     // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}/${id}`;
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(id)}`;
 
     // Create and execute a request
     const request = new Request(HttpMethod.GET, path, null, null, options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Retrieved the document in the ${collection} collection with id = ${id}.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to retrieve the document in the ${collection} collection with id = ${id}.`, err);
+    promise.then((response) => {
+      log.info(`Retrieved the document in the ${this.collection} collection with id = ${id}.`, response);
+    }).catch((err) => {
+      log.error(`Failed to retrieve the document in the ${this.collection} collection with id = ${id}.`, err);
     });
 
     // Return the promise
@@ -139,10 +156,9 @@ class Datastore {
   }
 
   /**
-   * Saves a document to a collection. A promise will be returned that will be resolved with
+   * Saves a document to the collection. A promise will be returned that will be resolved with
    * saved document or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {Object}       doc                                          Document
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -150,16 +166,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
+   * var datastore = new Kinvey.Datastore('books');
    * var book = { name: 'JavaScript: The Definitive Guide', author: 'David Flanagan' };
-   * var datastore = new Kinvey.Datastore();
-   * datastore.save('books', book).then(function(book) {
+   * datastore.save(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  save(collection, doc, options = {}) {
-    log.debug(`Saving the document to the ${collection} collection.`, doc);
+  save(doc, options = {}) {
+    log.debug(`Saving the document to the ${this.collection} collection.`, doc);
 
     // If the doc has an _id, perform an update instead
     if (doc._id) {
@@ -174,20 +190,17 @@ class Datastore {
       authType: AuthType.Default
     }, options);
 
-    // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.POST, path, null, doc, options);
+    const request = new Request(HttpMethod.POST, this.path, null, doc, options);
     const promise = request.execute().then(function(response) {
       return response.data;
     });
 
     // Log
-    promise.then(function(response) {
-      log.info(`Saved the document to the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to save the document to the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Saved the document to the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to save the document to the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -195,10 +208,9 @@ class Datastore {
   }
 
   /**
-   * Updates a document in a collection. A promise will be returned that will be resolved with
+   * Updates a document in the collection. A promise will be returned that will be resolved with
    * the updated document or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {string}       doc                                          Document
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -206,16 +218,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
+   * var datastore = new Kinvey.Datastore('books');
    * var book = { name: 'JavaScript: The Definitive Guide 2.0', author: 'David Flanagan' };
-   * var datastore = new Kinvey.Datastore();
-   * datastore.update('books', book).then(function(book) {
+   * datastore.update(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  update(collection, doc, options = {}) {
-    log.debug(`Update the document to the ${collection} collection.`, doc);
+  update(doc, options = {}) {
+    log.debug(`Update the document to the ${this.collection} collection.`, doc);
 
     // Verify the doc contains an _id
     if (!doc._id) {
@@ -230,17 +242,17 @@ class Datastore {
     }, options);
 
     // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}/${doc._id}`;
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(doc._id)}`;
 
     // Create and execute a request
     const request = new Request(HttpMethod.PUT, path, null, doc, options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Updated the document to the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to update the document to the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Updated the document to the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to update the document to the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -248,12 +260,11 @@ class Datastore {
   }
 
   /**
-   * Deletes documents in a collection. A query can be optionally provided to delete
-   * a subset of documents in a collection or omitted to delete all documents in a
+   * Delete documents in the collection. A query can be optionally provided to delete
+   * a subset of documents in the collection or omitted to delete all documents in the
    * collection. A promise will be returned that will be resolved with a count of the
    * number of documents deleted or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -261,20 +272,21 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
+   * var datastore = new Kinvey.Datastore('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.clean('books', query).then(function(response) {
+   * datastore.clean(query).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  clean(collection, query = new Query(), options = {}) {
-    log.debug(`Deleting the documents in the ${collection} collection by query.`, query);
+  clean(query = new Query(), options = {}) {
+    log.debug(`Deleting the documents in the ${this.collection} collection by query.`, query);
 
-    if (!(query instanceof Query)) {
-      return Promise.reject(new KinveyError('query argument must be of type Kinvey.Query'));
+    // Check that the query is an instance of Query
+    if (query && !(query instanceof Query)) {
+      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
     }
 
     // Set option defaults. These values will be overridden
@@ -284,18 +296,15 @@ class Datastore {
       authType: AuthType.Default
     }, options);
 
-    // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.DELETE, path, query, null, options);
+    const request = new Request(HttpMethod.DELETE, this.path, query, null, options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Deleted the documents in the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to delete the documents in the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Deleted the documents in the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to delete the documents in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -303,10 +312,9 @@ class Datastore {
   }
 
   /**
-   * Deletes a single document in a collection by id. A promise will be returned that will be
+   * Delete a document in the collection. A promise will be returned that will be
    * resolved with a count of the number of documents deleted or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -314,15 +322,15 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
-   * datastore.destroy('books', '507f191e810c19729de860ea').then(function(response) {
+   * var datastore = new Kinvey.Datastore('books');
+   * datastore.destroy('507f191e810c19729de860ea').then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  destroy(collection, id, options = {}) {
-    log.debug(`Deleting a document in the ${collection} collection with id = ${id}.`);
+  destroy(id, options = {}) {
+    log.debug(`Deleting a document in the ${this.collection} collection with id = ${id}.`);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -332,17 +340,17 @@ class Datastore {
     }, options);
 
     // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}/${id}`;
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(id)}`;
 
     // Create and execute a request
     const request = new Request(HttpMethod.DELETE, path, null, null, options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Deleted the document in the ${collection} collection with id = ${id}.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to delete the document in the ${collection} collection with id = ${id}.`, err);
+    promise.then((response) => {
+      log.info(`Deleted the document in the ${this.collection} collection with id = ${id}.`, response);
+    }).catch((err) => {
+      log.error(`Failed to delete the document in the ${this.collection} collection with id = ${id}.`, err);
     });
 
     // Return the promise
@@ -350,12 +358,11 @@ class Datastore {
   }
 
   /**
-   * Counts documents in a collection. A query can be optionally provided to count
-   * a subset of documents in a collection or omitted to count all the documents
+   * Counts documents in the collection. A query can be optionally provided to count
+   * a subset of documents in the collection or omitted to count all the documents
    * in a collection. A promise will be returned that will be resolved with a count
    * of the documents or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -363,17 +370,17 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
+   * var datastore = new Kinvey.Datastore('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.count('books', query).then(function(response) {
+   * datastore.count(query).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  count(collection, query, options = {}) {
-    log.debug(`Counting the number of documents in the ${collection} collection.`, query);
+  count(query, options = {}) {
+    log.debug(`Counting the number of documents in the ${this.collection} collection.`, query);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -384,21 +391,21 @@ class Datastore {
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('query argument must be of type Kinvey.Query'));
+      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
     }
 
     // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}/_count`;
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_count')}`;
 
     // Create and execute a request
     const request = new Request(HttpMethod.GET, path, query, null, options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Counted the number of documents in the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to count the number of documents in the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Counted the number of documents in the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to count the number of documents in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -406,12 +413,11 @@ class Datastore {
   }
 
   /**
-   * Groups documents in a collection. An aggregation can be optionally provided to group
-   * a subset of documents in a collection or omitted to group all the documents
-   * in a collection. A promise will be returned that will be resolved with all documents
+   * Groups documents in the collection. An aggregation can be optionally provided to group
+   * a subset of documents in the collection or omitted to group all the documents
+   * in the collection. A promise will be returned that will be resolved with all documents
    * in the group or rejected with an error.
    *
-   * @param   {string}       collection                                   Collection
    * @param   {Aggregation}  [aggregation]                                Aggregation
    * @param   {Object}       [options]                                    Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
@@ -419,16 +425,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore();
+   * var datastore = new Kinvey.Datastore('books');
    * var aggregation = new Kinvey.Aggregation();
-   * datastore.groupd('books', aggregation).then(function(response) {
+   * datastore.groupd(aggregation).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  group(collection, aggregation, options = {}) {
-    log.debug(`Grouping the documents in the ${collection} collection.`, aggregation, options);
+  group(aggregation, options = {}) {
+    log.debug(`Grouping the documents in the ${this.collection} collection.`, aggregation, options);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -437,28 +443,26 @@ class Datastore {
       authType: AuthType.Default
     }, options);
 
-    // Check that the query is an instance of Query
+    // Check that the aggregation is an instance of Aggregation
     if (aggregation && !(aggregation instanceof Aggregation)) {
-      return Promise.reject(new KinveyError('aggregation argument must be of type Kinvey.Aggregation'));
+      aggregation = new Aggregation(isFunction(aggregation.toJSON) ? aggregation.toJSON() : aggregation);
     }
 
     // Create the request path
-    const path = `/${datastoreNamespace}/${this.client.appKey}/${collection}/_group`;
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_group')}`;
 
     // Create and execute a request
     const request = new Request(HttpMethod.POST, path, null, aggregation.toJSON(), options);
     const promise = request.execute();
 
     // Log
-    promise.then(function(response) {
-      log.info(`Grouped the documents in the ${collection} collection.`, response);
-    }).catch(function(err) {
-      log.error(`Failed to group the documents in the ${collection} collection.`, err);
+    promise.then((response) => {
+      log.info(`Grouped the documents in the ${this.collection} collection.`, response);
+    }).catch((err) => {
+      log.error(`Failed to group the documents in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
     return promise;
   }
 }
-
-export default Datastore;

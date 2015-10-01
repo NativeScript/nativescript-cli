@@ -4,6 +4,7 @@ import isString from 'lodash/lang/isString';
 import HttpMethod from './enums/httpMethod';
 import Rack from '../rack/rack';
 import AuthType from './enums/authType';
+import ResponseType from './enums/responseType';
 import Auth from './auth';
 import Query from './query';
 import url from 'url';
@@ -41,6 +42,7 @@ class PrivateRequest {
     this.path = path;
     this.query = merge({}, options.flags, query ? query.toJSON() : {});
     this.body = body;
+    this.responseType = ResponseType.Text;
     this.client = options.client;
     this.auth = options.authType;
     this.dataPolicy = options.dataPolicy;
@@ -121,6 +123,34 @@ class PrivateRequest {
       query: this.query,
       hash: this.hash
     });
+  }
+
+  get responseType() {
+    return this._responseType;
+  }
+
+  set responseType(type = ResponseType.DOMString) {
+    let responseType;
+
+    switch (type) {
+    case ResponseType.Blob:
+      try {
+        responseType = new global.Blob() && 'blob';
+      } catch (e) {
+        responseType = 'arraybuffer';
+      }
+      break;
+    case ResponseType.Document:
+      respnseType = 'document';
+      break;
+    case ResponseType.JSON:
+      responseType = 'json';
+      break;
+    default:
+      responseType = '';
+    }
+
+    this._responseType = responseType;
   }
 
   getHeader(header) {
@@ -292,6 +322,7 @@ class PrivateRequest {
       path: this.path,
       query: this.query,
       body: this.body,
+      responseType: this.responseType,
       authType: this.authType,
       dataPolicy: this.dataPolicy,
       client: this.client.toJSON()
@@ -303,6 +334,10 @@ class PrivateRequest {
 }
 
 class Request {
+  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
+    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
+  }
+
   get method() {
     const privateRequest = this[privateRequestSymbol];
     return privateRequest.method;
@@ -393,8 +428,14 @@ class Request {
     return privateRequest.url;
   }
 
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
+  get responseType() {
+    const privateRequest = this[privateRequestSymbol];
+    return privateRequest.responseType;
+  }
+
+  set responseType(type) {
+    const privateRequest = this[privateRequestSymbol];
+    privateRequest.responseType = type;
   }
 
   getHeader(header) {

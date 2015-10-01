@@ -2,103 +2,161 @@ import AuthType from '../enums/authType';
 import DataPolicy from '../enums/dataPolicy';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
-import Collection from './collection';
+import Datastore from './datastore';
 import when from 'when';
 import assign from 'lodash/object/assign';
 import isObject from 'lodash/lang/isObject';
-const userNamespace = 'user';
+const usersNamespace = 'user';
 const rpcNamespace = 'rpc';
+const pathReplaceRegex = /[^\/]$/;
 
-export default class Users extends Collection {
-  constructor(name, models = [], options = {}) {
-    super(name, models, options);
-    this.namespace = userNamespace;
+/**
+ * The Users class is used to perform operations on users on the Kinvey platform.
+ *
+ * @example
+ * var users = new Kinvey.Users();
+ */
+export default class Users extends Datastore {
+  /**
+   * Creates a new instance of the Users class.
+   *
+   * @param   {Client}    [client=Kinvey.sharedInstance()]            Client
+   */
+  constructor(client = Kinvey.sharedClientInstance()) {
+    super(null, client);
   }
 
-  login(usernameOrData, password, options = {}) {
-    options = assign({
+  /**
+   * The path for the users where requests will be sent.
+   *
+   * @return   {string}    Path
+   */
+  get path() {
+    return `/${usersNamespace}/${this.client.appKey}`;
+  }
+
+  /**
+   * The path for the rpc where requests will be sent.
+   *
+   * @return   {string}    Path
+   */
+  get rpcPath() {
+    return `/${rpcNamespace}/${this.client.appKey}`;
+  }
+
+  /**
+   * Login a user. A promise will be returned that will be resolved with a
+   * user or rejected with an error.
+   *
+   * @param   {string|Object} usernameOrData                              Username or login data
+   * @param   {string}        [password]                                  Password
+   * @return  {Promise}                                                   Promise
+   *
+   * @example
+   * var users = new Kinvey.Users();
+   * users.login('admin', 'foo').then(function(user) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
+  login(usernameOrData, password) {
+    // Set options
+    const options = {
       dataPolicy: DataPolicy.CloudOnly,
       authType: AuthType.App
-    }, options);
+    };
 
-    if (isObject(usernameOrData)) {
-      options = options ? options : password;
-    } else {
+    // Cast arguments
+    if (!isObject(usernameOrData)) {
       usernameOrData = {
         username: usernameOrData,
         password: password
       };
     }
 
+    // Validate arguments
     if ((!usernameOrData.username || !usernameOrData.password) && !usernameOrData._socialIdentity) {
       return when.reject(new KinveyError('Username and/or password missing. Please provide both a username and password to login.'));
     }
 
-    const prevName = this.name;
-    this.name = 'login';
-    const path = this.path;
+    // Create the request path
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('login')}`;
+
+    // Create and execute a request
     const request = new Request(HttpMethod.POST, path, null, usernameOrData, options);
-    let promise = request.execute();
+    const promise = request.execute();
 
-    promise = promise.then((response) => {
-      this.name = prevName;
-      return this.add(response.data, options);
-    });
-
+    // Return the promise
     return promise;
   }
 
-  logout(options = {}) {
-    options = assign({
+  /**
+   * Logout the active user. A promise will be returned that will be resolved
+   * with null or rejected with an error.
+   *
+   * @return  {Promise}                                                   Promise
+   *
+   * @example
+   * var users = new Kinvey.Users();
+   * users.logout().then(function() {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
+  logout() {
+    // Set options. These values will be overridden
+    // if the option was provided.
+    const options = {
       dataPolicy: DataPolicy.CloudOnly,
       authType: AuthType.Session
-    }, options);
+    };
 
-    const prevName = this.name;
-    this.name = '_logout';
-    const path = this.path;
+    // Create the request path
+    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_logout')}`;
+
+    // Create and execute the request
     const request = new Request(HttpMethod.POST, path, null, null, options);
-    let promise = request.execute();
+    const promise = request.execute();
 
-    promise = promise.then((response) => {
-      this.name = prevName;
-    });
-
+    // Return the promise
     return promise;
   }
 
   find(query, options = {}) {
-    if (query && !(query instanceof Query)) {
-      return when.reject(new KinveyError('query argument must be of type Kinvey.Query'));
-    }
-
-    options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default,
-      parse: true
-    }, options);
-
     let promise;
 
-    if (options.discover) {
-      const prevName = this.name;
-      this.name = '_lookup';
-      const path = this.path;
-      const request = new Request(HttpMethod.POST, path, null, query.toJSON().filter, options);
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
+    options = assign({
+      dataPolicy: DataPolicy.CloudFirst,
+      authType: AuthType.Default
+    }, options);
 
-      promise = request.execute().then((response) => {
-        return response.data;
-      }).finally(() => {
-        this.name = prevName;
-      });
+    // Check that the query is an instance of Query
+    if (query && !(query instanceof Query)) {
+      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
+    }
+
+    if (options.discover) {
+      // Create the request path
+      const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_lookup')}`;
+
+      // Create and execute the request
+      const request = new Request(HttpMethod.POST, path, null, query.toJSON().filter, options);
+      promise = request.execute();
     } else {
       promise = super.find(query, options);
     }
 
+    // Return the promise;
     return promise;
   }
 
   verifyEmail(models = [], options = {}) {
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
       authType: AuthType.App

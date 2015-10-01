@@ -20,7 +20,7 @@ const config = {};
  */
 config.env = {
   KINVEY_API_PROTOCOL: 'https',
-  KINVEY_API_HOSTNAME: 'baas.kinvey.com',
+  KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
   KINVEY_INDEXEDDB_LIB: 'fake-indexeddb',
   KINVEY_HTTP_LIB: 'kinvey-http-node',
