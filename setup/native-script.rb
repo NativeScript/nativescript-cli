@@ -1,20 +1,32 @@
 # coding: utf-8
 
-# Only the user can manually download and install Xcode from AppStore
-puts "Installing Xcode... Please, click 'Get' or 'Update' to install Xcode from the App Store."
-`open 'macappstore://itunes.apple.com/us/app/xcode/id497799835'`
+# Only the user can manually download and install Xcode from App Store
+puts "NativeScript requires Xcode."
+puts "If you do not have Xcode installed, download and install it from App Store and run it once to complete its setup."
+puts "Do you have Xcode installed? (y/n)"
 
-until `xcodebuild -version`.include? "version" do
-  puts "Waiting for Xcode to finish installing..."
-  sleep(30)
+xcode = gets.chomp
+
+if xcode == "n" || xcode == "N"
+  exit
+end
+
+if !(`xcodebuild -version`.include? "version")
+  puts "Xcode is not installed or not configured properly. Download, install, set it up and run this script again."
+  exit
 end
 
 puts "You need to accept the Xcode license agreement to be able to use the Xcode command-line tools. (You might need to provide your password.)"
-`sudo xcodebuild -license`
+system('sudo xcodebuild -license')
 
 # Install all other dependencies
 puts "Installing Homebrew... (You might need to provide your password.)"
-`ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+system('ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"')
+
+if !(`brew --version`.include? "git revision")
+  puts "Homebrew is not installed or not configured properly. Download it from http://brew.sh/, install, set it up and run this script again."
+  exit
+end
 
 puts "Installing CocoaPods... This might take some time, please, be patient. (You might need to provide your password.)"
 system('sudo gem install cocoapods')
@@ -22,10 +34,10 @@ system('sudo gem install cocoapods')
 puts "Installing Homebrew Cask... (You might need to provide your password.)"
 system('brew install caskroom/cask/brew-cask')
 
-puts "Installing the Java SE Development Kit... (You might need to provide your password.)"
+puts "Installing the Java SE Development Kit... This might take some time, please, be patient. (You might need to provide your password.)"
 system('brew cask install java')
-`echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.bash_profile`
-`echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.bash_profile`
+system('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.bash_profile')
+system('echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.bash_profile')
 
 puts "Installing node.js 0.12"
 system('brew install homebrew/versions/node012')
