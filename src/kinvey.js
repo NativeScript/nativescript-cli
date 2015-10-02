@@ -45,9 +45,6 @@ Kinvey.Rack = require('./rack/rack');
  * @param {string} [options.masterSecret] - My app's master secret
  * @param {string} [options.encryptionKey] - My app's encryption key
  * @param {string} [options.apiUrl] - The url to send Kinvey API requests.
- * @param {number} [options.apiVersion] - The version of the Kinvey API to use.
- * @param {string} [options.micApiUrl] - The url to use to connect with Mobile Identity Connect (MIC).
- * @param {number} [options.micApiVersion] - The version of Mobile Identity Connect (MIC) to use.
  *
  * @throws {KinveyError}  If an `options.appkey` is not provided.
  * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.

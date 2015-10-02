@@ -61,7 +61,7 @@ export default class Store {
     }
 
     if (!this.adapter) {
-      throw new KinveyError('Please provide a supported adapter for this platform.');
+      throw new KinveyError('Please provide a supported storage adapter.');
     }
   }
 
@@ -94,7 +94,6 @@ export default class Store {
       query = new Query(query);
     }
 
-
     if (query) {
       query.sort(null).limit(null).skip(0);
     }
@@ -119,7 +118,6 @@ export default class Store {
     if (!(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(aggregation);
     }
-
 
     return this.adapter.group(aggregation);
   }

@@ -172,6 +172,7 @@ export default class Files extends Datastore {
       appKey: sharedClient.appKey,
       appSecret: sharedClient.appSecret,
       masterSecret: sharedClient.masterSecret,
+      encryptionKey: sharedClient.encryptionKey,
       apiUrl: metadata._downloadURL,
       allowHttp: true
     });
@@ -269,6 +270,7 @@ export default class Files extends Datastore {
         appKey: sharedClient.appKey,
         appSecret: sharedClient.appSecret,
         masterSecret: sharedClient.masterSecret,
+        encryptionKey: sharedClient.encryptionKey,
         apiUrl: uploadUrl,
         allowHttp: true
       });
