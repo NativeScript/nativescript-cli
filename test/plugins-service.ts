@@ -480,6 +480,7 @@ describe("Plugins service", () => {
 					}];
 				}).future<IPluginData[]>()();
 			};
+			pluginsService.cleanGradle = (platform: string) => future.fromResult();
 
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 
@@ -542,6 +543,7 @@ describe("Plugins service", () => {
 					}];
 				}).future<IPluginData[]>()();
 			};
+			pluginsService.cleanGradle = (platform: string) => future.fromResult();
 
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 
