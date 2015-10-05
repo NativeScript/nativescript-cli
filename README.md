@@ -73,7 +73,7 @@ You can install and run the NativeScript CLI on Windows or OS X.
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
 * [Gradle 2.3][Gradle 2.3] or a later stable official release
-* [Android SDK 21][Android SDK 21] or a later stable official release
+* [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 * [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
@@ -134,12 +134,12 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Gr
 	```
 
 	For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools
-1. To update the Android SDK to 21 or later, run the following command.
+1. To update the Android SDK to 22 or later, run the following command.
 
 	```Shell
 	android update sdk
 	```
-1. Select all packages for the Android 21 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
+1. Select all packages for the Android 22 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
 1. Select Android SDK Build-tools 22.0.0 or later stable version, click **Install** and wait for the installation to complete.
 1. Select Extras/Android Support Repository, click **Install** and wait for the installation to complete.
 
@@ -161,7 +161,7 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Gradle 2.3][Gradle 2.3] or a later stable official release
-	* [Android SDK 21][Android SDK 21] or a later stable official release
+	* [Android SDK 22][Android SDK 22] or a later stable official release
 	* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 	* [Android Support Repository][Android Support Repository]
 	* (Optional) [Genymotion][Genymotion]
@@ -221,7 +221,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 		```
 * [JDK 8][JDK 8] or a later stable official release
 * [Gradle 2.3][Gradle 2.3] or a later stable official release
-* [Android SDK 21][Android SDK 21] or a later stable official release
+* [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 * [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
@@ -616,7 +616,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Chocolatey]: https://chocolatey.org/
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Gradle 2.3]: https://gradle.org/gradle-download/
-[Android SDK 21]: http://developer.android.com/sdk/index.html
+[Android SDK 22]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
 [CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
 [Android SDK Build-tools 22.0.0]: http://developer.android.com/sdk/index.html
