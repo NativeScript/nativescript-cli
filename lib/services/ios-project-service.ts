@@ -466,8 +466,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			expectedArchs.forEach(expectedArch => {
 				if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures:
-						${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
+					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: ${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
 				}
 			});
 		}).future<void>()();
