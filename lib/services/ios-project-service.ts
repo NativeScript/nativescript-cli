@@ -519,16 +519,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
 				let contentToWrite = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				this.$fs.appendFile(this.projectPodFilePath, contentToWrite).wait();
+
+				let project = this.createPbxProj();
+				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
+				this.savePbxProj(project).wait();
 			}
 
 			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
 				this.executePodInstall().wait();
 			}
-
-			let project = this.createPbxProj();
-			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
-			this.savePbxProj(project).wait();
 		}).future<void>()();
 	}
 
