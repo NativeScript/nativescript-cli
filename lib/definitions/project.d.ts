@@ -16,6 +16,7 @@ interface IProjectDataService {
 	getValue(propertyName: string): IFuture<any>;
 	setValue(key: string, value: any): IFuture<void>;
 	removeProperty(propertyName: string): IFuture<void>;
+	removeDependency(dependencyName: string): IFuture<void>;
 }
 
 interface IProjectTemplatesService {

@@ -9,7 +9,9 @@ interface IPluginsService {
 
 interface IPluginData extends INodeModuleData {
 	platformsData: IPluginPlatformsData;
-	pluginPlatformsFolderPath(platform: string): string; 
+	/* Gets all plugin variables from plugin */
+	pluginVariables: IDictionary<IPluginVariableData>;
+	pluginPlatformsFolderPath(platform: string): string;
 }
 
 interface INodeModuleData {
@@ -23,4 +25,38 @@ interface INodeModuleData {
 interface IPluginPlatformsData {
 	ios: string;
 	android: string;
+}
+
+interface IPluginVariablesService {
+	/**
+	 * Saves plugin variables in project package.json file.
+	 * @param  {IPluginData}		pluginData for the plugin.
+	 * @return {IFuture<void>}
+	 */
+	savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void>;
+	/**
+	 * Removes plugin variables from project package.json file.
+	 * @param  {IPluginData}		pluginData for the plugin.
+	 * @return {IFuture<void>}
+	 */
+	removePluginVariablesFromProjectFile(pluginData: IPluginData): IFuture<void>;
+	/**
+	 * Replaces all plugin variables with their corresponding values.
+	 * @param {IPluginData}		pluginData for the plugin.
+	 * @param {pluginConfigurationFileContent}		pluginConfigurationFileContent for the plugin.
+	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
+	 */
+	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFileContent: string): IFuture<string>;
+	/**
+	 * Returns the
+	 * @param {IPluginData}		pluginData for the plugin.
+	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
+	 */
+	getPluginVariablePropertyName(pluginData: IPluginData): string;
+}
+
+interface IPluginVariableData {
+	defaultValue?: string;
+	name?: string;
+	value?: string;
 }

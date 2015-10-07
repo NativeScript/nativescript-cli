@@ -67,6 +67,11 @@ function createTestInjector() {
 		trackFeature: () => { return future.fromResult(); }
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManager);
+	testInjector.register("pluginVariablesService", {
+		savePluginVariablesInProjectFile: (pluginData: IPluginData) => future.fromResult(),
+		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => future.fromResult(pluginConfigurationFileContent)
+	});
+	testInjector.register("npmInstallationManager", {});
 
 	return testInjector;
 }
@@ -243,7 +248,8 @@ describe("Plugins service", () => {
 			platformsData.getPlatformData = (platform: string) => {
 				return {
 					appDestinationDirectoryPath: path.join(projectFolder, "platforms", "android"),
-					frameworkPackageName: "tns-android"
+					frameworkPackageName: "tns-android",
+					normalizedPlatformName: "Android"
 				};
 			};
 
@@ -489,12 +495,16 @@ describe("Plugins service", () => {
 				return {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
 					frameworkPackageName: "tns-android",
-					configurationFileName: "AndroidManifest.xml"
+					configurationFileName: "AndroidManifest.xml",
+					normalizedPlatformName: "Android",
+					platformProjectService: {
+						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult()
+					}
 				};
 			};
 
 			// Ensure the pluginDestinationPath folder exists
-			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
+			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
 			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
 
 			// Creates invalid plugin's AndroidManifest.xml file
@@ -510,9 +520,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-
-			let commandsService = testInjector.resolve(CommandsService);
-			commandsService.tryExecuteCommand("plugin|add", [pluginFolderPath]).wait();
+			pluginsService.prepare(pluginJsonData).wait();
 		});
 		it("merges AndroidManifest.xml and produces correct xml", () => {
 			let pluginName = "mySamplePlugin";
@@ -544,6 +552,7 @@ describe("Plugins service", () => {
 			};
 
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
+			fs.ensureDirectoryExists(path.join(appDestinationDirectoryPath, "app")).wait();
 
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
@@ -556,12 +565,13 @@ describe("Plugins service", () => {
 					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }],
 					platformProjectService:  {
 						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult()
-					}
+					},
+					normalizedPlatformName: "Android"
 				};
 			};
 
 			// Ensure the pluginDestinationPath folder exists
-			let pluginPlatformsDirPath = path.join(appDestinationDirectoryPath, "app", "tns_modules", pluginName, "platforms", "android");
+			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
 			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
 
 			// Creates valid plugin's AndroidManifest.xml file
@@ -572,7 +582,7 @@ describe("Plugins service", () => {
 			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
 			fs.writeFile(pluginConfigurationFilePath, xml).wait();
 
-			pluginsService.add(pluginFolderPath).wait();
+			pluginsService.prepare(pluginJsonData).wait();
 
 			let expectedXml = '<?xmlversion="1.0"encoding="UTF-8"?><manifestxmlns:android="http://schemas.android.com/apk/res/android"package="com.example.android.basiccontactables"android:versionCode="1"android:versionName="1.0"><uses-permissionandroid:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.INTERNET"/><applicationandroid:allowBackup="true"android:icon="@drawable/ic_launcher"android:label="@string/app_name"android:theme="@style/Theme.Sample"><activityandroid:name="com.example.android.basiccontactables.MainActivity"android:label="@string/app_name"android:launchMode="singleTop"><meta-dataandroid:name="android.app.searchable"android:resource="@xml/searchable"/><intent-filter><actionandroid:name="android.intent.action.SEARCH"/></intent-filter><intent-filter><actionandroid:name="android.intent.action.MAIN"/></intent-filter></activity></application><uses-permissionandroid:name="android.permission.READ_CONTACTS"/></manifest>';
 			expectedXml = helpers.stringReplaceAll(expectedXml, EOL, "");
