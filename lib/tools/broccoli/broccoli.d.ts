@@ -152,7 +152,8 @@ interface BroccoliNode {
 }
 
 interface IBroccoliBuilder {
-   prepareNodeModules(outputPath: string,  projectDir: string, platform: string, lastModifiedTime?: Date): IFuture<void>;
+   getChangedNodeModules(outputPath: string, platform: string, lastModifiedTime?: Date): IFuture<any>;
+   prepareNodeModules(outputPath: string, platform: string, lastModifiedTime?: Date): IFuture<void>;
 }
 
 interface IDiffResult {
