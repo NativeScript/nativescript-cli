@@ -2,7 +2,9 @@
 "use strict";
 
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
-	constructor(protected $fs: IFileSystem) { }
+	constructor(protected $fs: IFileSystem,
+		    protected $projectData: IProjectData) {
+	}
 
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string) {
 		return pluginData.pluginPlatformsFolderPath(platform);
@@ -21,5 +23,14 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 
 			return nativeLibraries;
 		}).future<string[]>()();
+	}
+
+	protected getFrameworkVersion(runtimePackageName: string): string {
+		let frameworkVersion: string;
+		let jsonData = this.$fs.readJson(this.$projectData.projectFilePath).wait();
+		if (jsonData && jsonData.nativescript && jsonData.nativescript[runtimePackageName]) {
+			frameworkVersion = jsonData.nativescript[runtimePackageName].version;
+		}
+		return frameworkVersion;
 	}
 }
