@@ -23,7 +23,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this.$injector.resolve("npmInstallationManager");
 	}
 
-	constructor(private $projectData: IProjectData,
+	constructor($projectData: IProjectData,
 		$fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -33,7 +33,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $injector: IInjector,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter) {
-			super($fs);
+			super($fs, $projectData);
 		}
 
 	public get platformData(): IPlatformData {
@@ -57,6 +57,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			frameworkFilesExtensions: [".a", ".framework", ".bin"],
 			frameworkDirectoriesExtensions: [".framework"],
 			frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
+			frameworkVersion: this.getFrameworkVersion("tns-ios"),
 			targetedOS: ['darwin'],
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
@@ -157,10 +158,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				basicArgs.push("-target", this.$projectData.projectName);
 			}
 
+			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
+			if (semver.lt(this.platformData.frameworkVersion, "1.4.0")) {
+				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
+			}
+
 			let args: string[] = [];
 			if(this.$options.forDevice) {
 				args = basicArgs.concat([
-					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
 					"-sdk", "iphoneos",
 					'ARCHS=armv7 arm64',
 					'VALID_ARCHS=armv7 arm64',

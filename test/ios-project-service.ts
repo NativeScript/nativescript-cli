@@ -33,14 +33,31 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("projectData", {
 		platformsDir: projectPath,
-		projectName: projectName
+		projectName: projectName,
+		projectPath: projectPath,
+		projectFilePath: path.join(projectPath, "package.json")
 	});
 	testInjector.register("projectHelper", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", {});
 	testInjector.register("prompter", {});
-
 	return testInjector;
+}
+
+function createPackageJson(testInjector: IInjector, projectPath: string, projectName: string) {
+	let packageJsonData = {
+		"name": projectName,
+		"version": "0.1.0",
+		"nativescript": {
+			"tns-ios": {
+				"version": "1.0.0"
+			},
+			"tns-android": {
+				"version": "1.0.0"
+			}
+		}
+	};
+	testInjector.resolve("fs").writeJson(path.join(projectPath, "package.json"), packageJsonData).wait();
 }
 
 describe("Cocoapods support", () => {
@@ -59,7 +76,7 @@ describe("Cocoapods support", () => {
 				"version": "0.1.0",
 				"nativescript": {
 					"id": "org.nativescript.myProject",
-					"tns-android": {
+					"tns-ios": {
 						"version": "1.0.0"
 					}
 				}
@@ -120,7 +137,7 @@ describe("Cocoapods support", () => {
 				"version": "0.1.0",
 				"nativescript": {
 					"id": "org.nativescript.myProject2",
-					"tns-android": {
+					"tns-ios": {
 						"version": "1.0.0"
 					}
 				}
@@ -250,6 +267,7 @@ describe("Relative paths", () => {
 			let subpath = "sub/path";
 
 			let testInjector = createTestInjector(projectPath, projectName);
+			createPackageJson(testInjector, projectPath, projectName);
 			let iOSProjectService = testInjector.resolve("iOSProjectService");
 
 			let result = iOSProjectService.getLibSubpathRelativeToProjectPath(subpath);

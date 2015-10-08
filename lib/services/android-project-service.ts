@@ -25,12 +25,11 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $options: IOptions,
-		private $projectData: IProjectData,
+		$projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $propertiesParser: IPropertiesParser,
 		private $sysInfo: ISysInfo,
 		private $mobileHelper: Mobile.IMobileHelper) {
-			super($fs);
+			super($fs, $projectData);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
 
@@ -52,6 +51,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 					`${this.$projectData.projectName}-release.apk`
 				],
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
+				frameworkVersion: this.getFrameworkVersion("tns-android"),
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
 				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}]

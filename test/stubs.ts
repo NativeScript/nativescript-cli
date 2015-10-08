@@ -252,6 +252,7 @@ export class PlatformsDataStub implements IPlatformsData {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
+			frameworkVersion: "",
 			appDestinationDirectoryPath: "",
 			preparePluginNativeCode: () => Future.fromResult(),
 			removePluginNativeCode: () => Future.fromResult(),
@@ -275,6 +276,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
+			frameworkVersion: "",
 			appDestinationDirectoryPath: ""
 		};
 	}
