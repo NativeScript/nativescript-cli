@@ -212,7 +212,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public deploy(device: Mobile.IDevice, appIdentifier: string): IFuture<void> {
+	public deploy(deviceIdentifier: string): IFuture<void> {
 		return Future.fromResult();
 	}
 
