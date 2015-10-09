@@ -2,7 +2,10 @@
 "use strict";
 
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
-	constructor(protected $fs: IFileSystem) { }
+	constructor(protected $fs: IFileSystem,
+		    protected $projectData: IProjectData,
+			protected $projectDataService: IProjectDataService) {
+	}
 
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string) {
 		return pluginData.pluginPlatformsFolderPath(platform);
@@ -21,5 +24,13 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 
 			return nativeLibraries;
 		}).future<string[]>()();
+	}
+
+	protected getFrameworkVersion(runtimePackageName: string): IFuture<string> {
+		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(runtimePackageName).wait().version;
+			return frameworkVersion;
+		}).future<string>()();
 	}
 }

@@ -10,6 +10,7 @@ import * as xcode from "xcode";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
+import Future = require("fibers/future");
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -22,7 +23,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this.$injector.resolve("npmInstallationManager");
 	}
 
-	constructor(private $projectData: IProjectData,
+	constructor($projectData: IProjectData,
 		$fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -30,9 +31,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $options: IOptions,
 		private $injector: IInjector,
-		private $projectDataService: IProjectDataService,
+		$projectDataService: IProjectDataService,
 		private $prompter: IPrompter) {
-			super($fs);
+			super($fs, $projectData, $projectDataService);
 		}
 
 	public get platformData(): IPlatformData {
@@ -65,8 +66,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
 		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait()["version"];
+			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
 
 			if(semver.lt(frameworkVersion, "1.3.0")) {
 				return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
@@ -156,10 +156,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				basicArgs.push("-target", this.$projectData.projectName);
 			}
 
+			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
+			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
+			if (semver.lt(frameworkVersion, "1.4.0")) {
+				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
+			}
+
 			let args: string[] = [];
 			if(this.$options.forDevice) {
 				args = basicArgs.concat([
-					"-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"),
 					"-sdk", "iphoneos",
 					'ARCHS=armv7 arm64',
 					'VALID_ARCHS=armv7 arm64',
@@ -205,6 +210,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not appear to be a dynamic framework package.`);
 			}
 		}).future<void>()();
+	}
+
+	public deploy(device: Mobile.IDevice, appIdentifier: string): IFuture<void> {
+		return Future.fromResult();
 	}
 
 	private addDynamicFramework(frameworkPath: string): IFuture<void> {
@@ -461,8 +470,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			expectedArchs.forEach(expectedArch => {
 				if (archsInTheFatFile.indexOf(expectedArch) < 0) {
-					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures:
-						${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
+					this.$errors.failWithoutHelp(`The static library at ${libraryPath} is not built for one or more of the following required architectures: ${expectedArchs.join(", ")}. The static library must be built for all required architectures.`);
 				}
 			});
 		}).future<void>()();
@@ -514,16 +522,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
 				let contentToWrite = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				this.$fs.appendFile(this.projectPodFilePath, contentToWrite).wait();
+
+				let project = this.createPbxProj();
+				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
+				this.savePbxProj(project).wait();
 			}
 
 			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
 				this.executePodInstall().wait();
 			}
-
-			let project = this.createPbxProj();
-			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
-			this.savePbxProj(project).wait();
 		}).future<void>()();
 	}
 

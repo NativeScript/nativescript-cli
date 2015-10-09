@@ -25,6 +25,7 @@ class PlatformData implements IPlatformData {
 	deviceBuildOutputPath = "";
 	validPackageNamesForDevice: string[] = [];
 	frameworkFilesExtensions = [".jar", ".dat"];
+	frameworkVersion = "";
 	appDestinationDirectoryPath = "";
 	appResourcesDestinationDirectoryPath = "";
 }
