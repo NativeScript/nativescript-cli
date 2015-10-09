@@ -276,7 +276,7 @@ export class PlatformService implements IPlatformService {
 			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
-					platformData.platformProjectService.deploy(device, this.$projectData.projectId).wait();
+					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
 					device.deploy(packageFile, this.$projectData.projectId).wait();
 
 					if (!this.$options.justlaunch) {
@@ -300,6 +300,9 @@ export class PlatformService implements IPlatformService {
 
 			emulatorServices.checkAvailability().wait();
 			emulatorServices.checkDependencies().wait();
+
+			let emulatorId = emulatorServices.getEmulatorId().wait();
+			platformData.platformProjectService.deploy(emulatorId).wait();
 
 			if(!this.$options.availableDevices) {
 				this.buildPlatform(platform, buildConfig).wait();
