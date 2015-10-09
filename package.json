@@ -59,7 +59,6 @@
     "gulp-livereload": "^3.4.0",
     "gulp-load-plugins": "^1.0.0-rc.1",
     "gulp-mocha": "^2.0.0",
-    "gulp-notify": "^2.1.0",
     "gulp-plumber": "^1.0.1",
     "gulp-rename": "^1.2.0",
     "gulp-shell": "^0.4.3",

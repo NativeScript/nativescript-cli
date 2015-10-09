@@ -4,13 +4,6 @@ const $ = require('gulp-load-plugins')({
 });
 const config = require('../config');
 
-// Send a notification when JSRC fails,
-// so that you know your changes didn't build
-function jscsNotify(file) {
-  if (!file.jscs) return false;
-  return file.jscs.success ? false : 'JSRC failed';
-}
-
 function createLintTask(taskName, files) {
   gulp.task(taskName, function() {
     return gulp.src(files)
@@ -19,7 +12,6 @@ function createLintTask(taskName, files) {
       .pipe($.eslint.format())
       .pipe($.eslint.failOnError())
       .pipe($.jscs())
-      .pipe($.notify(jscsNotify));
   });
 }
 
