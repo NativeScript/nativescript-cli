@@ -32,7 +32,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $options: IOptions,
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
-		private $prompter: IPrompter) {
+		private $prompter: IPrompter,
+		private $config: IConfiguration) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -495,7 +496,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private executePodInstall(): IFuture<any> {
 		this.$logger.info("Installing pods...");
-		return this.$childProcess.spawnFromEvent("pod",  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' });
+		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		return this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' });
 	}
 
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
