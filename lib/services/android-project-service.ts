@@ -6,6 +6,7 @@ import Future = require("fibers/future");
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
+import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
 
 class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -28,7 +29,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		$projectData: IProjectData,
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $injector: IInjector) {
 			super($fs, $projectData, $projectDataService);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -285,10 +287,11 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		return Future.fromResult();
 	}
 
-	public deploy(device: Mobile.IAndroidDevice, appIdentifier: string): IFuture<void> {
+	public deploy(deviceIdentifier: string): IFuture<void> {
 		return (() => {
-			let deviceRootPath = `/data/local/tmp/${appIdentifier}`;
-			device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
+			let adb = this.$injector.resolve(androidDebugBridgePath.AndroidDebugBridge, { identifier: deviceIdentifier });
+			let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
+			adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
 		}).future<void>()();
