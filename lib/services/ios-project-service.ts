@@ -349,8 +349,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.platformData.projectRoot, "Podfile");
 	}
 
-	private get projectXcconfigFilePath(): string {
-		return path.join(this.platformData.appDestinationDirectoryPath, "build.xcconfig");
+	private get pluginsDebugXcconfigFilePath(): string {
+		return path.join(this.platformData.projectRoot, "plugins-debug.xcconfig");
+	}
+
+	private get pluginsReleaseXcconfigFilePath(): string {
+		return path.join(this.platformData.projectRoot, "plugins-release.xcconfig");
 	}
 
 	private replace(name: string): string {
@@ -389,7 +393,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.prepareFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.prepareStaticLibs(pluginPlatformsFolderPath, pluginData).wait();
 			this.prepareCocoapods(pluginPlatformsFolderPath).wait();
-			this.prepareXcconfigFile(pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
 
@@ -400,7 +403,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.removeFrameworks(pluginPlatformsFolderPath, pluginData).wait();
 			this.removeStaticLibs(pluginPlatformsFolderPath, pluginData).wait();
 			this.removeCocoapods(pluginPlatformsFolderPath).wait();
-			this.removeXcconfigFile(pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
 
@@ -433,6 +435,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				this.executePodInstall().wait();
 			}
+
+			this.regeneratePluginsXcconfigFile().wait();
 		}).future<void>()();
 	}
 
@@ -535,16 +539,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private prepareXcconfigFile(pluginPlatformsFolderPath: string): IFuture<void> {
-		return (() => {
-			let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
-			if(this.$fs.exists(pluginXcconfigFilePath).wait()) {
-				let contentToWrite = this.buildXcconfigContent(pluginXcconfigFilePath);
-				this.$fs.appendFile(this.projectXcconfigFilePath, contentToWrite).wait();
-			}
-		}).future<void>()();
-	}
-
 	private removeFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let project = this.createPbxProj();
@@ -588,18 +582,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				} else {
 					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
 				}
-			}
-		}).future<void>()();
-	}
 
-	private removeXcconfigFile(pluginPlatformsFolderPath: string): IFuture<void> {
-		return (() => {
-			let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
-			if(this.$fs.exists(pluginXcconfigFilePath).wait()) {
-				let projectXcconfigFileContent = this.$fs.readText(this.projectXcconfigFilePath).wait();
-				let contentToRemove = this.buildXcconfigContent(pluginXcconfigFilePath);
-				projectXcconfigFileContent = helpers.stringReplaceAll(projectXcconfigFileContent, contentToRemove, "");
-				this.$fs.writeFile(this.projectXcconfigFilePath, projectXcconfigFileContent).wait();
 			}
 		}).future<void>()();
 	}
@@ -624,9 +607,38 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.writeFile(path.join(headersFolderPath, "module.modulemap"), modulemap).wait();
 	}
 
-	private buildXcconfigContent(xcconfigFilePath: string): string {
-		let relativePluginXcconfigFilePath = path.relative(path.dirname(this.projectXcconfigFilePath), xcconfigFilePath);
-		return `${os.EOL}#include "${relativePluginXcconfigFilePath}"${os.EOL}`;
+	private mergeXcconfigFiles(pluginFile: string, projectFile: string): IFuture<void> {
+		return (() => {
+			if (!this.$fs.exists(projectFile).wait()) {
+				this.$fs.writeFile(projectFile, "").wait();
+			}
+
+			let mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${projectFile}').merge(Xcodeproj::Config.new('${pluginFile}')).save_as(Pathname.new('${projectFile}'))`;
+			this.$childProcess.exec(`ruby -e "${mergeScript}"`).wait();
+		}).future<void>()();
+	}
+
+	private regeneratePluginsXcconfigFile(): IFuture<void> {
+		return (() => {
+			this.$fs.deleteFile(this.pluginsDebugXcconfigFilePath).wait();
+			this.$fs.deleteFile(this.pluginsReleaseXcconfigFilePath).wait();
+
+			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
+			for (let plugin of allPlugins) {
+				let pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME);
+				let pluginXcconfigFilePath = path.join(pluginPlatformsFolderPath, "build.xcconfig");
+				if (this.$fs.exists(pluginXcconfigFilePath).wait()) {
+					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsDebugXcconfigFilePath).wait();
+					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsReleaseXcconfigFilePath).wait();
+				}
+			}
+
+			let podFolder = path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/");
+			if (this.$fs.exists(podFolder).wait()) {
+				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/Pods.debug.xcconfig"), this.pluginsDebugXcconfigFilePath).wait();
+				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/Pods.release.xcconfig"), this.pluginsReleaseXcconfigFilePath).wait();
+			}
+		}).future<void>()();
 	}
 }
 
