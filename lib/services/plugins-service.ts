@@ -385,9 +385,7 @@ export class PluginsService implements IPluginsService {
 				if(!pluginVersion) {
 					this.$logger.warn(`${pluginData.name} is not supported for ${platform}.`);
 					isValid = false;
-				}
-
-				if(semver.gt(pluginVersion, installedFrameworkVersion)) {
+				} else if(semver.gt(pluginVersion, installedFrameworkVersion)) {
 					this.$logger.warn(`${pluginData.name} ${pluginVersion} for ${platform} is not compatible with the currently installed framework version ${installedFrameworkVersion}.`);
 					isValid = false;
 				}
