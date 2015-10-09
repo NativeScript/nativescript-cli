@@ -12,6 +12,7 @@ export class ProjectData implements IProjectData {
 	public projectFilePath: string;
 	public projectId: string;
 	public projectName: string;
+	public dependencies: any;
 
 	constructor(private $fs: IFileSystem,
 		private $errors: IErrors,
@@ -31,8 +32,9 @@ export class ProjectData implements IProjectData {
 				let data: any = null;
 
 				if (this.$fs.exists(this.projectFilePath).wait()) {
+					let fileContent: any = null;
 					try {
-						let fileContent = this.$fs.readJson(this.projectFilePath).wait();
+						fileContent = this.$fs.readJson(this.projectFilePath).wait();
 						data = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 					} catch (err) {
 						this.$errors.fail({formatStr: "The project file %s is corrupted." + os.EOL +
@@ -44,6 +46,7 @@ export class ProjectData implements IProjectData {
 
 					if(data) {
 						this.projectId = data.id;
+						this.dependencies = fileContent.dependencies;
 					} else { // This is the case when we have package.json file but nativescipt key is not presented in it
 						this.tryToUpgradeProject().wait();
 					}

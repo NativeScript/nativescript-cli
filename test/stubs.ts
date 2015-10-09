@@ -236,6 +236,7 @@ export class ProjectDataStub implements IProjectData {
 	}
 	projectFilePath: string;
 	projectId: string;
+	dependencies: any;
 }
 
 export class PlatformsDataStub implements IPlatformsData {
@@ -251,6 +252,7 @@ export class PlatformsDataStub implements IPlatformsData {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
+			frameworkVersion: "",
 			appDestinationDirectoryPath: "",
 			preparePluginNativeCode: () => Future.fromResult(),
 			removePluginNativeCode: () => Future.fromResult(),
@@ -274,6 +276,7 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
+			frameworkVersion: "",
 			appDestinationDirectoryPath: ""
 		};
 	}
@@ -320,6 +323,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 		return Future.fromResult();
 	}
 	afterPrepareAllPlugins(): IFuture<void> {
+		return Future.fromResult();
+	}
+	deploy(device: Mobile.IAndroidDevice, appIdentifier: string): IFuture<void> {
 		return Future.fromResult();
 	}
 }

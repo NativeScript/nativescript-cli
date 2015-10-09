@@ -1,6 +1,34 @@
 NativeScript CLI Changelog
 ================
 
+1.4.0 (2015, October 07)
+==
+
+### Breaking
+* Application cannot be built with android-21 SDK. You need at least android-22 SDK in order to build or run your application on connected device or in emulator.
+
+### New
+* [Implemented #685](https://github.com/NativeScript/nativescript-cli/issues/685): Support static libraries in plugins for iOS.
+* [Implemented #923](https://github.com/NativeScript/nativescript-cli/issues/923): Ability to specify android debug ui on Windows and Linux.
+* [Implemented #927](https://github.com/NativeScript/nativescript-cli/issues/927): Support compileSdk option for android build.
+* [Implemented #935](https://github.com/NativeScript/nativescript-cli/issues/935): Android 6.0 support.
+* [Implemented #949](https://github.com/NativeScript/nativescript-cli/issues/949): `tns doctor` command checks if CocoaPods are not installed or old CocoaPods version is used.
+
+### Fixed
+* [Fixed #393](https://github.com/NativeScript/nativescript-cli/issues/393): Unable to build when app contains .gz file.
+* [Fixed #748](https://github.com/NativeScript/nativescript-cli/issues/748): Debug --stop option does not detach the debug tools.
+* [Fixed #936](https://github.com/NativeScript/nativescript-cli/issues/936): javac version is not getting properly extracted in case of open jdk systems.
+* [Fixed #941](https://github.com/NativeScript/nativescript-cli/issues/941): `tns doctor` command reports Ant is not installed.
+* [Fixed #942](https://github.com/NativeScript/nativescript-cli/issues/942): Updating some files in App_Resources kills livesync.
+* [Fixed #943](https://github.com/NativeScript/nativescript-cli/issues/943): `tns run android` or `tns debug android` after `tns livesync android` starts the last synced app on the android device with api level 21 or greater.
+* [Fixed #944](https://github.com/NativeScript/nativescript-cli/issues/944): Using CocosPods does not update the app deployment target to iOS 8.
+* [Fixed #947](https://github.com/NativeScript/nativescript-cli/issues/947): Creash for missing module at runtime after upgrade a project from 1.2.0 version to 1.3.0 version.
+* [Fixed #961](https://github.com/NativeScript/nativescript-cli/issues/961): `tns build` command crashes when NativeScript CLI is added as dev dependency to project.
+* [Fixed #977](https://github.com/NativeScript/nativescript-cli/issues/977): `tns livesync <Platform> --watch` installs the application on the device on every change.
+* [Fixed #989](https://github.com/NativeScript/nativescript-cli/issues/989): `tns doctor` command is failing when installed Gradle version contains more than 2 numbers.
+* [Fixed #1018](https://github.com/NativeScript/nativescript-cli/issues/1018): ProjectName is incorrect in settings.gradle when projectDir name is different from projectId.
+* [Fixed #1019](https://github.com/NativeScript/nativescript-cli/issues/1019): Check if shasum is correct for all cached packages.
+
 1.3.0 (2015, September 16)
 ==
 

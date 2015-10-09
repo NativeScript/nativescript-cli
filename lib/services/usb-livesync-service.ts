@@ -79,7 +79,21 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
 					let projectFileInfo = this.getProjectFileInfo(filePath);
-					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), projectFileInfo.onDeviceName));
+					let result = path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), projectFileInfo.onDeviceName));
+
+					// Handle files that are in App_Resources/<platform>
+					if(filePath.indexOf(path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, platformData.normalizedPlatformName)) > -1) {
+						let appResourcesRelativePath = path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, platformData.normalizedPlatformName), filePath);
+						result = path.join(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait(), appResourcesRelativePath);
+					}
+
+					if(filePath.indexOf(path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME)) > -1 &&
+						filePath.indexOf(path.join(constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, platformData.normalizedPlatformName)) === -1) {
+						this.$logger.warn(`Unable to sync ${filePath}.`);
+						return null;
+					}
+
+					return result;
 				}).future<string>()();
 			};
 
