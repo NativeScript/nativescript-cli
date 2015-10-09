@@ -1,11 +1,11 @@
-import Aggregation from './aggregation';
-import KinveyError from './errors/error';
-import Request from './request';
-import HttpMethod from './enums/httpMethod';
-import DataPolicy from './enums/DataPolicy';
-import Kinvey from '../kinvey';
-import Query from './query';
-import AuthType from './enums/authType';
+import Aggregation from '../aggregation';
+import KinveyError from '../errors/error';
+import Request from '../request';
+import HttpMethod from '../enums/httpMethod';
+import DataPolicy from '../enums/DataPolicy';
+import Client from '../client';
+import Query from '../query';
+import Auth from '../auth';
 import assign from 'lodash/object/assign';
 import log from 'loglevel';
 import isFunction from 'lodash/lang/isFunction';
@@ -24,9 +24,9 @@ export default class Datastore {
    * Creates a new instance of the Datastore class.
    *
    * @param   {string}    [collection]                                Collection
-   * @param   {Client}    [client=Kinvey.sharedInstance()]            Client
+   * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(collection, client = Kinvey.sharedClientInstance()) {
+  constructor(collection, client = Client.sharedInstance()) {
     /**
      * @type {string}
      */
@@ -84,7 +84,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Check that the query is an instance of Query
@@ -134,7 +134,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Create the request path
@@ -180,14 +180,14 @@ export default class Datastore {
     // If the doc has an _id, perform an update instead
     if (doc._id) {
       log.debug(`The document has an _id = ${doc._id}, updating the document instead.`);
-      return this.update(collection, document, options);
+      return this.update(doc, options);
     }
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Create and execute a request
@@ -238,7 +238,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Create the request path
@@ -293,7 +293,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Create and execute a request
@@ -336,7 +336,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Create the request path
@@ -386,7 +386,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Check that the query is an instance of Query
@@ -440,7 +440,7 @@ export default class Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Check that the aggregation is an instance of Aggregation

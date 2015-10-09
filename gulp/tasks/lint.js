@@ -7,7 +7,7 @@ const config = require('../config');
 // Send a notification when JSRC fails,
 // so that you know your changes didn't build
 function jscsNotify(file) {
-  if (!file.jscs) return;
+  if (!file.jscs) return false;
   return file.jscs.success ? false : 'JSRC failed';
 }
 

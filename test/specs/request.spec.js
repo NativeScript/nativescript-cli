@@ -50,15 +50,15 @@ describe('Request', function() {
     });
   });
 
-  describe('hostname', function() {
+  describe('host', function() {
     it(`should be set to \`baas.kinvey.com\` by default`, function() {
-      expect(this.request).to.have.property('hostname', this.kinvey.apiHostname);
+      expect(this.request).to.have.property('host', this.kinvey.apiHost);
     });
 
     it('should be able to be set to a different value', function() {
-      const hostname = 'foo.com';
-      this.request.hostname = hostname;
-      expect(this.request.hostname).to.equal(hostname);
+      const host = 'foo.com';
+      this.request.host = host;
+      expect(this.request.host).to.equal(host);
     });
   });
 

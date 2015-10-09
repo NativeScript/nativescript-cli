@@ -1,6 +1,9 @@
-import AuthType from '../enums/authType';
+import Auth from '../auth';
 import DataPolicy from '../enums/dataPolicy';
 import Model from './model';
+import Query from '../query';
+import KinveyError from '../errors/error';
+import HttpMethod from '../enums/httpMethod';
 import assign from 'lodash/object/assign';
 const filesNamespace = 'blob';
 
@@ -14,7 +17,7 @@ class Files extends Model {
     // Default options
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Build flags
@@ -51,7 +54,7 @@ class Files extends Model {
     // Default options
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Build flags
@@ -97,7 +100,7 @@ class Files extends Model {
     // Default options
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Build the request path

@@ -1,4 +1,5 @@
 import KinveyError from '../../errors/error';
+import Query from '../../query';
 import when from 'when';
 let inTransaction = false;
 let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB);
@@ -163,8 +164,9 @@ export default class IndexedDBAdapter {
 
   group(aggregation) {
     const query = new Query({ filter: aggregation.condition });
-    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-    aggregation.reduce = new Function(['doc', 'out'], reduce);
+
+    // const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    // aggregation.reduce = new Function(['doc', 'out'], reduce);
 
     const promise = this.find(query).then(docs => {
       const groups = {};

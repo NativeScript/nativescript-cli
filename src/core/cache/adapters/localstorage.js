@@ -17,27 +17,27 @@ export default class LocalStorageAdapter {
     return `${this.keyPrefix}.${id}`;
   }
 
-  find(query) {
+  find() {
 
   }
 
-  count(query) {
+  count() {
 
   }
 
-  findAndModify(id, fn) {
+  findAndModify() {
 
   }
 
-  group(aggregation) {
+  group() {
 
   }
 
-  batch(docs) {
+  batch() {
 
   }
 
-  clean(query) {
+  clean() {
 
   }
 

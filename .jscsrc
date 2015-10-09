@@ -4,5 +4,6 @@
   "requirePaddingNewLinesAfterBlocks": {
     "allExcept": ["inCallExpressions", "inArrayExpressions", "inProperties"]
   },
-  "esnext": true
+  "esnext": true,
+  "requireTrailingComma": false
 }

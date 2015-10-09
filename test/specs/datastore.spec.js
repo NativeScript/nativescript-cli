@@ -1,12 +1,12 @@
-import DataStore from '../../src/core/datastore';
+import DataStore from '../../src/core/collections/datastore';
 import DataPolicy from '../../src/core/enums/dataPolicy';
 import Query from '../../src/core/query';
 
 describe('DataStore', function() {
   before(function() {
-    this.datastore = new DataStore();
+    this.datastore = new DataStore('books');
     const book = { name: 'The Definitive Guide to JavaScript', author: 'David Flanagan' };
-    const promise = this.datastore.save('books', book, {
+    const promise = this.datastore.save(book, {
       dataPolicy: DataPolicy.LocalOnly
     });
 
@@ -22,7 +22,7 @@ describe('DataStore', function() {
 
     it('should create an _id when saving a new entity', function() {
       const book = { name: 'foo', author: 'bar' };
-      const promise = this.datastore.save('books', book, {
+      const promise = this.datastore.save(book, {
         dataPolicy: DataPolicy.LocalOnly
       });
 
@@ -33,7 +33,7 @@ describe('DataStore', function() {
 
         const query = new Query();
         query.equalTo('_id', savedBook._id);
-        return this.datastore.find('books', query, {
+        return this.datastore.find(query, {
           dataPolicy: DataPolicy.LocalOnly
         });
       }).then(books => {

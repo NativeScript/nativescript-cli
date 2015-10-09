@@ -3,13 +3,11 @@ import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
 import HttpMethod from './enums/httpMethod';
 import Rack from '../rack/rack';
-import AuthType from './enums/authType';
 import ResponseType from './enums/responseType';
-import Auth from './auth';
 import Query from './query';
 import url from 'url';
-import Kinvey from '../kinvey';
 import Client from './client';
+import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
 import KinveyError from './errors/error';
 import defaults from 'lodash/object/defaults';
@@ -19,8 +17,8 @@ const privateRequestSymbol = Symbol();
 class PrivateRequest {
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = defaults({}, options, {
-      client: Kinvey.sharedClientInstance(),
-      authType: AuthType.None,
+      auth: Auth.none,
+      client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudFirst
     });
 
@@ -38,13 +36,13 @@ class PrivateRequest {
     this.method = method;
     this.headers = {};
     this.protocol = options.client.apiProtocol;
-    this.hostname = options.client.apiHostname;
+    this.host = options.client.apiHost;
     this.path = path;
     this.query = merge({}, options.flags, query ? query.toJSON() : {});
     this.body = body;
     this.responseType = ResponseType.Text;
     this.client = options.client;
-    this.auth = options.authType;
+    this.auth = options.auth;
     this.dataPolicy = options.dataPolicy;
     this.executing = false;
 
@@ -54,39 +52,6 @@ class PrivateRequest {
     headers['Content-Type'] = 'application/json';
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION;
     this.addHeaders(headers);
-  }
-
-  get auth() {
-    return this._auth;
-  }
-
-  set auth(auth) {
-    switch (auth) {
-    case AuthType.All:
-      this._auth = Auth.all;
-      break;
-    case AuthType.App:
-      this._auth = Auth.app;
-      break;
-    case AuthType.Basic:
-      this._auth = Auth.basic;
-      break;
-    case AuthType.Master:
-      this._auth = Auth.master;
-      break;
-    case AuthType.None:
-      this._auth = Auth.none;
-      break;
-    case AuthType.Session:
-      this._auth = Auth.session;
-      break;
-    case AuthType.Default:
-      this._auth = Auth.default;
-      break;
-    default:
-      this._auth = auth;
-      break;
-    }
   }
 
   get method() {
@@ -118,7 +83,7 @@ class PrivateRequest {
   get url() {
     return url.format({
       protocol: this.protocol,
-      hostname: this.hostname,
+      host: this.host,
       pathname: this.path,
       query: this.query,
       hash: this.hash
@@ -129,7 +94,8 @@ class PrivateRequest {
     return this._responseType;
   }
 
-  set responseType(type = ResponseType.DOMString) {
+  set responseType(type) {
+    type = type || ResponseType.DOMString;
     let responseType;
 
     switch (type) {
@@ -139,9 +105,10 @@ class PrivateRequest {
       } catch (e) {
         responseType = 'arraybuffer';
       }
+
       break;
     case ResponseType.Document:
-      respnseType = 'document';
+      responseType = 'document';
       break;
     case ResponseType.JSON:
       responseType = 'json';
@@ -323,7 +290,6 @@ class PrivateRequest {
       query: this.query,
       body: this.body,
       responseType: this.responseType,
-      authType: this.authType,
       dataPolicy: this.dataPolicy,
       client: this.client.toJSON()
     };
@@ -358,14 +324,14 @@ class Request {
     privateRequest.protocol = protocol;
   }
 
-  get hostname() {
+  get host() {
     const privateRequest = this[privateRequestSymbol];
-    return privateRequest.hostname;
+    return privateRequest.host;
   }
 
-  set hostname(hostname) {
+  set host(host) {
     const privateRequest = this[privateRequestSymbol];
-    privateRequest.hostname = hostname;
+    privateRequest.host = host;
   }
 
   get auth() {

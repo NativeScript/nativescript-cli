@@ -1,25 +1,27 @@
 import Client from './core/client';
-import KinveyError from './core/errors/error';
 import when from 'when';
-const sharedClientInstanceSymbol = Symbol();
 const Kinvey = {};
 
 // Core
 Kinvey.Acl = require('./core/acl');
 Kinvey.Aggregation = require('./core/aggregation');
 Kinvey.Client = Client;
-Kinvey.Datastore = require('./core/datastore');
+Kinvey.Datastore = require('./core/collections/datastore');
+Kinvey.File = require('./core/models/file');
 Kinvey.Group = require('./core/aggregation');
 Kinvey.Metadata = require('./core/metadata');
+Kinvey.Model = require('./core/models/model');
 Kinvey.Query = require('./core/query');
 Kinvey.User = require('./core/models/user');
 
 // Enums
-Kinvey.AuthType = require('./core/enums/authType');
 Kinvey.DataPolicy = require('./core/enums/dataPolicy');
 Kinvey.HttpMethod = require('./core/enums/httpMethod');
 Kinvey.RackType = require('./core/enums/rackType');
+Kinvey.ResponseType = require('./core/enums/responseType');
+Kinvey.SocialAdapter = require('./core/enums/socialAdapter');
 Kinvey.StatusCode = require('./core/enums/statusCode');
+Kinvey.StoreAdapter = require('./core/enums/storeAdapter');
 
 // Errors
 Kinvey.Error = require('./core/errors/error');
@@ -58,26 +60,8 @@ Kinvey.Rack = require('./rack/rack');
  * });
  */
 Kinvey.init = function(options = {}) {
-  const client = new Client(options);
-  Kinvey[sharedClientInstanceSymbol] = client;
+  const client = Client.init(options);
   return when.resolve(client);
-};
-
-/**
- * Returns the shared client instance used by the library.
- *
- * @throws {KinveyError} If `Kinvey.init()` has not been called.
- *
- * @return {Client} The shared instance.
- */
-Kinvey.sharedClientInstance = function() {
-  const client = Kinvey[sharedClientInstanceSymbol];
-
-  if (!client) {
-    throw new KinveyError('You have not initialized the library. Please call `Kinvey.init()` before accessing the shared instance.');
-  }
-
-  return client;
 };
 
 // Export

@@ -1,4 +1,4 @@
-import User from './models/user';
+import userUtils from '../utils/user';
 
 class Auth {
   static all(client) {
@@ -63,14 +63,14 @@ class Auth {
   }
 
   static session() {
-    return User.getActive().then(user => {
+    return userUtils.getActiveUser().then(user => {
       if (!user) {
         throw new Error('There is not an active user.');
       }
 
       return {
         scheme: 'Kinvey',
-        credentials: user.authtoken
+        credentials: user.metadata.authtoken
       };
     });
   }

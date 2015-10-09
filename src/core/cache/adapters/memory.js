@@ -13,27 +13,27 @@ export default class MemoryAdapter {
     this.collection = data[dbInfo.name][dbInfo.collection] = data[dbInfo.name][dbInfo.collection] || {};
   }
 
-  find(query) {
+  find() {
 
   }
 
-  count(query) {
+  count() {
 
   }
 
-  findAndModify(id, fn) {
+  findAndModify() {
 
   }
 
-  group(aggregation) {
+  group() {
 
   }
 
-  batch(docs) {
+  batch() {
 
   }
 
-  clean(query) {
+  clean() {
 
   }
 

@@ -2,18 +2,16 @@ import ActiveUserError from '../errors/activeUserError';
 import KinveyError from '../errors/error';
 import Model from './model';
 import Users from '../collections/users';
-import StoreAdapter from '../enums/storeAdapter';
 import SocialAdapter from '../enums/socialAdapter';
-import Facebook from './social/facebook';
-import Google from './social/google';
-import LinkedIn from './social/linkedIn';
-import Twitter from './social/twitter';
-import Store from '../cache/store';
-import Kinvey from '../../kinvey';
+import Facebook from '../social/facebook';
+import Google from '../social/google';
+import LinkedIn from '../social/linkedIn';
+import Twitter from '../social/twitter';
+import userUtils from '../../utils/user';
 import isFunction from 'lodash/lang/isFunction';
+import isString from 'lodash/lang/isString';
 import when from 'when';
 const activeUserSymbol = Symbol();
-const activeUserCollection = 'activeUser';
 
 export default class User extends Model {
   get authtoken() {
@@ -26,26 +24,20 @@ export default class User extends Model {
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
   static getActive() {
-    let user = User[activeUserSymbol];
+    const user = User[activeUserSymbol];
 
     if (!user) {
       return when.resolve(user);
     }
 
-    const client = Kinvey.sharedClientInstance();
-    const store = new Store(StoreAdapter.LocalStorage, {
-      name: client.appKey,
-      collection: activeUserCollection
-    });
-
-    return store.find().then(users => {
-      if (users.length === 0) {
-        return null;
+    return userUtils.getActiveUser().then(user => {
+      if (user) {
+        user = new User(user);
+        User[activeUserSymbol] = user;
+        return user;
       }
 
-      user = new User(users[0]);
-      User[activeUserSymbol] = user;
-      return user;
+      return null;
     });
   }
 
@@ -55,32 +47,18 @@ export default class User extends Model {
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
   static setActive(user) {
-    const client = Kinvey.sharedClientInstance();
-    const store = new Store(StoreAdapter.LocalStorage, {
-      name: client.appKey,
-      collection: activeUserCollection
-    });
+    if (user && !(user instanceof User)) {
+      user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
+    }
 
-    const promise = User.getActive().then(activeUser => {
-      if (activeUser) {
-        return store.delete(activeUser.id).then(() => {
-          User[activeUserSymbol] = null;
-        });
-      }
-    }).then(() => {
+    return userUtils.setActive(user ? user.toJSON() : user).then(() => {
       if (user) {
-        if (!(user instanceof User)) {
-          user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
-        }
-
-        return store.save(user.toJSON()).then(() => {
-          User[activeUserSymbol] = user;
-          return user;
-        });
+        User[activeUserSymbol] = user;
+        return user;
       }
-    });
 
-    return promise;
+      return null;
+    });
   }
 
   /**
@@ -143,8 +121,8 @@ export default class User extends Model {
       return when.reject(new KinveyError('token argument must contain both an `access_token` and `expires_in` property.', token));
     }
 
-    var data = { _socialIdentity: { } };
-    data._socialIdentity[provider] = tokens;
+    const data = { _socialIdentity: { } };
+    data._socialIdentity[provider] = token;
     return User.login(data, options);
   }
 
@@ -175,7 +153,7 @@ export default class User extends Model {
    * @param   {string|Object}      Adapter          Social Adapter
    * @return  {Promise}                             Resolved with the active user or rejected with an error.
    */
-  connect(Adapter = SocialAdapter.Facebook) {
+  connect(Adapter = SocialAdapter.Facebook, options) {
     let adapter = Adapter;
     let promise;
 
@@ -192,6 +170,7 @@ export default class User extends Model {
         break;
       default:
         Adapter = Facebook;
+      }
     }
 
     if (isFunction(Adapter)) {
@@ -202,8 +181,8 @@ export default class User extends Model {
       return when.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide an `connect` function for the adapter.'));
     }
 
-    promise = adapter.connect().then((tokens) => {
-      return User.loginWithProvider(adapter.name, tokens);
+    promise = adapter.connect(options).then((token) => {
+      return User.loginWithProvider(adapter.name, token, options);
     });
 
     return promise;

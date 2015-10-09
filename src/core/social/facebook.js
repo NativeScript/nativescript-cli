@@ -1,5 +1,7 @@
 import Social from './social';
+import KinveyError from '../errors/error';
 import when from 'when';
+const FB = global.FB;
 
 export default class Facebook extends Social {
 
@@ -10,7 +12,7 @@ export default class Facebook extends Social {
   connect() {
     const promise = when.promise((resolve, reject) => {
       if (typeof FB === 'undefined') {
-        return reject(new KinveyError('Facebook SDK not found.',  'Please load the Facebook SDK by following the guide at https://developers.facebook.com/docs/javascript/quickstart/v2.4.'));
+        return reject(new KinveyError('Facebook SDK not found.', 'Please load the Facebook SDK by following the guide at https://developers.facebook.com/docs/javascript/quickstart/v2.4.'));
       }
 
       FB.getLoginStatus((response) => {

@@ -1,11 +1,17 @@
-import AuthType from '../enums/authType';
+import Client from '../client';
+import Auth from '../auth';
 import DataPolicy from '../enums/dataPolicy';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Datastore from './datastore';
+import KinveyError from '../errors/error';
+import Query from '../query';
 import when from 'when';
 import assign from 'lodash/object/assign';
+import clone from 'lodash/lang/clone';
 import isObject from 'lodash/lang/isObject';
+import isFunction from 'lodash/lang/isFunction';
+import isArray from 'lodash/lang/isArray';
 const usersNamespace = 'user';
 const rpcNamespace = 'rpc';
 const pathReplaceRegex = /[^\/]$/;
@@ -20,9 +26,9 @@ export default class Users extends Datastore {
   /**
    * Creates a new instance of the Users class.
    *
-   * @param   {Client}    [client=Kinvey.sharedInstance()]            Client
+   * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(client = Kinvey.sharedClientInstance()) {
+  constructor(client = Client.sharedInstance()) {
     super(null, client);
   }
 
@@ -64,7 +70,7 @@ export default class Users extends Datastore {
     // Set options
     const options = {
       dataPolicy: DataPolicy.CloudOnly,
-      authType: AuthType.App
+      auth: Auth.app
     };
 
     // Cast arguments
@@ -110,7 +116,7 @@ export default class Users extends Datastore {
     // if the option was provided.
     const options = {
       dataPolicy: DataPolicy.CloudOnly,
-      authType: AuthType.Session
+      auth: Auth.session
     };
 
     // Create the request path
@@ -131,7 +137,7 @@ export default class Users extends Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Check that the query is an instance of Query
@@ -159,7 +165,7 @@ export default class Users extends Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.App
+      auth: Auth.app
     }, options);
 
     const singular = !isArray(models);
@@ -205,7 +211,7 @@ export default class Users extends Datastore {
   forgotUsername(models = [], options = {}) {
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.App
+      auth: Auth.app
     }, options);
 
     const singular = !isArray(models);
@@ -248,7 +254,7 @@ export default class Users extends Datastore {
   resetPassword(models = [], options = {}) {
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.App
+      auth: Auth.app
     }, options);
 
     const singular = !isArray(models);
@@ -294,7 +300,7 @@ export default class Users extends Datastore {
   exists(models = [], options = {}) {
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     const singular = !isArray(models);
@@ -337,7 +343,7 @@ export default class Users extends Datastore {
   restore(models = [], options = {}) {
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default,
+      auth: Auth.default,
       parse: true
     }, options);
 

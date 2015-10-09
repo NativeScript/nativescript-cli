@@ -11,6 +11,7 @@ import log from 'loglevel';
 import assign from 'lodash/object/assign';
 import isString from 'lodash/lang/isString';
 import isArray from 'lodash/lang/isArray';
+import isFunction from 'lodash/lang/isArray';
 const validCollectionRegex = /^[a-zA-Z0-9\-]{1,128}/;
 
 export default class Store {

@@ -129,8 +129,9 @@ export default class WebSQLAdapter {
 
   group(aggregation) {
     const query = new Query({ filter: aggregation.condition });
-    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-    aggregation.reduce = new Function(['doc', 'out'], reduce);
+
+    // const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    // aggregation.reduce = new Function(['doc', 'out'], reduce);
 
     const promise = this.find(query).then(docs => {
       const groups = {};
@@ -180,7 +181,7 @@ export default class WebSQLAdapter {
         throw new KinveyError('The entity was not found in the collection.');
       }
 
-      return documents[0];
+      return docs[0];
     });
 
     return promise;

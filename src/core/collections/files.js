@@ -4,8 +4,11 @@ import Request from '../request';
 import KinveyError from '../errors/error';
 import HttpMethod from '../enums/httpMethod';
 import ResponseType from '../enums/responseType';
+import DataPolicy from '../enums/dataPolicy';
+import Auth from '../auth';
 import url from 'url';
 import when from 'when';
+import assign from 'lodash/object/assign';
 import isObject from 'lodash/lang/isObject';
 const filesNamespace = 'blob';
 const pathReplaceRegex = /[^\/]$/;
@@ -20,9 +23,9 @@ export default class Files extends Datastore {
   /**
    * Creates a new instance of the Files class.
    *
-   * @param   {Client}    [client=Kinvey.sharedInstance()]            Client
+   * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(client = Kinvey.sharedClientInstance()) {
+  constructor(client = Client.sharedInstance()) {
     super(null, client);
   }
 
@@ -124,7 +127,7 @@ export default class Files extends Datastore {
     // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      authType: AuthType.Default
+      auth: Auth.default
     }, options);
 
     // Build flags
@@ -167,7 +170,7 @@ export default class Files extends Datastore {
     }
 
     // Create a client
-    const sharedClient = Kinvey.sharedClientInstance();
+    const sharedClient = Client.sharedInstance();
     const client = new Client({
       appKey: sharedClient.appKey,
       appSecret: sharedClient.appSecret,
@@ -265,7 +268,7 @@ export default class Files extends Datastore {
       delete response._uploadURL;
 
       // Create a client
-      const sharedClient = Kinvey.sharedClientInstance();
+      const sharedClient = Client.sharedInstance();
       const client = new Client({
         appKey: sharedClient.appKey,
         appSecret: sharedClient.appSecret,

@@ -1,6 +1,7 @@
+import KinveyError from './errors/error';
 import url from 'url';
 import clone from 'lodash/lang/clone';
-import KinveyError from './errors/error';
+const sharedInstanceSymbol = Symbol();
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -107,6 +108,50 @@ class Client {
     };
 
     return clone(json);
+  }
+
+  /**
+   * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.
+   *
+   * @param {Object} options - Options
+   * @param {string} options.appKey - My app's key
+   * @param {string} [options.appSecret] - My app's secret
+   * @param {string} [options.masterSecret] - My app's master secret
+   * @param {string} [options.encryptionKey] - My app's encryption key
+   * @param {string} [options.apiUrl] - The url to send Kinvey API requests.
+   *
+   * @throws {KinveyError}  If an `options.appkey` is not provided.
+   * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
+   *
+   * @return {Client}  An instance of Client.
+   *
+   * @example
+   * var sharedInstance = Client.init({
+   *   appKey: 'appKey',
+   *   appSecret: 'appSecret'
+   * });
+   */
+  static init(options) {
+    const client = new Client(options);
+    Client[sharedInstanceSymbol] = client;
+    return client;
+  }
+
+  /**
+   * Returns the shared client instance used by the library.
+   *
+   * @throws {KinveyError} If `Kinvey.init()` has not been called.
+   *
+   * @return {Client} The shared instance.
+   */
+  static sharedInstance() {
+    const client = Client[sharedInstanceSymbol];
+
+    if (!client) {
+      throw new KinveyError('You have not initialized the library. Please call `Kinvey.init()` before accessing the shared instance.');
+    }
+
+    return client;
   }
 }
 
