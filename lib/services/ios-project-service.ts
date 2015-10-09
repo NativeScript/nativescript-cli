@@ -31,9 +31,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $options: IOptions,
 		private $injector: IInjector,
-		private $projectDataService: IProjectDataService,
+		$projectDataService: IProjectDataService,
 		private $prompter: IPrompter) {
-			super($fs, $projectData);
+			super($fs, $projectData, $projectDataService);
 		}
 
 	public get platformData(): IPlatformData {
@@ -57,7 +57,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			frameworkFilesExtensions: [".a", ".framework", ".bin"],
 			frameworkDirectoriesExtensions: [".framework"],
 			frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
-			frameworkVersion: this.getFrameworkVersion("tns-ios"),
 			targetedOS: ['darwin'],
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
@@ -67,8 +66,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public getAppResourcesDestinationDirectoryPath(): IFuture<string> {
 		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait()["version"];
+			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
 
 			if(semver.lt(frameworkVersion, "1.3.0")) {
 				return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
@@ -159,7 +157,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
-			if (semver.lt(this.platformData.frameworkVersion, "1.4.0")) {
+			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
+			if (semver.lt(frameworkVersion, "1.4.0")) {
 				basicArgs.push("-xcconfig", path.join(projectRoot, this.$projectData.projectName, "build.xcconfig"));
 			}
 

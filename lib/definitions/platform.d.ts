@@ -32,7 +32,6 @@ interface IPlatformData {
 	frameworkFilesExtensions: string[];
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];
-	frameworkVersion: string;
 	targetedOS?: string[];
 	configurationFileName?: string;
 	configurationFilePath?: string;

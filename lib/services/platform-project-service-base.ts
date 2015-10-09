@@ -3,7 +3,8 @@
 
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
-		    protected $projectData: IProjectData) {
+		    protected $projectData: IProjectData,
+			protected $projectDataService: IProjectDataService) {
 	}
 
 	public getPluginPlatformsFolderPath(pluginData: IPluginData, platform: string) {
@@ -25,12 +26,11 @@ export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 		}).future<string[]>()();
 	}
 
-	protected getFrameworkVersion(runtimePackageName: string): string {
-		let frameworkVersion: string;
-		let jsonData = this.$fs.readJson(this.$projectData.projectFilePath).wait();
-		if (jsonData && jsonData.nativescript && jsonData.nativescript[runtimePackageName]) {
-			frameworkVersion = jsonData.nativescript[runtimePackageName].version;
-		}
-		return frameworkVersion;
+	protected getFrameworkVersion(runtimePackageName: string): IFuture<string> {
+		return (() => {
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(runtimePackageName).wait().version;
+			return frameworkVersion;
+		}).future<string>()();
 	}
 }
