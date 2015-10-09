@@ -201,7 +201,7 @@ export class PluginsService implements IPluginsService {
 
 	public getAllInstalledPlugins(): IFuture<IPluginData[]> {
 		return (() => {
-			let nodeModules = this.getAllInstalledModules().wait();
+			let nodeModules = this.getAllInstalledModules().wait().map(nodeModuleData => this.convertToPluginData(nodeModuleData));
 			return _.filter(nodeModules, nodeModuleData => nodeModuleData && nodeModuleData.isPlugin);
 		}).future<IPluginData[]>()();
 	}

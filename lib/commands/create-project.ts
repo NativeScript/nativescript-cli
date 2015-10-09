@@ -14,7 +14,7 @@ export class ProjectCommandParameter implements ICommandParameter {
 			}
 
 			if (value.toUpperCase() === "APP") {
-				this.$logger.warn("You cannot build aplications named 'app' in Xcode. Consider creating a project with different name.");
+				this.$logger.warn("You cannot build applications named 'app' in Xcode. Consider creating a project with different name.");
 			}
 
 			return this.$projectNameValidator.validate(value);
