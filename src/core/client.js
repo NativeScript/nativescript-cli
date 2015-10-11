@@ -148,7 +148,7 @@ class Client {
     const client = Client[sharedInstanceSymbol];
 
     if (!client) {
-      throw new KinveyError('You have not initialized the library. Please call `Kinvey.init()` before accessing the shared instance.');
+      throw new KinveyError('You have not initialized the library. Please call Kinvey.init() before accessing the shared instance.');
     }
 
     return client;

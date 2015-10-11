@@ -1,16 +1,16 @@
 import Aggregation from '../aggregation';
-import KinveyError from '../errors/error';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
 import DataPolicy from '../enums/DataPolicy';
 import Client from '../client';
 import Query from '../query';
 import Auth from '../auth';
+import Model from '../models/model';
 import assign from 'lodash/object/assign';
+import result from 'lodash/object/result';
 import log from 'loglevel';
-import isFunction from 'lodash/lang/isFunction';
+import isArray from 'lodash/lang/isArray';
 const datastoreNamespace = 'appdata';
-const pathReplaceRegex = /[^\/]$/;
 
 /**
  * The Datastore class is used to retrieve, create, update, destroy, count and group documents
@@ -26,7 +26,12 @@ export default class Datastore {
    * @param   {string}    [collection]                                Collection
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(collection, client = Client.sharedInstance()) {
+  constructor(collection, client = Client.sharedInstance(), options = {}) {
+    // Default options
+    options = assign({
+      model: Model
+    }, options);
+
     /**
      * @type {string}
      */
@@ -36,6 +41,11 @@ export default class Datastore {
      * @type {Client}
      */
     this.client = client;
+
+    /**
+     * @type {Model}
+     */
+    this.model = options.model;
   }
 
   /**
@@ -47,18 +57,18 @@ export default class Datastore {
     let path = `/${datastoreNamespace}/${this.client.appKey}`;
 
     if (this.collection) {
-      path = `${path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(this.collection)}`;
+      path = `${path}/${this.collection}`;
     }
 
     return path;
   }
 
   /**
-   * Finds all documents in the collection. A query can be optionally provided to return
-   * a subset of all documents in the collection or omitted to return all documents in
-   * the collection. The number of documents returned will adhere to the limits specified
+   * Finds all models in the collection. A query can be optionally provided to return
+   * a subset of all models in the collection or omitted to return all models in
+   * the collection. The number of models returned will adhere to the limits specified
    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
-   * promise will be returned that will be resolved with the documents or rejected with
+   * promise will be returned that will be resolved with the models or rejected with
    * an error.
    *
    * @param   {Query}        [query]                                      Query
@@ -78,7 +88,7 @@ export default class Datastore {
    * });
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the documents in the ${this.collection} collection.`, query);
+    log.debug(`Retrieving the models in the ${this.collection} collection.`, query);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -89,20 +99,31 @@ export default class Datastore {
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     // Create and execute a request
     const request = new Request(HttpMethod.GET, this.path, query, null, options);
-    const promise = request.execute().then(function(response) {
-      return response.data;
+    const promise = request.execute().then(response => {
+      let data = response.data;
+      const models = [];
+
+      if (!isArray(data)) {
+        data = [data];
+      }
+
+      data.forEach(doc => {
+        models.push(new this.model(doc, options));
+      });
+
+      return models;
     });
 
     // Log
     promise.then((response) => {
-      log.info(`Retrieved the documents in the ${this.collection} collection.`, response);
+      log.info(`Retrieved the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to retrieve the documents in the ${this.collection} collection.`, err);
+      log.error(`Failed to retrieve the models in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -110,8 +131,8 @@ export default class Datastore {
   }
 
   /**
-   * Retrieves a single document in the collection by id. A promise will be returned that will
-   * be resolved with the document or rejected with an error.
+   * Retrieves a single model in the collection by id. A promise will be returned that will
+   * be resolved with the model or rejected with an error.
    *
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
@@ -128,7 +149,7 @@ export default class Datastore {
    * });
    */
   get(id, options = {}) {
-    log.debug(`Retrieving a document in the ${this.collection} collection with id = ${id}.`);
+    log.debug(`Retrieving a model in the ${this.collection} collection with id = ${id}.`);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -137,18 +158,17 @@ export default class Datastore {
       auth: Auth.default
     }, options);
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(id)}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.GET, path, null, null, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.GET, `${this.path}/id`, null, null, options);
+    const promise = request.execute().then(response => {
+      return new this.model(response.data, options);
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Retrieved the document in the ${this.collection} collection with id = ${id}.`, response);
+      log.info(`Retrieved the model in the ${this.collection} collection with id = ${id}.`, response);
     }).catch((err) => {
-      log.error(`Failed to retrieve the document in the ${this.collection} collection with id = ${id}.`, err);
+      log.error(`Failed to retrieve the model in the ${this.collection} collection with id = ${id}.`, err);
     });
 
     // Return the promise
@@ -156,10 +176,10 @@ export default class Datastore {
   }
 
   /**
-   * Saves a document to the collection. A promise will be returned that will be resolved with
-   * saved document or rejected with an error.
+   * Saves a model to the collection. A promise will be returned that will be resolved with
+   * saved model or rejected with an error.
    *
-   * @param   {Object}       doc                                          Document
+   * @param   {Object}       model                                        Model
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -174,13 +194,13 @@ export default class Datastore {
    *   ...
    * });
    */
-  save(doc, options = {}) {
-    log.debug(`Saving the document to the ${this.collection} collection.`, doc);
+  save(model, options = {}) {
+    log.debug(`Saving the model to the ${this.collection} collection.`, model);
 
     // If the doc has an _id, perform an update instead
-    if (doc._id) {
-      log.debug(`The document has an _id = ${doc._id}, updating the document instead.`);
-      return this.update(doc, options);
+    if (model.id) {
+      log.debug(`The model has an id = ${model.id}, updating the model instead.`);
+      return this.update(model, options);
     }
 
     // Set option defaults. These values will be overridden
@@ -191,16 +211,16 @@ export default class Datastore {
     }, options);
 
     // Create and execute a request
-    const request = new Request(HttpMethod.POST, this.path, null, doc, options);
+    const request = new Request(HttpMethod.POST, this.path, null, result(model, 'toJSON', model), options);
     const promise = request.execute().then(function(response) {
-      return response.data;
+      return new this.model(response.data, options);
     });
 
     // Log
     promise.then((response) => {
-      log.info(`Saved the document to the ${this.collection} collection.`, response);
+      log.info(`Saved the model to the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to save the document to the ${this.collection} collection.`, err);
+      log.error(`Failed to save the model to the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -208,10 +228,10 @@ export default class Datastore {
   }
 
   /**
-   * Updates a document in the collection. A promise will be returned that will be resolved with
-   * the updated document or rejected with an error.
+   * Updates a model in the collection. A promise will be returned that will be resolved with
+   * the updated model or rejected with an error.
    *
-   * @param   {string}       doc                                          Document
+   * @param   {string}       model                                        Model
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -226,13 +246,8 @@ export default class Datastore {
    *   ...
    * });
    */
-  update(doc, options = {}) {
-    log.debug(`Update the document to the ${this.collection} collection.`, doc);
-
-    // Verify the doc contains an _id
-    if (!doc._id) {
-      return Promise.reject(new KinveyError('The doc argument must contain an _id.'));
-    }
+  update(model, options = {}) {
+    log.debug(`Update the model to the ${this.collection} collection.`, model);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -241,18 +256,17 @@ export default class Datastore {
       auth: Auth.default
     }, options);
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(doc._id)}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.PUT, path, null, doc, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.PUT, `${this.path}/${model.id}`, null, result(model, 'toJSON', model), options);
+    const promise = request.execute().then(() => {
+      return model;
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Updated the document to the ${this.collection} collection.`, response);
+      log.info(`Updated the model to the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to update the document to the ${this.collection} collection.`, err);
+      log.error(`Failed to update the model to the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -260,10 +274,10 @@ export default class Datastore {
   }
 
   /**
-   * Delete documents in the collection. A query can be optionally provided to delete
-   * a subset of documents in the collection or omitted to delete all documents in the
+   * Delete models in the collection. A query can be optionally provided to delete
+   * a subset of modsels in the collection or omitted to delete all models in the
    * collection. A promise will be returned that will be resolved with a count of the
-   * number of documents deleted or rejected with an error.
+   * number of models deleted or rejected with an error.
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
@@ -282,11 +296,11 @@ export default class Datastore {
    * });
    */
   clean(query = new Query(), options = {}) {
-    log.debug(`Deleting the documents in the ${this.collection} collection by query.`, query);
+    log.debug(`Deleting the models in the ${this.collection} collection by query.`, query);
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     // Set option defaults. These values will be overridden
@@ -298,13 +312,15 @@ export default class Datastore {
 
     // Create and execute a request
     const request = new Request(HttpMethod.DELETE, this.path, query, null, options);
-    const promise = request.execute();
+    const promise = request.execute().then(function(response) {
+      return response.data;
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Deleted the documents in the ${this.collection} collection.`, response);
+      log.info(`Deleted the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to delete the documents in the ${this.collection} collection.`, err);
+      log.error(`Failed to delete the models in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -312,8 +328,8 @@ export default class Datastore {
   }
 
   /**
-   * Delete a document in the collection. A promise will be returned that will be
-   * resolved with a count of the number of documents deleted or rejected with an error.
+   * Delete a model in the collection. A promise will be returned that will be
+   * resolved with a count of the number of models deleted or rejected with an error.
    *
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
@@ -330,7 +346,7 @@ export default class Datastore {
    * });
    */
   destroy(id, options = {}) {
-    log.debug(`Deleting a document in the ${this.collection} collection with id = ${id}.`);
+    log.debug(`Deleting a model in the ${this.collection} collection with id = ${id}.`);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -339,18 +355,17 @@ export default class Datastore {
       auth: Auth.default
     }, options);
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(id)}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.DELETE, path, null, null, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.DELETE, `${this.path}/${id}`, null, null, options);
+    const promise = request.execute().then(function(response) {
+      return response.data;
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Deleted the document in the ${this.collection} collection with id = ${id}.`, response);
+      log.info(`Deleted the model in the ${this.collection} collection with id = ${id}.`, response);
     }).catch((err) => {
-      log.error(`Failed to delete the document in the ${this.collection} collection with id = ${id}.`, err);
+      log.error(`Failed to delete the model in the ${this.collection} collection with id = ${id}.`, err);
     });
 
     // Return the promise
@@ -358,10 +373,10 @@ export default class Datastore {
   }
 
   /**
-   * Counts documents in the collection. A query can be optionally provided to count
-   * a subset of documents in the collection or omitted to count all the documents
+   * Counts models in the collection. A query can be optionally provided to count
+   * a subset of models in the collection or omitted to count all the models
    * in a collection. A promise will be returned that will be resolved with a count
-   * of the documents or rejected with an error.
+   * of the models or rejected with an error.
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
@@ -380,7 +395,7 @@ export default class Datastore {
    * });
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of documents in the ${this.collection} collection.`, query);
+    log.debug(`Counting the number of models in the ${this.collection} collection.`, query);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -391,21 +406,20 @@ export default class Datastore {
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_count')}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.GET, path, query, null, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.GET, `${this.path}/_count`, query, null, options);
+    const promise = request.execute().then(response => {
+      return response.data;
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Counted the number of documents in the ${this.collection} collection.`, response);
+      log.info(`Counted the number of models in the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to count the number of documents in the ${this.collection} collection.`, err);
+      log.error(`Failed to count the number of models in the ${this.collection} collection.`, err);
     });
 
     // Return the promise
@@ -413,9 +427,9 @@ export default class Datastore {
   }
 
   /**
-   * Groups documents in the collection. An aggregation can be optionally provided to group
-   * a subset of documents in the collection or omitted to group all the documents
-   * in the collection. A promise will be returned that will be resolved with all documents
+   * Groups models in the collection. An aggregation can be optionally provided to group
+   * a subset of models in the collection or omitted to group all the models
+   * in the collection. A promise will be returned that will be resolved with all models
    * in the group or rejected with an error.
    *
    * @param   {Aggregation}  [aggregation]                                Aggregation
@@ -434,7 +448,7 @@ export default class Datastore {
    * });
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the documents in the ${this.collection} collection.`, aggregation, options);
+    log.debug(`Grouping the models in the ${this.collection} collection.`, aggregation, options);
 
     // Set option defaults. These values will be overridden
     // if the option was provided.
@@ -445,21 +459,20 @@ export default class Datastore {
 
     // Check that the aggregation is an instance of Aggregation
     if (aggregation && !(aggregation instanceof Aggregation)) {
-      aggregation = new Aggregation(isFunction(aggregation.toJSON) ? aggregation.toJSON() : aggregation);
+      aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_group')}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.POST, path, null, aggregation.toJSON(), options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.POST, `${this.path}/_group`, null, aggregation.toJSON(), options);
+    const promise = request.execute().then(response => {
+      return response.data;
+    });
 
     // Log
     promise.then((response) => {
-      log.info(`Grouped the documents in the ${this.collection} collection.`, response);
+      log.info(`Grouped the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to group the documents in the ${this.collection} collection.`, err);
+      log.error(`Failed to group the models in the ${this.collection} collection.`, err);
     });
 
     // Return the promise

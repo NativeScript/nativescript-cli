@@ -1,5 +1,4 @@
 import Client from './core/client';
-import when from 'when';
 const Kinvey = {};
 
 // Core
@@ -61,7 +60,7 @@ Kinvey.Rack = require('./rack/rack');
  */
 Kinvey.init = function(options = {}) {
   const client = Client.init(options);
-  return when.resolve(client);
+  return client;
 };
 
 // Export

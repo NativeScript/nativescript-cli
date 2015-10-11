@@ -7,7 +7,7 @@ import Facebook from '../social/facebook';
 import Google from '../social/google';
 import LinkedIn from '../social/linkedIn';
 import Twitter from '../social/twitter';
-import userUtils from '../../utils/user';
+import { getActiveUser, setActiveUser } from '../../utils/user';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
 import when from 'when';
@@ -30,7 +30,7 @@ export default class User extends Model {
       return when.resolve(user);
     }
 
-    return userUtils.getActiveUser().then(user => {
+    return getActiveUser().then(user => {
       if (user) {
         user = new User(user);
         User[activeUserSymbol] = user;
@@ -48,10 +48,10 @@ export default class User extends Model {
    */
   static setActive(user) {
     if (user && !(user instanceof User)) {
-      user = new User(isFunction(user.toJSON) ? user.toJSON() : user);
+      user = new User(result(user, 'toJSON', user));
     }
 
-    return userUtils.setActive(user ? user.toJSON() : user).then(() => {
+    return setActiveUser(user ? user.toJSON() : user).then(() => {
       if (user) {
         User[activeUserSymbol] = user;
         return user;
@@ -118,7 +118,7 @@ export default class User extends Model {
     }
 
     if (!token.access_token || !token.expires_in) {
-      return when.reject(new KinveyError('token argument must contain both an `access_token` and `expires_in` property.', token));
+      return when.reject(new KinveyError('token argument must contain both an access_token and expires_in property.', token));
     }
 
     const data = { _socialIdentity: { } };
@@ -127,33 +127,12 @@ export default class User extends Model {
   }
 
   /**
-   * Logout the active user.
-   *
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The previous active user.
-   */
-  logout(options = {}) {
-    const promise = this.isActive().then(active => {
-      if (!active) {
-        return null;
-      }
-
-      const collection = new Users();
-      return collection.logout(options);
-    }).then(() => {
-      return User.setActive(null);
-    });
-
-    return promise;
-  }
-
-  /**
-   * Connect with a social identity to login a user.
+   * Connect with a social identity.
    *
    * @param   {string|Object}      Adapter          Social Adapter
    * @return  {Promise}                             Resolved with the active user or rejected with an error.
    */
-  connect(Adapter = SocialAdapter.Facebook, options) {
+  static connect(Adapter = SocialAdapter.Facebook, options) {
     let adapter = Adapter;
     let promise;
 
@@ -178,11 +157,32 @@ export default class User extends Model {
     }
 
     if (!isFunction(adapter.connect)) {
-      return when.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide an `connect` function for the adapter.'));
+      return when.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide a connect function for the adapter.'));
     }
 
     promise = adapter.connect(options).then((token) => {
       return User.loginWithProvider(adapter.name, token, options);
+    });
+
+    return promise;
+  }
+
+  /**
+   * Logout the active user.
+   *
+   * @param   {Options} [options] Options.
+   * @returns {Promise}           The previous active user.
+   */
+  logout(options = {}) {
+    const promise = this.isActive().then(active => {
+      if (!active) {
+        return null;
+      }
+
+      const collection = new Users();
+      return collection.logout(options);
+    }).then(() => {
+      return User.setActive(null);
     });
 
     return promise;

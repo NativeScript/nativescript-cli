@@ -1,4 +1,4 @@
-import userUtils from '../utils/user';
+import { getActiveUser } from '../utils/user';
 
 class Auth {
   static all(client) {
@@ -32,10 +32,10 @@ class Auth {
   }
 
   static default(client) {
-    return Auth.session(client).then(null).catch((error) => {
+    return Auth.session(client).then(null).catch((err) => {
       return Auth.master(client).then(null).catch(() => {
         // Most likely, the developer did not create a user. Return a useful error.
-        return Promise.resolve(error);
+        return Promise.reject(err);
       });
     });
   }
@@ -63,14 +63,14 @@ class Auth {
   }
 
   static session() {
-    return userUtils.getActiveUser().then(user => {
+    return getActiveUser().then(user => {
       if (!user) {
         throw new Error('There is not an active user.');
       }
 
       return {
         scheme: 'Kinvey',
-        credentials: user.metadata.authtoken
+        credentials: user._kmd.authtoken
       };
     });
   }

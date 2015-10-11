@@ -8,13 +8,10 @@ import KinveyError from '../errors/error';
 import Query from '../query';
 import when from 'when';
 import assign from 'lodash/object/assign';
-import clone from 'lodash/lang/clone';
 import isObject from 'lodash/lang/isObject';
-import isFunction from 'lodash/lang/isFunction';
 import isArray from 'lodash/lang/isArray';
 const usersNamespace = 'user';
 const rpcNamespace = 'rpc';
-const pathReplaceRegex = /[^\/]$/;
 
 /**
  * The Users class is used to perform operations on users on the Kinvey platform.
@@ -66,12 +63,10 @@ export default class Users extends Datastore {
    *   ...
    * });
    */
-  login(usernameOrData, password) {
+  login(usernameOrData, password, options = {}) {
     // Set options
-    const options = {
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.app
-    };
+    options.dataPolicy = DataPolicy.CloudOnly;
+    options.auth = Auth.app;
 
     // Cast arguments
     if (!isObject(usernameOrData)) {
@@ -86,12 +81,11 @@ export default class Users extends Datastore {
       return when.reject(new KinveyError('Username and/or password missing. Please provide both a username and password to login.'));
     }
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('login')}`;
-
     // Create and execute a request
-    const request = new Request(HttpMethod.POST, path, null, usernameOrData, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.POST, `${this.path}/login`, null, usernameOrData, options);
+    const promise = request.execute().then(response => {
+      return new this.model(response.data, options);
+    });
 
     // Return the promise
     return promise;
@@ -111,20 +105,16 @@ export default class Users extends Datastore {
    *   ...
    * });
    */
-  logout() {
-    // Set options. These values will be overridden
-    // if the option was provided.
-    const options = {
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.session
-    };
-
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_logout')}`;
+  logout(options = {}) {
+    // Set options
+    options.dataPolicy = DataPolicy.CloudOnly;
+    options.auth = Auth.session;
 
     // Create and execute the request
-    const request = new Request(HttpMethod.POST, path, null, null, options);
-    const promise = request.execute();
+    const request = new Request(HttpMethod.POST, `${this.path}/_logout`, null, null, options);
+    const promise = request.execute().then(() => {
+      return null;
+    });
 
     // Return the promise
     return promise;
@@ -142,16 +132,26 @@ export default class Users extends Datastore {
 
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
-      query = new Query(isFunction(query.toJSON) ? query.toJSON() : query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     if (options.discover) {
-      // Create the request path
-      const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent('_lookup')}`;
-
       // Create and execute the request
-      const request = new Request(HttpMethod.POST, path, null, query.toJSON().filter, options);
-      promise = request.execute();
+      const request = new Request(HttpMethod.POST, `${this.path}/_lookup`, null, query, options); // TODO: should be query.toJSON().filter
+      promise = request.execute().then(response => {
+        let data = response.data;
+        const models = [];
+
+        if (!isArray(data)) {
+          data = [data];
+        }
+
+        data.forEach(doc => {
+          models.push(new this.model(doc, options));
+        });
+
+        return models;
+      });
     } else {
       promise = super.find(query, options);
     }
@@ -160,7 +160,7 @@ export default class Users extends Datastore {
     return promise;
   }
 
-  verifyEmail(models = [], options = {}) {
+  verifyEmail(username, options = {}) {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
@@ -168,219 +168,91 @@ export default class Users extends Datastore {
       auth: Auth.app
     }, options);
 
-    const singular = !isArray(models);
-    models = singular ? [models] : models.slice();
-    const promises = [];
-
-    for (let i = 0, len = models.length; i < len; i++) {
-      const model = this._prepareModel(models[i], options);
-      const opts = clone(options, true);
-      let promise;
-
-      if (!model) {
-        promises.push(Promise.reject(new Error('Model required')));
-        continue;
-      }
-
-      if (model.has('username')) {
-        const prevNamespace = this.namespace;
-        this.namespace = rpcNamespace;
-        const prevName = this.name;
-        this.name = model.get('username');
-        const path = this.path;
-        const request = new Request(HttpMethod.POST, `${path}/user-email-verification-initiate`, null, null, opts);
-
-        promise = request.execute().then((response) => {
-          return response.data;
-        }).finally(() => {
-          this.namespace = prevNamespace;
-          this.name = prevName;
-        });
-      } else {
-        promise = when.resolve({});
-      }
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then((responses) => {
-      return singular ? responses[0] : responses;
+    // Create and execute the request
+    const request = new Request(HttpMethod.POST, `${this.rpcPath}/${username}/user-email-verification-initiate`, null, null, options);
+    const promise = request.execute().then(() => {
+      return null;
     });
+
+    // Return the promise
+    return promise;
   }
 
-  forgotUsername(models = [], options = {}) {
+  forgotUsername(email, options = {}) {
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
       auth: Auth.app
     }, options);
 
-    const singular = !isArray(models);
-    models = singular ? [models] : models.slice();
-    const promises = [];
-
-    for (let i = 0, len = models.length; i < len; i++) {
-      const model = this._prepareModel(models[i], options);
-      const opts = clone(options, true);
-      let promise;
-
-      if (!model) {
-        promises.push(Promise.reject(new Error('Model required')));
-        continue;
-      }
-
-      if (model.has('email')) {
-        const prevNamespace = this.namespace;
-        this.namespace = rpcNamespace;
-        const path = this.path;
-        const request = new Request(HttpMethod.POST, `${path}/user-forgot-username`, null, {email: model.get('email')}, opts);
-
-        promise = request.execute().then((response) => {
-          return response.data;
-        }).finally(() => {
-          this.namespace = prevNamespace;
-        });
-      } else {
-        promise = when.resolve({});
-      }
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then((responses) => {
-      return singular ? responses[0] : responses;
+    // Create and execute the request
+    const request = new Request(HttpMethod.POST, `${this.rpcPath}/user-forgot-username`, { email: email }, null, options);
+    const promise = request.execute().then(() => {
+      return null;
     });
+
+    // Return the promise
+    return promise;
   }
 
-  resetPassword(models = [], options = {}) {
+  resetPassword(username, options = {}) {
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
       auth: Auth.app
     }, options);
 
-    const singular = !isArray(models);
-    models = singular ? [models] : models.slice();
-    const promises = [];
-
-    for (let i = 0, len = models.length; i < len; i++) {
-      const model = this._prepareModel(models[i], options);
-      const opts = clone(options, true);
-      let promise;
-
-      if (!model) {
-        promises.push(Promise.reject(new Error('Model required')));
-        continue;
-      }
-
-      if (model.has('username')) {
-        const prevNamespace = this.namespace;
-        this.namespace = rpcNamespace;
-        const prevName = this.name;
-        this.name = model.get('username');
-        const path = this.path;
-        const request = new Request(HttpMethod.POST, `${path}/user-password-reset-initiate`, null, null, opts);
-
-        promise = request.execute().then((response) => {
-          return response.data;
-        }).finally(() => {
-          this.namespace = prevNamespace;
-          this.name = prevName;
-        });
-      } else {
-        promise = when.resolve({});
-      }
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then((responses) => {
-      return singular ? responses[0] : responses;
+    // Create and execute the request
+    const request = new Request(HttpMethod.POST, `${this.rpcPath}/${username}/user-password-reset-initiate`, null, null, options);
+    const promise = request.execute().then(() => {
+      return null;
     });
+
+    // Return the promise
+    return promise;
   }
 
-  exists(models = [], options = {}) {
+  exists(username, options = {}) {
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      auth: Auth.default
+      auth: Auth.app
     }, options);
 
-    const singular = !isArray(models);
-    models = singular ? [models] : models.slice();
-    const promises = [];
+    // Create and execute the request
+    const request = new Request(HttpMethod.POST, `${this.rpcPath}/check-username-exists`, { username: username }, null, options);
+    const promise = request.execute().then(() => {
+      const data = response.data;
 
-    for (let i = 0, len = models.length; i < len; i++) {
-      const model = this._prepareModel(models[i], options);
-      const opts = clone(options, true);
-      let promise;
-
-      if (!model) {
-        promises.push(Promise.reject(new Error('Model required')));
-        continue;
+      if (data) {
+        return data.usernameExists;
       }
 
-      if (model.has('username')) {
-        const prevNamespace = this.namespace;
-        this.namespace = rpcNamespace;
-        const path = this.path;
-        const request = new Request(HttpMethod.POST, `${path}/check-username-exists`, null, {username: model.get('username')}, opts);
-
-        promise = request.execute().then((response) => {
-          return response.data;
-        }).finally(() => {
-          this.namespace = prevNamespace;
-        });
-      } else {
-        promise = when.resolve({usernameExists: false});
-      }
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then((responses) => {
-      return singular ? responses[0] : responses;
+      return false;
     });
+
+    // Return the promise
+    return promise;
   }
 
-  restore(models = [], options = {}) {
+  restore(id, options = {}) {
+    // Set option defaults. These values will be overridden
+    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
-      auth: Auth.default,
-      parse: true
+      auth: Auth.master
     }, options);
 
-    const singular = !isArray(models);
-    models = singular ? [models] : models.slice();
-    const promises = [];
-
-    for (let i = 0, len = models.length; i < len; i++) {
-      const model = this._prepareModel(models[i], options);
-      const opts = clone(options, true);
-
-      if (!model) {
-        promises.push(Promise.reject(new KinveyError('Model required')));
-        continue;
-      }
-
-      const prevName = this.name;
-      this.name = id;
-      const path = this.path;
-      const request = new Request(HttpMethod.POST, `${path}/_restore`, null, null, opts);
-      const promise = request.execute().then((response) => {
-        let data = response.data;
-
-        if (opts.parse) {
-          data = this.parse(data);
-        }
-
-        return data;
-      }).finally(() => {
-        this.name = prevName;
-      });
-
-      promises.push(promise);
-    }
-
-    return Promise.all(promises).then((responses) => {
-      return singular ? responses[0] : responses;
+    // Create and execute the request
+    const request = new Request(HttpMethod.POST, `${this.path}/${id}/_restore`, null, null, options);
+    const promise = request.execute().then(() => {
+      return null;
     });
+
+    // Return the promise
+    return promise;
   }
 }

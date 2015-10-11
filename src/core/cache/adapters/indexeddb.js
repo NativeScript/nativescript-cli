@@ -299,7 +299,7 @@ export default class IndexedDBAdapter {
   clean(query) {
     const promise = this.find(query).then(docs => {
       if (docs.length === 0) {
-        return { count: 0, documents: []};
+        return { count: 0, documents: [] };
       }
 
       return when.promise((resolve, reject) => {

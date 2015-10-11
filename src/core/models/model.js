@@ -6,7 +6,6 @@ import clone from 'lodash/lang/clone';
 import assign from 'lodash/object/assign';
 import has from 'lodash/object/has';
 import size from 'lodash/collection/size';
-import uniqueId from 'lodash/utility/uniqueId';
 import isEqual from 'lodash/lang/isEqual';
 import isEmpty from 'lodash/lang/isEmpty';
 const idAttribute = '_id';
@@ -15,7 +14,6 @@ const kmdAttribute = '_kmd';
 
 export default class Model {
   constructor(attributes = {}, options = {}) {
-    this.cid = uniqueId(this.cidPrefix);
     this.attributes = {};
     this.changed = {};
     this.validationError = null;
@@ -27,10 +25,6 @@ export default class Model {
 
     attrs = defaults({}, attrs, result(this, 'defaults', {}));
     this.set(attrs, options);
-  }
-
-  get cidPrefix() {
-    return 'c';
   }
 
   get id() {

@@ -6,7 +6,7 @@ import Auth from '../auth';
 import url from 'url';
 import when from 'when';
 import assign from 'lodash/object/assign';
-import platformUtils from '../../utils/platform';
+import { isPhoneGap, isTitanium } from '../../utils/platform';
 const usersNamespace = 'user';
 
 export default class Social {
@@ -69,10 +69,10 @@ export default class Social {
 
         // Close handler: Used when running PhoneGap or Titanium
         const closePopup = () => {
-          if (platformUtils.isPhoneGap()) {
+          if (isPhoneGap()) {
             popup.removeEventListener('loadstart', loadHandler);
             popup.removeEventListener('exit', closePopup);
-          } else if (platformUtils.isTitanium()) {
+          } else if (isTitanium()) {
             tiWebView.removeEventListener('load', loadHandler);
             tiWebView.removeEventListener('error', loadHandler);
             popup.removeEventListener('close', closePopup);
@@ -94,11 +94,11 @@ export default class Social {
           popup.closed = true;
         };
 
-        if (platformUtils.isPhoneGap()) {
+        if (isPhoneGap()) {
           popup = global.open(popupUrl, '_blank', 'location=yes');
           popup.addEventListener('loadstart', loadHandler);
           popup.addEventListener('exit', closeHandler);
-        } else if (platformUtils.isTitanium()) {
+        } else if (isTitanium()) {
           // Create a web view
           tiWebView = Titanium.UI.createWebView({
             width: '100%',

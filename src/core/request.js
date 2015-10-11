@@ -10,17 +10,18 @@ import Client from './client';
 import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
 import KinveyError from './errors/error';
-import defaults from 'lodash/object/defaults';
+import assign from 'lodash/object/assign';
 import merge from 'lodash/object/merge';
+import result from 'lodash/object/result';
 const privateRequestSymbol = Symbol();
 
 class PrivateRequest {
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    options = defaults({}, options, {
+    options = assign({
       auth: Auth.none,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudFirst
-    });
+    }, options);
 
     // Validate options
     if (!(options.client instanceof Client)) {
@@ -38,7 +39,8 @@ class PrivateRequest {
     this.protocol = options.client.apiProtocol;
     this.host = options.client.apiHost;
     this.path = path;
-    this.query = merge({}, options.flags, query ? query.toJSON() : {});
+    this.query = query;
+    this.flags = options.flags;
     this.body = body;
     this.responseType = ResponseType.Text;
     this.client = options.client;
@@ -85,7 +87,7 @@ class PrivateRequest {
       protocol: this.protocol,
       host: this.host,
       pathname: this.path,
-      query: this.query,
+      query: merge({}, this.flags, result(this.query, 'toJSON', {})),
       hash: this.hash
     });
   }
@@ -225,7 +227,7 @@ class PrivateRequest {
     }
 
     return promise.then((response) => {
-      // Store the response
+      // Save the response
       this.response = response;
 
       // Switch the executing flag
@@ -287,7 +289,8 @@ class PrivateRequest {
       method: this.method,
       url: this.url,
       path: this.path,
-      query: this.query,
+      query: this.query ? this.query.toJSON() : null,
+      flags: this.flags,
       body: this.body,
       responseType: this.responseType,
       dataPolicy: this.dataPolicy,
@@ -362,6 +365,16 @@ class Request {
   set query(query) {
     const privateRequest = this[privateRequestSymbol];
     privateRequest.query = query;
+  }
+
+  get flags() {
+    const privateRequest = this[privateRequestSymbol];
+    return privateRequest.flags;
+  }
+
+  set flags(flags) {
+    const privateRequest = this[privateRequestSymbol];
+    privateRequest.flags = flags;
   }
 
   get body() {

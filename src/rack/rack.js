@@ -1,4 +1,5 @@
 import clone from 'lodash/lang/clone';
+import Response from '../core/response';
 import KinveyRack from 'kinvey-rack';
 import SerializerMiddleware from './middleware/serializer';
 import HttpMiddleware from './middleware/http';
@@ -40,9 +41,15 @@ class Rack extends KinveyRack {
   }
 
   execute(request) {
-    const requestClone = clone(request.toJSON(), true);
+    const requestClone = clone(result(request, 'toJSON', request), true);
     return super.execute(requestClone).then((request) => {
-      return request.response;
+      const response = request.response;
+
+      if (response) {
+        return new Response(response.statusCode, response.headers, response.data);
+      }
+
+      return response;
     });
   }
 }

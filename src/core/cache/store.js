@@ -4,7 +4,6 @@ import Query from '../query';
 import Aggregation from '../aggregation';
 import IndexedDBAdapter from './adapters/indexeddb';
 import LocalStorageAdapter from './adapters/localstorage';
-import MemoryAdapter from './adapters/memory';
 import WebSQLAdapter from './adapters/websql';
 import when from 'when';
 import log from 'loglevel';
@@ -43,9 +42,6 @@ export default class Store {
           break;
         case StoreAdapter.LocalStorage:
           Adapter = LocalStorageAdapter;
-          break;
-        case StoreAdapter.Memory:
-          Adapter = MemoryAdapter;
           break;
         case StoreAdapter.WebSQL:
           Adapter = WebSQLAdapter;
@@ -150,7 +146,7 @@ export default class Store {
       docs = [docs];
     }
 
-    return this.batch(docs);
+    return this.adapter.batch(docs);
   }
 
   delete(id) {

@@ -12,8 +12,8 @@ const exorcist = require('exorcist');
 const config = require('../config');
 const errorHandler = config.errorHandler('build');
 
-// Build two versions of the library
-gulp.task('build', ['clean'], function() {
+// Build unminified and minified versions of the library
+gulp.task('build', ['lint-src', 'clean'], function() {
   return browserify(path.join(config.paths.src, config.files.entry.fileName + '.js'), config.browserify)
     .transform(babelify.configure(config.babel))
     .bundle()

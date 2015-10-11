@@ -1,4 +1,5 @@
 import Serializer from './serializer';
+import KinveyError from '../../errors/error';
 import assign from 'lodash/object/assign';
 import when from 'when';
 import localStorage from 'humble-localstorage';
@@ -13,40 +14,98 @@ export default class LocalStorageAdapter {
     this.keyPrefix = `${dbInfo.name}.${dbInfo.collection}`;
   }
 
-  generateKey(id) {
-    return `${this.keyPrefix}.${id}`;
+  serializeKey(key) {
+    return `${this.keyPrefix}.${key}`;
   }
 
-  find() {
-
+  deserializeKey(key) {
+    return key.replace(`${this.keyPrefix}.`, '');
   }
 
-  count() {
+  find(query) {
+    const promises = [];
 
+    for (let i = 0, len = localStorage.length; i < len; i++) {
+      const key = localStorage.key(i);
+
+      if (key.indexOf(this.keyPrefix) === 0) {
+        promises.push(this.get(this.deserializeKey(key)));
+      }
+    }
+
+    return when.all(promises).then(docs => {
+      if (query) {
+        return query.process(docs);
+      }
+
+      return docs;
+    });
   }
 
-  findAndModify() {
+  count(query) {
+    const promise = this.find(query).then(docs => {
+      return docs.length;
+    });
 
+    return promise;
   }
 
-  group() {
+  findAndModify(key, fn) {
+    const promise = this.get(key).then(doc => {
+      doc = fn(doc || null);
+      return this.save(doc);
+    });
 
+    return promise;
   }
 
-  batch() {
+  group(aggregation) {
+    const query = new Query({ filter: aggregation.condition });
 
+    // const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    // aggregation.reduce = new Function(['doc', 'out'], reduce);
+
+    const promise = this.find(query).then(docs => {
+      const groups = {};
+
+      docs.forEach((doc) => {
+        const group = {};
+
+        for (const name in aggregation.key) {
+          if (aggregation.key.hasOwnProperty(name)) {
+            group[name] = doc[name];
+          }
+        }
+
+        const key = JSON.stringify(group);
+        if (!groups[key]) {
+          groups[key] = group;
+
+          for (const attr in aggregation.initial) {
+            if (aggregation.initial.hasOwnProperty(attr)) {
+              groups[key][attr] = aggregation.initial[attr];
+            }
+          }
+        }
+
+        aggregation.reduce(doc, groups[key]);
+      });
+
+      const response = [];
+      for (const segment in groups) {
+        if (groups.hasOwnProperty(segment)) {
+          response.push(groups[segment]);
+        }
+      }
+
+      return response;
+    });
+
+    return promise;
   }
 
-  clean() {
-
-  }
-
-  clear() {
-
-  }
-
-  get(id) {
-    const value = localStorage.getItem(this.generateKey(id));
+  get(key) {
+    const value = localStorage.getItem(this.serializeKey(key));
     const serializer = new Serializer();
     const promise = serializer.deserialize(value);
     return promise;
@@ -60,7 +119,7 @@ export default class LocalStorageAdapter {
     const serializer = new Serializer();
     const promise = serializer.serialize(doc).then(value => {
       try {
-        localStorage.setItem(this.generateKey(doc._id), value);
+        localStorage.setItem(this.serializeKey(doc._id), value);
         return doc;
       } catch (err) {
         // Make error specific
@@ -75,12 +134,31 @@ export default class LocalStorageAdapter {
     return promise;
   }
 
-  delete(id) {
+  batch(docs) {
+    const promises = [];
+
+    docs.forEach(doc => {
+      promises.push(this.save(doc));
+    });
+
+    return when.all(promises);
+  }
+
+  delete(key) {
     const promise = when.promise(resolve => {
-      localStorage.removeItem(this.generateKey(id));
+      localStorage.removeItem(this.serializeKey(key));
       resolve();
     });
     return promise;
+  }
+
+  clean() {
+    return when.reject(new KinveyError('LocalStorageAdapter.clean() method is unsupported.'));
+  }
+
+  clear() {
+    localStorage.clear();
+    return when.resolve();
   }
 
   static isSupported() {

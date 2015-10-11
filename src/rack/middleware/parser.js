@@ -9,7 +9,7 @@ class ParserMiddleware extends Middleware {
     const response = request.response;
 
     if (response && response.data) {
-      const contentType = response.getHeader('Content-Type');
+      const contentType = request.headers['content-type'] || request.headers['Content-Type'];
 
       if (contentType.indexOf('application/json') === 0) {
         try {
