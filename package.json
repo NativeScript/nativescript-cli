@@ -41,7 +41,7 @@
     "gulp": "3.9.0",
     "iconv-lite": "0.4.11",
     "inquirer": "0.9.0",
-    "ios-sim-portable": "1.0.9-beta",
+    "ios-sim-portable": "1.0.10-alpha",
     "lockfile": "1.0.1",
     "lodash": "3.10.0",
     "log4js": "0.6.26",

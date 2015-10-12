@@ -12,7 +12,6 @@ import semver = require("semver");
 import temp = require("temp");
 import byline = require("byline");
 
-
 module notification {
     function formatNotification(bundleId: string, notification: string) {
         return `${bundleId}:NativeScript.Debug.${notification}`;
@@ -125,15 +124,15 @@ class IOSDebugService implements IDebugService {
 
             lineStream.on('data', (line: NodeBuffer) => {
                 let lineText = line.toString();
-                if(lineText && _.startsWith(lineText, emulatorPackage.packageName)) {                   
+                if(lineText && _.startsWith(lineText, emulatorPackage.packageName)) {
                     let pid = _.trimLeft(lineText, emulatorPackage.packageName + ": ");
-                    
+
                     this.$childProcess.exec(`lldb -p ${pid} -o "process continue"`);
                 } else {
                     process.stdout.write(line + "\n");
                 }
             });
-            
+
             this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
         }).future<void>()();
     }
