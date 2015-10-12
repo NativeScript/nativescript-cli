@@ -10,6 +10,8 @@ import * as path from "path";
 import Future = require("fibers/future");
 import semver = require("semver");
 import temp = require("temp");
+import byline = require("byline");
+
 
 module notification {
     function formatNotification(bundleId: string, notification: string) {
@@ -118,7 +120,20 @@ class IOSDebugService implements IDebugService {
             this.$platformService.buildPlatform(this.platform).wait();
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
-            this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { args: "--nativescript-debug-brk" }).wait();
+            let child_process = this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true, args: "--nativescript-debug-brk" }).wait();
+            let lineStream = byline(child_process.stdout);
+
+            lineStream.on('data', (line: NodeBuffer) => {
+                let lineText = line.toString();
+                if(lineText && _.startsWith(lineText, emulatorPackage.packageName)) {                   
+                    let pid = _.trimLeft(lineText, emulatorPackage.packageName + ": ");
+                    
+                    this.$childProcess.exec(`lldb -p ${pid} -o "process continue"`);
+                } else {
+                    process.stdout.write(line + "\n");
+                }
+            });
+            
             this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
         }).future<void>()();
     }
