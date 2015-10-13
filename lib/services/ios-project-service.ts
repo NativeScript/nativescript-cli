@@ -572,7 +572,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private removeCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			if(this.$fs.exists(pluginPodFilePath).wait()) {
+			if(this.$fs.exists(pluginPodFilePath).wait() && this.$fs.exists(this.projectPodFilePath).wait()) {
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
 				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
 				let contentToRemove= this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);

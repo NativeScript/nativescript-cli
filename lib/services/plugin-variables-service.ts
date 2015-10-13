@@ -26,8 +26,10 @@ export class PluginVariablesService implements IPluginVariablesService {
 					values[pluginVariableData.name] = pluginVariableValue;
 				}).future<void>()()).wait();
 
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData), values).wait();
+			if(!_.isEmpty(values)) {
+				this.$projectDataService.initialize(this.$projectData.projectDir);
+				this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData), values).wait();
+			}
 		}).future<void>()();
 	}
 
