@@ -149,7 +149,12 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	}
 
 	private getProjectNameFromId(): string {
-		return this.$projectData.projectId.split(".")[2];
+		let id: string;
+		if(this.$projectData && this.$projectData.projectId) {
+			id = this.$projectData.projectId.split(".")[2];
+		}
+
+		return id;
 	}
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
