@@ -1,6 +1,5 @@
 import clone from 'lodash/lang/clone';
 const privateRequestPropertiesSymbol = Symbol();
-const sharedInstanceSymbol = Symbol();
 const appVersionKey = 'appVersion';
 
 class PrivateRequestProperties {
@@ -43,6 +42,10 @@ class PrivateRequestProperties {
       delete properties[key];
     }
   }
+
+  toJSON() {
+    return clone(this.properties, true);
+  }
 }
 
 /**
@@ -50,13 +53,12 @@ class PrivateRequestProperties {
  */
 class RequestProperties {
   /**
-   * Return the request properties.
+   * This is the constructor.
    *
-   * @return {Object} Request properties
+   * @param  {Object} properties Request properties
    */
-  get properties() {
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    return clone(privateRequestProperties.properties);
+  constructor(properties = {}) {
+    this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
   }
 
   /**
@@ -107,15 +109,6 @@ class RequestProperties {
   }
 
   /**
-   * This is the constructor.
-   *
-   * @param  {Object} properties Request properties
-   */
-  constructor(properties = {}) {
-    this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
-  }
-
-  /**
    * Returns the request property for the key or `undefined` if
    * it has not been set.
    *
@@ -123,7 +116,7 @@ class RequestProperties {
    * @return {*}          Request property value
    */
   getProperty(key) {
-    const properties = this.properties;
+    const properties = this.toJSON();
 
     if (key && properties.hasOwnProperty(key)) {
       return properties[key];
@@ -173,20 +166,9 @@ class RequestProperties {
     privateRequestProperties.clearProperty(key);
   }
 
-  /**
-   * Returns the shared instance of request properties.
-   *
-   * @return {RequestProperties} Request properties shared instance.
-   */
-  static sharedInstance() {
-    let requestProperties = RequestProperties[sharedInstanceSymbol];
-
-    if (!requestProperties) {
-      requestProperties = new RequestProperties();
-      RequestProperties[sharedInstanceSymbol] = requestProperties;
-    }
-
-    return requestProperties;
+  toJSON() {
+    const privateRequestProperties = this[privateRequestPropertiesSymbol];
+    return privateRequestProperties.toJSON();
   }
 }
 

@@ -1,5 +1,5 @@
 import Serializer from './serializer';
-import KinveyError from '../../errors/error';
+import { KinveyError } from '../../errors';
 import assign from 'lodash/object/assign';
 import when from 'when';
 import localStorage from 'humble-localstorage';

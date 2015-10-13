@@ -1,4 +1,4 @@
-import KinveyError from '../errors/error';
+import { KinveyError } from '../errors';
 import Client from '../client';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';

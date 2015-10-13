@@ -1,13 +1,13 @@
-import KinveyError from '../../errors/error';
+import { KinveyError } from '../../errors';
 import Queue from 'promise-queue';
 import Query from '../../query';
-import when from 'when';
+import Promise from 'bluebird';
 import isArray from 'lodash/lang/isArray';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
 
 // Configure queue
-Queue.configure(when.promise);
+Queue.configure(Promise);
 
 export default class WebSQLAdapter {
   constructor(dbInfo) {
@@ -27,7 +27,7 @@ export default class WebSQLAdapter {
       this.db = global.openDatabase(name, 1, '', 5 * 1024 * 1024);
     }
 
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       const writeTxn = write || !isFunction(this.db.readTransaction);
       this.db[writeTxn ? 'transaction' : 'readTransaction'](txn => {
         if (write && !isMaster) {

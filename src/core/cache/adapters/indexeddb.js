@@ -1,4 +1,4 @@
-import KinveyError from '../../errors/error';
+import { KinveyError } from '../../errors';
 import Query from '../../query';
 import when from 'when';
 let inTransaction = false;

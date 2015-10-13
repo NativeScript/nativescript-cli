@@ -1,5 +1,4 @@
-import ActiveUserError from '../errors/activeUserError';
-import KinveyError from '../errors/error';
+import { ActiveUserError, KinveyError } from '../errors';
 import Model from './model';
 import Users from '../collections/users';
 import SocialAdapter from '../enums/socialAdapter';

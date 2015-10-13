@@ -1,5 +1,5 @@
 import Social from './social';
-import KinveyError from '../errors/error';
+import { KinveyError } from '../errors';
 
 export default class Twitter extends Social {
 

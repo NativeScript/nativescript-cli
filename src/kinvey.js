@@ -23,13 +23,13 @@ Kinvey.StatusCode = require('./core/enums/statusCode');
 Kinvey.StoreAdapter = require('./core/enums/storeAdapter');
 
 // Errors
-Kinvey.Error = require('./core/errors/error');
-Kinvey.ActiveUserError = require('./core/errors/activeUserError');
-Kinvey.NotFoundError = require('./core/errors/notFoundError');
+Kinvey.Error = require('./core/errors').KinveyError;
+Kinvey.ActiveUserError = require('./core/errors').ActiveUserError;
+Kinvey.NotFoundError = require('./core/errors').NotFoundError;
 
 // Middleware
 Kinvey.Middleware = require('./rack/middleware/middleware');
-Kinvey.Middleware.cache = require('./rack/middleware/cache');
+Kinvey.Middleware.Cache = require('./rack/middleware/cache');
 Kinvey.Middleware.Http = require('./rack/middleware/http');
 Kinvey.Middleware.Parser = require('./rack/middleware/parser');
 Kinvey.Middleware.Serializer = require('./rack/middleware/serializer');

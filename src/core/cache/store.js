@@ -1,5 +1,5 @@
 import StoreAdapter from '../enums/storeAdapter';
-import KinveyError from '../errors/error';
+import { KinveyError } from '../errors';
 import Query from '../query';
 import Aggregation from '../aggregation';
 import IndexedDBAdapter from './adapters/indexeddb';
@@ -8,6 +8,7 @@ import WebSQLAdapter from './adapters/websql';
 import when from 'when';
 import log from 'loglevel';
 import assign from 'lodash/object/assign';
+import result from 'lodash/object/result';
 import isString from 'lodash/lang/isString';
 import isArray from 'lodash/lang/isArray';
 import isFunction from 'lodash/lang/isArray';
@@ -80,7 +81,7 @@ export default class Store {
 
   find(query) {
     if (query && !(query instanceof Query)) {
-      query = new Query(query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     return this.adapter.find(query);
@@ -88,7 +89,7 @@ export default class Store {
 
   count(query) {
     if (query && !(query instanceof Query)) {
-      query = new Query(query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     if (query) {
@@ -160,7 +161,7 @@ export default class Store {
 
   clean(query) {
     if (query && !(query instanceof Query)) {
-      query = new Query(query);
+      query = new Query(result(query, 'toJSON', query));
     }
 
     if (query) {

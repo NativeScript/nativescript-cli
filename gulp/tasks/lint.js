@@ -11,7 +11,7 @@ function createLintTask(taskName, files) {
       .pipe($.eslint())
       .pipe($.eslint.format())
       .pipe($.eslint.failOnError())
-      .pipe($.jscs())
+      .pipe($.jscs());
   });
 }
 

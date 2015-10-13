@@ -1,4 +1,5 @@
 import StatusCode from './enums/statusCode';
+import isString from 'lodash/lang/isString';
 const privateResponseSymbol = Symbol();
 
 class PrivateResponse {
@@ -9,6 +10,10 @@ class PrivateResponse {
   }
 
   getHeader(header) {
+    if (!isString(header)) {
+      header = String(header);
+    }
+
     const keys = Object.keys(this.headers);
 
     for (let i = 0, len = keys.length; i < len; i++) {
@@ -23,7 +28,15 @@ class PrivateResponse {
   }
 
   setHeader(header, value) {
-    const headers = this.headers || {};
+    if (!isString(header)) {
+      header = String(header);
+    }
+
+    if (!isString(value)) {
+      value = String(value);
+    }
+
+    const headers = this.headers;
     headers[header.toLowerCase()] = value;
     this.headers = headers;
   }

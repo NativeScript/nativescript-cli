@@ -4,7 +4,7 @@ import DataPolicy from '../enums/dataPolicy';
 import Request from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Datastore from './datastore';
-import KinveyError from '../errors/error';
+import { KinveyError } from '../errors';
 import Query from '../query';
 import when from 'when';
 import assign from 'lodash/object/assign';

@@ -4,10 +4,10 @@ const config = require('../config');
 
 // Remove the built files
 gulp.task('clean', function(done) {
-  del([config.paths.dist], done);
+  return del([config.paths.dist], done);
 });
 
 // Remove our temporary files
 gulp.task('clean-tmp', function(done) {
-  del([config.paths.tmp], done);
+  return del([config.paths.tmp], done);
 });

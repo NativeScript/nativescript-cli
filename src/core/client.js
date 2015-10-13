@@ -1,4 +1,4 @@
-import KinveyError from './errors/error';
+import { KinveyError } from './errors';
 import url from 'url';
 import clone from 'lodash/lang/clone';
 const sharedInstanceSymbol = Symbol();

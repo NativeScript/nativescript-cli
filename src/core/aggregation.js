@@ -1,4 +1,4 @@
-import KinveyError from './errors/error';
+import { KinveyError } from './errors';
 import Query from './query';
 import clone from 'lodash/lang/clone';
 import isObject from 'lodash/lang/isObject';

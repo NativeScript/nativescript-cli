@@ -2,7 +2,7 @@ import Auth from '../auth';
 import DataPolicy from '../enums/dataPolicy';
 import Model from './model';
 import Query from '../query';
-import KinveyError from '../errors/error';
+import { KinveyError } from '../errors';
 import HttpMethod from '../enums/httpMethod';
 import assign from 'lodash/object/assign';
 const filesNamespace = 'blob';

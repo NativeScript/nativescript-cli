@@ -9,40 +9,48 @@ import url from 'url';
 import Client from './client';
 import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
-import KinveyError from './errors/error';
+import { KinveyError } from './errors';
+import RequestProperties from './requestProperties';
 import assign from 'lodash/object/assign';
 import merge from 'lodash/object/merge';
 import result from 'lodash/object/result';
+import clone from 'lodash/lang/clone';
+import { byteCount } from '../utils/string';
 const privateRequestSymbol = Symbol();
+const customRequestPropertiesMaxBytes = 2000;
 
 class PrivateRequest {
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = assign({
       auth: Auth.none,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.CloudFirst
+      dataPolicy: DataPolicy.CloudFirst,
+      responseType: ResponseType.Text
     }, options);
 
+    let client = options.client;
+
     // Validate options
-    if (!(options.client instanceof Client)) {
-      throw new KinveyError('options.client must be of type Kinvey');
+    if (!(client instanceof Client)) {
+      client = new Client(result(client, 'toJSON', client));
     }
 
     // Validate query
     if (query && !(query instanceof Query)) {
-      throw new KinveyError('query argument must be an instance of Kinvey.Query');
+      query = new Query(result(query, 'toJSON', query));
     }
 
     // Set request info
     this.method = method;
     this.headers = {};
+    this.requestProperties = options.requestProperties;
     this.protocol = options.client.apiProtocol;
     this.host = options.client.apiHost;
     this.path = path;
     this.query = query;
     this.flags = options.flags;
     this.body = body;
-    this.responseType = ResponseType.Text;
+    this.responseType = options.responseType;
     this.client = options.client;
     this.auth = options.auth;
     this.dataPolicy = options.dataPolicy;
@@ -51,8 +59,22 @@ class PrivateRequest {
     // Add default headers
     const headers = {};
     headers.Accept = 'application/json';
-    headers['Content-Type'] = 'application/json';
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION;
+    headers['X-Kinvey-Device-Information'] = {};
+
+    if (options.contentType) {
+      headers['X-Kinvey-Content-Type'] = options.contentType;
+    }
+
+    if (options.skipBL === true) {
+      headers['X-Kinvey-Skip-Business-Logic'] = true;
+    }
+
+    if (options.trace === true) {
+      headers['X-Kinvey-Include-Headers-In-Response'] = 'X-Kinvey-Request-Id';
+      headers['X-Kinvey-ResponseWrapper'] = true;
+    }
+
     this.addHeaders(headers);
   }
 
@@ -62,7 +84,7 @@ class PrivateRequest {
 
   set method(method) {
     if (!isString(method)) {
-      throw new Error('Invalid Http Method. It must be a string.');
+      method = String(method);
     }
 
     // Make the method uppercase
@@ -82,6 +104,36 @@ class PrivateRequest {
     }
   }
 
+  get requestProperties() {
+    return this._requestProperties;
+  }
+
+  set requestProperties(requestProperties) {
+    if (!(requestProperties instanceof RequestProperties)) {
+      requestProperties = new RequestProperties(result(requestProperties, 'toJSON', requestProperties));
+    }
+
+    const appVersion = requestProperties.getAppVersion();
+
+    if (appVersion) {
+      this.setHeader('X-Kinvey-Client-App-Version', appVersion);
+    } else {
+      this.removeHeader('X-Kinvey-Client-App-Version');
+    }
+
+    const customRequestProperties = result(requestProperties, 'toJSON', {});
+    delete customRequestProperties.appVersion;
+    const customRequestPropertiesHeader = JSON.stringify(requestProperties.toJSON());
+    const customRequestPropertiesByteCount = byteCount(customRequestPropertiesHeader);
+
+    if (customRequestPropertiesByteCount >= customRequestPropertiesMaxBytes) {
+      throw new KinveyError(`The custom request properties are ${customRequestPropertiesByteCount}. It must be less then ${customRequestPropertiesMaxBytes} bytes.`, 'Please remove some custom request properties.');
+    }
+
+    this.setHeader('X-Kinvey-Custom-Request-Properties', customRequestPropertiesHeader);
+    this._requestProperties = requestProperties;
+  }
+
   get url() {
     return url.format({
       protocol: this.protocol,
@@ -90,6 +142,24 @@ class PrivateRequest {
       query: merge({}, this.flags, result(this.query, 'toJSON', {})),
       hash: this.hash
     });
+  }
+
+  get body() {
+    return this._body;
+  }
+
+  set body(body) {
+    if (body) {
+      const contentTypeHeader = this.getHeader('Content-Type');
+
+      if (!contentTypeHeader) {
+        this.setHeader('Content-Type', 'application/json; charset=utf-8');
+      }
+    } else {
+      this.removeHeader('Content-Type');
+    }
+
+    this._body = body;
   }
 
   get responseType() {
@@ -123,6 +193,10 @@ class PrivateRequest {
   }
 
   getHeader(header) {
+    if (!isString(header)) {
+      header = String(header);
+    }
+
     const keys = Object.keys(this.headers);
 
     for (let i = 0, len = keys.length; i < len; i++) {
@@ -137,6 +211,14 @@ class PrivateRequest {
   }
 
   setHeader(header, value) {
+    if (!isString(header)) {
+      header = String(header);
+    }
+
+    if (!isString(value)) {
+      value = String(value);
+    }
+
     const headers = this.headers;
     headers[header.toLowerCase()] = value;
     this.headers = headers;
@@ -174,10 +256,10 @@ class PrivateRequest {
         if (response && response.isSuccess()) {
           if (this.method !== HttpMethod.GET) {
             const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+              auth: this.auth,
               client: this.client,
               dataPolicy: DataPolicy.CloudOnly
             });
-            privateRequest.auth = this.auth;
             return privateRequest.execute().then(() => {
               return response;
             });
@@ -185,10 +267,10 @@ class PrivateRequest {
         } else {
           if (this.method === HttpMethod.GET) {
             const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+              auth: this.auth,
               client: this.client,
               dataPolicy: DataPolicy.CloudFirst
             });
-            privateRequest.auth = this.auth;
             return privateRequest.execute();
           }
         }
@@ -201,10 +283,10 @@ class PrivateRequest {
       promise = this.executeCloud().then((response) => {
         if (response && response.isSuccess()) {
           const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            auth: this.auth,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
-          privateRequest.auth = this.auth;
 
           if (method === HttpMethod.GET) {
             privateRequest.method = HttpMethod.PUT;
@@ -215,10 +297,10 @@ class PrivateRequest {
           });
         } else if (this.method === HttpMethod.GET) {
           const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            auth: this.auth,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
-          privateRequest.auth = this.auth;
           return privateRequest.execute();
         }
 
@@ -279,26 +361,28 @@ class PrivateRequest {
   }
 
   cancel() {
-
+    // TODO
+    throw new KinveyError('Method not supported');
   }
 
   toJSON() {
     // Create an object representing the request
     const json = {
-      headers: this.headers,
       method: this.method,
+      headers: this.headers,
+      requestProperties: result(this.requestProperties, 'toJSON', null),
       url: this.url,
       path: this.path,
-      query: this.query ? this.query.toJSON() : null,
+      query: result(this.query, 'toJSON', null),
       flags: this.flags,
-      body: this.body,
+      body: this._body,
       responseType: this.responseType,
       dataPolicy: this.dataPolicy,
-      client: this.client.toJSON()
+      client: result(this.client, 'toJSON', null)
     };
 
     // Return the json object
-    return json;
+    return clone(json, true);
   }
 }
 
