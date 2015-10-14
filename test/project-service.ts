@@ -151,7 +151,12 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.createProject(projectName).wait();
 			projectIntegrationTest.assertProject(tempFolder, projectName, options.appid).wait();
 		});
-		it("creates valid project and tests pod sandbox", () => {
+		it("creates ios project and tests post-install sandboxing of CocoaPods setup", () => {
+			if (require("os").platform() !== "darwin") {
+				console.log("Skipping CocoaPods sandbox test. It works only on darwin.");
+				return;
+			}
+
 			let testInjector = createTestInjector();
 			let fs: IFileSystem = testInjector.resolve("fs");
 			let config = testInjector.resolve("config");
