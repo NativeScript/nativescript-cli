@@ -1,4 +1,4 @@
-import Request from '../../src/core/request';
+import { Request } from '../../src/core/request';
 import Auth from '../../src/core/auth';
 import DataPolicy from '../../src/core/enums/dataPolicy';
 import HttpMethod from '../../src/core/enums/httpMethod';
@@ -9,8 +9,8 @@ describe('Request', function() {
   });
 
   describe('headers', function() {
-    it('should be undefined', function() {
-      expect(this.request.headers).to.be.undefined;
+    it('should be defined', function() {
+      expect(this.request.headers).to.exist;
     });
   });
 
@@ -28,7 +28,7 @@ describe('Request', function() {
     it('should throw an error if the method is not a string', function() {
       expect(function() {
         return new Request(1);
-      }).to.throw('Invalid Http Method. It must be a string.');
+      }).to.throw('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
     });
 
     it('should throw an error for an invalid method', function() {
@@ -40,7 +40,7 @@ describe('Request', function() {
 
   describe('protocol', function() {
     it(`should be set to \`https\` by default`, function() {
-      expect(this.request).to.have.property('protocol', this.kinvey.apiProtocol);
+      expect(this.request).to.have.property('protocol', this.client.apiProtocol);
     });
 
     it('should be able to be set to a different value', function() {
@@ -52,7 +52,7 @@ describe('Request', function() {
 
   describe('host', function() {
     it(`should be set to \`baas.kinvey.com\` by default`, function() {
-      expect(this.request).to.have.property('host', this.kinvey.apiHost);
+      expect(this.request).to.have.property('host', this.client.apiHost);
     });
 
     it('should be able to be set to a different value', function() {
@@ -127,7 +127,7 @@ describe('Request', function() {
 
   describe('url', function() {
     it('should be equal to `https://baas.kinvey.com`', function() {
-      expect(this.request).to.have.property('url', this.kinvey.apiUrl);
+      expect(this.request).to.have.property('url', this.client.apiUrl);
     });
 
     it('should not be able to be set', function() {
@@ -176,11 +176,12 @@ describe('Request', function() {
     });
 
     it('should have Accept header set to `application/json` by default', function() {
-      expect(this.request.getHeader('Accept')).to.equal('application/json');
+      expect(this.request.getHeader('Accept')).to.contain('application/json');
     });
 
     it('should have Content-Type header set to `application/json` by default', function() {
-      expect(this.request.getHeader('Content-Type')).to.equal('application/json');
+      this.request.body = {};
+      expect(this.request.getHeader('Content-Type')).to.contain('application/json');
     });
 
     it('should have X-Kinvey-Api-Version header set to `3` by default', function() {
