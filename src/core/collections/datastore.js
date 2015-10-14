@@ -1,5 +1,5 @@
 import Aggregation from '../aggregation';
-import Request from '../request';
+import { Request } from '../request';
 import HttpMethod from '../enums/httpMethod';
 import DataPolicy from '../enums/DataPolicy';
 import Client from '../client';

@@ -1,7 +1,7 @@
 import Client from '../client';
 import Auth from '../auth';
 import DataPolicy from '../enums/dataPolicy';
-import Request from '../request';
+import { Request } from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Datastore from './datastore';
 import { KinveyError } from '../errors';

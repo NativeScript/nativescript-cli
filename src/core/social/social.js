@@ -1,6 +1,6 @@
 import { KinveyError } from '../errors';
 import Client from '../client';
-import Request from '../request';
+import { Request } from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Auth from '../auth';
 import url from 'url';

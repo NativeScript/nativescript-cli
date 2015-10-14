@@ -1,6 +1,6 @@
 import Datastore from './datastore';
 import Client from '../client';
-import Request from '../request';
+import { Request } from '../request';
 import { KinveyError } from '../errors';
 import HttpMethod from '../enums/httpMethod';
 import ResponseType from '../enums/responseType';

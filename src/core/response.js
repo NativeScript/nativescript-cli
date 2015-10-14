@@ -1,8 +1,7 @@
 import StatusCode from './enums/statusCode';
 import isString from 'lodash/lang/isString';
-const privateResponseSymbol = Symbol();
 
-class PrivateResponse {
+export default class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
     this.statusCode = statusCode;
     this.addHeaders(headers);
@@ -65,41 +64,3 @@ class PrivateResponse {
     return json;
   }
 }
-
-class Response {
-  constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
-    this[privateResponseSymbol] = new PrivateResponse(statusCode, headers, data);
-  }
-
-  get statusCode() {
-    const privateResponse = this[privateResponseSymbol];
-    return privateResponse.statusCode;
-  }
-
-  get data() {
-    const privateResponse = this[privateResponseSymbol];
-    return privateResponse.data;
-  }
-
-  set data(data) {
-    const privateResponse = this[privateResponseSymbol];
-    privateResponse.data = data;
-  }
-
-  getHeader(header) {
-    const privateResponse = this[privateResponseSymbol];
-    return privateResponse.getHeader(header);
-  }
-
-  isSuccess() {
-    const privateResponse = this[privateResponseSymbol];
-    return privateResponse.isSuccess();
-  }
-
-  toJSON() {
-    const privateResponse = this[privateResponseSymbol];
-    return privateResponse.toJSON();
-  }
-}
-
-export default Response;

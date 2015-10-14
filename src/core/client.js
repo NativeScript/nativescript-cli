@@ -7,7 +7,7 @@ const sharedInstanceSymbol = Symbol();
  * The Client class stores information regarding your application. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  */
-class Client {
+export default class Client {
   /**
    * Create a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.
@@ -154,5 +154,3 @@ class Client {
     return client;
   }
 }
-
-export default Client;
