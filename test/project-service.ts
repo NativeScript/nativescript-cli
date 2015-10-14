@@ -156,7 +156,7 @@ describe("Project Service Tests", () => {
 			let fs: IFileSystem = testInjector.resolve("fs");
 			let config = testInjector.resolve("config");
 			let childProcess = testInjector.resolve("childProcess");
-			let	projectIntegrationTest = new ProjectIntegrationTest();
+			let projectIntegrationTest = new ProjectIntegrationTest();
 			let workingFolderPath = temp.mkdirSync("ios_project");
 
 			let iosTemplatePath = path.join(projectIntegrationTest.getDefaultTemplatePath("tns-ios").wait(), "framework/");
