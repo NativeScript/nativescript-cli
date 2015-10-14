@@ -80,7 +80,7 @@ class PrivateQuery {
    */
   contains(field, values) {
     if (!isArray(values)) {
-      throw new Error('You must supply an array.');
+      values = [values];
     }
 
     return this.addFilter(field, '$in', values);
@@ -98,7 +98,7 @@ class PrivateQuery {
    */
   containsAll(field, values) {
     if (!isArray(values)) {
-      throw new Error('You must supply an array.');
+      values = [values];
     }
 
     return this.addFilter(field, '$all', values);
@@ -153,7 +153,7 @@ class PrivateQuery {
 
   notContainedIn(field, values) {
     if (!isArray(values)) {
-      throw new Error('You must supply an array.');
+      values = [values];
     }
 
     return this.addFilter(field, '$nin', values);
