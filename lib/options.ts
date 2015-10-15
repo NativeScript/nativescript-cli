@@ -30,7 +30,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			ignoreScripts: {type: OptionType.Boolean },
 			tnsModulesVersion: { type: OptionType.String },
 			staticBindings: {type: OptionType.Boolean},
-			compileSdk: {type: OptionType.Number }
+			compileSdk: {type: OptionType.Number },
+			copyTo: { type: OptionType.String }
 		},
 		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);

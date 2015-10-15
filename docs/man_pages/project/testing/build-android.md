@@ -3,7 +3,7 @@ build android
 
 Usage | Synopsis
 ---|---
-General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings]`
+General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>]`
 
 Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
 
@@ -15,6 +15,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias-password` - Provides the password for the alias specified with `--key-store-alias-password`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--static-bindings` - **This is an experimental feature**. If set, generates static bindings from your JavaScript code to corresponding native Android APIs during build. This static bindings speed up app loading.[\*\*](#note)
+* `--copy-to` - Specifies the file path where the built `.apk` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
 
 <% if(isHtml) { %><a id="note"></a><% } %>
 \*\* By default, NativeScript runtime for Android uses runtime binding generator. When you extend a Java class and overwrite a lot of methods, this could be a potentially slow operation.

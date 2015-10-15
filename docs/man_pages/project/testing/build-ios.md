@@ -3,19 +3,20 @@ build ios
 
 Usage | Synopsis
 ---|---
-General | `$ tns build ios [--for-device] [--release]`
+General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>]`
 
 Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on device, respectively.
 
-<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help build ios`<% } %> 
-<% if((isConsole && isMacOS) || isHtml) { %>  
-<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %> 
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on OS X systems. To view the complete help for this command, run `$ tns help build ios`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>
+<% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
 ### Options
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
+* `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
 <% } %>
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Command Limitations
 
 * You can run `$ tns build ios` only on OS X systems.

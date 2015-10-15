@@ -39,7 +39,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 	public get platformData(): IPlatformData {
 		if (!this._platformData) {
 			let projectRoot = path.join(this.$projectData.platformsDir, "android");
-
+			let packageName = this.getProjectNameFromId();
 			this._platformData = {
 				frameworkPackageName: "tns-android",
 				normalizedPlatformName: "Android",
@@ -49,6 +49,8 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				projectRoot: projectRoot,
 				deviceBuildOutputPath: path.join(projectRoot, "build", "outputs", "apk"),
 				validPackageNamesForDevice: [
+					`${packageName}-debug.apk`,
+					`${packageName}-release.apk`,
 					`${this.$projectData.projectName}-debug.apk`,
 					`${this.$projectData.projectName}-release.apk`
 				],
@@ -143,9 +145,18 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			shell.sed('-i', /__TITLE_ACTIVITY__/, this.$projectData.projectName, stringsFilePath);
 
 			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
-			shell.sed('-i', /__PROJECT_NAME__/, this.$projectData.projectId.split(".")[2], gradleSettingsFilePath);
+			shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
 			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
 		}).future<void>()();
+	}
+
+	private getProjectNameFromId(): string {
+		let id: string;
+		if(this.$projectData && this.$projectData.projectId) {
+			id = this.$projectData.projectId.split(".")[2];
+		}
+
+		return id;
 	}
 
 	public afterCreateProject(projectRoot: string): IFuture<void> {
