@@ -4,7 +4,7 @@
 import yok = require('../lib/common/yok');
 import stubs = require('./stubs');
 import * as constants from "./../lib/constants";
-import * as ChildProcessLib from "../lib/common/child-process";
+import {ChildProcess} from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";
 import * as ProjectDataServiceLib from "../lib/services/project-data-service";
 import * as ProjectDataLib from "../lib/project-data";
@@ -20,6 +20,7 @@ import * as helpers from "../lib/common/helpers";
 import {assert} from "chai";
 import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
+import iOSProjectServiceLib = require("../lib/services/ios-project-service");
 
 let mockProjectNameValidator = {
 	validate: () => { return true; }
@@ -102,7 +103,7 @@ class ProjectIntegrationTest {
 
 	private createTestInjector(): void {
 		this.testInjector = new yok.Yok();
-		this.testInjector.register("childProcess", ChildProcessLib.ChildProcess);
+		this.testInjector.register("childProcess", ChildProcess);
 		this.testInjector.register("errors", stubs.ErrorsStub);
 		this.testInjector.register('logger', stubs.LoggerStub);
 		this.testInjector.register("projectService", ProjectServiceLib.ProjectService);
@@ -157,9 +158,10 @@ describe("Project Service Tests", () => {
 				return;
 			}
 
-			let testInjector = createTestInjector();
+			let testInjector = createInjectorForPodsTest();
+
+			let iOSProjectService: IPlatformProjectService = testInjector.resolve("iOSProjectService");
 			let fs: IFileSystem = testInjector.resolve("fs");
-			let config = testInjector.resolve("config");
 			let childProcess = testInjector.resolve("childProcess");
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let workingFolderPath = temp.mkdirSync("ios_project");
@@ -172,8 +174,20 @@ describe("Project Service Tests", () => {
 			let podfileContent = `post_install do |installer_representation| ${postInstallCommmand} end`;
 			fs.writeFile(path.join(workingFolderPath, "Podfile"), podfileContent).wait();
 
-			let podTool = config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-			childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: workingFolderPath, stdio: 'inherit' }).wait();
+			let platformData =  iOSProjectService.platformData;
+			Object.defineProperty(iOSProjectService, "platformData", {
+				get: () => {
+					return { projectRoot: workingFolderPath };
+				}
+    		 });
+
+			try {
+				iOSProjectService.afterPrepareAllPlugins().wait();
+			} catch(e) {
+				assert.isNotNull(e);
+			} finally {
+				Object.defineProperty(iOSProjectService, "platformData", platformData);	
+			}
 
 			assert.isTrue(fs.exists("/tmp/Podfile").wait());
 			assert.isTrue(fs.exists(path.join(workingFolderPath, "copyTestFile.txt")).wait());
@@ -189,6 +203,7 @@ function createTestInjector() {
 	testInjector.register("projectService", ProjectServiceLib.ProjectService);
 	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 	testInjector.register("projectTemplatesService", stubs.ProjectTemplatesService);
+	testInjector.register("projectNameValidator", mockProjectNameValidator);
 
 	testInjector.register("fs", fsLib.FileSystem);
 	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
@@ -197,14 +212,38 @@ function createTestInjector() {
 
 	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
 	testInjector.register("httpClient", HttpClientLib.HttpClient);
+	testInjector.register("lockfile", stubs.LockFile);
+
+	testInjector.register("childProcess", ChildProcess);
+
+	testInjector.register('projectData', ProjectDataLib.ProjectData);
+	testInjector.register("options", optionsLib.Options);
+	testInjector.register("hostInfo", hostInfoLib.HostInfo);
+
+	return testInjector;
+}
+
+function createInjectorForPodsTest() {
+	let testInjector = new yok.Yok();
+
+	testInjector.register("errors", stubs.ErrorsStub);
+	testInjector.register('logger', stubs.LoggerStub);
+	testInjector.register("projectHelper", {});
+	testInjector.register("projectData", {
+		projectName: "__PROJECT_NAME__",
+		platformsDir: ""
+	});
+	testInjector.register("projectDataService", {});
+	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("config", {
 		"USE_POD_SANDBOX": true
 	});
-	testInjector.register("lockfile", stubs.LockFile);
-
-	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
-
-	testInjector.register('projectData', ProjectDataLib.ProjectData);
+	testInjector.register("prompter", {});
+	testInjector.register("fs", fsLib.FileSystem);
+	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
+	testInjector.register("npmInstallationManager", NpmInstallationManagerLib.NpmInstallationManager);
+	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
+	testInjector.register("childProcess", ChildProcess);
 	testInjector.register("options", optionsLib.Options);
 	testInjector.register("hostInfo", hostInfoLib.HostInfo);
 
