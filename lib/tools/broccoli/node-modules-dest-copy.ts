@@ -16,17 +16,19 @@ export class DestCopy implements IBroccoliPlugin {
 	private dependencies:  IDictionary<any>  = null;
 	private devDependencies:  IDictionary<any>  = null;
 
-  constructor(private inputPath: string,
-	  private cachePath: string,
-	  private outputRoot: string,
-	  private projectDir: string,
-	  private platform: string,
-	  private $fs: IFileSystem,
-	  private $projectFilesManager: IProjectFilesManager,
-	  private $pluginsService: IPluginsService) {
-	this.dependencies = Object.create(null);
-	this.devDependencies = this.getDevDependencies(projectDir);
-  }
+	constructor(
+		private inputPath: string,
+		private cachePath: string,
+		private outputRoot: string,
+		private projectDir: string,
+		private platform: string,
+		private $fs: IFileSystem,
+		private $projectFilesManager: IProjectFilesManager,
+		private $pluginsService: IPluginsService
+	) {
+		this.dependencies = Object.create(null);
+		this.devDependencies = this.getDevDependencies(projectDir);
+	}
 
   public rebuildChangedDirectories(changedDirectories: string[], platform: string): void {
 	_.each(changedDirectories, changedDirectoryAbsolutePath => {
@@ -68,8 +70,8 @@ export class DestCopy implements IBroccoliPlugin {
 	});
 
 	_.each(this.dependencies, dependency => {
-		shelljs.cp("-Rf", dependency.directory, this.outputRoot);
-		shelljs.rm("-rf", path.join(this.outputRoot, dependency.name, "node_modules"));
+		this.copyDependencyDir(dependency);
+
 		let isPlugin = !!dependency.nativescript;
 		if(isPlugin) {
 			this.$pluginsService.prepare(dependency).wait();
@@ -85,6 +87,18 @@ export class DestCopy implements IBroccoliPlugin {
 	if(!_.isEmpty(this.dependencies)) {
 		this.$pluginsService.afterPrepareAllPlugins().wait();
 	}
+  }
+
+  private copyDependencyDir(dependency: any): void {
+		let dependencyDir = path.dirname(dependency.name || "");
+		let insideNpmScope = /^@/.test(dependencyDir);
+		let targetDir = this.outputRoot;
+		if (insideNpmScope) {
+			targetDir = path.join(this.outputRoot, dependencyDir);
+		}
+		shelljs.mkdir("-p", targetDir);
+		shelljs.cp("-Rf", dependency.directory, targetDir);
+		shelljs.rm("-rf", path.join(targetDir, dependency.name, "node_modules"));
   }
 
   public rebuild(treeDiff: IDiffResult): void {
@@ -113,10 +127,10 @@ export class DestCopy implements IBroccoliPlugin {
 					foundFiles.push(packageJsonFilePath);
 				}
 
-                let directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
-                if (fs.existsSync(directoryPath)) {
-                    this.enumeratePackageJsonFilesSync(directoryPath, foundFiles);
-                }
+				let directoryPath = path.join(nodeModulesDirectoryPath, contents[i], constants.NODE_MODULES_FOLDER_NAME);
+				if (fs.existsSync(directoryPath)) {
+					this.enumeratePackageJsonFilesSync(directoryPath, foundFiles);
+				}
 			}
 		}
 		return foundFiles;
