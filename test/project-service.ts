@@ -40,20 +40,20 @@ class ProjectIntegrationTest {
 		return projectService.createProject(projectName);
 	}
 
-	public getDefaultTemplatePath(templateName: string): IFuture<string> {
+	public getNpmPackagePath(packageName: string): IFuture<string> {
 		return (() => {
 			let npmInstallationManager = this.testInjector.resolve("npmInstallationManager");
 			let fs = this.testInjector.resolve("fs");
 
 			let cacheRoot = npmInstallationManager.getCacheRootPath();
-			let defaultTemplatePath = path.join(cacheRoot, templateName);
-			let latestVersion = npmInstallationManager.getLatestVersion(templateName).wait();
+			let defaultTemplatePath = path.join(cacheRoot, packageName);
+			let latestVersion = npmInstallationManager.getLatestVersion(packageName).wait();
 
 			if(!fs.exists(path.join(defaultTemplatePath, latestVersion)).wait()) {
-				npmInstallationManager.addToCache(templateName, latestVersion).wait();
+				npmInstallationManager.addToCache(packageName, latestVersion).wait();
 			}
 			if(!fs.exists(path.join(defaultTemplatePath, latestVersion, "package", "app")).wait()) {
-				npmInstallationManager.cacheUnpack(templateName, latestVersion).wait();
+				npmInstallationManager.cacheUnpack(packageName, latestVersion).wait();
 			}
 
 			return path.join(defaultTemplatePath, latestVersion, "package");
@@ -134,7 +134,7 @@ describe("Project Service Tests", () => {
 			let options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
-			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath("tns-template-hello-world").wait();
+			options.copyFrom = projectIntegrationTest.getNpmPackagePath("tns-template-hello-world").wait();
 
 			projectIntegrationTest.createProject(projectName).wait();
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp").wait();
@@ -146,7 +146,7 @@ describe("Project Service Tests", () => {
 			let options = projectIntegrationTest.testInjector.resolve("options");
 
 			options.path = tempFolder;
-			options.copyFrom = projectIntegrationTest.getDefaultTemplatePath("tns-template-hello-world").wait();
+			options.copyFrom = projectIntegrationTest.getNpmPackagePath("tns-template-hello-world").wait();
 			options.appid = "my.special.id";
 
 			projectIntegrationTest.createProject(projectName).wait();
@@ -166,7 +166,7 @@ describe("Project Service Tests", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let workingFolderPath = temp.mkdirSync("ios_project");
 
-			let iosTemplatePath = path.join(projectIntegrationTest.getDefaultTemplatePath("tns-ios").wait(), "framework/");
+			let iosTemplatePath = path.join(projectIntegrationTest.getNpmPackagePath("tns-ios").wait(), "framework/");
 			childProcess.exec(`cp -R ${iosTemplatePath} ${workingFolderPath}`, { cwd: workingFolderPath }).wait();
 			fs.writeFile("/tmp/Podfile/testFile.txt", "Test content.").wait();
 
