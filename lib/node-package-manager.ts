@@ -19,15 +19,24 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public load(config?: any): IFuture<void> {
-		let future = new Future<void>();
-		npm.load(config, (err: Error) => {
-			if(err) {
-				future.throw(err);
-			} else {
-				future.return();
+		if (npm.config.loaded) {
+			let data = npm.config.sources.cli.data;
+			Object.keys(data).forEach(k => delete data[k]);
+			if (config) {
+				_.assign(data, config);
 			}
-		});
-		return future;
+			return Future.fromResult();
+		} else {
+			let future = new Future<void>();
+			npm.load(config, (err: Error) => {
+				if(err) {
+					future.throw(err);
+				} else {
+					future.return();
+				}
+			});
+			return future;
+		}
 	}
 
 	public install(packageName: string, pathToSave: string, config?: any): IFuture<any> {
