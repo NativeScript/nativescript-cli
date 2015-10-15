@@ -215,6 +215,33 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void> {
+		return (() => {
+			let packageFile: string;
+			platform = platform.toLowerCase();
+			targetPath = path.resolve(targetPath);
+			let platformData = this.$platformsData.getPlatformData(platform);
+			if (settings.isForDevice) {
+				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+			} else {
+				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+			}
+			if(!packageFile || !this.$fs.exists(packageFile).wait()) {
+				this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
+			}
+
+			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
+
+			if(this.$fs.exists(targetPath).wait() && this.$fs.getFsStats(targetPath).wait().isDirectory()) {
+				let sourceFileName = path.basename(packageFile);
+				this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
+				targetPath = path.join(targetPath, sourceFileName);
+			}
+			this.$fs.copyFile(packageFile, targetPath).wait();
+			this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+		}).future<void>()();
+	}
+
 	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
