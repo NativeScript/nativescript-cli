@@ -82,6 +82,7 @@ interface IOptions extends ICommonOptions {
 	tnsModulesVersion: string;
 	staticBindings: boolean;
 	compileSdk: number;
+	copyTo: string;
 }
 
 interface IProjectFilesManager {

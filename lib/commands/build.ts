@@ -2,17 +2,25 @@
 "use strict";
 
 export class BuildCommandBase {
-	constructor(private $platformService: IPlatformService) { }
+	constructor(protected $options: IOptions,
+		private $platformService: IPlatformService) { }
 
 	executeCore(args: string[], buildConfig?: IBuildConfig): IFuture<void> {
-		return this.$platformService.buildPlatform(args[0], buildConfig);
+		return (() => {
+			let platform = args[0].toLowerCase();
+			this.$platformService.buildPlatform(platform, buildConfig).wait();
+			if(this.$options.copyTo) {
+				this.$platformService.copyLastOutput(platform, this.$options.copyTo, {isForDevice: this.$options.forDevice}).wait();
+			}
+		}).future<void>()();
 	}
 }
 
 export class BuildIosCommand extends BuildCommandBase implements  ICommand {
-	constructor($platformService: IPlatformService,
-		private $platformsData: IPlatformsData) {
-		super($platformService);
+	constructor(protected $options: IOptions,
+				private $platformsData: IPlatformsData,
+				$platformService: IPlatformService) {
+		super($options, $platformService);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -24,11 +32,11 @@ export class BuildIosCommand extends BuildCommandBase implements  ICommand {
 $injector.registerCommand("build|ios", BuildIosCommand);
 
 export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
-	constructor($platformService: IPlatformService,
+	constructor(protected $options: IOptions,
 				private $platformsData: IPlatformsData,
-				private $options: IOptions,
-				private $errors: IErrors) {
-		super($platformService);
+				private $errors: IErrors,
+				$platformService: IPlatformService) {
+		super($options, $platformService);
 	}
 
 	public execute(args: string[]): IFuture<void> {
