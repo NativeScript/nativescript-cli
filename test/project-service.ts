@@ -244,7 +244,6 @@ function createInjectorForPodsTest() {
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("iOSProjectService", IOSProjectService);
 	testInjector.register("projectService", ProjectServiceLib.ProjectService);
-	testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 	testInjector.register("projectTemplatesService", stubs.ProjectTemplatesService);
 	testInjector.register("projectNameValidator", mockProjectNameValidator);
 	testInjector.register("options", Options);
