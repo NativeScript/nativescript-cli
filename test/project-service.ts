@@ -233,7 +233,6 @@ function createInjectorForPodsTest() {
 		projectName: "__PROJECT_NAME__",
 		platformsDir: ""
 	});
-	testInjector.register("projectDataService", {});
 	testInjector.register("iOSEmulatorServices", {});
 	testInjector.register("config", {
 		"USE_POD_SANDBOX": true
@@ -244,8 +243,15 @@ function createInjectorForPodsTest() {
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
 	testInjector.register("iOSProjectService", IOSProjectService);
 	testInjector.register("projectService", ProjectServiceLib.ProjectService);
-	testInjector.register("projectTemplatesService", stubs.ProjectTemplatesService);
-	testInjector.register("projectNameValidator", mockProjectNameValidator);
+	testInjector.register("pluginsService", {
+		getAllInstalledPlugins: () => {
+			return (() => {
+				return <any>[];
+			}).future<IPluginData[]>()();
+		}
+	});
+	testInjector.register("fs", FileSystem);
+	testInjector.register("projectDataService", ProjectDataServiceLib.ProjectDataService);
 	testInjector.register("options", Options);
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register("childProcess", ChildProcess);
