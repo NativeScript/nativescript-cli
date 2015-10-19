@@ -152,10 +152,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public interpolateConfigurationFile(): IFuture<void> {
 		return (() => {
 			let manifestPath = this.platformData.configurationFilePath;
-
-			console.log("ANDROID MANIFEST FILE PATH!!!!");
-			console.log(manifestPath);
-
 			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
 			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
 		}).future<void>()();

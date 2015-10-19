@@ -66,17 +66,6 @@ export class PluginsService implements IPluginsService {
 
 	public remove(pluginName: string): IFuture<void> {
 		return (() => {
-			let isUninstallCommandExecuted = false;
-
-			let executeUninstallCommand = () => {
-				return (() => {
-					if(!isUninstallCommandExecuted) {
-						this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
-						isUninstallCommandExecuted = true;
-					}
-				}).future<void>()();
-			};
-
 			let removePluginNativeCodeAction = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
 				return (() => {
 					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName).wait());
@@ -96,7 +85,7 @@ export class PluginsService implements IPluginsService {
 			};
 			this.executeForAllInstalledPlatforms(removePluginNativeCodeAction).wait();
 
-			executeUninstallCommand().wait();
+			this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
 
 			let showMessage = true;
 			let action = (modulesDestinationPath: string, platform: string, platformData: IPlatformData) => {
@@ -119,10 +108,11 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-			this.$npm.cache(platformData.frameworkPackageName, frameworkVersion).wait();
 
 			// We need to resolve this manager here due to some restrictions from npm api and in order to load PluginsService.NPM_CONFIG config
 			let npmInstallationManager: INpmInstallationManager = this.$injector.resolve("npmInstallationManager");
+			npmInstallationManager.addToCache(platformData.frameworkPackageName, frameworkVersion).wait();
+
 			let cachedPackagePath = npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, frameworkVersion);
 			let cachedConfigurationFilePath = path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, platformData.relativeToFrameworkConfigurationFilePath);
 			let cachedConfigurationFileContent = this.$fs.readText(cachedConfigurationFilePath).wait();
@@ -147,7 +137,6 @@ export class PluginsService implements IPluginsService {
 						shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
 
 						let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
-
 						if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
 							this.merge(pluginData, platformData).wait();
 						}
