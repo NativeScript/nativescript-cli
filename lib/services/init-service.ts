@@ -99,7 +99,7 @@ export class InitService implements IInitService {
 
 	private getVersionData(packageName: string): IFuture<IStringDictionary> {
 		return (() => {
-			let latestVersion = this.$npmInstallationManager.getLatestVersion(packageName).wait();
+			let latestVersion = this.$npmInstallationManager.getLatestCompatibleVersion(packageName).wait();
 			if(this.useDefaultValue) {
 				return this.buildVersionData(latestVersion);
 			}
