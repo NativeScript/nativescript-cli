@@ -24,6 +24,7 @@ import Future = require("fibers/future");
 
 import path = require("path");
 import temp = require("temp");
+import shelljs = require("shelljs");
 temp.track();
 
 let assert = require("chai").assert;
@@ -184,6 +185,26 @@ describe("Npm support tests", () => {
 		assert.isTrue(fs.exists(bplistFolderPath).wait());
 		assert.isTrue(fs.exists(bplistCreatorFolderPath).wait());
 		assert.isTrue(fs.exists(bplistParserFolderPath).wait());
+	});
+	it("Ensures that scoped dependencies are prepared correctly", () => {
+		// Setup
+		let fs = testInjector.resolve("fs");
+		let scopedName = "@reactivex/rxjs";
+		let scopedModule = path.join(projectFolder, "node_modules", "@reactivex/rxjs");
+		let scopedPackageJson = path.join(scopedModule, "package.json");
+		addDependencies(testInjector, projectFolder, {scopedName:  "0.0.0-prealpha.3"}).wait();
+		//create module dir, and add a package.json
+		shelljs.mkdir("-p", scopedModule);
+		fs.writeFile(scopedPackageJson, JSON.stringify({name: scopedName})).wait();
+
+		// Act
+		preparePlatform(testInjector).wait();
+
+		// Assert
+		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+
+		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
+		assert.isTrue(fs.exists(scopedDependencyPath).wait());
 	});
 });
 
