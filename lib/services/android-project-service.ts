@@ -100,14 +100,13 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 			if(this.$options.symlink) {
 				this.symlinkDirectory("build-tools", this.platformData.projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", this.platformData.projectRoot, frameworkDir).wait();
-				this.symlinkDirectory("src", this.platformData.projectRoot, frameworkDir).wait();
-
-				this.$fs.symlink(path.join(frameworkDir, "build.gradle"), path.join(this.platformData.projectRoot, "build.gradle")).wait();
-				this.$fs.symlink(path.join(frameworkDir, "settings.gradle"), path.join(this.platformData.projectRoot, "settings.gradle")).wait();
 			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "build-tools libs src", "-R");
-				this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
+				this.copy(this.platformData.projectRoot, frameworkDir, "build-tools libs", "-R");
 			}
+
+			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
+			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 
 			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
 
