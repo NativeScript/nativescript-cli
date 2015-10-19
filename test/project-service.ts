@@ -161,21 +161,20 @@ describe("Project Service Tests", () => {
 
 			let testDirectoryPath = "/tmp/Podfile";
 			let testInjector = createInjectorForPodsTest();
-
 			let iOSProjectService: IPlatformProjectService = testInjector.resolve("iOSProjectService");
 			let fs: IFileSystem = testInjector.resolve("fs");
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let workingFolderPath = temp.mkdirSync("ios_project");
-
 			let iosTemplatePath = path.join(projectIntegrationTest.getNpmPackagePath("tns-ios").wait(), "framework/");
-			shell.cp("-R", iosTemplatePath, workingFolderPath);
-			fs.writeFile(`${testDirectoryPath}/testFile.txt`, "Test content.").wait();
-
 			let postInstallCommmand = `\`cat ${testDirectoryPath}/testFile.txt > ${workingFolderPath}/copyTestFile.txt && rm -rf ${testDirectoryPath}\``;
 			let podfileContent = `post_install do |installer_representation| ${postInstallCommmand} end`;
+			let platformData =  iOSProjectService.platformData;
+
+			shell.cp("-R", iosTemplatePath, workingFolderPath);
+
+			fs.writeFile(`${testDirectoryPath}/testFile.txt`, "Test content.").wait();
 			fs.writeFile(path.join(workingFolderPath, "Podfile"), podfileContent).wait();
 
-			let platformData =  iOSProjectService.platformData;
 			Object.defineProperty(iOSProjectService, "platformData", {
 				get: () => {
 					return { projectRoot: workingFolderPath };
