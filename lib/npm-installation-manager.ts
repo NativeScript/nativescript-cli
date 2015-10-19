@@ -6,6 +6,12 @@ import semver = require("semver");
 import * as npm from "npm";
 import * as constants from "./constants";
 
+interface IVersionData {
+	major: string;
+	minor: string;
+	patch: string;
+}
+
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 	private versionsCache: IDictionary<string[]>;
@@ -20,7 +26,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		private $lockfile: ILockFile,
 		private $errors: IErrors,
 		private $options: IOptions,
-		private $fs: IFileSystem) {
+		private $fs: IFileSystem,
+		private $staticConfig: IStaticConfig) {
 		this.versionsCache = {};
 		this.$npm.load().wait();
 	}
@@ -60,6 +67,27 @@ export class NpmInstallationManager implements INpmInstallationManager {
 			this.$logger.trace("Using version %s. ", latestVersion);
 
 			return latestVersion;
+		}).future<string>()();
+	}
+
+	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
+		return (() => {
+			let latestVersion = this.getLatestVersion(packageName).wait();
+			let data = this.$npm.view(packageName, "versions").wait();
+			let versions: string[] = data[latestVersion].versions;
+
+			let versionData = this.getVersionData(this.$staticConfig.version);
+
+ 			let compatibleVersions = _(versions)
+				.map(ver => this.getVersionData(ver))
+				.filter(verData => versionData.major === verData.major && versionData.minor === verData.minor)
+				.sortBy(verData => verData.patch)
+				.value();
+
+			let result = _.last(compatibleVersions);
+
+			let latestCompatibleVersion = `${result.major}.${result.minor}.${result.patch}`;
+			return latestCompatibleVersion;
 		}).future<string>()();
 	}
 
@@ -131,7 +159,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 				}
 				return this.$options.frameworkPath;
 			} else {
-				version = version || this.getLatestVersion(packageName).wait();
+				version = version || this.getLatestCompatibleVersion(packageName).wait();
 				let packagePath = this.getCachedPackagePath(packageName, version);
 				this.addToCache(packageName, version).wait();
 				return packagePath;
@@ -162,6 +190,11 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return ((): boolean => {
 			return this.$fs.exists(directory).wait() &&	this.$fs.enumerateFilesInDirectorySync(directory).length > 0;
 		}).future<boolean>()();
+	}
+
+	private getVersionData(version: string): IVersionData {
+		let [ major, minor, patch ] = version.split(".");
+		return { major, minor, patch };
 	}
 }
 $injector.register("npmInstallationManager", NpmInstallationManager);

@@ -223,6 +223,10 @@ export class NpmInstallationManagerStub implements INpmInstallationManager {
 		return Future.fromResult("");
 	}
 
+	getLatestCompatibleVersion(packageName: string): IFuture<string> {
+		return Future.fromResult("");
+	}
+
 	getCachedPackagePath(packageName: string, version: string): string {
 		return "";
 	}
