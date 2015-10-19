@@ -8,7 +8,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
 
-class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
+export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
@@ -57,6 +57,7 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 				frameworkFilesExtensions: [".jar", ".dat", ".so"],
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
+				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
 				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}]
 			};
 		}
@@ -134,11 +135,10 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 		}).future<void>()();
 	}
 
-	public interpolateData(projectRoot: string): IFuture<void> {
+	public interpolateData(): IFuture<void> {
 		return (() => {
-			// Interpolate the activity name and package
-			let manifestPath = this.platformData.configurationFilePath;
-			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
+			// Interpolate the apilevel and package
+			this.interpolateConfigurationFile().wait();
 
 			let stringsFilePath = path.join(this.getAppResourcesDestinationDirectoryPath().wait(), 'values', 'strings.xml');
 			shell.sed('-i', /__NAME__/, this.$projectData.projectName, stringsFilePath);
@@ -146,6 +146,17 @@ class AndroidProjectService extends projectServiceBaseLib.PlatformProjectService
 
 			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
 			shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
+		}).future<void>()();
+	}
+
+	public interpolateConfigurationFile(): IFuture<void> {
+		return (() => {
+			let manifestPath = this.platformData.configurationFilePath;
+
+			console.log("ANDROID MANIFEST FILE PATH!!!!");
+			console.log(manifestPath);
+
+			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, manifestPath);
 			shell.sed('-i', /__APILEVEL__/, this.$options.sdk || this.$androidToolsInfo.getToolsInfo().wait().compileSdkVersion.toString(), manifestPath);
 		}).future<void>()();
 	}

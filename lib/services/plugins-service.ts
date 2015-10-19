@@ -86,25 +86,7 @@ export class PluginsService implements IPluginsService {
 					// Remove the plugin and call merge for another plugins that have configuration file
 					let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
 					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
-						let nodeModules = this.$broccoliBuilder.getChangedNodeModules(tnsModulesDestinationPath, platform).wait();
-
-						_(nodeModules)
-							.map(nodeModule => this.getNodeModuleData(pluginName).wait())
-							.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
-							.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
-							.forEach((data, index) => {
-								executeUninstallCommand().wait();
-
-								if(index === 0) {
-									this.initializeConfigurationFileFromCache(platformData).wait();
-								}
-
-								if(data.name !== pluginName) {
-									this.merge(data, platformData).wait();
-								}
-							})
-							.value();
+						this.merge(pluginData, platformData).wait();
 					}
 
 					if(pluginData.pluginVariables) {
@@ -139,13 +121,14 @@ export class PluginsService implements IPluginsService {
 			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
 			this.$npm.cache(platformData.frameworkPackageName, frameworkVersion).wait();
 
-			let relativeConfigurationFilePath = path.relative(platformData.projectRoot, platformData.configurationFilePath);
 			// We need to resolve this manager here due to some restrictions from npm api and in order to load PluginsService.NPM_CONFIG config
 			let npmInstallationManager: INpmInstallationManager = this.$injector.resolve("npmInstallationManager");
 			let cachedPackagePath = npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, frameworkVersion);
-			let cachedConfigurationFilePath = path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, relativeConfigurationFilePath);
+			let cachedConfigurationFilePath = path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, platformData.relativeToFrameworkConfigurationFilePath);
+			let cachedConfigurationFileContent = this.$fs.readText(cachedConfigurationFilePath).wait();
+			this.$fs.writeFile(platformData.configurationFilePath, cachedConfigurationFileContent).wait();
 
-			shelljs.cp("-f", cachedConfigurationFilePath, path.dirname(platformData.configurationFilePath));
+			platformData.platformProjectService.interpolateConfigurationFile().wait();
 		}).future<void>()();
 	}
 
@@ -347,7 +330,7 @@ export class PluginsService implements IPluginsService {
 		doc.parseFromString(xml, 'text/xml');
 	}
 
-	private merge(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
+	private mergeCore(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
 		return (() => {
 			let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
 			let configurationFilePath = platformData.configurationFilePath;
@@ -365,6 +348,27 @@ export class PluginsService implements IPluginsService {
 			let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
 			this.validateXml(resultXml);
 			this.$fs.writeFile(configurationFilePath, resultXml).wait();
+		}).future<void>()();
+	}
+
+	private merge(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
+		return (() => {
+			let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
+			let nodeModules = this.$broccoliBuilder.getChangedNodeModules(tnsModulesDestinationPath, platformData.normalizedPlatformName.toLowerCase()).wait();
+
+			_(_.keys(nodeModules))
+				.map(nodeModule => this.getNodeModuleData(path.join(nodeModule, "package.json")).wait())
+				.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
+				.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
+				.forEach((data, index) => {
+					if(index === 0) {
+						this.initializeConfigurationFileFromCache(platformData).wait();
+					}
+
+					this.mergeCore(data, platformData).wait();
+				})
+				.value();
+
 		}).future<void>()();
 	}
 

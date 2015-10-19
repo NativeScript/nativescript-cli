@@ -102,7 +102,7 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
 			}
 
-			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
+			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);

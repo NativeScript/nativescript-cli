@@ -36,6 +36,7 @@ interface IPlatformData {
 	targetedOS?: string[];
 	configurationFileName?: string;
 	configurationFilePath?: string;
+	relativeToFrameworkConfigurationFilePath: string;
 	mergeXmlConfig?: any[];
 }
 
