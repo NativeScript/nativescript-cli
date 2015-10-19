@@ -11,6 +11,7 @@ export class Configuration extends configBaseLib.ConfigBase implements IConfigur
 	TYPESCRIPT_COMPILER_OPTIONS = {};
 	USE_PROXY = false;
 	ANDROID_DEBUG_UI: string = null;
+	USE_POD_SANDBOX: boolean = true;
 
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
 	constructor(protected $fs: IFileSystem) {
