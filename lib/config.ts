@@ -34,6 +34,7 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 
 	constructor($injector: IInjector) {
 		super($injector);
+		this.RESOURCE_DIR_PATH = path.join(this.RESOURCE_DIR_PATH, "../../resources");
 	}
 
 	public get SYS_REQUIREMENTS_LINK(): string {

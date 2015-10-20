@@ -60,8 +60,11 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
-				return this.$platformService.deployOnDevice(platform);
+			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<boolean> => {
+				return (() => {
+					this.$platformService.deployOnDevice(platform).wait();
+					return false;
+				}).future<boolean>()();
 			};
 
 			let notRunningiOSSimulatorAction = (): IFuture<void> => {
@@ -153,6 +156,7 @@ export class IOSUsbLiveSyncService implements IPlatformSpecificUsbLiveSyncServic
 		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier);
 	}
 }
+$injector.register("iosUsbLiveSyncServiceLocator", {factory: IOSUsbLiveSyncService});
 
 export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.AndroidLiveSyncService implements IPlatformSpecificUsbLiveSyncService {
 	constructor(_device: Mobile.IDevice,
@@ -190,3 +194,4 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 		}).future<void>()();
 	}
 }
+$injector.register("androidUsbLiveSyncServiceLocator", {factory: AndroidUsbLiveSyncService});
