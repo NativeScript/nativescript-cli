@@ -7,7 +7,7 @@ import HttpMethod from '../enums/httpMethod';
 import assign from 'lodash/object/assign';
 const filesNamespace = 'blob';
 
-class Files extends Model {
+export default class File extends Model {
   find(query, options = {}) {
     // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
@@ -119,5 +119,3 @@ class Files extends Model {
     return promise;
   }
 }
-
-export default Files;
