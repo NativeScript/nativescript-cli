@@ -160,6 +160,10 @@ export class FileSystemStub implements IFileSystem {
 	getFileShasum(fileName: string): IFuture<string> {
 		return undefined;
 	}
+
+	readStdin(): IFuture<string> {
+		return undefined;
+	}
 }
 
 export class ErrorsStub implements IErrors {

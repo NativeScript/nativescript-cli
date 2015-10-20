@@ -135,16 +135,34 @@ class AndroidDebugService implements IDebugService {
                 this.device.applicationManager.uninstallApplication(packageName).wait();
                 this.device.applicationManager.installApplication(packageFile).wait();
             }
+            this.debugStartCore().wait();
+        }).future<void>()();
+    }
 
+    public debugStart(): IFuture<void> {
+        return (() => {
+            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
+            let action = (device: Mobile.IAndroidDevice): IFuture<void> => {
+                this.device = device;
+                return this.debugStartCore();
+            };
+            this.$devicesServices.execute(action).wait();
+        }).future<void>()();
+    }
+
+    private debugStartCore(): IFuture<void> {
+        return (() => {
+            let packageName = this.$projectData.projectId;
             let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
             let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
 
             this.device.adb.executeShellCommand(["rm", `${envDebugOutFullpath}`]).wait();
             this.device.adb.executeShellCommand(["mkdir", "-p", `${packageDir}`]).wait();
 
-    		let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
+            let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
             this.device.adb.executeShellCommand([`cat /dev/null > ${debugBreakPath}`]).wait();
 
+            this.device.applicationManager.stopApplication(packageName).wait();
             this.device.applicationManager.startApplication(packageName).wait();
 
             let dbgPort = this.startAndGetPort(packageName).wait();

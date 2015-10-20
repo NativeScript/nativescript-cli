@@ -10,7 +10,7 @@ function RunTestCommandFactory(platform: string) {
 }
 
 $injector.registerCommand("dev-test|android",  RunTestCommandFactory('android'));
-$injector.registerCommand("dev-test|ios",  RunTestCommandFactory('ios'));
+$injector.registerCommand("dev-test|ios",  RunTestCommandFactory('iOS'));
 
 function RunKarmaTestCommandFactory(platform: string) {
 	return function RunKarmaTestCommand($testExecutionService: ITestExecutionService) {
@@ -20,4 +20,4 @@ function RunKarmaTestCommandFactory(platform: string) {
 }
 
 $injector.registerCommand("test|android", RunKarmaTestCommandFactory('android'));
-$injector.registerCommand("test|ios", RunKarmaTestCommandFactory('ios'));
+$injector.registerCommand("test|ios", RunKarmaTestCommandFactory('iOS'));

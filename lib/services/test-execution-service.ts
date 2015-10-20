@@ -7,12 +7,18 @@ import * as path from 'path';
 import Future = require('fibers/future');
 import * as os from 'os';
 
+interface IKarmaConfigOptions {
+	debugBrk: boolean;
+	debugTransport: boolean;
+}
+
 class TestExecutionService implements ITestExecutionService {
 	private static MAIN_APP_NAME = `./tns_modules/${constants.TEST_RUNNER_NAME}/app.js`;
 	private static CONFIG_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/config.js`;
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
 	constructor(
+		private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
@@ -32,12 +38,15 @@ class TestExecutionService implements ITestExecutionService {
 		return (() => {
 			this.$options.justlaunch = true;
 
-			let platformData = this.$platformsData.getPlatformData(platform);
+			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
 			let projectDir = this.$projectData.projectDir;
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let configJs = this.generateConfig(this.$options.port, this.$options.debugTransport);
+			let configOptions: IKarmaConfigOptions = JSON.parse(this.$fs.readStdin().wait());
+			this.$options.debugBrk = configOptions.debugBrk;
+			this.$options.debugTransport = configOptions.debugTransport;
+			let configJs = this.generateConfig(configOptions);
 			this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
 
 			let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
@@ -90,11 +99,17 @@ class TestExecutionService implements ITestExecutionService {
 				(device: Mobile.IDevice, deviceAppData:Mobile.IDeviceAppData) => Future.fromResult(),
 				beforeBatchLiveSyncAction).wait();
 
+			if (this.$options.debugBrk) {
+				this.$logger.info('Starting debugger...');
+				let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
+				debugService.debugStart().wait();
+			}
 		}).future<void>()();
 	}
 
 	public startKarmaServer(platform: string): IFuture<void> {
 		return (() => {
+			platform = platform.toLowerCase();
 			let pathToKarma = path.join(this.$projectData.projectDir, 'node_modules/karma');
 			let KarmaServer = require(path.join(pathToKarma, 'lib/server'));
 			if (platform === 'ios' && this.$options.emulator) {
@@ -108,7 +123,10 @@ class TestExecutionService implements ITestExecutionService {
 					path: this.$options.path,
 					tns: process.argv[1],
 					node: process.execPath,
-					debugTransport: this.$options.debugTransport,
+					options: {
+						debugTransport: this.$options.debugTransport,
+						debugBrk: this.$options.debugBrk,
+					}
 				},
 			};
 			if (this.$config.DEBUG || this.$logger.getLevel() === 'TRACE') {
@@ -117,6 +135,10 @@ class TestExecutionService implements ITestExecutionService {
 			if (!this.$options.watch) {
 				karmaConfig.singleRun = true;
 			}
+			if (this.$options.debugBrk) {
+				karmaConfig.browserNoActivityTimeout = 1000000000;
+			}
+			this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
 			new KarmaServer(karmaConfig).start();
 		}).future<void>()();
 	}
@@ -132,14 +154,19 @@ class TestExecutionService implements ITestExecutionService {
 		}).future<void>()();
 	}
 
-	private generateConfig(port: Number, debug: boolean): string {
+	private generateConfig(options: any): string {
+		let port = this.$options.port;
 		let nics = os.networkInterfaces();
 		let ips = Object.keys(nics)
 			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4' && !binding.internal)[0])
 			.filter(binding => binding)
 			.map(binding => binding.address);
 
-		let config = { debug, port, ips };
+		let config = {
+			port,
+			ips,
+			options,
+		};
 
 		return 'module.exports = ' + JSON.stringify(config);
 	}

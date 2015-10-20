@@ -152,31 +152,42 @@ class IOSDebugService implements IDebugService {
     private deviceDebugBrk(): IFuture<void> {
         return (() => {
             this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute(device => (() => {
+            this.$devicesServices.execute((device: iOSDevice.IOSDevice) => (() => {
                 // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
                 let deploy = this.$platformService.deployOnDevice(this.platform);
-
-                let iosDevice = <iOSDevice.IOSDevice>device;
-                let projectId = this.$projectData.projectId;
-                let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
-
-                try {
-                    let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
-                    awaitNotification(npc, notification.appLaunching(projectId), timeout).wait();
-                    process.nextTick(() => {
-                        npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
-                        npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
-                    });
-
-                    awaitNotification(npc, notification.readyForAttach(projectId), this.getReadyForAttachTimeout(timeout)).wait();
-                } catch(e) {
-                    this.$logger.trace(`Timeout error: ${e}`);
-                    this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
-                }
-
-                this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
+                this.debugBrkCore(device).wait();
                 deploy.wait();
             }).future<void>()()).wait();
+        }).future<void>()();
+    }
+
+    public debugStart(): IFuture<void> {
+        return (() => {
+            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesServices.execute((device: iOSDevice.IOSDevice) => this.debugBrkCore(device)).wait();
+        }).future<void>()();
+    }
+
+    private debugBrkCore(iosDevice: iOSDevice.IOSDevice): IFuture<void> {
+        return (() => {
+            let projectId = this.$projectData.projectId;
+            let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);
+
+            try {
+                let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
+                awaitNotification(npc, notification.appLaunching(projectId), timeout).wait();
+                process.nextTick(() => {
+                    npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
+                    npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
+                });
+
+                awaitNotification(npc, notification.readyForAttach(projectId), this.getReadyForAttachTimeout(timeout)).wait();
+            } catch(e) {
+                this.$logger.trace(`Timeout error: ${e}`);
+                this.$errors.failWithoutHelp("Timeout waiting for NativeScript debugger.");
+            }
+
+            this.wireDebuggerClient(() => iosDevice.connectToPort(InspectorBackendPort)).wait();
         }).future<void>()();
     }
 
