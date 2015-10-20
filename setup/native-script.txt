@@ -1,0 +1,28 @@
+
+# A Boxstarter script to set up Windows machine for NativeScript development
+
+# install dependenciess with Chocolately
+
+cinst googlechrome
+cinst nodejs.install -version 0.12.7
+cinst jdk8
+cinst gradle -version 2.3
+cinst android-sdk
+
+# setup android sdk
+echo yes | cmd /c $env:localappdata\Android\android-sdk\tools\android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+
+# setup environment
+
+if (!$env:ANDROID_HOME) { [Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:localappdata\Android\android-sdk", "User") }
+$oldPathUser = [Environment]::GetEnvironmentVariable("PATH", "User")
+$pathMachine = [Environment]::GetEnvironmentVariable("PATH", "Machine")
+$myPath = [Environment]::GetEnvironmentVariable("PATH")
+
+[Environment]::SetEnvironmentVariable("PATH", "$myPath;$oldPathUser;$pathMachine;$env:localappdata\Android\android-sdk\tools;$env:localappdata\Android\android-sdk\platform-tools")
+[Environment]::SetEnvironmentVariable("PATH", "$oldPathUser;$env:localappdata\Android\android-sdk\tools;$env:localappdata\Android\android-sdk\platform-tools", "User")
+
+# install NativeScript CLI
+npm install -g nativescript
+
+write-host -BackgroundColor Black -ForegroundColor Yellow "This script has modified your environment. You need to log off and log back on for the changes to take effect."
