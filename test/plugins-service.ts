@@ -562,35 +562,41 @@ describe("Plugins service", () => {
 			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
 			fs.ensureDirectoryExists(path.join(appDestinationDirectoryPath, "app")).wait();
 
+			// Mock projectData
+			let projectData = testInjector.resolve("projectData");
+			projectData.projectId = "com.example.android.basiccontactables";
+
+			let configurationFilePath = path.join(appDestinationDirectoryPath, "src", "main", "AndroidManifest.xml");
+
+			let shelljs = require("shelljs");
+
 			// Mock platformsData
 			let platformsData = testInjector.resolve("platformsData");
 			platformsData.getPlatformData = (platform: string) => {
-				let androidProjectService = testInjector.resolve("androidProjectService");
-
 				return {
 					appDestinationDirectoryPath: appDestinationDirectoryPath,
 					frameworkPackageName: "tns-android",
 					configurationFileName: "AndroidManifest.xml",
-					configurationFilePath: path.join(appDestinationDirectoryPath, "src", "main", "AndroidManifest.xml"),
+					configurationFilePath: configurationFilePath,
 					relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
 					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }],
 					platformProjectService:  {
 						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult(),
-						interpolateConfigurationFile: () => androidProjectService.interpolateConfigurationFile()
+						interpolateConfigurationFile: () => {
+							return (() => {
+								shelljs.sed('-i', /__PACKAGE__/, projectData.projectId, configurationFilePath);
+								shelljs.sed('-i', /__APILEVEL__/, "23", configurationFilePath);
+							}).future<void>()();
+						}
 					},
 					normalizedPlatformName: "Android"
 				};
 			};
 
-			// Mock projectData
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectId = "com.example.android.basiccontactables";
-
 			// Ensure the pluginDestinationPath folder exists
 			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
 			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
 
-			let shelljs = require("shelljs");
 			shelljs.cp("-R", path.join(pluginFolderPath, "*"), path.join(projectFolder, "node_modules", pluginName));
 
 			// Creates valid plugin's AndroidManifest.xml file

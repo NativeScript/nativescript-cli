@@ -75,7 +75,7 @@ export class PluginsService implements IPluginsService {
 					// Remove the plugin and call merge for another plugins that have configuration file
 					let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
 					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						this.merge(pluginData, platformData).wait();
+						this.merge(pluginData, platformData, (data: IPluginData) => data.name !== pluginData.name).wait();
 					}
 
 					if(pluginData.pluginVariables) {
@@ -340,12 +340,13 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 
-	private merge(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
+	private merge(pluginData: IPluginData, platformData: IPlatformData, mergeCondition?: (_pluginData: IPluginData) => boolean): IFuture<void> {
 		return (() => {
 			let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
 			let nodeModules = this.$broccoliBuilder.getChangedNodeModules(tnsModulesDestinationPath, platformData.normalizedPlatformName.toLowerCase()).wait();
 
-			_(_.keys(nodeModules))
+			_(nodeModules)
+				.keys()
 				.map(nodeModule => this.getNodeModuleData(path.join(nodeModule, "package.json")).wait())
 				.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
 				.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
@@ -354,7 +355,9 @@ export class PluginsService implements IPluginsService {
 						this.initializeConfigurationFileFromCache(platformData).wait();
 					}
 
-					this.mergeCore(data, platformData).wait();
+					if(!mergeCondition || (mergeCondition && mergeCondition(data))) {
+						this.mergeCore(data, platformData).wait();
+					}
 				})
 				.value();
 

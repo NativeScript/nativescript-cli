@@ -124,8 +124,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let infoPlistFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, util.format("%s-%s", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "Info.plist"));
 			this.interpolateConfigurationFile(infoPlistFilePath).wait();
 
-			this.replaceFileName("-Info.plist", path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
-			this.replaceFileName("-Prefix.pch", path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
+			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
+			this.replaceFileName("-Info.plist", projectRootFilePath).wait();
+			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot).wait();
 
 			let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
