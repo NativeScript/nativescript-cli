@@ -192,7 +192,10 @@ describe("Npm support tests", () => {
 		let scopedName = "@reactivex/rxjs";
 		let scopedModule = path.join(projectFolder, "node_modules", "@reactivex/rxjs");
 		let scopedPackageJson = path.join(scopedModule, "package.json");
-		addDependencies(testInjector, projectFolder, {scopedName:  "0.0.0-prealpha.3"}).wait();
+		let dependencies: any = {};
+		dependencies[scopedName] = "0.0.0-prealpha.3";
+		// Do not pass dependencies object as the sinopia cannot work with scoped dependencies. Instead move them manually.
+		addDependencies(testInjector, projectFolder, {}).wait();
 		//create module dir, and add a package.json
 		shelljs.mkdir("-p", scopedModule);
 		fs.writeFile(scopedPackageJson, JSON.stringify({name: scopedName})).wait();
