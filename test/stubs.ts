@@ -383,13 +383,11 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 }
 
 export class HooksServiceStub implements IHooksService {
-	initialize(commandName: string): void {
+	executeBeforeHooks(commandName: string): IFuture<void> {
+		return Future.fromResult();
 	}
-	executeBeforeHooks(): IFuture<void> {
-		return (() => { }).future<void>()();
-	}
-	executeAfterHooks(): IFuture<void> {
-		return (() => { }).future<void>()();
+	executeAfterHooks(commandName: string): IFuture<void> {
+		return Future.fromResult();
 	}
 }
 
