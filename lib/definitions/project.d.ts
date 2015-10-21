@@ -36,7 +36,8 @@ interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
 	createProject(frameworkDir: string, frameworkVersion: string): IFuture<void>;
-	interpolateData(projectRoot: string): IFuture<void>;
+	interpolateData(): IFuture<void>;
+	interpolateConfigurationFile(configurationFilePath?: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
 	buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void>;
 	prepareProject(): IFuture<void>;

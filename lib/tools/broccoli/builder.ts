@@ -13,7 +13,6 @@ let through = require("through2");
 export class Builder implements IBroccoliBuilder {
 	constructor(
 		private $fs: IFileSystem,
-		private $nodeModulesTree: INodeModulesTree,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
