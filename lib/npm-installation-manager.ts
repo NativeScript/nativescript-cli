@@ -43,7 +43,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public addToCache(packageName: string, version: string): IFuture<void> {
 		return (() => {
 			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
-			if(!this.$fs.exists(cachedPackagePath).wait()) {
+			if(!this.$fs.exists(cachedPackagePath).wait() || !this.$fs.exists(path.join(cachedPackagePath, "framework")).wait()) {
 				this.addToCacheCore(packageName, version).wait();
 			}
 
@@ -155,6 +155,10 @@ export class NpmInstallationManager implements INpmInstallationManager {
 					this.npmInstall(packageName, pathToSave, version).wait();
 					let pathToNodeModules = path.join(pathToSave, "node_modules");
 					let folders = this.$fs.readDirectory(pathToNodeModules).wait();
+
+					let data = this.$fs.readJson(path.join(pathToNodeModules, folders[0], "package.json")).wait();
+					this.addToCache(data.name, data.version).wait();
+
 					return path.join(pathToNodeModules, folders[0]);
 				}
 				return this.$options.frameworkPath;
