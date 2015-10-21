@@ -189,13 +189,11 @@ export class PluginsService implements IPluginsService {
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
 		return (() => {
-			if(!this.$fs.exists(path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME)).wait()) {
-				let command = "npm install ";
-				if(this.$options.ignoreScripts) {
-					command += "--ignore-scripts";
-				}
-				this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
+			let command = "npm install ";
+			if(this.$options.ignoreScripts) {
+				command += "--ignore-scripts";
 			}
+			this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
 		}).future<void>()();
 	}
 
