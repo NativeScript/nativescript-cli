@@ -96,7 +96,7 @@ export class PlatformService implements IPlatformService {
 			let installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
 			platformData.platformProjectService.createProject(frameworkDir, installedVersion).wait();
 
-			if(this.$options.frameworkPath && this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile() && !this.$options.symlink) {
+			if(this.$options.frameworkPath && !this.$options.symlink) {
 				// Need to remove unneeded node_modules folder
 				// One level up is the runtime module and one above is the node_modules folder.
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
