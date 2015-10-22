@@ -205,7 +205,7 @@ export class PluginsService implements IPluginsService {
 
 	private getNodeModuleData(module: string): IFuture<INodeModuleData> { // module can be  modulePath or moduleName
 		return (() => {
-			if(!this.$fs.exists(module).wait()) {
+			if(!this.$fs.exists(module).wait() || path.basename(module) !== "package.json") {
 				module = this.getPackageJsonFilePathForModule(module);
 			}
 
