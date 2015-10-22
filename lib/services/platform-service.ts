@@ -104,7 +104,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			let sourceFrameworkDir = isFrameworkPathDirectory && this.$options.symlink ? path.join(this.$options.frameworkPath, "framework") : frameworkDir;
-			platformData.platformProjectService.createProject(sourceFrameworkDir, installedVersion).wait();
+			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion).wait();
 
 			if(isFrameworkPathDirectory || isFrameworkPathNotSymlinkedFile) {
 				// Need to remove unneeded node_modules folder
