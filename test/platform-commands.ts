@@ -28,6 +28,7 @@ class PlatformData implements IPlatformData {
 	frameworkVersion = "";
 	appDestinationDirectoryPath = "";
 	appResourcesDestinationDirectoryPath = "";
+	relativeToFrameworkConfigurationFilePath = "";
 }
 
 class ErrorsNoFailStub implements IErrors {
