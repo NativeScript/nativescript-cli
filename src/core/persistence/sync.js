@@ -50,6 +50,8 @@ var Sync = /** @lends Sync */{
    */
   system: 'system.sync',
 
+  queue: new root.Queue(1, Infinity),
+
   /**
    * Counts the number of documents pending synchronization. If `collection` is
    * provided, it returns the count of that collection only.
@@ -97,10 +99,42 @@ var Sync = /** @lends Sync */{
     return Database.find(Sync.system, query, options).then(function(response) {
       // Synchronize all the collections in parallel.
       var promises = response.map(function(collection) {
-        return Sync._collection(collection._id, collection.documents, options);
+        var batchSize = 1000;
+        var i=0;
+        var identifiers = Object.keys(collection.documents);
+        var syncResult = { collection: collection, success: [], error: [] };
+        var syncPromise = Kinvey.Defer.resolve(null);
+
+        function batchSync(batch) {
+          return function() {
+            return Sync._collection(collection._id, batch, options)
+              .then(function(result){
+                syncResult.success = syncResult.success.concat(result.success);
+                syncResult.error = syncResult.error.concat(result.error);
+                return syncResult;
+            });            
+          };
+        }
+
+        while (i<collection.size){
+          var batchKeys = identifiers.slice(i, i+batchSize);
+          var batch = {};
+          for (var j=0; j<batchKeys.length; j++){
+            var key = batchKeys[j];
+            batch[key] = collection.documents[key];
+          }
+
+          // Sync.queue.add(Sync._syncBatch
+          // }).then()
+          //syncPromises = Kinvey.Defer.all(syncPromises).then(Sync._syncBatch(collection, batch, options));
+          syncPromise = syncPromise.then(batchSync(batch));
+          i += batchSize;
+        }
+        return syncPromise;
       });
       return Kinvey.Defer.all(promises);
     });
+
   },
 
   /**
@@ -185,7 +219,6 @@ var Sync = /** @lends Sync */{
     var result = { collection: collection, success: [], error: [] };
     var identifiers = Object.keys(documents);
 
-    // Read the documents
     return Sync._read(collection, documents, options).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
@@ -262,8 +295,33 @@ var Sync = /** @lends Sync */{
       // Step 5: return the synchronization result.
       return result;
     });
+
+    //     return Kinvey.defer.resolve(null);
+    //   });
+
+    //   //syncPromises.push(syncPromise);
+    //   i+=batchSize;
+    // }
+    // return syncPromises;
   },
 
+  _readBatch: function(collection, batch, options) {
+    var request = {
+      namespace  : USERS === collection ? USERS : DATA_STORE,
+      collection : USERS === collection ? null  : collection,
+      query      : new Kinvey.Query().contains('_id', batch),
+      auth       : Auth.Default
+    };
+
+    var requestOptions = options || {};
+
+    return Kinvey.Defer.all([
+      Kinvey.Persistence.Local.read(request, requestOptions),
+      Kinvey.Persistence.Net.read(request, requestOptions)
+    ]).then(function (responses){
+      return {local: responses[0], net: responses[1]};
+    }); 
+  },
   /**
    * Reads the provided documents using both local and network persistence.
    *
@@ -275,34 +333,43 @@ var Sync = /** @lends Sync */{
    */
   _read: function(collection, documents, options) {
     var identifiers = Object.keys(documents);
-    var promises = identifiers.map(function(id) {
-      var metadata = documents[id];
-      var requestOptions = options || {};
+    var i=0;
+    var batchSize = 100;
 
-      // Set options.clientAppVersion based on the metadata for the document
-      requestOptions.clientAppVersion = metadata != null && metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
+    var promises = [];
+    while (i<identifiers.length){
+      var batch = identifiers.slice(i, i+batchSize);
+      promises.push(Sync._readBatch(collection, batch, options));
+      i+=batchSize;
+    }
+    // var promises = identifiers.map(function(id) {
+    //   var metadata = documents[id];
+    //   var requestOptions = options || {};
 
-      // Set options.customRequestProperties based on the metadata
-      // for the document
-      requestOptions.customRequestProperties = metadata != null && metadata.customRequestProperties != null ?
-                                               metadata.customRequestProperties : null;
+    //   // Set options.clientAppVersion based on the metadata for the document
+    //   requestOptions.clientAppVersion = metadata != null && metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
 
-      // Build the request.
-      var request = {
-        namespace  : USERS === collection ? USERS : DATA_STORE,
-        collection : USERS === collection ? null  : collection,
-        query      : new Kinvey.Query().contains('_id', [id]),
-        auth       : Auth.Default
-      };
+    //   // Set options.customRequestProperties based on the metadata
+    //   // for the document
+    //   requestOptions.customRequestProperties = metadata != null && metadata.customRequestProperties != null ?
+    //                                            metadata.customRequestProperties : null;
 
-      // Read from local and net in parallel.
-      return Kinvey.Defer.all([
-        Kinvey.Persistence.Local.read(request, requestOptions),
-        Kinvey.Persistence.Net.read(request, requestOptions)
-      ]).then(function(responses) {
-        return { local: responses[0], net: responses[1] };
-      });
-    });
+    //   // Build the request.
+    //   var request = {
+    //     namespace  : USERS === collection ? USERS : DATA_STORE,
+    //     collection : USERS === collection ? null  : collection,
+    //     query      : new Kinvey.Query().contains('_id', [id]),
+    //     auth       : Auth.Default
+    //   };
+
+    //   // Read from local and net in parallel.
+    //   return Kinvey.Defer.all([
+    //     Kinvey.Persistence.Local.read(request, requestOptions),
+    //     Kinvey.Persistence.Net.read(request, requestOptions)
+    //   ]).then(function(responses) {
+    //     return { local: responses[0], net: responses[1] };
+    //   });
+    // });
 
     return Kinvey.Defer.all(promises).then(function(responses) {
       var response = { local: {}, net: {} };
