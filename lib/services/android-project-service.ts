@@ -286,6 +286,24 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if(this.$fs.exists(libsFolderPath).wait()) {
 				this.addLibrary(libsFolderPath).wait();
 			}
+
+			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
+			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
+
+			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
+			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
+
+			// Copy include include.gradle file
+			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+			if(this.$fs.exists(includeGradleFilePath).wait()) {
+				// TODO: Validate the existing include.gradle
+				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
+			} // TODO: SHOULD generate default include.gradle
+
+			// Copy all resources from plugin
+			let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
+			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
+			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 		}).future<void>()();
 	}
 
@@ -299,6 +317,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
 					_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
 				}
+
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name)).wait();
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name)).wait();
 			} catch(e) {
 				if (e.code === "ENOENT") {
 					this.$logger.debug("No native code jars found: " + e.message);
