@@ -253,19 +253,15 @@ export class PlatformsDataStub implements IPlatformsData {
 	public getPlatformData(platform: string): IPlatformData {
 		return {
 			frameworkPackageName: "",
-			normalizedPlatformName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
 			emulatorServices: undefined,
 			projectRoot: "",
+			normalizedPlatformName: "",
+			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			frameworkVersion: "",
-			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: "",
-			preparePluginNativeCode: () => Future.fromResult(),
-			removePluginNativeCode: () => Future.fromResult(),
-			afterPrepareAllPlugins: () => Future.fromResult()
 		};
 	}
 
@@ -285,7 +281,6 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			frameworkVersion: "",
 			appDestinationDirectoryPath: "",
 			relativeToFrameworkConfigurationFilePath: ""
 		};

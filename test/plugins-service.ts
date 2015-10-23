@@ -28,6 +28,7 @@ import {Builder} from "../lib/tools/broccoli/builder";
 import {AndroidProjectService} from "../lib/services/android-project-service";
 import {AndroidToolsInfo} from "../lib/android-tools-info";
 import {assert} from "chai";
+import NodeModulesTreeLib = require("../lib/tools/broccoli/trees/node-modules-tree");
 import * as path from "path";
 import * as temp from "temp";
 temp.track();
@@ -61,6 +62,7 @@ function createTestInjector() {
 	testInjector.register("staticConfig", StaticConfig);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("commandsService", CommandsService);
+	testInjector.register("nodeModulesTree", NodeModulesTreeLib.NodeModulesTree);
 	testInjector.register("commandsServiceProvider", {
 		registerDynamicSubCommands: () => { /* intentionally empty body */ }
 	});
