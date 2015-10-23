@@ -530,7 +530,7 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].` +
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
-			pluginsService.prepare(pluginJsonData).wait();
+			pluginsService.prepare(pluginJsonData, "android").wait();
 		});
 		it("merges AndroidManifest.xml and produces correct xml", () => {
 			let pluginName = "mySamplePlugin";
@@ -609,7 +609,7 @@ describe("Plugins service", () => {
 			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
 			fs.writeFile(pluginConfigurationFilePath, xml).wait();
 
-			pluginsService.prepare(pluginJsonData).wait();
+			pluginsService.prepare(pluginJsonData, "android").wait();
 
 			let expectedXml = '<?xmlversion="1.0"encoding="utf-8"?><manifestxmlns:android="http://schemas.android.com/apk/res/android"package="com.example.android.basiccontactables"android:versionCode="1"android:versionName="1.0"><supports-screensandroid:smallScreens="true"android:normalScreens="true"android:largeScreens="true"android:xlargeScreens="true"/><uses-sdkandroid:minSdkVersion="17"android:targetSdkVersion="23"/><uses-permissionandroid:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.INTERNET"/><applicationandroid:name="com.tns.NativeScriptApplication"android:allowBackup="true"android:icon="@drawable/icon"android:label="@string/app_name"android:theme="@style/AppTheme"><activityandroid:name="com.tns.NativeScriptActivity"android:label="@string/title_activity_kimera"android:configChanges="keyboardHidden|orientation|screenSize"><intent-filter><actionandroid:name="android.intent.action.MAIN"/><categoryandroid:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activityandroid:name="com.tns.ErrorReportActivity"/></application><uses-permissionandroid:name="android.permission.READ_CONTACTS"/></manifest>';
 			expectedXml = helpers.stringReplaceAll(expectedXml, EOL, "");
