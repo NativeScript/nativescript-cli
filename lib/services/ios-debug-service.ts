@@ -177,6 +177,10 @@ class IOSDebugService implements IDebugService {
                 let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
                 awaitNotification(npc, notification.appLaunching(projectId), timeout).wait();
                 process.nextTick(() => {
+                   // console.log("BEFORE SEND PAGE RELOAD!!!!!");
+                  /* let pageReloadMessage = {"method":"Page.reload","params":{"ignoreCache":false},"id":54};
+                   npc.postNotificationAndAttachForData(pageReloadMessage);
+                   console.log("DEBUG BRK CORE!!!!"); */
                     npc.postNotificationAndAttachForData(notification.waitForDebug(projectId));
                     npc.postNotificationAndAttachForData(notification.attachRequest(projectId));
                 });
@@ -337,6 +341,13 @@ function createTcpSocketProxy($logger: ILogger, socketFactory: (handler: (socket
                 $logger.info("Backend socket closed!");
                 process.exit(0);
             });
+
+            let message = '{ "method":"Page.reload","params":{"ignoreCache":false},"id":54 }';
+            let length = Buffer.byteLength(message, "utf16le");
+            let payload = new Buffer(length + 4);
+            payload.writeInt32BE(length, 0);
+            payload.write(message, 4, length, "utf16le");
+            backendSocket.write(payload);
 
             backendSocket.pipe(frontendSocket);
             frontendSocket.pipe(backendSocket);
