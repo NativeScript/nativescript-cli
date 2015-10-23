@@ -94,15 +94,25 @@ export class PlatformService implements IPlatformService {
 	private addPlatformCore(platformData: IPlatformData, frameworkDir: string): IFuture<void> {
 		return (() => {
 			let installedVersion = this.$fs.readJson(path.join(frameworkDir, "../", "package.json")).wait().version;
-			platformData.platformProjectService.createProject(frameworkDir, installedVersion).wait();
+			let isFrameworkPathDirectory = false,
+				isFrameworkPathNotSymlinkedFile = false;
 
-			if(this.$options.frameworkPath && this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile() && !this.$options.symlink) {
+			if(this.$options.frameworkPath) {
+				let frameworkPathStats = this.$fs.getFsStats(this.$options.frameworkPath).wait();
+				isFrameworkPathDirectory = frameworkPathStats.isDirectory();
+				isFrameworkPathNotSymlinkedFile = !this.$options.symlink && frameworkPathStats.isFile();
+			}
+
+			let sourceFrameworkDir = isFrameworkPathDirectory && this.$options.symlink ? path.join(this.$options.frameworkPath, "framework") : frameworkDir;
+			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion).wait();
+
+			if(isFrameworkPathDirectory || isFrameworkPathNotSymlinkedFile) {
 				// Need to remove unneeded node_modules folder
 				// One level up is the runtime module and one above is the node_modules folder.
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
 			}
 
-			platformData.platformProjectService.interpolateData(platformData.projectRoot).wait();
+			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);

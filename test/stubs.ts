@@ -253,14 +253,15 @@ export class PlatformsDataStub implements IPlatformsData {
 	public getPlatformData(platform: string): IPlatformData {
 		return {
 			frameworkPackageName: "",
-			normalizedPlatformName: "",
 			platformProjectService: new PlatformProjectServiceStub(),
 			emulatorServices: undefined,
 			projectRoot: "",
+			normalizedPlatformName: "",
+			appDestinationDirectoryPath: "",
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			appDestinationDirectoryPath: ""
+			relativeToFrameworkConfigurationFilePath: "",
 		};
 	}
 
@@ -280,7 +281,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			appDestinationDirectoryPath: ""
+			appDestinationDirectoryPath: "",
+			relativeToFrameworkConfigurationFilePath: ""
 		};
 	}
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>{
@@ -292,7 +294,10 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	createProject(projectRoot: string, frameworkDir: string): IFuture<void> {
 		return Future.fromResult();
 	}
-	interpolateData(projectRoot: string): IFuture<void> {
+	interpolateData(): IFuture<void> {
+		return Future.fromResult();
+	}
+	interpolateConfigurationFile(): IFuture<void> {
 		return Future.fromResult();
 	}
 	afterCreateProject(projectRoot: string): IFuture<void> {

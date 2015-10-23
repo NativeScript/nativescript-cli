@@ -1,6 +1,27 @@
 NativeScript CLI Changelog
 ================
 
+1.4.3 (2015, October 21)
+==
+
+### New
+* [Implemented #883](https://github.com/NativeScript/nativescript-cli/issues/883): Support xcconfig file from plugin.
+* [Implemented #958](https://github.com/NativeScript/nativescript-cli/issues/958): Support for Node 4.2.1+.
+* [Implemented #1065](https://github.com/NativeScript/nativescript-cli/issues/1065): Support sandbox-pod.
+
+### Fixed
+* [Fixed #1031](https://github.com/NativeScript/nativescript-cli/issues/1031): Command emulate android after LiveSync starts the last synced app on the emulator.
+* [Fixed #1044](https://github.com/NativeScript/nativescript-cli/issues/1044): iOS debug break on Simulator causes app crash when the debugger is paused on the first line for a long time.
+* [Fixed #1054](https://github.com/NativeScript/nativescript-cli/issues/1054): ENOENT error is thrown when `tns platform add ios` command is executed.
+* [Fixed #1066](https://github.com/NativeScript/nativescript-cli/issues/1066): Merge Info.plist fails second build.
+* [Fixed #1080](https://github.com/NativeScript/nativescript-cli/issues/1080): Using --symlink for android runtime is modifying the original one.
+
+1.4.2 (2015, October 15)
+==
+
+### Fixed
+* [Fixed #1041](https://github.com/NativeScript/nativescript-cli/issues/1041): Unable to run the application when project root directory is renamed.
+
 1.4.0 (2015, October 07)
 ==
 
@@ -74,7 +95,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 
 * [Fixed #776](https://github.com/NativeScript/nativescript-cli/issues/776): `tns livesync ios --emulator --watch` doesn't sync changes.
 * [Fixed #777](https://github.com/NativeScript/nativescript-cli/issues/777): `tns library add ios` does not build correct relative paths to referenced frameworks for mdgenerator.
-* [Fixed #779](https://github.com/NativeScript/nativescript-cli/issues/779): Command failed due to space in library reference path. 
+* [Fixed #779](https://github.com/NativeScript/nativescript-cli/issues/779): Command failed due to space in library reference path.
 
 1.2.2 (2015, August 11)
 ==
@@ -173,7 +194,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 
 * [Implemented #510](https://github.com/NativeScript/nativescript-cli/issues/510): You can work with custom NativeScript plugins in your project. You can add a plugin from an npm package, a local folder, a URL or a `.tar.gz` file. For more information, run `$ tns help plugin`
 * [Implemented #362](https://github.com/NativeScript/nativescript-cli/issues/362): You can use npm as package manager for your NativeScript projects.
-	
+
 ### Updated
 
 * [Updated #358](https://github.com/NativeScript/nativescript-cli/issues/358): Multiple improvements and bug fixes for iOS debugging.
@@ -197,7 +218,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 
 ### Fixed
 
-* [Fixed #459](https://github.com/NativeScript/nativescript-cli/issues/459): You cannot add a third-party iOS native library to your project, if the path to the library contains spaces. 
+* [Fixed #459](https://github.com/NativeScript/nativescript-cli/issues/459): You cannot add a third-party iOS native library to your project, if the path to the library contains spaces.
 * [Fixed #458](https://github.com/NativeScript/nativescript-cli/issues/458): If you have installed Xcode 6.2 or earlier on your system, you cannot debug in the iOS Simulator.
 * [Fixed #413](https://github.com/NativeScript/nativescript-cli/issues/413): If your project name contains a hyphen, the NativeScript CLI sets your application identifier inconsistently across the project.
 
@@ -206,7 +227,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 
 ### New
 
-* [Implemented #447](https://github.com/NativeScript/nativescript-cli/issues/447): `tns run ios`, `tns run android` and `tns emulate android` print the output of the running application in the console. 
+* [Implemented #447](https://github.com/NativeScript/nativescript-cli/issues/447): `tns run ios`, `tns run android` and `tns emulate android` print the output of the running application in the console.
 * [Implemented #441](https://github.com/NativeScript/nativescript-cli/issues/441): Improved command-line completion.
 * [Implemented #416](https://github.com/NativeScript/nativescript-cli/issues/416): Improved installation.
 * [Implemented #358](https://github.com/NativeScript/nativescript-cli/issues/358): Improved `tns debug ios`.
@@ -250,7 +271,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 * [Fixed #257](https://github.com/NativeScript/nativescript-cli/issues/257): On bash consoles, you cannot pass arguments with spaces, even if escaped.
 * [Fixed #251](https://github.com/NativeScript/nativescript-cli/issues/251): On OS X systems, the command validation might not work properly.
 * [Fixed #248](https://github.com/NativeScript/nativescript-cli/issues/248): On OS X systems, the `tns deploy` command might not release the console.
-* [Fixed #169](https://github.com/NativeScript/nativescript-cli/issues/169): The native Xcode project is created with an incorrect name. 
+* [Fixed #169](https://github.com/NativeScript/nativescript-cli/issues/169): The native Xcode project is created with an incorrect name.
 
 0.9.4 (2015, March 18)
 ==
@@ -272,7 +293,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 ### New
 
 * [Implemented #305](https://github.com/NativeScript/nativescript-cli/issues/305), [#322](https://github.com/NativeScript/nativescript-cli/issues/322): You can quickly add or update your platform runtime to a specific version by running `tns platform update platform@version`<br/>For example: `tns platform update ios@0.9.2-beta`<br/>The NativeScript team will publish experimental support for the latest versions of iOS and Android.<br/>To list all available versions for android, run $ npm view tns-android versions<br/>To list only experimental versions for android, run $ npm view tns-android dist-tags
-To list all available versions for ios, run $ npm view tns-ios versions<br/>To list only experimental versions for ios, run $ npm view tns-ios dist-tags 
+To list all available versions for ios, run $ npm view tns-ios versions<br/>To list only experimental versions for ios, run $ npm view tns-ios dist-tags
 * [Implemented #302](https://github.com/NativeScript/nativescript-cli/issues/302): You can configure proxy settings for the NativeScript CLI.
 
 ### Fixed

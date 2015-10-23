@@ -43,7 +43,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public addToCache(packageName: string, version: string): IFuture<void> {
 		return (() => {
 			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
-			if(!this.$fs.exists(cachedPackagePath).wait()) {
+			if(!this.$fs.exists(cachedPackagePath).wait() || !this.$fs.exists(path.join(cachedPackagePath, "framework")).wait()) {
 				this.addToCacheCore(packageName, version).wait();
 			}
 
@@ -151,13 +151,16 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	private installCore(packageName: string, pathToSave: string, version: string): IFuture<string> {
 		return (() => {
 			if (this.$options.frameworkPath) {
-				if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
-					this.npmInstall(packageName, pathToSave, version).wait();
-					let pathToNodeModules = path.join(pathToSave, "node_modules");
-					let folders = this.$fs.readDirectory(pathToNodeModules).wait();
-					return path.join(pathToNodeModules, folders[0]);
+				this.npmInstall(packageName, pathToSave, version).wait();
+				let pathToNodeModules = path.join(pathToSave, "node_modules");
+				let folders = this.$fs.readDirectory(pathToNodeModules).wait();
+
+				let data = this.$fs.readJson(path.join(pathToNodeModules, folders[0], "package.json")).wait();
+				if(!this.isPackageUnpacked(this.getCachedPackagePath(data.name, data.version), data.name).wait()) {
+					this.cacheUnpack(data.name, data.version).wait();
 				}
-				return this.$options.frameworkPath;
+
+				return path.join(pathToNodeModules, folders[0]);
 			} else {
 				version = version || this.getLatestCompatibleVersion(packageName).wait();
 				let packagePath = this.getCachedPackagePath(packageName, version);
