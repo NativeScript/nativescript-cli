@@ -10,7 +10,7 @@ import Future = require("fibers/future");
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 	private excludedProjectDirsAndFiles = [
-		"app_resources"
+		"**/*.ts",
 	];
 
 	constructor($devicesServices: Mobile.IDevicesServices,
