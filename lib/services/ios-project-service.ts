@@ -410,14 +410,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public afterPrepareAllPlugins(): IFuture<void> {
 		return (() => {
 			if(this.$fs.exists(this.projectPodFilePath).wait()) {
-				// Check availability
-				try {
-					this.$childProcess.exec("gem which cocoapods").wait();
-					this.$childProcess.exec("gem which xcodeproj").wait();
-				} catch(e) {
-					this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
-				}
-
 				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath).wait();
 				this.$logger.trace("Project Podfile content");
 				this.$logger.trace(projectPodfileContent);
@@ -499,9 +491,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private executePodInstall(): IFuture<any> {
-		this.$logger.info("Installing pods...");
-		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-		return this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' });
+		return (() => {
+			// Check availability
+			try {
+				this.$childProcess.exec("gem which cocoapods").wait();
+				this.$childProcess.exec("gem which xcodeproj").wait();
+			} catch(e) {
+				this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
+			}
+
+			this.$logger.info("Installing pods...");
+			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+			return this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' }).wait();
+		}).future<any>()();
 	}
 
 	private prepareFrameworks(pluginPlatformsFolderPath: string, pluginData: IPluginData): IFuture<void> {
