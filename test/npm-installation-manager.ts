@@ -72,6 +72,7 @@ describe("Npm installation manager tests", () => {
 		let expectedLatestCompatibleVersion = "1.4.0";
 		assert.equal(actualLatestCompatibleVersion, expectedLatestCompatibleVersion);
 	});
+
 	it("returns correct latest compatible version", () => {
 		let testInjector = createTestInjector();
 
@@ -91,5 +92,24 @@ describe("Npm installation manager tests", () => {
 		let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
 		let expectedLatestCompatibleVersion = "1.3.3";
 		assert.equal(actualLatestCompatibleVersion, expectedLatestCompatibleVersion);
+	});
+
+	it("returns correct latest compatible version", () => {
+		let testInjector = createTestInjector();
+
+		let versions = ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"];
+		let latestVersion = _.last(versions);
+		mockNpm(testInjector, versions, latestVersion);
+
+		// Mock staticConfig.version
+		let staticConfig = testInjector.resolve("staticConfig");
+		staticConfig.version = "1.5.0";
+
+		// Mock npmInstallationManager.getLatestVersion
+		let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+		npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(latestVersion);
+
+		let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
+		assert.equal(actualLatestCompatibleVersion, latestVersion);
 	});
 });

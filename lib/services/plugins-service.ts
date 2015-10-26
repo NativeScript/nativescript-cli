@@ -161,11 +161,15 @@ export class PluginsService implements IPluginsService {
 
 	public ensureAllDependenciesAreInstalled(): IFuture<void> {
 		return (() => {
-			let command = "npm install ";
-			if(this.$options.ignoreScripts) {
-				command += "--ignore-scripts";
+			let installedDependencies = this.$fs.exists(this.nodeModulesPath).wait() ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
+			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
+			if(this.$options.force || (packageJsonContent.dependencies && _.difference(_.keys(packageJsonContent.dependencies), installedDependencies).length)) {
+				let command = "npm install ";
+				if(this.$options.ignoreScripts) {
+					command += "--ignore-scripts";
+				}
+				this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
 			}
-			this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
 		}).future<void>()();
 	}
 

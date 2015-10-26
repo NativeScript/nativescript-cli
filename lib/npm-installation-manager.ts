@@ -84,7 +84,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 				.sortBy(verData => verData.patch)
 				.value();
 
-			let result = _.last(compatibleVersions);
+			let result = _.last(compatibleVersions) || this.getVersionData(latestVersion);
 
 			let latestCompatibleVersion = `${result.major}.${result.minor}.${result.patch}`;
 			return latestCompatibleVersion;
