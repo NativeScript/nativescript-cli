@@ -315,11 +315,14 @@ var Sync = /** @lends Sync */{
 
     var requestOptions = options || {};
 
+    //return Kinvey.Persistence.Net.read(request, requestOptions);
+
     return Kinvey.Defer.all([
-      Kinvey.Persistence.Local.read(request, requestOptions),
+      //Kinvey.Persistence.Local.read(request, requestOptions),
       Kinvey.Persistence.Net.read(request, requestOptions)
     ]).then(function (responses){
-      return {local: responses[0], net: responses[1]};
+      //return {local: responses[0], net: responses[1]};
+      return {net: responses[0]};
     }); 
   },
   /**
@@ -337,6 +340,7 @@ var Sync = /** @lends Sync */{
     var batchSize = 100;
 
     var promises = [];
+
     while (i<identifiers.length){
       var batch = identifiers.slice(i, i+batchSize);
       promises.push(Sync._readBatch(collection, batch, options));
@@ -371,24 +375,25 @@ var Sync = /** @lends Sync */{
     //   });
     // });
 
+    var response = { local: {}, net: {} };
     return Kinvey.Defer.all(promises).then(function(responses) {
-      var response = { local: {}, net: {} };
+      //var response = { local: {}, net: {} };
       var error;
 
       responses.forEach(function(composite) {
-        var locals = composite.local;
+      //  var locals = composite.local;
         var nets = composite.net;
 
-        locals.forEach(function(document) {
-          // Check document for property _id. Thrown error will reject promise.
-          if (document._id == null) {
-            error = new Kinvey.Error('Document does not have _id property defined. ' +
-                                     'It is required to do proper synchronization.');
-            throw error;
-          }
+        // locals.forEach(function(document) {
+        //   // Check document for property _id. Thrown error will reject promise.
+        //   if (document._id == null) {
+        //     error = new Kinvey.Error('Document does not have _id property defined. ' +
+        //                              'It is required to do proper synchronization.');
+        //     throw error;
+        //   }
 
-          response.local[document._id] = document;
-        });
+        //   response.local[document._id] = document;
+        // });
         nets.forEach(function(document) {
           // Check document for property _id. Thrown error will reject promise.
           if (document._id == null) {
@@ -400,7 +405,30 @@ var Sync = /** @lends Sync */{
           response.net[document._id] = document;
         });
       });
+    }).then(function(){
+      var request = {
+        namespace  : USERS === collection ? USERS : DATA_STORE,
+        collection : USERS === collection ? null  : collection,
+        query      : new Kinvey.Query().contains('_id', identifiers),    
+        auth       : Auth.Default
+      };
+      var requestOptions = options || {};
 
+      return Kinvey.Persistence.Local.read(request, requestOptions);
+    }).then (function (locals){
+      var error;
+
+      locals.forEach(function(document) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (document._id == null) {
+          error = new Kinvey.Error('Document does not have _id property defined. ' +
+                                   'It is required to do proper synchronization.');
+          throw error;
+        }
+
+        response.local[document._id] = document;
+      });
+    }).then (function (){
       return response;
     });
   },
