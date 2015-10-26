@@ -101,7 +101,10 @@ class TestExecutionService implements ITestExecutionService {
 				notRunningiOSSimulatorAction,
 				localProjectRootPath,
 				(device: Mobile.IDevice, deviceAppData:Mobile.IDeviceAppData) => Future.fromResult(),
-				beforeBatchLiveSyncAction).wait();
+				beforeBatchLiveSyncAction,
+				(projectFile: string) => "",
+				(localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk)
+			).wait();
 
 			if (this.$options.debugBrk) {
 				this.$logger.info('Starting debugger...');
