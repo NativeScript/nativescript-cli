@@ -252,9 +252,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.ensureDirectoryExists(targetPath).wait();
 
 			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
-			let projectLibsDir = path.join(this.platformData.projectRoot, "libs");
-			this.$fs.ensureDirectoryExists(projectLibsDir).wait();
-			shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
 		}).future<void>()();
 	}
 
@@ -281,12 +278,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
 
-			// Handle *.jars inside libs folder
-			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
-			if(this.$fs.exists(libsFolderPath).wait()) {
-				this.addLibrary(libsFolderPath).wait();
-			}
-
 			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
 			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
 
@@ -310,14 +301,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			try {
-				let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-				let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
-
-				if(this.$fs.exists(libsFolderPath).wait()) {
-					let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
-					_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
-				}
-
 				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name)).wait();
 				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name)).wait();
 			} catch(e) {
