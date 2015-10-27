@@ -164,6 +164,10 @@ export class FileSystemStub implements IFileSystem {
 	readStdin(): IFuture<string> {
 		return undefined;
 	}
+
+	renameIfExists(oldPath: string, newPath: string): IFuture<boolean> {
+		return undefined;
+	}
 }
 
 export class ErrorsStub implements IErrors {
