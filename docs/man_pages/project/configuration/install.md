@@ -5,7 +5,7 @@ Usage | Synopsis
 ---|---
 Install all dependencies | `$ tns install [--path]`
 Install a selected npm module | `$ tns install <Module>`
-Enable TypeScript support | `tns install typescript`
+Enable TypeScript support | `$ tns install typescript`
 
 Installs all dependencies described in a valid `package.json` or installs a selected NativeScript development module as a dev dependency.
 
