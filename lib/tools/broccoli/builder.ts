@@ -102,7 +102,7 @@ export class Builder implements IBroccoliBuilder {
 				platform: platform
 			});
 
-			destCopy.rebuildChangedDirectories(_.keys(nodeModules));
+			destCopy.rebuildChangedDirectories(_.keys(nodeModules), platform);
 
 		}).future<void>()();
 	}
