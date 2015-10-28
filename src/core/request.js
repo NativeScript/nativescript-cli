@@ -11,15 +11,18 @@ import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
 import { KinveyError } from './errors';
 import RequestProperties from './requestProperties';
+import Response from './response';
 import assign from 'lodash/object/assign';
 import merge from 'lodash/object/merge';
 import result from 'lodash/object/result';
 import clone from 'lodash/lang/clone';
+import indexBy from 'lodash/collection/indexBy';
+import reduce from 'lodash/collection/reduce';
 import { byteCount } from '../utils/string';
-const privateRequestSymbol = Symbol();
 const customRequestPropertiesMaxBytes = 2000;
+const maxIdsPerRequest = 200;
 
-class PrivateRequest {
+export class Request {
   constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
     options = assign({
       auth: Auth.none,
@@ -100,7 +103,7 @@ class PrivateRequest {
       this._method = method;
       break;
     default:
-      throw new Error('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
+      throw new KinveyError('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 
@@ -113,7 +116,7 @@ class PrivateRequest {
       requestProperties = new RequestProperties(result(requestProperties, 'toJSON', requestProperties));
     }
 
-    const appVersion = requestProperties.getAppVersion();
+    const appVersion = requestProperties.appVersion;
 
     if (appVersion) {
       this.setHeader('X-Kinvey-Client-App-Version', appVersion);
@@ -242,88 +245,73 @@ class PrivateRequest {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
-    const dataPolicy = this.dataPolicy;
-    const method = this.method;
     let promise;
-
-    // Switch the executing flag
     this.executing = true;
 
-    if (dataPolicy === DataPolicy.LocalOnly) {
+    if (this.dataPolicy === DataPolicy.LocalOnly) {
       promise = this.executeLocal();
-    } else if (dataPolicy === DataPolicy.LocalFirst) {
-      promise = this.executeLocal().then((response) => {
+    } else if (this.dataPolicy === DataPolicy.LocalFirst) {
+      promise = this.executeLocal().then(response => {
         if (response && response.isSuccess()) {
           if (this.method !== HttpMethod.GET) {
-            const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            const request = new Request(this.method, this.path, this.query, response.data, {
               auth: this.auth,
               client: this.client,
               dataPolicy: DataPolicy.CloudOnly
             });
-            return privateRequest.execute().then(() => {
+            return request.execute().then(() => {
               return response;
             });
           }
         } else {
           if (this.method === HttpMethod.GET) {
-            const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+            const request = new Request(this.method, this.path, this.query, response.data, {
               auth: this.auth,
               client: this.client,
               dataPolicy: DataPolicy.CloudFirst
             });
-            return privateRequest.execute();
+            return request.execute();
           }
         }
 
         return response;
       });
-    } else if (dataPolicy === DataPolicy.CloudOnly) {
+    } else if (this.dataPolicy === DataPolicy.CloudOnly) {
       promise = this.executeCloud();
-    } else if (dataPolicy === DataPolicy.CloudFirst) {
-      promise = this.executeCloud().then((response) => {
+    } else if (this.dataPolicy === DataPolicy.CloudFirst) {
+      promise = this.executeCloud().then(response => {
         if (response && response.isSuccess()) {
-          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+          const request = new Request(this.method, this.path, this.query, response.data, {
             auth: this.auth,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
 
-          if (method === HttpMethod.GET) {
-            privateRequest.method = HttpMethod.PUT;
+          if (this.method === HttpMethod.GET) {
+            request.method = HttpMethod.PUT;
           }
 
-          return privateRequest.execute().then(() => {
+          return request.execute().then(() => {
             return response;
           });
         } else if (this.method === HttpMethod.GET) {
-          const privateRequest = new PrivateRequest(method, this.path, this.query, response.data, {
+          const request = new Request(this.method, this.path, this.query, response.data, {
             auth: this.auth,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
-          return privateRequest.execute();
+          return request.execute();
         }
 
         return response;
       });
     }
 
-    return promise.then((response) => {
-      // Save the response
+    return promise.then(response => {
       this.response = response;
-
-      // Switch the executing flag
-      this.executing = false;
-
-      // Return the response
       return response;
-    }).catch((err) => {
-      // Switch the executing flag
+    }).finally(() => {
       this.executing = false;
-
-      // Throw the err to allow it to
-      // be caught later in the promise chain
-      throw err;
     });
   }
 
@@ -386,155 +374,77 @@ class PrivateRequest {
   }
 }
 
-class Request {
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
-    this[privateRequestSymbol] = new PrivateRequest(method, path, query, body, options);
-  }
-
-  get method() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.method;
-  }
-
-  set method(method) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.method = method;
-  }
-
-  get protocol() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.protocol;
-  }
-
-  set protocol(protocol) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.protocol = protocol;
-  }
-
-  get host() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.host;
-  }
-
-  set host(host) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.host = host;
-  }
-
-  get auth() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.auth;
-  }
-
-  set auth(auth) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.auth = auth;
-  }
-
-  get path() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.path;
-  }
-
-  set path(path) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.path = path;
-  }
-
-  get query() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.query;
-  }
-
-  set query(query) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.query = query;
-  }
-
-  get flags() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.flags;
-  }
-
-  set flags(flags) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.flags = flags;
-  }
-
-  get body() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.body;
-  }
-
-  set body(body) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.body = body;
-  }
-
-  get dataPolicy() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.dataPolicy;
-  }
-
-  set dataPolicy(dataPolicy) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.dataPolicy = dataPolicy;
-  }
-
-  get response() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.response;
-  }
-
-  get url() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.url;
-  }
-
-  get responseType() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.responseType;
-  }
-
-  set responseType(type) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.responseType = type;
-  }
-
-  getHeader(header) {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.getHeader(header);
-  }
-
-  setHeader(header, value) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.setHeader(header, value);
-  }
-
-  addHeaders(headers) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.addHeaders(headers);
-  }
-
-  removeHeader(header) {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.removeHeader(header);
-  }
-
+export class DeltaSetRequest extends Request {
   execute() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.execute();
-  }
+    if (this.dataPolicy === DataPolicy.CloudFirst && this.method === HttpMethod.GET) {
+      const origQuery = this.query;
+      this.query = new Query();
+      this.query.fields(['_id', '_kmd']);
 
-  cancel() {
-    const privateRequest = this[privateRequestSymbol];
-    privateRequest.cancel();
-  }
+      return this.executeLocal().then(localResponse => {
+        if (localResponse && localResponse.isSuccess()) {
+          const localEntities = indexBy(localResponse.data, '_id');
 
-  toJSON() {
-    const privateRequest = this[privateRequestSymbol];
-    return privateRequest.toJSON();
+          return this.executeCloud().then(cloudResponse => {
+            if (cloudResponse && cloudResponse.isSuccess()) {
+              const cloudEntities = indexBy(cloudResponse.data, '_id');
+
+              for (const id in cloudEntities) {
+                if (cloudEntities.hasOwnProperty(id)) {
+                  const cloudEntity = cloudEntities[id];
+                  const localEntity = localEntities[id];
+
+                  // Push id onto delta set if local entity doesn't exist
+                  if (cloudEntity && !localEntity) {
+                    continue;
+                  } else if (cloudEntity && localEntity) {
+                    // Push id onto delta set if lmt differs
+                    if (cloudEntity._kmd && localEntity._kmd && cloudEntity._kmd.lmt > localEntity._kmd.lmt) {
+                      continue;
+                    }
+                  }
+
+                  delete cloudEntities[id];
+                }
+              }
+
+              const ids = Object.keys(cloudEntities);
+              const promises = [];
+              let i = 0;
+
+              // Batch the requests to retrieve 200 items per request
+              while (i < ids.length) {
+                const query = new Query(origQuery.toJSON());
+                query.contains('_id', ids.slice(i, ids.length > maxIdsPerRequest + i ? maxIdsPerRequest : ids.length));
+                const request = new Request(this.method, this.path, query, null, {
+                  auth: this.auth,
+                  client: this.client,
+                  dataPolicy: this.dataPolicy
+                });
+                promises.push(request.execute());
+
+                i += maxIdsPerRequest;
+              }
+
+              // Reduce all the responses into one response
+              return Promise.all(promises).then(responses => {
+                const initialResponse = new Response(null, null, []);
+                return reduce(responses, (result, response) => {
+                  result.addHeaders(response.headers);
+                  result.data.concat(response.data);
+                  return result;
+                }, initialResponse);
+              });
+            }
+
+            return super.execute();
+          });
+        }
+
+        return super.execute();
+      });
+    }
+
+    return super.execute();
   }
 }
-
-export default Request;
