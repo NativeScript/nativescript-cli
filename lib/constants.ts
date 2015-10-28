@@ -12,7 +12,7 @@ export let PACKAGE_JSON_FILE_NAME = "package.json";
 export let NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
 export let DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 export var LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
-export var TESTING_FRAMEWORKS = ['jasmine', 'mocha'];
+export var TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
 export let TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 
 export class ReleaseType {

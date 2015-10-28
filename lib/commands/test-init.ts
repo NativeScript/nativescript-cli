@@ -19,7 +19,6 @@ class TestInitCommand implements ICommand {
 	}
 
 	private frameworkDependencies:IDictionary<string[]> = {
-		jasmine: [],
 		mocha: ['chai'],
 	};
 
@@ -33,8 +32,9 @@ class TestInitCommand implements ICommand {
 				this.$errors.fail(`Unknown or unsupported unit testing framework: ${frameworkToInstall}`);
 			}
 
+			let dependencies = this.frameworkDependencies[frameworkToInstall] || [];
 			['karma', 'karma-' + frameworkToInstall, 'karma-nativescript-launcher']
-			.concat(this.frameworkDependencies[frameworkToInstall].map(f => 'karma-' + f))
+			.concat(dependencies.map(f => 'karma-' + f))
 			.forEach(mod => {
 				this.$npm.install(mod, projectDir, {
 					'save-dev': true,
@@ -55,7 +55,7 @@ class TestInitCommand implements ICommand {
 
 			let karmaConfTemplate = this.$resources.readText('test/karma.conf.js').wait();
 			let karmaConf = _.template(karmaConfTemplate)({
-				frameworks: [frameworkToInstall].concat(this.frameworkDependencies[frameworkToInstall])
+				frameworks: [frameworkToInstall].concat(dependencies)
 					.map(fw => `'${fw}'`)
 					.join(', ')
 			});
