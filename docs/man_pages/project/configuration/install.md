@@ -3,11 +3,11 @@ install
 
 Usage | Synopsis
 ---|---
-General | `$ tns install [module] [--path]`
+Install all dependencies | `$ tns install [--path]`
+Install a selected npm module | `$ tns install <Module>`
+Enable TypeScript support | `tns install typescript`
 
-When executed without a `module` argument - install all platforms and dependencies described in the `package.json` file in the current directory.
-
-When a `module` argument is given - install the specified npm module. If `module` is a path to an existing directory, then the npm module from that path is installed. If `module` does not refer to an existing directory, then the module with the name `nativescript-dev-<module>` is installed from the npm registry. This command is intended for installing NativeScript-related development modules. For example, by executing `tns install typescript`, TypeScript support is installed into the project. Look for modules in the npm registry whose name starts with `nativescript-dev` to discover other development modules for NativeScript.
+Installs all dependencies described in a valid `package.json` or installs a selected NativeScript development module as a dev dependency.
 
 <% if(isHtml) { %>
 The `package.json` file must be a valid `package.json` describing the configuration of a NativeScript project. If missing or corrupted, you can recreate the file by running `$ tns init` in the directory of a NativeScript project.
@@ -16,7 +16,11 @@ The `package.json` file must be a valid `package.json` describing the configurat
 ### Options
 * `--path` - Specifies the directory which contains the `package.json` file, if different from the current directory.
 
-<% if(isHtml) { %>
+### Arguments
+* `<Module>` - Specifies a NativeScript development module by path to a local directory containing a valid npm module or by name in the npm registry.<% if(isHtml) { %> When a `<Module>` is specified, this command adds the module as a dev dependency in your `package.json`.
+
+> **TIP:** When installing a module from the npm registry, you can specify it by full name or suffix. NativeScript development modules are published in the npm registry with the following name format: `nativescript-dev-<suffix>`.
+
 ### Related Commands
 
 Command | Description
