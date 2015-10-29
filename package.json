@@ -34,6 +34,7 @@
     "chalk": "1.1.0",
     "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.1",
     "colors": "1.1.2",
+    "esprima": "2.7.0",
     "ffi": "https://github.com/icenium/node-ffi/tarball/v2.0.0.0",
     "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.6.2",
     "filesize": "3.1.2",
