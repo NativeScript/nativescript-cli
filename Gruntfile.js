@@ -57,7 +57,7 @@ module.exports = function(grunt) {
 				}
 			},
 		},
-		
+
 		tslint: {
             build: {
                 files: {
@@ -68,13 +68,23 @@ module.exports = function(grunt) {
                 }
             }
         },
-		
+
 		watch: {
 			devall: {
 				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts"],
 				tasks: [
 					'ts:devall',
 					'shell:npm_test'
+				],
+				options: {
+					atBegin: true,
+					interrupt: true
+				}
+			},
+			ts: {
+				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts"],
+				tasks: [
+					'ts:devall'
 				],
 				options: {
 					atBegin: true,
@@ -106,7 +116,7 @@ module.exports = function(grunt) {
 			npm_test: {
 				command: "npm test"
 			}
-	
+
 		},
 
 		copy: {

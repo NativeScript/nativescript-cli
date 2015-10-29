@@ -52,6 +52,7 @@ function createTestInjector() {
 		}
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
+	testInjector.register("hooksService", stubs.HooksServiceStub);
 
 	return testInjector;
 }

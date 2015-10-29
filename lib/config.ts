@@ -37,6 +37,10 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 		this.RESOURCE_DIR_PATH = path.join(this.RESOURCE_DIR_PATH, "../../resources");
 	}
 
+	public get disableHooks() {
+		return true;
+	}
+
 	public get SYS_REQUIREMENTS_LINK(): string {
 		let linkToSysRequirements: string;
 		switch(process.platform) {

@@ -19,6 +19,7 @@ export class PlatformService implements IPlatformService {
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
+		private $hooksService: IHooksService,
 		private $commandsService: ICommandsService,
 		private $options: IOptions,
 		private $broccoliBuilder: IBroccoliBuilder,
@@ -147,6 +148,7 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
+	@helpers.hook('prepare')
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			this.validatePlatform(platform);
