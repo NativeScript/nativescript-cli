@@ -53,8 +53,9 @@ export class InstallCommand implements ICommand {
 			process.env['TNS_PROJECT_DIR'] = projectDir;
 			process.env['TNS_HOOKS_DIR'] = path.join(projectDir, 'hooks');
 
-			if (!this.$fs.exists(moduleName).wait()) {
-				moduleName = 'nativescript-dev-' + moduleName;
+			let devPrefix = 'nativescript-dev-';
+			if (!this.$fs.exists(moduleName).wait() && moduleName.indexOf(devPrefix) !== 0) {
+				moduleName = devPrefix + moduleName;
 			}
 
 			this.$npm.install(moduleName, projectDir, { 'save-dev': true }).wait();
