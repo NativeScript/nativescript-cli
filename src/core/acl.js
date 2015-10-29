@@ -140,7 +140,7 @@ class PrivateAcl {
   }
 }
 
-class Acl {
+export default class Acl {
   get creator() {
     return this[privateAclSymbol].creator;
   }
@@ -220,5 +220,3 @@ class Acl {
     return this[privateAclSymbol].toJSON();
   }
 }
-
-export default Acl;
