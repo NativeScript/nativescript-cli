@@ -28,7 +28,7 @@
     "jquery-browser": "1.10.2-1",
     "loglevel": "~1.4.0",
     "promiscuous": "~0.6",
-    "promise-queue": "^2.1.1",
+    "promise-queue": "git+https://github.com/ThomasConner/promise-queue.git",
     "sift": "~0.0",
     "tiplatformconnect": "git://github.com/Kinvey/TiPlatformConnect.git",
     "uglify-js": "~2.4",
