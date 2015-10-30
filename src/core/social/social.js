@@ -4,7 +4,7 @@ import { Request } from '../request';
 import HttpMethod from '../enums/httpMethod';
 import Auth from '../auth';
 import url from 'url';
-import when from 'when';
+import Promise from 'bluebird';
 import assign from 'lodash/object/assign';
 import { isPhoneGap, isTitanium } from '../../utils/platform';
 const usersNamespace = 'user';
@@ -32,7 +32,7 @@ export default class Social {
     const promise = request.execute().then((data) => {
       const popupUrl = data.url;
 
-      return when.promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         const interval = 100;
         let elapsed = 0;
         let tiWebView;

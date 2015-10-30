@@ -1,6 +1,6 @@
 import { KinveyError } from '../../errors';
 import Query from '../../query';
-import when from 'when';
+import Promise from 'bluebird';
 let inTransaction = false;
 let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB);
 
@@ -95,7 +95,7 @@ export default class IndexedDBAdapter {
   }
 
   find(query) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(false, (store) => {
         const request = store.openCursor();
         const response = [];
@@ -138,7 +138,7 @@ export default class IndexedDBAdapter {
   }
 
   findAndModify(id, fn) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(true, (store) => {
         const txn = store.transaction;
         const request = store.get(id);
@@ -208,7 +208,7 @@ export default class IndexedDBAdapter {
   }
 
   get(id) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(false, (store) => {
         const request = store.get(id);
 
@@ -230,7 +230,7 @@ export default class IndexedDBAdapter {
   }
 
   save(doc) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(true, (store) => {
         const request = store.put(doc);
 
@@ -248,7 +248,7 @@ export default class IndexedDBAdapter {
   }
 
   batch(docs) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(true, (store) => {
         const txn = store.transaction;
 
@@ -270,7 +270,7 @@ export default class IndexedDBAdapter {
   }
 
   delete(id) {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       this.transaction(true, (store) => {
         const txn = store.transaction;
         const request = store.get(id);
@@ -302,7 +302,7 @@ export default class IndexedDBAdapter {
         return { count: 0, documents: [] };
       }
 
-      return when.promise((resolve, reject) => {
+      return new Promise((resolve, reject) => {
         this.transaction(true, (store) => {
           const txn = store.transaction;
 
@@ -328,7 +328,7 @@ export default class IndexedDBAdapter {
   }
 
   clear() {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       if (this.db) {
         this.db.close();
         this.db = null;

@@ -1,4 +1,4 @@
-import when from 'when';
+import Promise from 'bluebird';
 
 const BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const BLOB_TYPE_PREFIX = '~~kinvey_type~';
@@ -22,7 +22,7 @@ const TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH + TYPE_ARRAYBUFFE
 
 export default class Serializer {
   serialize(value) {
-    const promise = when.promise(function(resolve, reject) {
+    const promise = new Promise(function(resolve, reject) {
       let valueString = '';
 
       if (value) {
@@ -96,7 +96,7 @@ export default class Serializer {
   }
 
   deserialize(value) {
-    const promise = when.promise(function(resolve, reject) {
+    const promise = new Promise(function(resolve, reject) {
       // If we haven't marked this string as being specially serialized (i.e.
       // something other than serialized JSON), we can just return it and be
       // done with it.

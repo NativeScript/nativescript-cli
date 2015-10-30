@@ -9,7 +9,7 @@ import Twitter from '../social/twitter';
 import { getActiveUser, setActiveUser } from '../../utils/user';
 import isFunction from 'lodash/lang/isFunction';
 import isString from 'lodash/lang/isString';
-import when from 'when';
+import Promise from 'bluebird';
 const activeUserSymbol = Symbol();
 
 export default class User extends Model {
@@ -26,7 +26,7 @@ export default class User extends Model {
     const user = User[activeUserSymbol];
 
     if (!user) {
-      return when.resolve(user);
+      return Promise.resolve(user);
     }
 
     return getActiveUser().then(user => {
@@ -117,7 +117,7 @@ export default class User extends Model {
     }
 
     if (!token.access_token || !token.expires_in) {
-      return when.reject(new KinveyError('token argument must contain both an access_token and expires_in property.', token));
+      return Promise.reject(new KinveyError('token argument must contain both an access_token and expires_in property.', token));
     }
 
     const data = { _socialIdentity: { } };
@@ -156,7 +156,7 @@ export default class User extends Model {
     }
 
     if (!isFunction(adapter.connect)) {
-      return when.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide a connect function for the adapter.'));
+      return Promise.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide a connect function for the adapter.'));
     }
 
     promise = adapter.connect(options).then((token) => {

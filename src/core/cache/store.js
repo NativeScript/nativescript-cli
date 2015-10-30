@@ -5,7 +5,7 @@ import Aggregation from '../aggregation';
 import IndexedDBAdapter from './adapters/indexeddb';
 import LocalStorageAdapter from './adapters/localstorage';
 import WebSQLAdapter from './adapters/websql';
-import when from 'when';
+import Promise from 'bluebird';
 import log from 'loglevel';
 import assign from 'lodash/object/assign';
 import result from 'lodash/object/result';
@@ -106,7 +106,7 @@ export default class Store {
     }
 
     if (!isFunction(fn)) {
-      return when.reject(new KinveyError('fn argument must be a function'));
+      return Promise.reject(new KinveyError('fn argument must be a function'));
     }
 
     return this.adapter.findAndModify(id, fn);
@@ -135,7 +135,7 @@ export default class Store {
     }
 
     if (!doc) {
-      return when.resolve(null);
+      return Promise.resolve(null);
     }
 
     doc._id = doc._id || this.generateObjectId();

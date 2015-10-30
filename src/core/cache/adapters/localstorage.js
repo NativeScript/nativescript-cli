@@ -1,7 +1,7 @@
 import Serializer from './serializer';
 import { KinveyError } from '../../errors';
 import assign from 'lodash/object/assign';
-import when from 'when';
+import Promise from 'bluebird';
 import localStorage from 'humble-localstorage';
 
 export default class LocalStorageAdapter {
@@ -33,7 +33,7 @@ export default class LocalStorageAdapter {
       }
     }
 
-    return when.all(promises).then(docs => {
+    return Promise.all(promises).then(docs => {
       if (query) {
         return query.process(docs);
       }
@@ -113,7 +113,7 @@ export default class LocalStorageAdapter {
 
   save(doc) {
     if (!doc) {
-      return when.resolve(null);
+      return Promise.resolve(null);
     }
 
     const serializer = new Serializer();
@@ -141,24 +141,21 @@ export default class LocalStorageAdapter {
       promises.push(this.save(doc));
     });
 
-    return when.all(promises);
+    return Promise.all(promises);
   }
 
   delete(key) {
-    const promise = when.promise(resolve => {
-      localStorage.removeItem(this.serializeKey(key));
-      resolve();
-    });
-    return promise;
+    localStorage.removeItem(this.serializeKey(key));
+    return Promise.resolve();
   }
 
   clean() {
-    return when.reject(new KinveyError('LocalStorageAdapter.clean() method is unsupported.'));
+    return Promise.reject(new KinveyError('LocalStorageAdapter.clean() method is unsupported.'));
   }
 
   clear() {
     localStorage.clear();
-    return when.resolve();
+    return Promise.resolve();
   }
 
   static isSupported() {

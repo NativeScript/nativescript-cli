@@ -6,7 +6,7 @@ import HttpMethod from '../enums/httpMethod';
 import Datastore from './datastore';
 import { KinveyError } from '../errors';
 import Query from '../query';
-import when from 'when';
+import Promise from 'bluebird';
 import assign from 'lodash/object/assign';
 import isObject from 'lodash/lang/isObject';
 import isArray from 'lodash/lang/isArray';
@@ -78,7 +78,7 @@ export default class Users extends Datastore {
 
     // Validate arguments
     if ((!usernameOrData.username || !usernameOrData.password) && !usernameOrData._socialIdentity) {
-      return when.reject(new KinveyError('Username and/or password missing. Please provide both a username and password to login.'));
+      return Promise.reject(new KinveyError('Username and/or password missing. Please provide both a username and password to login.'));
     }
 
     // Create and execute a request

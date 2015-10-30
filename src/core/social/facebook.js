@@ -1,6 +1,6 @@
 import Social from './social';
 import { KinveyError } from '../errors';
-import when from 'when';
+import Promise from 'bluebird';
 const FB = global.FB;
 
 export default class Facebook extends Social {
@@ -10,7 +10,7 @@ export default class Facebook extends Social {
   }
 
   connect() {
-    const promise = when.promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       if (typeof FB === 'undefined') {
         return reject(new KinveyError('Facebook SDK not found.', 'Please load the Facebook SDK by following the guide at https://developers.facebook.com/docs/javascript/quickstart/v2.4.'));
       }

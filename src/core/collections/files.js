@@ -7,7 +7,7 @@ import ResponseType from '../enums/responseType';
 import DataPolicy from '../enums/dataPolicy';
 import Auth from '../auth';
 import url from 'url';
-import when from 'when';
+import Promise from 'bluebird';
 import assign from 'lodash/object/assign';
 import isObject from 'lodash/lang/isObject';
 const filesNamespace = 'blob';
@@ -87,7 +87,7 @@ export default class Files extends Datastore {
           return this.downloadByUrl(file, options);
         });
 
-        return when.all(promises);
+        return Promise.all(promises);
       }
 
       return files;
