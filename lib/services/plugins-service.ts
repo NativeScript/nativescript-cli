@@ -346,6 +346,7 @@ export class PluginsService implements IPluginsService {
 
 			_(nodeModules)
 				.keys()
+				.filter(nodeModule => this.$fs.exists(path.join(nodeModule, "package.json")).wait())
 				.map(nodeModule => this.getNodeModuleData(path.join(nodeModule, "package.json")).wait())
 				.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
 				.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
