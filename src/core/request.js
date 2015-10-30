@@ -11,7 +11,6 @@ import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
 import { KinveyError } from './errors';
 import RequestProperties from './requestProperties';
-import Response from './response';
 import assign from 'lodash/object/assign';
 import merge from 'lodash/object/merge';
 import result from 'lodash/object/result';
@@ -21,14 +20,16 @@ import reduce from 'lodash/collection/reduce';
 import { byteCount } from '../utils/string';
 const customRequestPropertiesMaxBytes = 2000;
 const maxIdsPerRequest = 200;
+const defaultTimeout = 10000; // 10 seconds
 
 export class Request {
-  constructor(method = HttpMethod.GET, path = '', query, body, options = {}) {
+  constructor(method = HttpMethod.GET, path = '', query, data, options = {}) {
     options = assign({
       auth: Auth.none,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudFirst,
-      responseType: ResponseType.Text
+      responseType: ResponseType.Text,
+      timeout: defaultTimeout
     }, options);
 
     let client = options.client;
@@ -52,11 +53,12 @@ export class Request {
     this.path = path;
     this.query = query;
     this.flags = options.flags;
-    this.body = body;
+    this.data = data;
     this.responseType = options.responseType;
     this.client = options.client;
     this.auth = options.auth;
     this.dataPolicy = options.dataPolicy;
+    this.timeout = options.timeout;
     this.executing = false;
 
     // Add default headers
@@ -94,7 +96,6 @@ export class Request {
     method = method.toUpperCase();
 
     switch (method) {
-    case HttpMethod.OPTIONS:
     case HttpMethod.GET:
     case HttpMethod.POST:
     case HttpMethod.PATCH:
@@ -103,7 +104,7 @@ export class Request {
       this._method = method;
       break;
     default:
-      throw new KinveyError('Invalid Http Method. OPTIONS, GET, POST, PATCH, PUT, and DELETE are allowed.');
+      throw new KinveyError('Invalid Http Method. GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 
@@ -148,7 +149,7 @@ export class Request {
   }
 
   get body() {
-    return this._body;
+    return this._data;
   }
 
   set body(body) {
@@ -162,7 +163,25 @@ export class Request {
       this.removeHeader('Content-Type');
     }
 
-    this._body = body;
+    this._data = body;
+  }
+
+  get data() {
+    return this._data;
+  }
+
+  set data(data) {
+    if (data) {
+      const contentTypeHeader = this.getHeader('Content-Type');
+
+      if (!contentTypeHeader) {
+        this.setHeader('Content-Type', 'application/json; charset=utf-8');
+      }
+    } else {
+      this.removeHeader('Content-Type');
+    }
+
+    this._data = data;
   }
 
   get responseType() {
@@ -348,7 +367,7 @@ export class Request {
     });
   }
 
-  cancel() {
+  abort() {
     // TODO
     throw new KinveyError('Method not supported');
   }
@@ -363,10 +382,11 @@ export class Request {
       path: this.path,
       query: result(this.query, 'toJSON', null),
       flags: this.flags,
-      body: this._body,
+      data: this.data,
       responseType: this.responseType,
       dataPolicy: this.dataPolicy,
-      client: result(this.client, 'toJSON', null)
+      client: result(this.client, 'toJSON', null),
+      timeout: this.timeout
     };
 
     // Return the json object
@@ -376,10 +396,15 @@ export class Request {
 
 export class DeltaSetRequest extends Request {
   execute() {
+    if (this.executing) {
+      return Promise.reject(new KinveyError('The request is already executing.'));
+    }
+
     if (this.dataPolicy === DataPolicy.CloudFirst && this.method === HttpMethod.GET) {
       const origQuery = this.query;
       this.query = new Query();
       this.query.fields(['_id', '_kmd']);
+      this.executing = true;
 
       return this.executeLocal().then(localResponse => {
         if (localResponse && localResponse.isSuccess()) {
@@ -434,6 +459,8 @@ export class DeltaSetRequest extends Request {
                   result.data.concat(response.data);
                   return result;
                 }, initialResponse);
+              }).finally(() => {
+                this.executing = false;
               });
             }
 

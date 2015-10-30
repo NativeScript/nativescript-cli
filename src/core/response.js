@@ -1,5 +1,5 @@
-import StatusCode from './enums/statusCode';
 import isString from 'lodash/lang/isString';
+import StatusCode from './enums/statusCode';
 
 export default class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
