@@ -93,7 +93,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -154,7 +154,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -206,7 +206,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -252,7 +252,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -306,7 +306,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -351,7 +351,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -400,7 +400,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 
@@ -453,7 +453,7 @@ export default class Datastore {
     // Set option defaults. These values will be overridden
     // if the option was provided.
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
 

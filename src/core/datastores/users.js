@@ -35,7 +35,7 @@ export default class Users extends Datastore {
    * @return   {string}    Path
    */
   get path() {
-    return `/${usersNamespace}/${this.client.appKey}`;
+    return `/${usersNamespace}/${this.client.appId}`;
   }
 
   /**
@@ -44,7 +44,7 @@ export default class Users extends Datastore {
    * @return   {string}    Path
    */
   get rpcPath() {
-    return `/${rpcNamespace}/${this.client.appKey}`;
+    return `/${rpcNamespace}/${this.client.appId}`;
   }
 
   /**

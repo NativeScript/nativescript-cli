@@ -35,7 +35,7 @@ export default class Files extends Datastore {
    * @return   {string}    Path
    */
   get path() {
-    return `/${filesNamespace}/${this.client.appKey}`;
+    return `/${filesNamespace}/${this.client.appId}`;
   }
 
   /**
@@ -172,7 +172,7 @@ export default class Files extends Datastore {
     // Create a client
     const sharedClient = Client.sharedInstance();
     const client = new Client({
-      appKey: sharedClient.appKey,
+      appId: sharedClient.appId,
       appSecret: sharedClient.appSecret,
       masterSecret: sharedClient.masterSecret,
       encryptionKey: sharedClient.encryptionKey,
@@ -270,7 +270,7 @@ export default class Files extends Datastore {
       // Create a client
       const sharedClient = Client.sharedInstance();
       const client = new Client({
-        appKey: sharedClient.appKey,
+        appId: sharedClient.appId,
         appSecret: sharedClient.appSecret,
         masterSecret: sharedClient.masterSecret,
         encryptionKey: sharedClient.encryptionKey,
