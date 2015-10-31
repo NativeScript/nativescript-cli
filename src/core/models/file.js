@@ -31,7 +31,7 @@ export default class File extends Model {
     }
 
     // Build the request path
-    const path = `/${filesNamespace}/${this.client.appKey}`;
+    const path = `/${filesNamespace}/${this.client.appId}`;
 
     // Create and send the request
     const request = new Request(HttpMethod.GET, path, query, null, options);
@@ -68,7 +68,7 @@ export default class File extends Model {
     }
 
     // Build the request path
-    const path = `/${filesNamespace}/${this.client.appKey}/${name}`;
+    const path = `/${filesNamespace}/${this.client.appId}/${name}`;
 
     // Create and send the request
     const request = new Request(HttpMethod.GET, path, null, null, options);
@@ -104,7 +104,7 @@ export default class File extends Model {
     }, options);
 
     // Build the request path
-    const path = `/${filesNamespace}/${this.client.appKey}/${name}`;
+    const path = `/${filesNamespace}/${this.client.appId}/${name}`;
 
     // Create and send the request
     const request = new Request(HttpMethod.DELETE, path, null, null, options);

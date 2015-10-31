@@ -5,6 +5,7 @@ import SerializerMiddleware from './middleware/serializer';
 import HttpMiddleware from './middleware/http';
 import ParserMiddleware from './middleware/parser';
 import CacheMiddleware from './middleware/cache';
+import Promise from 'bluebird';
 const networkRackSymbol = Symbol();
 const cacheRackSymbol = Symbol();
 
@@ -42,7 +43,7 @@ class Rack extends KinveyRack {
 
   execute(request) {
     const requestClone = clone(result(request, 'toJSON', request), true);
-    return super.execute(requestClone).then((request) => {
+    const promise = super.execute(requestClone).then((request) => {
       const response = request.response;
 
       if (response) {
@@ -51,6 +52,7 @@ class Rack extends KinveyRack {
 
       return response;
     });
+    return Promise.resolve(promise);
   }
 }
 

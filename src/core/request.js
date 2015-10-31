@@ -11,6 +11,7 @@ import Auth from './auth';
 import DataPolicy from './enums/dataPolicy';
 import { KinveyError } from './errors';
 import RequestProperties from './requestProperties';
+import Promise from 'bluebird';
 import assign from 'lodash/object/assign';
 import merge from 'lodash/object/merge';
 import result from 'lodash/object/result';
@@ -27,7 +28,7 @@ export class Request {
     options = assign({
       auth: Auth.none,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.CloudOnly,
       responseType: ResponseType.Text,
       timeout: defaultTimeout
     }, options);

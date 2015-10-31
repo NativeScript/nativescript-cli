@@ -15,7 +15,7 @@ export default class CacheMiddleware extends Middleware {
       const query = request.query;
       const id = matches.id;
       const store = new Store([StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.LocalStorage], {
-        name: matches.appKey,
+        name: matches.appId,
         collection: matches.collection
       });
       let promise;

@@ -6,7 +6,7 @@ const activeUserCollection = 'activeUser';
 export function getActiveUser() {
   const client = Client.sharedInstance();
   const store = new Store(StoreAdapter.LocalStorage, {
-    name: client.appKey,
+    name: client.appId,
     collection: activeUserCollection
   });
 
@@ -22,7 +22,7 @@ export function getActiveUser() {
 export function setActiveUser(user) {
   const client = Client.sharedInstance();
   const store = new Store(StoreAdapter.LocalStorage, {
-    name: client.appKey,
+    name: client.appId,
     collection: activeUserCollection
   });
 

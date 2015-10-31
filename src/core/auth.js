@@ -2,14 +2,14 @@ import { getActiveUser } from '../utils/user';
 
 class Auth {
   static all(client) {
-    return Auth.session(client).then(null, () => {
+    return Auth.session(client).catch(() => {
       return Auth.basic(client);
     });
   }
 
   static app(client) {
     // Validate preconditions.
-    if (!client.appKey || !client.appSecret) {
+    if (!client.appId || !client.appSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -17,7 +17,7 @@ class Auth {
     // Prepare the response.
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: client.appKey,
+      username: client.appId,
       password: client.appSecret
     });
 
@@ -26,14 +26,14 @@ class Auth {
   }
 
   static basic(client) {
-    return Auth.master(client).then(null, () => {
+    return Auth.master(client).catch(() => {
       return Auth.app(client);
     });
   }
 
   static default(client) {
-    return Auth.session(client).then(null).catch((err) => {
-      return Auth.master(client).then(null).catch(() => {
+    return Auth.session(client).catch((err) => {
+      return Auth.master(client).catch(() => {
         // Most likely, the developer did not create a user. Return a useful error.
         return Promise.reject(err);
       });
@@ -42,7 +42,7 @@ class Auth {
 
   static master(client) {
     // Validate preconditions.
-    if (!client.appKey || !client.masterSecret) {
+    if (!client.appId || !client.masterSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
@@ -50,7 +50,7 @@ class Auth {
     // Prepare the response.
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: client.appKey,
+      username: client.appId,
       password: client.masterSecret
     });
 

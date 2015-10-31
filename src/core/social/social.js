@@ -21,7 +21,7 @@ export default class Social {
 
     const redirectUri = options.redirect || global.location.toString();
     const client = Client.sharedInstance();
-    const path = `/${usersNamespace}/${client.appKey}`;
+    const path = `/${usersNamespace}/${client.appId}`;
     const data = {
       redirect: redirectUri,
       state: options.state
@@ -205,7 +205,7 @@ export default class Social {
     });
 
     const client = Client.sharedInstance();
-    const path = `/${usersNamespace}/${client.appKey}`;
+    const path = `/${usersNamespace}/${client.appId}`;
     const request = new Request(HttpMethod.POST, path, null, token, options);
     request.auth = Auth.app;
     const promise = request.execute();

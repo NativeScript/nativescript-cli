@@ -1,6 +1,6 @@
 import { ActiveUserError, KinveyError } from '../errors';
 import Model from './model';
-import Users from '../collections/users';
+import Users from '../datastores/users';
 import SocialAdapter from '../enums/socialAdapter';
 import Facebook from '../social/facebook';
 import Google from '../social/google';

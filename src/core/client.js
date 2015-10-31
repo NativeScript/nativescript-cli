@@ -13,18 +13,18 @@ export default class Client {
    * either and `options.appSecret` or `options.masterSecret`.
    *
    * @param {Object} options - Options
-   * @param {string} options.appKey - My app's key
+   * @param {string} options.appId - My app's id
    * @param {string} [options.appSecret] - My app's secret
    * @param {string} [options.masterSecret] - My app's master secret
    * @param {string} [options.encryptionKey] - My app's encryption key
    * @param {string} [options.apiUrl] - The url to use to send network requests.
    *
-   * @throws {KinveyError}  If an `options.appkey` is not provided.
+   * @throws {KinveyError}  If an `options.appId` is not provided.
    * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
    *
    * @example
    * var client = new Client({
-   *   appKey: 'appKey',
+   *   appId: 'appId',
    *   appSecret: 'appSecret'
    * });
    */
@@ -34,8 +34,8 @@ export default class Client {
     let apiUrl;
     let apiUrlComponents;
 
-    if (!options.appKey) {
-      throw new KinveyError('No App Key was provided. Unable to create a new Client without an App Key.');
+    if (!options.appId && !options.appKey) {
+      throw new KinveyError('No App Id was provided. Unable to create a new Client without an App Id.');
     }
 
     if (!options.appSecret && !options.masterSecret) {
@@ -64,7 +64,7 @@ export default class Client {
     /**
      * @type {string}
      */
-    this.appKey = options.appKey;
+    this.appId = options.appId || options.appKey;
 
     /**
      * @type {string|undefined}
@@ -101,7 +101,7 @@ export default class Client {
     const json = {
       apiProtocol: this.apiProtocol,
       apiHost: this.apiHost,
-      appKey: this.appKey,
+      appId: this.appId,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
       encryptionKey: this.encryptionKey
@@ -114,20 +114,20 @@ export default class Client {
    * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.
    *
    * @param {Object} options - Options
-   * @param {string} options.appKey - My app's key
+   * @param {string} options.appId - My app's id
    * @param {string} [options.appSecret] - My app's secret
    * @param {string} [options.masterSecret] - My app's master secret
    * @param {string} [options.encryptionKey] - My app's encryption key
    * @param {string} [options.apiUrl] - The url to send Kinvey API requests.
    *
-   * @throws {KinveyError}  If an `options.appkey` is not provided.
+   * @throws {KinveyError}  If an `options.appId` is not provided.
    * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
    *
    * @return {Client}  An instance of Client.
    *
    * @example
    * var sharedInstance = Client.init({
-   *   appKey: 'appKey',
+   *   appId: 'appId',
    *   appSecret: 'appSecret'
    * });
    */
@@ -148,7 +148,7 @@ export default class Client {
     const client = Client[sharedInstanceSymbol];
 
     if (!client) {
-      throw new KinveyError('You have not initialized the library. Please call Kinvey.init() before accessing the shared instance.');
+      throw new KinveyError('You have not initialized the library. Please call Kinvey.init() to initialize the library.');
     }
 
     return client;
