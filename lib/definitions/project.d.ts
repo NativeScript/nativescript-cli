@@ -10,6 +10,8 @@ interface IProjectData {
 	projectFilePath: string;
 	projectId?: string;
 	dependencies: any;
+	appDirectoryPath: string;
+	appResourcesDirectoryPath: string;
 }
 
 interface IProjectDataService {

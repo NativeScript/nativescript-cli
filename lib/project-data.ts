@@ -1,6 +1,7 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
+import constants = require("./constants");
 import * as path from "path";
 import * as os from "os";
 
@@ -12,6 +13,8 @@ export class ProjectData implements IProjectData {
 	public projectFilePath: string;
 	public projectId: string;
 	public projectName: string;
+	public appDirectoryPath: string;
+	public appResourcesDirectoryPath: string;
 	public dependencies: any;
 
 	constructor(private $fs: IFileSystem,
@@ -101,6 +104,8 @@ export class ProjectData implements IProjectData {
 		this.projectName = this.$projectHelper.sanitizeName(path.basename(projectDir));
 		this.platformsDir = path.join(projectDir, "platforms");
 		this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
+		this.appDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME);
+		this.appResourcesDirectoryPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME);
 	}
 }
 $injector.register("projectData", ProjectData);
