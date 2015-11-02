@@ -92,7 +92,7 @@ function createTestInjector() {
 	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', PlatformsData);
-	testInjector.register('devicesServices', {});
+	testInjector.register('devicesService', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});
 	testInjector.register('commands-service', CommandsServiceLib.CommandsService);

@@ -12,7 +12,7 @@ class AndroidDebugService implements IDebugService {
 
 	private _device: Mobile.IAndroidDevice = null;
 
-	constructor(private $devicesServices: Mobile.IDevicesServices,
+	constructor(private $devicesService: Mobile.IDevicesService,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $projectData: IProjectData,
@@ -70,9 +70,9 @@ class AndroidDebugService implements IDebugService {
 				this.$logger.out("Using ", packageFile);
 			}
 
-			this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
+			this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IAndroidDevice): IFuture<void> => { return this.debugCore(device, packageFile, this.$projectData.projectId); };
-			this.$devicesServices.execute(action).wait();
+			this.$devicesService.execute(action).wait();
 
 		}).future<void>()();
 	}
@@ -141,12 +141,12 @@ class AndroidDebugService implements IDebugService {
 
     public debugStart(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device}).wait();
             let action = (device: Mobile.IAndroidDevice): IFuture<void> => {
                 this.device = device;
                 return this.debugStartCore();
             };
-            this.$devicesServices.execute(action).wait();
+            this.$devicesService.execute(action).wait();
         }).future<void>()();
     }
 

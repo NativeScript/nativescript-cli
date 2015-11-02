@@ -61,7 +61,7 @@ $injector.require("mobilePlatformsCapabilities", "./mobile-platforms-capabilitie
 $injector.require("commandsServiceProvider", "./providers/commands-service-provider");
 $injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
 
-$injector.require("logcatPrinter", "./providers/logcat-printer");
+$injector.require("deviceLogProvider", "./providers/device-log-provider");
 
 $injector.require("broccoliBuilder", "./tools/broccoli/builder");
 $injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");

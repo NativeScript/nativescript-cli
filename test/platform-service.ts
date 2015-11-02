@@ -25,7 +25,7 @@ function createTestInjector() {
 	testInjector.register('npmInstallationManager', stubs.NpmInstallationManagerStub);
 	testInjector.register('projectData', stubs.ProjectDataStub);
 	testInjector.register('platformsData', stubs.PlatformsDataStub);
-	testInjector.register('devicesServices', {});
+	testInjector.register('devicesService', {});
 	testInjector.register('androidEmulatorServices', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});

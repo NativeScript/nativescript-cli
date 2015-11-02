@@ -51,7 +51,7 @@ function createTestInjector() {
 	testInjector.register("mobileHelper", {});
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("iOSProjectService", {});
-	testInjector.register("devicesServices", {});
+	testInjector.register("devicesService", {});
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});
 	testInjector.register("resources", ResourceLoader);

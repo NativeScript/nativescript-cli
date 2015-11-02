@@ -10,7 +10,7 @@ import * as semver from "semver";
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
 
-	constructor(private $devicesServices: Mobile.IDevicesServices,
+	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -317,7 +317,7 @@ export class PlatformService implements IPlatformService {
 			let packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			this.$devicesServices.initialize({platform: platform, deviceId: this.$options.device}).wait();
+			this.$devicesService.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
 					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
@@ -328,7 +328,7 @@ export class PlatformService implements IPlatformService {
 					}
 				}).future<void>()();
 			};
-			this.$devicesServices.execute(action).wait();
+			this.$devicesService.execute(action).wait();
 		}).future<void>()();
 	}
 

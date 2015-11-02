@@ -69,7 +69,7 @@ class IOSDebugService implements IDebugService {
     constructor(
         private $platformService: IPlatformService,
         private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
-        private $devicesServices: Mobile.IDevicesServices,
+        private $devicesService: Mobile.IDevicesService,
         private $platformsData: IPlatformsData,
         private $projectData: IProjectData,
         private $childProcess: IChildProcess,
@@ -151,8 +151,8 @@ class IOSDebugService implements IDebugService {
 
     private deviceDebugBrk(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute((device: iOSDevice.IOSDevice) => (() => {
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesService.execute((device: iOSDevice.IOSDevice) => (() => {
                 // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
                 let deploy = this.$platformService.deployOnDevice(this.platform);
                 this.debugBrkCore(device).wait();
@@ -163,8 +163,8 @@ class IOSDebugService implements IDebugService {
 
     public debugStart(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute((device: iOSDevice.IOSDevice) => this.debugBrkCore(device)).wait();
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesService.execute((device: iOSDevice.IOSDevice) => this.debugBrkCore(device)).wait();
         }).future<void>()();
     }
 
@@ -193,8 +193,8 @@ class IOSDebugService implements IDebugService {
 
     private deviceStart(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute(device => (() => {
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesService.execute(device => (() => {
                 let iosDevice = <iOSDevice.IOSDevice>device;
                 let projectId = this.$projectData.projectId;
                 let npc = new iOSProxyServices.NotificationProxyClient(iosDevice, this.$injector);

@@ -35,7 +35,7 @@
     "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.1",
     "colors": "1.1.2",
     "ffi": "https://github.com/icenium/node-ffi/tarball/v2.0.0.0",
-    "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.6.1",
+    "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.6.2",
     "filesize": "3.1.2",
     "gaze": "0.5.1",
     "gulp": "3.9.0",
