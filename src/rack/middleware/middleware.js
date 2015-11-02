@@ -1,5 +1,6 @@
-import Rack from 'kinvey-rack';
-import UrlPattern from 'url-pattern';
+const Rack = require('kinvey-rack');
+const UrlPattern = require('url-pattern');
+const Promise = require('bluebird');
 const urlPartsSymbol = Symbol();
 
 class Middleware extends Rack.Middleware {
@@ -24,4 +25,4 @@ class Middleware extends Rack.Middleware {
   }
 }
 
-export default Middleware;
+module.exports = Middleware;

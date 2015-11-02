@@ -1,15 +1,24 @@
-import nested from '../utils/nested';
-import sift from 'sift';
-import clone from 'lodash/lang/clone';
-import isArray from 'lodash/lang/isArray';
-import isNumber from 'lodash/lang/isNumber';
-import isString from 'lodash/lang/isString';
-import isObject from 'lodash/lang/isObject';
-import isRegExp from 'lodash/lang/isRegExp';
+const nested = require('../utils/object').nested;
+const sift = require('sift');
+const clone = require('lodash/lang/clone');
+const assign = require('lodash/object/assign');
+const isArray = require('lodash/lang/isArray');
+const isNumber = require('lodash/lang/isNumber');
+const isString = require('lodash/lang/isString');
+const isObject = require('lodash/lang/isObject');
+const isRegExp = require('lodash/lang/isRegExp');
 const privateQuerySymbol = Symbol();
 
 class PrivateQuery {
-  constructor(options = {}) {
+  constructor(options) {
+    options = assign({
+      fields: [],
+      filter: {},
+      sort: {},
+      limit: null,
+      skip: 0
+    }, options);
+
     /**
      * Fields to select.
      *
@@ -22,28 +31,28 @@ class PrivateQuery {
      *
      * @type {Object}
      */
-    this._filter = options.filter || {};
+    this._filter = options.filter;
 
     /**
      * The sorting order.
      *
      * @type {Object}
      */
-    this._sort = options.sort || {};
+    this._sort = options.sort;
 
     /**
      * Number of documents to select.
      *
      * @type {?Number}
      */
-    this._limit = options.limit || null;
+    this._limit = options.limit;
 
     /**
      * Number of documents to skip from the start.
      *
      * @type {Number}
      */
-    this._skip = options.skip || 0;
+    this._skip = options.skip;
 
     /**
      * Maintain reference to the parent query in case the query is part of a
@@ -184,7 +193,9 @@ class PrivateQuery {
     return this.addFilter(field, '$exists', flag);
   }
 
-  mod(field, divisor, remainder = 0) {
+  mod(field, divisor, remainder) {
+    remainder = remainder || 0;
+
     if (isString(divisor)) {
       divisor = parseFloat(divisor);
     }
@@ -204,7 +215,9 @@ class PrivateQuery {
     return this.addFilter(field, '$mod', [divisor, remainder]);
   }
 
-  matches(field, regExp, options = {}) {
+  matches(field, regExp, options) {
+    options = options || {};
+
     if (!isRegExp(regExp)) {
       regExp = new RegExp(regExp);
     }
@@ -300,15 +313,17 @@ class PrivateQuery {
     }
 
     if (!isNumber(size)) {
-      throw new Error('size argument must be of type: number');
+      throw new Error('size argument must be a number');
     }
 
     return this.addFilter(field, '$size', size);
   }
 
-  fields(fields = []) {
+  fields(fields) {
+    fields = fields || [];
+
     if (!isArray(fields)) {
-      throw new Error('fields argument must be of type: Array.');
+      throw new Error('fields argument must an Array.');
     }
 
     if (this.parent) {
@@ -558,7 +573,7 @@ class PrivateQuery {
 }
 
 class Query {
-  constructor(options = {}) {
+  constructor(options) {
     this[privateQuerySymbol] = new PrivateQuery(options);
   }
 
@@ -666,12 +681,12 @@ class Query {
     return this;
   }
 
-  mod(field, divisor, remainder = 0) {
+  mod(field, divisor, remainder) {
     this[privateQuerySymbol].mod(field, divisor, remainder);
     return this;
   }
 
-  matches(field, regExp, options = {}) {
+  matches(field, regExp, options) {
     this[privateQuerySymbol].matches(field, regExp, options);
     return this;
   }
@@ -696,7 +711,7 @@ class Query {
     return this;
   }
 
-  fields(fields = []) {
+  fields(fields) {
     this[privateQuerySymbol].fields(fields);
     return this;
   }
@@ -740,4 +755,4 @@ class Query {
   }
 }
 
-export default Query;
+module.exports = Query;

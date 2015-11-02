@@ -7,4 +7,4 @@ const StatusCode = {
   ServerError: 500
 };
 Object.freeze(StatusCode);
-export default StatusCode;
+module.exports = StatusCode;

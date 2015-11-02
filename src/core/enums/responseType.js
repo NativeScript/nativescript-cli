@@ -6,4 +6,4 @@ const ResponseType = {
   Text: 'text'
 };
 Object.freeze(ResponseType);
-export default ResponseType;
+module.exports = ResponseType;

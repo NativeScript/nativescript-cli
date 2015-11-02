@@ -58,31 +58,21 @@ config.files = {
 config.files = assign(config.files, platformConfig.files);
 
 /**
- * Babel is the lib used to transpile ES6 and beyond into ES5.
- */
-config.babel = {
-  blacklist: [
-    'useStrict'
-  ],
-  comments: false,
-  optional: [
-    'runtime',
-    'spec.undefinedToVoid',
-    'utility.inlineEnvironmentVariables'
-  ],
-  stage: 2
-};
-config.babel = assign(config.babel, platformConfig.babel);
-
-/**
- * Browserify is the lib used to link external dependencies to provide the
+ * Webpack is the lib used to link external dependencies to provide the
  * ability to run the library in a browser.
  */
-config.browserify = {
-  debug: true, // turns on/off creating .map file
-  standalone: 'Kinvey'
+config.webpack = {
+  module: {
+    loaders: [
+      {
+        test: /(src)\.js?$/,
+        exclude: /(node_modules)/,
+        loader: 'babel?comments=false&presets[]=es2015'
+      }
+    ]
+  }
 };
-config.browserify = assign(config.browserify, platformConfig.browserify);
+config.webpack = assign(config.webpack, platformConfig.webpack);
 
 // /**
 //  * BrowserySync is the lib used to automatically reload the browser

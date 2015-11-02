@@ -3,4 +3,4 @@ const RackType = {
   Storage: 'Storage'
 };
 Object.freeze(RackType);
-export default RackType;
+module.exports = RackType;

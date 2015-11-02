@@ -1,10 +1,10 @@
-import Middleware from './middleware';
-import Store from '../../core/cache/store';
-import HttpMethod from '../../core/enums/httpMethod';
-import StatusCode from '../../core/enums/statusCode';
-import StoreAdapter from '../../core/enums/storeAdapter';
+const Middleware = require('./middleware');
+const Store = require('../../core/storage/store');
+const HttpMethod = require('../../core/enums/httpMethod');
+const StatusCode = require('../../core/enums/statusCode');
+const StoreAdapter = require('../../core/enums/storeAdapter');
 
-export default class CacheMiddleware extends Middleware {
+class Cache extends Middleware {
   constructor() {
     super('Kinvey Cache Middleware');
   }
@@ -58,3 +58,5 @@ export default class CacheMiddleware extends Middleware {
     });
   }
 }
+
+module.exports = Cache;

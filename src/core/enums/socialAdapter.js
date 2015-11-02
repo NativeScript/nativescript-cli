@@ -5,4 +5,4 @@ const SocialAdapter = {
   Twitter: 'Twitter'
 };
 Object.freeze(SocialAdapter);
-export default SocialAdapter;
+module.exports = SocialAdapter;

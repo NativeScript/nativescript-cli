@@ -1,15 +1,13 @@
-import { KinveyError } from '../../errors';
-import Queue from 'promise-queue';
-import Query from '../../query';
-import Promise from 'bluebird';
-import isArray from 'lodash/lang/isArray';
-import isFunction from 'lodash/lang/isFunction';
-import isString from 'lodash/lang/isString';
-
-// Configure queue
+const KinveyError = require('../../errors');
+const Queue = require('promise-queue');
+const Query = require('../../query');
+const Promise = require('bluebird');
+const isArray = require('lodash/lang/isArray');
+const isFunction = require('lodash/lang/isFunction');
+const isString = require('lodash/lang/isString');
 Queue.configure(Promise);
 
-export default class WebSQLAdapter {
+class WebSQLAdapter {
   constructor(dbInfo) {
     this.dbInfo = dbInfo;
     this.queue = new Queue(1, Infinity);
@@ -31,7 +29,9 @@ export default class WebSQLAdapter {
       const writeTxn = write || !isFunction(this.db.readTransaction);
       this.db[writeTxn ? 'transaction' : 'readTransaction'](txn => {
         if (write && !isMaster) {
-          txn.executeSQL(`CREATE TABLE IF NOT EXISTS ${escapedCollection} (key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)`);
+          txn.executeSQL(
+            `CREATE TABLE IF NOT EXISTS ${escapedCollection} (key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)`
+          );
         }
 
         let pending = this.sql.length;
@@ -229,7 +229,9 @@ export default class WebSQLAdapter {
       count = count ? count : docs.length;
 
       if (count === 0) {
-        throw new KinveyError('The entity not found in the collection.', { collection: this.dbInfo.collection, id: id });
+        throw new KinveyError('The entity not found in the collection.',
+          { collection: this.dbInfo.collection, id: id }
+        );
       }
 
       return { count: count, documents: docs };
@@ -299,3 +301,5 @@ export default class WebSQLAdapter {
     return global.openDatabase ? true : false;
   }
 }
+
+module.exports = WebSQLAdapter;

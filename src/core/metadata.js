@@ -1,10 +1,10 @@
-import clone from 'lodash/lang/clone';
-import isPlainObject from 'lodash/lang/isPlainObject';
-import isDefined from '../utils/isDefined';
+const clone = require('lodash/lang/clone');
+const isPlainObject = require('lodash/lang/isPlainObject');
+const isDefined = require('../utils/object').isDefined;
 const privateMetadataSymbol = Symbol();
 
 class PrivateMetadata {
-  constructor(kmd = {}) {
+  constructor(kmd) {
     if (!isPlainObject(kmd)) {
       throw new Error('kmd argument must be an object');
     }
@@ -67,4 +67,4 @@ class Metadata {
   }
 }
 
-export default Metadata;
+module.exports = Metadata;

@@ -1,4 +1,4 @@
-import { getActiveUser } from '../utils/user';
+const getActiveUser = require('../utils/user').getActiveUser;
 
 class Auth {
   static all(client) {
@@ -32,7 +32,7 @@ class Auth {
   }
 
   static default(client) {
-    return Auth.session(client).catch((err) => {
+    return Auth.session().catch((err) => {
       return Auth.master(client).catch(() => {
         // Most likely, the developer did not create a user. Return a useful error.
         return Promise.reject(err);
@@ -76,4 +76,4 @@ class Auth {
   }
 }
 
-export default Auth;
+module.exports = Auth;

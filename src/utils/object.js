@@ -1,4 +1,4 @@
-export default function nested(document, dotProperty, value) {
+function nested(document, dotProperty, value) {
   if (!dotProperty) {// Top-level document.
     document = typeof value === 'undefined' ? document : value;
     return document;
@@ -21,3 +21,12 @@ export default function nested(document, dotProperty, value) {
 
   return null;// Property not found.
 }
+
+function isDefined(obj) {
+  return obj !== undefined && obj !== null;
+}
+
+module.exports = {
+  nested: nested,
+  isDefined: isDefined
+};

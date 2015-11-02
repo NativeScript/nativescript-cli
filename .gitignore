@@ -1,7 +1,9 @@
 node_modules
 .tmp
+tmp
 .DS_Store
-dist
+production
+staging
 coverage
 tmp
 npm-debug.log

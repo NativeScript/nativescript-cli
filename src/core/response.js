@@ -1,8 +1,8 @@
-import isString from 'lodash/lang/isString';
-import StatusCode from './enums/statusCode';
+const isString = require('lodash/lang/isString');
+const StatusCode = require('./enums/statusCode');
 
-export default class Response {
-  constructor(statusCode = StatusCode.OK, headers = {}, data = {}) {
+class Response {
+  constructor(statusCode = StatusCode.OK, headers = {}, data) {
     this.statusCode = statusCode;
     this.addHeaders(headers);
     this.data = data;
@@ -35,12 +35,12 @@ export default class Response {
       value = String(value);
     }
 
-    const headers = this.headers;
+    const headers = this.headers || {};
     headers[header.toLowerCase()] = value;
     this.headers = headers;
   }
 
-  addHeaders(headers = {}) {
+  addHeaders(headers) {
     const keys = Object.keys(headers);
 
     keys.forEach((header) => {
@@ -59,8 +59,8 @@ export default class Response {
       headers: this.headers,
       data: this.data
     };
-
-    // Return the json object
     return json;
   }
 }
+
+module.exports = Response;

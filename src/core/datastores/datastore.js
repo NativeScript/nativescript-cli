@@ -1,16 +1,17 @@
-import Aggregation from '../aggregation';
-import { Request } from '../request';
-import HttpMethod from '../enums/httpMethod';
-import DataPolicy from '../enums/DataPolicy';
-import Client from '../client';
-import Query from '../query';
-import Auth from '../auth';
-import Model from '../models/model';
-import assign from 'lodash/object/assign';
-import result from 'lodash/object/result';
-import log from 'loglevel';
-import isArray from 'lodash/lang/isArray';
-const datastoreNamespace = 'appdata';
+/* eslint new-cap: 0 */
+const Aggregation = require('../aggregation');
+const Request = require('../request').Request;
+const HttpMethod = require('../enums/httpMethod');
+const DataPolicy = require('../enums/DataPolicy');
+const Client = require('../client');
+const Query = require('../query');
+const Auth = require('../auth');
+const Model = require('../models/model');
+const assign = require('lodash/object/assign');
+const result = require('lodash/object/result');
+const log = require('loglevel');
+const isArray = require('lodash/lang/isArray');
+const datastoreNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
  * The Datastore class is used to retrieve, create, update, destroy, count and group documents
@@ -19,7 +20,7 @@ const datastoreNamespace = 'appdata';
  * @example
  * var datastore = new Kinvey.Datastore('books');
  */
-export default class Datastore {
+class Datastore {
   /**
    * Creates a new instance of the Datastore class.
    *
@@ -27,7 +28,6 @@ export default class Datastore {
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
   constructor(collection, client = Client.sharedInstance(), options = {}) {
-    // Default options
     options = assign({
       model: Model
     }, options);
@@ -90,20 +90,19 @@ export default class Datastore {
   find(query, options = {}) {
     log.debug(`Retrieving the models in the ${this.collection} collection.`, query);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
-    options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default
-    }, options);
-
-    // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.GET, this.path, query, null, options);
+    options = assign({
+      dataPolicy: DataPolicy.CloudOnly,
+      auth: Auth.default
+    }, options);
+    options.method = HttpMethod.GET;
+    options.path = this.path;
+    options.query = query;
+
+    const request = new Request(options);
     const promise = request.execute().then(response => {
       let data = response.data;
       const models = [];
@@ -119,14 +118,12 @@ export default class Datastore {
       return models;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Retrieved the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to retrieve the models in the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -151,27 +148,24 @@ export default class Datastore {
   get(id, options = {}) {
     log.debug(`Retrieving a model in the ${this.collection} collection with id = ${id}.`);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
+    options.method = HttpMethod.GET;
+    options.path = `${this.path}/id`;
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.GET, `${this.path}/id`, null, null, options);
+    const request = new Request(options);
     const promise = request.execute().then(response => {
       return new this.model(response.data, options);
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Retrieved the model in the ${this.collection} collection with id = ${id}.`, response);
     }).catch((err) => {
       log.error(`Failed to retrieve the model in the ${this.collection} collection with id = ${id}.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -197,33 +191,30 @@ export default class Datastore {
   save(model, options = {}) {
     log.debug(`Saving the model to the ${this.collection} collection.`, model);
 
-    // If the doc has an _id, perform an update instead
     if (model.id) {
       log.debug(`The model has an id = ${model.id}, updating the model instead.`);
       return this.update(model, options);
     }
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
+    options.method = HttpMethod.POST;
+    options.path = this.path;
+    options.data = result(model, 'toJSON', model);
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.POST, this.path, null, result(model, 'toJSON', model), options);
+    const request = new Request(options);
     const promise = request.execute().then(function(response) {
       return new this.model(response.data, options);
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Saved the model to the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to save the model to the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -249,27 +240,25 @@ export default class Datastore {
   update(model, options = {}) {
     log.debug(`Update the model to the ${this.collection} collection.`, model);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
+    options.method = HttpMethod.PUT;
+    options.path = `${this.path}/${model.id}`;
+    options.data = result(model, 'toJSON', model);
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.PUT, `${this.path}/${model.id}`, null, result(model, 'toJSON', model), options);
+    const request = new Request(options);
     const promise = request.execute().then(() => {
       return model;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Updated the model to the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to update the model to the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -295,35 +284,32 @@ export default class Datastore {
    *   ...
    * });
    */
-  clean(query = new Query(), options = {}) {
+  clean(query, options = {}) {
     log.debug(`Deleting the models in the ${this.collection} collection by query.`, query);
 
-    // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
+    options.method = HttpMethod.DELETE;
+    options.path = this.path;
+    options.query = query;
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.DELETE, this.path, query, null, options);
+    const request = new Request(options);
     const promise = request.execute().then(function(response) {
       return response.data;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Deleted the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to delete the models in the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -348,27 +334,24 @@ export default class Datastore {
   destroy(id, options = {}) {
     log.debug(`Deleting a model in the ${this.collection} collection with id = ${id}.`);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
+    options.method = HttpMethod.DELETE;
+    options.path = `${this.path}/${id}`;
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.DELETE, `${this.path}/${id}`, null, null, options);
+    const request = new Request(options);
     const promise = request.execute().then(function(response) {
       return response.data;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Deleted the model in the ${this.collection} collection with id = ${id}.`, response);
     }).catch((err) => {
       log.error(`Failed to delete the model in the ${this.collection} collection with id = ${id}.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -397,32 +380,29 @@ export default class Datastore {
   count(query, options = {}) {
     log.debug(`Counting the number of models in the ${this.collection} collection.`, query);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
-    options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default
-    }, options);
-
-    // Check that the query is an instance of Query
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.GET, `${this.path}/_count`, query, null, options);
+    options = assign({
+      dataPolicy: DataPolicy.CloudOnly,
+      auth: Auth.default
+    }, options);
+    options.method = HttpMethod.GET;
+    options.path = `${this.path}/_count`;
+    options.query = query;
+
+    const request = new Request(options);
     const promise = request.execute().then(response => {
       return response.data;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Counted the number of models in the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to count the number of models in the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -450,32 +430,31 @@ export default class Datastore {
   group(aggregation, options = {}) {
     log.debug(`Grouping the models in the ${this.collection} collection.`, aggregation, options);
 
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
-    options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default
-    }, options);
-
-    // Check that the aggregation is an instance of Aggregation
     if (aggregation && !(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
-    // Create and execute a request
-    const request = new Request(HttpMethod.POST, `${this.path}/_group`, null, aggregation.toJSON(), options);
+    options = assign({
+      dataPolicy: DataPolicy.CloudOnly,
+      auth: Auth.default
+    }, options);
+    options.method = HttpMethod.POST;
+    options.path = `${this.path}/_group`;
+    options.data = aggregation.toJSON();
+
+    const request = new Request(options);
     const promise = request.execute().then(response => {
       return response.data;
     });
 
-    // Log
     promise.then((response) => {
       log.info(`Grouped the models in the ${this.collection} collection.`, response);
     }).catch((err) => {
       log.error(`Failed to group the models in the ${this.collection} collection.`, err);
     });
 
-    // Return the promise
     return promise;
   }
 }
+
+module.exports = Datastore;

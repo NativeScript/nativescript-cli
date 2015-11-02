@@ -1,4 +1,4 @@
-import Client from './core/client';
+const Client = require('./core/client');
 const Kinvey = {};
 
 // Core
@@ -8,6 +8,7 @@ Kinvey.Client = Client;
 Kinvey.Datastore = require('./core/datastores/datastore');
 Kinvey.File = require('./core/models/file');
 Kinvey.Group = require('./core/aggregation');
+Kinvey.Logger = require('./core/logger');
 Kinvey.Metadata = require('./core/metadata');
 Kinvey.Model = require('./core/models/model');
 Kinvey.Query = require('./core/query');
@@ -58,7 +59,7 @@ Kinvey.Rack = require('./rack/rack');
  *   appSecret: 'appSecret'
  * });
  */
-Kinvey.init = function(options = {}) {
+Kinvey.init = function(options) {
   const client = Client.init(options);
   return client;
 };

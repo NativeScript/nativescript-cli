@@ -5,4 +5,4 @@ const DataPolicy = {
   CloudOnly: 'CloudOnly'
 };
 Object.freeze(DataPolicy);
-export default DataPolicy;
+module.exports = DataPolicy;

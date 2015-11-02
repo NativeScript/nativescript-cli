@@ -1,16 +1,19 @@
-import Datastore from './datastore';
-import Client from '../client';
-import { Request } from '../request';
-import { KinveyError } from '../errors';
-import HttpMethod from '../enums/httpMethod';
-import ResponseType from '../enums/responseType';
-import DataPolicy from '../enums/dataPolicy';
-import Auth from '../auth';
-import url from 'url';
-import Promise from 'bluebird';
-import assign from 'lodash/object/assign';
-import isObject from 'lodash/lang/isObject';
-const filesNamespace = 'blob';
+// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+const Datastore = require('./datastore');
+const Client = require('../client');
+const Request = require('../request').Request;
+const KinveyError = require('../errors').KinveyError;
+const HttpMethod = require('../enums/httpMethod');
+const ResponseType = require('../enums/responseType');
+const DataPolicy = require('../enums/dataPolicy');
+const Auth = require('../auth');
+const File = require('../models/file');
+const url = require('url');
+const Promise = require('bluebird');
+const assign = require('lodash/object/assign');
+const defaults = require('lodash/object/defaults');
+const isObject = require('lodash/lang/isObject');
+const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const pathReplaceRegex = /[^\/]$/;
 
 /**
@@ -19,14 +22,15 @@ const pathReplaceRegex = /[^\/]$/;
  * @example
  * var files = new Kinvey.Files();
  */
-export default class Files extends Datastore {
+class Files extends Datastore {
   /**
    * Creates a new instance of the Files class.
    *
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(client = Client.sharedInstance()) {
-    super(null, client);
+  constructor(client = Client.sharedInstance(), options = {}) {
+    options.model = File;
+    super('files', client, options);
   }
 
   /**
@@ -69,8 +73,8 @@ export default class Files extends Datastore {
    * });
    */
   find(query, options = {}) {
-    // Build flags
     options.flags = {};
+
     if (options.tls !== false) {
       options.flags.tls = true;
     }
@@ -79,9 +83,7 @@ export default class Files extends Datastore {
       options.flags.ttl_in_seconds = options.ttl;
     }
 
-    // Execute the request
     const promise = super.find(query, options).then((files) => {
-      // Download the file
       if (options.download) {
         const promises = files.map((file) => {
           return this.downloadByUrl(file, options);
@@ -92,8 +94,6 @@ export default class Files extends Datastore {
 
       return files;
     });
-
-    // Return the promise
     return promise;
   }
 
@@ -123,15 +123,14 @@ export default class Files extends Datastore {
    * });
    */
   download(name, options = {}) {
-    // Set option defaults. These values will be overridden
-    // if the option was provided.
     options = assign({
       dataPolicy: DataPolicy.CloudFirst,
       auth: Auth.default
     }, options);
-
-    // Build flags
+    options.method = HttpMethod.GET;
+    options.path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(name)}`;
     options.flags = {};
+
     if (options.tls !== false) {
       options.flags.tls = true;
     }
@@ -140,36 +139,27 @@ export default class Files extends Datastore {
       options.flags.ttl_in_seconds = options.ttl;
     }
 
-    // Create the request path
-    const path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(name)}`;
-
-    // Create and execute a request
-    const request = new Request(HttpMethod.GET, path, null, null, options);
+    const request = new Request(options);
     const promise = request.execute().then((response) => {
-      // Stream the file
       if (options.stream) {
         return response.data;
       }
 
-      // Download the file
       return this.downloadByUrl(response.data, options);
     });
 
-    // Return the promise
     return promise;
   }
 
   donwloadByUrl(metadataOrUrl) {
     let metadata = metadataOrUrl;
 
-    // Format metadata
     if (!isObject(metadataOrUrl)) {
       metadata = {
         _downloadURL: metadataOrUrl
       };
     }
 
-    // Create a client
     const sharedClient = Client.sharedInstance();
     const client = new Client({
       appId: sharedClient.appId,
@@ -180,17 +170,16 @@ export default class Files extends Datastore {
       allowHttp: true
     });
 
-    // Create the request path
-    const path = url.parse(metadata._downloadURL).path;
-
-    // Create and execute the request
-    const request = new Request(HttpMethod.GET, path, null, null, {
+    const request = new Request({
+      method: HttpMethod.GET,
+      path: url.parse(metadata._downloadURL).path,
       client: client
     });
     request.setHeader('Accept', metadata.mimeType || 'application-octet-stream');
     request.removeHeader('Content-Type');
     request.removeHeader('X-Kinvey-Api-Version');
     request.setResponseType = ResponseType.Blob;
+
     const promise = request.execute().then((data) => {
       metadata._data = data;
       return metadata;
@@ -198,7 +187,6 @@ export default class Files extends Datastore {
       throw new KinveyError('The file could not be downloaded from the provided url.', err);
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -231,7 +219,6 @@ export default class Files extends Datastore {
   }
 
   upload(file = {}, data = {}, options = {}) {
-    // Extract metadata
     data._filename = data._filename || file._filename || file.name;
     data.size = data.size || file.size || file.length;
     data.mimeType = data.mimeType || file.mimeType || file.type || 'application/octet-stream';
@@ -240,23 +227,23 @@ export default class Files extends Datastore {
       data._public = true;
     }
 
-    // Request path
-    let path = this.path;
-    let request;
-
     if (data._id) {
-      // Add the _id to the path
-      path = `${path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(data._id)}`;
-
-      // Create the request
-      request = new Request(HttpMethod.PUT, path, null, data, options);
+      options = defaults({
+        method: HttpMethod.PUT,
+        path: `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(data._id)}`,
+        data: data
+      }, options);
     } else {
-      // Create the request
-      request = new Request(HttpMethod.POST, path, null, data, options);
+      options = defaults({
+        method: HttpMethod.POST,
+        path: this.path,
+        data: data
+      }, options);
     }
 
-    // Execute the request
+    const request = new Request(options);
     request.setHeader('Content-Type', data.mimeType);
+
     const promise = request.execute().then((response) => {
       const uploadUrl = response._uploadURL;
       const headers = response._requiredHeaders || {};
@@ -282,18 +269,21 @@ export default class Files extends Datastore {
       const path = url.parse(uploadUrl).path;
 
       // Upload the file
-      const request = new Request(HttpMethod.PUT, path, null, file, {
+      const uploadRequest = new Request({
+        method: HttpMethod.PUT,
+        path: path,
+        data: file,
         client: client
       });
-      request.addHeaders(headers);
-      request.removeHeader('X-Kinvey-Api-Version');
-      return request.execute().then(() => {
+      uploadRequest.addHeaders(headers);
+      uploadRequest.removeHeader('X-Kinvey-Api-Version');
+
+      return uploadRequest.execute().then(() => {
         response._data = file;
         return response;
       });
     });
 
-    // Return the promise
     return promise;
   }
 
@@ -316,7 +306,6 @@ export default class Files extends Datastore {
    * });
    */
   destroy(name, options = {}) {
-    // Execute the request
     const promise = super.destroy(name, options).catch((err) => {
       if (err.name === 'BLOB_NOT_FOUND') {
         return { count: 0 };
@@ -325,7 +314,8 @@ export default class Files extends Datastore {
       throw err;
     });
 
-    // Return the promise
     return promise;
   }
 }
+
+module.exports = Files;

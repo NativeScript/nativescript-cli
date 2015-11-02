@@ -1,30 +1,22 @@
-import Acl from '../acl';
-import Metadata from '../metadata';
-import defaults from 'lodash/object/defaults';
-import result from 'lodash/object/result';
-import clone from 'lodash/lang/clone';
-import assign from 'lodash/object/assign';
-import has from 'lodash/object/has';
-import size from 'lodash/collection/size';
-import isEqual from 'lodash/lang/isEqual';
-import isEmpty from 'lodash/lang/isEmpty';
-const idAttribute = '_id';
-const aclAttribute = '_acl';
-const kmdAttribute = '_kmd';
+const Acl = require('../acl');
+const Metadata = require('../metadata');
+const defaults = require('lodash/object/defaults');
+const result = require('lodash/object/result');
+const clone = require('lodash/lang/clone');
+const assign = require('lodash/object/assign');
+const has = require('lodash/object/has');
+const size = require('lodash/collection/size');
+const isEqual = require('lodash/lang/isEqual');
+const isEmpty = require('lodash/lang/isEmpty');
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
-export default class Model {
+class Model {
   constructor(attributes = {}, options = {}) {
     this.attributes = {};
-    this.changed = {};
-    this.validationError = null;
-
-    let attrs = attributes;
-    if (options.parse) {
-      attrs = this.parse(attrs, options) || {};
-    }
-
-    attrs = defaults({}, attrs, result(this, 'defaults', {}));
-    this.set(attrs, options);
+    attributes = defaults({}, attributes, result(this, 'defaults', {}));
+    this.set(attributes, options);
   }
 
   get id() {
@@ -76,7 +68,6 @@ export default class Model {
       return this;
     }
 
-    // Handle both `key, value` and `{key: value}` style arguments
     let attrs;
     if (typeof key === 'object') {
       attrs = key;
@@ -85,40 +76,13 @@ export default class Model {
       (attrs = {})[key] = val;
     }
 
-    // Run validation
-    if (!this._validate(attrs, options)) {
-      return false;
-    }
-
-    // Extract attributes and options
     const unset = options.unset;
-    const changes = [];
-    const changing = this._changing;
+    const currentAttributes = clone(this.attributes, true);
     this._changing = true;
 
-    if (!changing) {
-      this._previousAttributes = clone(this.attributes, true);
-      this.changed = {};
-    }
-
-    const currentAttributes = this.attributes;
-    const changed = this.changed;
-    const previousAttributes = this._previousAttributes;
-
-    // For each `set` attribute. update or delete the current value
     for (const attr in attrs) {
       if (attrs.hasOwnProperty(attr)) {
         val = attrs[attr];
-
-        if (!isEqual(currentAttributes[attr], val)) {
-          changes.push(attr);
-        }
-
-        if (!isEqual(previousAttributes[attr], val)) {
-          changed[attr] = val;
-        } else {
-          delete changed[attr];
-        }
 
         if (unset) {
           delete currentAttributes[attr];
@@ -128,55 +92,13 @@ export default class Model {
       }
     }
 
+    this.attributes = currentAttributes;
     this._changing = false;
     return this;
   }
 
   unset(attr, options = {}) {
-    return this.set(attr, undefined, assign({}, options, {unset: true}));
-  }
-
-  hasChanged(attr) {
-    if (!attr) {
-      return !isEmpty(this.changed);
-    }
-
-    return has(this.changed, attr);
-  }
-
-  changedAttributes(diff) {
-    if (!diff) {
-      return this.hasChanged() ? clone(this.changed, true) : false;
-    }
-
-    const old = this._changing ? this._previousAttributes : this.attributes;
-    const changed = {};
-
-    for (const attr in diff) {
-      if (diff.hasOwnProperty(attr)) {
-        const val = diff[attr];
-
-        if (isEqual(old[attr], val)) {
-          continue;
-        }
-
-        changed[attr] = val;
-      }
-    }
-
-    return size(changed) ? changed : false;
-  }
-
-  previousAttribute(attr) {
-    if (!attr || !this._previousAttributes) {
-      return null;
-    }
-
-    return this._previousAttributes[attr];
-  }
-
-  parse(data) {
-    return data;
+    return this.set(attr, undefined, assign({}, options, { unset: true }));
   }
 
   isNew() {
@@ -184,26 +106,9 @@ export default class Model {
     return !this.has(idAttribute) || id.indexOf(this.objectIdPrefix) === 0;
   }
 
-  isValid(options = {}) {
-    return this._validate({}, defaults({validate: true}, options));
-  }
-
   toJSON() {
     return clone(this.attributes, true);
   }
-
-  _validate(attrs, options = {}) {
-    if (!options.validate || !this.validate) {
-      return true;
-    }
-
-    attrs = assign({}, this.attributes, attrs);
-    const error = this.validationError = this.validate(attrs, options) || null;
-
-    if (error) {
-      return false;
-    }
-
-    return true;
-  }
 }
+
+module.exports = Model;

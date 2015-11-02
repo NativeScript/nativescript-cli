@@ -97,7 +97,7 @@ export default class Social {
         if (isPhoneGap()) {
           popup = global.open(popupUrl, '_blank', 'location=yes');
           popup.addEventListener('loadstart', loadHandler);
-          popup.addEventListener('exit', closeHandler);
+          popup.addEventListener('exit', closePopup);
         } else if (isTitanium()) {
           // Create a web view
           tiWebView = Titanium.UI.createWebView({

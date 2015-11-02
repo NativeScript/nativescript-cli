@@ -1,15 +1,17 @@
-import { KinveyError } from '../../errors';
-import Query from '../../query';
-import Promise from 'bluebird';
+const KinveyError = require('../../errors').KinveyError;
+const Query = require('../../query');
+const Promise = require('bluebird');
 let inTransaction = false;
-let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB);
+let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB || 'fake-indexeddb');
 
-if (process.env.KINVEY_PLATFORM_ENV !== 'node') {
+if (process.env.KINVEY_PLATFORM_ENV !== 'node' && global.shimIndexedDB) {
   global.shimIndexedDB.__useShim();
-  indexedDB = global.shimIndexedDB || global.indexedDB || global.mozIndexedDB || global.webkitIndexedDB || global.OIndexedDB || global.msIndexedDB;
+  indexedDB = global.shimIndexedDB || global.indexedDB ||
+    global.mozIndexedDB || global.webkitIndexedDB ||
+    global.OIndexedDB || global.msIndexedDB;
 }
 
-export default class IndexedDBAdapter {
+class IndexedDBAdapter {
   constructor(dbInfo) {
     this.dbInfo = dbInfo;
     this.queue = [];
@@ -31,7 +33,9 @@ export default class IndexedDBAdapter {
             return success(store);
           }
 
-          return error(new KinveyError('Unable to open a transaction for the database. Please try this database transaction again.'));
+          return error(new KinveyError(
+            'Unable to open a transaction for the database. Please try this database transaction again.'
+          ));
         } catch (err) {
           return error(err);
         }
@@ -352,3 +356,5 @@ export default class IndexedDBAdapter {
     return indexedDB ? true : false;
   }
 }
+
+module.exports = IndexedDBAdapter;

@@ -1,20 +1,20 @@
-import StoreAdapter from '../enums/storeAdapter';
-import { KinveyError } from '../errors';
-import Query from '../query';
-import Aggregation from '../aggregation';
-import IndexedDBAdapter from './adapters/indexeddb';
-import LocalStorageAdapter from './adapters/localstorage';
-import WebSQLAdapter from './adapters/websql';
-import Promise from 'bluebird';
-import log from 'loglevel';
-import assign from 'lodash/object/assign';
-import result from 'lodash/object/result';
-import isString from 'lodash/lang/isString';
-import isArray from 'lodash/lang/isArray';
-import isFunction from 'lodash/lang/isArray';
+const StoreAdapter = require('../enums/storeAdapter');
+const KinveyError = require('../errors').KinveyError;
+const Query = require('../query');
+const Aggregation = require('../aggregation');
+const IndexedDBAdapter = require('./adapters/indexeddb');
+const LocalStorageAdapter = require('./adapters/localstorage');
+const WebSQLAdapter = require('./adapters/websql');
+const Promise = require('bluebird');
+const log = require('loglevel');
+const assign = require('lodash/object/assign');
+const result = require('lodash/object/result');
+const isString = require('lodash/lang/isString');
+const isArray = require('lodash/lang/isArray');
+const isFunction = require('lodash/lang/isArray');
 const validCollectionRegex = /^[a-zA-Z0-9\-]{1,128}/;
 
-export default class Store {
+class Store {
   constructor(Adapters = [StoreAdapter.IndexedDB], dbInfo) {
     dbInfo = assign({
       name: 'kinvey',
@@ -22,11 +22,13 @@ export default class Store {
     }, dbInfo);
 
     if (!isString(dbInfo.name) || !validCollectionRegex.test(dbInfo.name)) {
-      throw new KinveyError('The database name has an invalid format.', 'The database name must be a string containing only alphanumeric characters and dashes.');
+      throw new KinveyError('The database name has an invalid format.',
+        'The database name must be a string containing only alphanumeric characters and dashes.');
     }
 
     if (!isString(dbInfo.collection) || !validCollectionRegex.test(dbInfo.collection)) {
-      throw new KinveyError('The collection name has an invalid format.', 'The collection name must be a string containing only alphanumeric characters and dashes.');
+      throw new KinveyError('The collection name has an invalid format.',
+        'The collection name must be a string containing only alphanumeric characters and dashes.');
     }
 
     if (!isArray(Adapters)) {
@@ -175,3 +177,5 @@ export default class Store {
     return this.adapter.clear();
   }
 }
+
+module.exports = Store;

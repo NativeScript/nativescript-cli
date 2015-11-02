@@ -1,6 +1,6 @@
-import { KinveyError } from './errors';
-import isPlainObject from 'lodash/lang/isPlainObject';
-import clone from 'lodash/lang/clone';
+const KinveyError = require('./errors').KinveyError;
+const isPlainObject = require('lodash/lang/isPlainObject');
+const clone = require('lodash/lang/clone');
 const privateAclSymbol = Symbol();
 
 class PrivateAcl {
@@ -32,7 +32,7 @@ class PrivateAcl {
     this.acl.gw = gw || false;
   }
 
-  constructor(acl = {}) {
+  constructor(acl) {
     if (!isPlainObject(acl)) {
       throw new KinveyError('acl argument must be an object');
     }
@@ -140,7 +140,7 @@ class PrivateAcl {
   }
 }
 
-export default class Acl {
+class Acl {
   get creator() {
     return this[privateAclSymbol].creator;
   }
@@ -220,3 +220,5 @@ export default class Acl {
     return this[privateAclSymbol].toJSON();
   }
 }
+
+module.exports = Acl;

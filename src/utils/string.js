@@ -1,5 +1,4 @@
-// Gets the byte count for a string
-export function byteCount(str) {
+function byteCount(str) {
   let count = 0;
   const stringLength = str.length;
   str = String(str || '');
@@ -11,3 +10,7 @@ export function byteCount(str) {
 
   return count;
 }
+
+module.exports = {
+  byteCount: byteCount
+};

@@ -1,18 +1,30 @@
-import { ActiveUserError, KinveyError } from '../errors';
-import Model from './model';
-import Users from '../datastores/users';
-import SocialAdapter from '../enums/socialAdapter';
-import Facebook from '../social/facebook';
-import Google from '../social/google';
-import LinkedIn from '../social/linkedIn';
-import Twitter from '../social/twitter';
-import { getActiveUser, setActiveUser } from '../../utils/user';
-import isFunction from 'lodash/lang/isFunction';
-import isString from 'lodash/lang/isString';
-import Promise from 'bluebird';
-const activeUserSymbol = Symbol();
+// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
-export default class User extends Model {
+const KinveyError = require('../errors').KinveyError;
+const ActiveUserError = require('../errors').ActiveUserError;
+const Model = require('./model');
+const Request = require('../request').Request;
+const SocialAdapter = require('../enums/socialAdapter');
+const Facebook = require('../social/facebook');
+const Google = require('../social/google');
+const LinkedIn = require('../social/linkedIn');
+const Twitter = require('../social/twitter');
+const Client = require('../client');
+const HttpMethod = require('../enums/httpMethod');
+const DataPolicy = require('../enums/dataPolicy');
+const Auth = require('../auth');
+const getActiveUser = require('../../utils/user').getActiveUser;
+const setActiveUser = require('../../utils/user').setActiveUser;
+const isFunction = require('lodash/lang/isFunction');
+const isString = require('lodash/lang/isString');
+const isObject = require('lodash/lang/isObject');
+const result = require('lodash/object/result');
+const assign = require('lodash/object/assign');
+const Promise = require('bluebird');
+const activeUserSymbol = Symbol();
+const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+
+class User extends Model {
   get authtoken() {
     return this.metadata.authtoken;
   }
@@ -50,7 +62,7 @@ export default class User extends Model {
       user = new User(result(user, 'toJSON', user));
     }
 
-    return setActiveUser(user ? user.toJSON() : user).then(() => {
+    return setActiveUser(user).then(() => {
       if (user) {
         User[activeUserSymbol] = user;
         return user;
@@ -76,26 +88,56 @@ export default class User extends Model {
   }
 
   /**
-   * Login a Kinvey user.
+   * Login a user. A promise will be returned that will be resolved with a
+   * user or rejected with an error.
    *
-   * @param   {Object|string} usernameOrData      Username, or user data.
-   * @param   {string}        [password]          Password
-   * @param   {Options}       [options]           Options
-   * @returns {Promise}                           Resolved with the active user or rejected with an error.
-  */
+   * @param   {string|Object} usernameOrData Username or login data
+   * @param   {string} [password] Password
+   * @param   {Options} [options] Options
+   * @return  {Promise} Promise
+   *
+   * @example
+   * Kinvey.User.login('admin', 'admin').then(function(user) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
   static login(usernameOrData, password, options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
     const promise = User.getActive().then(user => {
       if (user) {
         throw new ActiveUserError('A user is already logged in.');
       }
 
-      const collection = new Users();
-      return collection.login(usernameOrData, password, options);
-    }).then((data) => {
-      const user = new User(data);
-      return User.setActive(user).then(() => {
-        return user;
-      });
+      options.method = HttpMethod.POST;
+      options.path = `/${usersNamespace}/${options.client.appId}/login`;
+      options.data = usernameOrData;
+      options.dataPolicy = DataPolicy.CloudOnly;
+      options.auth = Auth.app;
+
+      if (!isObject(usernameOrData)) {
+        usernameOrData = {
+          username: usernameOrData,
+          password: password
+        };
+        options.data = usernameOrData;
+      }
+
+      if ((!usernameOrData.username || !usernameOrData.password) && !usernameOrData._socialIdentity) {
+        throw new KinveyError(
+          'Username and/or password missing. Please provide both a username and password to login.'
+        );
+      }
+
+      const request = new Request(options);
+      return request.execute();
+    }).then(response => {
+      const user = new User(response.data);
+      return User.setActive(user);
     });
 
     return promise;
@@ -117,11 +159,14 @@ export default class User extends Model {
     }
 
     if (!token.access_token || !token.expires_in) {
-      return Promise.reject(new KinveyError('token argument must contain both an access_token and expires_in property.', token));
+      return Promise.reject(
+        new KinveyError('token argument must contain both an access_token and expires_in property.', token)
+      );
     }
 
     const data = { _socialIdentity: { } };
     data._socialIdentity[provider] = token;
+
     return User.login(data, options);
   }
 
@@ -156,7 +201,10 @@ export default class User extends Model {
     }
 
     if (!isFunction(adapter.connect)) {
-      return Promise.reject(new KinveyError('Unable to connect with the social adapter.', 'Please provide a connect function for the adapter.'));
+      return Promise.reject(
+        new KinveyError('Unable to connect with the social adapter.',
+                        'Please provide a connect function for the adapter.')
+      );
     }
 
     promise = adapter.connect(options).then((token) => {
@@ -167,19 +215,37 @@ export default class User extends Model {
   }
 
   /**
-   * Logout the active user.
+   * Logout the active user. A promise will be returned that will be resolved
+   * with null or rejected with an error.
    *
-   * @param   {Options} [options] Options.
-   * @returns {Promise}           The previous active user.
+   * @param {Object} [options] Options
+   * @return  {Promise} Promise
+   *
+   * @example
+   * var user = Kinvey.User.getActive();
+   * user.logout().then(function() {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
    */
   logout(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
     const promise = this.isActive().then(active => {
       if (!active) {
         return null;
       }
 
-      const collection = new Users();
-      return collection.logout(options);
+      options.method = HttpMethod.POST;
+      options.path = `/${usersNamespace}/${options.client.appId}/_logout`;
+      options.dataPolicy = DataPolicy.CloudOnly;
+      options.auth = Auth.session;
+
+      const request = new Request(options);
+      return request.execute();
     }).then(() => {
       return User.setActive(null);
     });
@@ -187,3 +253,5 @@ export default class User extends Model {
     return promise;
   }
 }
+
+module.exports = User;

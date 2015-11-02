@@ -1,16 +1,17 @@
-import Middleware from './middleware';
+const Middleware = require('./middleware');
+const Promise = require('bluebird');
 
-class SerializerMiddleware extends Middleware {
+class Serializer extends Middleware {
   constructor() {
     super('Kinvey Serializer Middleware');
   }
 
   handle(request) {
-    if (request && request.body) {
+    if (request && request.data) {
       const contentType = request.headers['content-type'] || request.headers['Content-Type'];
 
       if (contentType.indexOf('application/json') === 0) {
-        request.body = JSON.stringify(request.body);
+        request.data = JSON.stringify(request.data);
       }
     }
 
@@ -18,4 +19,4 @@ class SerializerMiddleware extends Middleware {
   }
 }
 
-export default SerializerMiddleware;
+module.exports = Serializer;

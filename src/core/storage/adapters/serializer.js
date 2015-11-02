@@ -1,4 +1,4 @@
-import Promise from 'bluebird';
+const Promise = require('bluebird');
 
 const BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const BLOB_TYPE_PREFIX = '~~kinvey_type~';

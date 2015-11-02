@@ -4,4 +4,4 @@ const StoreAdapter = {
   WebSQL: 'WebSQL'
 };
 Object.freeze(StoreAdapter);
-export default StoreAdapter;
+module.exports = StoreAdapter;

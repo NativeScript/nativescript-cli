@@ -1,10 +1,11 @@
-import Serializer from './serializer';
-import { KinveyError } from '../../errors';
-import assign from 'lodash/object/assign';
-import Promise from 'bluebird';
-import localStorage from 'humble-localstorage';
+const Serializer = require('./serializer');
+const KinveyError = require('../../errors').KinveyError;
+const assign = require('lodash/object/assign');
+const Promise = require('bluebird');
+const Query = require('../../query');
+const localStorage = require('humble-localstorage');
 
-export default class LocalStorageAdapter {
+class LocalStorageAdapter {
   constructor(dbInfo = {}) {
     dbInfo = assign({
       name: 'kinvey',
@@ -170,3 +171,5 @@ export default class LocalStorageAdapter {
     }
   }
 }
+
+module.exports = LocalStorageAdapter;

@@ -1,6 +1,7 @@
-import Middleware from './middleware';
+const Middleware = require('./middleware');
+const Promise = require('bluebird');
 
-class ParserMiddleware extends Middleware {
+class Parser extends Middleware {
   constructor(name = 'Kinvey Parser Middleware') {
     super(name);
   }
@@ -9,7 +10,7 @@ class ParserMiddleware extends Middleware {
     const response = request.response;
 
     if (response && response.data) {
-      const contentType = request.headers['content-type'] || request.headers['Content-Type'];
+      const contentType = response.headers['content-type'] || response.headers['Content-Type'];
 
       if (contentType.indexOf('application/json') === 0) {
         try {
@@ -26,4 +27,4 @@ class ParserMiddleware extends Middleware {
   }
 }
 
-export default ParserMiddleware;
+module.exports = Parser;

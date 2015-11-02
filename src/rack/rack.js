@@ -1,22 +1,22 @@
-import clone from 'lodash/lang/clone';
-import Response from '../core/response';
-import KinveyRack from 'kinvey-rack';
-import SerializerMiddleware from './middleware/serializer';
-import HttpMiddleware from './middleware/http';
-import ParserMiddleware from './middleware/parser';
-import CacheMiddleware from './middleware/cache';
-import Promise from 'bluebird';
+const clone = require('lodash/lang/clone');
+const Response = require('../core/response');
+const KinveyRack = require('kinvey-rack');
+const Serializer = require('./middleware/serializer');
+const Http = require('./middleware/http');
+const Parser = require('./middleware/parser');
+const Cache = require('./middleware/cache');
+const Promise = require('bluebird');
+const result = require('lodash/object/result');
 const networkRackSymbol = Symbol();
 const cacheRackSymbol = Symbol();
 
 class Rack extends KinveyRack {
-
   static get networkRack() {
     if (!Rack[networkRackSymbol]) {
       const rack = new Rack('Kinvey Network Rack');
-      rack.use(new SerializerMiddleware());
-      rack.use(new HttpMiddleware());
-      rack.use(new ParserMiddleware());
+      rack.use(new Serializer());
+      rack.use(new Http());
+      rack.use(new Parser());
       Rack[networkRackSymbol] = rack;
     }
 
@@ -30,7 +30,7 @@ class Rack extends KinveyRack {
   static get cacheRack() {
     if (!Rack[cacheRackSymbol]) {
       const rack = new Rack('Kinvey Cache Rack');
-      rack.use(new CacheMiddleware());
+      rack.use(new Cache());
       Rack[cacheRackSymbol] = rack;
     }
 
@@ -56,4 +56,4 @@ class Rack extends KinveyRack {
   }
 }
 
-export default Rack;
+module.exports = Rack;

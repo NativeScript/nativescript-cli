@@ -1,31 +1,36 @@
-import isDefined from '../utils/isDefined';
-import isFunction from 'lodash/lang/isFunction';
-import isString from 'lodash/lang/isString';
-import HttpMethod from './enums/httpMethod';
-import Rack from '../rack/rack';
-import ResponseType from './enums/responseType';
-import Query from './query';
-import url from 'url';
-import Client from './client';
-import Auth from './auth';
-import DataPolicy from './enums/dataPolicy';
-import { KinveyError } from './errors';
-import RequestProperties from './requestProperties';
-import Promise from 'bluebird';
-import assign from 'lodash/object/assign';
-import merge from 'lodash/object/merge';
-import result from 'lodash/object/result';
-import clone from 'lodash/lang/clone';
-import indexBy from 'lodash/collection/indexBy';
-import reduce from 'lodash/collection/reduce';
-import { byteCount } from '../utils/string';
+const isDefined = require('../utils/object').isDefined;
+const isFunction = require('lodash/lang/isFunction');
+const isString = require('lodash/lang/isString');
+const isPlainObject = require('lodash/lang/isPlainObject');
+const HttpMethod = require('./enums/httpMethod');
+const Rack = require('../rack/rack');
+const ResponseType = require('./enums/responseType');
+const Query = require('./query');
+const url = require('url');
+const Client = require('./client');
+const Auth = require('./auth');
+const DataPolicy = require('./enums/dataPolicy');
+const KinveyError = require('./errors').KinveyError;
+const RequestProperties = require('./requestProperties');
+const Promise = require('bluebird');
+const assign = require('lodash/object/assign');
+const merge = require('lodash/object/merge');
+const result = require('lodash/object/result');
+const clone = require('lodash/lang/clone');
+const indexBy = require('lodash/collection/indexBy');
+const reduce = require('lodash/collection/reduce');
+const byteCount = require('../utils/string').byteCount;
 const customRequestPropertiesMaxBytes = 2000;
 const maxIdsPerRequest = 200;
 const defaultTimeout = 10000; // 10 seconds
 
-export class Request {
-  constructor(method = HttpMethod.GET, path = '', query, data, options = {}) {
+class Request {
+  constructor(options = {}) {
     options = assign({
+      method: HttpMethod.GET,
+      path: '/',
+      query: null,
+      data: null,
       auth: Auth.none,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudOnly,
@@ -33,28 +38,23 @@ export class Request {
       timeout: defaultTimeout
     }, options);
 
-    let client = options.client;
-
-    // Validate options
-    if (!(client instanceof Client)) {
-      client = new Client(result(client, 'toJSON', client));
+    if (!(options.client instanceof Client)) {
+      options.client = new Client(result(options.client, 'toJSON', options.client));
     }
 
-    // Validate query
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+    if (options.query && !(options.query instanceof Query)) {
+      options.query = new Query(result(options.query, 'toJSON', options.query));
     }
 
-    // Set request info
-    this.method = method;
+    this.method = options.method;
     this.headers = {};
     this.requestProperties = options.requestProperties;
     this.protocol = options.client.apiProtocol;
     this.host = options.client.apiHost;
-    this.path = path;
-    this.query = query;
+    this.path = options.path;
+    this.query = options.query;
     this.flags = options.flags;
-    this.data = data;
+    this.data = options.data;
     this.responseType = options.responseType;
     this.client = options.client;
     this.auth = options.auth;
@@ -62,11 +62,10 @@ export class Request {
     this.timeout = options.timeout;
     this.executing = false;
 
-    // Add default headers
     const headers = {};
     headers.Accept = 'application/json';
-    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION;
-    headers['X-Kinvey-Device-Information'] = {};
+    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
+    headers['X-Kinvey-Device-Information'] = 'nodejs-sdk v1.9.0';
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;
@@ -93,7 +92,6 @@ export class Request {
       method = String(method);
     }
 
-    // Make the method uppercase
     method = method.toUpperCase();
 
     switch (method) {
@@ -132,7 +130,10 @@ export class Request {
     const customRequestPropertiesByteCount = byteCount(customRequestPropertiesHeader);
 
     if (customRequestPropertiesByteCount >= customRequestPropertiesMaxBytes) {
-      throw new KinveyError(`The custom request properties are ${customRequestPropertiesByteCount}. It must be less then ${customRequestPropertiesMaxBytes} bytes.`, 'Please remove some custom request properties.');
+      throw new KinveyError(
+        `The custom request properties are ${customRequestPropertiesByteCount}.` +
+        `It must be less then ${customRequestPropertiesMaxBytes} bytes.`,
+        'Please remove some custom request properties.');
     }
 
     this.setHeader('X-Kinvey-Custom-Request-Properties', customRequestPropertiesHeader);
@@ -144,8 +145,7 @@ export class Request {
       protocol: this.protocol,
       host: this.host,
       pathname: this.path,
-      query: merge({}, this.flags, result(this.query, 'toJSON', {})),
-      hash: this.hash
+      query: merge({}, this.flags, result(this.query, 'toJSON', {}))
     });
   }
 
@@ -247,7 +247,11 @@ export class Request {
     this.headers = headers;
   }
 
-  addHeaders(headers = {}) {
+  addHeaders(headers) {
+    if (!isPlainObject(headers)) {
+      throw new KinveyError('headers argument must be an object');
+    }
+
     const keys = Object.keys(headers);
 
     keys.forEach((header) => {
@@ -374,28 +378,23 @@ export class Request {
   }
 
   toJSON() {
-    // Create an object representing the request
     const json = {
       method: this.method,
       headers: this.headers,
-      requestProperties: result(this.requestProperties, 'toJSON', null),
       url: this.url,
       path: this.path,
       query: result(this.query, 'toJSON', null),
       flags: this.flags,
       data: this.data,
       responseType: this.responseType,
-      dataPolicy: this.dataPolicy,
-      client: result(this.client, 'toJSON', null),
       timeout: this.timeout
     };
 
-    // Return the json object
     return clone(json, true);
   }
 }
 
-export class DeltaSetRequest extends Request {
+class DeltaSetRequest extends Request {
   execute() {
     if (this.executing) {
       return Promise.reject(new KinveyError('The request is already executing.'));
@@ -476,3 +475,8 @@ export class DeltaSetRequest extends Request {
     return super.execute();
   }
 }
+
+module.exports = {
+  Request: Request,
+  DeltaSetRequest: DeltaSetRequest
+};

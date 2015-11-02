@@ -1,9 +1,10 @@
-import StoreAdapter from '../core/enums/storeAdapter';
-import Store from '../core/cache/store';
-import Client from '../core/client';
+const StoreAdapter = require('../core/enums/storeAdapter');
+const Store = require('../core/storage/store');
+const Client = require('../core/client');
+const result = require('lodash/object/result');
 const activeUserCollection = 'activeUser';
 
-export function getActiveUser() {
+function getActiveUser() {
   const client = Client.sharedInstance();
   const store = new Store(StoreAdapter.LocalStorage, {
     name: client.appId,
@@ -19,7 +20,7 @@ export function getActiveUser() {
   });
 }
 
-export function setActiveUser(user) {
+function setActiveUser(user) {
   const client = Client.sharedInstance();
   const store = new Store(StoreAdapter.LocalStorage, {
     name: client.appId,
@@ -32,9 +33,14 @@ export function setActiveUser(user) {
     }
   }).then(() => {
     if (user) {
-      return store.save(user);
+      return store.save(result(user, 'toJSON', user));
     }
   });
 
   return promise;
 }
+
+module.exports = {
+  getActiveUser: getActiveUser,
+  setActiveUser: setActiveUser
+};

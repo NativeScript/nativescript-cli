@@ -1,13 +1,13 @@
-import { KinveyError } from './errors';
-import url from 'url';
-import clone from 'lodash/lang/clone';
+const KinveyError = require('./errors').KinveyError;
+const url = require('url');
+const clone = require('lodash/lang/clone');
 const sharedInstanceSymbol = Symbol();
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  */
-export default class Client {
+class Client {
   /**
    * Create a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.
@@ -28,7 +28,8 @@ export default class Client {
    *   appSecret: 'appSecret'
    * });
    */
-  constructor(options = {}) {
+  constructor(options) {
+    options = options || {};
     const apiProtocol = process.env.KINVEY_API_PROTOCOL || 'https';
     const apiHost = process.env.KINVEY_API_HOST || 'baas.kinvey.com';
     let apiUrl;
@@ -69,17 +70,17 @@ export default class Client {
     /**
      * @type {string|undefined}
      */
-    this.appSecret = options.appSecret || undefined;
+    this.appSecret = options.appSecret;
 
     /**
      * @type {string|undefined}
      */
-    this.masterSecret = options.masterSecret || undefined;
+    this.masterSecret = options.masterSecret;
 
     /**
      * @type {string|undefined}
      */
-    this.encryptionKey = options.encryptionKey || undefined;
+    this.encryptionKey = options.encryptionKey;
   }
 
   /**
@@ -154,3 +155,5 @@ export default class Client {
     return client;
   }
 }
+
+module.exports = Client;

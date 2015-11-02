@@ -6,4 +6,4 @@ const HttpMethod = {
   DELETE: 'DELETE'
 };
 Object.freeze(HttpMethod);
-export default HttpMethod;
+module.exports = HttpMethod;

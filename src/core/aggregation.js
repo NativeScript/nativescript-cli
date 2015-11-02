@@ -1,9 +1,10 @@
-import { KinveyError } from './errors';
-import Query from './query';
-import clone from 'lodash/lang/clone';
-import isObject from 'lodash/lang/isObject';
-import isString from 'lodash/lang/isString';
-import isFunction from 'lodash/lang/isFunction';
+const KinveyError = require('./errors').KinveyError;
+const Query = require('./query');
+const clone = require('lodash/lang/clone');
+const result = require('lodash/object/result');
+const isObject = require('lodash/lang/isObject');
+const isString = require('lodash/lang/isString');
+const isFunction = require('lodash/lang/isFunction');
 const privateAggregationSymbol = Symbol();
 
 class PrivateAggregation {
@@ -42,8 +43,8 @@ class PrivateAggregation {
   }
 
   query(query) {
-    if (!(query instanceof Query)) {
-      throw new KinveyError('query argument must be of type Kinvey.Query.');
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
     }
 
     this._query = query;
@@ -109,4 +110,4 @@ class Aggregation {
   }
 }
 
-export default Aggregation;
+module.exports = Aggregation;

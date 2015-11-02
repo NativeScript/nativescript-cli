@@ -1,7 +1,17 @@
-export function isPhoneGap() {
+function isNode() {
+  return typeof module !== 'undefined' && module.exports;
+}
+
+function isPhoneGap() {
   return typeof global.cordova !== 'undefined';
 }
 
-export function isTitanium() {
+function isTitanium() {
   return typeof Titanium !== 'undefined';
 }
+
+module.exports = {
+  isNode: isNode,
+  isPhoneGap: isPhoneGap,
+  isTitanium: isTitanium
+};
