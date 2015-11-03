@@ -1,7 +1,10 @@
 ///<reference path=".d.ts"/>
 "use strict";
-require("./bootstrap");
 
+// this call must be first to avoid requiring c++ dependencies
+require("./common/verify-node-version").verifyNodeVersion(require("../package.json").engines.node);
+
+require("./bootstrap");
 import fiber = require("fibers");
 import Future = require("fibers/future");
 import {installUncaughtExceptionListener} from "./common/errors";
