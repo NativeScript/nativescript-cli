@@ -1,8 +1,6 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import * as path from 'path';
-
 export class InstallCommand implements ICommand {
 	constructor(private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
@@ -50,8 +48,6 @@ export class InstallCommand implements ICommand {
 	private installModule(moduleName: string): IFuture<void> {
 		return (() => {
 			let projectDir = this.$projectData.projectDir;
-			process.env['TNS_PROJECT_DIR'] = projectDir;
-			process.env['TNS_HOOKS_DIR'] = path.join(projectDir, 'hooks');
 
 			let devPrefix = 'nativescript-dev-';
 			if (!this.$fs.exists(moduleName).wait() && moduleName.indexOf(devPrefix) !== 0) {
