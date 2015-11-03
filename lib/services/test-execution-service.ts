@@ -91,20 +91,23 @@ class TestExecutionService implements ITestExecutionService {
 			};
 
 			let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
-			this.$usbLiveSyncServiceBase.sync(platform,
-				this.$projectData.projectId,
-				projectFilesPath,
-				constants.LIVESYNC_EXCLUDED_DIRECTORIES,
-				watchGlob,
-				platformSpecificLiveSyncServices,
-				notInstalledAppOnDeviceAction,
-				notRunningiOSSimulatorAction,
-				localProjectRootPath,
-				(device: Mobile.IDevice, deviceAppData:Mobile.IDeviceAppData) => Future.fromResult(),
-				beforeBatchLiveSyncAction,
-				(projectFile: string) => "",
-				(localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk)
-			).wait();
+
+			let liveSyncData = {
+				platform: platform,
+				appIdentifier: this.$projectData.projectId,
+				projectFilesPath: projectFilesPath,
+				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_DIRECTORIES,
+				watchGlob: watchGlob,
+				platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
+				notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
+				notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
+				localProjectRootPath: localProjectRootPath,
+				beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
+				shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
+				canExecuteFastLiveSync: (filePath: string) => false,
+			};
+
+			this.$usbLiveSyncServiceBase.sync(liveSyncData).wait();
 
 			if (this.$options.debugBrk) {
 				this.$logger.info('Starting debugger...');

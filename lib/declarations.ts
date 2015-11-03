@@ -58,10 +58,7 @@ interface IUsbLiveSyncService {
 	liveSync(platform: string): IFuture<void>;
 }
 
-interface IPlatformSpecificUsbLiveSyncService {
-	restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void>;
-	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): IFuture<void>;
-	sendPageReloadMessageToDevice(): IFuture<void>;
+interface IiOSUsbLiveSyncService extends IPlatformSpecificUsbLiveSyncService {
 	sendPageReloadMessageToSimulator(): IFuture<void>;
 }
 

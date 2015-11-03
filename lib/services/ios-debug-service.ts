@@ -65,8 +65,8 @@ class IOSDebugService implements IDebugService {
 
     public debugStart(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute((device: Mobile.IiOSDevice) => this.debugBrkCore(device)).wait();
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesService.execute((device: Mobile.IiOSDevice) => this.debugBrkCore(device)).wait();
         }).future<void>()();
     }
 
@@ -117,13 +117,6 @@ class IOSDebugService implements IDebugService {
         }).future<void>()();
     }
 
-    public debugStart(): IFuture<void> {
-        return (() => {
-            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesService.execute((device: iOSDevice.IOSDevice) => this.debugBrkCore(device)).wait();
-        }).future<void>()();
-    }
-
     private debugBrkCore(device: Mobile.IiOSDevice): IFuture<void> {
         return (() => {
             let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
@@ -136,8 +129,8 @@ class IOSDebugService implements IDebugService {
 
     private deviceStart(): IFuture<void> {
         return (() => {
-            this.$devicesServices.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesServices.execute((device: Mobile.IiOSDevice) => this.deviceStartCore(device)).wait();
+            this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
+            this.$devicesService.execute((device: Mobile.IiOSDevice) => this.deviceStartCore(device)).wait();
         }).future<void>()();
     }
 
