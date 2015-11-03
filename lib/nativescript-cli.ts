@@ -4,12 +4,12 @@ require("./bootstrap");
 
 import fiber = require("fibers");
 import Future = require("fibers/future");
-import errors = require("./common/errors");
-errors.installUncaughtExceptionListener();
+import {installUncaughtExceptionListener} from "./common/errors";
+installUncaughtExceptionListener(process.exit);
 
 fiber(() => {
-	let config = <Config.IConfig>$injector.resolve("$config");
-	let err = <IErrors>$injector.resolve("$errors");
+	let config: Config.IConfig = $injector.resolve("$config");
+	let err: IErrors = $injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
 	let commandDispatcher: ICommandDispatcher = $injector.resolve("commandDispatcher");

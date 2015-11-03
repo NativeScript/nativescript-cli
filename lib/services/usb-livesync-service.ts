@@ -13,7 +13,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		"**/*.ts",
 	];
 
-	constructor($devicesServices: Mobile.IDevicesServices,
+	constructor($devicesService: Mobile.IDevicesService,
 		$fs: IFileSystem,
 		$mobileHelper: Mobile.IMobileHelper,
 		$localToDevicePathDataFactory: Mobile.ILocalToDevicePathDataFactory,
@@ -31,7 +31,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		$hostInfo: IHostInfo) {
-			super($devicesServices, $mobileHelper, $localToDevicePathDataFactory, $logger, $options,
+			super($devicesService, $mobileHelper, $localToDevicePathDataFactory, $logger, $options,
 				$deviceAppDataFactory, $fs, $dispatcher, $injector, $childProcess, $iOSEmulatorServices, $hostInfo);
 	}
 
@@ -72,7 +72,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			};
 
 			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
-				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesServices.platform, device);
+				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesService.platform, device);
 				if (platformSpecificUsbLiveSyncService.beforeLiveSyncAction) {
 					return platformSpecificUsbLiveSyncService.beforeLiveSyncAction(deviceAppData);
 				}

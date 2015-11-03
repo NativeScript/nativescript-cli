@@ -73,5 +73,9 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public get pathToPackageJson(): string {
 		return path.join(__dirname, "..", "package.json");
 	}
+
+	public get PATH_TO_BOOTSTRAP() : string {
+		return path.join(__dirname, "bootstrap");
+	}
 }
 $injector.register("staticConfig", StaticConfig);
