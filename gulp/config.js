@@ -11,7 +11,8 @@ const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
-const platform = argv.platform || 'node';
+const webpack = require('webpack');
+const platform = argv.platform || 'html5';
 const platformConfig = require('./config/' + platform);
 const config = {};
 
@@ -21,10 +22,7 @@ const config = {};
 config.env = {
   KINVEY_API_PROTOCOL: 'https',
   KINVEY_API_HOST: 'baas.kinvey.com',
-  KINVEY_API_VERSION: 3,
-  KINVEY_INDEXEDDB_LIB: 'fake-indexeddb',
-  KINVEY_HTTP_LIB: 'kinvey-http-node',
-  KINVEY_PLATFORM_ENV: 'node'
+  KINVEY_API_VERSION: 3
 };
 config.env = assign(config.env, platformConfig.env);
 process.env = assign(process.env, config.env);
@@ -49,10 +47,10 @@ config.files = {
   src: 'src/**/*.js',
   test: 'test/**/*.spec.js',
   entry: {
-    fileName: 'kinvey'
+    filename: 'kinvey'
   },
   output: {
-    fileName: 'kinvey'
+    filename: 'kinvey'
   }
 };
 config.files = assign(config.files, platformConfig.files);
@@ -62,33 +60,29 @@ config.files = assign(config.files, platformConfig.files);
  * ability to run the library in a browser.
  */
 config.webpack = {
+  context: config.paths.src,
+  entry: './' + config.files.entry.filename,
+  output: {
+    path: config.paths.dist,
+    filename: config.files.output.filename,
+    library: 'Kinvey',
+    libraryTarget: 'umd'
+  },
   module: {
     loaders: [
       {
-        test: /(src)\.js?$/,
-        exclude: /(node_modules)/,
-        loader: 'babel?comments=false&presets[]=es2015'
+        test: /\.js?$/,
+        exclude: /(node_modules|test|gulp)/,
+        loader: 'babel',
+        query: {
+          comments: false,
+          presets: ['es2015', 'stage-2']
+        }
       }
     ]
   }
 };
 config.webpack = assign(config.webpack, platformConfig.webpack);
-
-// /**
-//  * BrowserySync is the lib used to automatically reload the browser
-//  * whenever a file changes.
-//  */
-// config.browserSync = {
-//   server: {
-//     baseDir: [
-//       './test/',
-//       './tmp',
-//       './'
-//     ],
-//     index: 'runner.html'
-//   }
-// };
-// config.browserSync = assign(config.browserSync, platformConfig.browserSync);
 
 /**
  * Istanbul is the lib used to create a coverage report the details how

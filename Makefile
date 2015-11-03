@@ -19,8 +19,6 @@ test-request:
 test-user:
 	@./node_modules/.bin/gulp test-user
 
-all: clean \
-	install \
-	test
+all: test
 
 .PHONY: test

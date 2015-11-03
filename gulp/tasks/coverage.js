@@ -7,7 +7,7 @@ const test = require('./test').test;
 const errorHandler = config.errorHandler('coverage');
 
 gulp.task('coverage', ['lint-src', 'lint-test'], function(done) {
-  require('babel/register');
+  require('babel-core/register');
   gulp.src(config.files.src)
     .pipe($.istanbul(config.istanbul.config))
     .pipe($.istanbul.hookRequire())

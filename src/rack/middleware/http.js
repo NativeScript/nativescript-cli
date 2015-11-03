@@ -48,7 +48,7 @@ class Http extends Middleware {
         });
 
         httpRequest.on('response', (res) => {
-          let data = [];
+          const data = [];
 
           res.on('data', chunk => {
             data.push(new Buffer(chunk));

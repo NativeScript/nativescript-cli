@@ -2,13 +2,10 @@ const KinveyError = require('../../errors').KinveyError;
 const Query = require('../../query');
 const Promise = require('bluebird');
 let inTransaction = false;
-let indexedDB = require(process.env.KINVEY_INDEXEDDB_LIB || 'fake-indexeddb');
+let indexedDB = require('fake-indexeddb');
 
-if (process.env.KINVEY_PLATFORM_ENV !== 'node' && global.shimIndexedDB) {
-  global.shimIndexedDB.__useShim();
-  indexedDB = global.shimIndexedDB || global.indexedDB ||
-    global.mozIndexedDB || global.webkitIndexedDB ||
-    global.OIndexedDB || global.msIndexedDB;
+if (process.env.KINVEY_PLATFORM_ENV !== 'node') {
+  indexedDB = require('indexeddbshim');
 }
 
 class IndexedDBAdapter {

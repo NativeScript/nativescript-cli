@@ -5,7 +5,6 @@ const config = {};
  */
 config.env = {
   KINVEY_INDEXEDDB_LIB: 'indexeddbshim',
-  KINVEY_HTTP_LIB: 'kinvey-http-xhr',
   KINVEY_PLATFORM_ENV: 'html5'
 };
 

@@ -1,4 +1,3 @@
-require('babel-core/register');
 const Kinvey = require('../src/kinvey');
 Kinvey.Logger.setLevel(Kinvey.Logger.levels.DEBUG);
 
