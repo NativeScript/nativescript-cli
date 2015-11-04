@@ -16,6 +16,17 @@
 
 /* jshint evil: true */
 
+// Configure Queue
+root.Queue.configure(function(handler) {
+  var deferred = Kinvey.Defer.deferred();
+  try {
+    handler(deferred.resolve, deferred.reject, deferred.progress);
+  } catch (err) {
+    deferred.reject(err);
+  }
+  return deferred.promise;
+});
+
 // `Database` adapter for [IndexedDB](http://www.w3.org/TR/IndexedDB/).
 var IDBAdapter = {
   /**
@@ -61,6 +72,19 @@ var IDBAdapter = {
    * @type {boolean}
    */
   inTransaction: false,
+
+  /**
+   * Cache to store collections in memory.
+   *
+   * @type {Object}
+   */
+  cache: {},
+
+  /**
+   * Queue used to handle mutiple transactions.
+   * @type {Queue}
+   */
+  queue: new root.Queue(1, Infinity),
 
   /**
    * Generates an object id.
@@ -283,6 +307,7 @@ var IDBAdapter = {
         store.put(document);
       });
       request.oncomplete = function() {
+        IDBAdapter.flushCache(collection);
         deferred.resolve(documents);
       };
       request.onerror = function(event) {
@@ -334,6 +359,7 @@ var IDBAdapter = {
           store['delete'](document._id);
         });
         request.oncomplete = function() {
+          IDBAdapter.flushCache(collection);
           deferred.resolve({ count: documents.length, documents: documents });
         };
         request.onerror = function(event) {
@@ -377,6 +403,8 @@ var IDBAdapter = {
       var document = store.get(id);
       store['delete'](id);
       request.oncomplete = function() {
+        IDBAdapter.flushCache(collection);
+
         if(null == document.result) {
           return deferred.reject(clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
             description : 'This entity not found in the collection',
@@ -421,6 +449,7 @@ var IDBAdapter = {
 
     // Handle the `success` event.
     request.onsuccess = function() {
+      IDBAdapter.flushCache();
       deferred.resolve(null);
     };
 
@@ -441,48 +470,59 @@ var IDBAdapter = {
    * @augments {Database.find}
    */
   find: function(collection, query/*, options*/) {
-    // Prepare the response.
-    var deferred = Kinvey.Defer.deferred();
+    return IDBAdapter.queue.add(function() {
+      // Prepare the response.
+      var deferred = Kinvey.Defer.deferred();
 
-    // Obtain the transaction handle.
-    IDBAdapter.transaction(collection, false, function(store) {
-      // Retrieve all documents.
-      var request = store.openCursor();
-      var response = [];
-      request.onsuccess = function() {
-        var cursor = request.result;
-        if(null != cursor) {
-          response.push(cursor.value);
-          cursor['continue']();
-        }
-        else {
-          deferred.resolve(response);
-        }
-      };
-      request.onerror = function(event) {
-        deferred.reject(clientError(Kinvey.DATABASE_ERROR, { debug: event }));
-      };
-    }, function(error) {
-      // If the error is `COLLECTION_NOT_FOUND`, return the empty set.
-      if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
-        return deferred.resolve([]);
+      // Look in the cache
+      var data = IDBAdapter.cache[collection];
+
+      if (data) {
+        deferred.resolve(data);
+      } else {
+        // Obtain the transaction handle.
+        IDBAdapter.transaction(collection, false, function(store) {
+          // Retrieve all documents.
+          var request = store.openCursor();
+          var response = [];
+          request.onsuccess = function() {
+            var cursor = request.result;
+            if(null != cursor) {
+              response.push(cursor.value);
+              cursor['continue']();
+            }
+            else {
+              deferred.resolve(response);
+            }
+          };
+          request.onerror = function(event) {
+            deferred.reject(clientError(Kinvey.DATABASE_ERROR, { debug: event }));
+          };
+        }, function(error) {
+          // If the error is `COLLECTION_NOT_FOUND`, return the empty set.
+          if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
+            return deferred.resolve([]);
+          }
+          return deferred.reject(error);
+        });
       }
-      return deferred.reject(error);
-    });
 
-    // Return the promise.
-    return deferred.promise.then(function(response) {
-      // Post process the response by applying the query. If there is no query,
-      // exit here.
-      if(null == query) {
-        return response;
-      }
+      // Return the promise.
+      return deferred.promise.then(function(response) {
+        IDBAdapter.cache[collection] = response;
 
-      // Filters.
-      response = root.sift(query.toJSON().filter, response);
+        // Post process the response by applying the query. If there is no query,
+        // exit here.
+        if(null == query) {
+          return response;
+        }
 
-      // Post process.
-      return query._postProcess(response);
+        // Filters.
+        response = root.sift(query.toJSON().filter, response);
+
+        // Post process.
+        return query._postProcess(response);
+      });
     });
   },
 
@@ -508,6 +548,7 @@ var IDBAdapter = {
       // `success` event, bind to the `complete` event.
       var txn = store.transaction;
       txn.oncomplete = function() {
+        IDBAdapter.flushCache(collection);
         deferred.resolve(document);
       };
       txn.onerror = function(event) {
@@ -526,38 +567,61 @@ var IDBAdapter = {
    * @augments {Database.get}
    */
   get: function(collection, id/*, options*/) {
-    // Prepare the response.
-    var deferred = Kinvey.Defer.deferred();
+    return IDBAdapter.queue.add(function() {
+      // Prepare the response.
+      var deferred = Kinvey.Defer.deferred();
 
-    // Obtain the transaction handle.
-    IDBAdapter.transaction(collection, false, function(store) {
-      // Retrieve the document.
-      var request = store.get(id);
-      request.onsuccess = function() {
-        if(null != request.result) {
-          return deferred.resolve(request.result);
+      // Look in the cache
+      var data = IDBAdapter.cache[collection];
+      if (data) {
+        var query = new Kinvey.Query();
+        query.contains('_id', [id]);
+        data = root.sift(query.toJSON().filter, data);
+        var doc = data.length === 1 ? data[0] : null;
+
+        if (!doc) {
+          deferred.reject(clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+            description : 'This entity not found in the collection',
+            debug       : { collection: collection, id: id }
+          }));
+        } else {
+          deferred.resolve(doc);
         }
-        deferred.reject(clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-          description : 'This entity not found in the collection',
-          debug       : { collection: collection, id: id }
-        }));
-      };
-      request.onerror = function(event) {// Reject.
-        deferred.reject(clientError(Kinvey.Error.DATABASE_ERROR, { debug: event }));
-      };
-    }, function(error) {// Reject.
-      // If the error is `COLLECTION_NOT_FOUND`, convert to `ENTITY_NOT_FOUND`.
-      if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
-        error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-          description : 'This entity not found in the collection',
-          debug       : { collection: collection, id: id }
+      } else {
+        // Obtain the transaction handle.
+        IDBAdapter.transaction(collection, false, function(store) {
+          // Retrieve the document.
+          var request = store.get(id);
+          request.onsuccess = function() {
+            if(null != request.result) {
+              var data = IDBAdapter.cache[collection] || {};
+              data[id] = request.result;
+              IDBAdapter.cache[collection] = data;
+              return deferred.resolve(request.result);
+            }
+            deferred.reject(clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+              description : 'This entity not found in the collection',
+              debug       : { collection: collection, id: id }
+            }));
+          };
+          request.onerror = function(event) {// Reject.
+            deferred.reject(clientError(Kinvey.Error.DATABASE_ERROR, { debug: event }));
+          };
+        }, function(error) {// Reject.
+          // If the error is `COLLECTION_NOT_FOUND`, convert to `ENTITY_NOT_FOUND`.
+          if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
+            error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+              description : 'This entity not found in the collection',
+              debug       : { collection: collection, id: id }
+            });
+          }
+          deferred.reject(error);
         });
       }
-      deferred.reject(error);
-    });
 
-    // Return the promise.
-    return deferred.promise;
+      // Return the promise.
+      return deferred.promise;
+    });
   },
 
   /**
@@ -626,6 +690,7 @@ var IDBAdapter = {
       // Save the document.
       var request = store.put(document);
       request.onsuccess = function() {
+        IDBAdapter.flushCache(collection);
         deferred.resolve(document);
       };
       request.onerror = function(event) {
@@ -646,6 +711,20 @@ var IDBAdapter = {
   update: function(collection, document, options) {
     // Forward to `IDBAdapter.save`.
     return IDBAdapter.save(collection, document, options);
+  },
+
+  flushCache: function(collections) {
+    if (collections && !isArray(collections)) {
+      collections = [collections];
+    }
+
+    if (collections && collections.length > 0) {
+      collections.forEach(function(collection) {
+        delete IDBAdapter.cache[collection];
+      });
+    } else {
+      IDBAdapter.cache = {};
+    }
   }
 };
 
