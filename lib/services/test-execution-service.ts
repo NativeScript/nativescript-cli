@@ -75,8 +75,12 @@ class TestExecutionService implements ITestExecutionService {
 				}).future<boolean>()();
 			};
 
-			let notRunningiOSSimulatorAction = (): IFuture<void> => {
-				return this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
+			let notRunningiOSSimulatorAction = (): IFuture<boolean> => {
+				return (() => {
+					this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
+					this.detourEntryPoint(projectFilesPath).wait();
+					return true;
+				}).future<boolean>()();
 			};
 
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {

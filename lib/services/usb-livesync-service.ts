@@ -69,8 +69,11 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				}).future<boolean>()();
 			};
 
-			let notRunningiOSSimulatorAction = (): IFuture<void> => {
-				return this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
+			let notRunningiOSSimulatorAction = (): IFuture<boolean> => {
+				return (() => {
+					 this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
+					 return false;
+				}).future<boolean>()();
 			};
 
 			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
