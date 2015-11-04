@@ -27,12 +27,14 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		$dispatcher: IFutureDispatcher,
 		$childProcess: IChildProcess,
 		$iOSEmulatorServices: Mobile.IiOSSimulatorService,
+		$hooksService: IHooksService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		$hostInfo: IHostInfo) {
 			super($devicesService, $mobileHelper, $localToDevicePathDataFactory, $logger, $options,
-				$deviceAppDataFactory, $fs, $dispatcher, $injector, $childProcess, $iOSEmulatorServices, $hostInfo);
+				$deviceAppDataFactory, $fs, $dispatcher, $injector, $childProcess, $iOSEmulatorServices,
+				$hooksService, $hostInfo);
 	}
 
 	public liveSync(platform: string): IFuture<void> {
