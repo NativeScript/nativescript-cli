@@ -91,9 +91,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
 
-			// TODO: Move these check to validate method once we do not support ant.
-			this.checkGradle().wait();
-
 			this.$fs.ensureDirectoryExists(this.platformData.projectRoot).wait();
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
@@ -109,9 +106,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
 			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
 
+			if (this.useGradleWrapper(frameworkDir)) {
+				this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
+				this.copy(this.platformData.projectRoot, frameworkDir, "gradlew gradlew.bat", "-f");
+			}
+
 			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
 
 		}).future<any>()();
+	}
+
+	private useGradleWrapper(frameworkDir: string): boolean {
+		let gradlew = path.join(frameworkDir, "gradlew");
+		return this.$fs.exists(gradlew).wait();
 	}
 
 	private cleanResValues(targetSdkVersion: number, frameworkVersion: string): IFuture<void> {
@@ -189,7 +196,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
-				this.checkGradle().wait();
 				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 				let compileSdk = androidToolsInfo.compileSdkVersion;
 				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
@@ -214,7 +220,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					buildOptions.push("-PrunSBGenerator");
 				}
 
-				this.spawn("gradle", buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 			} else {
 				this.checkAnt().wait();
 
@@ -435,16 +442,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			} catch(error) {
 				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
 			}
-		}).future<void>()();
-	}
-
-	private checkGradle(): IFuture<void> {
-		return (() => {
-			if(!this.$sysInfo.getSysInfo().gradleVer) {
-				this.$errors.failWithoutHelp("Error executing commands 'gradle'. Make sure you have Gradle installed and its bin directory added to your PATH.");
-			}
-
-			this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
 		}).future<void>()();
 	}
 

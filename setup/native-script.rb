@@ -63,7 +63,6 @@ class NativeScript < Formula
   depends_on "pkg-config" => :build
 #  depends_on "node" # currently we do not work with latest node, and we manually install 0.12 (see above)
   depends_on "android-sdk"
-  depends_on "gradle"
 
   def install
     ohai "Installing NativeScript CLI..."
