@@ -69,10 +69,9 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
-* [Gradle 2.3][Gradle 2.3] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 * [Android Support Repository][Android Support Repository]
@@ -81,14 +80,13 @@ You can install and run the NativeScript CLI on Windows or OS X.
 If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
 
 ```
-Path to the bin directory in the Gradle installation folder
 Path to tools directory in the Android SDK installation folder
 Path to platform-tools directory in the Android SDK installation folder
 ```
 
-For example: PATH=...;...;C:\tools\gradle\bin;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
+For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
 
-If you have installed Chocolatey, you can complete these steps to set up JDK, Gradle, and Android SDK.
+If you have installed Chocolatey, you can complete these steps to set up JDK, and Android SDK.
 
 1. Run a Windows command prompt.
 1. To install JDK, run the following command.
@@ -102,25 +100,13 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, Gr
 	JAVA_HOME=Path to the jdk* install folder
 	```
 
-	For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_11
+	For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_66
 
 	```
 	ANDROID_HOME=Path to Android installation directory
 	```
 
 	For example: ANDROID_HOME=C:\Android\android-sdk
-1. To install Gradle, run the following command.
-
-	```Shell
-	choco install gradle
-	```
-1. If not present, add the following file path to the `PATH` system environment variable.
-
-	```
-	Path to the bin directory in the Gradle installation folder
-	```
-
-	For example: PATH=...;...;C:\tools\gradle\bin
 1. To install the Android SDK, run the following command.
 
 	```Shell
@@ -153,14 +139,13 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
 	* (Optional) [CocoaPods 0.38.2][CocoaPods 0.38.2]
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
-	* [Gradle 2.3][Gradle 2.3] or a later stable official release
 	* [Android SDK 22][Android SDK 22] or a later stable official release
 	* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 	* [Android Support Repository][Android Support Repository]
@@ -169,14 +154,13 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
 
 ```
-Path to the bin subdirectory in the Gradle installation directory
 Path to the tools subdirectory in the Android SDK installation directory
 Path to the platform-tools subdirectory in the Android SDK installation directory
 ```
 
 For example:
 ```
-export PATH=${PATH}:/gradle/bin:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
+export PATH=${PATH}:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
 ```
 
 If not present, create the following environment variables.
@@ -204,7 +188,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
 
 	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
@@ -220,7 +204,6 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 		sudo apt-get install lib32z1 lib32ncurses5 lib32bz2-1.0 libstdc++6:i386
 		```
 * [JDK 8][JDK 8] or a later stable official release
-* [Gradle 2.3][Gradle 2.3] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 * [Android Support Repository][Android Support Repository]
@@ -229,14 +212,13 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 Verify that you have added the following paths in your `PATH`.
 
 ```
-Path to the bin subdirectory in the Gradle installation directory
 Path to the tools subdirectory in the Android SDK installation directory
 Path to the platform-tools subdirectory in the Android SDK installation directory
 ```
 
 For example:
 ```
-export PATH=${PATH}:/gradle/bin:/home/user/android-sdk/tools:/home/user/android-sdk/platform-tools
+export PATH=${PATH}:/home/user/android-sdk/tools:/home/user/android-sdk/platform-tools
 ```
 
 If not present, create the following environment variables.
@@ -615,7 +597,6 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [12]: https://developer.apple.com/xcode/downloads/
 [Chocolatey]: https://chocolatey.org/
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
-[Gradle 2.3]: https://gradle.org/gradle-download/
 [Android SDK 22]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
 [CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started

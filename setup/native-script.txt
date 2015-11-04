@@ -6,7 +6,6 @@
 cinst googlechrome
 cinst nodejs.install -version 0.12.7
 cinst jdk8
-cinst gradle -version 2.3
 cinst android-sdk
 
 # setup android sdk
