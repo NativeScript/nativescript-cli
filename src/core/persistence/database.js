@@ -39,6 +39,9 @@ var Database = /** @lends Database */{
    * @return {Promise} Upgrade has completed
    */
   upgrade: function() {
+    var logLevel = Kinvey.Log.getLevel();
+    Kinvey.Log.disableAll();
+
     try {
       // Read the existing version of the database
       return Database.find(Database.versionTable).then(null, function() {
@@ -55,9 +58,11 @@ var Database = /** @lends Database */{
         // Save the version doc
         return Database.save(Database.versionTable, doc);
       }).then(function() {
+        Kinvey.Log.setLevel(logLevel);
         return;
       });
     } catch (err) {
+      Kinvey.Log.setLevel(logLevel);
       // Catch unsupported database methods error and
       // just resolve
       return Kinvey.Defer.resolve();
