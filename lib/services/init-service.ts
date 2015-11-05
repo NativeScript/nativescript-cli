@@ -1,10 +1,10 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import constants = require("../constants");
+import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as path from "path";
-import semver = require("semver");
+import * as semver from "semver";
 
 export class InitService implements IInitService {
 	private static MIN_SUPPORTED_FRAMEWORK_VERSIONS: IStringDictionary = {

@@ -4,7 +4,7 @@
 import * as constants from "../../../lib/constants";
 import * as path from "path";
 import Future = require("fibers/future");
-import destCopyLib = require("./node-modules-dest-copy");
+import * as destCopyLib from "./node-modules-dest-copy";
 
 let gulp = require("gulp");
 let vinylFilterSince = require("vinyl-filter-since");

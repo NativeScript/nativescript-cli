@@ -3,21 +3,18 @@
 
 import Future = require("fibers/future");
 import * as path from "path";
+import * as ChildProcessLib from "../lib/common/child-process";
+import * as ConfigLib from "../lib/config";
+import * as ErrorsLib from "../lib/common/errors";
+import * as FileSystemLib from "../lib/common/file-system";
+import * as HostInfoLib from "../lib/common/host-info";
+import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
+import * as LoggerLib from "../lib/common/logger";
+import * as OptionsLib from "../lib/options";
+import * as yok from "../lib/common/yok";
+import { assert } from "chai";
 import temp = require("temp");
 temp.track();
-
-import ChildProcessLib = require("../lib/common/child-process");
-import ConfigLib = require("../lib/config");
-import ErrorsLib = require("../lib/common/errors");
-import FileSystemLib = require("../lib/common/file-system");
-import HostInfoLib = require("../lib/common/host-info");
-import iOSProjectServiceLib = require("../lib/services/ios-project-service");
-import LoggerLib = require("../lib/common/logger");
-import OptionsLib = require("../lib/options");
-
-import yok = require("../lib/common/yok");
-
-import { assert } from "chai";
 
 function createTestInjector(projectPath: string, projectName: string): IInjector {
 	let testInjector = new yok.Yok();

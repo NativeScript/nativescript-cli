@@ -10,7 +10,7 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as LoggerLib from "../lib/common/logger";
 import * as ConfigLib from "../lib/config";
 import * as OptionsLib from "../lib/options";
-import yok = require("../lib/common/yok");
+import * as yok from "../lib/common/yok";
 import * as path from "path";
 import temp = require("temp");
 temp.track();

@@ -1,8 +1,8 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import yok = require('../lib/common/yok');
-import stubs = require('./stubs');
+import * as yok from "../lib/common/yok";
+import * as stubs from "./stubs";
 import * as constants from "./../lib/constants";
 import {ChildProcess} from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";

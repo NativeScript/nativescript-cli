@@ -5,7 +5,7 @@
 require("./common/verify-node-version").verifyNodeVersion(require("../package.json").engines.node);
 
 require("./bootstrap");
-import fiber = require("fibers");
+import * as fiber from "fibers";
 import Future = require("fibers/future");
 import {installUncaughtExceptionListener} from "./common/errors";
 installUncaughtExceptionListener(process.exit);

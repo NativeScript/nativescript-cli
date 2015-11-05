@@ -1,7 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import helpers = require("./../common/helpers");
+import * as helpers from "../common/helpers";
 
 export class ListPlatformsCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,

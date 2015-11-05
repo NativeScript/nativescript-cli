@@ -2,7 +2,7 @@
 "use strict";
 
 import Future = require("fibers/future");
-import lockfile = require("lockfile");
+import * as lockfile from "lockfile";
 import * as path from "path";
 
 export class LockFile implements ILockFile {

@@ -1,8 +1,8 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import path = require("path");
-import userSettingsServiceBaseLib = require("../common/services/user-settings-service");
+import * as path from "path";
+import * as userSettingsServiceBaseLib from "../common/services/user-settings-service";
 
 class UserSettingsService extends userSettingsServiceBaseLib.UserSettingsServiceBase {
 	constructor($fs: IFileSystem,

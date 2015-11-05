@@ -1,12 +1,12 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-import fs = require("fs");
+import * as fs from "fs";
 import * as path from "path";
-import semver = require("semver");
+import * as semver from "semver";
 import * as shelljs from "shelljs";
 import {wrapBroccoliPlugin} from './broccoli-plugin-wrapper-factory';
-import constants = require("../../constants");
+import * as constants from "../../constants";
 
 /**
  * Intercepts each directory as it is copied to the destination tempdir,

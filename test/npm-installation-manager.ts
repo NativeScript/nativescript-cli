@@ -10,9 +10,8 @@ import * as LoggerLib from "../lib/common/logger";
 import * as NpmInstallationManagerLib from "../lib/npm-installation-manager";
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
-
 import Future = require("fibers/future");
-import yok = require("../lib/common/yok");
+import * as yok from "../lib/common/yok";
 
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();

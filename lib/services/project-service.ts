@@ -1,7 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import constants = require("../constants");
+import * as constants from "../constants";
 import * as osenv from "osenv";
 import * as path from "path";
 import * as shell from "shelljs";
