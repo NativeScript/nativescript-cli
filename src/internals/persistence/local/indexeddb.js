@@ -594,9 +594,6 @@ var IDBAdapter = {
           var request = store.get(id);
           request.onsuccess = function() {
             if(null != request.result) {
-              var data = IDBAdapter.cache[collection] || {};
-              data[id] = request.result;
-              IDBAdapter.cache[collection] = data;
               return deferred.resolve(request.result);
             }
             deferred.reject(clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
