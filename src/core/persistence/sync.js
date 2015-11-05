@@ -24,6 +24,17 @@
 // Most of these methods delegate back to `Sync`. Therefore, `Kinvey.Sync`
 // provides the public interface for synchronization.
 
+// Configure Queue
+root.Queue.configure(function(handler) {
+  var deferred = Kinvey.Defer.deferred();
+  try {
+    handler(deferred.resolve, deferred.reject, deferred.progress);
+  } catch (err) {
+    deferred.reject(err);
+  }
+  return deferred.promise;
+});
+
 /**
  * @private
  * @namespace Sync
@@ -49,6 +60,12 @@ var Sync = /** @lends Sync */{
    * @type {string}
    */
   system: 'system.sync',
+
+  /**
+   * Queue used to handle sync.
+   * @type {Queue}
+   */
+  queue: new root.Queue(1, Infinity),
 
   /**
    * Counts the number of documents pending synchronization. If `collection` is
@@ -95,10 +112,41 @@ var Sync = /** @lends Sync */{
     // Obtain all the collections that need to be synchronized.
     var query = new Kinvey.Query().greaterThan('size', 0);
     return Database.find(Sync.system, query, options).then(function(response) {
-      // Synchronize all the collections in parallel.
+      // Synchronize all the collections in parallel in batches to prevent exhausting
+      // network resources
       var promises = response.map(function(collection) {
-        return Sync._collection(collection._id, collection.documents, options);
+        var batchSize = 1000;
+        var i = 0;
+        var identifiers = Object.keys(collection.documents);
+        var syncResult = { collection: collection, success: [], error: [] };
+
+        function batchSync() {
+          var batchIds = identifiers.slice(i, i + batchSize);
+          var batch = {};
+
+          i += batchSize;
+
+          for (var j = 0, len = batchIds.length; j < len; j++) {
+            var id = batchIds[j];
+            batch[id] = collection.documents[id];
+          }
+
+          return Sync._collection(collection._id, batch, options).then(function(result) {
+            syncResult.success = syncResult.success.concat(result.success);
+            syncResult.error = syncResult.error.concat(result.error);
+            return syncResult;
+          }).then(function(syncResult) {
+            if (i < identifiers.length) {
+              return batchSync();
+            }
+
+            return syncResult;
+          });
+        }
+
+        return batchSync();
       });
+
       return Kinvey.Defer.all(promises);
     });
   },
@@ -185,7 +233,6 @@ var Sync = /** @lends Sync */{
     var result = { collection: collection, success: [], error: [] };
     var identifiers = Object.keys(documents);
 
-    // Read the documents
     return Sync._read(collection, documents, options).then(function(response) {
       // Step 2: categorize the documents in the collection.
       var promises = identifiers.map(function(id) {
@@ -196,11 +243,12 @@ var Sync = /** @lends Sync */{
           clientAppVersion: document.clientAppVersion,
           customRequestProperties: document.customRequestProperties
         };
+
         return Sync._document(
           collection,
           metadata,                   // The document metadata.
           response.local[id] || null, // The local document.
-          response.net[id]   || null, // The net document.
+          response.net[id] || null, // The net document.
           options
         ).then(null, function(response) {
           // Rejection occurs when a conflict could not be resolved. Append the
@@ -212,6 +260,7 @@ var Sync = /** @lends Sync */{
           return null;
         });
       });
+
       return Kinvey.Defer.all(promises);
     }).then(function(responses) {
       // Step 3: commit the documents in the collection.
@@ -231,7 +280,7 @@ var Sync = /** @lends Sync */{
     }).then(function(responses) {
       // Merge the response.
       result.success = result.success.concat(responses[0].success, responses[1].success);
-      result.error   = result.error.concat(responses[0].error, responses[1].error);
+      result.error = result.error.concat(responses[0].error, responses[1].error);
 
       // Step 4: update the metadata.
       return Database.findAndModify(Sync.system, collection, function(metadata) {
@@ -295,13 +344,19 @@ var Sync = /** @lends Sync */{
         auth       : Auth.Default
       };
 
-      // Read from local and net in parallel.
-      return Kinvey.Defer.all([
-        Kinvey.Persistence.Local.read(request, requestOptions),
-        Kinvey.Persistence.Net.read(request, requestOptions)
-      ]).then(function(responses) {
-        return { local: responses[0], net: responses[1] };
-      });
+      if (Database.isTemporaryObjectID(id)) {
+        return Kinvey.Persistence.Local.read(request, requestOptions).then(function(response) {
+          return { local: response, net: [] };
+        });
+      } else {
+        // Read from local and net in parallel.
+        return Kinvey.Defer.all([
+          Kinvey.Persistence.Local.read(request, requestOptions),
+          Kinvey.Persistence.Net.read(request, requestOptions)
+        ]).then(function(responses) {
+          return { local: responses[0], net: responses[1] };
+        });
+      }
     });
 
     return Kinvey.Defer.all(promises).then(function(responses) {
@@ -363,10 +418,10 @@ var Sync = /** @lends Sync */{
 
       // Build the request.
       var request = {
-        namespace  : USERS === collection ? USERS : DATA_STORE,
-        collection : USERS === collection ? null  : collection,
-        query      : new Kinvey.Query().contains('_id', [id]),
-        auth       : Auth.Default
+        namespace: USERS === collection ? USERS : DATA_STORE,
+        collection: USERS === collection ? null  : collection,
+        query: new Kinvey.Query().contains('_id', [id]),
+        auth: Auth.Default
       };
 
       // Delete from local and net in parallel. Deletion is an atomic action,
@@ -460,12 +515,11 @@ var Sync = /** @lends Sync */{
    */
   _save: function(collection, documents, options) {
     // Save documents on net.
-    var error    = [];// Track errors of individual update operations.
+    var error = []; // Track errors of individual update operations.
     var promises = documents.map(function(composite) {
       var document = composite.document;
       var metadata = composite.metadata;
       var requestOptions = options || {};
-      var originalId = document._id;
 
       // Set requestOptions.appVersion based on the metadata for the document
       requestOptions.clientAppVersion = metadata.clientAppVersion != null ? metadata.clientAppVersion : null;
@@ -476,16 +530,17 @@ var Sync = /** @lends Sync */{
                                         metadata.customRequestProperties : null;
 
       // Send a create request if the document was created offline
-      if (Database.isTemporaryObjectID(originalId)) {
+      if (Database.isTemporaryObjectID(document._id)) {
+        var originalId = document._id;
         // Delete the id
         delete document._id;
 
         // Send the request
         return Kinvey.Persistence.Net.create({
-          namespace  : USERS === collection ? USERS : DATA_STORE,
-          collection : USERS === collection ? null  : collection,
-          data       : document,
-          auth       : Auth.Default
+          namespace: USERS === collection ? USERS : DATA_STORE,
+          collection: USERS === collection ? null  : collection,
+          data: document,
+          auth: Auth.Default
         }, requestOptions).then(function(createdDoc) {
           // Remove the doc created offline
           return Database.destroy(collection, originalId).then(function() {
@@ -505,11 +560,11 @@ var Sync = /** @lends Sync */{
 
       // Send and update request
       return Kinvey.Persistence.Net.update({
-        namespace  : USERS === collection ? USERS : DATA_STORE,
-        collection : USERS === collection ? null  : collection,
-        id         : document._id,
-        data       : document,
-        auth       : Auth.Default
+        namespace: USERS === collection ? USERS : DATA_STORE,
+        collection: USERS === collection ? null  : collection,
+        id: document._id,
+        data: document,
+        auth: Auth.Default
       }, requestOptions).then(null, function(err) {
         // Rejection should not break the entire synchronization. Instead,
         // append the document id to `error`, and resolve.
@@ -520,13 +575,14 @@ var Sync = /** @lends Sync */{
         return null;
       });
     });
+
     return Kinvey.Defer.all(promises).then(function(responses) {
       // `responses` is an `Array` of documents. Batch save all documents.
       return Kinvey.Persistence.Local.create({
-        namespace  : USERS === collection ? USERS : DATA_STORE,
-        collection : USERS === collection ? null  : collection,
-        data       : responses,
-        auth       : Auth.Default
+        namespace: USERS === collection ? USERS : DATA_STORE,
+        collection: USERS === collection ? null  : collection,
+        data: responses,
+        auth: Auth.Default
       }, options);
     }).then(function(response) {
       // Build the final response.
