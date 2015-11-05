@@ -1,8 +1,8 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import yok = require('../lib/common/yok');
-import stubs = require('./stubs');
+import * as yok from "../lib/common/yok";
+import * as stubs from "./stubs";
 import * as PlatformAddCommandLib from "../lib/commands/add-platform";
 import * as PlatformRemoveCommandLib from "../lib/commands/remove-platform";
 import * as PlatformUpdateCommandLib from "../lib/commands/update-platform";

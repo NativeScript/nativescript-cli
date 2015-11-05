@@ -2,7 +2,7 @@
 "use strict";
 
 import * as path from "path";
-import semver = require("semver");
+import * as semver from "semver";
 import * as npm from "npm";
 import * as constants from "./constants";
 

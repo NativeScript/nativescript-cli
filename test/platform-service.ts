@@ -1,14 +1,14 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import yok = require('../lib/common/yok');
-import stubs = require('./stubs');
-import PlatformServiceLib = require('../lib/services/platform-service');
-import StaticConfigLib = require("../lib/config");
-import fsLib = require("../lib/common/file-system");
-import optionsLib = require("../lib/options");
-import hostInfoLib = require("../lib/common/host-info");
-import ProjectFilesManagerLib = require("../lib/services/project-files-manager");
+import * as yok from "../lib/common/yok";
+import * as stubs from "./stubs";
+import * as PlatformServiceLib from "../lib/services/platform-service";
+import * as StaticConfigLib from "../lib/config";
+import * as fsLib from "../lib/common/file-system";
+import * as optionsLib from "../lib/options";
+import * as hostInfoLib from "../lib/common/host-info";
+import * as ProjectFilesManagerLib from "../lib/services/project-files-manager";
 import * as path from "path";
 import Future = require("fibers/future");
 import {assert} from "chai";

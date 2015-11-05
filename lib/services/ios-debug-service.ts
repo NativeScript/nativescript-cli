@@ -4,11 +4,11 @@
 import * as iOSProxyServices from "../common/mobile/ios/ios-proxy-services";
 import * as iOSDevice from "../common/mobile/ios/ios-device";
 import * as net from "net";
-import ws = require("ws");
+import * as ws from "ws";
 import * as stream from "stream";
 import * as path from "path";
 import Future = require("fibers/future");
-import semver = require("semver");
+import * as semver from "semver";
 import temp = require("temp");
 import byline = require("byline");
 

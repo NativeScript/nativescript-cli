@@ -1,7 +1,7 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-import broccoliPluginWrapperLib = require("./broccoli-plugin-wrapper");
+import * as broccoliPluginWrapperLib from "./broccoli-plugin-wrapper";
 
 /**
  * Makes writing plugins easy.
