@@ -229,6 +229,11 @@ var Database = /** @lends Database */{
   isTemporaryObjectID: methodNotImplemented('Database.isTemporaryObjectID'),
 
   /**
+   * Flush the cache
+   */
+  flushCache: methodNotImplemented('Database.flushCache'),
+
+  /**
    * Sets the implementation of `Database` to the specified adapter.
    *
    * @method

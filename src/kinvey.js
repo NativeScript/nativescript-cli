@@ -355,3 +355,10 @@ Kinvey.ping = function(options) {
   // Return the response.
   return wrapCallbacks(promise, options);
 };
+
+/**
+ * Flush the Database cache
+ */
+Kinvey.flushDatabaseCache = function() {
+  return Database.flushCache();
+};
