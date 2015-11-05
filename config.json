@@ -32,7 +32,7 @@
         "node_modules/backbone-associations/backbone-associations-min.js"
       ],
       "externals": [
-        "node_modules/loglevel/lib/loglevel.js",
+        "node_modules/loglevel/lib/loglevel.min.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
