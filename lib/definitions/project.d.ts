@@ -57,6 +57,7 @@ interface IPlatformProjectService {
 	afterPrepareAllPlugins(): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
 	deploy(deviceIdentifier: string): IFuture<void>;
+	processConfigurationFilesFromAppResources(): IFuture<void>;
 }
 
 interface IAndroidProjectPropertiesManager {

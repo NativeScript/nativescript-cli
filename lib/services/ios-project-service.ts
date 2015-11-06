@@ -354,6 +354,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	public processConfigurationFilesFromAppResources(): IFuture<void> {
+		return Future.fromResult();
+	}
+
 	private get projectPodFilePath(): string {
 		return path.join(this.platformData.projectRoot, "Podfile");
 	}

@@ -276,13 +276,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-
 			this.processResourcesFromPlugin(pluginData.name, pluginPlatformsFolderPath).wait();
+		}).future<void>()();
+	}
 
+	public processConfigurationFilesFromAppResources(): IFuture<void> {
+		return (() => {
 			// Process androidManifest.xml from App_Resources
-			let manifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.configurationFileName);
+			let manifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
 			if (this.$fs.exists(manifestFilePath).wait()) {
-				this.processResourcesFromPlugin("NativescriptAppResources", this.$projectData.appResourcesDirectoryPath).wait();
+				this.processResourcesFromPlugin("NativescriptAppResources", path.dirname(manifestFilePath)).wait();
 			}
 		}).future<void>()();
 	}
