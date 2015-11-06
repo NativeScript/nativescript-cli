@@ -71,8 +71,8 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			}
 
 			if(!toolsInfoData.supportRepositoryVersion) {
-				this.printMessage(`You need to have the latest Android Support Repository installed on your system.`,
-					'Run `$ android`  to manage the Android Support Repository.');
+				this.printMessage(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`,
+					"Run `$ android` to manage the Android Support Repository.");
 				detectedErrors = true;
 			}
 
