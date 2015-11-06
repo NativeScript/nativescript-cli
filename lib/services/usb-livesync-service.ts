@@ -132,13 +132,13 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 						platformSpecificUsbLiveSyncService.sendPageReloadMessageToSimulator().wait();
 					} else {
 						let deviceAppData =  this.$deviceAppDataFactory.create(this.$projectData.projectId, this.$mobileHelper.normalizePlatformName(platform));
-						let localToDevicePaths = this.createLocalToDevicePaths(platform, this.$projectData.projectId, projectFilesPath, [mappedFilePath]);
+						let localToDevicePaths = this.createLocalToDevicePaths(platform, this.$projectData.projectId, localProjectRootPath || projectFilesPath, [mappedFilePath]);
 
 						let devices = this.$devicesService.getDeviceInstances();
 						_.each(devices, (device: Mobile.IDevice) => {
-							this.transferFiles(device, deviceAppData, localToDevicePaths);
+							this.transferFiles(device, deviceAppData, localToDevicePaths, projectFilesPath, true).wait();
 							let platformSpecificUsbLiveSyncService = this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, device, platformSpecificLiveSyncServices);
-							return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData);
+							return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
 						});
 
 						this.$dispatcher.dispatch(() => Future.fromResult());
@@ -184,9 +184,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 }
 $injector.register("usbLiveSyncService", UsbLiveSyncService);
 
+let currentPageReloadId = 0;
+
 export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 	private static BACKEND_PORT = 18181;
-	private currentPageReloadId = 0;
 
 	constructor(private _device: Mobile.IDevice,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
@@ -219,7 +220,7 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 	}
 
 	private sendReloadMessageCore(socket: net.Socket): void {
-		let message = `{ "method":"Page.reload","params":{"ignoreCache":false},"id":${++this.currentPageReloadId} }`;
+		let message = `{ "method":"Page.reload","params":{"ignoreCache":false},"id":${++currentPageReloadId} }`;
 		let length = Buffer.byteLength(message, "utf16le");
 		let payload = new Buffer(length + 4);
 		payload.writeInt32BE(length, 0);
