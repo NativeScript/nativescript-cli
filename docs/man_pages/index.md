@@ -30,7 +30,7 @@ Command | Description
 [emulate `<Platform>`](project/testing/emulate.html) | Deploys the project in the native emulator for the selected target platform.
 [run `<Platform>`](project/testing/run.html) | Runs your project on a connected device or in the native emulator, if configured.
 [debug `<Platform>`](project/testing/debug.html) | Debugs your project on a connected physical or virtual device.
-[test init](project/testing/test-init.html) | Adds support for unit testing to your project.
+[test init](project/testing/test-init.html) | Configures your project for unit testing with a selected framework.
 [test `<Platform>`](project/testing/test.html) | Runs the unit tests in your project on a connected physical or virtual device.
 [install](project/configuration/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
