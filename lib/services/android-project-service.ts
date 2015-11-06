@@ -196,6 +196,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if(this.canUseGradle().wait()) {
+				this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
 				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 				let compileSdk = androidToolsInfo.compileSdkVersion;
 				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
