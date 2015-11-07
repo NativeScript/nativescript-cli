@@ -37,12 +37,20 @@ localStorageAdapter._destroy = function(key) {
   }
 
   // Remove the item on our turn.
+  var deferred = Kinvey.Defer.deferred();
   storagePromise = storagePromise.then(function() {
-    var deferred = Kinvey.Defer.deferred();
-    kc.removeForKey(deferred.resolve, deferred.reject, key, kcServiceName);
-    return deferred.promise;
+    var deferred2 = Kinvey.Defer.deferred();
+    kc.removeForKey(function() {
+      deferred.resolve();
+      deferred2.resolve();
+    }, function(err) {
+      deferred.reject(err);
+      deferred2.resolve();
+    }, key, kcServiceName);
+    return deferred2.promise;
   });
-  return storagePromise;
+
+  return deferred.promise;
 };
 
 /**
@@ -65,7 +73,7 @@ localStorageAdapter._get = function(key) {
   storagePromise = storagePromise.then(function() {
     var deferred = Kinvey.Defer.deferred();
     kc.getForKey(function(value) {
-      deferred.resolve(value ? JSON.parse(value) : null);
+      deferred.resolve(value ? JSON.parse(decodeURIComponent(value)) : null);
     }, function() {// Plugin fails on `null`-values, workaround here.
       deferred.resolve(null);
     }, key, kcServiceName);
@@ -91,21 +99,20 @@ localStorageAdapter._save = function(key, value) {
   }
 
   // Save the item on our turn.
+  var deferred = Kinvey.Defer.deferred();
   storagePromise = storagePromise.then(function() {
     // Escape stringified value.
     value = JSON.stringify(value);
-    value = value.replace(/[\\]/g, '\\\\')
-                 .replace(/[\"]/g, '\\\"')
-                 .replace(/[\/]/g, '\\/')
-                 .replace(/[\b]/g, '\\b')
-                 .replace(/[\f]/g, '\\f')
-                 .replace(/[\n]/g, '\\n')
-                 .replace(/[\r]/g, '\\r')
-                 .replace(/[\t]/g, '\\t');
-
-    var deferred = Kinvey.Defer.deferred();
-    kc.setForKey(deferred.resolve, deferred.reject, key, kcServiceName, value);
-    return deferred.promise;
+    value = encodeURIComponent(value);
+    var deferred2 = Kinvey.Defer.deferred();
+    kc.setForKey(function() {
+      deferred.resolve();
+      deferred2.resolve();
+    }, function(err) {
+      deferred.reject(err);
+      deferred2.resolve();
+    }, key, kcServiceName, value);
+    return deferred2.promise;
   });
-  return storagePromise;
+  return deferred.promise;
 };

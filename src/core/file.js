@@ -218,7 +218,7 @@ Kinvey.File = /** @lends Kinvey.File */{
 
     // Build the flags.
     var flags = {};
-    if(false !== options.tls) {
+    if(options.tls !== false) {
       flags.tls = true;
     }
     if(options.ttl) {

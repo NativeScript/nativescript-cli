@@ -137,6 +137,7 @@ var SocialAdapter = {
     // Open the login dialog. This step consists of getting the dialog url,
     // after which the dialog is opened.
     var redirect = options.redirect || root.location.toString();
+
     return Kinvey.Persistence.Net.create({
       namespace : USERS,
       data      : { redirect: redirect, state: options.state },
