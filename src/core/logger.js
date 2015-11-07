@@ -30,4 +30,5 @@ class Logger {
   }
 }
 
+Logger.setDefaultLevel(Logger.levels.ERROR);
 module.exports = Logger;

@@ -65,4 +65,4 @@ Kinvey.init = function(options) {
 };
 
 // Export
-export default Kinvey;
+module.exports = Kinvey;

@@ -1,7 +1,8 @@
 const StoreAdapter = {
-  IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage',
-  WebSQL: 'WebSQL'
+  IndexedDB: 'idb',
+  LocalStorage: 'localstorage',
+  Memory: 'memory',
+  WebSQL: 'websql'
 };
 Object.freeze(StoreAdapter);
 module.exports = StoreAdapter;

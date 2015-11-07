@@ -4,12 +4,8 @@ const Client = require('../core/client');
 const result = require('lodash/object/result');
 const activeUserCollection = 'activeUser';
 
-function getActiveUser() {
-  const client = Client.sharedInstance();
-  const store = new Store(StoreAdapter.LocalStorage, {
-    name: client.appId,
-    collection: activeUserCollection
-  });
+function getActiveUser(client = Client.sharedInstance()) {
+  const store = new Store(`${client.appId}.${activeUserCollection}`, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL]);
 
   return store.find().then(users => {
     if (users.length === 0) {
@@ -20,12 +16,8 @@ function getActiveUser() {
   });
 }
 
-function setActiveUser(user) {
-  const client = Client.sharedInstance();
-  const store = new Store(StoreAdapter.LocalStorage, {
-    name: client.appId,
-    collection: activeUserCollection
-  });
+function setActiveUser(user, client = Client.sharedInstance()) {
+  const store = new Store(`${client.appId}.${activeUserCollection}`, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL]);
 
   const promise = getActiveUser().then(activeUser => {
     if (activeUser) {

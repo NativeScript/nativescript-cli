@@ -1,5 +1,6 @@
+require('babel-core/register');
 const Kinvey = require('../src/kinvey');
-Kinvey.Logger.setLevel(Kinvey.Logger.levels.DEBUG);
+Kinvey.Logger.setLevel(Kinvey.Logger.levels.ERROR);
 
 const client = Kinvey.init({
   appKey: 'kid_byGoHmnX2',
@@ -7,6 +8,8 @@ const client = Kinvey.init({
 });
 
 Kinvey.User.login('admin', 'admin').then(user => {
-  var books = new Kinvey.Datastore('books');
+  const books = new Kinvey.Datastore('books');
   return books.find();
+}).then(books => {
+  console.log(books);
 });

@@ -14,10 +14,7 @@ class Cache extends Middleware {
       const method = request.method;
       const query = request.query;
       const id = matches.id;
-      const store = new Store([StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.LocalStorage], {
-        name: matches.appId,
-        collection: matches.collection
-      });
+      const store = new Store(`${matches.appId}.${matches.collection}`, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.Memory]);
       let promise;
 
       if (method === HttpMethod.GET) {
@@ -29,7 +26,7 @@ class Cache extends Middleware {
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
         promise = store.save(request.body);
       } else if (method === HttpMethod.DELETE) {
-        promise = store.destroy(id);
+        promise = store.remove(id);
       }
 
       return promise.then(result => {

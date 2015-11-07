@@ -1,67 +1,86 @@
+// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
+const PouchDB = require('pouchdb');
 const StoreAdapter = require('../enums/storeAdapter');
 const KinveyError = require('../errors').KinveyError;
-const Query = require('../query');
-const Aggregation = require('../aggregation');
-const IndexedDBAdapter = require('./adapters/indexeddb');
-const LocalStorageAdapter = require('./adapters/localstorage');
-const WebSQLAdapter = require('./adapters/websql');
 const Promise = require('bluebird');
+const Query = require('../query');
+const IndexedDBAdapter = require('pouchdb/lib/adapters/idb');
+const WebSQLAdapter = require('pouchdb/lib/adapters/websql');
 const log = require('loglevel');
-const assign = require('lodash/object/assign');
-const result = require('lodash/object/result');
+const find = require('lodash/collection/find');
+const forEach = require('lodash/collection/forEach');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
-const isFunction = require('lodash/lang/isArray');
-const validCollectionRegex = /^[a-zA-Z0-9\-]{1,128}/;
+require('pouchdb/extras/memory');
+
+function serialize(doc) {
+  for (const key in doc) {
+    if (doc.hasOwnProperty(key) && key.indexOf('_') === 0 && key !== '_id') {
+      doc[`${key.substring(1, key.length)}_`] = doc[key];
+      delete doc[key];
+    }
+  }
+
+  return doc;
+}
+
+function deserialize(doc) {
+  for (const key in doc) {
+    if (doc.hasOwnProperty(key) && key.indexOf('_') === key.length - 1) {
+      doc[`_${key.substring(0, key.length - 1)}`] = doc[key];
+      delete doc[key];
+    }
+  }
+
+  return doc;
+}
 
 class Store {
-  constructor(Adapters = [StoreAdapter.IndexedDB], dbInfo) {
-    dbInfo = assign({
-      name: 'kinvey',
-      collection: 'data'
-    }, dbInfo);
+  constructor(name = 'Kinvey', adapters = [StoreAdapter.Memory]) {
+    let dbAdapter;
 
-    if (!isString(dbInfo.name) || !validCollectionRegex.test(dbInfo.name)) {
-      throw new KinveyError('The database name has an invalid format.',
-        'The database name must be a string containing only alphanumeric characters and dashes.');
+    if (!isArray(adapters)) {
+      adapters = [adapters];
     }
 
-    if (!isString(dbInfo.collection) || !validCollectionRegex.test(dbInfo.collection)) {
-      throw new KinveyError('The collection name has an invalid format.',
-        'The collection name must be a string containing only alphanumeric characters and dashes.');
-    }
-
-    if (!isArray(Adapters)) {
-      Adapters = [Adapters];
-    }
-
-    for (let i = 0, len = Adapters.length; i < len; i++) {
-      let Adapter = Adapters[i];
-
-      if (isString(Adapter)) {
-        switch (Adapter) {
+    forEach(adapters, adapter => {
+      switch (adapter) {
         case StoreAdapter.IndexedDB:
-          Adapter = IndexedDBAdapter;
-          break;
-        case StoreAdapter.LocalStorage:
-          Adapter = LocalStorageAdapter;
+          if (IndexedDBAdapter.valid()) {
+            dbAdapter = adapter;
+            return false;
+          }
+
           break;
         case StoreAdapter.WebSQL:
-          Adapter = WebSQLAdapter;
-          break;
-        default:
-          continue;
-        }
-      }
+          if (WebSQLAdapter.valid()) {
+            dbAdapter = adapter;
+            return false;
+          }
 
-      if (Adapter.isSupported()) {
-        this.adapter = new Adapter(dbInfo);
-        break;
+          break;
       }
+    });
+
+    if (!dbAdapter) {
+      log.warn('Provided adapters are unsupported. Defaulting to StoreAdapter.Memory.', adapters);
+      dbAdapter = StoreAdapter.Memory;
     }
 
-    if (!this.adapter) {
-      throw new KinveyError('Please provide a supported storage adapter.');
+    this.db = new PouchDB(name, {
+      auto_compaction: true,
+      adapter: dbAdapter
+    });
+
+    if (dbAdapter !== StoreAdapter.Memory) {
+      this.cache = new PouchDB(name, {
+        auto_compaction: true,
+        adapter: StoreAdapter.Memory
+      });
+      this.syncHandler = this.cache.sync(this.db, { live: true });
+    } else {
+      this.cache = this.db;
     }
   }
 
@@ -81,37 +100,48 @@ class Store {
     return `${this.objectIdPrefix}${result}`;
   }
 
+  isLocalObjectId(id) {
+    return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
+  }
+
+  sync() {
+    return this.cache.sync(this.db);
+  }
+
+  cancelSync() {
+    if (this.syncHandler) {
+      this.syncHandler.cancel();
+    }
+  }
+
   find(query) {
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    return this.adapter.find(query);
+    const promise = this.cache.allDocs({ include_docs: true }).then(response => {
+      let docs = [];
+
+      forEach(response.rows, row => {
+        docs.push(deserialize(row.doc));
+      });
+
+      if (query) {
+        docs = query.process(docs);
+      }
+
+      return docs;
+    });
+
+    return promise;
   }
 
   count(query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
+    const promise = this.find(query).then(docs => {
+      return docs.length;
+    });
 
-    if (query) {
-      query.sort(null).limit(null).skip(0);
-    }
-
-    return this.adapter.count(query);
-  }
-
-  findAndModify(id, fn) {
-    if (!isString(id)) {
-      log.warn(`${id} is not a string. Casting to a string value.`, id);
-      id = String(id);
-    }
-
-    if (!isFunction(fn)) {
-      return Promise.reject(new KinveyError('fn argument must be a function'));
-    }
-
-    return this.adapter.findAndModify(id, fn);
+    return promise;
   }
 
   group(aggregation) {
@@ -119,7 +149,47 @@ class Store {
       aggregation = new Aggregation(aggregation);
     }
 
-    return this.adapter.group(aggregation);
+    const query = new Query({ filter: aggregation.condition });
+    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    aggregation.reduce = new Function(['doc', 'out'], reduce);
+
+    const promise = this.find(query).then(docs => {
+      const groups = {};
+      const response = [];
+
+      forEach(docs, doc => {
+        const group = {};
+
+        for (const name in aggregation.key) {
+          if (aggregation.key.hasOwnProperty(name)) {
+            group[name] = doc[name];
+          }
+        }
+
+        const key = JSON.stringify(group);
+        if (!groups[key]) {
+          groups[key] = group;
+
+          for (const attr in aggregation.initial) {
+            if (aggregation.initial.hasOwnProperty(attr)) {
+              groups[key][attr] = aggregation.initial[attr];
+            }
+          }
+        }
+
+        aggregation.reduce(doc, groups[key]);
+      });
+
+      for (const segment in groups) {
+        if (groups.hasOwnProperty(segment)) {
+          response.push(groups[segment]);
+        }
+      }
+
+      return response;
+    });
+
+    return promise;
   }
 
   get(id) {
@@ -128,7 +198,24 @@ class Store {
       id = String(id);
     }
 
-    return this.adapter.get(id);
+    const promise = this.cache.get(id).then(doc => {
+      return deserialize(doc);
+    });
+    return promise;
+  }
+
+  findAndModify(id, fn) {
+    if (!isFunction(fn)) {
+      return Promise.reject(new KinveyError('fn argument must be a function.'));
+    }
+
+    const promise = this.get(id).then(doc => {
+      return fn(doc);
+    }).then(doc => {
+      return this.save(doc);
+    });
+
+    return promise;
   }
 
   save(doc) {
@@ -140,41 +227,154 @@ class Store {
       return Promise.resolve(null);
     }
 
-    doc._id = doc._id || this.generateObjectId();
-    return this.adapter.save(doc);
+    if (!doc._id) {
+      doc._id = this.generateObjectId();
+    }
+
+    const serializedDoc = serialize(doc);
+    const promise = this.cache.put(serializedDoc).then(response => {
+      if (response.error) {
+        throw new KinveyError('An error occurred trying to save the document.', doc, response);
+      }
+
+      doc._id = response.id;
+      doc._rev = response.rev;
+      return doc;
+    });
+
+    return promise;
   }
 
-  batch(docs) {
+  saveBuld(docs) {
+    const serializeDocs = [];
+
     if (!isArray(docs)) {
-      docs = [docs];
+      return this.save(docs);
     }
 
-    return this.adapter.batch(docs);
+    forEach(docs, doc => {
+      if (!doc._id) {
+        doc._id = this.generateObjectId();
+      }
+
+      serializedDocs.push(serialize(doc));
+    });
+
+    const promise = this.cache.bulkDocs(serializedDocs).then(responses => {
+      var result = [];
+
+      forEach(responses, response => {
+        if (response.ok) {
+          const doc = find(docs, doc => {
+            return doc._id === response.id;
+          });
+
+          doc._id = response.id;
+          doc._rev = response.rev;
+          result.push(doc);
+        }
+      });
+
+      return result;
+    });
   }
 
-  delete(id) {
-    if (!isString(id)) {
-      log.warn(`${id} is not a string. Casting to a string value.`, id);
-      id = String(id);
+  remove(doc) {
+    if (!doc) {
+      return Promise.resolve({
+        count: 0,
+        documents: []
+      });
     }
 
-    return this.adapter.delete(id);
+    if (isArray(doc)) {
+      return this.removeBulk(doc);
+    }
+
+    if (!doc._id) {
+      return Promise.reject(new KinveyError('doc must have an _id property to be removed.', doc));
+    }
+
+    if (!doc._rev) {
+      return Promise.reject(new KinveyError('doc must have a _rev property to be removed.', doc));
+    }
+
+    const serializedDoc = serialize(doc);
+    const promise = this.cache.remove(doc).then(response => {
+      if (response.error) {
+        throw new KinveyError('An error occurred trying to remove the document.', doc, response);
+      }
+
+      return {
+        count: 1,
+        documents: [doc]
+      };
+    });
+
+    return promise;
   }
 
-  clean(query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+  removeBulk(docs) {
+    const serializeDocs = [];
+
+    if (!isArray(docs)) {
+      return this.remove(docs);
     }
 
-    if (query) {
-      query.sort(null).limit(null).skip(0);
-    }
+    forEach(docs, doc => {
+      doc._deleted = true;
+      serializedDocs.push(serialize(doc));
+    });
 
-    return this.adapter.clean(query);
+    const promise = this.cache.bulkDocs(serializeDocs).then(responses => {
+      var result = {
+        count: 0,
+        documents: []
+      };
+
+      forEach(responses, response => {
+        if (response.ok) {
+          const doc = find(docs, doc => {
+            return doc._id === response.id;
+          });
+
+          result.count = result.count + 1;
+          result.documents.push(doc);
+        }
+      });
+
+      return result;
+    });
+
+    return promise;
   }
 
-  clear() {
-    return this.adapter.clear();
+  clear(query) {
+    const promise = this.find(query).then(docs => {
+      return this.removeBulk(docs);
+    });
+
+    return promise;
+  }
+
+  destroy() {
+    const promise = this.cache.destroy().then(response => {
+      if (response.error) {
+        throw new KinveyError('An error occurred trying to destroy the database.', response);
+      }
+
+      return null;
+    });
+
+    return promise;
+  }
+
+  static enabledDebug() {
+    PouchDB.debug.enable('*');
+  }
+
+  static disableDebug() {
+    PouchDB.debug.disable();
   }
 }
 

@@ -5,10 +5,6 @@ const ActiveUserError = require('../errors').ActiveUserError;
 const Model = require('./model');
 const Request = require('../request').Request;
 const SocialAdapter = require('../enums/socialAdapter');
-const Facebook = require('../social/facebook');
-const Google = require('../social/google');
-const LinkedIn = require('../social/linkedIn');
-const Twitter = require('../social/twitter');
 const Client = require('../client');
 const HttpMethod = require('../enums/httpMethod');
 const DataPolicy = require('../enums/dataPolicy');
@@ -34,14 +30,14 @@ class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static getActive() {
+  static getActive(client) {
     const user = User[activeUserSymbol];
 
     if (!user) {
       return Promise.resolve(user);
     }
 
-    return getActiveUser().then(user => {
+    return getActiveUser(client).then(user => {
       if (user) {
         user = new User(user);
         User[activeUserSymbol] = user;
@@ -57,12 +53,12 @@ class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static setActive(user) {
+  static setActive(user, client) {
     if (user && !(user instanceof User)) {
       user = new User(result(user, 'toJSON', user));
     }
 
-    return setActiveUser(user).then(() => {
+    return setActiveUser(user, client).then(() => {
       if (user) {
         User[activeUserSymbol] = user;
         return user;
@@ -77,8 +73,8 @@ class User extends Model {
    *
    * @returns {Promise} Resolved with `true` if the user is active, `false` otherwise.
    */
-  isActive() {
-    return User.getActive().then(user => {
+  isActive(client) {
+    return User.getActive(client).then(user => {
       if (user) {
         return this.id === user.id;
       }
@@ -108,7 +104,7 @@ class User extends Model {
       client: Client.sharedInstance()
     }, options);
 
-    const promise = User.getActive().then(user => {
+    const promise = User.getActive(options.client).then(user => {
       if (user) {
         throw new ActiveUserError('A user is already logged in.');
       }
@@ -137,7 +133,7 @@ class User extends Model {
       return request.execute();
     }).then(response => {
       const user = new User(response.data);
-      return User.setActive(user);
+      return User.setActive(user, options.client);
     });
 
     return promise;
@@ -176,43 +172,43 @@ class User extends Model {
    * @param   {string|Object}      Adapter          Social Adapter
    * @return  {Promise}                             Resolved with the active user or rejected with an error.
    */
-  static connect(Adapter = SocialAdapter.Facebook, options) {
-    let adapter = Adapter;
-    let promise;
-
-    if (isString(Adapter)) {
-      switch (Adapter) {
-      case SocialAdapter.Google:
-        Adapter = Google;
-        break;
-      case SocialAdapter.LinkedIn:
-        Adapter = LinkedIn;
-        break;
-      case SocialAdapter.Twitter:
-        Adapter = Twitter;
-        break;
-      default:
-        Adapter = Facebook;
-      }
-    }
-
-    if (isFunction(Adapter)) {
-      adapter = new Adapter();
-    }
-
-    if (!isFunction(adapter.connect)) {
-      return Promise.reject(
-        new KinveyError('Unable to connect with the social adapter.',
-                        'Please provide a connect function for the adapter.')
-      );
-    }
-
-    promise = adapter.connect(options).then((token) => {
-      return User.loginWithProvider(adapter.name, token, options);
-    });
-
-    return promise;
-  }
+  // static connect(Adapter = SocialAdapter.Facebook, options) {
+  //   let adapter = Adapter;
+  //   let promise;
+  //
+  //   if (isString(Adapter)) {
+  //     switch (Adapter) {
+  //     case SocialAdapter.Google:
+  //       Adapter = Google;
+  //       break;
+  //     case SocialAdapter.LinkedIn:
+  //       Adapter = LinkedIn;
+  //       break;
+  //     case SocialAdapter.Twitter:
+  //       Adapter = Twitter;
+  //       break;
+  //     default:
+  //       Adapter = Facebook;
+  //     }
+  //   }
+  //
+  //   if (isFunction(Adapter)) {
+  //     adapter = new Adapter();
+  //   }
+  //
+  //   if (!isFunction(adapter.connect)) {
+  //     return Promise.reject(
+  //       new KinveyError('Unable to connect with the social adapter.',
+  //                       'Please provide a connect function for the adapter.')
+  //     );
+  //   }
+  //
+  //   promise = adapter.connect(options).then((token) => {
+  //     return User.loginWithProvider(adapter.name, token, options);
+  //   });
+  //
+  //   return promise;
+  // }
 
   /**
    * Logout the active user. A promise will be returned that will be resolved
@@ -247,7 +243,7 @@ class User extends Model {
       const request = new Request(options);
       return request.execute();
     }).then(() => {
-      return User.setActive(null);
+      return User.setActive(null, options.client);
     });
 
     return promise;
