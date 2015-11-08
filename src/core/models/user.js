@@ -33,7 +33,7 @@ class User extends Model {
   static getActive(client) {
     const user = User[activeUserSymbol];
 
-    if (!user) {
+    if (user) {
       return Promise.resolve(user);
     }
 

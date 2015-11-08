@@ -1,5 +1,5 @@
 const StoreAdapter = require('../core/enums/storeAdapter');
-const Store = require('../core/storage/store');
+const Store = require('../core/store');
 const Client = require('../core/client');
 const result = require('lodash/object/result');
 const activeUserCollection = 'activeUser';
@@ -21,7 +21,7 @@ function setActiveUser(user, client = Client.sharedInstance()) {
 
   const promise = getActiveUser().then(activeUser => {
     if (activeUser) {
-      return store.delete(activeUser._id);
+      return store.remove(activeUser._id);
     }
   }).then(() => {
     if (user) {

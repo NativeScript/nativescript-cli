@@ -12,6 +12,7 @@ Kinvey.Logger = require('./core/logger');
 Kinvey.Metadata = require('./core/metadata');
 Kinvey.Model = require('./core/models/model');
 Kinvey.Query = require('./core/query');
+Kinvey.Store = require('./core/store');
 Kinvey.User = require('./core/models/user');
 
 // Enums

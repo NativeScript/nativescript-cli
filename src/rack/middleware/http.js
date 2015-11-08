@@ -16,8 +16,9 @@ class Http extends Middleware {
   handle(request) {
     return super.handle(request).then(() => {
       let adapter = http;
+      const protocol = url.parse(request.url).protocol;
 
-      if (url.parse(request.url).protocol === 'https:') {
+      if (protocol === 'https:') {
         adapter = https;
       }
 
@@ -44,7 +45,8 @@ class Http extends Middleware {
           path: url.format({
             pathname: request.path,
             query: merge({}, request.query, request.flags),
-          })
+          }),
+          port: request.port ? request.port : protocol === 'https:' ? 443 : 80
         });
 
         httpRequest.on('response', (res) => {
@@ -76,11 +78,11 @@ class Http extends Middleware {
           httpRequest.write(request.data);
         }
 
-        if (request.timeout) {
-          httpRequest.setTimeout(request.timeout, () => {
-            reject(new KinveyError('Http request timed out.'));
-          });
-        }
+        // if (request.timeout) {
+        //   httpRequest.setTimeout(request.timeout, () => {
+        //     reject(new KinveyError('Http request timed out.'));
+        //   });
+        // }
 
         httpRequest.end();
       });

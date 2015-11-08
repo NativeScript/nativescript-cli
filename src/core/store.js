@@ -1,22 +1,30 @@
 // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
 const PouchDB = require('pouchdb');
-const StoreAdapter = require('../enums/storeAdapter');
-const KinveyError = require('../errors').KinveyError;
+const StoreAdapter = require('./enums/storeAdapter');
+const KinveyError = require('./errors').KinveyError;
 const Promise = require('bluebird');
-const Query = require('../query');
+const Query = require('./query');
+const Aggregation = require('./aggregation');
 const IndexedDBAdapter = require('pouchdb/lib/adapters/idb');
 const WebSQLAdapter = require('pouchdb/lib/adapters/websql');
+const Loki = require('lokijs');
 const log = require('loglevel');
 const find = require('lodash/collection/find');
+const clone = require('lodash/lang/clone');
+const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
+const protectedKeys = ['_id', '_rev'];
 require('pouchdb/extras/memory');
+require('pouchdb/extras/localstorage');
 
 function serialize(doc) {
+  doc = clone(doc, true);
+
   for (const key in doc) {
-    if (doc.hasOwnProperty(key) && key.indexOf('_') === 0 && key !== '_id') {
+    if (doc.hasOwnProperty(key) && key.indexOf('_') === 0 && protectedKeys.indexOf(key) === -1) {
       doc[`${key.substring(1, key.length)}_`] = doc[key];
       delete doc[key];
     }
@@ -26,6 +34,8 @@ function serialize(doc) {
 }
 
 function deserialize(doc) {
+  doc = clone(doc, true);
+
   for (const key in doc) {
     if (doc.hasOwnProperty(key) && key.indexOf('_') === key.length - 1) {
       doc[`_${key.substring(0, key.length - 1)}`] = doc[key];
@@ -34,6 +44,53 @@ function deserialize(doc) {
   }
 
   return doc;
+}
+
+class LocalStorageAdapter {
+  valid() {
+    const kinvey = 'kinvey';
+    try {
+      localStorage.setItem(kinvey, kinvey);
+      localStorage.removeItem(kinvey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+}
+
+class PouchDBAdapter {
+  constructor() {
+
+  }
+
+  loadDatabase(name, done) {
+    return this.db.get(name).then(doc => {
+      done(doc.data);
+      return doc;
+    });
+  }
+
+  saveDatabase(name, data, done) {
+    return this.db.get(name).then(doc => {
+      if (!doc) {
+        doc = {
+          _id: name
+        };
+      }
+
+      doc.data = data;
+      return this.db.save(doc).then(response => {
+        if (response.error) {
+          throw new KinveyError('An error occurred trying to save the document.', doc, response);
+        }
+
+        doc._rev = response.rev;
+        done(doc);
+        return doc;
+      });
+    });
+  }
 }
 
 class Store {
@@ -46,25 +103,37 @@ class Store {
 
     forEach(adapters, adapter => {
       switch (adapter) {
-        case StoreAdapter.IndexedDB:
-          if (IndexedDBAdapter.valid()) {
-            dbAdapter = adapter;
-            return false;
-          }
+      case StoreAdapter.IndexedDB:
+        if (IndexedDBAdapter.valid()) {
+          dbAdapter = adapter;
+          return false;
+        }
 
-          break;
-        case StoreAdapter.WebSQL:
-          if (WebSQLAdapter.valid()) {
-            dbAdapter = adapter;
-            return false;
-          }
+        break;
+      case StoreAdapter.LocalStorage:
+        if (LocalStorageAdapter.valid()) {
+          dbAdapter = adapter;
+          return false;
+        }
 
-          break;
+        break;
+      case StoreAdapter.Memory:
+        dbAdapter = adapter;
+        return false;
+      case StoreAdapter.WebSQL:
+        if (WebSQLAdapter.valid()) {
+          dbAdapter = adapter;
+          return false;
+        }
+
+        break;
+      default:
+        log.warn(`${adapter} adapter is unsupported. Please use a supported store adapter.`, StoreAdapter);
       }
     });
 
     if (!dbAdapter) {
-      log.warn('Provided adapters are unsupported. Defaulting to StoreAdapter.Memory.', adapters);
+      log.warn('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory.', adapters);
       dbAdapter = StoreAdapter.Memory;
     }
 
@@ -72,16 +141,39 @@ class Store {
       auto_compaction: true,
       adapter: dbAdapter
     });
+    this.db.viewCleanup();
 
-    if (dbAdapter !== StoreAdapter.Memory) {
-      this.cache = new PouchDB(name, {
-        auto_compaction: true,
-        adapter: StoreAdapter.Memory
-      });
-      this.syncHandler = this.cache.sync(this.db, { live: true });
-    } else {
-      this.cache = this.db;
+    this.cache = new Loki(name);
+    const collections = this.cache.listCollections();
+
+    if (collections.indexOf(name) === -1) {
+      this.cache.addCollection(name);
     }
+
+    // if (dbAdapter !== StoreAdapter.Memory) {
+    //   this.cache = new PouchDB(name, {
+    //     auto_compaction: true,
+    //     adapter: StoreAdapter.Memory
+    //   });
+    //   this.cache.viewCleanup();
+    //   this.syncHandler = this.cache.sync(this.db, { live: true });
+    //
+    //   // this.syncHandler.on('change', info => {
+    //   //   console.log('changed', info);
+    //   // }).on('paused', () => {
+    //   //   console.log('paused');
+    //   // }).on('active', () => {
+    //   //   console.log('active');
+    //   // }).on('denied', info => {
+    //   //   console.log('denied', info);
+    //   // }).on('complete', info => {
+    //   //   console.log('complete', info);
+    //   // }).on('error', err => {
+    //   //   console.error('error', err);
+    //   // });
+    // } else {
+    //   this.cache = this.db;
+    // }
   }
 
   get objectIdPrefix() {
@@ -90,14 +182,14 @@ class Store {
 
   generateObjectId(length = 24) {
     const chars = 'abcdef0123456789';
-    let result = '';
+    let objectId = '';
 
     for (let i = 0, j = chars.length; i < length; i += 1) {
       const pos = Math.floor(Math.random() * j);
-      result += chars.substring(pos, pos + 1);
+      objectId += chars.substring(pos, pos + 1);
     }
 
-    return `${this.objectIdPrefix}${result}`;
+    return `${this.objectIdPrefix}${objectId}`;
   }
 
   isLocalObjectId(id) {
@@ -220,7 +312,7 @@ class Store {
 
   save(doc) {
     if (isArray(doc)) {
-      return this.batch(doc);
+      return this.saveBulk(doc);
     }
 
     if (!doc) {
@@ -245,8 +337,8 @@ class Store {
     return promise;
   }
 
-  saveBuld(docs) {
-    const serializeDocs = [];
+  saveBulk(docs = []) {
+    const serializedDocs = [];
 
     if (!isArray(docs)) {
       return this.save(docs);
@@ -261,7 +353,7 @@ class Store {
     });
 
     const promise = this.cache.bulkDocs(serializedDocs).then(responses => {
-      var result = [];
+      const results = [];
 
       forEach(responses, response => {
         if (response.ok) {
@@ -271,51 +363,49 @@ class Store {
 
           doc._id = response.id;
           doc._rev = response.rev;
-          result.push(doc);
+          results.push(doc);
         }
       });
 
-      return result;
+      return results;
     });
+
+    return promise;
   }
 
-  remove(doc) {
-    if (!doc) {
+  remove(id) {
+    if (!id) {
       return Promise.resolve({
         count: 0,
         documents: []
       });
     }
 
-    if (isArray(doc)) {
-      return this.removeBulk(doc);
+    if (isArray(id)) {
+      const query = new Query();
+      query.contains('_id', id);
+      return this.clear(query);
     }
 
-    if (!doc._id) {
-      return Promise.reject(new KinveyError('doc must have an _id property to be removed.', doc));
-    }
+    const promise = this.get(id).then(doc => {
+      const serializedDoc = serialize(doc);
+      return this.cache.remove(doc).then(response => {
+        if (response.error) {
+          throw new KinveyError('An error occurred trying to remove the document.', doc, response);
+        }
 
-    if (!doc._rev) {
-      return Promise.reject(new KinveyError('doc must have a _rev property to be removed.', doc));
-    }
-
-    const serializedDoc = serialize(doc);
-    const promise = this.cache.remove(doc).then(response => {
-      if (response.error) {
-        throw new KinveyError('An error occurred trying to remove the document.', doc, response);
-      }
-
-      return {
-        count: 1,
-        documents: [doc]
-      };
+        return {
+          count: 1,
+          documents: [doc]
+        };
+      });
     });
 
     return promise;
   }
 
-  removeBulk(docs) {
-    const serializeDocs = [];
+  removeBulk(docs = []) {
+    const serializedDocs = [];
 
     if (!isArray(docs)) {
       return this.remove(docs);
@@ -326,8 +416,8 @@ class Store {
       serializedDocs.push(serialize(doc));
     });
 
-    const promise = this.cache.bulkDocs(serializeDocs).then(responses => {
-      var result = {
+    const promise = this.cache.bulkDocs(serializedDocs).then(responses => {
+      const results = {
         count: 0,
         documents: []
       };
@@ -338,12 +428,12 @@ class Store {
             return doc._id === response.id;
           });
 
-          result.count = result.count + 1;
-          result.documents.push(doc);
+          results.count = result.count + 1;
+          results.documents.push(doc);
         }
       });
 
-      return result;
+      return results;
     });
 
     return promise;
@@ -369,7 +459,7 @@ class Store {
     return promise;
   }
 
-  static enabledDebug() {
+  static enableDebug() {
     PouchDB.debug.enable('*');
   }
 

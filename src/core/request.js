@@ -278,8 +278,12 @@ class Request {
       promise = this.executeLocal().then(response => {
         if (response && response.isSuccess()) {
           if (this.method !== HttpMethod.GET) {
-            const request = new Request(this.method, this.path, this.query, response.data, {
+            const request = new Request({
+              method: this.method,
+              path: this.path,
+              query: this.query,
               auth: this.auth,
+              data: response.data,
               client: this.client,
               dataPolicy: DataPolicy.CloudOnly
             });
@@ -289,8 +293,12 @@ class Request {
           }
         } else {
           if (this.method === HttpMethod.GET) {
-            const request = new Request(this.method, this.path, this.query, response.data, {
+            const request = new Request({
+              method: this.method,
+              path: this.path,
+              query: this.query,
               auth: this.auth,
+              data: response.data,
               client: this.client,
               dataPolicy: DataPolicy.CloudFirst
             });
@@ -305,8 +313,12 @@ class Request {
     } else if (this.dataPolicy === DataPolicy.CloudFirst) {
       promise = this.executeCloud().then(response => {
         if (response && response.isSuccess()) {
-          const request = new Request(this.method, this.path, this.query, response.data, {
+          const request = new Request({
+            method: this.method,
+            path: this.path,
+            query: this.query,
             auth: this.auth,
+            data: response.data,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
@@ -319,8 +331,12 @@ class Request {
             return response;
           });
         } else if (this.method === HttpMethod.GET) {
-          const request = new Request(this.method, this.path, this.query, response.data, {
+          const request = new Request({
+            method: this.method,
+            path: this.path,
+            query: this.query,
             auth: this.auth,
+            data: response.data,
             client: this.client,
             dataPolicy: DataPolicy.LocalOnly
           });
@@ -441,7 +457,10 @@ class DeltaSetRequest extends Request {
               while (i < ids.length) {
                 const query = new Query(origQuery.toJSON());
                 query.contains('_id', ids.slice(i, ids.length > maxIdsPerRequest + i ? maxIdsPerRequest : ids.length));
-                const request = new Request(this.method, this.path, query, null, {
+                const request = new Request({
+                  method: this.method,
+                  path: this.path,
+                  query: query,
                   auth: this.auth,
                   client: this.client,
                   dataPolicy: this.dataPolicy

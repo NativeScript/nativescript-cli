@@ -9,8 +9,8 @@ function createLintTask(taskName, files) {
     return gulp.src(files)
       .pipe($.eslint())
       .pipe($.eslint.format())
-      .pipe($.eslint.failOnError())
-      .pipe($.jscs());
+      .pipe($.eslint.failOnError());
+      // .pipe($.jscs());
   });
 }
 

@@ -1,5 +1,5 @@
 const Middleware = require('./middleware');
-const Store = require('../../core/storage/store');
+const Store = require('../../core/store');
 const HttpMethod = require('../../core/enums/httpMethod');
 const StatusCode = require('../../core/enums/statusCode');
 const StoreAdapter = require('../../core/enums/storeAdapter');
@@ -24,7 +24,7 @@ class Cache extends Middleware {
           promise = store.find(query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
-        promise = store.save(request.body);
+        promise = store.save(request.data);
       } else if (method === HttpMethod.DELETE) {
         promise = store.remove(id);
       }

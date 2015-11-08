@@ -78,9 +78,14 @@ config.webpack = {
           comments: false,
           presets: ['es2015', 'stage-2']
         }
+      },
+      {
+        test: /\.json$/,
+        loader: 'json-loader'
       }
     ]
-  }
+  },
+  target: 'web'
 };
 config.webpack = assign(config.webpack, platformConfig.webpack);
 
