@@ -115,6 +115,21 @@ interface IAndroidToolsInfo {
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
 	validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<boolean>;
+
+	/**
+	 * Validates the information about required JAVA version.
+	 * @param {string} installedJavaVersion The JAVA version that will be checked.
+	 * @param {any} options Defines if the warning messages should treated as error.
+	 * @return {boolean} True if there are detected issues, false otherwise.
+	 */
+	validateJavacVersion(installedJavaVersion: string, options?: {showWarningsAsErrors: boolean}): IFuture<boolean>;
+
+	/**
+	 * Returns the path to `android` executable. It should be `$ANDROID_HOME/tools/android`.
+	 * In case ANDROID_HOME is not defined, check if `android` is part of $PATH.
+	 * @return {boolean} Path to the `android` executable.
+	 */
+	getPathToAndroidExecutable(): IFuture<string>;
 }
 
 /**
