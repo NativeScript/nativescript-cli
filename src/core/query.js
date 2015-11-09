@@ -495,10 +495,10 @@ class PrivateQuery {
       response = sift(json.filter, response);
 
       // Remove fields
-      if (this._fields) {
+      if (json.fields && json.fields.length > 0) {
         response = response.map((item) => {
           for (const key in item) {
-            if (item.hasOwnProperty(key) && this._fields.indexOf(key) === -1) {
+            if (item.hasOwnProperty(key) && json.fields.indexOf(key) === -1) {
               delete item[key];
             }
           }
@@ -509,8 +509,8 @@ class PrivateQuery {
 
       // Sorting.
       response = response.sort((a, b) => {
-        for (const field in this._sort) {
-          if (this._sort.hasOwnProperty(field)) {
+        for (const field in json.sort) {
+          if (json.sort.hasOwnProperty(field)) {
             // Find field in objects.
             const aField = nested(a, field);
             const bField = nested(b, field);
@@ -529,7 +529,7 @@ class PrivateQuery {
             // (ascending (-1), or descending(1)). If the fields are equal,
             // continue sorting based on the next field (if any).
             if (aField !== bField) {
-              const modifier = this._sort[field]; // 1 or -1.
+              const modifier = json.sort[field]; // 1 or -1.
               return (aField < bField ? -1 : 1) * modifier;
             }
           }
@@ -539,11 +539,11 @@ class PrivateQuery {
       });
 
       // Limit and skip.
-      if (this._limit) {
-        return response.slice(this._skip, this._skip + this._limit);
+      if (json.limit) {
+        return response.slice(json.skip, json.skip + json.limit);
       }
 
-      return response.slice(this._skip);
+      return response.slice(json.skip);
     }
 
     return response;

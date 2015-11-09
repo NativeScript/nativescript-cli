@@ -11,36 +11,37 @@ const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const log = require('loglevel');
 const isArray = require('lodash/lang/isArray');
-const datastoreNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
- * The Datastore class is used to retrieve, create, update, destroy, count and group documents
+ * The Collection class is used to retrieve, create, update, destroy, count and group documents
  * in collections.
  * a
  * @example
- * var datastore = new Kinvey.Datastore('books');
+ * var collection = new Kinvey.Collection('books');
  */
-class Datastore {
+class Collection {
   /**
-   * Creates a new instance of the Datastore class.
+   * Creates a new instance of the Collection class.
    *
    * @param   {string}    [collection]                                Collection
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(collection, client = Client.sharedInstance(), options = {}) {
+  constructor(name, options = {}) {
     options = assign({
+      client: Client.sharedInstance(),
       model: Model
     }, options);
 
     /**
      * @type {string}
      */
-    this.collection = collection;
+    this.name = name;
 
     /**
      * @type {Client}
      */
-    this.client = client;
+    this.client = options.client;
 
     /**
      * @type {Model}
@@ -49,15 +50,15 @@ class Datastore {
   }
 
   /**
-   * The path for the datastore where requests will be sent.
+   * The path for the collection where requests will be sent.
    *
    * @return   {string}    Path
    */
   get path() {
-    let path = `/${datastoreNamespace}/${this.client.appId}`;
+    let path = `/${appdataNamespace}/${this.client.appId}`;
 
-    if (this.collection) {
-      path = `${path}/${this.collection}`;
+    if (this.name) {
+      path = `${path}/${this.name}`;
     }
 
     return path;
@@ -78,17 +79,17 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.find(query).then(function(books) {
+   * collection.find(query).then(function(books) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the models in the ${this.collection} collection.`, query);
+    log.debug(`Retrieving the models in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
@@ -119,9 +120,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Retrieved the models in the ${this.collection} collection.`, response);
+      log.info(`Retrieved the models in the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to retrieve the models in the ${this.collection} collection.`, err);
+      log.error(`Failed to retrieve the models in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -138,22 +139,22 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
-   * datastore.get('507f191e810c19729de860ea').then(function(book) {
+   * var collection = new Kinvey.Collection('books');
+   * collection.get('507f191e810c19729de860ea').then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   get(id, options = {}) {
-    log.debug(`Retrieving a model in the ${this.collection} collection with id = ${id}.`);
+    log.debug(`Retrieving a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `${this.path}/id`;
+    options.path = `${this.path}/${id}`;
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
@@ -161,9 +162,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Retrieved the model in the ${this.collection} collection with id = ${id}.`, response);
+      log.info(`Retrieved the model in the ${this.name} collection with id = ${id}.`, response);
     }).catch((err) => {
-      log.error(`Failed to retrieve the model in the ${this.collection} collection with id = ${id}.`, err);
+      log.error(`Failed to retrieve the model in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -180,16 +181,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var book = { name: 'JavaScript: The Definitive Guide', author: 'David Flanagan' };
-   * datastore.save(book).then(function(book) {
+   * collection.save(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   save(model, options = {}) {
-    log.debug(`Saving the model to the ${this.collection} collection.`, model);
+    log.debug(`Saving the model to the ${this.name} collection.`, model);
 
     if (model.id) {
       log.debug(`The model has an id = ${model.id}, updating the model instead.`);
@@ -210,9 +211,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Saved the model to the ${this.collection} collection.`, response);
+      log.info(`Saved the model to the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to save the model to the ${this.collection} collection.`, err);
+      log.error(`Failed to save the model to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -229,16 +230,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var book = { name: 'JavaScript: The Definitive Guide 2.0', author: 'David Flanagan' };
-   * datastore.update(book).then(function(book) {
+   * collection.update(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   update(model, options = {}) {
-    log.debug(`Update the model to the ${this.collection} collection.`, model);
+    log.debug(`Update the model to the ${this.name} collection.`, model);
 
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
@@ -254,9 +255,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Updated the model to the ${this.collection} collection.`, response);
+      log.info(`Updated the model to the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to update the model to the ${this.collection} collection.`, err);
+      log.error(`Failed to update the model to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -275,17 +276,17 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.clean(query).then(function(response) {
+   * collection.clean(query).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   clean(query, options = {}) {
-    log.debug(`Deleting the models in the ${this.collection} collection by query.`, query);
+    log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
 
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
@@ -305,9 +306,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Deleted the models in the ${this.collection} collection.`, response);
+      log.info(`Deleted the models in the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to delete the models in the ${this.collection} collection.`, err);
+      log.error(`Failed to delete the models in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -324,15 +325,15 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
-   * datastore.destroy('507f191e810c19729de860ea').then(function(response) {
+   * var collection = new Kinvey.Collection('books');
+   * collection.destroy('507f191e810c19729de860ea').then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   destroy(id, options = {}) {
-    log.debug(`Deleting a model in the ${this.collection} collection with id = ${id}.`);
+    log.debug(`Deleting a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       dataPolicy: DataPolicy.CloudOnly,
@@ -347,9 +348,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Deleted the model in the ${this.collection} collection with id = ${id}.`, response);
+      log.info(`Deleted the model in the ${this.name} collection with id = ${id}.`, response);
     }).catch((err) => {
-      log.error(`Failed to delete the model in the ${this.collection} collection with id = ${id}.`, err);
+      log.error(`Failed to delete the model in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -368,17 +369,17 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * datastore.count(query).then(function(response) {
+   * collection.count(query).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of models in the ${this.collection} collection.`, query);
+    log.debug(`Counting the number of models in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
@@ -398,9 +399,9 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Counted the number of models in the ${this.collection} collection.`, response);
+      log.info(`Counted the number of models in the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to count the number of models in the ${this.collection} collection.`, err);
+      log.error(`Failed to count the number of models in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -419,16 +420,16 @@ class Datastore {
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var datastore = new Kinvey.Datastore('books');
+   * var collection = new Kinvey.Collection('books');
    * var aggregation = new Kinvey.Aggregation();
-   * datastore.groupd(aggregation).then(function(response) {
+   * collection.group(aggregation).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the models in the ${this.collection} collection.`, aggregation, options);
+    log.debug(`Grouping the models in the ${this.name} collection.`, aggregation, options);
 
     if (aggregation && !(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
@@ -448,13 +449,13 @@ class Datastore {
     });
 
     promise.then((response) => {
-      log.info(`Grouped the models in the ${this.collection} collection.`, response);
+      log.info(`Grouped the models in the ${this.name} collection.`, response);
     }).catch((err) => {
-      log.error(`Failed to group the models in the ${this.collection} collection.`, err);
+      log.error(`Failed to group the models in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 }
 
-module.exports = Datastore;
+module.exports = Collection;

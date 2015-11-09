@@ -1,31 +1,53 @@
-const StoreAdapter = require('../core/enums/storeAdapter');
-const Store = require('../core/store');
 const Client = require('../core/client');
+const Request = require('../core/request').Request;
+const DataPolicy = require('../core/enums/dataPolicy');
+const HttpMethod = require('../core/enums/httpMethod');
 const result = require('lodash/object/result');
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const activeUserCollection = 'activeUser';
 
 function getActiveUser(client = Client.sharedInstance()) {
-  const store = new Store(`${client.appId}.${activeUserCollection}`, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL]);
+  const request = new Request({
+    method: HttpMethod.GET,
+    path: `/${appdataNamespace}/${client.appId}/${activeUserCollection}`,
+    client: client,
+    dataPolicy: DataPolicy.LocalOnly
+  });
 
-  return store.find().then(users => {
-    if (users.length === 0) {
+  const promise = request.execute().then(response => {
+    const data = response.data;
+
+    if (data.length === 0) {
       return null;
     }
 
-    return users[0];
+    return data[0];
   });
+
+  return promise;
 }
 
 function setActiveUser(user, client = Client.sharedInstance()) {
-  const store = new Store(`${client.appId}.${activeUserCollection}`, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL]);
-
   const promise = getActiveUser().then(activeUser => {
     if (activeUser) {
-      return store.remove(activeUser._id);
+      const request = new Request({
+        method: HttpMethod.DELETE,
+        path: `/${appdataNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
+        client: client,
+        dataPolicy: DataPolicy.LocalOnly
+      });
+      return request.execute();
     }
   }).then(() => {
     if (user) {
-      return store.save(result(user, 'toJSON', user));
+      const request = new Request({
+        method: HttpMethod.POST,
+        path: `/${appdataNamespace}/${client.appId}/${activeUserCollection}`,
+        client: client,
+        dataPolicy: DataPolicy.LocalOnly,
+        data: result(user, 'toJSON', user)
+      });
+      return request.execute();
     }
   });
 

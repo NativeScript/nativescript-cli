@@ -1,5 +1,6 @@
 // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-const Datastore = require('./datastore');
+
+const Collection = require('./collection');
 const Client = require('../client');
 const Request = require('../request').Request;
 const KinveyError = require('../errors').KinveyError;
@@ -22,15 +23,15 @@ const pathReplaceRegex = /[^\/]$/;
  * @example
  * var files = new Kinvey.Files();
  */
-class Files extends Datastore {
+class Files extends Collection {
   /**
    * Creates a new instance of the Files class.
    *
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(client = Client.sharedInstance(), options = {}) {
+  constructor(options = {}) {
     options.model = File;
-    super('files', client, options);
+    super('files', options);
   }
 
   /**

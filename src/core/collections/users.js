@@ -4,7 +4,7 @@ const Auth = require('../auth');
 const DataPolicy = require('../enums/dataPolicy');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums/httpMethod');
-const Datastore = require('./datastore');
+const Collection = require('./collection');
 const Query = require('../query');
 const User = require('../models/user');
 const assign = require('lodash/object/assign');
@@ -19,15 +19,15 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * @example
  * var users = new Kinvey.Users();
  */
-class Users extends Datastore {
+class Users extends Collection {
   /**
    * Creates a new instance of the Users class.
    *
    * @param   {Client}    [client=Client.sharedInstance()]            Client
    */
-  constructor(client = Client.sharedInstance(), options = {}) {
+  constructor(options = {}) {
     options.model = User;
-    super('users', client, options);
+    super('users', options);
   }
 
   /**

@@ -58,7 +58,7 @@ class User extends Model {
       user = new User(result(user, 'toJSON', user));
     }
 
-    return setActiveUser(user, client).then(() => {
+    return setActiveUser(user, client).then(user => {
       if (user) {
         User[activeUserSymbol] = user;
         return user;

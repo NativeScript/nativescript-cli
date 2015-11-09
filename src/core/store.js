@@ -10,41 +10,16 @@ const IndexedDBAdapter = require('pouchdb/lib/adapters/idb');
 const WebSQLAdapter = require('pouchdb/lib/adapters/websql');
 const Loki = require('lokijs');
 const log = require('loglevel');
-const find = require('lodash/collection/find');
-const clone = require('lodash/lang/clone');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
+const pluck = require('lodash/collection/pluck');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
-const protectedKeys = ['_id', '_rev'];
-require('pouchdb/extras/memory');
-require('pouchdb/extras/localstorage');
+const loki = new Loki('kinvey', {
+  env: 'BROWSER'
+});
 
-function serialize(doc) {
-  doc = clone(doc, true);
-
-  for (const key in doc) {
-    if (doc.hasOwnProperty(key) && key.indexOf('_') === 0 && protectedKeys.indexOf(key) === -1) {
-      doc[`${key.substring(1, key.length)}_`] = doc[key];
-      delete doc[key];
-    }
-  }
-
-  return doc;
-}
-
-function deserialize(doc) {
-  doc = clone(doc, true);
-
-  for (const key in doc) {
-    if (doc.hasOwnProperty(key) && key.indexOf('_') === key.length - 1) {
-      doc[`_${key.substring(0, key.length - 1)}`] = doc[key];
-      delete doc[key];
-    }
-  }
-
-  return doc;
-}
+//require('pouchdb/extras/localstorage');
 
 class LocalStorageAdapter {
   valid() {
@@ -60,41 +35,7 @@ class LocalStorageAdapter {
 }
 
 class PouchDBAdapter {
-  constructor() {
-
-  }
-
-  loadDatabase(name, done) {
-    return this.db.get(name).then(doc => {
-      done(doc.data);
-      return doc;
-    });
-  }
-
-  saveDatabase(name, data, done) {
-    return this.db.get(name).then(doc => {
-      if (!doc) {
-        doc = {
-          _id: name
-        };
-      }
-
-      doc.data = data;
-      return this.db.save(doc).then(response => {
-        if (response.error) {
-          throw new KinveyError('An error occurred trying to save the document.', doc, response);
-        }
-
-        doc._rev = response.rev;
-        done(doc);
-        return doc;
-      });
-    });
-  }
-}
-
-class Store {
-  constructor(name = 'Kinvey', adapters = [StoreAdapter.Memory]) {
+  constructor(name, adapters = [StoreAdapter.Memory]) {
     let dbAdapter;
 
     if (!isArray(adapters)) {
@@ -133,7 +74,7 @@ class Store {
     });
 
     if (!dbAdapter) {
-      log.warn('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory.', adapters);
+      log.warn(`Provided adapters are unsupported on this platform. Defaulting to ${StoreAdapter.Memory} adapter.`, adapters);
       dbAdapter = StoreAdapter.Memory;
     }
 
@@ -142,38 +83,44 @@ class Store {
       adapter: dbAdapter
     });
     this.db.viewCleanup();
+  }
 
-    this.cache = new Loki(name);
-    const collections = this.cache.listCollections();
+  loadDatabase(name, done) {
+    return this.db.get(name).then(doc => {
+      done(doc.data);
+      return doc;
+    });
+  }
 
-    if (collections.indexOf(name) === -1) {
-      this.cache.addCollection(name);
+  saveDatabase(name, data, done) {
+    return this.db.get(name).then(doc => {
+      if (!doc) {
+        doc = {
+          _id: name
+        };
+      }
+
+      doc.data = data;
+      return this.db.save(doc).then(response => {
+        if (response.error) {
+          throw new KinveyError('An error occurred trying to save the document.', doc, response);
+        }
+
+        doc._rev = response.rev;
+        done(doc);
+        return doc;
+      });
+    });
+  }
+}
+
+class Store {
+  constructor(name = 'data', adapters = [StoreAdapter.Memory]) {
+    this.collection = loki.getCollection(name);
+
+    if (!this.collection) {
+      this.collection = loki.addCollection(name, { indices: ['_id', '_kmd'] });
     }
-
-    // if (dbAdapter !== StoreAdapter.Memory) {
-    //   this.cache = new PouchDB(name, {
-    //     auto_compaction: true,
-    //     adapter: StoreAdapter.Memory
-    //   });
-    //   this.cache.viewCleanup();
-    //   this.syncHandler = this.cache.sync(this.db, { live: true });
-    //
-    //   // this.syncHandler.on('change', info => {
-    //   //   console.log('changed', info);
-    //   // }).on('paused', () => {
-    //   //   console.log('paused');
-    //   // }).on('active', () => {
-    //   //   console.log('active');
-    //   // }).on('denied', info => {
-    //   //   console.log('denied', info);
-    //   // }).on('complete', info => {
-    //   //   console.log('complete', info);
-    //   // }).on('error', err => {
-    //   //   console.error('error', err);
-    //   // });
-    // } else {
-    //   this.cache = this.db;
-    // }
   }
 
   get objectIdPrefix() {
@@ -196,39 +143,25 @@ class Store {
     return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }
 
-  sync() {
-    return this.cache.sync(this.db);
-  }
-
-  cancelSync() {
-    if (this.syncHandler) {
-      this.syncHandler.cancel();
-    }
-  }
-
   find(query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
+    const promise = new Promise(resolve => {
+      if (query && !(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
 
-    const promise = this.cache.allDocs({ include_docs: true }).then(response => {
-      let docs = [];
+      let docs = this.collection.find();
 
-      forEach(response.rows, row => {
-        docs.push(deserialize(row.doc));
-      });
-
-      if (query) {
+      if (docs.length > 0 && query) {
         docs = query.process(docs);
       }
 
-      return docs;
+      resolve(docs);
     });
 
     return promise;
   }
 
-  count(query) {
+  count(collection, query) {
     const promise = this.find(query).then(docs => {
       return docs.length;
     });
@@ -290,8 +223,10 @@ class Store {
       id = String(id);
     }
 
-    const promise = this.cache.get(id).then(doc => {
-      return deserialize(doc);
+    const query = new Query();
+    query.contains('_id', [id]);
+    const promise = this.find(query).then(docs => {
+      return docs.length === 1 ? docs[0] : null;
     });
     return promise;
   }
@@ -311,65 +246,43 @@ class Store {
   }
 
   save(doc) {
-    if (isArray(doc)) {
-      return this.saveBulk(doc);
-    }
+    let promise;
 
     if (!doc) {
       return Promise.resolve(null);
+    }
+
+    if (isArray(doc)) {
+      return this.saveBulk(doc);
     }
 
     if (!doc._id) {
       doc._id = this.generateObjectId();
     }
 
-    const serializedDoc = serialize(doc);
-    const promise = this.cache.put(serializedDoc).then(response => {
-      if (response.error) {
-        throw new KinveyError('An error occurred trying to save the document.', doc, response);
+    promise = new Promise(resolve => {
+      if (doc.$loki) {
+        return resolve(this.collection.update(doc));
       }
 
-      doc._id = response.id;
-      doc._rev = response.rev;
-      return doc;
+      resolve(this.collection.insert(doc));
     });
 
     return promise;
   }
 
   saveBulk(docs = []) {
-    const serializedDocs = [];
+    const promises = [];
 
     if (!isArray(docs)) {
       return this.save(docs);
     }
 
     forEach(docs, doc => {
-      if (!doc._id) {
-        doc._id = this.generateObjectId();
-      }
-
-      serializedDocs.push(serialize(doc));
+      promises.push(this.save(doc));
     });
 
-    const promise = this.cache.bulkDocs(serializedDocs).then(responses => {
-      const results = [];
-
-      forEach(responses, response => {
-        if (response.ok) {
-          const doc = find(docs, doc => {
-            return doc._id === response.id;
-          });
-
-          doc._id = response.id;
-          doc._rev = response.rev;
-          results.push(doc);
-        }
-      });
-
-      return results;
-    });
-
+    const promise = Promise.all(promises);
     return promise;
   }
 
@@ -384,87 +297,41 @@ class Store {
     if (isArray(id)) {
       const query = new Query();
       query.contains('_id', id);
-      return this.clear(query);
+      return this.removeWhere(query);
     }
 
-    const promise = this.get(id).then(doc => {
-      const serializedDoc = serialize(doc);
-      return this.cache.remove(doc).then(response => {
-        if (response.error) {
-          throw new KinveyError('An error occurred trying to remove the document.', doc, response);
-        }
+    const promise = new Promise(resolve => {
+      this.collection.remove(id);
 
-        return {
-          count: 1,
-          documents: [doc]
-        };
+      resolve({
+        count: 1,
+        documents: [doc]
       });
     });
 
     return promise;
   }
 
-  removeBulk(docs = []) {
-    const serializedDocs = [];
+  removeBulk(ids = []) {
+    const promises = [];
 
-    if (!isArray(docs)) {
-      return this.remove(docs);
+    if (!isArray(ids)) {
+      return this.remove(ids);
     }
 
-    forEach(docs, doc => {
-      doc._deleted = true;
-      serializedDocs.push(serialize(doc));
+    forEach(ids, id => {
+      promises.push(this.remove(id));
     });
 
-    const promise = this.cache.bulkDocs(serializedDocs).then(responses => {
-      const results = {
-        count: 0,
-        documents: []
-      };
-
-      forEach(responses, response => {
-        if (response.ok) {
-          const doc = find(docs, doc => {
-            return doc._id === response.id;
-          });
-
-          results.count = result.count + 1;
-          results.documents.push(doc);
-        }
-      });
-
-      return results;
-    });
-
+    const promise = Promise.all(promises);
     return promise;
   }
 
-  clear(query) {
+  removeWhere(query) {
     const promise = this.find(query).then(docs => {
-      return this.removeBulk(docs);
+      return this.removeBulk(pluck(docs, '_id'));
     });
-
     return promise;
-  }
-
-  destroy() {
-    const promise = this.cache.destroy().then(response => {
-      if (response.error) {
-        throw new KinveyError('An error occurred trying to destroy the database.', response);
-      }
-
-      return null;
-    });
-
-    return promise;
-  }
-
-  static enableDebug() {
-    PouchDB.debug.enable('*');
-  }
-
-  static disableDebug() {
-    PouchDB.debug.disable();
   }
 }
 

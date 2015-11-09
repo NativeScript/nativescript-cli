@@ -1,4 +1,3 @@
-const isDefined = require('../utils/object').isDefined;
 const isFunction = require('lodash/lang/isFunction');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
@@ -8,7 +7,6 @@ const ResponseType = require('./enums/responseType');
 const Query = require('./query');
 const url = require('url');
 const Client = require('./client');
-const Auth = require('./auth');
 const DataPolicy = require('./enums/dataPolicy');
 const KinveyError = require('./errors').KinveyError;
 const RequestProperties = require('./requestProperties');
@@ -31,7 +29,7 @@ class Request {
       path: '/',
       query: null,
       data: null,
-      auth: Auth.none,
+      auth: null,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudOnly,
       responseType: ResponseType.Text,
@@ -366,7 +364,7 @@ class Request {
     let promise = Promise.resolve();
 
     return promise.then(() => {
-      if (isDefined(auth)) {
+      if (auth) {
         promise = isFunction(auth) ? auth(this.client) : Promise.resolve(auth);
 
         // Add auth info to headers
@@ -374,7 +372,7 @@ class Request {
           if (authInfo !== null) {
             // Format credentials
             let credentials = authInfo.credentials;
-            if (isDefined(authInfo.username)) {
+            if (authInfo.username) {
               credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
             }
 
