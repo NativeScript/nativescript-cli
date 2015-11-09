@@ -212,7 +212,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 				if(this.$options.release) {
 					buildOptions.push("-Prelease");
-					buildOptions.push(`-PksPath=${this.$options.keyStorePath}`);
+					buildOptions.push(`-PksPath=${path.resolve(this.$options.keyStorePath)}`);
 					buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
 					buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
 					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
@@ -361,7 +361,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		let args = [configuration, "-f", path.join(projectRoot, "build.xml")];
 		if(configuration === "release") {
 			if(this.$options.keyStorePath) {
-				args = args.concat(["-Dkey.store", this.$options.keyStorePath]);
+				args = args.concat(["-Dkey.store", path.resolve(this.$options.keyStorePath)]);
 			}
 
 			if(this.$options.keyStorePassword) {
