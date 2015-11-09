@@ -67,20 +67,18 @@ class TestExecutionService implements ITestExecutionService {
 				}
 			};
 
-			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<boolean> => {
+			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
 					this.$platformService.installOnDevice(platform).wait();
 					this.detourEntryPoint(projectFilesPath).wait();
-					return true;
-				}).future<boolean>()();
+				}).future<void>()();
 			};
 
-			let notRunningiOSSimulatorAction = (): IFuture<boolean> => {
+			let notRunningiOSSimulatorAction = (): IFuture<void> => {
 				return (() => {
 					this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
 					this.detourEntryPoint(projectFilesPath).wait();
-					return true;
-				}).future<boolean>()();
+				}).future<void>()();
 			};
 
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {

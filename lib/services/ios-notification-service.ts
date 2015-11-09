@@ -4,9 +4,6 @@
 import Future = require("fibers/future");
 
 export class IOSNotificationService implements IiOSNotificationService {
-	constructor(private $errors: IErrors,
-		private $projectData: IProjectData) { }
-
 	public awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): IFuture<string> {
 		let future = new Future<string>();
 

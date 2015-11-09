@@ -3,9 +3,10 @@
 
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
-import semver = require("semver");
+import * as semver from "semver";
+import * as ws from "ws";
 import temp = require("temp");
-import ws = require("ws");
+import * as helpers from "../../common/helpers";
 
 export class SocketProxyFactory implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
@@ -14,7 +15,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 	public createSocketProxy(factory: () => net.Socket): IFuture<any> {
 		return (() => {
-			let socketFactory = (callback: (_socket: net.Socket) => void) => this.connectEventually(factory, callback);
+			let socketFactory = (callback: (_socket: net.Socket) => void) => helpers.connectEventually(factory, callback);
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			let frameworkVersion = this.$projectDataService.getValue("tns-ios").wait().version;
@@ -30,21 +31,6 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 		}).future<any>()();
 	}
 
-	private connectEventually(factory: () => net.Socket, handler: (_socket: net.Socket) => void) { // TODO: Add socketProxyBase
-		function tryConnect() {
-			let tryConnectAfterTimeout = setTimeout.bind(undefined, tryConnect, 1000);
-
-			let socket = factory();
-			socket.on("connect", () => {
-				socket.removeListener("error", tryConnectAfterTimeout);
-				handler(socket);
-			});
-			socket.on("error", tryConnectAfterTimeout);
-		}
-
-		tryConnect();
-	}
-
 	private createWebSocketProxy(socketFactory: (handler: (socket: net.Socket) => void) => void): ws.Server {
 		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
 		let localPort = 8080;
@@ -58,7 +44,7 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		let server = ws.createServer(<any>{
 			port: localPort,
-			verifyClient: (info: any, callback: any) => {
+			verifyClient: (info: any, callback: Function) => {
 				this.$logger.info("Frontend client connected.");
 				socketFactory((_socket: any) => {
 					this.$logger.info("Backend socket created.");

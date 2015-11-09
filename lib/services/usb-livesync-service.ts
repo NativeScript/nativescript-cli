@@ -8,6 +8,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as net from "net";
 import Future = require("fibers/future");
+import * as helpers from "../common/helpers";
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 
@@ -49,7 +50,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				this.$projectDataService.initialize(this.$projectData.projectDir);
 				let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
 				if (semver.lt(frameworkVersion, "1.2.1")) {
-					let shouldUpdate = this.$prompter.confirm("You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
+					let shouldUpdate = this.$prompter.confirm(" You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?").wait();
 					if(shouldUpdate) {
 						this.$platformService.updatePlatforms([this.$devicePlatformsConstants.Android.toLowerCase()]).wait();
 					} else {
@@ -62,19 +63,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<boolean> => {
-				return (() => {
-					this.$platformService.deployOnDevice(platform).wait();
-					return false;
-				}).future<boolean>()();
-			};
+			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => this.$platformService.deployOnDevice(platform);
 
-			let notRunningiOSSimulatorAction = (): IFuture<boolean> => {
-				return (() => {
-					 this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
-					return false;
-				}).future<boolean>()();
-			};
+			let notRunningiOSSimulatorAction = (): IFuture<void> => this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
 
 			let beforeLiveSyncAction = (device: Mobile.IDevice, deviceAppData: Mobile.IDeviceAppData): IFuture<void> => {
 				let platformSpecificUsbLiveSyncService = this.resolveUsbLiveSyncService(platform || this.$devicesService.platform, device);
@@ -128,6 +119,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 					let mappedFilePath = beforeBatchLiveSyncAction(filePath).wait();
 
 					if (this.shouldSynciOSSimulator(platform).wait()) {
+						this.$iOSEmulatorServices.transferFiles(this.$projectData.projectId, [filePath], iOSSimulatorRelativeToProjectBasePathAction).wait();
+
 						let platformSpecificUsbLiveSyncService = <IiOSUsbLiveSyncService>this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, null, platformSpecificLiveSyncServices);
 						platformSpecificUsbLiveSyncService.sendPageReloadMessageToSimulator().wait();
 					} else {
@@ -192,7 +185,11 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 	constructor(private _device: Mobile.IDevice,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService) { }
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
+		private $injector: IInjector,
+		private $iOSNotificationService: IiOSNotificationService,
+		private $errors: IErrors,
+		private $projectData: IProjectData) { }
 
 	private get device(): Mobile.IiOSDevice {
 		return <Mobile.IiOSDevice>this._device;
@@ -212,11 +209,8 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 	}
 
 	public sendPageReloadMessageToSimulator(): IFuture<void> {
-		return (() => {
-			this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest).wait();
-			let socket = net.connect(IOSUsbLiveSyncService.BACKEND_PORT);
-			this.sendReloadMessageCore(socket);
-		}).future<void>()();
+		helpers.connectEventually(() => net.connect(IOSUsbLiveSyncService.BACKEND_PORT), (socket: net.Socket) => this.sendReloadMessageCore(socket));
+		return this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest);
 	}
 
 	private sendReloadMessageCore(socket: net.Socket): void {
@@ -226,6 +220,7 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 		payload.writeInt32BE(length, 0);
 		payload.write(message, 4, length, "utf16le");
 		socket.write(payload);
+		socket.destroy();
 	}
 }
 $injector.register("iosUsbLiveSyncServiceLocator", {factory: IOSUsbLiveSyncService});

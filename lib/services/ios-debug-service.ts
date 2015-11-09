@@ -5,7 +5,7 @@ import * as iOSDevice from "../common/mobile/ios/ios-device";
 
 import * as net from "net";
 import * as path from "path";
-import semver = require("semver");
+import * as semver from "semver";
 import byline = require("byline");
 
 let InspectorBackendPort = 18181;
