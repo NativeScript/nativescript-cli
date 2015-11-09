@@ -13,7 +13,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static LIBS_FOLDER_NAME = "libs";
-	private static MIN_JAVA_VERSION = "1.7.0";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
@@ -80,8 +79,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.validatePackageName(this.$projectData.projectId);
 			this.validateProjectName(this.$projectData.projectName);
 
-			this.checkJava().wait();
-			this.checkAndroid().wait();
+			// this call will fail in case `android` is not set correctly.
+			this.$androidToolsInfo.getPathToAndroidExecutable().wait();
+			this.$androidToolsInfo.validateJavacVersion(this.$sysInfo.getSysInfo().javacVersion, {showWarningsAsErrors: true}).wait();
 		}).future<void>()();
 	}
 
@@ -424,39 +424,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<string>()();
 	}
 
-	private checkJava(): IFuture<void> {
-		return (() => {
-			try {
-				let javaVersion = this.$sysInfo.getSysInfo().javaVer;
-				if(semver.lt(javaVersion, AndroidProjectService.MIN_JAVA_VERSION)) {
-					this.$errors.failWithoutHelp(`Your current java version is ${javaVersion}. NativeScript CLI needs at least ${AndroidProjectService.MIN_JAVA_VERSION} version to work correctly. Ensure that you have at least ${AndroidProjectService.MIN_JAVA_VERSION} java version installed and try again.`);
-				}
-			} catch(error) {
-				this.$errors.failWithoutHelp("Error executing command 'java'. Make sure you have java installed and added to your PATH.");
-			}
-		}).future<void>()();
-	}
-
 	private checkAnt(): IFuture<void> {
 		return (() => {
 			try {
 				this.$childProcess.exec("ant -version").wait();
 			} catch(error) {
 				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
-			}
-		}).future<void>()();
-	}
-
-	private checkAndroid(): IFuture<void> {
-		return (() => {
-			try {
-				this.$childProcess.exec('android list targets').wait();
-			} catch(error) {
-				if (error.message.match(/command\snot\sfound/)) {
-					this.$errors.fail("The command \"android\" failed. Make sure you have the latest Android SDK installed, and the \"android\" command (inside the tools/ folder) is added to your path.");
-				} else {
-					this.$errors.fail("An error occurred while listing Android targets");
-				}
 			}
 		}).future<void>()();
 	}

@@ -3,24 +3,78 @@
 
 import * as path from "path";
 import * as semver from "semver";
+import {EOL} from "os";
 
 export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
 	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22", "android-23"];
 	private static MIN_REQUIRED_COMPILE_TARGET = 22;
 	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=22";
-	private static VERSION_REGEX = /^(\d+\.){2}\d+$/;
+	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
+	private static MIN_JAVA_VERSION = "1.7.0";
+
 	private showWarningsAsErrors: boolean;
 	private toolsInfo: IAndroidToolsInfoData;
 	private selectedCompileSdk: number;
 	private installedTargetsCache: string[] = null;
 	private androidHome = process.env["ANDROID_HOME"];
+	private pathToAndroidExecutable: string;
+	private _androidExecutableName: string;
+	private get androidExecutableName(): string {
+		if(!this._androidExecutableName) {
+			this._androidExecutableName = "android";
+			if(this.$hostInfo.isWindows) {
+				this._androidExecutableName += ".bat";
+			}
+		}
+
+		return this._androidExecutableName;
+	}
 
 	constructor(private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $fs: IFileSystem,
+		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $options: IOptions) {}
+
+	public getPathToAndroidExecutable(): IFuture<string> {
+		return ((): string => {
+			if (!this.pathToAndroidExecutable) {
+				if(this.validateAndroidHomeEnvVariable(this.androidHome).wait()) {
+					let androidPath = path.join(this.androidHome, "tools", this.androidExecutableName);
+					if(!this.trySetAndroidPath(androidPath).wait() && !this.trySetAndroidPath(this.androidExecutableName).wait()) {
+						this.$errors.failWithoutHelp(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
+					}
+				} else {
+					this.$errors.failWithoutHelp("ANDROID_HOME environment variable is not set correctly.");
+				}
+			}
+
+			return this.pathToAndroidExecutable;
+		}).future<string>()();
+	}
+
+	private trySetAndroidPath(androidPath: string): IFuture<boolean> {
+		return ((): boolean => {
+			let isAndroidPathCorrect = true;
+			try {
+				let result = this.$childProcess.spawnFromEvent(androidPath, ["--help"], "close", {}, {throwError: false}).wait();
+				if(result && result.stdout) {
+					this.$logger.trace(result.stdout);
+					this.pathToAndroidExecutable = androidPath;
+				} else {
+					this.$logger.trace(`Unable to find android executable from '${androidPath}'.`);
+					isAndroidPathCorrect = false;
+				}
+			} catch(err) {
+				this.$logger.trace(`Error occurred while checking androidExecutable from '${androidPath}'. ${err.message}`);
+				isAndroidPathCorrect = false;
+			}
+
+			return isAndroidPathCorrect;
+		}).future<boolean>()();
+	}
 
 	public getToolsInfo(): IFuture<IAndroidToolsInfoData> {
 		return ((): IAndroidToolsInfoData => {
@@ -44,11 +98,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			let detectedErrors = false;
 			this.showWarningsAsErrors = options && options.showWarningsAsErrors;
 			let toolsInfoData = this.getToolsInfo().wait();
-			if(!toolsInfoData.androidHomeEnvVar || !this.$fs.exists(toolsInfoData.androidHomeEnvVar).wait()) {
-				this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
-					"To be able to perform Android build-related operations, set the ANDROID_HOME variable to point to the root of your Android SDK installation directory.");
-			}
-
+			let isAndroidHomeValid = this.validateAndroidHomeEnvVariable(toolsInfoData.androidHomeEnvVar).wait();
 			if(!toolsInfoData.compileSdkVersion) {
 				this.printMessage(`Cannot find a compatible Android SDK for compilation. To be able to build for Android, install Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later.`,
 							"Run `$ android` to manage your Android SDK versions.");
@@ -65,14 +115,21 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 					message = `You have to install version ${versionRangeMatches[1]}.`;
 				}
 
-				this.printMessage("You need to have the Android SDK Build-tools installed on your system. " + message,
-					'Run "android" from your command-line to install required Android Build Tools.');
+				let invalidBuildToolsAdditionalMsg = 'Run `android` from your command-line to install required `Android Build Tools`.';
+				if(!isAndroidHomeValid) {
+					invalidBuildToolsAdditionalMsg += ' In case you already have them installed, make sure `ANDROID_HOME` environment variable is set correctly.';
+				}
+
+				this.printMessage("You need to have the Android SDK Build-tools installed on your system. " + message, invalidBuildToolsAdditionalMsg);
 				detectedErrors = true;
 			}
 
 			if(!toolsInfoData.supportRepositoryVersion) {
-				this.printMessage(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`,
-					"Run `$ android` to manage the Android Support Repository.");
+				let invalidSupportLibAdditionalMsg = 'Run `$ android`  to manage the Android Support Repository.';
+				if(!isAndroidHomeValid) {
+					invalidSupportLibAdditionalMsg += ' In case you already have it installed, make sure `ANDROID_HOME` environment variable is set correctly.';
+				}
+				this.printMessage(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`, invalidSupportLibAdditionalMsg);
 				detectedErrors = true;
 			}
 
@@ -92,7 +149,31 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				}
 			}
 
-			return detectedErrors;
+			return detectedErrors || isAndroidHomeValid;
+		}).future<boolean>()();
+	}
+
+	public validateJavacVersion(installedJavaVersion: string, options?: {showWarningsAsErrors: boolean}): IFuture<boolean> {
+		return ((): boolean => {
+			let hasProblemWithJavaVersion = false;
+			if(options) {
+				this.showWarningsAsErrors = options.showWarningsAsErrors;
+			}
+			let additionalMessage = "You will not be able to build your projects for Android." + EOL
+				+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
+				" described in https://github.com/NativeScript/nativescript-cli#system-requirements.";
+			let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
+			if(matchingVersion && matchingVersion[1]) {
+				if(semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
+					hasProblemWithJavaVersion = true;
+					this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
+				}
+			} else {
+				hasProblemWithJavaVersion = true;
+				this.printMessage("Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.", additionalMessage);
+			}
+
+			return hasProblemWithJavaVersion;
 		}).future<boolean>()();
 	}
 
@@ -113,7 +194,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}
 
 		if(additionalMsg) {
-			this.$logger.info(additionalMsg);
+			this.$logger.printMarkdown(additionalMsg);
 		}
 	}
 
@@ -157,10 +238,24 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return ((): string => {
 			let selectedVersion: string;
 			if(this.$fs.exists(pathToDir).wait()) {
-				let subDirs = this.$fs.readDirectory(pathToDir).wait()
-					.filter(buildTools => !!buildTools.match(AndroidToolsInfo.VERSION_REGEX));
-				this.$logger.trace(`Versions found in ${pathToDir} are ${subDirs.join(", ")}`);
-				selectedVersion = semver.maxSatisfying(subDirs, versionRange);
+				let subDirs = this.$fs.readDirectory(pathToDir).wait();
+				this.$logger.trace(`Directories found in ${pathToDir} are ${subDirs.join(", ")}`);
+
+				let subDirsVersions = subDirs
+					.map(dirName => {
+						let dirNameGroups = dirName.match(AndroidToolsInfo.VERSION_REGEX);
+						if(dirNameGroups) {
+							return dirNameGroups[1];
+						}
+
+						return null;
+					})
+					.filter(dirName => !!dirName);
+				this.$logger.trace(`Versions found in ${pathToDir} are ${subDirsVersions.join(", ")}`);
+				let version = semver.maxSatisfying(subDirsVersions, versionRange);
+				if(version) {
+					selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
+				}
 			}
 
 			return selectedVersion;
@@ -224,9 +319,16 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private getInstalledTargets(): IFuture<string[]> {
 		return (() => {
 			if (!this.installedTargetsCache) {
-				this.installedTargetsCache = [];
-				let output = this.$childProcess.exec('android list targets').wait();
-				output.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
+				try {
+					let result = this.$childProcess.spawnFromEvent(this.getPathToAndroidExecutable().wait(), ["list", "targets"], "close", {}, {throwError: false}).wait();
+					if(result.stdout) {
+						this.$logger.trace(result.stdout);
+						this.installedTargetsCache = [];
+						result.stdout.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
+					}
+				} catch(err) {
+					this.$logger.trace("Unable to get Android targets. Error is: " + err);
+				}
 			}
 			return this.installedTargetsCache;
 		}).future<string[]>()();
@@ -234,6 +336,28 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	private getMaxSupportedVersion(): number {
 		return this.parseAndroidSdkString(_.last(AndroidToolsInfo.SUPPORTED_TARGETS.sort()));
+	}
+
+	private _cachedAndroidHomeValidationResult: boolean = null;
+	private validateAndroidHomeEnvVariable(androidHomeEnvVar: string): IFuture<boolean> {
+		return ((): boolean => {
+			if(this._cachedAndroidHomeValidationResult === null) {
+				this._cachedAndroidHomeValidationResult = true;
+				let expectedDirectoriesInAndroidHome = ["build-tools", "tools", "platform-tools", "extras"];
+				if(!androidHomeEnvVar || !this.$fs.exists(androidHomeEnvVar).wait()) {
+					this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
+						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
+					this._cachedAndroidHomeValidationResult = false;
+				} else if(!_.any(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir)).wait()))) {
+					this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
+						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
+						"where you will find `tools` and `platform-tools` directories.");
+					this._cachedAndroidHomeValidationResult = false;
+				}
+			}
+
+			return this._cachedAndroidHomeValidationResult;
+		}).future<boolean>()();
 	}
 }
 $injector.register("androidToolsInfo", AndroidToolsInfo);
