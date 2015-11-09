@@ -92,6 +92,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			this.$fs.ensureDirectoryExists(this.platformData.projectRoot).wait();
+			this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
