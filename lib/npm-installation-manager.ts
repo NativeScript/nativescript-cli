@@ -137,13 +137,21 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return ((): boolean => {
 			let shasumProperty = "dist.shasum";
 			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
-			let realShasum = this.$npm.view(`${packageName}@${version}`, shasumProperty).wait()[version][shasumProperty];
+			let packageInfo = this.$npm.view(`${packageName}@${version}`, shasumProperty).wait();
+
+			if (_.isEmpty(packageInfo)) {
+				// this package has not been published to npmjs.org yet - perhaps manually added via --framework-path
+				this.$logger.trace(`Checking shasum of package ${packageName}@${version}: skipped because the package was not found in npmjs.org`);
+				return true;
+			}
+
+			let realShasum = packageInfo[version][shasumProperty];
 			let packageTgz = cachedPackagePath + ".tgz";
 			let currentShasum = "";
 			if(this.$fs.exists(packageTgz).wait()) {
 				currentShasum = this.$fs.getFileShasum(packageTgz).wait();
 			}
-			this.$logger.trace(`Checking shasum of package: ${packageName}@${version}: expected ${realShasum}, actual ${currentShasum}.`);
+			this.$logger.trace(`Checking shasum of package ${packageName}@${version}: expected ${realShasum}, actual ${currentShasum}.`);
 			return realShasum === currentShasum;
 		}).future<boolean>()();
 	}
