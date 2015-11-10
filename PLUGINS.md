@@ -24,7 +24,7 @@ A NativeScript plugin is any npm package, published or not, that exposes a nativ
 * One or more CommonJS modules that expose a native API via a unified JavaScript API. For more information about Common JS modules, see the [CommonJS Wiki](http://wiki.commonjs.org/wiki/CommonJS).
 * `AndroidManifest.xml` and `Info.plist` which describe the permissions, features or other configurations required or used by your app for Android and iOS, respectively.
 * (Optional) Native Android libraries.
-* (Optional) Native Android include.gradle configurations file. (sugestion)
+* (Optional) Native Android include.gradle configurations file.
 * (Optional) Native iOS dynamic libraries.
 
 The plugin must have the directory structure, described in the [Directory Structure](#directory-structure) section.
@@ -80,7 +80,7 @@ my-plugin/
 * `package.json`: This file contains the metadata for your plugin. It sets the supported runtimes, the plugin name and version and any dependencies. The `package.json` specification is described in detail below.
 * `platforms/android/AndroidManifest.xml`: This file describes any specific configuration changes required for your plugin to work. For example: required permissions. For more information about the format of `AndroidManifest.xml`, see [App Manifest](http://developer.android.com/guide/topics/manifest/manifest-intro.html).<br/>During build, gradle will merge the plugin `AndroidManifest.xml` with the `AndroidManifest.xml` for your project. The NativeScript CLI will not resolve any contradicting or duplicate entries during the merge. After the plugin is installed, you need to manually resolve such issues.
 * `platforms/android/include.gradle': This file modifies the native Android configuration of your NativeScript project. For example, native dependencies, build types and configurations. For more information about the format of 'include.gradle', see [include.gradle file](#includegradle-specification).
-* `platforms/android/res': todo: add link
+* `platforms/android/res':  (Optional) This directory contains resources declared by the AndroidManifest.xml file. You can look at the folder structure [here](http://developer.android.com/guide/topics/resources/providing-resources.html#ResourceTypes).
 * `platforms/ios/Info.plist`: This file describes any specific configuration changes required for your plugin to work. For example: required permissions. For more information about the format of `Info.plist`, see [About Information Property List Files](https://developer.apple.com/library/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/AboutInformationPropertyListFiles.html).<br/>During the plugin installation, the NativeScript CLI will merge the plugin `Info.plist` with the `Info.plist` for your project. The NativeScript CLI will not resolve any contradicting or duplicate entries during the merge. After the plugin is installed, you need to manually resolve such issues. 
 
 NativeScript plugins which contain both native Android and iOS libraries might have the following directory structure.
@@ -101,7 +101,7 @@ my-plugin/
 ```
 
 * `platforms/android`: This directory contains any native Android libraries packaged as `*.jar` and '*.aar' packages. These native libraries can reside in the root of this directory or in a user-created sub-directory. During the plugin installation, the NativeScript CLI will configure the Android project in `platforms/android` to work with the plugin. 
-* `platforms/android/res':  (Optional) This directory contains resources declared by the AndroidManifest.xml file. todo: add link
+* `platforms/android/res':  (Optional) This directory contains resources declared by the AndroidManifest.xml file. You can look at the folder structure [here](http://developer.android.com/guide/topics/resources/providing-resources.html#ResourceTypes).
 * `platforms/ios`: This directory contains native iOS dynamic libraries (`.framework`). During the plugin installation, the NativeScript CLI will copy these files to `lib/iOS` in your project and will configure the Android project in `platforms/ios` to work with the library.
 * `platforms/android/include.gradle': This file modifies the native Android configuration of your NativeScript project. For example, native dependencies, build types and configurations. For more information about the format of 'include.gradle', see [include.gradle file](#includegradle-specification).
 
@@ -133,11 +133,10 @@ The following is an example of a `package.json` file for a NativeScript plugin w
 ### Include.gradle Specification
 Every NativeScript plugin, which contains native Android dependencies, should contain a valid 'incluide.gradle' file in the root of its 'platforms/android' directory. This `include.gradle` file must meet the following requirements.
 
-* It must contain its own configuration (todo: link if you find).
+* It must contain its own configuration.
 * It might contain native dependencies required to build the plugin properly.
 * Any native dependencies should be available in [jcenter](https://bintray.com/bintray/jcenter) or from the Android SDK installed on your machine.
-* todo: add link for android configuration
-* todo: add link dependencies configuration
+>  **IMPORTANT:** [Link to all configurations](http://developer.android.com/tools/building/configuring-gradle.html).
 
  > **IMPORTANT:** If you don't have an `include.gradle` file, at build time, gradle will create a default one containing all default elements.
  
