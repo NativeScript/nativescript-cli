@@ -105,7 +105,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
 			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
-			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle", "-f");
+			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties", "-f");
 
 			if (this.useGradleWrapper(frameworkDir)) {
 				this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");
