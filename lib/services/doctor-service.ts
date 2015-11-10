@@ -13,11 +13,7 @@ class DoctorService implements IDoctorService {
 
 	public printWarnings(): boolean {
 		let result = false;
-		let androidToolsInfo = {
-			pathToAdb: this.$androidToolsInfo.getPathToAdbFromAndroidHome().wait(),
-			pathToAndroid: this.$androidToolsInfo.getPathToAndroidExecutable().wait()
-		};
-		let sysInfo = this.$sysInfo.getSysInfo(androidToolsInfo);
+		let sysInfo = this.$sysInfo.getSysInfo().wait();
 
 		if (!sysInfo.adbVer) {
 			this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
@@ -65,16 +61,6 @@ class DoctorService implements IDoctorService {
 		} else {
 			this.$logger.out("NOTE: You can develop for iOS only on Mac OS X systems.");
 			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
-		}
-
-		if(!sysInfo.javaVer) {
-			this.$logger.warn("WARNING: The Java Development Kit (JDK) is not installed or is not configured properly.");
-			this.$logger.out("You will not be able to work with the Android SDK and you might not be able" + EOL
-				+ "to perform some Android-related operations. To ensure that you can develop and" + EOL
-				+ "test your apps for Android, verify that you have installed the JDK as" + EOL
-				+ "described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8)" + EOL
-				+ "or http://docs.oracle.com/javase/7/docs/webnotes/install/ (for JDK 7)." + EOL);
-			result = true;
 		}
 
 		let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();

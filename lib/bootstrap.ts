@@ -84,3 +84,4 @@ $injector.require("androidToolsInfo", "./android-tools-info");
 
 $injector.require("iosUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
 $injector.require("androidUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
+$injector.require("sysInfo", "./sys-info");

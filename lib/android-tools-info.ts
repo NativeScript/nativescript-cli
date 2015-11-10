@@ -180,7 +180,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	public getPathToAdbFromAndroidHome(): IFuture<string> {
 		return (() => {
 			if(this.androidHome) {
-				let pathToAdb = path.join(this.androidHome, "platform-tools", "adb") + (this.$hostInfo.isWindows ? ".exe" : "");
+				let pathToAdb = path.join(this.androidHome, "platform-tools", "adb");
 				try {
 					this.$childProcess.execFile(pathToAdb, ["help"]).wait();
 					return pathToAdb;
