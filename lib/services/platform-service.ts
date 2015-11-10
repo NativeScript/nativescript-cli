@@ -417,7 +417,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	private ensurePlatformInstalled(platform: string): IFuture<void> {
+	public ensurePlatformInstalled(platform: string): IFuture<void> {
 		return (() => {
 			if(!this.isPlatformInstalled(platform).wait()) {
 				this.addPlatform(platform).wait();

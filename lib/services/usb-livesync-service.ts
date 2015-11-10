@@ -44,6 +44,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		return (() => {
 			platform = platform || this.initialize(platform).wait();
 			let platformLowerCase = platform ? platform.toLowerCase() : null;
+
+			this.$platformService.ensurePlatformInstalled(platform).wait();
+
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
 
 			if (platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
