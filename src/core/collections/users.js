@@ -1,5 +1,4 @@
 /* eslint new-cap: 0 */
-const Client = require('../client');
 const Auth = require('../auth');
 const DataPolicy = require('../enums/dataPolicy');
 const Request = require('../request').Request;

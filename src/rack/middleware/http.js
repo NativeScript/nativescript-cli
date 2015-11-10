@@ -1,6 +1,5 @@
 const Middleware = require('./middleware');
-const HttpMethod = require('../../core/enums/httpMethod');
-const KinveyError = require('../../core/errors').KinveyError;
+const HttpMethod = require('../../core/enums').HttpMethod;
 const Promise = require('bluebird');
 const http = require('http');
 const https = require('https');
@@ -17,9 +16,11 @@ class Http extends Middleware {
     return super.handle(request).then(() => {
       let adapter = http;
       const protocol = url.parse(request.url).protocol;
+      const port = url.parse(request.url).port || 80;
 
       if (protocol === 'https:') {
         adapter = https;
+        port = 443;
       }
 
       return new Promise((resolve, reject) => {
@@ -46,7 +47,7 @@ class Http extends Middleware {
             pathname: request.path,
             query: merge({}, request.query, request.flags),
           }),
-          port: request.port ? request.port : protocol === 'https:' ? 443 : 80
+          port: port
         });
 
         httpRequest.on('response', (res) => {

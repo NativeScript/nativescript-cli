@@ -1,5 +1,5 @@
 const isString = require('lodash/lang/isString');
-const StatusCode = require('./enums/statusCode');
+const StatusCode = require('./enums').StatusCode;
 
 class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data) {

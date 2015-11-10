@@ -1,8 +1,8 @@
 const Middleware = require('./middleware');
 const Store = require('../../core/store');
-const HttpMethod = require('../../core/enums/httpMethod');
-const StatusCode = require('../../core/enums/statusCode');
-const StoreAdapter = require('../../core/enums/storeAdapter');
+const HttpMethod = require('../../core/enums').HttpMethod;
+const StatusCode = require('../../core/enums').StatusCode;
+const StoreAdapter = require('../../core/enums').StoreAdapter;
 
 class Cache extends Middleware {
   constructor() {

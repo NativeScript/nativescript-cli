@@ -1,13 +1,12 @@
 // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
-const PouchDB = require('pouchdb');
-const StoreAdapter = require('./enums/storeAdapter');
+const StoreAdapter = require('./enums').StoreAdapter;
 const KinveyError = require('./errors').KinveyError;
 const Promise = require('bluebird');
 const Query = require('./query');
 const Aggregation = require('./aggregation');
-const IndexedDBAdapter = require('pouchdb/lib/adapters/idb');
-const WebSQLAdapter = require('pouchdb/lib/adapters/websql');
+const NotFoundError = require('./errors').NotFoundError;
+const platform = require('./utils/platform');
 const Loki = require('lokijs');
 const log = require('loglevel');
 const result = require('lodash/object/result');
@@ -15,104 +14,111 @@ const forEach = require('lodash/collection/forEach');
 const pluck = require('lodash/collection/pluck');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
+const isFunction = require('lodash/lang/isFunction');
+
+let env = 'BROWSER';
+if (platform.isPhoneGap()) {
+  env = 'CORDOVA';
+} else if (platform.isNode()) {
+  env = 'NODEJS';
+}
+
 const loki = new Loki('kinvey', {
-  env: 'BROWSER'
+  env: env
 });
 
-//require('pouchdb/extras/localstorage');
+// class LocalStorageAdapter {
+//   valid() {
+//     const kinvey = 'kinvey';
+//     try {
+//       localStorage.setItem(kinvey, kinvey);
+//       localStorage.removeItem(kinvey);
+//       return true;
+//     } catch (e) {
+//       return false;
+//     }
+//   }
+// }
 
-class LocalStorageAdapter {
-  valid() {
-    const kinvey = 'kinvey';
-    try {
-      localStorage.setItem(kinvey, kinvey);
-      localStorage.removeItem(kinvey);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-}
-
-class PouchDBAdapter {
-  constructor(name, adapters = [StoreAdapter.Memory]) {
-    let dbAdapter;
-
-    if (!isArray(adapters)) {
-      adapters = [adapters];
-    }
-
-    forEach(adapters, adapter => {
-      switch (adapter) {
-      case StoreAdapter.IndexedDB:
-        if (IndexedDBAdapter.valid()) {
-          dbAdapter = adapter;
-          return false;
-        }
-
-        break;
-      case StoreAdapter.LocalStorage:
-        if (LocalStorageAdapter.valid()) {
-          dbAdapter = adapter;
-          return false;
-        }
-
-        break;
-      case StoreAdapter.Memory:
-        dbAdapter = adapter;
-        return false;
-      case StoreAdapter.WebSQL:
-        if (WebSQLAdapter.valid()) {
-          dbAdapter = adapter;
-          return false;
-        }
-
-        break;
-      default:
-        log.warn(`${adapter} adapter is unsupported. Please use a supported store adapter.`, StoreAdapter);
-      }
-    });
-
-    if (!dbAdapter) {
-      log.warn(`Provided adapters are unsupported on this platform. Defaulting to ${StoreAdapter.Memory} adapter.`, adapters);
-      dbAdapter = StoreAdapter.Memory;
-    }
-
-    this.db = new PouchDB(name, {
-      auto_compaction: true,
-      adapter: dbAdapter
-    });
-    this.db.viewCleanup();
-  }
-
-  loadDatabase(name, done) {
-    return this.db.get(name).then(doc => {
-      done(doc.data);
-      return doc;
-    });
-  }
-
-  saveDatabase(name, data, done) {
-    return this.db.get(name).then(doc => {
-      if (!doc) {
-        doc = {
-          _id: name
-        };
-      }
-
-      doc.data = data;
-      return this.db.save(doc).then(response => {
-        if (response.error) {
-          throw new KinveyError('An error occurred trying to save the document.', doc, response);
-        }
-
-        doc._rev = response.rev;
-        done(doc);
-        return doc;
-      });
-    });
-  }
-}
+// class PouchDBAdapter {
+//   constructor(name, adapters = [StoreAdapter.Memory]) {
+//     let dbAdapter;
+//
+//     if (!isArray(adapters)) {
+//       adapters = [adapters];
+//     }
+//
+//     forEach(adapters, adapter => {
+//       switch (adapter) {
+//       case StoreAdapter.IndexedDB:
+//         if (IndexedDBAdapter.valid()) {
+//           dbAdapter = adapter;
+//           return false;
+//         }
+//
+//         break;
+//       case StoreAdapter.LocalStorage:
+//         if (LocalStorageAdapter.valid()) {
+//           dbAdapter = adapter;
+//           return false;
+//         }
+//
+//         break;
+//       case StoreAdapter.Memory:
+//         dbAdapter = adapter;
+//         return false;
+//       case StoreAdapter.WebSQL:
+//         if (WebSQLAdapter.valid()) {
+//           dbAdapter = adapter;
+//           return false;
+//         }
+//
+//         break;
+//       default:
+//         log.warn(`${adapter} adapter is unsupported. Please use a supported store adapter.`, StoreAdapter);
+//       }
+//     });
+//
+//     if (!dbAdapter) {
+//       log.warn(`Provided adapters are unsupported on this platform. Defaulting to ${StoreAdapter.Memory} adapter.`, adapters);
+//       dbAdapter = StoreAdapter.Memory;
+//     }
+//
+//     this.db = new PouchDB(name, {
+//       auto_compaction: true,
+//       adapter: dbAdapter
+//     });
+//     this.db.viewCleanup();
+//   }
+//
+//   loadDatabase(name, done) {
+//     return this.db.get(name).then(doc => {
+//       done(doc.data);
+//       return doc;
+//     });
+//   }
+//
+//   saveDatabase(name, data, done) {
+//     return this.db.get(name).then(doc => {
+//       if (!doc) {
+//         doc = {
+//           _id: name
+//         };
+//       }
+//
+//       doc.data = data;
+//       return this.db.save(doc).then(response => {
+//         if (response.error) {
+//           throw new KinveyError('An error occurred trying to save the document.', doc, response);
+//         }
+//
+//         doc._rev = response.rev;
+//         done(doc);
+//         return doc;
+//       });
+//     });
+//   }
+// }
 
 class Store {
   constructor(name = 'data', adapters = [StoreAdapter.Memory]) {
@@ -176,7 +182,7 @@ class Store {
 
     const query = new Query({ filter: aggregation.condition });
     const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-    aggregation.reduce = new Function(['doc', 'out'], reduce);
+    aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
 
     const promise = this.find(query).then(docs => {
       const groups = {};
@@ -300,13 +306,16 @@ class Store {
       return this.removeWhere(query);
     }
 
-    const promise = new Promise(resolve => {
-      this.collection.remove(id);
+    const promise = this.get(id).then(doc => {
+      if (!doc) {
+        throw new NotFoundError();
+      }
 
-      resolve({
+      this.collection.remove(doc);
+      return {
         count: 1,
         documents: [doc]
-      });
+      };
     });
 
     return promise;

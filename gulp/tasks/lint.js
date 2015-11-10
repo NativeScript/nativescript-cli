@@ -7,10 +7,9 @@ const config = require('../config');
 function createLintTask(taskName, files) {
   gulp.task(taskName, function() {
     return gulp.src(files)
+      .pipe($.jscs())
       .pipe($.eslint())
-      .pipe($.eslint.format())
-      .pipe($.eslint.failOnError());
-      // .pipe($.jscs());
+      .pipe($.eslint.format());
   });
 }
 

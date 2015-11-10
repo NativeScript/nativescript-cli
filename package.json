@@ -26,8 +26,6 @@
     "lodash": "^3.10.0",
     "loglevel": "^1.3.1",
     "lokijs": "^1.3.10",
-    "memdown": "^1.1.0",
-    "pouchdb": "^5.1.0",
     "promise-queue": "git+https://github.com/ThomasConner/promise-queue.git",
     "sift": "^2.0.9",
     "url-pattern": "^0.10.2"

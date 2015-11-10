@@ -1,8 +1,8 @@
 /* eslint new-cap: 0 */
 const Aggregation = require('../aggregation');
 const Request = require('../request').Request;
-const HttpMethod = require('../enums/httpMethod');
-const DataPolicy = require('../enums/dataPolicy');
+const HttpMethod = require('../enums').HttpMethod;
+const DataPolicy = require('../enums').DataPolicy;
 const Client = require('../client');
 const Query = require('../query');
 const Auth = require('../auth');

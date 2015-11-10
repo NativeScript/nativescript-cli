@@ -6,6 +6,7 @@ Kinvey.Acl = require('./core/acl');
 Kinvey.Aggregation = require('./core/aggregation');
 Kinvey.Client = Client;
 Kinvey.Collection = require('./core/collections/collection');
+Kinvey.Enums = require('./core/enums');
 Kinvey.File = require('./core/models/file');
 Kinvey.Group = require('./core/aggregation');
 Kinvey.Logger = require('./core/logger');
@@ -14,15 +15,6 @@ Kinvey.Model = require('./core/models/model');
 Kinvey.Query = require('./core/query');
 Kinvey.Store = require('./core/store');
 Kinvey.User = require('./core/models/user');
-
-// Enums
-Kinvey.DataPolicy = require('./core/enums/dataPolicy');
-Kinvey.HttpMethod = require('./core/enums/httpMethod');
-Kinvey.RackType = require('./core/enums/rackType');
-Kinvey.ResponseType = require('./core/enums/responseType');
-Kinvey.SocialAdapter = require('./core/enums/socialAdapter');
-Kinvey.StatusCode = require('./core/enums/statusCode');
-Kinvey.StoreAdapter = require('./core/enums/storeAdapter');
 
 // Errors
 Kinvey.Error = require('./core/errors').KinveyError;

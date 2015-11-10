@@ -4,21 +4,19 @@ const KinveyError = require('../errors').KinveyError;
 const ActiveUserError = require('../errors').ActiveUserError;
 const Model = require('./model');
 const Request = require('../request').Request;
-const SocialAdapter = require('../enums/socialAdapter');
 const Client = require('../client');
-const HttpMethod = require('../enums/httpMethod');
-const DataPolicy = require('../enums/dataPolicy');
+const HttpMethod = require('../enums').HttpMethod;
+const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
-const getActiveUser = require('../../utils/user').getActiveUser;
-const setActiveUser = require('../../utils/user').setActiveUser;
-const isFunction = require('lodash/lang/isFunction');
 const isString = require('lodash/lang/isString');
 const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
 const Promise = require('bluebird');
 const activeUserSymbol = Symbol();
+const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 
 class User extends Model {
   get authtoken() {
@@ -30,22 +28,33 @@ class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static getActive(client) {
-    const user = User[activeUserSymbol];
+  static getActive(client = Client.sharedInstance()) {
+    let user = User[activeUserSymbol];
 
     if (user) {
       return Promise.resolve(user);
     }
 
-    return getActiveUser(client).then(user => {
-      if (user) {
-        user = new User(user);
-        User[activeUserSymbol] = user;
-        return user;
+    const request = new Request({
+      method: HttpMethod.GET,
+      path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
+      client: client,
+      dataPolicy: DataPolicy.LocalOnly
+    });
+
+    const promise = request.execute().then(response => {
+      const data = response.data;
+
+      if (data.length === 0) {
+        return null;
       }
 
-      return null;
+      user = new User(data[0]);
+      User[activeUserSymbol] = user;
+      return user;
     });
+
+    return promise;
   }
 
   /**
@@ -53,19 +62,40 @@ class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static setActive(user, client) {
+  static setActive(user, client = Client.sharedInstance()) {
     if (user && !(user instanceof User)) {
       user = new User(result(user, 'toJSON', user));
     }
 
-    return setActiveUser(user, client).then(user => {
+    const promise = User.getActive().then(activeUser => {
+      if (activeUser) {
+        const request = new Request({
+          method: HttpMethod.DELETE,
+          path: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
+          client: client,
+          dataPolicy: DataPolicy.LocalOnly
+        });
+        return request.execute();
+      }
+    }).then(() => {
+      if (user) {
+        const request = new Request({
+          method: HttpMethod.POST,
+          path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
+          client: client,
+          dataPolicy: DataPolicy.LocalOnly,
+          data: user.toJSON()
+        });
+        return request.execute();
+      }
+    }).then(user => {
       if (user) {
         User[activeUserSymbol] = user;
         return user;
       }
-
-      return null;
     });
+
+    return promise;
   }
 
   /**

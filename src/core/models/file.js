@@ -1,10 +1,10 @@
 // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 const Auth = require('../auth');
-const DataPolicy = require('../enums/dataPolicy');
+const DataPolicy = require('../enums').DataPolicy;
 const Model = require('./model');
 const Query = require('../query');
 const KinveyError = require('../errors').KinveyError;
-const HttpMethod = require('../enums/httpMethod');
+const HttpMethod = require('../enums').HttpMethod;
 const assign = require('lodash/object/assign');
 const filesNamespace = process.env.KINVEY_FILE_NAMESPACE || 'blob';
 
