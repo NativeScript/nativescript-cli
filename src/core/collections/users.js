@@ -1,4 +1,3 @@
-/* eslint new-cap: 0 */
 const Auth = require('../auth');
 const DataPolicy = require('../enums/dataPolicy');
 const Request = require('../request').Request;
@@ -74,7 +73,7 @@ class Users extends Collection {
         }
 
         data.forEach(doc => {
-          models.push(new this.model(doc, options));
+          models.push(new this.model(doc, options)); // eslint-disable-line new-cap
         });
 
         return models;

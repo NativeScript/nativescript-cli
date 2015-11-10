@@ -1,5 +1,3 @@
-// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
 const Collection = require('./collection');
 const Client = require('../client');
 const Request = require('../request').Request;
@@ -80,9 +78,13 @@ class Files extends Collection {
       options.flags.tls = true;
     }
 
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
     if (options.ttl) {
       options.flags.ttl_in_seconds = options.ttl;
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const promise = super.find(query, options).then((files) => {
       if (options.download) {
@@ -136,9 +138,13 @@ class Files extends Collection {
       options.flags.tls = true;
     }
 
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
     if (options.ttl) {
       options.flags.ttl_in_seconds = options.ttl;
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const request = new Request(options);
     const promise = request.execute().then((response) => {

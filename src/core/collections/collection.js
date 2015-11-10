@@ -1,4 +1,3 @@
-/* eslint new-cap: 0 */
 const Aggregation = require('../aggregation');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
@@ -113,7 +112,7 @@ class Collection {
       }
 
       data.forEach(doc => {
-        models.push(new this.model(doc, options));
+        models.push(new this.model(doc, options)); // eslint-disable-line new-cap
       });
 
       return models;
@@ -158,7 +157,7 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      return new this.model(response.data, options);
+      return new this.model(response.data, options); // eslint-disable-line new-cap
     });
 
     promise.then((response) => {
@@ -207,7 +206,7 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(function(response) {
-      return new this.model(response.data, options);
+      return new this.model(response.data, options); // eslint-disable-line new-cap
     });
 
     promise.then((response) => {

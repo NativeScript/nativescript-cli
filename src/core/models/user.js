@@ -1,5 +1,3 @@
-// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
 const KinveyError = require('../errors').KinveyError;
 const ActiveUserError = require('../errors').ActiveUserError;
 const Model = require('./model');
@@ -184,11 +182,15 @@ class User extends Model {
       provider = String(provider);
     }
 
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
     if (!token.access_token || !token.expires_in) {
       return Promise.reject(
         new KinveyError('token argument must contain both an access_token and expires_in property.', token)
       );
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const data = { _socialIdentity: { } };
     data._socialIdentity[provider] = token;
@@ -202,6 +204,7 @@ class User extends Model {
    * @param   {string|Object}      Adapter          Social Adapter
    * @return  {Promise}                             Resolved with the active user or rejected with an error.
    */
+
   // static connect(Adapter = SocialAdapter.Facebook, options) {
   //   let adapter = Adapter;
   //   let promise;

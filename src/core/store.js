@@ -1,5 +1,3 @@
-// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
 const StoreAdapter = require('./enums').StoreAdapter;
 const KinveyError = require('./errors').KinveyError;
 const Promise = require('bluebird');

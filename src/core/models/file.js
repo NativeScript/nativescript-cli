@@ -1,4 +1,3 @@
-// jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 const Auth = require('../auth');
 const DataPolicy = require('../enums').DataPolicy;
 const Model = require('./model');
@@ -27,9 +26,13 @@ class File extends Model {
       options.flags.tls = true;
     }
 
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
     if (options.ttl) {
       options.flags.ttl_in_seconds = options.ttl;
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const request = new Request(options);
     const promise = request.execute().then((response) => {
@@ -59,9 +62,13 @@ class File extends Model {
       options.flags.tls = true;
     }
 
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
     if (options.ttl) {
       options.flags.ttl_in_seconds = options.ttl;
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const request = new Request(options);
     const promise = request.execute().then((response) => {
