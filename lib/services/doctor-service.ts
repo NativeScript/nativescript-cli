@@ -13,7 +13,11 @@ class DoctorService implements IDoctorService {
 
 	public printWarnings(): boolean {
 		let result = false;
-		let sysInfo = this.$sysInfo.getSysInfo();
+		let androidToolsInfo = {
+			pathToAdb: this.$androidToolsInfo.getPathToAdbFromAndroidHome().wait(),
+			pathToAndroid: this.$androidToolsInfo.getPathToAndroidExecutable().wait()
+		};
+		let sysInfo = this.$sysInfo.getSysInfo(androidToolsInfo);
 
 		if (!sysInfo.adbVer) {
 			this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
@@ -59,9 +63,8 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 		} else {
-			this.$logger.warn("WARNING: You can work with iOS only on Mac OS X systems.");
+			this.$logger.out("NOTE: You can develop for iOS only on Mac OS X systems.");
 			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
-			result = true;
 		}
 
 		if(!sysInfo.javaVer) {

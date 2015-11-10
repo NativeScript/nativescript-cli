@@ -127,9 +127,15 @@ interface IAndroidToolsInfo {
 	/**
 	 * Returns the path to `android` executable. It should be `$ANDROID_HOME/tools/android`.
 	 * In case ANDROID_HOME is not defined, check if `android` is part of $PATH.
-	 * @return {boolean} Path to the `android` executable.
+	 * @return {string} Path to the `android` executable.
 	 */
 	getPathToAndroidExecutable(): IFuture<string>;
+
+	/**
+	 * Gets the path to `adb` executable from ANDROID_HOME. It should be `$ANDROID_HOME/platform-tools/adb` in case it exists.
+	 * @return {string} Path to the `adb` executable. In case it does not exists, null is returned.
+	 */
+	getPathToAdbFromAndroidHome(): IFuture<string>;
 }
 
 /**

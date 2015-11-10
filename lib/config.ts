@@ -81,21 +81,8 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 	public getAdbFilePath(): IFuture<string> {
 		return (() => {
 			if(!this._adbFilePath) {
-				let androidHomeEnvVar = process.env.ANDROID_HOME;
-				if(androidHomeEnvVar) {
-					let pathToAdb = path.join(androidHomeEnvVar, "platform-tools", "adb");
-					let childProcess: IChildProcess = this.$injector.resolve("$childProcess");
-					try {
-						childProcess.execFile(pathToAdb, ["help"]).wait();
-						this._adbFilePath = pathToAdb;
-					} catch (err) {
-						// adb does not exist, so ANDROID_HOME is not set correctly
-						// try getting default adb path (included in CLI package)
-						super.getAdbFilePath().wait();
-					}
-				} else {
-					super.getAdbFilePath().wait();
-				}
+				let androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
+				this._adbFilePath = androidToolsInfo.getPathToAdbFromAndroidHome().wait() || super.getAdbFilePath().wait();
 			}
 
 			return this._adbFilePath;
