@@ -1,9 +1,9 @@
 ///<reference path=".d.ts"/>
 "use strict";
 
-import constants = require("./constants");
+import * as constants from "./constants";
 import * as path from "path";
-import * as os from "os";
+import {EOL} from "os";
 
 export class ProjectData implements IProjectData {
 	private static OLD_PROJECT_FILE_NAME = ".tnsproject";
@@ -40,8 +40,8 @@ export class ProjectData implements IProjectData {
 						fileContent = this.$fs.readJson(this.projectFilePath).wait();
 						data = fileContent[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE];
 					} catch (err) {
-						this.$errors.fail({formatStr: "The project file %s is corrupted." + os.EOL +
-							"Consider restoring an earlier version from your source control or backup." + os.EOL +
+						this.$errors.fail({formatStr: "The project file %s is corrupted." + EOL +
+							"Consider restoring an earlier version from your source control or backup." + EOL +
 							"Additional technical info: %s",
 								suppressCommandHelp: true},
 							this.projectFilePath, err.toString());

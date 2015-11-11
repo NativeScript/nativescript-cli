@@ -123,7 +123,8 @@ function setupProject(): IFuture<any> {
 					prepareProject: () => Future.fromResult(),
 					prepareAppResources: () => Future.fromResult(),
 					afterPrepareAllPlugins: () => Future.fromResult(),
-					getAppResourcesDestinationDirectoryPath: () => Future.fromResult("")
+					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+					processConfigurationFilesFromAppResources: () => Future.fromResult()
 				}
 			};
 		};
