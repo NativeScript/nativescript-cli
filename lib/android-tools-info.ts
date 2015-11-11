@@ -149,7 +149,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				}
 			}
 
-			return detectedErrors || isAndroidHomeValid;
+			return detectedErrors || !isAndroidHomeValid;
 		}).future<boolean>()();
 	}
 
@@ -175,6 +175,24 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 			return hasProblemWithJavaVersion;
 		}).future<boolean>()();
+	}
+
+	public getPathToAdbFromAndroidHome(): IFuture<string> {
+		return (() => {
+			if(this.androidHome) {
+				let pathToAdb = path.join(this.androidHome, "platform-tools", "adb");
+				try {
+					this.$childProcess.execFile(pathToAdb, ["help"]).wait();
+					return pathToAdb;
+				} catch (err) {
+					// adb does not exist, so ANDROID_HOME is not set correctly
+					// try getting default adb path (included in CLI package)
+					this.$logger.trace(`Error while executing '${pathToAdb} help'. Error is: ${err.message}`);
+				}
+			}
+
+			return null;
+		}).future<string>()();
 	}
 
 	/**

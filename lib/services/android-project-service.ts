@@ -81,7 +81,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// this call will fail in case `android` is not set correctly.
 			this.$androidToolsInfo.getPathToAndroidExecutable().wait();
-			this.$androidToolsInfo.validateJavacVersion(this.$sysInfo.getSysInfo().javacVersion, {showWarningsAsErrors: true}).wait();
+			this.$androidToolsInfo.validateJavacVersion(this.$sysInfo.getSysInfo().wait().javacVersion, {showWarningsAsErrors: true}).wait();
 		}).future<void>()();
 	}
 
