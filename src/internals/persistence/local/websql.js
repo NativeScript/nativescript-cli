@@ -16,17 +16,6 @@
 
 /* jshint evil: true */
 
-// Configure Queue
-root.Queue.configure(function(handler) {
-  var deferred = Kinvey.Defer.deferred();
-  try {
-    handler(deferred.resolve, deferred.reject, deferred.progress);
-  } catch (err) {
-    deferred.reject(err);
-  }
-  return deferred.promise;
-});
-
 /**
  * `Database` adapter for [WebSql](http://dev.w3.org/html5/webdatabase/).
  *
@@ -76,8 +65,8 @@ var WebSqlAdapter = {
    * Queue used to handle mutiple transactions.
    * @type {Queue}
    */
-  transactionQueue: new root.Queue(1, Infinity),
-  cacheQueue: new root.Queue(1, Infinity),
+  transactionQueue: new Queue(1, Infinity),
+  cacheQueue: new Queue(1, Infinity),
 
   /**
    * Cache to store collections in memory.
@@ -630,7 +619,7 @@ var WebSqlAdapter = {
 
 function useWebSqlAdapter() {
   // Use WebSQL adapter.
-  if (('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift && 'undefined' !== typeof root.Queue) {
+  if (('undefined' !== typeof openDatabase || 'undefined' !== typeof root.openDatabase) && 'undefined' !== typeof root.sift && 'undefined' !== typeof Queue) {
     // Normalize for Windows Phone 8.1
     root.openDatabase = 'undefined' !== typeof openDatabase ? openDatabase : root.openDatabase;
     Database.use(WebSqlAdapter);

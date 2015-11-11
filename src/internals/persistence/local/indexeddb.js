@@ -16,17 +16,6 @@
 
 /* jshint evil: true */
 
-// Configure Queue
-root.Queue.configure(function(handler) {
-  var deferred = Kinvey.Defer.deferred();
-  try {
-    handler(deferred.resolve, deferred.reject, deferred.progress);
-  } catch (err) {
-    deferred.reject(err);
-  }
-  return deferred.promise;
-});
-
 // `Database` adapter for [IndexedDB](http://www.w3.org/TR/IndexedDB/).
 var IDBAdapter = {
   /**
@@ -84,7 +73,7 @@ var IDBAdapter = {
    * Queue used to handle mutiple transactions.
    * @type {Queue}
    */
-  queue: new root.Queue(1, Infinity),
+  queue: new Queue(1, Infinity),
 
   /**
    * Generates an object id.

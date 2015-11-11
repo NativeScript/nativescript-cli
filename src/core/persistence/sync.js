@@ -24,17 +24,6 @@
 // Most of these methods delegate back to `Sync`. Therefore, `Kinvey.Sync`
 // provides the public interface for synchronization.
 
-// Configure Queue
-root.Queue.configure(function(handler) {
-  var deferred = Kinvey.Defer.deferred();
-  try {
-    handler(deferred.resolve, deferred.reject, deferred.progress);
-  } catch (err) {
-    deferred.reject(err);
-  }
-  return deferred.promise;
-});
-
 /**
  * @private
  * @namespace Sync
@@ -65,7 +54,7 @@ var Sync = /** @lends Sync */{
    * Queue used to handle sync.
    * @type {Queue}
    */
-  queue: new root.Queue(1, Infinity),
+  queue: new Queue(1, Infinity),
 
   /**
    * Counts the number of documents pending synchronization. If `collection` is

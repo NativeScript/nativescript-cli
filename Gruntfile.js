@@ -87,6 +87,7 @@ module.exports = function(grunt) {
         src: [
           // Log
           build === 'nodejs' ? 'src/internals/log/logger-node.js' : 'src/internals/log/logger.js',
+          build === 'nodejs' ? 'src/internals/deferreds/promisequeue-node.js' : 'src/internals/deferreds/promisequeue.js',
           'src/core/log.js',
 
           // Setup.
