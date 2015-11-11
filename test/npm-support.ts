@@ -161,7 +161,7 @@ function preparePlatform(testInjector: IInjector): IFuture<void> {
 
 describe("Npm support tests", () => {
 	let testInjector: IInjector, projectFolder: string, appDestinationFolderPath: string;
-	before(() => {
+	beforeEach(() => {
 		let projectSetup = setupProject().wait();
 		testInjector = projectSetup.testInjector;
 		projectFolder = projectSetup.projectFolder;

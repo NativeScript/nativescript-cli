@@ -6,9 +6,15 @@ import * as shell from "shelljs";
 import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
+import * as minimatch from "minimatch";
+import Future = require("fibers/future");
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
+	private static EXCLUDE_FILES_PATTERN = [
+		"**/*.js.map",
+		"**/*.ts"
+	];
 
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
@@ -174,21 +180,25 @@ export class PlatformService implements IPlatformService {
 				.value();
 
 			// Copy all files from app dir, but make sure to exclude tns_modules
-			let sourceFiles = this.$fs.readDirectory(appSourceDirectoryPath).wait();
+			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath);
 
 			if (this.$options.release) {
 				sourceFiles = sourceFiles.filter(source => source !== 'tests');
 			}
 
-			let hasTnsModulesInAppFolder = _.contains(sourceFiles, constants.TNS_MODULES_FOLDER_NAME);
+			let hasTnsModulesInAppFolder = this.$fs.exists(path.join(appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME)).wait();
 			if(hasTnsModulesInAppFolder && this.$projectData.dependencies && this.$projectData.dependencies[constants.TNS_CORE_MODULES_NAME]) {
 				this.$logger.warn("You have tns_modules dir in your app folder and tns-core-modules in your package.json file. Tns_modules dir in your app folder will not be used and you can safely remove it.");
-				sourceFiles.filter(source => source !== constants.TNS_MODULES_FOLDER_NAME)
-					.map(source => path.join(appSourceDirectoryPath, source))
-					.forEach(source => shell.cp("-Rf", source, appDestinationDirectoryPath));
-			} else {
-				shell.cp("-Rf", path.join(appSourceDirectoryPath, "*"), appDestinationDirectoryPath);
+				sourceFiles = sourceFiles.filter(source => !minimatch(source, `**/${constants.TNS_MODULES_FOLDER_NAME}/**`, {nocase: true}));
 			}
+
+			// Remove .ts and .js.map files
+			PlatformService.EXCLUDE_FILES_PATTERN.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));
+			let copyFileFutures = sourceFiles.map(source => {
+										let destinationFile = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
+										return this.$fs.copyFile(source, destinationFile);
+									});
+			Future.wait(copyFileFutures);
 
 			// Copy App_Resources to project root folder
 			this.$fs.ensureDirectoryExists(platformData.platformProjectService.getAppResourcesDestinationDirectoryPath().wait()).wait(); // Should be deleted
