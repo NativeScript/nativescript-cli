@@ -16,12 +16,12 @@
         "src/internals/persistence/local/websql.js",
         "src/internals/persistence/local/indexeddb.js",
         "src/internals/social/html5.js",
+        "src/internals/storage/local-storage.js",
         "src/shims/angular/angular.js",
         "src/shims/angular/intro.txt",
         "src/shims/angular/defer.js",
         "src/shims/angular/persistence/net.js",
-        "src/shims/angular/outro.txt",
-        "src/internals/storage/local-storage.js"
+        "src/shims/angular/outro.txt"
       ]
     },
     "backbone": {
@@ -32,7 +32,7 @@
         "node_modules/backbone-associations/backbone-associations-min.js"
       ],
       "externals": [
-        "node_modules/loglevel/lib/loglevel.min.js",
+        "node_modules/loglevel/lib/loglevel.js",
         "node_modules/promiscuous/dist/promiscuous-browser.js",
         "node_modules/sift/sift.min.js",
         "node_modules/promise-queue/lib/index.js"
@@ -79,7 +79,8 @@
         "src/shims/nodejs/nodejs.js",
         "src/internals/deferreds/promiscuous-node.js",
         "src/internals/persistence/net/node-http.js",
-        "src/internals/storage/memory.js"
+        "src/internals/storage/memory.js",
+        "src/internals/deferreds/promisequeue-node.js"
       ]
     },
     "phonegap": {

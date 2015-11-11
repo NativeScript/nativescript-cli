@@ -1,4 +1,7 @@
 ## Changelog
+#### 1.6.1 (2015-11-11)
+* Bugfix: Fix bug when trying to configure the promise-queue library.
+
 #### 1.6.0 (2015-11-06)
 * Bugfix(MLIBZ-625): Fix third party library bug that prevented the library from being used in a Titanium environment.
 * Bugfix(MLIBZ-652): Fix race condition in crypto localStorage adapter.
