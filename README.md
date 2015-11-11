@@ -309,6 +309,8 @@ Run `tns help` to view all available commands in the browser. Run `tns help <Com
 * `deploy <Platform> [--device <Device ID>]` deploys an already built application on connected device.
 * `run <Platform> [--device <Device ID>]` executes `prepare`, `build`, and `deploy`.
 * `livesync <Platform>` synchronizes changes from your project to an already deployed application on device.
+* `test init` configures your project for unit testing with a selected framework.
+* `test <Platform>` runs your unit tests on a connected device or in the native emulator.
 * `device` lists connected devices, including any running Android Virtual Devices or Genymotion virtual devices.
 * `device log` opens the log stream for the selected device.
 * `device run` runs a selected application on a connected device.

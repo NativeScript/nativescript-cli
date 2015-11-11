@@ -32,4 +32,7 @@ Command | Description
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run](run.html) | Runs your project on a connected device or in the native emulator for the selected platform.
+[test init](test-init.html) | Configures your project for unit testing with a selected framework.
+[test android](test-android.html) | Runs the tests in your project on Android devices or native emulators. 
+[test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.
 <% } %>
