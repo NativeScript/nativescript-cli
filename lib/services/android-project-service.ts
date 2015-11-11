@@ -12,7 +12,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_DIRNAME = "values";
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
-	private static LIBS_FOLDER_NAME = "libs";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
@@ -252,9 +251,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.ensureDirectoryExists(targetPath).wait();
 
 			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
-			let projectLibsDir = path.join(this.platformData.projectRoot, "libs");
-			this.$fs.ensureDirectoryExists(projectLibsDir).wait();
-			shell.cp("-f", path.join(libraryPath, "*.jar"), projectLibsDir);
 		}).future<void>()();
 	}
 
@@ -280,25 +276,46 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
+			this.processResourcesFromPlugin(pluginData.name, pluginPlatformsFolderPath).wait();
+		}).future<void>()();
+	}
 
-			// Handle *.jars inside libs folder
-			let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
-			if(this.$fs.exists(libsFolderPath).wait()) {
-				this.addLibrary(libsFolderPath).wait();
+	public processConfigurationFilesFromAppResources(): IFuture<void> {
+		return (() => {
+			// Process androidManifest.xml from App_Resources
+			let manifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+			if (this.$fs.exists(manifestFilePath).wait()) {
+				this.processResourcesFromPlugin("NativescriptAppResources", path.dirname(manifestFilePath)).wait();
 			}
+		}).future<void>()();
+	}
+
+	private processResourcesFromPlugin(pluginName: string, pluginPlatformsFolderPath: string): IFuture<void> {
+		return (() => {
+			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
+			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
+
+			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginName);
+			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
+
+			// Copy include.gradle file
+			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
+			if(this.$fs.exists(includeGradleFilePath).wait()) {
+				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
+			}
+
+			// Copy all resources from plugin
+			let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginName);
+			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
+			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 		}).future<void>()();
 	}
 
 	public removePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			try {
-				let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-				let libsFolderPath = path.join(pluginPlatformsFolderPath, AndroidProjectService.LIBS_FOLDER_NAME);
-
-				if(this.$fs.exists(libsFolderPath).wait()) {
-					let pluginJars = this.$fs.enumerateFilesInDirectorySync(libsFolderPath);
-					_.each(pluginJars, jarName => this.$fs.deleteFile(path.join(libsFolderPath, jarName)).wait());
-				}
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name)).wait();
+				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name)).wait();
 			} catch(e) {
 				if (e.code === "ENOENT") {
 					this.$logger.debug("No native code jars found: " + e.message);

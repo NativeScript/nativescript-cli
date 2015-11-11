@@ -249,6 +249,8 @@ export class ProjectDataStub implements IProjectData {
 	projectFilePath: string;
 	projectId: string;
 	dependencies: any;
+	appDirectoryPath: string;
+	appResourcesDirectoryPath: string;
 }
 
 export class PlatformsDataStub implements IPlatformsData {
@@ -265,7 +267,7 @@ export class PlatformsDataStub implements IPlatformsData {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			relativeToFrameworkConfigurationFilePath: "",
+			relativeToFrameworkConfigurationFilePath: ""
 		};
 	}
 
@@ -338,6 +340,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 		return Future.fromResult();
 	}
 	deploy(deviceIdentifier: string): IFuture<void> {
+		return Future.fromResult();
+	}
+	processConfigurationFilesFromAppResources(): IFuture<void> {
 		return Future.fromResult();
 	}
 }

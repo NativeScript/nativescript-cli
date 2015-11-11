@@ -217,6 +217,9 @@ export class PlatformService implements IPlatformService {
 			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
+			// Process configurations files from App_Resources
+			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
+
 			this.$logger.out("Project successfully prepared");
 		}).future<void>()();
 	}

@@ -10,6 +10,8 @@ interface IProjectData {
 	projectFilePath: string;
 	projectId?: string;
 	dependencies: any;
+	appDirectoryPath: string;
+	appResourcesDirectoryPath: string;
 }
 
 interface IProjectDataService {
@@ -55,6 +57,7 @@ interface IPlatformProjectService {
 	afterPrepareAllPlugins(): IFuture<void>;
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
 	deploy(deviceIdentifier: string): IFuture<void>;
+	processConfigurationFilesFromAppResources(): IFuture<void>;
 }
 
 interface IAndroidProjectPropertiesManager {
