@@ -66,7 +66,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => this.$platformService.deployOnDevice(platform);
+			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => this.$platformService.installOnDevice(platform);
 
 			let notRunningiOSSimulatorAction = (): IFuture<void> => this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase());
 
@@ -117,29 +117,29 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let canExecuteFastLiveSync = (filePath: string) => _.contains(fastLivesyncFileExtensions, path.extname(filePath));
 
 			let fastLiveSync = (filePath: string) => {
-				return (() => {
-					this.$platformService.preparePlatform(platform).wait();
-					let mappedFilePath = beforeBatchLiveSyncAction(filePath).wait();
+				this.$dispatcher.dispatch(() => {
+					return (() => {
+						this.$platformService.preparePlatform(platform).wait();
+						let mappedFilePath = beforeBatchLiveSyncAction(filePath).wait();
 
-					if (this.shouldSynciOSSimulator(platform).wait()) {
-						this.$iOSEmulatorServices.transferFiles(this.$projectData.projectId, [filePath], iOSSimulatorRelativeToProjectBasePathAction).wait();
+						if (this.shouldSynciOSSimulator(platform).wait()) {
+							this.$iOSEmulatorServices.transferFiles(this.$projectData.projectId, [filePath], iOSSimulatorRelativeToProjectBasePathAction).wait();
 
-						let platformSpecificUsbLiveSyncService = <IiOSUsbLiveSyncService>this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, null, platformSpecificLiveSyncServices);
-						platformSpecificUsbLiveSyncService.sendPageReloadMessageToSimulator().wait();
-					} else {
-						let deviceAppData =  this.$deviceAppDataFactory.create(this.$projectData.projectId, this.$mobileHelper.normalizePlatformName(platform));
-						let localToDevicePaths = this.createLocalToDevicePaths(platform, this.$projectData.projectId, localProjectRootPath || projectFilesPath, [mappedFilePath]);
+							let platformSpecificUsbLiveSyncService = <IiOSUsbLiveSyncService>this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, null, platformSpecificLiveSyncServices);
+							platformSpecificUsbLiveSyncService.sendPageReloadMessageToSimulator().wait();
+						} else {
+							let deviceAppData =  this.$deviceAppDataFactory.create(this.$projectData.projectId, this.$mobileHelper.normalizePlatformName(platform));
+							let localToDevicePaths = this.createLocalToDevicePaths(platform, this.$projectData.projectId, localProjectRootPath || projectFilesPath, [mappedFilePath]);
 
-						let devices = this.$devicesService.getDeviceInstances();
-						_.each(devices, (device: Mobile.IDevice) => {
-							this.transferFiles(device, deviceAppData, localToDevicePaths, projectFilesPath, true).wait();
-							let platformSpecificUsbLiveSyncService = this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, device, platformSpecificLiveSyncServices);
-							return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
-						});
-
-						this.$dispatcher.dispatch(() => Future.fromResult());
-					}
-				}).future<void>()();
+							let devices = this.$devicesService.getDeviceInstances();
+							_.each(devices, (device: Mobile.IDevice) => {
+								this.transferFiles(device, deviceAppData, localToDevicePaths, projectFilesPath, true).wait();
+								let platformSpecificUsbLiveSyncService = this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, device, platformSpecificLiveSyncServices);
+								return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
+							});
+						}
+					}).future<void>()()
+				});
 			};
 
 			let liveSyncData = {
@@ -207,13 +207,21 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 			let timeout = 9000;
 			this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout).wait();
 			let socket = this.device.connectToPort(IOSUsbLiveSyncService.BACKEND_PORT);
-			this.sendReloadMessageCore(socket);
+			this.sendReloadMessage(socket);
 		}).future<void>()();
 	}
 
 	public sendPageReloadMessageToSimulator(): IFuture<void> {
-		helpers.connectEventually(() => net.connect(IOSUsbLiveSyncService.BACKEND_PORT), (socket: net.Socket) => this.sendReloadMessageCore(socket));
+		helpers.connectEventually(() => net.connect(IOSUsbLiveSyncService.BACKEND_PORT), (socket: net.Socket) => this.sendReloadMessage(socket));
 		return this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest);
+	}
+
+	private sendReloadMessage(socket: net.Socket): void {
+		try {
+			this.sendReloadMessageCore(socket);
+		} finally {
+			socket.destroy();
+		}
 	}
 
 	private sendReloadMessageCore(socket: net.Socket): void {
@@ -223,8 +231,8 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 		payload.writeInt32BE(length, 0);
 		payload.write(message, 4, length, "utf16le");
 		socket.write(payload);
-		socket.destroy();
 	}
+
 }
 $injector.register("iosUsbLiveSyncServiceLocator", {factory: IOSUsbLiveSyncService});
 
