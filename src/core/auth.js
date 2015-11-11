@@ -1,4 +1,4 @@
-const User = require('./user');
+const User = require('./models/user');
 
 class Auth {
   static all(client) {

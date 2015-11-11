@@ -22,7 +22,8 @@ const config = {};
 config.env = {
   KINVEY_API_PROTOCOL: 'https',
   KINVEY_API_HOST: 'baas.kinvey.com',
-  KINVEY_API_VERSION: 3
+  KINVEY_API_VERSION: 3,
+  KINVEY_LOKI_ENV: 'BROWSER'
 };
 config.env = assign(config.env, platformConfig.env);
 process.env = assign(process.env, config.env);

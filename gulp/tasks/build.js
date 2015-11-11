@@ -36,4 +36,4 @@ gulp.task('build-release', function(done) {
   });
 });
 
-gulp.task('build', ['lint-src', 'clean', 'build-dev', 'build-release']);
+gulp.task('build', ['clean', 'build-dev', 'build-release']);

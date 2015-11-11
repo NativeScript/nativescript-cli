@@ -4,8 +4,8 @@ const Promise = require('bluebird');
 const http = require('http');
 const https = require('https');
 const url = require('url');
-const isString = require('lodash/lang/isString');
 const merge = require('lodash/object/merge');
+const isString = require('lodash/lang/isString');
 
 class Http extends Middleware {
   constructor() {
@@ -16,7 +16,7 @@ class Http extends Middleware {
     return super.handle(request).then(() => {
       let adapter = http;
       const protocol = url.parse(request.url).protocol;
-      const port = url.parse(request.url).port || 80;
+      let port = url.parse(request.url).port || 80;
 
       if (protocol === 'https:') {
         adapter = https;

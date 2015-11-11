@@ -1,6 +1,7 @@
 const Rack = require('kinvey-rack');
 const UrlPattern = require('url-pattern');
 const Promise = require('bluebird');
+const KinveyError = require('../../core/errors').KinveyError;
 const urlPartsSymbol = Symbol();
 
 class Middleware extends Rack.Middleware {
@@ -20,7 +21,7 @@ class Middleware extends Rack.Middleware {
         return resolve(matches);
       }
 
-      reject(); // TODO: Give reason
+      reject(new KinveyError('request is missing', request));
     });
   }
 }

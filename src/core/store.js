@@ -4,7 +4,8 @@ const Promise = require('bluebird');
 const Query = require('./query');
 const Aggregation = require('./aggregation');
 const NotFoundError = require('./errors').NotFoundError;
-const platform = require('./utils/platform');
+const IndexedDB = require('./persistence/indexeddb');
+const platform = require('../utils/platform');
 const Loki = require('lokijs');
 const log = require('loglevel');
 const result = require('lodash/object/result');
@@ -13,16 +14,18 @@ const pluck = require('lodash/collection/pluck');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
 const isFunction = require('lodash/lang/isFunction');
+const databaseName = 'kinvey';
 
-let env = 'BROWSER';
-if (platform.isPhoneGap()) {
-  env = 'CORDOVA';
-} else if (platform.isNode()) {
-  env = 'NODEJS';
-}
-
-const loki = new Loki('kinvey', {
-  env: env
+const loki = new Loki(databaseName, {
+  env: process.env.KINVEY_LOKI_ENV || 'NODEJS',
+  autosave: true,
+  autosaveInterval: 1000,
+  autoload: true,
+  autoloadCallback: function() {
+    console.log('db loaded');
+  },
+  persistenceMethod: 'adapter',
+  persistenceAdapter: new IndexedDB(databaseName)
 });
 
 // class LocalStorageAdapter {
@@ -35,86 +38,6 @@ const loki = new Loki('kinvey', {
 //     } catch (e) {
 //       return false;
 //     }
-//   }
-// }
-
-// class PouchDBAdapter {
-//   constructor(name, adapters = [StoreAdapter.Memory]) {
-//     let dbAdapter;
-//
-//     if (!isArray(adapters)) {
-//       adapters = [adapters];
-//     }
-//
-//     forEach(adapters, adapter => {
-//       switch (adapter) {
-//       case StoreAdapter.IndexedDB:
-//         if (IndexedDBAdapter.valid()) {
-//           dbAdapter = adapter;
-//           return false;
-//         }
-//
-//         break;
-//       case StoreAdapter.LocalStorage:
-//         if (LocalStorageAdapter.valid()) {
-//           dbAdapter = adapter;
-//           return false;
-//         }
-//
-//         break;
-//       case StoreAdapter.Memory:
-//         dbAdapter = adapter;
-//         return false;
-//       case StoreAdapter.WebSQL:
-//         if (WebSQLAdapter.valid()) {
-//           dbAdapter = adapter;
-//           return false;
-//         }
-//
-//         break;
-//       default:
-//         log.warn(`${adapter} adapter is unsupported. Please use a supported store adapter.`, StoreAdapter);
-//       }
-//     });
-//
-//     if (!dbAdapter) {
-//       log.warn(`Provided adapters are unsupported on this platform. Defaulting to ${StoreAdapter.Memory} adapter.`, adapters);
-//       dbAdapter = StoreAdapter.Memory;
-//     }
-//
-//     this.db = new PouchDB(name, {
-//       auto_compaction: true,
-//       adapter: dbAdapter
-//     });
-//     this.db.viewCleanup();
-//   }
-//
-//   loadDatabase(name, done) {
-//     return this.db.get(name).then(doc => {
-//       done(doc.data);
-//       return doc;
-//     });
-//   }
-//
-//   saveDatabase(name, data, done) {
-//     return this.db.get(name).then(doc => {
-//       if (!doc) {
-//         doc = {
-//           _id: name
-//         };
-//       }
-//
-//       doc.data = data;
-//       return this.db.save(doc).then(response => {
-//         if (response.error) {
-//           throw new KinveyError('An error occurred trying to save the document.', doc, response);
-//         }
-//
-//         doc._rev = response.rev;
-//         done(doc);
-//         return doc;
-//       });
-//     });
 //   }
 // }
 
