@@ -11,6 +11,7 @@ export class LoggerStub implements ILogger {
 	fatal(...args: string[]): void {}
 	error(...args: string[]): void {}
 	warn(...args: string[]): void {}
+	warnWithLabel(...args: string[]): void {}
 	info(...args: string[]): void {}
 	debug(...args: string[]): void {}
 	trace(...args: string[]): void {}

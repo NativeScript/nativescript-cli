@@ -514,7 +514,27 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this.$logger.info("Installing pods...");
 			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-			return this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: 'inherit' }).wait();
+			let childProcess = this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] }).wait();
+			if (childProcess.stderr) {
+				let warnings = childProcess.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)/g);
+				_.each(warnings, (warning: string) => {
+					this.$logger.warnWithLabel(warning.replace("\n", ""));
+				});
+
+				// HACK for silencing irrelevant linking warnings when pod installing on
+				// El Capitan with cocoa pods version 0.38.2
+				// Reference https://github.com/CocoaPods/CocoaPods/issues/4302
+				let errors = childProcess.stderr.replace(/dyld: warning, LC_RPATH @executable_path.*?@executable_path/g, "");
+				_.each(warnings, warning => {
+					errors = errors.replace(warning, "");
+				});
+
+				if(errors.trim()) {
+					this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
+				}
+			}
+
+			return childProcess;
 		}).future<any>()();
 	}
 

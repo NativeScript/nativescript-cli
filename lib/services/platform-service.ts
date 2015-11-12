@@ -209,7 +209,7 @@ export class PlatformService implements IPlatformService {
 			} catch(error) {
 				this.$logger.debug(error);
 				shell.rm("-rf", appResourcesDirectoryPath);
-				this.$errors.fail(`Processing node_modules failed. Error:${error}`);
+				this.$errors.failWithoutHelp(`Processing node_modules failed. ${error}`);
 			}
 
 			// Process platform specific files
