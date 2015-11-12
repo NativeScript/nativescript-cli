@@ -5,6 +5,7 @@ const Query = require('./query');
 const Aggregation = require('./aggregation');
 const NotFoundError = require('./errors').NotFoundError;
 const IndexedDB = require('./persistence/indexeddb');
+const Memory = require('./persistence/memory');
 const platform = require('../utils/platform');
 const Loki = require('lokijs');
 const log = require('loglevel');
@@ -14,18 +15,14 @@ const pluck = require('lodash/collection/pluck');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
 const isFunction = require('lodash/lang/isFunction');
-const databaseName = 'kinvey';
+const defaultDatabaseName = 'kinvey';
 
-const loki = new Loki(databaseName, {
-  env: process.env.KINVEY_LOKI_ENV || 'NODEJS',
-  autosave: true,
-  autosaveInterval: 1000,
-  autoload: true,
-  autoloadCallback: function() {
-    console.log('db loaded');
-  },
-  persistenceMethod: 'adapter',
-  persistenceAdapter: new IndexedDB(databaseName)
+const indexedDB = new Loki(defaultDatabaseName, {
+  adapter: new IndexedDB()
+});
+
+const memory = new Loki(defaultDatabaseName, {
+  adapter: new Memory()
 });
 
 // class LocalStorageAdapter {
@@ -43,10 +40,37 @@ const loki = new Loki(databaseName, {
 
 class Store {
   constructor(name = 'data', adapters = [StoreAdapter.Memory]) {
-    this.collection = loki.getCollection(name);
+    this.dbName = name;
+    this.dbLoaded = false;
 
-    if (!this.collection) {
-      this.collection = loki.addCollection(name, { indices: ['_id', '_kmd'] });
+    if (!isArray(adapters)) {
+      adapters = [adapters];
+    }
+
+    forEach(adapters, adapter => {
+      switch (adapter) {
+      case StoreAdapter.IndexedDB:
+        if (IndexedDB.isSupported()) {
+          this.db = indexedDB;
+          return false;
+        }
+
+        break;
+      case StoreAdapter.Memory:
+        if (Memory.isSupported()) {
+          this.db = memory;
+          return false;
+        }
+
+        break;
+      default:
+        log.warn(`The ${adapter} adapter is is not recognized.`);
+      }
+    });
+
+    if (!this.db) {
+      log.warn('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
+      this.db = memory;
     }
   }
 
@@ -70,33 +94,86 @@ class Store {
     return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }
 
-  find(query) {
+  isDatabaseLoaded() {
+    if (this.dbLoaded) {
+      return true;
+    }
+
+    return false;
+  }
+
+  loadDatabase(force = false) {
+    if (!this.isDatabaseLoaded() || force) {
+      const promise = new Promise(resolve => {
+        this.db.loadDatabase({
+          dbname: this.dbName
+        }, () => {
+          this.dbLoaded = true;
+          resolve(this.dbLoaded);
+        });
+      });
+
+      return promise;
+    }
+
+    return Promise.resolve(this.dbLoaded);
+  }
+
+  saveDatabase() {
     const promise = new Promise(resolve => {
-      if (query && !(query instanceof Query)) {
-        query = new Query(result(query, 'toJSON', query));
-      }
-
-      let docs = this.collection.find();
-
-      if (docs.length > 0 && query) {
-        docs = query.process(docs);
-      }
-
-      resolve(docs);
+      this.db.saveDatabase({
+        dbname: this.dbName
+      }, () => {
+        resolve();
+      });
     });
 
     return promise;
   }
 
-  count(collection, query) {
-    const promise = this.find(query).then(docs => {
+  getCollection(name) {
+    return this.db.getCollection(name);
+  }
+
+  addCollection(name) {
+    const collection = this.getCollection(name);
+
+    if (collection) {
+      return collection;
+    }
+
+    return this.db.addCollection(name, { indices: ['_id', '_kmd'] });
+  }
+
+  find(name, query) {
+    const promise = this.loadDatabase().then(() => {
+      const collection = this.addCollection(name);
+
+      if (query && !(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      let docs = collection.find();
+
+      if (docs.length > 0 && query) {
+        docs = query.process(docs);
+      }
+
+      return docs;
+    });
+
+    return promise;
+  }
+
+  count(name, query) {
+    const promise = this.find(name, query).then(docs => {
       return docs.length;
     });
 
     return promise;
   }
 
-  group(aggregation) {
+  group(name, aggregation) {
     if (!(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(aggregation);
     }
@@ -105,7 +182,7 @@ class Store {
     const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
     aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
 
-    const promise = this.find(query).then(docs => {
+    const promise = this.find(name, query).then(docs => {
       const groups = {};
       const response = [];
 
@@ -144,7 +221,7 @@ class Store {
     return promise;
   }
 
-  get(id) {
+  get(name, id) {
     if (!isString(id)) {
       log.warn(`${id} is not a string. Casting to a string value.`, id);
       id = String(id);
@@ -152,68 +229,68 @@ class Store {
 
     const query = new Query();
     query.contains('_id', [id]);
-    const promise = this.find(query).then(docs => {
+    const promise = this.find(name, query).then(docs => {
       return docs.length === 1 ? docs[0] : null;
     });
     return promise;
   }
 
-  findAndModify(id, fn) {
+  findAndModify(name, id, fn) {
     if (!isFunction(fn)) {
       return Promise.reject(new KinveyError('fn argument must be a function.'));
     }
 
-    const promise = this.get(id).then(doc => {
+    const promise = this.get(name, id).then(doc => {
       return fn(doc);
     }).then(doc => {
-      return this.save(doc);
+      return this.save(name, doc);
     });
 
     return promise;
   }
 
-  save(doc) {
-    let promise;
-
-    if (!doc) {
-      return Promise.resolve(null);
-    }
-
-    if (isArray(doc)) {
-      return this.saveBulk(doc);
-    }
-
-    if (!doc._id) {
-      doc._id = this.generateObjectId();
-    }
-
-    promise = new Promise(resolve => {
-      if (doc.$loki) {
-        return resolve(this.collection.update(doc));
+  save(name, doc) {
+    const promise = this.loadDatabase().then(() => {
+      if (!doc) {
+        return null;
       }
 
-      resolve(this.collection.insert(doc));
+      if (isArray(doc)) {
+        return this.saveBulk(name, doc);
+      }
+
+      if (!doc._id) {
+        doc._id = this.generateObjectId();
+      }
+
+      const collection = this.addCollection(name);
+
+      if (doc.$loki) {
+        return collection.update(doc);
+      }
+
+      return collection.insert(doc);
     });
 
     return promise;
   }
 
-  saveBulk(docs = []) {
+  saveBulk(name, docs = []) {
     const promises = [];
 
     if (!isArray(docs)) {
-      return this.save(docs);
+      return this.save(name, docs);
     }
 
     forEach(docs, doc => {
-      promises.push(this.save(doc));
+      promises.push(this.save(name, doc));
     });
 
     const promise = Promise.all(promises);
     return promise;
   }
 
-  remove(id) {
+  remove(name, id) {
     if (!id) {
       return Promise.resolve({
         count: 0,
@@ -224,15 +301,17 @@ class Store {
     if (isArray(id)) {
       const query = new Query();
       query.contains('_id', id);
-      return this.removeWhere(query);
+      return this.removeWhere(name, query);
     }
 
-    const promise = this.get(id).then(doc => {
+    const promise = this.get(name, id).then(doc => {
       if (!doc) {
         throw new NotFoundError();
       }
 
-      this.collection.remove(doc);
+      const collection = this.addCollection(name);
+      collection.remove(doc);
+
       return {
         count: 1,
         documents: [doc]
@@ -242,24 +321,24 @@ class Store {
     return promise;
   }
 
-  removeBulk(ids = []) {
+  removeBulk(name, ids = []) {
     const promises = [];
 
     if (!isArray(ids)) {
-      return this.remove(ids);
+      return this.remove(name, ids);
     }
 
     forEach(ids, id => {
-      promises.push(this.remove(id));
+      promises.push(this.remove(name, id));
     });
 
     const promise = Promise.all(promises);
     return promise;
   }
 
-  removeWhere(query) {
-    const promise = this.find(query).then(docs => {
-      return this.removeBulk(pluck(docs, '_id'));
+  removeWhere(name, query) {
+    const promise = this.find(name, query).then(docs => {
+      return this.removeBulk(name, pluck(docs, '_id'));
     });
     return promise;
   }

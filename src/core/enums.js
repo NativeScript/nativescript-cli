@@ -2,7 +2,9 @@ const DataPolicy = {
   LocalFirst: 'LocalFist',
   LocalOnly: 'LocalOnly',
   CloudFirst: 'CloudFirst',
-  CloudOnly: 'CloudOnly'
+  CloudOnly: 'CloudOnly',
+  NetworkFirst: 'NetworkFirst',
+  NetworkOnly: 'NetworkOnly'
 };
 Object.freeze(DataPolicy);
 
@@ -49,10 +51,8 @@ const StatusCode = {
 Object.freeze(StatusCode);
 
 const StoreAdapter = {
-  IndexedDB: 'idb',
-  LocalStorage: 'localstorage',
-  Memory: 'memory',
-  WebSQL: 'websql'
+  IndexedDB: 'IndexedDB',
+  LocalStorage: 'LocalStorage'
 };
 Object.freeze(StoreAdapter);
 

@@ -1,4 +1,4 @@
-const User = require('./models/user');
+const UserUtils = require('../utils/user');
 
 class Auth {
   static all(client) {
@@ -63,7 +63,7 @@ class Auth {
   }
 
   static session() {
-    return User.getActive().then(user => {
+    return UserUtils.getActive().then(user => {
       if (!user) {
         throw new Error('There is not an active user.');
       }

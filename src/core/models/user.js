@@ -11,10 +11,8 @@ const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
 const Promise = require('bluebird');
-const activeUserSymbol = Symbol();
-const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
+const UserUtils = require('../../utils/user');
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 
 class User extends Model {
   get authtoken() {
@@ -27,31 +25,13 @@ class User extends Model {
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
   static getActive(client = Client.sharedInstance()) {
-    let user = User[activeUserSymbol];
-
-    if (user) {
-      return Promise.resolve(user);
-    }
-
-    const request = new Request({
-      method: HttpMethod.GET,
-      path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
-      client: client,
-      dataPolicy: DataPolicy.LocalOnly
-    });
-
-    const promise = request.execute().then(response => {
-      const data = response.data;
-
-      if (data.length === 0) {
-        return null;
+    const promise = UserUtils.getActive(client).then(data => {
+      if (data) {
+        return new User(data);
       }
 
-      user = new User(data[0]);
-      User[activeUserSymbol] = user;
-      return user;
+      return null;
     });
-
     return promise;
   }
 
@@ -65,34 +45,13 @@ class User extends Model {
       user = new User(result(user, 'toJSON', user));
     }
 
-    const promise = User.getActive().then(activeUser => {
-      if (activeUser) {
-        const request = new Request({
-          method: HttpMethod.DELETE,
-          path: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
-          client: client,
-          dataPolicy: DataPolicy.LocalOnly
-        });
-        return request.execute();
+    const promise = UserUtils.setActive(user.toJSON(), client).then(data => {
+      if (data) {
+        return new User(data);
       }
-    }).then(() => {
-      if (user) {
-        const request = new Request({
-          method: HttpMethod.POST,
-          path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
-          client: client,
-          dataPolicy: DataPolicy.LocalOnly,
-          data: user.toJSON()
-        });
-        return request.execute();
-      }
-    }).then(user => {
-      if (user) {
-        User[activeUserSymbol] = user;
-        return user;
-      }
-    });
 
+      return null;
+    });
     return promise;
   }
 

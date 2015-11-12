@@ -16,6 +16,7 @@ class Http extends Middleware {
     return super.handle(request).then(() => {
       let adapter = http;
       const protocol = url.parse(request.url).protocol;
+      const hostname = url.parse(request.url).hostname;
       let port = url.parse(request.url).port || 80;
 
       if (protocol === 'https:') {
@@ -41,13 +42,13 @@ class Http extends Middleware {
 
         const httpRequest = adapter.request({
           method: request.method,
-          hostname: url.parse(request.url).hostname,
+          hostname: hostname,
+          port: port,
           headers: request.headers,
           path: url.format({
             pathname: request.path,
             query: merge({}, request.query, request.flags),
-          }),
-          port: port
+          })
         });
 
         httpRequest.on('response', (res) => {
