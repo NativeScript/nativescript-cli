@@ -16,7 +16,7 @@ class Cache extends Middleware {
       const appId = matches.appId;
       const collection = matches.collection;
       const id = matches.id;
-      const store = new Store(appId, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.Memory]);
+      const store = new Store(appId, [StoreAdapter.IndexedDB, StoreAdapter.LocalStorage, StoreAdapter.Memory]);
       let promise;
 
       if (method === HttpMethod.GET) {

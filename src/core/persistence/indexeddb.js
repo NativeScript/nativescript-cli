@@ -6,9 +6,10 @@ const isFunction = require('lodash/lang/isFunction');
 const tableName = process.env.KINVEY_DATABASE_TABLE_NAME || 'data';
 let pendingTransactions = [];
 let inTransaction = false;
+let indexedDB = undefined;
 
-if (window) {
-  window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+if (typeof window !== 'undefined') {
+  indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
   window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' };
   window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
 }
@@ -50,9 +51,9 @@ class IndexedDB {
     if (this.db) {
       const version = this.db.version + 1;
       this.db.close();
-      request = window.indexedDB.open(dbName, version);
+      request = indexedDB.open(dbName, version);
     } else {
-      request = window.indexedDB.open(dbName);
+      request = indexedDB.open(dbName);
     }
 
     request.onupgradeneeded = (e) => {
@@ -228,7 +229,7 @@ class IndexedDB {
   }
 
   static isSupported() {
-    return window.indexedDB ? true : false;
+    return indexedDB ? true : false;
   }
 }
 

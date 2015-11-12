@@ -1,3 +1,9 @@
+let localStorage = undefined;
+
+if (typeof window !== 'undefined') {
+  localStorage = window.localStorage;
+}
+
 class LocalStorage {
   loadDatabase(dbName, callback) {
     callback(localStorage.getItem(dbName));
@@ -11,8 +17,8 @@ class LocalStorage {
   static isSupported() {
     var mod = 'kinvey';
     try {
-      window.localStorage.setItem(mod, mod);
-      window.localStorage.removeItem(mod);
+      localStorage.setItem(mod, mod);
+      localStorage.removeItem(mod);
       return true;
     } catch (e) {
       return false;

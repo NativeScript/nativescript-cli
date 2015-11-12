@@ -5,6 +5,7 @@ const Query = require('./query');
 const Aggregation = require('./aggregation');
 const NotFoundError = require('./errors').NotFoundError;
 const IndexedDB = require('./persistence/indexeddb');
+const LocalStorage = require('./persistence/localstorage');
 const Memory = require('./persistence/memory');
 const platform = require('../utils/platform');
 const Loki = require('lokijs');
@@ -16,27 +17,19 @@ const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
 const isFunction = require('lodash/lang/isFunction');
 const defaultDatabaseName = 'kinvey';
+const dbLoaded = {};
 
 const indexedDB = new Loki(defaultDatabaseName, {
   adapter: new IndexedDB()
 });
 
+const localStorage = new Loki(defaultDatabaseName, {
+  adapter: new LocalStorage()
+});
+
 const memory = new Loki(defaultDatabaseName, {
   adapter: new Memory()
 });
-
-// class LocalStorageAdapter {
-//   valid() {
-//     const kinvey = 'kinvey';
-//     try {
-//       localStorage.setItem(kinvey, kinvey);
-//       localStorage.removeItem(kinvey);
-//       return true;
-//     } catch (e) {
-//       return false;
-//     }
-//   }
-// }
 
 class Store {
   constructor(name = 'data', adapters = [StoreAdapter.Memory]) {
@@ -56,6 +49,13 @@ class Store {
         }
 
         break;
+      case StoreAdapter.LocalStorage:
+        if (LocalStorage.isSupported()) {
+          this.db = localStorage;
+          return false;
+        }
+
+        break;
       case StoreAdapter.Memory:
         if (Memory.isSupported()) {
           this.db = memory;
@@ -69,7 +69,7 @@ class Store {
     });
 
     if (!this.db) {
-      log.warn('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
+      log.error('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
       this.db = memory;
     }
   }
@@ -95,7 +95,7 @@ class Store {
   }
 
   isDatabaseLoaded() {
-    if (this.dbLoaded) {
+    if (dbLoaded[this.dbName]) {
       return true;
     }
 
@@ -108,15 +108,15 @@ class Store {
         this.db.loadDatabase({
           dbname: this.dbName
         }, () => {
-          this.dbLoaded = true;
-          resolve(this.dbLoaded);
+          dbLoaded[this.dbName] = true;
+          resolve(this.isDatabaseLoaded());
         });
       });
 
       return promise;
     }
 
-    return Promise.resolve(this.dbLoaded);
+    return Promise.resolve(this.isDatabaseLoaded());
   }
 
   saveDatabase() {
@@ -227,11 +227,23 @@ class Store {
       id = String(id);
     }
 
-    const query = new Query();
-    query.contains('_id', [id]);
-    const promise = this.find(name, query).then(docs => {
+    //
+    // const query = new Query();
+    // query.contains('_id', [id]);
+    // const promise = this.find(name, query).then(docs => {
+    //   return docs.length === 1 ? docs[0] : null;
+    // });
+    // return promise;
+
+    const promise = this.loadDatabase().then(() => {
+      const collection = this.addCollection(name);
+      const query = new Query();
+      query.contains('_id', [id]);
+
+      let docs = collection.find(query.toJSON().filter);
       return docs.length === 1 ? docs[0] : null;
     });
+
     return promise;
   }
 
