@@ -85,3 +85,8 @@ $injector.require("androidToolsInfo", "./android-tools-info");
 $injector.require("iosUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
 $injector.require("androidUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
 $injector.require("sysInfo", "./sys-info");
+
+$injector.require("iOSNotificationService", "./services/ios-notification-service");
+$injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
+$injector.require("iOSNotification", "./device-sockets/ios/notification");
+$injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");

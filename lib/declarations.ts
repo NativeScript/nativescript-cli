@@ -58,9 +58,8 @@ interface IUsbLiveSyncService {
 	liveSync(platform: string): IFuture<void>;
 }
 
-interface IPlatformSpecificUsbLiveSyncService {
-	restartApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths?: Mobile.ILocalToDevicePathData[]): IFuture<void>;
-	beforeLiveSyncAction?(deviceAppData: Mobile.IDeviceAppData): IFuture<void>;
+interface IiOSUsbLiveSyncService extends IPlatformSpecificUsbLiveSyncService {
+	sendPageReloadMessageToSimulator(): IFuture<void>;
 }
 
 interface IOptions extends ICommonOptions {
@@ -167,4 +166,27 @@ interface IAndroidToolsInfoData {
 	 * In case it is not specified, compileSdkVersion will be used for targetSdkVersion.
 	 */
 	targetSdkVersion: number;
+}
+
+interface ISocketProxyFactory {
+	createSocketProxy(factory: () => any): IFuture<any>;
+}
+
+interface IiOSNotification {
+	waitForDebug: string;
+	attachRequest: string;
+	appLaunching: string;
+	readyForAttach: string;
+	attachAvailabilityQuery: string;
+	alreadyConnected: string;
+	attachAvailable: string;
+}
+
+interface IiOSNotificationService {
+	awaitNotification(npc: Mobile.INotificationProxyClient, notification: string, timeout: number): IFuture<string>;
+}
+
+interface IiOSSocketRequestExecutor {
+	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number): IFuture<void>;
+	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): IFuture<void>;
 }

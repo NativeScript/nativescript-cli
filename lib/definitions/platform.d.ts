@@ -18,6 +18,7 @@ interface IPlatformService {
 	getLatestApplicationPackageForDevice(platformData: IPlatformData): IFuture<IApplicationPackage>;
 	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IFuture<IApplicationPackage>;
 	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void>;
+	ensurePlatformInstalled(platform: string): IFuture<void>;
 }
 
 interface IPlatformData {
