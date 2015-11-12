@@ -139,7 +139,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 								return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
 							});
 						}
-					}).future<void>()()
+					}).future<void>()();
 				});
 			};
 
