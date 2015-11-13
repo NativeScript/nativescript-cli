@@ -15,7 +15,7 @@ class LocalStorage {
   }
 
   static isSupported() {
-    var mod = 'kinvey';
+    const mod = 'kinvey';
     try {
       localStorage.setItem(mod, mod);
       localStorage.removeItem(mod);

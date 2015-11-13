@@ -1,5 +1,5 @@
 const Middleware = require('./middleware');
-const HttpMethod = require('../../core/enums').HttpMethod;
+const HttpMethod = require('../core/enums').HttpMethod;
 const Promise = require('bluebird');
 const http = require('http');
 const https = require('https');

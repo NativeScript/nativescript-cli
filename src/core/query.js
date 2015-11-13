@@ -346,7 +346,7 @@ class PrivateQuery {
 
     if (this._parent) {
       this.parent.limit(limit);
-    }else {
+    } else {
       this._limit = limit;
     }
 

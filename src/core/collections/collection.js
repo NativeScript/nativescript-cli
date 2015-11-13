@@ -2,6 +2,8 @@ const Aggregation = require('../aggregation');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
+const NotFoundError = require('../errors').NotFoundError;
+const KinveyError = require('../errors').KinveyError;
 const Client = require('../client');
 const Query = require('../query');
 const Auth = require('../auth');
@@ -112,13 +114,17 @@ class Collection {
       let data = response.data;
       const models = [];
 
-      if (!isArray(data)) {
-        data = [data];
-      }
+      if (data) {
+        if (!isArray(data)) {
+          data = [data];
+        }
 
-      forEach(data, obj => {
-        models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-      });
+        forEach(data, obj => {
+          if (obj) {
+            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+          }
+        });
+      }
 
       return models;
     });
@@ -174,13 +180,17 @@ class Collection {
       let data = response.data;
       const models = [];
 
-      if (!isArray(data)) {
-        data = [data];
-      }
+      if (data) {
+        if (!isArray(data)) {
+          data = [data];
+        }
 
-      forEach(data, obj => {
-        models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-      });
+        forEach(data, obj => {
+          if (obj) {
+            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+          }
+        });
+      }
 
       return models;
     });
@@ -277,7 +287,13 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      return new this.model(response.data, options); // eslint-disable-line new-cap
+      const data = response.data;
+
+      if (data) {
+        return new this.model(response.data, options); // eslint-disable-line new-cap
+      }
+
+      throw new NotFoundError();
     });
 
     promise.then(response => {
@@ -293,7 +309,7 @@ class Collection {
    * Saves a model to the collection. A promise will be returned that will be resolved with
    * saved model or rejected with an error.
    *
-   * @param   {Object}       model                                        Model
+   * @param   {Object|Array} models                                       Model(s)
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -312,14 +328,19 @@ class Collection {
     log.debug(`Saving the models to the ${this.name} collection.`, models);
     let singular = false;
 
+    if (!models) {
+      log.warn('There are no models to save.', models);
+      Promise.resolve(null);
+    }
+
     if (!isArray(models)) {
       models = [models];
       singular = true;
     }
 
     models = models.map(model => {
-      if (!model instanceof this.model) {
-        model = new this.model(result(model, 'toJSON', model), options);
+      if (model && !model instanceof this.model) {
+        model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
       }
 
       return model;
@@ -333,14 +354,27 @@ class Collection {
     options.method = HttpMethod.POST;
     options.path = this.getPath(options.client);
     options.data = models.map(model => {
-      return model.toJSON();
+      if (model) {
+        return model.toJSON();
+      }
     });
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      models = response.data.map(data => {
-        return new this.model(data, options); // eslint-disable-line new-cap
-      });
+      let data = response.data;
+      const models = [];
+
+      if (data) {
+        if (!isArray(data)) {
+          data = [data];
+        }
+
+        forEach(data, obj => {
+          if (obj) {
+            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+          }
+        });
+      }
 
       return singular && models.length === 1 ? models[0] : models;
     });
@@ -358,7 +392,7 @@ class Collection {
    * Updates a model in the collection. A promise will be returned that will be resolved with
    * the updated model or rejected with an error.
    *
-   * @param   {string}       model                                        Model
+   * @param   {Object}       model                                        Model
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -376,9 +410,18 @@ class Collection {
   update(model, options = {}) {
     log.debug(`Update the model to the ${this.name} collection.`, model);
 
+    if (!model) {
+      log.warn('No model was provided to be updated.', model);
+      Promise.resolve(null);
+    }
+
     if (isArray(model)) {
       log.warn(`Unable to update an array of models. Saving the models instead.`, model);
       return this.save(model, options);
+    }
+
+    if (!model instanceof this.model) {
+      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
     options = assign({
@@ -388,11 +431,17 @@ class Collection {
     }, options);
     options.method = HttpMethod.PUT;
     options.path = `${this.getPath(options.client)}/${model.id}`;
-    options.data = result(model, 'toJSON', model);
+    options.data = model.toJSON();
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      return new this.model(response.data, options); // eslint-disable-line new-cap
+      const data = response.data;
+
+      if (data) {
+        return new this.model(response.data, options); // eslint-disable-line new-cap
+      }
+
+      throw new KinveyError();
     });
 
     promise.then(response => {

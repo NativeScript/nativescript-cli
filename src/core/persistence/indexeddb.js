@@ -1,7 +1,5 @@
 const KinveyError = require('../errors').KinveyError;
-const platform = require('../../utils/platform');
 const forEach = require('lodash/collection/forEach');
-const isString = require('lodash/lang/isString');
 const isFunction = require('lodash/lang/isFunction');
 const tableName = process.env.KINVEY_DATABASE_TABLE_NAME || 'data';
 let pendingTransactions = [];
@@ -64,7 +62,7 @@ class IndexedDB {
       }
 
       if (!db.objectStoreNames.contains(tableName) && write) {
-        var objectStore = db.createObjectStore(tableName, { keyPath: 'id', autoIncrement: true });
+        const objectStore = db.createObjectStore(tableName, { keyPath: 'id', autoIncrement: true });
         objectStore.createIndex('app', 'app', { unique: false });
         objectStore.createIndex('key', 'key', { unique: false });
         objectStore.createIndex('appkey', 'appkey', { unique: true });
@@ -116,8 +114,6 @@ class IndexedDB {
         }
 
         callback(result.val);
-      } else {
-        console.log(result.val);
       }
     });
   }
@@ -150,8 +146,6 @@ class IndexedDB {
 
         if (isFunction(callback)) {
           callback(result);
-        } else {
-          console.log(result);
         }
       };
 
@@ -201,28 +195,22 @@ class IndexedDB {
 
         const requestPut = store.put(result);
 
-        requestPut.onsuccess = function(e) {
+        requestPut.onsuccess = function() {
           if (isFunction(callback)) {
             callback({ success: true });
           }
         };
 
-        requestPut.onerror = function(e) {
+        requestPut.onerror = function() {
           if (isFunction(callback)) {
             callback({ success: false });
-          } else {
-            console.error('IndexedDB.setAppKey (set) onerror');
-            console.error(requestPut.error);
           }
         };
       };
 
-      request.onerror = function(e) {
+      request.onerror = function() {
         if (isFunction(callback)) {
           callback({ success: false });
-        } else {
-          console.error('IndexedDB.setAppKey (set) onerror');
-          console.error(request.error);
         }
       };
     });

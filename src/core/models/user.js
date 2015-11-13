@@ -96,12 +96,6 @@ class User extends Model {
         throw new ActiveUserError('A user is already logged in.');
       }
 
-      options.method = HttpMethod.POST;
-      options.path = `/${usersNamespace}/${options.client.appId}/login`;
-      options.data = usernameOrData;
-      options.dataPolicy = DataPolicy.CloudOnly;
-      options.auth = Auth.app;
-
       if (!isObject(usernameOrData)) {
         usernameOrData = {
           username: usernameOrData,
@@ -116,7 +110,14 @@ class User extends Model {
         );
       }
 
-      const request = new Request(options);
+      const request = new Request({
+        method: HttpMethod.POST,
+        path: `/${usersNamespace}/${options.client.appId}/login`,
+        data: usernameOrData,
+        dataPolicy: DataPolicy.CloudOnly,
+        auth: Auth.app,
+        client: options.client
+      });
       return request.execute();
     }).then(response => {
       const user = new User(response.data);

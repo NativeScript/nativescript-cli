@@ -7,7 +7,6 @@ const NotFoundError = require('./errors').NotFoundError;
 const IndexedDB = require('./persistence/indexeddb');
 const LocalStorage = require('./persistence/localstorage');
 const Memory = require('./persistence/memory');
-const platform = require('../utils/platform');
 const Loki = require('lokijs');
 const log = require('loglevel');
 const result = require('lodash/object/result');
@@ -135,19 +134,23 @@ class Store {
     return this.db.getCollection(name);
   }
 
-  addCollection(name) {
-    const collection = this.getCollection(name);
+  getOrAddCollection(name) {
+    let collection = this.getCollection(name);
 
-    if (collection) {
-      return collection;
+    if (!collection) {
+      collection = this.db.addCollection(name, {
+        clone: true,
+        indices: ['_id']
+      });
+      collection.ensureUniqueIndex('_id');
     }
 
-    return this.db.addCollection(name, { indices: ['_id', '_kmd'] });
+    return collection;
   }
 
   find(name, query) {
     const promise = this.loadDatabase().then(() => {
-      const collection = this.addCollection(name);
+      const collection = this.getOrAddCollection(name);
 
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
@@ -227,20 +230,12 @@ class Store {
       id = String(id);
     }
 
-    //
-    // const query = new Query();
-    // query.contains('_id', [id]);
-    // const promise = this.find(name, query).then(docs => {
-    //   return docs.length === 1 ? docs[0] : null;
-    // });
-    // return promise;
-
     const promise = this.loadDatabase().then(() => {
-      const collection = this.addCollection(name);
+      const collection = this.getOrAddCollection(name);
       const query = new Query();
       query.contains('_id', [id]);
 
-      let docs = collection.find(query.toJSON().filter);
+      const docs = collection.find(query.toJSON().filter);
       return docs.length === 1 ? docs[0] : null;
     });
 
@@ -275,7 +270,7 @@ class Store {
         doc._id = this.generateObjectId();
       }
 
-      const collection = this.addCollection(name);
+      const collection = this.getOrAddCollection(name);
 
       if (doc.$loki) {
         return collection.update(doc);
@@ -321,7 +316,7 @@ class Store {
         throw new NotFoundError();
       }
 
-      const collection = this.addCollection(name);
+      const collection = this.getOrAddCollection(name);
       collection.remove(doc);
 
       return {
