@@ -7,6 +7,8 @@ import * as semver from "semver";
 import * as shelljs from "shelljs";
 import {wrapBroccoliPlugin} from './broccoli-plugin-wrapper-factory';
 import * as constants from "../../constants";
+import * as minimatch from "minimatch";
+import Future = require("fibers/future");
 
 /**
  * Intercepts each directory as it is copied to the destination tempdir,
@@ -79,6 +81,12 @@ export class DestCopy implements IBroccoliPlugin {
 
 		if (dependency.name === constants.TNS_CORE_MODULES_NAME) {
 			let tnsCoreModulesResourcePath = path.join(this.outputRoot, constants.TNS_CORE_MODULES_NAME);
+
+			// Remove .ts files
+			let allFiles = this.$fs.enumerateFilesInDirectorySync(tnsCoreModulesResourcePath);
+			let deleteFilesFutures = allFiles.filter(file => minimatch(file, "**/*.ts", {nocase: true})).map(file => this.$fs.deleteFile(file));
+			Future.wait(deleteFilesFutures);
+
 			shelljs.cp("-Rf", path.join(tnsCoreModulesResourcePath, "*"), this.outputRoot);
 			this.$fs.deleteDirectory(tnsCoreModulesResourcePath).wait();
 		}
