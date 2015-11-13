@@ -49,9 +49,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
 
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
+
 			if (platformLowerCase === this.$devicePlatformsConstants.Android.toLowerCase()) {
-				this.$projectDataService.initialize(this.$projectData.projectDir);
-				let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
 				if (semver.lt(frameworkVersion, "1.2.1")) {
 					let shouldUpdate = this.$prompter.confirm(
 						"You need Android Runtime 1.2.1 or later for LiveSync to work properly. Do you want to update your runtime now?"
@@ -139,6 +140,8 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 								return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
 							});
 						}
+
+						this.$logger.info(`Successfully synced application ${this.$projectData.projectId}.`);
 					}).future<void>()();
 				});
 			};
@@ -156,7 +159,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				beforeLiveSyncAction: beforeLiveSyncAction,
 				beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
 				iOSSimulatorRelativeToProjectBasePathAction: iOSSimulatorRelativeToProjectBasePathAction,
-				canExecuteFastLiveSync: (filePath: string) => _.contains(fastLivesyncFileExtensions, path.extname(filePath)),
+				canExecuteFastLiveSync: (filePath: string) => _.contains(fastLivesyncFileExtensions, path.extname(filePath)) && semver.gte(frameworkVersion, "1.5.0"),
 				fastLiveSync: fastLiveSync
 			};
 
