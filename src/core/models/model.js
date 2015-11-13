@@ -19,12 +19,24 @@ class Model {
     return this.get(idAttribute);
   }
 
+  get _id() {
+    return this.id;
+  }
+
   get acl() {
     return new Acl(this.get(aclAttribute));
   }
 
+  get _acl() {
+    return this.acl;
+  }
+
   get metadata() {
     return new Metadata(this.get(kmdAttribute));
+  }
+
+  get _kmd() {
+    return this.metadata;
   }
 
   get defaults() {

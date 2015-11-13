@@ -112,21 +112,26 @@ class Collection {
     const request = new Request(options);
     const promise = request.execute().then(response => {
       let data = response.data;
-      const models = [];
 
-      if (data) {
-        if (!isArray(data)) {
-          data = [data];
+      if (response.isSuccess()) {
+        const models = [];
+
+        if (data) {
+          if (!isArray(data)) {
+            data = [data];
+          }
+
+          forEach(data, obj => {
+            if (obj) {
+              models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+            }
+          });
         }
 
-        forEach(data, obj => {
-          if (obj) {
-            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-          }
-        });
+        return models;
       }
 
-      return models;
+      throw new KinveyError(data.description, data.debug);
     });
 
     promise.then(response => {
@@ -289,11 +294,13 @@ class Collection {
     const promise = request.execute().then(response => {
       const data = response.data;
 
-      if (data) {
-        return new this.model(response.data, options); // eslint-disable-line new-cap
+      if (response.isSuccess()) {
+        return new this.model(data, options); // eslint-disable-line new-cap
+      } else if (data.error === 'EntityNotFound') {
+        throw new NotFoundError(data.description, data.debug);
       }
 
-      throw new NotFoundError();
+      throw new KinveyError(data.description, data.debug);
     });
 
     promise.then(response => {
@@ -339,7 +346,7 @@ class Collection {
     }
 
     models = models.map(model => {
-      if (model && !model instanceof this.model) {
+      if (model && !(model instanceof this.model)) {
         model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
       }
 

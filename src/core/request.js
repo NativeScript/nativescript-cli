@@ -3,6 +3,7 @@ const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
 const HttpMethod = require('./enums').HttpMethod;
 const Rack = require('../rack/rack');
+const Response = require('./response');
 const ResponseType = require('./enums').ResponseType;
 const Query = require('./query');
 const url = require('url');
@@ -267,7 +268,7 @@ class Request {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
-    let promise;
+    let promise = Promise.resolve();
     this.executing = true;
 
     if (this.dataPolicy === DataPolicy.LocalOnly) {
@@ -346,6 +347,10 @@ class Request {
     }
 
     return promise.then(response => {
+      if (!response) {
+        response = new Response();
+      }
+
       this.response = response;
       return response;
     }).finally(() => {
@@ -361,25 +366,20 @@ class Request {
   executeCloud() {
     const auth = this.auth;
     const rack = Rack.networkRack;
-    let promise = Promise.resolve();
+    const promise = Promise.resolve();
 
     return promise.then(() => {
-      if (auth) {
-        promise = isFunction(auth) ? auth(this.client) : Promise.resolve(auth);
+      return isFunction(auth) ? auth(this.client) : auth;
+    }).then(authInfo => {
+      if (authInfo) {
+        // Format credentials
+        let credentials = authInfo.credentials;
+        if (authInfo.username) {
+          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+        }
 
-        // Add auth info to headers
-        return promise.then((authInfo) => {
-          if (authInfo !== null) {
-            // Format credentials
-            let credentials = authInfo.credentials;
-            if (authInfo.username) {
-              credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-            }
-
-            // Set the header
-            this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-          }
-        });
+        // Set the header
+        this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
       }
     }).then(() => {
       return rack.execute(this);

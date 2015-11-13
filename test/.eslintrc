@@ -18,6 +18,7 @@
     "sinon": true,
     "randomString": true,
     "stub": true,
-    "spy": true
+    "spy": true,
+    "loginUser": true
   }
 }

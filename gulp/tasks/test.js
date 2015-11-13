@@ -23,36 +23,36 @@ const test = module.exports.test = function(files) {
 
 // Lint and run our tests
 gulp.task('test', ['lint-src', 'lint-test'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', config.files.test]);
 });
 
 gulp.task('test-acl', ['lint-src', 'lint-test-acl'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/acl.spec.js']);
 });
 
-gulp.task('test-datastore', ['lint-src', 'lint-test-datastore'], function() {
-  require('babel/register');
-  return test(['test/setup/node.js', 'test/specs/datastore.spec.js']);
+gulp.task('test-collection', ['lint-src', 'lint-test-collection'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', 'test/specs/collection.spec.js']);
 });
 
 gulp.task('test-indexeddb', ['lint-src', 'lint-test-indexeddb'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/indexeddb.spec.js']);
 });
 
 gulp.task('test-query', ['lint-src', 'lint-test-query'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/query.spec.js']);
 });
 
 gulp.task('test-request', ['lint-src', 'lint-test-request'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/request.spec.js']);
 });
 
 gulp.task('test-user', ['lint-src', 'lint-test-user'], function() {
-  require('babel/register');
+  require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/user.spec.js']);
 });

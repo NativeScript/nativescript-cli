@@ -4,8 +4,9 @@ const Promise = require('bluebird');
 const http = require('http');
 const https = require('https');
 const url = require('url');
-const merge = require('lodash/object/merge');
+const result = require('lodash/object/result');
 const isString = require('lodash/lang/isString');
+const isEmpty = require('lodash/lang/isEmpty');
 
 class Http extends Middleware {
   constructor() {
@@ -18,6 +19,7 @@ class Http extends Middleware {
       const protocol = url.parse(request.url).protocol;
       const hostname = url.parse(request.url).hostname;
       let port = url.parse(request.url).port || 80;
+      const flags = request.flags || {};
 
       if (protocol === 'https:') {
         adapter = https;
@@ -40,6 +42,33 @@ class Http extends Middleware {
 
         request.headers['content-length'] = length;
 
+        if (request.query) {
+          const query = result(request.query, 'toJSON', request.query);
+          flags.query = query.filter;
+
+          if (!isEmpty(query.fields)) {
+            flags.fields = query.fields.join(',');
+          }
+
+          if (query.limit) {
+            flags.limit = query.limit;
+          }
+
+          if (query.skip > 0) {
+            flags.skip = query.skip;
+          }
+
+          if (!isEmpty(query.sort)) {
+            flags.sort = query.sort;
+          }
+        }
+
+        for (const key in flags) {
+          if (flags.hasOwnProperty(key)) {
+            flags[key] = isString(flags[key]) ? flags[key] : JSON.stringify(flags[key]);
+          }
+        }
+
         const httpRequest = adapter.request({
           method: request.method,
           hostname: hostname,
@@ -47,7 +76,7 @@ class Http extends Middleware {
           headers: request.headers,
           path: url.format({
             pathname: request.path,
-            query: merge({}, request.query, request.flags),
+            query: flags
           })
         });
 

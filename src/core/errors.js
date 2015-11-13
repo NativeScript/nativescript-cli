@@ -1,10 +1,17 @@
+const isFunction = require('lodash/lang/isFunction');
+
 class KinveyError extends Error {
   constructor(message = 'An error occurred.', debug = '') {
     super();
-    Error.captureStackTrace(this, this.constructor);
     this.name = this.constructor.name;
     this.message = message;
     this.debug = debug;
+
+    if (isFunction(Error.captureStackTrace)) {
+      Error.captureStackTrace(this, this.constructor.name);
+    } else {
+      this.stack = (new Error(message)).stack;
+    }
   }
 }
 
