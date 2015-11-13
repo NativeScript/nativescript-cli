@@ -185,6 +185,22 @@ export class PluginsService implements IPluginsService {
 		return this.executeForAllInstalledPlatforms(action);
 	}
 
+	public installDevDependencies(): IFuture<void> {
+		return (() => {
+			let installedDependencies = this.$fs.exists(this.nodeModulesPath).wait() ? this.$fs.readDirectory(this.nodeModulesPath).wait() : [];
+			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
+			let devDependencies = _.keys(packageJsonContent.devDependencies);
+			if(devDependencies.length && (this.$options.force || _.difference(devDependencies, installedDependencies).length)) {
+				let command = `npm install ${devDependencies.join(" ")}`;
+				if(this.$options.ignoreScripts) {
+					command += "--ignore-scripts";
+				}
+				this.$logger.trace(`Command for installing devDependencies is: '${command}'.`);
+				this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
+			}
+		}).future<void>()();
+	}
+
 	private get nodeModulesPath(): string {
 		return path.join(this.$projectData.projectDir, "node_modules");
 	}

@@ -154,11 +154,20 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	@helpers.hook('prepare')
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			this.validatePlatform(platform);
 
+			//Install dev-dependencies here, so before-prepare hooks will be executed correctly.
+			this.$pluginsService.installDevDependencies().wait();
+
+			this.preparePlatformCore(platform).wait();
+		}).future<void>()();
+	}
+
+	@helpers.hook('prepare')
+	private preparePlatformCore(platform: string): IFuture<void> {
+		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
 
