@@ -49,8 +49,7 @@ function createTestInjector() {
 		},
 		ensureAllDependenciesAreInstalled: () => {
 			return Future.fromResult();
-		},
-		installDevDependencies: () => Future.fromResult()
+		}
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
