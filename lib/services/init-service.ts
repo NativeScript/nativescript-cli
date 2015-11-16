@@ -16,7 +16,6 @@ export class InitService implements IInitService {
 	private _projectFilePath: string;
 
 	constructor(private $fs: IFileSystem,
-		private $errors: IErrors,
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $injector: IInjector,
