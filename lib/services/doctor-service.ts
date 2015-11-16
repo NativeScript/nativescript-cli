@@ -45,15 +45,22 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 
-			if(!sysInfo.cocoapodVer ) {
+			if(!sysInfo.cocoapodVer) {
 				this.$logger.warn("WARNING: CocoaPod is not installed or is not configured properly.");
 				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
 					+ "To be able to build such projects, verify that you have installed CocoaPod.");
 				result = true;
 			}
 
-			if(sysInfo.cocoapodVer && semver.lt(sysInfo.cocoapodVer, DoctorService.MIN_SUPPORTED_POD_VERSION)) {
-				this.$logger.warn(`WARNING: CocoaPods version is lower than ${DoctorService.MIN_SUPPORTED_POD_VERSION}`);
+			if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) === null) {
+				this.$logger.warn(`WARNING: CocoaPods version is not a valid semver version.`);
+				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
+					+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
+				result = true;
+			}
+
+			if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) && semver.lt(sysInfo.cocoapodVer, DoctorService.MIN_SUPPORTED_POD_VERSION)) {
+				this.$logger.warn(`WARNING: CocoaPods version is lower than ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
 				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
 					+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
 				result = true;
