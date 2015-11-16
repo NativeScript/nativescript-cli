@@ -53,6 +53,7 @@ interface IPluginVariablesService {
 	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
 	 */
 	getPluginVariablePropertyName(pluginData: IPluginData): string;
+
 }
 
 interface IPluginVariableData {

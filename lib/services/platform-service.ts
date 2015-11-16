@@ -154,11 +154,25 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	@helpers.hook('prepare')
 	public preparePlatform(platform: string): IFuture<void> {
 		return (() => {
 			this.validatePlatform(platform);
 
+			//We need dev-dependencies here, so before-prepare hooks will be executed correctly.
+			try {
+				this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+			} catch(err) {
+				this.$logger.trace(err);
+				this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
+			}
+
+			this.preparePlatformCore(platform).wait();
+		}).future<void>()();
+	}
+
+	@helpers.hook('prepare')
+	private preparePlatformCore(platform: string): IFuture<void> {
+		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
 
@@ -214,7 +228,6 @@ export class PlatformService implements IPlatformService {
 			// Process node_modules folder
 			let appDir = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			try {
-				this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 				let tnsModulesDestinationPath = path.join(appDir, PlatformService.TNS_MODULES_FOLDER_NAME);
 				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 			} catch(error) {
