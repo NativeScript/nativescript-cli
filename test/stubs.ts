@@ -184,7 +184,7 @@ export class ErrorsStub implements IErrors {
 	}
 
 	failWithoutHelp(message: string, ...args: any[]): void {
-		throw new Error();
+		throw new Error(message);
 	}
 
 	beginCommand(action:() => IFuture<boolean>, printHelpCommand: () => IFuture<boolean>): IFuture<boolean> {
@@ -384,6 +384,10 @@ export class ProjectHelperStub implements IProjectHelper {
 
 export class ProjectTemplatesService implements IProjectTemplatesService {
 	get defaultTemplatePath(): IFuture<string> {
+		return Future.fromResult("");
+	}
+
+	prepareTemplate(templateName: string): IFuture<string> {
 		return Future.fromResult("");
 	}
 }

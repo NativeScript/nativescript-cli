@@ -4,7 +4,7 @@
 import * as constants from "../constants";
 import * as osenv from "osenv";
 import * as path from "path";
-import * as shell from "shelljs";
+import * as shelljs from "shelljs";
 
 export class ProjectService implements IProjectService {
 
@@ -18,7 +18,7 @@ export class ProjectService implements IProjectService {
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $options: IOptions) { }
 
-	public createProject(projectName: string): IFuture<void> {
+	public createProject(projectName: string, selectedTemplate?: string): IFuture<void> {
 		return(() => {
 			if (!projectName) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
@@ -51,7 +51,6 @@ export class ProjectService implements IProjectService {
 
 			let appDirectory = path.join(projectDir, constants.APP_FOLDER_NAME);
 			let appPath: string = null;
-
 			if (customAppPath) {
 				this.$logger.trace("Using custom app from %s", customAppPath);
 
@@ -68,23 +67,69 @@ export class ProjectService implements IProjectService {
 				this.$logger.trace("Copying custom app into %s", appDirectory);
 				appPath = customAppPath;
 			} else {
-				// No custom app - use nativescript hello world application
-				this.$logger.trace("Using NativeScript hello world application");
-				let defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
-				this.$logger.trace("Copying NativeScript hello world application into %s", appDirectory);
+				let defaultTemplatePath = this.$projectTemplatesService.prepareTemplate(selectedTemplate).wait();
+				this.$logger.trace(`Copying application from '${defaultTemplatePath}' into '${appDirectory}'.`);
 				appPath = defaultTemplatePath;
 			}
 
 			try {
 				this.createProjectCore(projectDir, appPath, projectId).wait();
+				//update dependencies and devDependencies of newly created project with data from template
+				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait();
+				this.updateAppResourcesDir(appDirectory).wait();
+				// Delete app/package.json file, its just causing confusion.
+				// Also its dependencies and devDependencies are already merged in project's package.json.
+				this.$fs.deleteFile(path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME)).wait();
 			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
 			}
-
 			this.$logger.out("Project %s was successfully created", projectName);
 
 		}).future<void>()();
+	}
+
+	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): IFuture<void> {
+		return (() => {
+			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath).wait();
+			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
+			let templatePackageJsonData = this.$fs.readJson(path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME)).wait();
+			if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
+				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
+			}
+
+			if(projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
+				projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
+			}
+
+			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
+			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData).wait();
+		}).future<void>()();
+	}
+
+	private updateAppResourcesDir(appDirectory: string): IFuture<void> {
+		return (() => {
+			let defaultAppResourcesDir = path.join(this.$projectTemplatesService.defaultTemplatePath.wait(), constants.APP_RESOURCES_FOLDER_NAME);
+			let targetAppResourcesDir = path.join(appDirectory, constants.APP_RESOURCES_FOLDER_NAME);
+			this.$logger.trace(`Updating AppResources values from ${defaultAppResourcesDir} to ${targetAppResourcesDir}`);
+			shelljs.cp("-R", path.join(defaultAppResourcesDir, "*"), targetAppResourcesDir);
+		}).future<void>()();
+	}
+
+	private mergeDependencies(projectDependencies: IStringDictionary, templateDependencies: IStringDictionary): IStringDictionary {
+		// Cast to any when logging as logger thinks it can print only string.
+		// Cannot use toString() because we want to print the whole objects, not [Object object]
+		this.$logger.trace("Merging dependencies, projectDependencies are: ", <any>projectDependencies, " templateDependencies are: ", <any>templateDependencies);
+		projectDependencies = projectDependencies || {};
+		_.extend(projectDependencies, templateDependencies || {});
+		let sortedDeps: IStringDictionary = {};
+		let dependenciesNames = _.keys(projectDependencies).sort();
+		_.each(dependenciesNames, (key: string) => {
+			sortedDeps[key] = projectDependencies[key];
+		});
+		this.$logger.trace("Sorted merged dependencies are: ", <any>sortedDeps);
+		return sortedDeps;
 	}
 
 	private createProjectCore(projectDir: string, appSourcePath: string, projectId: string): IFuture<void> {
@@ -97,7 +142,7 @@ export class ProjectService implements IProjectService {
 			if(this.$options.symlink) {
 				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
 			} else {
-				shell.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
+				shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
 			}
 
 			this.createBasicProjectStructure(projectDir,  projectId).wait();

@@ -1,6 +1,6 @@
 
 interface IProjectService {
-	createProject(projectName: string): IFuture<void>;
+	createProject(projectName: string, selectedTemplate?: string): IFuture<void>;
 }
 
 interface IProjectData {
@@ -22,8 +22,24 @@ interface IProjectDataService {
 	removeDependency(dependencyName: string): IFuture<void>;
 }
 
+/**
+ * Describes working with templates.
+ */
 interface IProjectTemplatesService {
+	/**
+	 * Defines the path where unpacked default template can be found.
+	 */
 	defaultTemplatePath: IFuture<string>;
+
+	/**
+	 * Prepares template for project creation.
+	 * In case templateName is not provided, use defaultTemplatePath.
+	 * In case templateName is a special word, validated from us (for ex. typescript), resolve the real template name and add it to npm cache.
+	 * In any other cases try to `npm install` the specified templateName to temp directory.
+	 * @param {string} templateName The name of the template.
+	 * @return {string} Path to the directory where extracted template can be found.
+	 */
+	prepareTemplate(templateName: string): IFuture<string>;
 }
 
 interface IPlatformProjectServiceBase {
