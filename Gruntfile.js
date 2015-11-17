@@ -39,17 +39,17 @@ module.exports = function(grunt) {
 			},
 
 			devlib: {
-				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts"],
+				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/common/test/.d.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/common/test/.d.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
 				reference: "lib/.d.ts",
 				options: {
 					sourceMap: false,
@@ -61,7 +61,7 @@ module.exports = function(grunt) {
 		tslint: {
             build: {
                 files: {
-                    src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!**/*.d.ts"]
+                    src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!**/*.d.ts"]
                 },
                 options: {
                     configuration: grunt.file.readJSON("./tslint.json")
@@ -71,7 +71,7 @@ module.exports = function(grunt) {
 
 		watch: {
 			devall: {
-				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts"],
+				files: ["lib/**/*.ts", 'test/**/*.ts', "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
 				tasks: [
 					'ts:devall',
 					'shell:npm_test'

@@ -24,6 +24,7 @@ import {ResourceLoader} from "../lib/common/resource-loader";
 import {EOL} from "os";
 import {PluginsService} from "../lib/services/plugins-service";
 import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
+import {MessagesService} from "../lib/common/services/messages-service";
 import {Builder} from "../lib/tools/broccoli/builder";
 import {AndroidProjectService} from "../lib/services/android-project-service";
 import {AndroidToolsInfo} from "../lib/android-tools-info";
@@ -37,7 +38,7 @@ let isErrorThrown = false;
 
 function createTestInjector() {
 	let testInjector = new Yok();
-
+	testInjector.register("messagesService", MessagesService);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("fs", FileSystem);
 	testInjector.register("projectData", ProjectData);
