@@ -335,6 +335,11 @@ export class PlatformService implements IPlatformService {
 			this.ensurePlatformInstalled(platform).wait();
 			let platformData = this.$platformsData.getPlatformData(platform);
 
+			this.$devicesService.initialize({platform: platform, deviceId: this.$options.device}).wait();
+			if (this.$devicesService.deviceCount < 1) {
+				this.$errors.failWithoutHelp("Cannot find connected devices. Reconnect any connected devices, verify that your system recognizes them, and run this command again.");
+			}
+
 			let cachedDeviceOption = this.$options.forDevice;
 			this.$options.forDevice = true;
 			this.buildPlatform(platform, buildConfig).wait();
@@ -344,7 +349,6 @@ export class PlatformService implements IPlatformService {
 			let packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 			this.$logger.out("Using ", packageFile);
 
-			this.$devicesService.initialize({platform: platform, deviceId: this.$options.device}).wait();
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
 					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
