@@ -162,11 +162,7 @@ export class PluginsService implements IPluginsService {
 			let packageJsonContent = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
 			let allDependencies = _.keys(packageJsonContent.dependencies).concat(_.keys(packageJsonContent.devDependencies));
 			if(this.$options.force || _.difference(allDependencies, installedDependencies).length) {
-				let command = "npm install ";
-				if(this.$options.ignoreScripts) {
-					command += "--ignore-scripts";
-				}
-				this.$childProcess.exec(command, { cwd: this.$projectData.projectDir }).wait();
+				this.$npm.install(this.$projectData.projectDir, this.$projectData.projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 			}
 		}).future<void>()();
 	}

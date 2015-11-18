@@ -217,6 +217,14 @@ export class IOSUsbLiveSyncService implements IiOSUsbLiveSyncService {
 		return this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest);
 	}
 
+	public removeFile(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
+		return (() => {
+			_.each(localToDevicePaths, localToDevicePathData => {
+				this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier);
+			});
+		}).future<void>()();
+	}
+
 	private sendPageReloadMessage(socket: net.Socket): void {
 		try {
 			this.sendPageReloadMessageCore(socket);
@@ -265,7 +273,7 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 
 	public beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
 		return (() => {
-			let deviceRootPath = `/data/local/tmp/${deviceAppData.appIdentifier}`;
+			let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier);
 			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
@@ -277,6 +285,21 @@ export class AndroidUsbLiveSyncService extends androidLiveSyncServiceLib.Android
 			this.device.adb.executeCommand(["forward", `tcp:${AndroidUsbLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]).wait();
 			this.sendPageReloadMessage().wait();
 		}).future<void>()();
+	}
+
+	public removeFile(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
+		return (() => {
+			let deviceRootPath = this.getDeviceRootPath(appIdentifier);
+			_.each(localToDevicePaths, localToDevicePathData => {
+				let relativeUnixPath = _.trimLeft(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
+				let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
+				this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&&", "touch", deviceFilePath]).wait();
+			});
+		}).future<void>()();
+	}
+
+	private getDeviceRootPath(appIdentifier: string): string {
+		return `/data/local/tmp/${appIdentifier}`;
 	}
 
 	private sendPageReloadMessage(): IFuture<void> {
