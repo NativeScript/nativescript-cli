@@ -32,7 +32,8 @@ class TestExecutionService implements ITestExecutionService {
 		private $config: IConfiguration,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $pluginsService: IPluginsService) {
 	}
 
 	public startTestRunner(platform: string) : IFuture<void> {
@@ -133,6 +134,7 @@ class TestExecutionService implements ITestExecutionService {
 	public startKarmaServer(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			let pathToKarma = path.join(this.$projectData.projectDir, 'node_modules/karma');
 			let KarmaServer = require(path.join(pathToKarma, 'lib/server'));
 			if (platform === 'ios' && this.$options.emulator) {
