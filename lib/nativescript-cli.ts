@@ -7,6 +7,8 @@ require("./common/verify-node-version").verifyNodeVersion(require("../package.js
 require("./bootstrap");
 import * as fiber from "fibers";
 import Future = require("fibers/future");
+import * as shelljs from "shelljs";
+shelljs.config.silent = true;
 import {installUncaughtExceptionListener} from "./common/errors";
 installUncaughtExceptionListener(process.exit);
 
