@@ -598,16 +598,22 @@ class Collection {
     }, options);
     options.dataPolicy = DataPolicy.LocalOnly;
 
+    // {
+    //   _id = 'books',
+    //   documents = {
+    //     '1231uhds089kjhsd0923': {
+    //       operation: 'POST',
+    //       requestProperties: ...
+    //     }
+    //   },
+    //   size: 1
+    // }
+
     // Get the documents to sync
     const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.get(this.name, options).then(collection => {
-      const documents = collection.documents;
-      const identifiers = Object.keys(collection.documents);
-      const result = {
-        collection: collection,
-        success: [],
-        error: []
-      };
+    const promise = syncCollection.get(this.name, options).then(syncModel => {
+      const documents = syncModel.get('documents');
+      const identifiers = Object.keys(documents);
 
       // Get the document. If it is found, push it onto the saved array and if
       // it is not (aka a NotFoundError is thrown) then push the id onto the destroyed
@@ -628,45 +634,113 @@ class Collection {
       });
 
       // Save and destroy everything that needs to be synced
-      Promise.all(promises).then(() => {
+      return Promise.all(promises).then(() => {
+        // Save the models that need to be saved
         const savePromises = saved.map(model => {
           const metadata = documents[model.id];
           const requestOptions = clone(assign(metadata, options), true);
           requestOptions.dataPolicy = DataPolicy.CloudFirst;
 
+          // If the model is new then just save it
           if (model.isNew()) {
-            return this.save(model, requestOptions);
+            const originalId = model.id;
+            model.unset('_id');
+            return this.save(model, requestOptions).then(model => {
+              // Remove the locally created model
+              requestOptions.dataPolicy = DataPolicy.LocalOnly;
+              return this.destroy(originalId, requestOptions).then(() => {
+                return {
+                  success: [{
+                    _id: model.id,
+                    document: model.toJSON()
+                  }],
+                  error: []
+                };
+              });
+            }).catch(err => {
+              model.set('_id', originalId);
+              return {
+                success: [],
+                error: [{
+                  _id: model.id,
+                  error: err
+                }]
+              };
+            });
           }
 
-          return this.update(model, requestOptions);
+          // Else just update the model
+          return this.update(model, requestOptions).then(model => {
+            return {
+              success: [{
+                _id: model.id,
+                document: model.toJSON()
+              }],
+              error: []
+            };
+          }).catch(err => {
+            return {
+              success: [],
+              error: [{
+                _id: model.id,
+                error: err
+              }]
+            };
+          });
         });
 
+        // Destroy the models that need to be destroyed
         const destroyPromises = destroyed.map(id => {
           const metadata = documents[id];
           const requestOptions = clone(assign(metadata, options), true);
           requestOptions.dataPolicy = DataPolicy.CloudFirst;
-          return this.destroy(id, requestOptions);
+          return this.destroy(id, requestOptions).then(response => {
+            return {
+              success: [{
+                _id: id,
+                document: response.documents[0]
+              }],
+              error: []
+            };
+          }).catch(err => {
+            return {
+              success: [],
+              error: [{
+                _id: id,
+                error: err
+              }]
+            };
+          });
         });
 
         return Promise.all([Promise.all(savePromises), Promise.all(destroyPromises)]);
       }).then(responses => {
-        console.log(responses);
+        const saveResponses = responses[0];
+        const destroyResponses = responses[1];
+        const result = {
+          collection: syncModel.toJSON(),
+          success: [],
+          error: []
+        };
+
+        forEach(saveResponse, saveResponse => {
+          if (saveResponse.err) {
+            result.error.push(saveResponse);
+          } else {
+            result.success.push(saveResponse);
+          }
+        });
+
+        forEach(destroyResponses, destroyResponse => {
+          if (destroyResponse.err) {
+            result.error.push(destroyResponse);
+          } else {
+            result.success.push(destroyResponse);
+          }
+        });
+
+        return result;
       });
-
-      // {
-      //   _id = 'books',
-      //   documents = {
-      //     '1231uhds089kjhsd0923': {
-      //       operation: 'POST',
-      //       requestProperties: ...
-      //     }
-      //   },
-      //   size: 1
-      // }
-
-      // send all created, updated, and deleted documents
-
-      return result;
     });
 
     return promise;
