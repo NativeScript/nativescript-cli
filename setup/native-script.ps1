@@ -1,5 +1,9 @@
 
 # A Boxstarter script to set up Windows machine for NativeScript development
+# To run it against RELEASE branch (recommended) use
+# http://boxstarter.org/package/nr/url?https://raw.githubusercontent.com/NativeScript/nativescript-cli/release/setup/native-script.ps1
+# To run it against MASTER branch (usually only developers of NativeScript need to) use
+# http://boxstarter.org/package/nr/url?https://raw.githubusercontent.com/NativeScript/nativescript-cli/master/setup/native-script.ps1
 
 # install dependenciess with Chocolately
 
@@ -16,7 +20,7 @@ write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Android SD
 cinst android-sdk
 
 # setup android sdk
-echo yes | cmd /c $env:localappdata\Android\android-sdk\tools\android update sdk --filter "tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support" --all --no-ui
+echo yes | cmd /c $env:localappdata\Android\android-sdk\tools\android update sdk --filter "tools,platform-tools,android-23,build-tools-23.0.2,extra-android-m2repository" --all --no-ui
 
 # setup environment
 

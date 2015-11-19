@@ -1,5 +1,11 @@
 # coding: utf-8
 
+# A script to setup developer's workstation for developing with NativeScript
+# To run it against RELEASE branch (recommended) use
+# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/release/setup/native-script.rb)"
+# To run it against MASTER branch (usually only developers of NativeScript need to) use
+# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/master/setup/native-script.rb)"
+
 # Only the user can manually download and install Xcode from App Store
 puts "NativeScript requires Xcode."
 puts "If you do not have Xcode installed, download and install it from App Store and run it once to complete its setup."
@@ -69,7 +75,7 @@ class NativeScript < Formula
     system "/usr/local/bin/npm install -g nativescript"
 
     ohai "Configuring your system for Android development... This might take some time, please, be patient."
-    system "echo yes | android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui"
+    system "echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,extra-android-m2repository --all --no-ui"
 
     ohai "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile. Restart the terminal to use them."
   end
