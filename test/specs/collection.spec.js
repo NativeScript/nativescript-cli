@@ -11,12 +11,19 @@ describe('Collection', function() {
   before(function() {
     this.collection = new Collection('books');
     const book = { title: 'The Definitive Guide to JavaScript', author: 'David Flanagan' };
-    const promise = this.collection.save(book, {
+    return this.collection.save(book, {
       dataPolicy: DataPolicy.LocalOnly
-    });
-
-    return promise.then(book => {
+    }).then(book => {
       this.book = book;
+    });
+  });
+
+  after(function() {
+    return this.collection.clean(null, {
+      dataPolicy: DataPolicy.LocalOnly
+    }).then(() => {
+      delete this.collection;
+      delete this.book;
     });
   });
 
@@ -26,20 +33,22 @@ describe('Collection', function() {
     });
 
     describe('DataPolicy.NetworkOnly', function() {
-      it('should return all models in the collection when no query is provided', function() {
+      it('should return all models from the network store', function() {
+        const reply = [{
+          _id: '56462e112bd5548e4207a569',
+          _kmd: {
+            lmt: '2015-11-13T18:38:09.085Z',
+            ect: '2015-11-13T18:38:09.085Z'
+          },
+          _acl: {
+            creator: 'kid_byGoHmnX2'
+          },
+          title: 'Harry Potter'
+        }];
+
         nock('https://baas.kinvey.com')
           .get('/appdata/kid_byGoHmnX2/books')
-          .reply(200, [{
-            _id: '56462e112bd5548e4207a569',
-            _kmd: {
-              lmt: '2015-11-13T18:38:09.085Z',
-              ect: '2015-11-13T18:38:09.085Z'
-            },
-            _acl: {
-              creator: 'kid_byGoHmnX2'
-            },
-            title: 'Harry Potter'
-          }], {
+          .reply(200, reply, {
             'content-type': 'application/json'
           });
 
@@ -48,67 +57,87 @@ describe('Collection', function() {
         });
 
         return promise.then(books => {
-          expect(books.length).to.equal(1);
+          expect(books.length).to.equal(reply.length);
+          return books;
+        });
+      });
+    });
+
+    describe('DataPolicy.NetworkFirst', function() {
+      it('should return all models from the network store', function() {
+        const reply = [{
+          _id: '56462e112bd5548e4207a569',
+          _kmd: {
+            lmt: '2015-11-13T18:38:09.085Z',
+            ect: '2015-11-13T18:38:09.085Z'
+          },
+          _acl: {
+            creator: 'kid_byGoHmnX2'
+          },
+          title: 'Harry Potter'
+        }];
+
+        nock('https://baas.kinvey.com')
+          .get('/appdata/kid_byGoHmnX2/books')
+          .reply(200, reply, {
+            'content-type': 'application/json'
+          });
+
+        const promise = this.collection.find(null, {
+          dataPolicy: DataPolicy.CloudFirst
+        });
+
+        return promise.then(books => {
+          expect(books.length).to.equal(reply.length);
           return books;
         });
       });
 
-      it('should return all models in the collection matching the provided query', function() {
-        const query = new Query();
-        query.equalTo('title', 'Harry Potter');
+      it('should return all models from the local store when the network responds with an error', function() {
+        const reply = {
+          error: 'ServerError',
+          description: 'A server error has occurred.',
+          debug: ''
+        };
 
         nock('https://baas.kinvey.com')
           .get('/appdata/kid_byGoHmnX2/books')
-          .query({
-            query: JSON.stringify(query.toJSON().filter)
-          })
-          .reply(200, [{
-            _id: '56462e112bd5548e4207a569',
-            _kmd: {
-              lmt: '2015-11-13T18:38:09.085Z',
-              ect: '2015-11-13T18:38:09.085Z'
-            },
-            _acl: {
-              creator: 'kid_byGoHmnX2'
-            },
-            title: 'Harry Potter'
-          }], {
+          .reply(500, reply, {
             'content-type': 'application/json'
           });
 
-        const promise = this.collection.find(query, {
-          dataPolicy: DataPolicy.CloudOnly
+        const promise = this.collection.find(null, {
+          dataPolicy: DataPolicy.CloudFirst
         });
 
         return promise.then(books => {
-          expect(books.length).to.equal(1);
+          expect(books.length).to.equal(2);
           return books;
         });
       });
     });
 
     describe('DataPolicy.LocalOnly', function() {
-      it('should return all models in the collection when no query is provided', function() {
+      it('should return all models from the local store', function() {
         const promise = this.collection.find(null, {
           dataPolicy: DataPolicy.LocalOnly
         });
 
         return promise.then(books => {
-          expect(books.length).to.equal(1);
+          expect(books.length).to.equal(2);
           return books;
         });
       });
+    });
 
-      it('should return all models in the collection matching the provided query', function() {
-        const query = new Query();
-        query.equalTo('title', 'foo');
-
-        const promise = this.collection.find(query, {
-          dataPolicy: DataPolicy.LocalOnly
+    describe('DataPolicy.LocalFirst', function() {
+      it('should return all models from the local store', function() {
+        const promise = this.collection.find(null, {
+          dataPolicy: DataPolicy.LocalFirst
         });
 
         return promise.then(books => {
-          expect(books.length).to.equal(0);
+          expect(books.length).to.equal(2);
           return books;
         });
       });
@@ -120,46 +149,48 @@ describe('Collection', function() {
       expect(this.collection).itself.to.respondTo('get');
     });
 
-    describe('DataPolicy.CloundOnly', function() {
+    describe('DataPolicy.NetworkOnly', function() {
       it('should return the model for an existing id', function() {
-        const id = '56462e112bd5548e4207a569';
+        const reply = {
+          _id: '56462e112bd5548e4207a569',
+          _kmd: {
+            lmt: '2015-11-13T18:38:09.085Z',
+            ect: '2015-11-13T18:38:09.085Z'
+          },
+          _acl: {
+            creator: 'kid_byGoHmnX2'
+          },
+          title: 'Harry Potter'
+        };
 
         nock('https://baas.kinvey.com')
-          .get(`/appdata/kid_byGoHmnX2/books/${id}`)
-          .reply(200, {
-            _id: '56462e112bd5548e4207a569',
-            _kmd: {
-              lmt: '2015-11-13T18:38:09.085Z',
-              ect: '2015-11-13T18:38:09.085Z'
-            },
-            _acl: {
-              creator: 'kid_byGoHmnX2'
-            },
-            title: 'Harry Potter'
-          }, {
+          .get(`/appdata/kid_byGoHmnX2/books/${reply._id}`)
+          .reply(200, reply, {
             'content-type': 'application/json'
           });
 
-        const promise = this.collection.get(id, {
+        const promise = this.collection.get(reply._id, {
           dataPolicy: DataPolicy.CloudOnly
         });
 
         return promise.then(book => {
-          expect(book._id).to.equal(id);
+          expect(book.id).to.equal(reply._id);
+          expect(book._id).to.equal(reply._id);
           return book;
         });
       });
 
       it('should throw a NotFoundError for a non-existent id', function() {
         const id = 'doesnotexist';
+        const reply = {
+          error: 'EntityNotFound',
+          description: 'This entity not found in the collection',
+          debug: ''
+        };
 
         nock('https://baas.kinvey.com')
           .get(`/appdata/kid_byGoHmnX2/books/${id}`)
-          .reply(404, {
-            error: 'EntityNotFound',
-            description: 'This entity not found in the collection',
-            debug: ''
-          }, {
+          .reply(404, reply, {
             'content-type': 'application/json; charset=utf-8',
             'content-length': '93'
           });
@@ -169,7 +200,8 @@ describe('Collection', function() {
         });
 
         return promise.catch(err => {
-          expect(err.message).to.equal('This entity not found in the collection');
+          expect(err.message).to.equal(reply.description);
+          expect(err.debug).to.equal(reply.debug);
         });
       });
     });
@@ -211,9 +243,10 @@ describe('Collection', function() {
         dataPolicy: DataPolicy.LocalOnly
       });
 
-      return promise.then(savedBook => {
-        expect(savedBook._id).to.exist;
-        return savedBook;
+      return promise.then(book => {
+        expect(book._id).to.exist;
+        expect(book.id).to.exist;
+        return book;
       });
     });
   });

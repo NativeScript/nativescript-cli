@@ -16,7 +16,7 @@ class Cache extends Middleware {
       const appId = matches.appId;
       const collection = matches.collection;
       const id = matches.id;
-      const store = new Store(appId, [StoreAdapter.IndexedDB, StoreAdapter.LocalStorage, StoreAdapter.Memory]);
+      const store = new Store(appId, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.LocalStorage, StoreAdapter.Memory]);
       let promise;
 
       if (method === HttpMethod.GET) {
@@ -38,11 +38,19 @@ class Cache extends Middleware {
           });
         });
       } else if (method === HttpMethod.DELETE) {
-        promise = store.remove(collection, id).then(result => {
-          return store.saveDatabase().then(() => {
-            return result;
+        if (id) {
+          promise = store.remove(collection, id).then(result => {
+            return store.saveDatabase().then(() => {
+              return result;
+            });
           });
-        });
+        } else {
+          promise = store.removeWhere(collection, query).then(result => {
+            return store.saveDatabase().then(() => {
+              return result;
+            });
+          });
+        }
       }
 
       return promise.then(result => {

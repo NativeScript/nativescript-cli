@@ -1,4 +1,4 @@
-const nested = require('../utils/object').nested;
+const nested = require('./utils/object').nested;
 const sift = require('sift');
 const clone = require('lodash/lang/clone');
 const assign = require('lodash/object/assign');

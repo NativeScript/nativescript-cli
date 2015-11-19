@@ -1,4 +1,4 @@
-const UserUtils = require('../utils/user');
+const UserUtils = require('./utils/user');
 
 class Auth {
   static all(client) {

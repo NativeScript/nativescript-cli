@@ -15,10 +15,10 @@ class LocalStorage {
   }
 
   static isSupported() {
-    const mod = 'kinvey';
+    const item = 'kinvey';
     try {
-      localStorage.setItem(mod, mod);
-      localStorage.removeItem(mod);
+      localStorage.setItem(item, item);
+      localStorage.removeItem(item);
       return true;
     } catch (e) {
       return false;

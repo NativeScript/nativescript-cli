@@ -18,7 +18,7 @@ const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const indexBy = require('lodash/collection/indexBy');
 const reduce = require('lodash/collection/reduce');
-const byteCount = require('../utils/string').byteCount;
+const byteCount = require('./utils/string').byteCount;
 const customRequestPropertiesMaxBytes = 2000;
 const maxIdsPerRequest = 200;
 const defaultTimeout = 10000; // 10 seconds
@@ -130,7 +130,7 @@ class Request {
 
     if (customRequestPropertiesByteCount >= customRequestPropertiesMaxBytes) {
       throw new KinveyError(
-        `The custom request properties are ${customRequestPropertiesByteCount}.` +
+        `The custom request properties are ${customRequestPropertiesByteCount} bytes.` +
         `It must be less then ${customRequestPropertiesMaxBytes} bytes.`,
         'Please remove some custom request properties.');
     }
@@ -348,7 +348,13 @@ class Request {
 
     return promise.then(response => {
       if (!response) {
-        response = new Response();
+        throw new KinveyError('No response');
+      } else if (!response.isSuccess()) {
+        const data = response.data || {
+          description: 'Error',
+          debug: ''
+        };
+        throw new KinveyError(data.description, data.debug);
       }
 
       this.response = response;
@@ -395,6 +401,7 @@ class Request {
     const json = {
       method: this.method,
       headers: this.headers,
+      requestProperties: this.requestProperties,
       url: this.url,
       path: this.path,
       query: result(this.query, 'toJSON', null),
@@ -478,6 +485,7 @@ class DeltaSetRequest extends Request {
                 }, initialResponse);
               }).finally(() => {
                 this.executing = false;
+                this.query = origQuery;
               });
             }
 

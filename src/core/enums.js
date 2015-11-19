@@ -52,7 +52,9 @@ Object.freeze(StatusCode);
 
 const StoreAdapter = {
   IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage'
+  LocalStorage: 'LocalStorage',
+  Memory: 'Memory',
+  WebSQL: 'WebSQL'
 };
 Object.freeze(StoreAdapter);
 

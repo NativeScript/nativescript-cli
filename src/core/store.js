@@ -7,6 +7,7 @@ const NotFoundError = require('./errors').NotFoundError;
 const IndexedDB = require('./persistence/indexeddb');
 const LocalStorage = require('./persistence/localstorage');
 const Memory = require('./persistence/memory');
+const WebSQL = require('./persistence/websql');
 const Loki = require('lokijs');
 const log = require('loglevel');
 const result = require('lodash/object/result');
@@ -28,6 +29,10 @@ const localStorage = new Loki(defaultDatabaseName, {
 
 const memory = new Loki(defaultDatabaseName, {
   adapter: new Memory()
+});
+
+const websql = new Loki(defaultDatabaseName, {
+  adapter: new WebSQL()
 });
 
 class Store {
@@ -62,14 +67,25 @@ class Store {
         }
 
         break;
+      case StoreAdapter.WebSQL:
+        if (WebSQL.isSupported()) {
+          this.db = websql;
+          return false;
+        }
+
+        break;
       default:
         log.warn(`The ${adapter} adapter is is not recognized.`);
       }
     });
 
     if (!this.db) {
-      log.error('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
-      this.db = memory;
+      if (Memory.isSupported()) {
+        log.error('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
+        this.db = memory;
+      } else {
+        log.error('Provided adapters are unsupported on this platform.', adapters);
+      }
     }
   }
 
@@ -306,9 +322,7 @@ class Store {
     }
 
     if (isArray(id)) {
-      const query = new Query();
-      query.contains('_id', id);
-      return this.removeWhere(name, query);
+      return this.removeBulk(name, id);
     }
 
     const promise = this.get(name, id).then(doc => {

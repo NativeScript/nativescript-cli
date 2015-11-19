@@ -4,6 +4,7 @@ const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const assign = require('lodash/object/assign');
+const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'kinvey.local_';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
@@ -48,7 +49,7 @@ class Model {
   }
 
   get objectIdPrefix() {
-    return 'local_';
+    return objectIdPrefix;
   }
 
   generateObjectId(length = 24) {
@@ -86,7 +87,6 @@ class Model {
 
     const unset = options.unset;
     const currentAttributes = clone(this.attributes, true);
-    this._changing = true;
 
     for (const attr in attrs) {
       if (attrs.hasOwnProperty(attr)) {
@@ -101,7 +101,6 @@ class Model {
     }
 
     this.attributes = currentAttributes;
-    this._changing = false;
     return this;
   }
 

@@ -2,18 +2,21 @@ const Aggregation = require('../aggregation');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
-const NotFoundError = require('../errors').NotFoundError;
-const KinveyError = require('../errors').KinveyError;
 const Client = require('../client');
 const Query = require('../query');
 const Auth = require('../auth');
 const Model = require('../models/model');
+const SyncUtils = require('./utils/sync');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
 const log = require('loglevel');
+const clone = require('lodash/lang/clone');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey.sync';
+
+// const syncBatchSize = process.env.KINVEY_SYCN_BATCH_SIZE || 1000;
 
 /**
  * The Collection class is used to retrieve, create, update, destroy, count and group documents
@@ -26,12 +29,17 @@ class Collection {
   /**
    * Creates a new instance of the Collection class.
    *
-   * @param   {string}    [collection]                                Collection
-   * @param   {Client}    [client=Client.sharedInstance()]            Client
+   * @param {string}      name                                        Name of the collection.
+   * @param {Object}      [options]                                   Options.
+   * @param {Client}      [options.client=Client.sharedInstance()]    Client to use.
+   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.LocalFirst]  Data policy to use.
+   * @param {Model}       [options.model=Model]                       Model class to use.
    */
   constructor(name, options = {}) {
     options = assign({
+      auth: Auth.default,
       client: Client.sharedInstance(),
+      dataPolicy: DataPolicy.LocalFirst,
       model: Model
     }, options);
 
@@ -41,9 +49,19 @@ class Collection {
     this.name = name;
 
     /**
+     * @type {Auth}
+     */
+    this.auth = options.auth;
+
+    /**
      * @type {Client}
      */
     this.client = options.client;
+
+    /**
+     * @type {DataPolicy}
+     */
+    this.dataPolicy = options.dataPolicy;
 
     /**
      * @type {Model}
@@ -101,8 +119,8 @@ class Collection {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.GET;
@@ -112,26 +130,21 @@ class Collection {
     const request = new Request(options);
     const promise = request.execute().then(response => {
       let data = response.data;
+      const models = [];
 
-      if (response.isSuccess()) {
-        const models = [];
-
-        if (data) {
-          if (!isArray(data)) {
-            data = [data];
-          }
-
-          forEach(data, obj => {
-            if (obj) {
-              models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-            }
-          });
+      if (data) {
+        if (!isArray(data)) {
+          data = [data];
         }
 
-        return models;
+        forEach(data, obj => {
+          if (obj) {
+            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+          }
+        });
       }
 
-      throw new KinveyError(data.description, data.debug);
+      return models;
     });
 
     promise.then(response => {
@@ -172,11 +185,11 @@ class Collection {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
-    options.method = HttpMethod.POST;
+    options.method = HttpMethod.GET;
     options.path = `${this.getPath(options.client)}/_group`;
     options.data = aggregation.toJSON();
 
@@ -185,17 +198,15 @@ class Collection {
       let data = response.data;
       const models = [];
 
-      if (data) {
-        if (!isArray(data)) {
-          data = [data];
-        }
-
-        forEach(data, obj => {
-          if (obj) {
-            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-          }
-        });
+      if (!isArray(data)) {
+        data = [data];
       }
+
+      forEach(data, obj => {
+        if (obj) {
+          models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+        }
+      });
 
       return models;
     });
@@ -239,8 +250,8 @@ class Collection {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.GET;
@@ -283,8 +294,8 @@ class Collection {
     log.debug(`Retrieving a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.GET;
@@ -293,14 +304,7 @@ class Collection {
     const request = new Request(options);
     const promise = request.execute().then(response => {
       const data = response.data;
-
-      if (response.isSuccess()) {
-        return new this.model(data, options); // eslint-disable-line new-cap
-      } else if (data.error === 'EntityNotFound') {
-        throw new NotFoundError(data.description, data.debug);
-      }
-
-      throw new KinveyError(data.description, data.debug);
+      return new this.model(data, options); // eslint-disable-line new-cap
     });
 
     promise.then(response => {
@@ -353,9 +357,15 @@ class Collection {
       return model;
     });
 
+    forEach(models, model => {
+      if (model.id && model.isNew()) {
+        model.unset('_id');
+      }
+    });
+
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.POST;
@@ -368,20 +378,26 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
+      if (options.dataPolicy === DataPolicy.LocalOnly) {
+        return SyncUtils.notify(this.name, response.data, options).then(() => {
+          return response;
+        });
+      }
+
+      return response;
+    }).then(response => {
       let data = response.data;
       const models = [];
 
-      if (data) {
-        if (!isArray(data)) {
-          data = [data];
-        }
-
-        forEach(data, obj => {
-          if (obj) {
-            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-          }
-        });
+      if (!isArray(data)) {
+        data = [data];
       }
+
+      forEach(data, obj => {
+        if (obj) {
+          models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+        }
+      });
 
       return singular && models.length === 1 ? models[0] : models;
     });
@@ -432,8 +448,8 @@ class Collection {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.PUT;
@@ -442,13 +458,16 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      const data = response.data;
-
-      if (data) {
-        return new this.model(response.data, options); // eslint-disable-line new-cap
+      if (options.dataPolicy === DataPolicy.LocalOnly) {
+        return SyncUtils.notify(this.name, response.data, options).then(() => {
+          return response;
+        });
       }
 
-      throw new KinveyError();
+      return response;
+    }).then(response => {
+      const data = response.data;
+      return new this.model(data, options); // eslint-disable-line new-cap
     });
 
     promise.then(response => {
@@ -490,8 +509,8 @@ class Collection {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.DELETE;
@@ -499,7 +518,15 @@ class Collection {
     options.query = query;
 
     const request = new Request(options);
-    const promise = request.execute().then(function(response) {
+    const promise = request.execute().then(response => {
+      if (options.dataPolicy === DataPolicy.LocalOnly) {
+        return SyncUtils.notify(this.name, response.data.documents, options).then(() => {
+          return response;
+        });
+      }
+
+      return response;
+    }).then(function(response) {
       return response.data;
     });
 
@@ -534,15 +561,23 @@ class Collection {
     log.debug(`Deleting a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      dataPolicy: DataPolicy.CloudOnly,
-      auth: Auth.default,
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
       client: this.client
     }, options);
     options.method = HttpMethod.DELETE;
     options.path = `${this.getPath(options.client)}/${id}`;
 
     const request = new Request(options);
-    const promise = request.execute().then(function(response) {
+    const promise = request.execute().then(response => {
+      if (options.dataPolicy === DataPolicy.LocalOnly) {
+        return SyncUtils.notify(this.name, response.data.documents, options).then(() => {
+          return response;
+        });
+      }
+
+      return response;
+    }).then(function(response) {
       return response.data;
     });
 
@@ -550,6 +585,106 @@ class Collection {
       log.info(`Deleted the model in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
       log.error(`Failed to delete the model in the ${this.name} collection with id = ${id}.`, err);
+    });
+
+    return promise;
+  }
+
+  push(options = {}) {
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client
+    }, options);
+    options.dataPolicy = DataPolicy.LocalOnly;
+
+    // Get the documents to sync
+    const syncCollection = new Collection(syncCollectionName, options);
+    const promise = syncCollection.get(this.name, options).then(collection => {
+      const documents = collection.documents;
+      const identifiers = Object.keys(collection.documents);
+      const result = {
+        collection: collection,
+        success: [],
+        error: []
+      };
+
+      // Get the document. If it is found, push it onto the saved array and if
+      // it is not (aka a NotFoundError is thrown) then push the id onto the destroyed
+      // array.
+      const saved = [];
+      const destroyed = [];
+      const promises = identifiers.map(id => {
+        const metadata = documents[id];
+        const requestOptions = clone(assign(metadata, options), true);
+        requestOptions.dataPolicy = DataPolicy.LocalOnly;
+        return this.get(id, requestOptions).then(model => {
+          saved.push(model);
+          return model;
+        }).catch(() => {
+          destroyed.push(id);
+          return null;
+        });
+      });
+
+      // Save and destroy everything that needs to be synced
+      Promise.all(promises).then(() => {
+        const savePromises = saved.map(model => {
+          const metadata = documents[model.id];
+          const requestOptions = clone(assign(metadata, options), true);
+          requestOptions.dataPolicy = DataPolicy.CloudFirst;
+
+          if (model.isNew()) {
+            return this.save(model, requestOptions);
+          }
+
+          return this.update(model, requestOptions);
+        });
+
+        const destroyPromises = destroyed.map(id => {
+          const metadata = documents[id];
+          const requestOptions = clone(assign(metadata, options), true);
+          requestOptions.dataPolicy = DataPolicy.CloudFirst;
+          return this.destroy(id, requestOptions);
+        });
+
+        return Promise.all([Promise.all(savePromises), Promise.all(destroyPromises)]);
+      }).then(responses => {
+        console.log(responses);
+      });
+
+      // {
+      //   _id = 'books',
+      //   documents = {
+      //     '1231uhds089kjhsd0923': {
+      //       operation: 'POST',
+      //       requestProperties: ...
+      //     }
+      //   },
+      //   size: 1
+      // }
+
+      // send all created, updated, and deleted documents
+
+      return result;
+    });
+
+    return promise;
+  }
+
+  sync(query, options = {}) {
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: Auth.default,
+      client: this.client
+    }, options);
+
+    const promise = this.push(options).then(() => {
+      options.dataPolicy = DataPolicy.CloundOnly;
+      return this.find(query, options);
+    }).then(models => {
+      options.dataPolicy = DataPolicy.LocalOnly;
+      return this.save(models, options);
     });
 
     return promise;

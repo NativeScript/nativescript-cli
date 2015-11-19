@@ -1,6 +1,5 @@
 const clone = require('lodash/lang/clone');
 const isPlainObject = require('lodash/lang/isPlainObject');
-const isDefined = require('../utils/object').isDefined;
 const privateMetadataSymbol = Symbol();
 
 class PrivateMetadata {
@@ -13,7 +12,7 @@ class PrivateMetadata {
   }
 
   get createdAt() {
-    if (isDefined(this.kmd.ect)) {
+    if (this.kmd.ect) {
       return Date.parse(this.kmd.ect);
     }
 
@@ -25,7 +24,7 @@ class PrivateMetadata {
   }
 
   get lastModified() {
-    if (isDefined(this.kmd.lmt)) {
+    if (this.kmd.lmt) {
       return Date.parse(this.kmd.lmt);
     }
 
@@ -37,7 +36,7 @@ class PrivateMetadata {
   }
 
   toJSON() {
-    return clone(this.kmd);
+    return clone(this.kmd, true);
   }
 }
 
