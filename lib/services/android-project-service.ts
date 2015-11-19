@@ -296,18 +296,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
 
 			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginName);
-			this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
+			if (this.$fs.exists(pluginPlatformsFolderPath).wait()) {
+				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
+
+				// Copy all resources from plugin
+				let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginName);
+				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
+				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
+			}
 
 			// Copy include.gradle file
 			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
 			if(this.$fs.exists(includeGradleFilePath).wait()) {
 				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 			}
-
-			// Copy all resources from plugin
-			let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginName);
-			this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
-			shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 		}).future<void>()();
 	}
 
