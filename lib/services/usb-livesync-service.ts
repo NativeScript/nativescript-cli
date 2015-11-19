@@ -135,7 +135,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 							let devices = this.$devicesService.getDeviceInstances();
 							_.each(devices, (device: Mobile.IDevice) => {
-								this.transferFiles(device, deviceAppData, localToDevicePaths, projectFilesPath, true).wait();
+								if (this.$fs.exists(filePath).wait()) {
+									this.transferFiles(device, deviceAppData, localToDevicePaths, projectFilesPath, true).wait();
+								}
 								let platformSpecificUsbLiveSyncService = this.resolvePlatformSpecificLiveSyncService(platform || this.$devicesService.platform, device, platformSpecificLiveSyncServices);
 								return platformSpecificUsbLiveSyncService.sendPageReloadMessageToDevice(deviceAppData).wait();
 							});
