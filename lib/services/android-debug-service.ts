@@ -3,6 +3,8 @@
 import * as helpers from "../common/helpers";
 import * as path from "path";
 import * as util from "util";
+import * as net from "net";
+import Future = require("fibers/future");
 
 class AndroidDebugService implements IDebugService {
     private static ENV_DEBUG_IN_FILENAME = "envDebug.in";
@@ -43,14 +45,64 @@ class AndroidDebugService implements IDebugService {
 			: this.debugOnDevice();
 	}
 
-	public debugOnEmulator(): IFuture<void> {
+	private debugOnEmulator(): IFuture<void> {
 		return (() => {
 			this.$platformService.deployOnEmulator(this.platform).wait();
 			this.debugOnDevice().wait();
 		}).future<void>()();
 	}
+    
+    
+    private isPortAvailable(candidatetPort: number): IFuture<boolean> {
+		return (() => {
+            
+            let future = new Future<boolean>();
+            var server = net.createServer();
+            server.listen(candidatetPort, function (err: any) {
+                server.once('close', function () {
+                    future.return(true);
+                })
+                server.close();
+            });
+            
+            server.on('error', function (err: any) {
+               future.return(false);
+            });
+            
+            return future;
+		}).future<boolean>()();
+	}
+    
+    
+    private getForwardedLocalDebugPortForPackageName(deviceId: string, packageName: string): number {
+        var port = -1;
+        var forwardsResult = this.device.adb.executeCommand(["forward", "--list"]).wait();
+        
+        //this gets the port number without supporting forwards on multiple devices on the same package name
+        //let match = forwardsResult.match(new RegExp("(?! tcp:)([\\d])+(?= localabstract:" + packageName + "-debug)", "g"));
+        
+        //matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
+        let match = forwardsResult.match(new RegExp("(" + deviceId + " tcp:)([\\d])+(?= localabstract:" + packageName + "-debug)", "g"));
+        if (match) {
+            port = parseInt(match[0].substring(match[0].length - 5));
+        }
+        else {
+            var candidatePort = 40000;
+            while (!this.isPortAvailable(candidatePort++).wait()) {
+                if (candidatePort > 65534) {
+                    this.$errors.failWithoutHelp("Unable to find free local port.");
+                }
+            }
+            port = candidatePort;
+            
+            this.unixSocketForward(port, packageName + "-debug").wait();
+        }
+        
+        return port;
+    }
+    
 
-	public debugOnDevice(): IFuture<void> {
+	private debugOnDevice(): IFuture<void> {
 		return (() => {
 			let packageFile = "";
 
@@ -82,9 +134,9 @@ class AndroidDebugService implements IDebugService {
 			this.device = device;
 
             if (this.$options.getPort) {
-                this.printDebugPort(packageName).wait();
+                this.printDebugPort(device.deviceInfo.identifier, packageName).wait();
             } else if (this.$options.start) {
-                this.attachDebugger(packageName);
+                this.attachDebugger(device.deviceInfo.identifier, packageName);
             } else if (this.$options.stop) {
                 this.detachDebugger(packageName).wait();
             } else if (this.$options.debugBrk) {
@@ -93,40 +145,27 @@ class AndroidDebugService implements IDebugService {
         }).future<void>()();
     }
 
-	private printDebugPort(packageName: string): IFuture<void> {
+	private printDebugPort(deviceId: string, packageName: string): IFuture<void> {
         return (() => {
-            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-GetDbgPort"]).wait();
-            this.$logger.info(res);
+            var port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+            this.$logger.info(port);
         }).future<void>()();
     }
 
-	private attachDebugger(packageName: string): void {
-        let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-Debug\"', "--ez", "enable", "true"];
-        let port = this.$options.debugPort;
-
-        if (port > 0) {
-            startDebuggerCommand.push("--ei", "debuggerPort", port.toString());
-            this.device.adb.executeShellCommand(startDebuggerCommand).wait();
-        } else {
-            let res = this.device.adb.executeShellCommand(["am", "broadcast", "-a", packageName + "-Debug", "--ez", "enable", "true"]).wait();
-            let match = res.match(/result=(\d)+/);
-            if (match) {
-                port = match[0].substring(7);
-            } else {
-                port = 0;
-            }
-        }
-        if ((0 < port) && (port < 65536)) {
-            this.tcpForward(port, port).wait();
-            this.startDebuggerClient(port).wait();
-            this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
-        } else {
-          this.$logger.info("Cannot detect debug port.");
-        }
+	private attachDebugger(deviceId: string,packageName: string): void {
+        
+        //let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-debug\"', "--ez", "enable", "true"];
+        //this.device.adb.executeShellCommand(startDebuggerCommand).wait();
+        
+        var port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
+        
+        
+        this.startDebuggerClient(port).wait();
+        this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
     }
 
     private detachDebugger(packageName: string): IFuture<void> {
-        return this.device.adb.executeShellCommand(["am", "broadcast", "-a", `${packageName}-Debug`, "--ez", "enable", "false"]);
+        return this.device.adb.executeShellCommand(["am", "broadcast", "-a", `${packageName}-debug`, "--ez", "enable", "false"]);
     }
 
     private startAppWithDebugger(packageFile: string, packageName: string): IFuture<void> {
@@ -153,29 +192,35 @@ class AndroidDebugService implements IDebugService {
     private debugStartCore(): IFuture<void> {
         return (() => {
             let packageName = this.$projectData.projectId;
-            let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
-            let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
+            
+            //TODO: Removed these...
+            //let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
+            //let envDebugOutFullpath = this.$mobileHelper.buildDevicePath(packageDir, AndroidDebugService.ENV_DEBUG_OUT_FILENAME);
 
-            this.device.adb.executeShellCommand(["rm", `${envDebugOutFullpath}`]).wait();
-            this.device.adb.executeShellCommand(["mkdir", "-p", `${packageDir}`]).wait();
+            //this.device.adb.executeShellCommand(["rm", `${envDebugOutFullpath}`]).wait();
+            //this.device.adb.executeShellCommand(["mkdir", "-p", `${packageDir}`]).wait();
 
-            let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
-            this.device.adb.executeShellCommand([`cat /dev/null > ${debugBreakPath}`]).wait();
+            //let debugBreakPath = this.$mobileHelper.buildDevicePath(packageDir, "debugbreak");
+            //this.device.adb.executeShellCommand([`cat /dev/null > ${debugBreakPath}`]).wait();
+            
+            this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${packageName}-debugbreak`]).wait();
 
             this.device.applicationManager.stopApplication(packageName).wait();
             this.device.applicationManager.startApplication(packageName).wait();
 
-            let dbgPort = this.startAndGetPort(packageName).wait();
-            if (dbgPort > 0) {
-                this.tcpForward(dbgPort, dbgPort).wait();
-                this.startDebuggerClient(dbgPort).wait();
-                this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + dbgPort);
-            }
+            var localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName);
+            this.startDebuggerClient(localDebugPort).wait();
+            this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
+            
         }).future<void>()();
     }
 
-    private tcpForward(src: Number, dest: Number): IFuture<void> {
-        return this.device.adb.executeCommand(["forward", `tcp:${src.toString()}`, `tcp:${dest.toString()}`]);
+    // private tcpForward(src: Number, dest: Number): IFuture<void> {
+    //     return this.device.adb.executeCommand(["forward", `tcp:${src.toString()}`, `tcp:${dest.toString()}`]);
+    // }
+    
+    private unixSocketForward(local: Number, remote: String): IFuture<void> {
+        return this.device.adb.executeCommand(["forward", `tcp:${local.toString()}`, `localabstract:${remote.toString()}`]);
     }
 
     private startDebuggerClient(port: Number): IFuture<void> {
@@ -203,58 +248,58 @@ class AndroidDebugService implements IDebugService {
 		}
     }
 
-    private checkIfRunning(packageName: string): boolean {
-        let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
-        let envDebugOutFullpath = packageDir + AndroidDebugService.ENV_DEBUG_OUT_FILENAME;
-        let isRunning = this.checkIfFileExists(envDebugOutFullpath).wait();
-        return isRunning;
-    }
+    // private checkIfRunning(packageName: string): boolean {
+    //     let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
+    //     let envDebugOutFullpath = packageDir + AndroidDebugService.ENV_DEBUG_OUT_FILENAME;
+    //     let isRunning = this.checkIfFileExists(envDebugOutFullpath).wait();
+    //     return isRunning;
+    // }
 
-    private checkIfFileExists(filename: string): IFuture<boolean> {
-        return (() => {
-            let res = this.device.adb.executeShellCommand([`test -f ${filename} && echo 'yes' || echo 'no'`]).wait();
-            let exists = res.indexOf('yes') > -1;
-            return exists;
-        }).future<boolean>()();
-    }
+    // private checkIfFileExists(filename: string): IFuture<boolean> {
+    //     return (() => {
+    //         let res = this.device.adb.executeShellCommand([`test -f ${filename} && echo 'yes' || echo 'no'`]).wait();
+    //         let exists = res.indexOf('yes') > -1;
+    //         return exists;
+    //     }).future<boolean>()();
+    // }
 
-    private startAndGetPort(packageName: string): IFuture<number> {
-        return (() => {
-            let port = -1;
-			let timeout = this.$utils.getParsedTimeout(90);
+    // private startAndGetPort(packageName: string): IFuture<number> {
+    //     return (() => {
+    //         let port = -1;
+	// 		let timeout = this.$utils.getParsedTimeout(90);
 
-            let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
-            let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
-            this.device.adb.executeShellCommand(["rm", `${envDebugInFullpath}`]).wait();
+    //         let packageDir = util.format(AndroidDebugService.PACKAGE_EXTERNAL_DIR_TEMPLATE, packageName);
+    //         let envDebugInFullpath = packageDir + AndroidDebugService.ENV_DEBUG_IN_FILENAME;
+    //         this.device.adb.executeShellCommand(["rm", `${envDebugInFullpath}`]).wait();
 
-            let isRunning = false;
-            for (let i = 0; i < timeout; i++) {
-                helpers.sleep(1000 /* ms */);
-                isRunning = this.checkIfRunning(packageName);
-                if (isRunning) {
-                    break;
-                }
-            }
+    //         let isRunning = false;
+    //         for (let i = 0; i < timeout; i++) {
+    //             helpers.sleep(1000 /* ms */);
+    //             isRunning = this.checkIfRunning(packageName);
+    //             if (isRunning) {
+    //                 break;
+    //             }
+    //         }
 
-            if (isRunning) {
-                this.device.adb.executeShellCommand([`cat /dev/null > ${envDebugInFullpath}`]).wait();
+    //         if (isRunning) {
+    //             this.device.adb.executeShellCommand([`cat /dev/null > ${envDebugInFullpath}`]).wait();
 
-                for (let i = 0; i < timeout; i++) {
-                    helpers.sleep(1000 /* ms */);
-                    let envDebugOutFullpath = packageDir + AndroidDebugService.ENV_DEBUG_OUT_FILENAME;
-                    let exists = this.checkIfFileExists(envDebugOutFullpath).wait();
-                    if (exists) {
-                        let res = this.device.adb.executeShellCommand(["cat", envDebugOutFullpath]).wait();
-                        let match = res.match(/PORT=(\d)+/);
-                        if (match) {
-                            port = parseInt(match[0].substring(5), 10);
-                            break;
-                        }
-                    }
-                }
-            }
-            return port;
-        }).future<number>()();
-    }
+    //             for (let i = 0; i < timeout; i++) {
+    //                 helpers.sleep(1000 /* ms */);
+    //                 let envDebugOutFullpath = packageDir + AndroidDebugService.ENV_DEBUG_OUT_FILENAME;
+    //                 let exists = this.checkIfFileExists(envDebugOutFullpath).wait();
+    //                 if (exists) {
+    //                     let res = this.device.adb.executeShellCommand(["cat", envDebugOutFullpath]).wait();
+    //                     let match = res.match(/PORT=(\d)+/);
+    //                     if (match) {
+    //                         port = parseInt(match[0].substring(5), 10);
+    //                         break;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         return port;
+    //     }).future<number>()();
+    // }
 }
 $injector.register("androidDebugService", AndroidDebugService);
