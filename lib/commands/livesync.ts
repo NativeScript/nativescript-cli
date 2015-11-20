@@ -9,7 +9,6 @@ export class LivesyncCommand implements ICommand {
 		private $errors: IErrors) { }
 
 	public execute(args: string[]): IFuture<void> {
-		this.$options.justlaunch = true;
 		return this.$usbLiveSyncService.liveSync(args[0]);
 	}
 
