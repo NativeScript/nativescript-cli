@@ -1,8 +1,8 @@
-const Request = require('../core/request').Request;
-const NotFoundError = require('../core/errors').NotFoundError;
-const HttpMethod = require('../core/enums').HttpMethod;
-const Client = require('../core/client');
-const assign = require('lodash/object/assign');
+const Request = require('../request').Request;
+const NotFoundError = require('../errors').NotFoundError;
+const HttpMethod = require('../enums').HttpMethod;
+const DataPolicy = require('../enums').DataPolicy;
+const UrlPattern = require('url-pattern');
 const forEach = require('lodash/collection/forEach');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -22,28 +22,33 @@ class SyncUtils {
     enabled = false;
   }
 
-  getPath(client = Client.sharedInstance()) {
-    return `/${appdataNamespace}/${client.appId}/${syncCollectionName}`;
-  }
+  notify(request, response) {
+    const pattern = new UrlPattern('/:namespace/:appId/:collection(/)(:id)(/)');
+    const matches = pattern.match(request.path);
+    const path = `/${appdataNamespace}/${request.client.appId}/${syncCollectionName}/${matches.collection}`;
+    const getRequest = new Request({
+      method: HttpMethod.GET,
+      path: path,
+      dataPolicy: DataPolicy.LocalOnly
+    });
 
-  notify(collectionName, documents = [], options = {}) {
-    if (!isArray(documents)) {
-      documents = [documents];
-    }
+    // {
+    //   _id = 'books',
+    //   documents = {
+    //     '1231uhds089kjhsd0923': {
+    //       operation: 'POST',
+    //       requestProperties: ...
+    //     }
+    //   },
+    //   size: 1
+    // }
 
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-    options.method = HttpMethod.GET;
-    options.path = `${this.getPath(options.client)}/${collectionName}`;
-
-    const getRequest = new Request(options);
     const promise = getRequest.execute().then(response => {
       return response.data;
     }).catch(err => {
       if (err instanceof NotFoundError) {
-        return { // eslint-disable-line new-cap
-          _id: collectionName,
+        return {
+          _id: matches.collection,
           documents: {},
           size: 0
         };
@@ -51,20 +56,32 @@ class SyncUtils {
 
       throw err;
     }).then(syncCollection => {
-      forEach(documents, doc => {
-        if (!syncCollection.documents.hasOwnProperty(doc._id)) {
-          syncCollection.size += 1;
+      let data = response.data;
+
+      if (!isArray(data)) {
+        data = [data];
+      }
+
+      forEach(data, item => {
+        if (item._id) {
+          if (!syncCollection.documents.hasOwnProperty(item._id)) {
+            syncCollection.size += 1;
+          }
+
+          const timestamp = item._kmd ? item._kmd.lmt : null;
+
+          syncCollection.documents[item._id] = {
+            request: request,
+            timestamp: timestamp
+          };
         }
-
-        const timestamp = doc._kmd ? doc._kmd.lmt : null;
-
-        syncCollection.documents[doc.id] = {
-          timestamp: timestamp
-        };
       });
 
-      options.method = HttpMethod.PUT;
-      const saveRequest = new Request(options);
+      const saveRequest = new Request({
+        method: HttpMethod.PUT,
+        path: path,
+        dataPolicy: DataPolicy.LocalOnly
+      });
       return saveRequest.execute();
     }).then(() => {
       return null;

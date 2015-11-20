@@ -12,6 +12,7 @@ const DataPolicy = require('./enums').DataPolicy;
 const KinveyError = require('./errors').KinveyError;
 const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
+const SyncUtils = require('./utils/sync');
 const assign = require('lodash/object/assign');
 const merge = require('lodash/object/merge');
 const result = require('lodash/object/result');
@@ -268,30 +269,77 @@ class Request {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
-    let promise = Promise.resolve();
+    const promise = Promise.resolve();
+    const auth = this.auth;
     this.executing = true;
 
-    if (this.dataPolicy === DataPolicy.LocalOnly) {
-      promise = this.executeLocal();
-    } else if (this.dataPolicy === DataPolicy.LocalFirst) {
-      promise = this.executeLocal().then(response => {
-        if (response && response.isSuccess()) {
-          if (this.method !== HttpMethod.GET) {
-            const request = new Request({
-              method: this.method,
-              path: this.path,
-              query: this.query,
-              auth: this.auth,
-              data: response.data,
-              client: this.client,
-              dataPolicy: DataPolicy.CloudOnly
-            });
-            return request.execute().then(() => {
+    promise.then(() => {
+      return isFunction(auth) ? auth(this.client) : auth;
+    }).then(authInfo => {
+      if (authInfo) {
+        // Format credentials
+        let credentials = authInfo.credentials;
+        if (authInfo.username) {
+          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+        }
+
+        // Set the header
+        this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
+      }
+    }).then(() => {
+      if (this.dataPolicy === DataPolicy.LocalOnly) {
+        return this.executeLocal().then(response => {
+          if (this.method !== HttpMethod.GET && response && response.isSuccess()) {
+            return SyncUtils.notify(this.toJSON(), response.toJSON()).then(() => {
               return response;
             });
           }
-        } else {
-          if (this.method === HttpMethod.GET) {
+
+          return response;
+        });
+      } else if (this.dataPolicy === DataPolicy.LocalFirst) {
+        return this.executeLocal().then(response => {
+          if (response && response.isSuccess()) {
+            if (this.method !== HttpMethod.GET) {
+              const request = new Request({
+                method: this.method,
+                path: this.path,
+                query: this.query,
+                auth: this.auth,
+                data: response.data,
+                client: this.client,
+                dataPolicy: DataPolicy.CloudOnly
+              });
+              return request.execute().then(() => {
+                return response;
+              }).catch(err => {
+                return SyncUtils.notify(this.toJSON(), response.toJSON()).then(() => {
+                  throw err;
+                });
+              });
+            }
+          } else {
+            if (this.method === HttpMethod.GET) {
+              const request = new Request({
+                method: this.method,
+                path: this.path,
+                query: this.query,
+                auth: this.auth,
+                data: response.data,
+                client: this.client,
+                dataPolicy: DataPolicy.CloudFirst
+              });
+              return request.execute();
+            }
+          }
+
+          return response;
+        });
+      } else if (this.dataPolicy === DataPolicy.CloudOnly) {
+        return this.executeCloud();
+      } else if (this.dataPolicy === DataPolicy.CloudFirst) {
+        return this.executeCloud().then(response => {
+          if (response && response.isSuccess()) {
             const request = new Request({
               method: this.method,
               path: this.path,
@@ -299,52 +347,33 @@ class Request {
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.CloudFirst
+              dataPolicy: DataPolicy.LocalOnly
+            });
+
+            if (this.method === HttpMethod.GET) {
+              request.method = HttpMethod.PUT;
+            }
+
+            return request.execute().then(() => {
+              return response;
+            });
+          } else if (this.method === HttpMethod.GET) {
+            const request = new Request({
+              method: this.method,
+              path: this.path,
+              query: this.query,
+              auth: this.auth,
+              data: response.data,
+              client: this.client,
+              dataPolicy: DataPolicy.LocalOnly
             });
             return request.execute();
           }
-        }
 
-        return response;
-      });
-    } else if (this.dataPolicy === DataPolicy.CloudOnly) {
-      promise = this.executeCloud();
-    } else if (this.dataPolicy === DataPolicy.CloudFirst) {
-      promise = this.executeCloud().then(response => {
-        if (response && response.isSuccess()) {
-          const request = new Request({
-            method: this.method,
-            path: this.path,
-            query: this.query,
-            auth: this.auth,
-            data: response.data,
-            client: this.client,
-            dataPolicy: DataPolicy.LocalOnly
-          });
-
-          if (this.method === HttpMethod.GET) {
-            request.method = HttpMethod.PUT;
-          }
-
-          return request.execute().then(() => {
-            return response;
-          });
-        } else if (this.method === HttpMethod.GET) {
-          const request = new Request({
-            method: this.method,
-            path: this.path,
-            query: this.query,
-            auth: this.auth,
-            data: response.data,
-            client: this.client,
-            dataPolicy: DataPolicy.LocalOnly
-          });
-          return request.execute();
-        }
-
-        return response;
-      });
-    }
+          return response;
+        });
+      }
+    });
 
     return promise.then(response => {
       if (!response) {
@@ -370,26 +399,8 @@ class Request {
   }
 
   executeCloud() {
-    const auth = this.auth;
     const rack = Rack.networkRack;
-    const promise = Promise.resolve();
-
-    return promise.then(() => {
-      return isFunction(auth) ? auth(this.client) : auth;
-    }).then(authInfo => {
-      if (authInfo) {
-        // Format credentials
-        let credentials = authInfo.credentials;
-        if (authInfo.username) {
-          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-        }
-
-        // Set the header
-        this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-      }
-    }).then(() => {
-      return rack.execute(this);
-    });
+    return rack.execute(this);
   }
 
   abort() {
@@ -401,7 +412,6 @@ class Request {
     const json = {
       method: this.method,
       headers: this.headers,
-      requestProperties: this.requestProperties,
       url: this.url,
       path: this.path,
       query: result(this.query, 'toJSON', null),

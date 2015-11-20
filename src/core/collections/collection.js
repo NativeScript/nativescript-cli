@@ -6,7 +6,6 @@ const Client = require('../client');
 const Query = require('../query');
 const Auth = require('../auth');
 const Model = require('../models/model');
-const SyncUtils = require('./utils/sync');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
@@ -378,14 +377,6 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      if (options.dataPolicy === DataPolicy.LocalOnly) {
-        return SyncUtils.notify(this.name, response.data, options).then(() => {
-          return response;
-        });
-      }
-
-      return response;
-    }).then(response => {
       let data = response.data;
       const models = [];
 
@@ -458,14 +449,6 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      if (options.dataPolicy === DataPolicy.LocalOnly) {
-        return SyncUtils.notify(this.name, response.data, options).then(() => {
-          return response;
-        });
-      }
-
-      return response;
-    }).then(response => {
       const data = response.data;
       return new this.model(data, options); // eslint-disable-line new-cap
     });
@@ -519,14 +502,6 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      if (options.dataPolicy === DataPolicy.LocalOnly) {
-        return SyncUtils.notify(this.name, response.data.documents, options).then(() => {
-          return response;
-        });
-      }
-
-      return response;
-    }).then(function(response) {
       return response.data;
     });
 
@@ -570,14 +545,6 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      if (options.dataPolicy === DataPolicy.LocalOnly) {
-        return SyncUtils.notify(this.name, response.data.documents, options).then(() => {
-          return response;
-        });
-      }
-
-      return response;
-    }).then(function(response) {
       return response.data;
     });
 
@@ -597,17 +564,6 @@ class Collection {
       client: this.client
     }, options);
     options.dataPolicy = DataPolicy.LocalOnly;
-
-    // {
-    //   _id = 'books',
-    //   documents = {
-    //     '1231uhds089kjhsd0923': {
-    //       operation: 'POST',
-    //       requestProperties: ...
-    //     }
-    //   },
-    //   size: 1
-    // }
 
     // Get the documents to sync
     const syncCollection = new Collection(syncCollectionName, options);
@@ -723,7 +679,7 @@ class Collection {
           error: []
         };
 
-        forEach(saveResponse, saveResponse => {
+        forEach(saveResponses, saveResponse => {
           if (saveResponse.err) {
             result.error.push(saveResponse);
           } else {
@@ -754,7 +710,7 @@ class Collection {
     }, options);
 
     const promise = this.push(options).then(() => {
-      options.dataPolicy = DataPolicy.CloundOnly;
+      options.dataPolicy = DataPolicy.CloudOnly;
       return this.find(query, options);
     }).then(models => {
       options.dataPolicy = DataPolicy.LocalOnly;

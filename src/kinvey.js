@@ -14,6 +14,7 @@ Kinvey.Metadata = require('./core/metadata');
 Kinvey.Model = require('./core/models/model');
 Kinvey.Query = require('./core/query');
 Kinvey.Store = require('./core/store');
+Kinvey.Sync = require('./core/sync');
 Kinvey.User = require('./core/models/user');
 
 // Errors
