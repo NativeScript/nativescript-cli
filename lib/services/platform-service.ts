@@ -353,10 +353,6 @@ export class PlatformService implements IPlatformService {
 				return (() => {
 					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
 					device.deploy(packageFile, this.$projectData.projectId).wait();
-
-					if (!this.$options.justlaunch) {
-						device.openDeviceLogStream();
-					}
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action).wait();
