@@ -6,6 +6,7 @@ import * as constants from "../constants";
 import * as path from 'path';
 import Future = require('fibers/future');
 import * as os from 'os';
+import * as fiberBootstrap from "../common/fiber-bootstrap";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -31,93 +32,109 @@ class TestExecutionService implements ITestExecutionService {
 		private $config: IConfiguration,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $pluginsService: IPluginsService) {
 	}
 
 	public startTestRunner(platform: string) : IFuture<void> {
 		return (() => {
 			this.$options.justlaunch = true;
+			let blockingOperationFuture = new Future<void>();
+			process.on('message', (launcherConfig: any) => {
+				fiberBootstrap.run(() => {
+					try {
+						let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+						let projectDir = this.$projectData.projectDir;
 
-			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
-			let projectDir = this.$projectData.projectDir;
+						let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
-			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+						let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
+						this.$options.debugBrk = configOptions.debugBrk;
+						this.$options.debugTransport = configOptions.debugTransport;
+						let configJs = this.generateConfig(configOptions);
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
 
-			let configOptions: IKarmaConfigOptions = JSON.parse(this.$fs.readStdin().wait());
-			this.$options.debugBrk = configOptions.debugBrk;
-			this.$options.debugTransport = configOptions.debugTransport;
-			let configJs = this.generateConfig(configOptions);
-			this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
+						let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
+						let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
 
-			let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
-			let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
-			this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
+						this.$platformService.preparePlatform(platform).wait();
+						this.detourEntryPoint(projectFilesPath).wait();
 
-			this.$platformService.preparePlatform(platform).wait();
-			this.detourEntryPoint(projectFilesPath).wait();
+						let watchGlob = path.join(projectDir, constants.APP_FOLDER_NAME);
 
-			let watchGlob = path.join(projectDir, constants.APP_FOLDER_NAME);
+						let platformSpecificLiveSyncServices: IDictionary<any> = {
+							android: (_device: Mobile.IDevice, $injector: IInjector): IPlatformSpecificLiveSyncService => {
+								return $injector.resolve(this.$androidUsbLiveSyncServiceLocator.factory, {_device: _device});
+							},
+							ios: (_device: Mobile.IDevice, $injector: IInjector) => {
+								return $injector.resolve(this.$iosUsbLiveSyncServiceLocator.factory, {_device: _device});
+							}
+						};
 
-			let platformSpecificLiveSyncServices: IDictionary<any> = {
-				android: (_device: Mobile.IDevice, $injector: IInjector): IPlatformSpecificLiveSyncService => {
-					return $injector.resolve(this.$androidUsbLiveSyncServiceLocator.factory, {_device: _device});
-				},
-				ios: (_device: Mobile.IDevice, $injector: IInjector) => {
-					return $injector.resolve(this.$iosUsbLiveSyncServiceLocator.factory, {_device: _device});
-				}
-			};
+						let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
+							return (() => {
+								this.$platformService.installOnDevice(platform).wait();
+								this.detourEntryPoint(projectFilesPath).wait();
+							}).future<void>()();
+						};
 
-			let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
-				return (() => {
-					this.$platformService.installOnDevice(platform).wait();
-					this.detourEntryPoint(projectFilesPath).wait();
-				}).future<void>()();
-			};
+						let notRunningiOSSimulatorAction = (): IFuture<void> => {
+							return (() => {
+								this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
+								this.detourEntryPoint(projectFilesPath).wait();
+							}).future<void>()();
+						};
 
-			let notRunningiOSSimulatorAction = (): IFuture<void> => {
-				return (() => {
-					this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
-					this.detourEntryPoint(projectFilesPath).wait();
-				}).future<void>()();
-			};
+						let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
+							return (() => {
+								this.$platformService.preparePlatform(platform).wait();
+								return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
+							}).future<string>()();
+						};
 
-			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
-				return (() => {
-					this.$platformService.preparePlatform(platform).wait();
-					return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
-				}).future<string>()();
-			};
+						let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
 
-			let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
+						let liveSyncData = {
+							platform: platform,
+							appIdentifier: this.$projectData.projectId,
+							projectFilesPath: projectFilesPath,
+							excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_DIRECTORIES,
+							watchGlob: watchGlob,
+							platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
+							notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
+							notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
+							localProjectRootPath: localProjectRootPath,
+							beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
+							shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
+							canExecuteFastLiveSync: (filePath: string) => false,
+						};
 
-			let liveSyncData = {
-				platform: platform,
-				appIdentifier: this.$projectData.projectId,
-				projectFilesPath: projectFilesPath,
-				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_DIRECTORIES,
-				watchGlob: watchGlob,
-				platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
-				notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
-				notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
-				localProjectRootPath: localProjectRootPath,
-				beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
-				shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
-				canExecuteFastLiveSync: (filePath: string) => false,
-			};
+						this.$usbLiveSyncServiceBase.sync(liveSyncData).wait();
 
-			this.$usbLiveSyncServiceBase.sync(liveSyncData).wait();
+						if (this.$options.debugBrk) {
+							this.$logger.info('Starting debugger...');
+							let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
+							debugService.debugStart().wait();
+						}
+						blockingOperationFuture.return();
+					} catch(err) {
+						// send the error to the real future
+						blockingOperationFuture.throw(err);
+					}
+				});
+			});
 
-			if (this.$options.debugBrk) {
-				this.$logger.info('Starting debugger...');
-				let debugService: IDebugService = this.$injector.resolve(`${platform}DebugService`);
-				debugService.debugStart().wait();
-			}
+			// Tell the parent that we are ready to receive the data.
+			process.send("ready");
+			blockingOperationFuture.wait();
 		}).future<void>()();
 	}
 
 	public startKarmaServer(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
+			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 			let pathToKarma = path.join(this.$projectData.projectDir, 'node_modules/karma');
 			let KarmaServer = require(path.join(pathToKarma, 'lib/server'));
 			if (platform === 'ios' && this.$options.emulator) {
