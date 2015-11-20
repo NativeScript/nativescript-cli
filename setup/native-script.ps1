@@ -11,7 +11,7 @@ write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Google Chr
 cinst googlechrome
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing node.js"
-cinst nodejs.install -version 0.12.7
+cinst nodejs.install -version 5.1.0
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Java Development Kit"
 cinst jdk8
@@ -25,12 +25,12 @@ echo yes | cmd /c $env:localappdata\Android\android-sdk\tools\android update sdk
 # setup environment
 
 if (!$env:ANDROID_HOME) { [Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:localappdata\Android\android-sdk", "User") }
-$oldPathUser = [Environment]::GetEnvironmentVariable("PATH", "User")
-$pathMachine = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-$myPath = [Environment]::GetEnvironmentVariable("PATH")
 
-[Environment]::SetEnvironmentVariable("PATH", "$myPath;$oldPathUser;$pathMachine;$env:localappdata\Android\android-sdk\tools;$env:localappdata\Android\android-sdk\platform-tools")
-[Environment]::SetEnvironmentVariable("PATH", "$oldPathUser;$env:localappdata\Android\android-sdk\tools;$env:localappdata\Android\android-sdk\platform-tools", "User")
+if (!$env:JAVA_HOME) {
+	$curVer = (Get-ItemProperty "HKLM:\SOFTWARE\JavaSoft\Java Development Kit").CurrentVersion
+	$javaHome = (Get-ItemProperty "HKLM:\Software\JavaSoft\Java Development Kit\$curVer").JavaHome
+	[Environment]::SetEnvironmentVariable("JAVA_HOME", $javaHome, "User")
+}
 
 # install NativeScript CLI
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing NativeScript CLI"
