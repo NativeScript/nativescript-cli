@@ -154,8 +154,8 @@ class AndroidDebugService implements IDebugService {
 
 	private attachDebugger(deviceId: string,packageName: string): void {
         
-        //let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-debug\"', "--ez", "enable", "true"];
-        //this.device.adb.executeShellCommand(startDebuggerCommand).wait();
+        let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-debug\"', "--ez", "enable", "true"];
+        this.device.adb.executeShellCommand(startDebuggerCommand).wait();
         
         var port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName);
         
