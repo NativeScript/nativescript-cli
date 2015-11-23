@@ -8,7 +8,7 @@ NativeScript CLI Changelog
 * [Implemented #493](https://github.com/NativeScript/nativescript-cli/issues/493): Enable transpilers support in NativeScript projects.
 * [Implemented #594](https://github.com/NativeScript/nativescript-cli/issues/594): Implement a hard dependency on the node.js version and exit if not satisfied.
 * [Implemented #684](https://github.com/NativeScript/nativescript-cli/issues/684): Enable commands hooks.
-* [Implemented #955](https://github.com/NativeScript/nativescript-cli/issues/955): Support for xCode7 simulator.
+* [Implemented #955](https://github.com/NativeScript/nativescript-cli/issues/955): Support for Xcode7 simulator.
 * [Implemented #1007](https://github.com/NativeScript/nativescript-cli/issues/1007): Smarter and faster LiveSync.
 * [Implemented #1048](https://github.com/NativeScript/nativescript-cli/issues/1048): Support Gradle files from plugins, merge android resource files using aapt and respect AndroidManifest.xml from App_Resources.
 * [Implemented #1113](https://github.com/NativeScript/nativescript-cli/issues/1113): Let users create and execute unit tests in their projects.
