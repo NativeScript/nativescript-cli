@@ -95,6 +95,12 @@ class TestExecutionService implements ITestExecutionService {
 
 						let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
 
+						let getApplicationPathForiOSSimulatorAction = (): IFuture<string> => {
+							return (() => {
+								return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+							}).future<string>()();
+						};
+
 						let liveSyncData = {
 							platform: platform,
 							appIdentifier: this.$projectData.projectId,
@@ -104,6 +110,7 @@ class TestExecutionService implements ITestExecutionService {
 							platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
 							notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
 							notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
+							getApplicationPathForiOSSimulatorAction: getApplicationPathForiOSSimulatorAction,
 							localProjectRootPath: localProjectRootPath,
 							beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
 							shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
