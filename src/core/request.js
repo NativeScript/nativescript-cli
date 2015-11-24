@@ -1,6 +1,3 @@
-const isFunction = require('lodash/lang/isFunction');
-const isString = require('lodash/lang/isString');
-const isPlainObject = require('lodash/lang/isPlainObject');
 const HttpMethod = require('./enums').HttpMethod;
 const Rack = require('../rack/rack');
 const Response = require('./response');
@@ -9,20 +6,27 @@ const Query = require('./query');
 const url = require('url');
 const Client = require('./client');
 const DataPolicy = require('./enums').DataPolicy;
+const StatusCode = require('./enums').StatusCode;
 const KinveyError = require('./errors').KinveyError;
 const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
-const SyncUtils = require('./utils/sync');
+const UrlPattern = require('url-pattern');
 const assign = require('lodash/object/assign');
 const merge = require('lodash/object/merge');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const indexBy = require('lodash/collection/indexBy');
 const reduce = require('lodash/collection/reduce');
+const forEach = require('lodash/collection/forEach');
 const byteCount = require('./utils/string').byteCount;
-const customRequestPropertiesMaxBytes = 2000;
-const maxIdsPerRequest = 200;
-const defaultTimeout = 10000; // 10 seconds
+const isArray = require('lodash/lang/isArray');
+const isFunction = require('lodash/lang/isFunction');
+const isString = require('lodash/lang/isString');
+const isPlainObject = require('lodash/lang/isPlainObject');
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+const customRequestPropertiesMaxBytes = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
+const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 10000;
+const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
 
 class Request {
   constructor(options = {}) {
@@ -264,16 +268,20 @@ class Request {
     delete this.headers[header.toLowerCase()];
   }
 
-  execute() {
+  execute(options = {}) {
     if (this.executing) {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
+
+    options = assign({
+      skipSync: false
+    }, options);
 
     const promise = Promise.resolve();
     const auth = this.auth;
     this.executing = true;
 
-    promise.then(() => {
+    return promise.then(() => {
       return isFunction(auth) ? auth(this.client) : auth;
     }).then(authInfo => {
       if (authInfo) {
@@ -289,8 +297,8 @@ class Request {
     }).then(() => {
       if (this.dataPolicy === DataPolicy.LocalOnly) {
         return this.executeLocal().then(response => {
-          if (this.method !== HttpMethod.GET && response && response.isSuccess()) {
-            return SyncUtils.notify(this.toJSON(), response.toJSON()).then(() => {
+          if (!options.skipSync && this.method !== HttpMethod.GET && response && response.isSuccess()) {
+            return this.notifySync(response.data).then(() => {
               return response;
             });
           }
@@ -313,9 +321,15 @@ class Request {
               return request.execute().then(() => {
                 return response;
               }).catch(err => {
-                return SyncUtils.notify(this.toJSON(), response.toJSON()).then(() => {
-                  throw err;
-                });
+                // TODO check err
+
+                if (!options.skipSync) {
+                  return this.notifySync(response.data).then(() => {
+                    return response;
+                  });
+                }
+
+                throw err;
               });
             }
           } else {
@@ -373,9 +387,7 @@ class Request {
           return response;
         });
       }
-    });
-
-    return promise.then(response => {
+    }).then(response => {
       if (!response) {
         throw new KinveyError('No response');
       } else if (!response.isSuccess()) {
@@ -383,11 +395,13 @@ class Request {
           description: 'Error',
           debug: ''
         };
-        throw new KinveyError(data.description, data.debug);
+        throw new KinveyError(data.message, data.debug);
       }
 
       this.response = response;
       return response;
+    }).catch(err => {
+      throw err;
     }).finally(() => {
       this.executing = false;
     });
@@ -401,6 +415,82 @@ class Request {
   executeCloud() {
     const rack = Rack.networkRack;
     return rack.execute(this);
+  }
+
+  /**
+   * {
+    _id = 'books',
+    documents = {
+      '1231uhds089kjhsd0923': {
+        operation: 'POST',
+        requestProperties: ...
+      }
+    },
+    size: 1
+  }
+   */
+  notifySync(data = []) {
+    const pattern = new UrlPattern('/:namespace/:appId/:collection(/)(:id)(/)');
+    const matches = pattern.match(this.path);
+    const getRequest = new Request({
+      method: HttpMethod.GET,
+      path: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
+      auth: this.auth,
+      client: this.client,
+      dataPolicy: DataPolicy.LocalOnly
+    });
+
+    const promise = getRequest.execute().catch(() => {
+      return new Response(StatusCode.OK, {
+        _id: matches.collection,
+        documents: {},
+        size: 0
+      });
+    }).then(response => {
+      const syncCollection = response.data || {
+        _id: matches.collection,
+        documents: {},
+        size: 0
+      };
+      const documents = syncCollection.documents;
+      let size = syncCollection.size;
+
+      if (!isArray(data)) {
+        data = [data];
+      }
+
+      forEach(data, item => {
+        if (item._id) {
+          if (!documents.hasOwnProperty(item._id)) {
+            size = size + 1;
+          }
+
+          documents[item._id] = {
+            request: this.toJSON(),
+            timestamp: item._kmd ? item._kmd.lmt : null
+          };
+        }
+      });
+
+      syncCollection.documents = documents;
+      syncCollection.size = size;
+
+      const updateRequest = new Request({
+        method: HttpMethod.PUT,
+        path: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
+        auth: this.auth,
+        data: syncCollection,
+        client: this.client,
+        dataPolicy: DataPolicy.LocalOnly
+      });
+      return updateRequest.execute({
+        skipSync: true
+      });
+    }).then(() => {
+      return null;
+    });
+
+    return promise;
   }
 
   abort() {

@@ -1,45 +1,20 @@
 const StoreAdapter = require('./enums').StoreAdapter;
-const KinveyError = require('./errors').KinveyError;
 const Promise = require('bluebird');
 const Query = require('./query');
 const Aggregation = require('./aggregation');
-const NotFoundError = require('./errors').NotFoundError;
 const IndexedDB = require('./persistence/indexeddb');
 const LocalStorage = require('./persistence/localstorage');
 const Memory = require('./persistence/memory');
 const WebSQL = require('./persistence/websql');
-const Loki = require('lokijs');
 const log = require('loglevel');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
-const pluck = require('lodash/collection/pluck');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
-const isFunction = require('lodash/lang/isFunction');
-const defaultDatabaseName = 'kinvey';
-const dbLoaded = {};
-
-const indexedDB = new Loki(defaultDatabaseName, {
-  adapter: new IndexedDB()
-});
-
-const localStorage = new Loki(defaultDatabaseName, {
-  adapter: new LocalStorage()
-});
-
-const memory = new Loki(defaultDatabaseName, {
-  adapter: new Memory()
-});
-
-const websql = new Loki(defaultDatabaseName, {
-  adapter: new WebSQL()
-});
+const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
 class Store {
-  constructor(name = 'data', adapters = [StoreAdapter.Memory]) {
-    this.dbName = name;
-    this.dbLoaded = false;
-
+  constructor(dbName = 'kinvey', adapters = [StoreAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }
@@ -48,28 +23,28 @@ class Store {
       switch (adapter) {
       case StoreAdapter.IndexedDB:
         if (IndexedDB.isSupported()) {
-          this.db = indexedDB;
+          this.db = new IndexedDB(dbName);
           return false;
         }
 
         break;
       case StoreAdapter.LocalStorage:
         if (LocalStorage.isSupported()) {
-          this.db = localStorage;
+          this.db = new LocalStorage(dbName);
           return false;
         }
 
         break;
       case StoreAdapter.Memory:
         if (Memory.isSupported()) {
-          this.db = memory;
+          this.db = new Memory(dbName);
           return false;
         }
 
         break;
       case StoreAdapter.WebSQL:
         if (WebSQL.isSupported()) {
-          this.db = websql;
+          this.db = new WebSQL(dbName);
           return false;
         }
 
@@ -82,7 +57,7 @@ class Store {
     if (!this.db) {
       if (Memory.isSupported()) {
         log.error('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
-        this.db = memory;
+        this.db = new Memory(dbName);
       } else {
         log.error('Provided adapters are unsupported on this platform.', adapters);
       }
@@ -90,7 +65,7 @@ class Store {
   }
 
   get objectIdPrefix() {
-    return 'local_';
+    return objectIdPrefix;
   }
 
   generateObjectId(length = 24) {
@@ -109,90 +84,31 @@ class Store {
     return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }
 
-  isDatabaseLoaded() {
-    if (dbLoaded[this.dbName]) {
-      return true;
-    }
-
-    return false;
-  }
-
-  loadDatabase(force = false) {
-    if (!this.isDatabaseLoaded() || force) {
-      const promise = new Promise(resolve => {
-        this.db.loadDatabase({
-          dbname: this.dbName
-        }, () => {
-          dbLoaded[this.dbName] = true;
-          resolve(this.isDatabaseLoaded());
-        });
-      });
-
-      return promise;
-    }
-
-    return Promise.resolve(this.isDatabaseLoaded());
-  }
-
-  saveDatabase() {
-    const promise = new Promise(resolve => {
-      this.db.saveDatabase({
-        dbname: this.dbName
-      }, () => {
-        resolve();
-      });
-    });
-
-    return promise;
-  }
-
-  getCollection(name) {
-    return this.db.getCollection(name);
-  }
-
-  getOrAddCollection(name) {
-    let collection = this.getCollection(name);
-
-    if (!collection) {
-      collection = this.db.addCollection(name, {
-        clone: true,
-        indices: ['_id']
-      });
-      collection.ensureUniqueIndex('_id');
-    }
-
-    return collection;
-  }
-
-  find(name, query) {
-    const promise = this.loadDatabase().then(() => {
-      const collection = this.getOrAddCollection(name);
-
+  find(collection, query) {
+    const promise = this.db.find(collection).then(documents => {
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
 
-      let docs = collection.find();
-
-      if (docs.length > 0 && query) {
-        docs = query.process(docs);
+      if (documents.length > 0 && query) {
+        documents = query.process(documents);
       }
 
-      return docs;
+      return documents;
     });
 
     return promise;
   }
 
-  count(name, query) {
-    const promise = this.find(name, query).then(docs => {
-      return docs.length;
+  count(collection, query) {
+    const promise = this.find(collection, query).then(documents => {
+      return documents.length;
     });
 
     return promise;
   }
 
-  group(name, aggregation) {
+  group(collection, aggregation) {
     if (!(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(aggregation);
     }
@@ -201,16 +117,16 @@ class Store {
     const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
     aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
 
-    const promise = this.find(name, query).then(docs => {
+    const promise = this.find(collection, query).then(documents => {
       const groups = {};
       const response = [];
 
-      forEach(docs, doc => {
+      forEach(documents, document => {
         const group = {};
 
         for (const name in aggregation.key) {
           if (aggregation.key.hasOwnProperty(name)) {
-            group[name] = doc[name];
+            group[name] = document[name];
           }
         }
 
@@ -225,7 +141,7 @@ class Store {
           }
         }
 
-        aggregation.reduce(doc, groups[key]);
+        aggregation.reduce(document, groups[key]);
       });
 
       for (const segment in groups) {
@@ -240,80 +156,39 @@ class Store {
     return promise;
   }
 
-  get(name, id) {
+  get(collection, id) {
     if (!isString(id)) {
       log.warn(`${id} is not a string. Casting to a string value.`, id);
       id = String(id);
     }
 
-    const promise = this.loadDatabase().then(() => {
-      const collection = this.getOrAddCollection(name);
-      const query = new Query();
-      query.contains('_id', [id]);
-
-      const docs = collection.find(query.toJSON().filter);
-      return docs.length === 1 ? docs[0] : null;
-    });
-
+    const promise = this.db.get(collection, id);
     return promise;
   }
 
-  findAndModify(name, id, fn) {
-    if (!isFunction(fn)) {
-      return Promise.reject(new KinveyError('fn argument must be a function.'));
+  save(collection, document) {
+    if (!document) {
+      return Promise.resolve(null);
     }
 
-    const promise = this.get(name, id).then(doc => {
-      return fn(doc);
-    }).then(doc => {
-      return this.save(name, doc);
-    });
-
-    return promise;
-  }
-
-  save(name, doc) {
-    const promise = this.loadDatabase().then(() => {
-      if (!doc) {
-        return null;
-      }
-
-      if (isArray(doc)) {
-        return this.saveBulk(name, doc);
-      }
-
-      if (!doc._id) {
-        doc._id = this.generateObjectId();
-      }
-
-      const collection = this.getOrAddCollection(name);
-
-      if (doc.$loki) {
-        return collection.update(doc);
-      }
-
-      return collection.insert(doc);
-    });
-
-    return promise;
-  }
-
-  saveBulk(name, docs = []) {
-    const promises = [];
-
-    if (!isArray(docs)) {
-      return this.save(name, docs);
+    if (isArray(document)) {
+      return this.saveBulk(collection, document);
     }
 
-    forEach(docs, doc => {
-      promises.push(this.save(name, doc));
-    });
-
-    const promise = Promise.all(promises);
+    const promise = this.db.save(collection, document);
     return promise;
   }
 
-  remove(name, id) {
+  saveBulk(collection, documents = []) {
+    if (!isArray(documents)) {
+      return this.save(collection, documents);
+    }
+
+    const promise = this.db.saveBulk(collection, documents);
+    return promise;
+  }
+
+  delete(collection, id) {
     if (!id) {
       return Promise.resolve({
         count: 0,
@@ -321,46 +196,19 @@ class Store {
       });
     }
 
-    if (isArray(id)) {
-      return this.removeBulk(name, id);
-    }
-
-    const promise = this.get(name, id).then(doc => {
-      if (!doc) {
-        throw new NotFoundError();
-      }
-
-      const collection = this.getOrAddCollection(name);
-      collection.remove(doc);
-
-      return {
-        count: 1,
-        documents: [doc]
-      };
-    });
-
+    const promise = this.db.delete(collection, id);
     return promise;
   }
 
-  removeBulk(name, ids = []) {
-    const promises = [];
+  deleteWhere(collection, query) {
+    const promise = this.find(collection, query).then(documents => {
+      const promises = documents.map(document => {
+        return this.delete(collection, document._id);
+      });
 
-    if (!isArray(ids)) {
-      return this.remove(name, ids);
-    }
-
-    forEach(ids, id => {
-      promises.push(this.remove(name, id));
+      return Promise.all(promises);
     });
 
-    const promise = Promise.all(promises);
-    return promise;
-  }
-
-  removeWhere(name, query) {
-    const promise = this.find(name, query).then(docs => {
-      return this.removeBulk(name, pluck(docs, '_id'));
-    });
     return promise;
   }
 }

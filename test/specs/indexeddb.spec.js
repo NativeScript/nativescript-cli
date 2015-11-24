@@ -1,86 +1,72 @@
-import IndexedDBAdapter from '../../src/core/cache/adapters/indexeddb';
+import IndexedDB from '../../src/core/persistence/indexeddb';
 import Query from '../../src/core/query';
+const collection = 'books';
 
-describe('IndexedDBAdapter', function() {
+describe('IndexedDB', function() {
   before(function() {
-    this.dbInfo = {
-      name: global.randomString(),
-      collection: 'foo'
-    };
-    this.adapter = new IndexedDBAdapter(this.dbInfo);
+    this.db = new IndexedDB(global.randomString());
   });
 
   after(function() {
-    return this.adapter.clear();
+    return this.db.destroy();
   });
 
   beforeEach(function() {
-    let docs = [];
+    let documents = [];
 
     for (let i = 0; i < 2; i++) {
-      docs.push({
+      documents.push({
         _id: global.randomString()
       });
     }
 
-    docs = docs.sort((doc1, doc2) => {
-      return doc1._id.localeCompare(doc2._id);
+    documents = documents.sort((document1, document2) => {
+      return document1._id.localeCompare(document2._id);
     });
 
-    return this.adapter.batch(docs).then(docs => {
-      this.docs = docs;
+    return this.db.saveBulk(collection, documents).then(documents => {
+      this.documents = documents;
     });
   });
 
   afterEach(function() {
-    return this.adapter.clean().then(() => {
-      this.docs = [];
-    });
-  });
-
-  describe('dbInfo', function() {
-    it('should exist', function() {
-      expect(this.adapter.dbInfo).to.exist;
-      expect(this.adapter.dbInfo).to.equal(this.dbInfo);
-    });
-  });
-
-  describe('queue', function() {
-    it('should be an empty array', function() {
-      expect(this.adapter.queue).to.exist;
-      expect(this.adapter.queue).to.be.an.instanceOf(Array);
-      expect(this.adapter.queue).to.deep.equal([]);
+    return this.db.removeWhere(collection).then(() => {
+      this.documents = [];
+      delete this.documents;
     });
   });
 
   describe('find()', function() {
     it('should return all the documents in the collection', function() {
-      return this.adapter.find().then(storedDocs => {
-        storedDocs = storedDocs.sort((doc1, doc2) => {
-          return doc1._id.localeCompare(doc2._id);
+      return this.db.find(collection).then(documents => {
+        documents = documents.sort((document1, document2) => {
+          return document1._id.localeCompare(document2._id);
         });
 
-        expect(storedDocs.length).to.equal(this.docs.length);
-        expect(storedDocs).to.deep.equal(this.docs);
-        return storedDocs;
+        expect(documents.length).to.equal(this.documents.length);
+        expect(documents).to.deep.equal(this.documents);
+        return documents;
       });
     });
 
     it('should return the documents in the collection that match the provided query', function() {
-      const doc = { _id: global.randomString(), title: 'foo' };
-      return this.adapter.save(doc).then(() => {
+      const document = {
+        title: 'foo'
+      };
+
+      return this.db.save(collection, document).then(() => {
         const query = new Query();
         query.equalTo('title', 'foo');
-        return this.adapter.find(query);
-      }).then(storedDocs => {
-        expect(storedDocs.length).to.equal(1);
-        expect(storedDocs).to.deep.equal([doc]);
-        expect(storedDocs[0].title).to.equal('foo');
+        return this.db.find(collection, query);
+      }).then(documents => {
+        expect(documents.length).to.equal(1);
+        expect(documents).to.deep.equal([document]);
+        expect(documents[0].title).to.equal(document.title);
       });
     });
   });
 
-  describe('count()', function() {
+  describe('get()', function() {
     it('should return the count of all the documents in the collection', function() {
       return this.adapter.count().then(count => {
         expect(count).to.equal(this.docs.length);

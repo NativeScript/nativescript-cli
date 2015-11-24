@@ -11,7 +11,7 @@ const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
 const Promise = require('bluebird');
-const UserUtils = require('../../utils/user');
+const UserUtils = require('../utils/user');
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 
 class User extends Model {
@@ -32,6 +32,7 @@ class User extends Model {
 
       return null;
     });
+
     return promise;
   }
 
@@ -45,13 +46,14 @@ class User extends Model {
       user = new User(result(user, 'toJSON', user));
     }
 
-    const promise = UserUtils.setActive(user.toJSON(), client).then(data => {
+    const promise = UserUtils.setActive(user, client).then(data => {
       if (data) {
         return new User(data);
       }
 
       return null;
     });
+
     return promise;
   }
 

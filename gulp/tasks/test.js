@@ -52,6 +52,11 @@ gulp.task('test-request', ['lint-src', 'lint-test-request'], function() {
   return test(['test/setup/node.js', 'test/specs/request.spec.js']);
 });
 
+gulp.task('test-sync', ['lint-src', 'lint-test-sync'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', 'test/specs/sync.spec.js']);
+});
+
 gulp.task('test-user', ['lint-src', 'lint-test-user'], function() {
   require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/user.spec.js']);

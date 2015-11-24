@@ -57,6 +57,10 @@ class Metadata {
     return this[privateMetadataSymbol].lastModified;
   }
 
+  get lmt() {
+    return this.lastModified;
+  }
+
   get authtoken() {
     return this[privateMetadataSymbol].authtoken;
   }

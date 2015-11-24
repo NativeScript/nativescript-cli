@@ -1,93 +1,115 @@
 const KinveyError = require('../errors').KinveyError;
+const NotFoundError = require('../errors').NotFoundError;
+const Promise = require('bluebird');
+const StoreUtils = require('../utils/store');
 const forEach = require('lodash/collection/forEach');
-const isFunction = require('lodash/lang/isFunction');
-const tableName = process.env.KINVEY_DATABASE_TABLE_NAME || 'data';
-let pendingTransactions = [];
-let inTransaction = false;
+const isArray = require('lodash/lang/isArray');
 let indexedDB = undefined;
+let db = null;
+let inTransaction = false;
+let queue = [];
 
 if (typeof window !== 'undefined') {
-  indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' };
-  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+  // Require indexeddbshim to patch buggy indexed db implementations
+  require('indexeddbshim');
+  window.shimIndexedDB.__useShim();
+  indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+} else {
+  indexedDB = require('fake-indexeddb');
 }
 
 class IndexedDB {
-  constructor(app = 'kinvey') {
-    this.app = app;
+  constructor(dbName = 'kinvey') {
+    this.dbName = dbName;
   }
 
-  transaction(dbName, write = false, done, force = false) {
-    if (this.db && (force || !inTransaction)) {
-      if (this.db.objectStoreNames.contains(tableName)) {
+  openTransaction(collection, write = false, success, error, force = false) {
+    if (db && db.name === this.dbName) {
+      if (db.objectStoreNames.indexOf(collection) !== -1) {
         try {
           const mode = write ? 'readwrite' : 'readonly';
-          const txn = this.db.transaction([tableName], mode);
-          const store = txn.objectStore(tableName);
-          done(null, store);
-          return true;
+          const txn = db.transaction([collection], mode);
+
+          if (txn) {
+            const store = txn.objectStore(collection);
+            return success(store);
+          }
+
+          throw new KinveyError(`Unable to open a transaction for the ${collection} collection on the ${this.dbName} indexedDB database.`);
         } catch (err) {
-          done(err);
-          return false;
+          return error(err);
         }
       } else if (!write) {
-        done(new KinveyError(`The ${tableName} table was not found for this app backend.`));
-        return false;
+        return error(new NotFoundError(`The ${collection} collection was not found on the ${this.dbName} indexedDB database.`));
       }
     }
 
     if (!force && inTransaction) {
-      pendingTransactions.push(() => {
-        this.transaction(tableName, write, done);
+      return queue.push(() => {
+        this.openTransaction(collection, write, success, error);
       });
-      return false;
+    }
+
+    // Switch flag
+    inTransaction = true;
+
+    if (db && db.name !== this.dbName) {
+      db.close();
+      db = null;
     }
 
     let request;
-    inTransaction = true;
 
-    if (this.db) {
-      const version = this.db.version + 1;
-      this.db.close();
-      request = indexedDB.open(dbName, version);
+    if (db) {
+      const version = db.version + 1;
+      db.close();
+      request = indexedDB.open(this.dbName, version);
     } else {
-      request = indexedDB.open(dbName);
+      request = indexedDB.open(this.dbName);
     }
 
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
+    // If the database is opened with an higher version than its current, the
+    // `upgradeneeded` event is fired. Save the handle to the database, and
+    // create the collection.
+    request.onupgradeneeded = function onUpgradeNeeded(e) {
+      db = e.target.result;
 
-      if (db.objectStoreNames.contains(tableName)) {
-        db.deleteObjectStore(tableName);
-      }
-
-      if (!db.objectStoreNames.contains(tableName) && write) {
-        const objectStore = db.createObjectStore(tableName, { keyPath: 'id', autoIncrement: true });
-        objectStore.createIndex('app', 'app', { unique: false });
-        objectStore.createIndex('key', 'key', { unique: false });
-        objectStore.createIndex('appkey', 'appkey', { unique: true });
+      if (write) {
+        db.createObjectStore(collection, { keyPath: '_id' });
       }
     };
 
+    // The `success` event is fired after `upgradeneeded` terminates.
+    // Save the handle to the database.
     request.onsuccess = (e) => {
-      this.db = e.target.result;
+      db = e.target.result;
 
-      this.db.onversionchange = () => {
-        if (this.db) {
-          this.db.onversionchange = null;
-          this.db.close();
-          this.db = null;
+      // If a second instance of the same IndexedDB database performs an
+      // upgrade operation, the `versionchange` event is fired. Then, close the
+      // database to allow the external upgrade to proceed.
+      db.onversionchange = function onVersionChange() {
+        if (db) {
+          db.close();
+          db = null;
         }
       };
 
-      const wrap = function(done) {
-        return function(err, store) {
-          done(err, store);
+      // Try to obtain the collection handle by recursing. Append the handlers
+      // to empty the queue upon success and failure. Set the `force` flag so
+      // all but the current transaction remain queued.
+      const wrap = function wrap(done) {
+        return function(arg) {
+          done(arg);
+
+          // Switch flag
           inTransaction = false;
 
-          if (pendingTransactions.length > 0) {
-            const pending = pendingTransactions;
-            pendingTransactions = [];
+          // The database handle has been established, we can now safely empty
+          // the queue. The queue must be emptied before invoking the concurrent
+          // operations to avoid infinite recursion.
+          if (queue.length > 0) {
+            const pending = queue;
+            queue = [];
             forEach(pending, function(fn) {
               fn();
             });
@@ -95,125 +117,171 @@ class IndexedDB {
         };
       };
 
-      this.transaction(tableName, write, wrap(done), true);
+      this.openTransaction(collection, write, wrap(success), wrap(error), true);
     };
 
-    request.onerror = (e) => {
-      throw e;
+    request.onblocked = function onBlocked() {
+      error(new KinveyError(`The ${this.dbName} indexedDB database version can't be upgraded because the database is already open.`));
     };
 
-    return false;
-  }
-
-  loadDatabase(dbName, callback) {
-    this.getAppKey(this.app, dbName, result => {
-      if (isFunction(callback)) {
-        if (result.id === 0) {
-          callback(null);
-          return;
-        }
-
-        callback(result.val);
-      }
-    });
-  }
-
-  getAppKey(app, key, callback) {
-    const defaultResult = {
-      id: 0,
-      success: false
+    request.onerror = function onError(e) {
+      error(new KinveyError(`Unable to open the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
     };
-
-    this.transaction(key, false, (err, store) => {
-      if (err) {
-        if (isFunction(callback)) {
-          callback(defaultResult);
-        }
-
-        return;
-      }
-
-      const index = store.index('appkey');
-      const appkey = `${app},${key}`;
-      const request = index.get(appkey);
-
-      request.onsuccess = function(e) {
-        let result = e.target.result;
-
-        if (!result) {
-          result = defaultResult;
-        }
-
-        if (isFunction(callback)) {
-          callback(result);
-        }
-      };
-
-      request.onerror = function(e) {
-        if (isFunction(callback)) {
-          callback(defaultResult);
-        } else {
-          throw e;
-        }
-      };
-    });
   }
 
-  saveDatabase(dbName, data, callback) {
-    this.setAppKey(this.app, dbName, data, result => {
-      if (result && result.success === true) {
-        if (isFunction(callback)) {
-          callback(null);
-        }
-      } else {
-        if (isFunction(callback)) {
-          callback(new KinveyError('Error saving the database.'));
-        }
-      }
-    });
-  }
+  find(collection) {
+    const promise = new Promise((resolve, reject) => {
+      this.openTransaction(collection, false, store => {
+        const request = store.openCursor();
+        const response = [];
 
-  setAppKey(app, key, val, callback) {
-    this.transaction(key, true, (err, store) => {
-      const index = store.index('appkey');
-      const appkey = `${app},${key}`;
-      const request = index.get(appkey);
+        request.onsuccess = function onSuccess(e) {
+          const cursor = e.target.result;
 
-      request.onsuccess = function(e) {
-        let result = e.target.result;
-
-        if (!result) {
-          result = {
-            app: app,
-            key: key,
-            appkey: appkey,
-            val: val
-          };
-        } else {
-          result.val = val;
-        }
-
-        const requestPut = store.put(result);
-
-        requestPut.onsuccess = function() {
-          if (isFunction(callback)) {
-            callback({ success: true });
+          if (cursor) {
+            response.push(cursor.value);
+            return cursor.continue();
           }
+
+          resolve(response);
         };
 
-        requestPut.onerror = function() {
-          if (isFunction(callback)) {
-            callback({ success: false });
-          }
+        request.onerror = function onError(e) {
+          reject(new KinveyError(`An error occurred while fetching data from the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
+      }, reject);
+    });
+
+    return promise;
+  }
+
+  get(collection, id) {
+    const promise = new Promise((resolve, reject) => {
+      this.openTransaction(collection, false, store => {
+        const request = store.get(id);
+
+        request.onsuccess = function onSuccess(e) {
+          const document = e.target.result;
+
+          if (document) {
+            return resolve(document);
+          }
+
+          reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} collection on the ${this.dbName} indexedDB database.`));
+        };
+
+        request.onerror = function onError(e) {
+          reject(new KinveyError(`An error occurred while retrieving a document with id = ${id} from the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        };
+      }, reject);
+    });
+
+    return promise;
+  }
+
+  save(collection, document) {
+    if (isArray(document)) {
+      return this.saveBulk(collection, document);
+    }
+
+    if (!document._id) {
+      document._id = StoreUtils.generateObjectId();
+    }
+
+    const promise = new Promise((resolve, reject) => {
+      this.openTransaction(collection, true, store => {
+        const request = store.put(document);
+
+        request.onsuccess = function onSuccess() {
+          resolve(document);
+        };
+
+        request.onerror = function onError(e) {
+          reject(new KinveyError(`An error occurred while saving a document to the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        };
+      }, reject);
+    });
+
+    return promise;
+  }
+
+  saveBulk(collection, documents) {
+    if (!isArray(documents)) {
+      return this.save(collection, document);
+    }
+
+    if (documents.length === 0) {
+      return Promise.resolve(documents);
+    }
+
+    const promise = new Promise((resolve, reject) => {
+      this.openTransaction(collection, true, store => {
+        const request = store.transaction;
+
+        forEach(documents, document => {
+          document._id = document._id || StoreUtils.generateObjectId();
+          store.put(document);
+        });
+
+        request.oncomplete = function onComplete() {
+          resolve(documents);
+        };
+
+        request.onerror = function onError(e) {
+          reject(new KinveyError(`An error occurred while saving the documents to the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        };
+      }, reject);
+    });
+
+    return promise;
+  }
+
+  delete(collection, id) {
+    const promise = new Promise((resolve, reject) => {
+      this.openTransaction(collection, true, store => {
+        const request = store.transaction;
+        const document = store.get(id);
+        store.delete(id);
+
+        request.oncomplete = function onComplete() {
+          if (!document.result) {
+            return reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} collection on the ${this.dbName} indexedDB database.`));
+          }
+
+          resolve({
+            count: 1,
+            documents: [document.result]
+          });
+        };
+
+        request.onerror = function onError(e) {
+          reject(new KinveyError(`An error occurred while deleting a document with id = ${id} in the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        };
+      }, reject);
+    });
+
+    return promise;
+  }
+
+  destroy() {
+    const promise = new Promise((resolve, reject) => {
+      if (db) {
+        db.close();
+        db = null;
+      }
+
+      const request = indexedDB.deleteDatabase(this.dbName);
+
+      request.onsuccess = function onSuccess() {
+        resolve(null);
       };
 
-      request.onerror = function() {
-        if (isFunction(callback)) {
-          callback({ success: false });
-        }
+      request.onerror = function onError(e) {
+        reject(new KinveyError(`An error occurred while destroying the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
       };
     });
+
+    return promise;
   }
 
   static isSupported() {

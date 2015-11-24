@@ -1,8 +1,9 @@
 const Promise = require('bluebird');
-const Request = require('../core/request').Request;
-const Client = require('../core/client');
-const DataPolicy = require('../core/enums').DataPolicy;
-const HttpMethod = require('../core/enums').HttpMethod;
+const Request = require('../request').Request;
+const Client = require('../client');
+const DataPolicy = require('../enums').DataPolicy;
+const HttpMethod = require('../enums').HttpMethod;
+const result = require('lodash/object/result');
 const activeUserSymbol = Symbol();
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
@@ -32,6 +33,8 @@ class UserUtils {
       user = data[0];
       UserUtils[activeUserSymbol] = user;
       return user;
+    }).catch(() => {
+      return null;
     });
 
     return promise;
@@ -46,7 +49,9 @@ class UserUtils {
           client: client,
           dataPolicy: DataPolicy.LocalOnly
         });
-        return request.execute();
+        return request.execute({
+          skipSync: true
+        });
       }
     }).then(() => {
       if (user) {
@@ -55,9 +60,11 @@ class UserUtils {
           path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
           client: client,
           dataPolicy: DataPolicy.LocalOnly,
-          data: user
+          data: result(user, 'toJSON', user)
         });
-        return request.execute();
+        return request.execute({
+          skipSync: true
+        });
       }
     }).then(response => {
       if (response) {

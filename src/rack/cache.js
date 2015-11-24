@@ -32,24 +32,12 @@ class Cache extends Middleware {
           promise = store.find(collection, query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
-        promise = store.save(collection, request.data).then(result => {
-          return store.saveDatabase().then(() => {
-            return result;
-          });
-        });
+        promise = store.save(collection, request.data);
       } else if (method === HttpMethod.DELETE) {
         if (id) {
-          promise = store.remove(collection, id).then(result => {
-            return store.saveDatabase().then(() => {
-              return result;
-            });
-          });
+          promise = store.delete(collection, id);
         } else {
-          promise = store.removeWhere(collection, query).then(result => {
-            return store.saveDatabase().then(() => {
-              return result;
-            });
-          });
+          promise = store.deleteWhere(collection, query);
         }
       }
 

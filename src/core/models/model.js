@@ -4,7 +4,7 @@ const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const assign = require('lodash/object/assign');
-const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'kinvey.local_';
+const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
@@ -32,12 +32,12 @@ class Model {
     return this.acl;
   }
 
-  get metadata() {
+  get kmd() {
     return new Metadata(this.get(kmdAttribute));
   }
 
   get _kmd() {
-    return this.metadata;
+    return this.kmd;
   }
 
   get defaults() {

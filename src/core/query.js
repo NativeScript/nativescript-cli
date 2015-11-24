@@ -124,7 +124,7 @@ class PrivateQuery {
    * @returns {Query}                     The query.
    */
   greaterThan(field, value) {
-    if (!isNumber(value) || !isString(value)) {
+    if (!isNumber(value) && !isString(value)) {
       throw new Error('You must supply a number or string.');
     }
 
@@ -132,8 +132,7 @@ class PrivateQuery {
   }
 
   greaterThanOrEqualTo(field, value) {
-    // Validate arguments
-    if (!isNumber(value) || !isString(value)) {
+    if (!isNumber(value) && !isString(value)) {
       throw new Error('You must supply a number or string.');
     }
 
@@ -141,7 +140,7 @@ class PrivateQuery {
   }
 
   lessThan(field, value) {
-    if (!isNumber(value) || !isString(value)) {
+    if (!isNumber(value) && !isString(value)) {
       throw new Error('You must supply a number or string.');
     }
 
@@ -149,7 +148,7 @@ class PrivateQuery {
   }
 
   lessThanOrEqualTo(field, value) {
-    if (!isNumber(value) || !isString(value)) {
+    if (!isNumber(value) && !isString(value)) {
       throw new Error('You must supply a number or string.');
     }
 

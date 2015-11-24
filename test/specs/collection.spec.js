@@ -1,6 +1,5 @@
 const Collection = require('../../src/core/collections/collection');
 const DataPolicy = require('../../src/core/enums').DataPolicy;
-const Query = require('../../src/core/query');
 const nock = require('nock');
 
 describe('Collection', function() {

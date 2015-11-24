@@ -13,7 +13,7 @@ const log = require('loglevel');
 const clone = require('lodash/lang/clone');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey.sync';
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 
 // const syncBatchSize = process.env.KINVEY_SYCN_BATCH_SIZE || 1000;
 
@@ -478,13 +478,13 @@ class Collection {
    * var collection = new Kinvey.Collection('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'David Flanagan');
-   * collection.clean(query).then(function(response) {
+   * collection.clear(query).then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  clean(query, options = {}) {
+  clear(query, options = {}) {
     log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
 
     if (query && !(query instanceof Query)) {
@@ -526,13 +526,13 @@ class Collection {
    *
    * @example
    * var collection = new Kinvey.Collection('books');
-   * collection.destroy('507f191e810c19729de860ea').then(function(response) {
+   * collection.Delete('507f191e810c19729de860ea').then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  destroy(id, options = {}) {
+  delete(id, options = {}) {
     log.debug(`Deleting a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
@@ -557,6 +557,21 @@ class Collection {
     return promise;
   }
 
+  countSync(options = {}) {
+    options = assign({
+      auth: this.auth,
+      client: this.client
+    }, options);
+    options.dataPolicy = DataPolicy.LocalOnly;
+
+    const syncCollection = new Collection(syncCollectionName, options);
+    const promise = syncCollection.get(this.name, options).then(row => {
+      return row.get('size') || 0;
+    });
+
+    return promise;
+  }
+
   push(options = {}) {
     options = assign({
       dataPolicy: this.dataPolicy,
@@ -575,7 +590,7 @@ class Collection {
       // it is not (aka a NotFoundError is thrown) then push the id onto the destroyed
       // array.
       const saved = [];
-      const destroyed = [];
+      const deleted = [];
       const promises = identifiers.map(id => {
         const metadata = documents[id];
         const requestOptions = clone(assign(metadata, options), true);
@@ -584,12 +599,12 @@ class Collection {
           saved.push(model);
           return model;
         }).catch(() => {
-          destroyed.push(id);
+          deleted.push(id);
           return null;
         });
       });
 
-      // Save and destroy everything that needs to be synced
+      // Save and delete everything that needs to be synced
       return Promise.all(promises).then(() => {
         // Save the models that need to be saved
         const savePromises = saved.map(model => {
@@ -604,23 +619,17 @@ class Collection {
             return this.save(model, requestOptions).then(model => {
               // Remove the locally created model
               requestOptions.dataPolicy = DataPolicy.LocalOnly;
-              return this.destroy(originalId, requestOptions).then(() => {
+              return this.delete(originalId, requestOptions).then(() => {
                 return {
-                  success: [{
-                    _id: model.id,
-                    document: model.toJSON()
-                  }],
-                  error: []
+                  _id: model.id,
+                  model: model
                 };
               });
             }).catch(err => {
               model.set('_id', originalId);
               return {
-                success: [],
-                error: [{
-                  _id: model.id,
-                  error: err
-                }]
+                _id: model.id,
+                error: err
               };
             });
           }
@@ -628,70 +637,59 @@ class Collection {
           // Else just update the model
           return this.update(model, requestOptions).then(model => {
             return {
-              success: [{
-                _id: model.id,
-                document: model.toJSON()
-              }],
-              error: []
+              _id: model.id,
+              model: model
             };
           }).catch(err => {
             return {
-              success: [],
-              error: [{
-                _id: model.id,
-                error: err
-              }]
+              _id: model.id,
+              error: err
             };
           });
         });
 
-        // Destroy the models that need to be destroyed
-        const destroyPromises = destroyed.map(id => {
+        // Delete the models that need to be deleted
+        const deletePromises = deleted.map(id => {
           const metadata = documents[id];
           const requestOptions = clone(assign(metadata, options), true);
           requestOptions.dataPolicy = DataPolicy.CloudFirst;
-          return this.destroy(id, requestOptions).then(response => {
+          return this.delete(id, requestOptions).then(response => {
             return {
-              success: [{
-                _id: id,
-                document: response.documents[0]
-              }],
-              error: []
+              _id: id,
+              model: response.documents[0]
             };
           }).catch(err => {
             return {
-              success: [],
-              error: [{
-                _id: id,
-                error: err
-              }]
+              _id: id,
+              error: err
             };
           });
         });
 
-        return Promise.all([Promise.all(savePromises), Promise.all(destroyPromises)]);
+        return Promise.all([Promise.all(savePromises), Promise.all(deletePromises)]);
       }).then(responses => {
         const saveResponses = responses[0];
-        const destroyResponses = responses[1];
+        const deletedResponses = responses[1];
+
         const result = {
-          collection: syncModel.toJSON(),
+          collection: syncModel.id,
           success: [],
           error: []
         };
 
         forEach(saveResponses, saveResponse => {
-          if (saveResponse.err) {
+          if (saveResponse.error) {
             result.error.push(saveResponse);
           } else {
             result.success.push(saveResponse);
           }
         });
 
-        forEach(destroyResponses, destroyResponse => {
-          if (destroyResponse.err) {
-            result.error.push(destroyResponse);
+        forEach(deletedResponses, deleteResponse => {
+          if (deleteResponse.error) {
+            result.error.push(deleteResponse);
           } else {
-            result.success.push(destroyResponse);
+            result.success.push(deleteResponse);
           }
         });
 
@@ -717,6 +715,14 @@ class Collection {
       return this.save(models, options);
     });
 
+    return promise;
+  }
+
+  static clearSync(options) {
+    const syncCollection = new Collection(syncCollectionName, options);
+    const query = new Query();
+    query.contains('_id', [this.name]);
+    const promise = syncCollection.clear(query, options);
     return promise;
   }
 }
