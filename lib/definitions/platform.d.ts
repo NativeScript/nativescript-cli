@@ -13,7 +13,6 @@ interface IPlatformService {
 	deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;
-	addLibrary(platform: string, libraryPath: string): IFuture<void>;
 
 	getLatestApplicationPackageForDevice(platformData: IPlatformData): IFuture<IApplicationPackage>;
 	getLatestApplicationPackageForEmulator(platformData: IPlatformData): IFuture<IApplicationPackage>;

@@ -319,9 +319,6 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
-    addLibrary(libraryPath: string): IFuture<void> {
-        return Future.fromResult();
-    }
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}

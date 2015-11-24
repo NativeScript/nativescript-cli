@@ -238,22 +238,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$fs.exists(path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
 	}
 
-	public addLibrary(libraryPath: string): IFuture<void> {
-		return (() => {
-			if(this.$fs.exists(path.join(libraryPath, "project.properties")).wait()) {
-				this.$errors.failWithoutHelp("Unable to add android library. You can use `library add` command only with path to folder containing one or more .jar files.");
-			}
-
-			let name = path.basename(libraryPath);
-			let targetLibPath = this.getLibraryPath(name);
-
-			let targetPath = path.dirname(targetLibPath);
-			this.$fs.ensureDirectoryExists(targetPath).wait();
-
-			shell.cp("-f", path.join(libraryPath, "*.jar"), targetPath);
-		}).future<void>()();
-	}
-
 	public getFrameworkFilesExtensions(): string[] {
 		return [".jar", ".dat"];
 	}
@@ -356,10 +340,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			return this._canUseGradle;
 		}).future<boolean>()();
-	}
-
-	private getLibraryPath(libraryName: string): string {
-		 return path.join(this.$projectData.projectDir, "lib", this.platformData.normalizedPlatformName, libraryName);
 	}
 
 	private copy(projectRoot: string, frameworkDir: string, files: string, cpArg: string): void {
