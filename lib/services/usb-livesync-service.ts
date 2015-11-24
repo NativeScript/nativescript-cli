@@ -116,7 +116,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
 
-			let fastLivesyncFileExtensions = [".css", ".xml"];
+			let fastLivesyncFileExtensions = [".css", ".xml"].concat(platformData.fastLivesyncFileExtensions);
 
 			let fastLiveSync = (filePath: string) => {
 				this.$dispatcher.dispatch(() => {
