@@ -86,7 +86,7 @@ class Model {
     }
 
     const unset = options.unset;
-    const currentAttributes = clone(this.attributes, true);
+    const currentAttributes = clone(this.attributes);
 
     for (const attr in attrs) {
       if (attrs.hasOwnProperty(attr)) {
@@ -114,7 +114,7 @@ class Model {
   }
 
   toJSON() {
-    return clone(this.attributes, true);
+    return clone(this.attributes);
   }
 }
 

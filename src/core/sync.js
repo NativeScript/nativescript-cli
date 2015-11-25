@@ -1,6 +1,7 @@
 const Promise = require('bluebird');
 const Collection = require('./collections/collection');
 const Query = require('./query');
+const DataPolicy = require('./enums').DataPolicy;
 const reduce = require('lodash/collection/reduce');
 const enabledSymbol = Symbol();
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
@@ -18,18 +19,24 @@ class Sync {
     Sync[enabledSymbol] = false;
   }
 
-  static count(options) {
+  static count(options = {}) {
+    options.dataPolicy = DataPolicy.LocalOnly;
+
     const syncCollection = new Collection(syncCollectionName, options);
     const promise = syncCollection.find(null, options).then(syncModels => {
       return reduce(syncModels, function(result, syncModel) {
         return result + syncModel.get('size');
       }, 0);
+    }).catch(() => {
+      return 0;
     });
 
     return promise;
   }
 
-  static push(options) {
+  static push(options = {}) {
+    options.dataPolicy = DataPolicy.LocalOnly;
+
     const syncCollection = new Collection(syncCollectionName, options);
     const query = new Query();
     query.greaterThan('size', 0);
@@ -45,11 +52,13 @@ class Sync {
     return promise;
   }
 
-  static sync(options) {
+  static sync(options = {}) {
+    options.dataPolicy = DataPolicy.LocalOnly;
+
     const syncCollection = new Collection(syncCollectionName, options);
     const promise = syncCollection.find(null, options).then(syncModels => {
       const promises = syncModels.map(syncModel => {
-        const collection = new Collection(syncModel.get('name'), options);
+        const collection = new Collection(syncModel.id, options);
         return collection.sync();
       });
 
@@ -59,9 +68,12 @@ class Sync {
     return promise;
   }
 
-  static clean(query, options) {
+  static clear(query, options = {}) {
+    options.dataPolicy = DataPolicy.LocalOnly;
+    options.skipSync = true;
+
     const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.clean(query, options);
+    const promise = syncCollection.clear(query, options);
     return promise;
   }
 }

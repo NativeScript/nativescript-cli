@@ -184,7 +184,7 @@ class KinveyRack extends Rack {
   }
 
   execute(request) {
-    const requestClone = clone(result(request, 'toJSON', request), true);
+    const requestClone = clone(result(request, 'toJSON', request));
     const promise = super.execute(requestClone).then(request => {
       const response = request.response;
 

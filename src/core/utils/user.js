@@ -47,11 +47,10 @@ class UserUtils {
           method: HttpMethod.DELETE,
           path: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
           client: client,
-          dataPolicy: DataPolicy.LocalOnly
-        });
-        return request.execute({
+          dataPolicy: DataPolicy.LocalOnly,
           skipSync: true
         });
+        return request.execute();
       }
     }).then(() => {
       if (user) {
@@ -60,11 +59,10 @@ class UserUtils {
           path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
           client: client,
           dataPolicy: DataPolicy.LocalOnly,
-          data: result(user, 'toJSON', user)
-        });
-        return request.execute({
+          data: result(user, 'toJSON', user),
           skipSync: true
         });
+        return request.execute();
       }
     }).then(response => {
       if (response) {

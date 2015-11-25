@@ -39,7 +39,8 @@ class Request {
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.CloudOnly,
       responseType: ResponseType.Text,
-      timeout: defaultTimeout
+      timeout: defaultTimeout,
+      skipSync: false
     }, options);
 
     if (!(options.client instanceof Client)) {
@@ -65,6 +66,7 @@ class Request {
     this.dataPolicy = options.dataPolicy;
     this.timeout = options.timeout;
     this.executing = false;
+    this.skipSync = options.skipSync;
 
     const headers = {};
     headers.Accept = 'application/json';
@@ -268,14 +270,10 @@ class Request {
     delete this.headers[header.toLowerCase()];
   }
 
-  execute(options = {}) {
+  execute() {
     if (this.executing) {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
-
-    options = assign({
-      skipSync: false
-    }, options);
 
     const promise = Promise.resolve();
     const auth = this.auth;
@@ -297,7 +295,7 @@ class Request {
     }).then(() => {
       if (this.dataPolicy === DataPolicy.LocalOnly) {
         return this.executeLocal().then(response => {
-          if (!options.skipSync && this.method !== HttpMethod.GET && response && response.isSuccess()) {
+          if (!this.skipSync && this.method !== HttpMethod.GET && response && response.isSuccess()) {
             return this.notifySync(response.data).then(() => {
               return response;
             });
@@ -323,7 +321,7 @@ class Request {
               }).catch(err => {
                 // TODO check err
 
-                if (!options.skipSync) {
+                if (!this.skipSync) {
                   return this.notifySync(response.data).then(() => {
                     return response;
                   });
@@ -467,7 +465,7 @@ class Request {
 
           documents[item._id] = {
             request: this.toJSON(),
-            timestamp: item._kmd ? item._kmd.lmt : null
+            lmt: item._kmd ? item._kmd.lmt : null
           };
         }
       });
@@ -481,11 +479,10 @@ class Request {
         auth: this.auth,
         data: syncCollection,
         client: this.client,
-        dataPolicy: DataPolicy.LocalOnly
-      });
-      return updateRequest.execute({
+        dataPolicy: DataPolicy.LocalOnly,
         skipSync: true
       });
+      return updateRequest.execute();
     }).then(() => {
       return null;
     });
@@ -511,7 +508,7 @@ class Request {
       timeout: this.timeout
     };
 
-    return clone(json, true);
+    return clone(json);
   }
 }
 

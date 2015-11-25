@@ -39,7 +39,8 @@ class Collection {
       auth: Auth.default,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.LocalFirst,
-      model: Model
+      model: Model,
+      skipSync: false
     }, options);
 
     /**
@@ -66,6 +67,11 @@ class Collection {
      * @type {Model}
      */
     this.model = options.model;
+
+    /**
+     * @type {boolean}
+     */
+    this.skipSync = options.skipSync;
   }
 
   /**
@@ -120,7 +126,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
     options.path = this.getPath(options.client);
@@ -186,7 +193,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
     options.path = `${this.getPath(options.client)}/_group`;
@@ -251,7 +259,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
     options.path = `${this.getPath(options.client)}/_count`;
@@ -295,7 +304,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
     options.path = `${this.getPath(options.client)}/${id}`;
@@ -365,7 +375,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.POST;
     options.path = this.getPath(options.client);
@@ -441,7 +452,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.PUT;
     options.path = `${this.getPath(options.client)}/${model.id}`;
@@ -494,7 +506,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.DELETE;
     options.path = this.getPath(options.client);
@@ -538,7 +551,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.DELETE;
     options.path = `${this.getPath(options.client)}/${id}`;
@@ -560,7 +574,8 @@ class Collection {
   countSync(options = {}) {
     options = assign({
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.dataPolicy = DataPolicy.LocalOnly;
 
@@ -576,7 +591,8 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.dataPolicy = DataPolicy.LocalOnly;
 
@@ -585,6 +601,7 @@ class Collection {
     const promise = syncCollection.get(this.name, options).then(syncModel => {
       const documents = syncModel.get('documents');
       const identifiers = Object.keys(documents);
+      let size = syncModel.get('size');
 
       // Get the document. If it is found, push it onto the saved array and if
       // it is not (aka a NotFoundError is thrown) then push the id onto the destroyed
@@ -593,7 +610,7 @@ class Collection {
       const deleted = [];
       const promises = identifiers.map(id => {
         const metadata = documents[id];
-        const requestOptions = clone(assign(metadata, options), true);
+        const requestOptions = clone(assign(metadata, options));
         requestOptions.dataPolicy = DataPolicy.LocalOnly;
         return this.get(id, requestOptions).then(model => {
           saved.push(model);
@@ -609,7 +626,7 @@ class Collection {
         // Save the models that need to be saved
         const savePromises = saved.map(model => {
           const metadata = documents[model.id];
-          const requestOptions = clone(assign(metadata, options), true);
+          const requestOptions = clone(assign(metadata, options));
           requestOptions.dataPolicy = DataPolicy.CloudFirst;
 
           // If the model is new then just save it
@@ -619,7 +636,11 @@ class Collection {
             return this.save(model, requestOptions).then(model => {
               // Remove the locally created model
               requestOptions.dataPolicy = DataPolicy.LocalOnly;
+              requestOptions.skipSync = true;
               return this.delete(originalId, requestOptions).then(() => {
+                size = size - 1;
+                delete documents[originalId];
+
                 return {
                   _id: model.id,
                   model: model
@@ -636,6 +657,9 @@ class Collection {
 
           // Else just update the model
           return this.update(model, requestOptions).then(model => {
+            size = size - 1;
+            delete documents[model.id];
+
             return {
               _id: model.id,
               model: model
@@ -651,9 +675,12 @@ class Collection {
         // Delete the models that need to be deleted
         const deletePromises = deleted.map(id => {
           const metadata = documents[id];
-          const requestOptions = clone(assign(metadata, options), true);
+          const requestOptions = clone(assign(metadata, options));
           requestOptions.dataPolicy = DataPolicy.CloudFirst;
           return this.delete(id, requestOptions).then(response => {
+            size = size - 1;
+            delete documents[id];
+
             return {
               _id: id,
               model: response.documents[0]
@@ -694,6 +721,13 @@ class Collection {
         });
 
         return result;
+      }).then(result => {
+        syncModel.set('size', size);
+        syncModel.set('documents', documents);
+        options.skipSync = true;
+        return syncCollection.save(syncModel, options).then(() => {
+          return result;
+        });
       });
     });
 
@@ -704,21 +738,38 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: Auth.default,
-      client: this.client
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
 
-    const promise = this.push(options).then(() => {
+    const promise = this.push(options).then(pushResponse => {
       options.dataPolicy = DataPolicy.CloudOnly;
-      return this.find(query, options);
-    }).then(models => {
-      options.dataPolicy = DataPolicy.LocalOnly;
-      return this.save(models, options);
+      return this.find(query, options).then(models => {
+        options.dataPolicy = DataPolicy.LocalOnly;
+        options.skipSync = true;
+        return this.save(models, options);
+      }).then(syncResponse => {
+        return {
+          push: pushResponse,
+          sync: {
+            collection: this.name,
+            models: syncResponse
+          }
+        };
+      });
     });
 
     return promise;
   }
 
-  static clearSync(options) {
+  clearSync(options = {}) {
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: Auth.default,
+      client: this.client
+    }, options);
+    options.skipSync = true;
+
     const syncCollection = new Collection(syncCollectionName, options);
     const query = new Query();
     query.contains('_id', [this.name]);

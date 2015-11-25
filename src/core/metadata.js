@@ -36,7 +36,7 @@ class PrivateMetadata {
   }
 
   toJSON() {
-    return clone(this.kmd, true);
+    return clone(this.kmd);
   }
 }
 
