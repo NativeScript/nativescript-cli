@@ -83,7 +83,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 				return (() => {
-					let projectFileInfo = this.getProjectFileInfo(filePath);
+					let projectFileInfo = this.getProjectFileInfo(filePath, platform);
 					let mappedFilePath = path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), projectFileInfo.onDeviceName));
 
 					// Handle files that are in App_Resources/<platform>
@@ -148,6 +148,12 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				});
 			};
 
+			let getApplicationPathForiOSSimulatorAction = (): IFuture<string> => {
+				return (() => {
+					return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+				}).future<string>()();
+			};
+
 			let liveSyncData = {
 				platform: platform,
 				appIdentifier: this.$projectData.projectId,
@@ -157,6 +163,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
 				notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
 				notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
+				getApplicationPathForiOSSimulatorAction: getApplicationPathForiOSSimulatorAction,
 				localProjectRootPath: localProjectRootPath,
 				beforeLiveSyncAction: beforeLiveSyncAction,
 				beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
