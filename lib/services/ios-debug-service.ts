@@ -76,13 +76,14 @@ class IOSDebugService implements IDebugService {
             this.$platformService.buildPlatform(this.platform).wait();
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
-            let child_process = this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true, args: "--nativescript-debug-brk" }).wait();
+            let child_process = this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true,
+                args: "--nativescript-debug-brk", appId: this.$projectData.projectId }).wait();
             let lineStream = byline(child_process.stdout);
 
             lineStream.on('data', (line: NodeBuffer) => {
                 let lineText = line.toString();
-                if(lineText && _.startsWith(lineText, emulatorPackage.packageName)) {
-                    let pid = _.trimLeft(lineText, emulatorPackage.packageName + ": ");
+                if(lineText && _.startsWith(lineText, this.$projectData.projectId)) {
+                    let pid = _.trimLeft(lineText, this.$projectData.projectId + ": ");
 
                     this.$childProcess.exec(`lldb -p ${pid} -o "process continue"`);
                 } else {
