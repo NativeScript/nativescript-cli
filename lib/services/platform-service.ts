@@ -154,7 +154,7 @@ export class PlatformService implements IPlatformService {
 		}).future<string[]>()();
 	}
 
-	public preparePlatform(platform: string): IFuture<void> {
+	public preparePlatform(platform: string): IFuture<boolean> {
 		return (() => {
 			this.validatePlatform(platform);
 
@@ -166,12 +166,36 @@ export class PlatformService implements IPlatformService {
 				this.$errors.failWithoutHelp(`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`);
 			}
 
-			this.preparePlatformCore(platform).wait();
-		}).future<void>()();
+			return this.preparePlatformCore(platform).wait();
+		}).future<boolean>()();
+	}
+
+	private checkXmlFiles(sourceFiles: string[]): IFuture<boolean> {
+		return (() => {
+			let xmlHasErrors = false;
+			let DomParser = require("xmldom").DOMParser;
+			sourceFiles
+				.filter(file => _.endsWith(file, ".xml"))
+				.forEach(file => {
+					let fileContents = this.$fs.readText(file).wait();
+					let hasErrors = false;
+					let domErrorHandler = (level:any, msg:string) => hasErrors = true;
+					let parser = new DomParser({
+						locator:{},
+						errorHandler: domErrorHandler
+					});
+					parser.parseFromString(fileContents, "text/xml");
+					xmlHasErrors = xmlHasErrors || hasErrors;
+					if (xmlHasErrors) {
+						this.$logger.out("Error: ".red.bold + `${file} has syntax errors.`);
+					}
+				});
+			return !xmlHasErrors;
+		}).future<boolean>()();
 	}
 
 	@helpers.hook('prepare')
-	private preparePlatformCore(platform: string): IFuture<void> {
+	private preparePlatformCore(platform: string): IFuture<boolean> {
 		return (() => {
 			platform = platform.toLowerCase();
 			this.ensurePlatformInstalled(platform).wait();
@@ -204,6 +228,12 @@ export class PlatformService implements IPlatformService {
 			if(hasTnsModulesInAppFolder && this.$projectData.dependencies && this.$projectData.dependencies[constants.TNS_CORE_MODULES_NAME]) {
 				this.$logger.warn("You have tns_modules dir in your app folder and tns-core-modules in your package.json file. Tns_modules dir in your app folder will not be used and you can safely remove it.");
 				sourceFiles = sourceFiles.filter(source => !minimatch(source, `**/${constants.TNS_MODULES_FOLDER_NAME}/**`, {nocase: true}));
+			}
+
+			// verify .xml files are well-formed
+			let validXmlFiles = this.checkXmlFiles(sourceFiles).wait();
+			if (!validXmlFiles) {
+				return false;
 			}
 
 			// Remove .ts and .js.map files
@@ -245,13 +275,16 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
 
 			this.$logger.out("Project successfully prepared");
-		}).future<void>()();
+			return true;
+		}).future<boolean>()();
 	}
 
 	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			this.preparePlatform(platform).wait();
+			if (!this.preparePlatform(platform).wait()) {
+				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			}
 
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();

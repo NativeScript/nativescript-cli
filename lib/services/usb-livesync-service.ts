@@ -34,6 +34,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
+		private $errors: IErrors,
 		$hostInfo: IHostInfo) {
 			super($devicesService, $mobileHelper, $localToDevicePathDataFactory, $logger, $options,
 				$deviceAppDataFactory, $fs, $dispatcher, $injector, $childProcess, $iOSEmulatorServices,
@@ -65,7 +66,9 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 				}
 			}
 
-			this.$platformService.preparePlatform(platform).wait();
+			if (!this.$platformService.preparePlatform(platform).wait()) {
+				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			}
 
 			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
@@ -121,7 +124,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 			let fastLiveSync = (filePath: string) => {
 				this.$dispatcher.dispatch(() => {
 					return (() => {
-						this.$platformService.preparePlatform(platform).wait();
+						if (!this.$platformService.preparePlatform(platform).wait()) {
+							this.$logger.out("Verify that listed files are well-formed and try again the operation.");
+							return;
+						}
 						let mappedFilePath = beforeBatchLiveSyncAction(filePath).wait();
 
 						if (this.shouldSynciOSSimulator(platform).wait()) {
@@ -177,7 +183,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 	}
 
 	protected preparePlatformForSync(platform: string) {
-		this.$platformService.preparePlatform(platform).wait();
+		if (!this.$platformService.preparePlatform(platform).wait()) {
+			this.$logger.out("Verify that listed files are well-formed and try again the operation.");
+			return;
+		}
 	}
 
 	private resolveUsbLiveSyncService(platform: string, device: Mobile.IDevice): IPlatformSpecificUsbLiveSyncService {
