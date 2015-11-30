@@ -181,7 +181,8 @@ describe('Platform Service Tests', () => {
 			testInjector.register("fs", fsLib.FileSystem);
 			fs = testInjector.resolve("fs");
 		});
-		it("should process only files in app folder when preparing for iOS platform", () => {
+
+		function prepareDirStructure() {
 			let tempFolder = temp.mkdirSync("prepare platform");
 
 			let appFolderPath = path.join(tempFolder, "app");
@@ -192,6 +193,12 @@ describe('Platform Service Tests', () => {
 
 			let appDestFolderPath = path.join(tempFolder, "appDest");
 			let appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
+
+			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
+		}
+
+		it("should process only files in app folder when preparing for iOS platform", () => {
+			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
@@ -242,16 +249,7 @@ describe('Platform Service Tests', () => {
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait());
 		});
 		it("should process only files in app folder when preparing for Android platform", () => {
-			let tempFolder = temp.mkdirSync("prepare platform");
-
-			let appFolderPath = path.join(tempFolder, "app");
-			fs.createDirectory(appFolderPath).wait();
-
-			let app1FolderPath = path.join(tempFolder, "app1");
-			fs.createDirectory(app1FolderPath).wait();
-
-			let appDestFolderPath = path.join(tempFolder, "appDest");
-			let appResourcesFolderPath = path.join(appDestFolderPath, "App_Resources");
+			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
 
 			// Add platform specific files to app and app1 folders
 			let platformSpecificFiles = [
@@ -300,6 +298,43 @@ describe('Platform Service Tests', () => {
 
 			// Asserts that the files in app1 folder aren't process as platform specific
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait());
+		});
+
+		it("invalid xml is caught", () => {
+			require("colors");
+			let { tempFolder, appFolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
+
+			// generate invalid xml
+			let fileFullPath = path.join(appFolderPath, "file.xml");
+			fs.writeFile(fileFullPath, "<xml><unclosedTag></xml>").wait();
+
+			let platformsData = testInjector.resolve("platformsData");
+			platformsData.platformsNames = ["android"];
+			platformsData.getPlatformData = (platform: string) => {
+				return {
+					appDestinationDirectoryPath: appDestFolderPath,
+					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
+					normalizedPlatformName: "Android",
+					platformProjectService: {
+						prepareProject: () => Future.fromResult(),
+						validate: () => Future.fromResult(),
+						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
+						interpolateData: (projectRoot: string) => Future.fromResult(),
+						afterCreateProject: (projectRoot: string) => Future.fromResult(),
+						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+						processConfigurationFilesFromAppResources: () => Future.fromResult()
+					}
+				};
+			};
+
+			let projectData = testInjector.resolve("projectData");
+			projectData.projectDir = tempFolder;
+
+			platformService = testInjector.resolve("platformService");
+			let result = platformService.preparePlatform("android").wait();
+
+			// Asserts that prepare has caught invalid xml
+			assert.isFalse(result);
 		});
 	});
 });

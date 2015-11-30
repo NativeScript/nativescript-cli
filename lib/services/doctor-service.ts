@@ -2,6 +2,7 @@
 "use strict";
 import {EOL} from "os";
 import * as semver from "semver";
+import * as path from "path";
 
 class DoctorService implements IDoctorService {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
@@ -13,7 +14,7 @@ class DoctorService implements IDoctorService {
 
 	public printWarnings(): boolean {
 		let result = false;
-		let sysInfo = this.$sysInfo.getSysInfo().wait();
+		let sysInfo = this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
 
 		if (!sysInfo.adbVer) {
 			this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");

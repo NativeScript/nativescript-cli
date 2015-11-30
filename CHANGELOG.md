@@ -1,6 +1,33 @@
 NativeScript CLI Changelog
 ================
 
+1.5.0 (2015, November 24)
+==
+
+### New
+* [Implemented #493](https://github.com/NativeScript/nativescript-cli/issues/493): Enable transpilers support in NativeScript projects.
+* [Implemented #594](https://github.com/NativeScript/nativescript-cli/issues/594): Implement a hard dependency on the node.js version and exit if not satisfied.
+* [Implemented #684](https://github.com/NativeScript/nativescript-cli/issues/684): Enable commands hooks.
+* [Implemented #955](https://github.com/NativeScript/nativescript-cli/issues/955): Support for Xcode7 simulator.
+* [Implemented #1007](https://github.com/NativeScript/nativescript-cli/issues/1007): Smarter and faster LiveSync.
+* [Implemented #1048](https://github.com/NativeScript/nativescript-cli/issues/1048): Support Gradle files from plugins, merge android resource files using aapt and respect AndroidManifest.xml from App_Resources.
+* [Implemented #1113](https://github.com/NativeScript/nativescript-cli/issues/1113): Let users create and execute unit tests in their projects.
+* [Implemented #1117](https://github.com/NativeScript/nativescript-cli/issues/1117): Support for TypeScript-based NativeScript projects.
+* [Implemented #1130](https://github.com/NativeScript/nativescript-cli/issues/1130): Show application output from livesync command for iOS devices and android devices and emulators.
+* [Implemented #1164](https://github.com/NativeScript/nativescript-cli/issues/1164): Use android tools from ANDROID_HOME.
+* [Implemented #1229](https://github.com/NativeScript/nativescript-cli/issues/1229): Support for Node 5.1.0.
+
+### Fixed
+* [Fixed #727](https://github.com/NativeScript/nativescript-cli/issues/727): Double logging with tns run ios.
+* [Fixed #1044](https://github.com/NativeScript/nativescript-cli/issues/1044): iOS debug break on Simulator causes app crash when the debugger is paused on the first line for a long time.
+* [Fixed #1086](https://github.com/NativeScript/nativescript-cli/issues/1086): --key-store-path option to look for the keystore file path relative to the app root.
+* [Fixed #1106](https://github.com/NativeScript/nativescript-cli/issues/1106): Livesync double restarts for TS projects.
+* [Fixed #1110](https://github.com/NativeScript/nativescript-cli/issues/1110): `tns doctor` command should detect invalid java version.
+* [Fixed #1167](https://github.com/NativeScript/nativescript-cli/issues/1167): `tns run`, `tns emulate` and `tns deploy` commands do not check if device is available before build.
+* [Fixed #1177](https://github.com/NativeScript/nativescript-cli/issues/1177): `tns run` command fails when multiple devices with same platform are attached.
+* [Fixed #1185](https://github.com/NativeScript/nativescript-cli/issues/1185): `tns device` command fails when VS Emulator is running.
+* [Fixed #1204](https://github.com/NativeScript/nativescript-cli/issues/1204): Incorrect prepare when using npm 3.x.
+
 1.4.3 (2015, October 21)
 ==
 

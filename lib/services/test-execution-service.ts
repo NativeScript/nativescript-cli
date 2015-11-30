@@ -33,7 +33,8 @@ class TestExecutionService implements ITestExecutionService {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $options: IOptions,
-		private $pluginsService: IPluginsService) {
+		private $pluginsService: IPluginsService,
+		private $errors: IErrors) {
 	}
 
 	public startTestRunner(platform: string) : IFuture<void> {
@@ -58,7 +59,9 @@ class TestExecutionService implements ITestExecutionService {
 						let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
 						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
 
-						this.$platformService.preparePlatform(platform).wait();
+						if (!this.$platformService.preparePlatform(platform).wait()) {
+							this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+						}
 						this.detourEntryPoint(projectFilesPath).wait();
 
 						let watchGlob = path.join(projectDir, constants.APP_FOLDER_NAME);
@@ -88,12 +91,21 @@ class TestExecutionService implements ITestExecutionService {
 
 						let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
 							return (() => {
-								this.$platformService.preparePlatform(platform).wait();
+								if (!this.$platformService.preparePlatform(platform).wait()) {
+									this.$logger.out("Verify that listed files are well-formed and try again the operation.");
+									return;
+								}
 								return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
 							}).future<string>()();
 						};
 
 						let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
+
+						let getApplicationPathForiOSSimulatorAction = (): IFuture<string> => {
+							return (() => {
+								return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+							}).future<string>()();
+						};
 
 						let liveSyncData = {
 							platform: platform,
@@ -104,6 +116,7 @@ class TestExecutionService implements ITestExecutionService {
 							platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
 							notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
 							notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
+							getApplicationPathForiOSSimulatorAction: getApplicationPathForiOSSimulatorAction,
 							localProjectRootPath: localProjectRootPath,
 							beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
 							shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
