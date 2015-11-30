@@ -187,7 +187,7 @@ export class PlatformService implements IPlatformService {
 					parser.parseFromString(fileContents, "text/xml");
 					xmlHasErrors = xmlHasErrors || hasErrors;
 					if (xmlHasErrors) {
-						this.$logger.out("Error: ".red.bold + `${file} has syntax errors.`);
+						this.$logger.out("Error: ".red.bold + file +  " has syntax errors.".red.bold);
 					}
 				});
 			return !xmlHasErrors;
