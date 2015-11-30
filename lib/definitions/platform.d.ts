@@ -6,7 +6,7 @@ interface IPlatformService {
 	removePlatforms(platforms: string[]): IFuture<void>;
 	updatePlatforms(platforms: string[]): IFuture<void>;
 	runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
-	preparePlatform(platform: string): IFuture<void>;
+	preparePlatform(platform: string): IFuture<boolean>;
 	buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;

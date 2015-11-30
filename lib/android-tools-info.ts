@@ -44,10 +44,10 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				if(this.validateAndroidHomeEnvVariable(this.androidHome).wait()) {
 					let androidPath = path.join(this.androidHome, "tools", this.androidExecutableName);
 					if(!this.trySetAndroidPath(androidPath).wait() && !this.trySetAndroidPath(this.androidExecutableName).wait()) {
-						this.$errors.failWithoutHelp(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
+						this.printMessage(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
 					}
 				} else {
-					this.$errors.failWithoutHelp("ANDROID_HOME environment variable is not set correctly.");
+					this.printMessage("ANDROID_HOME environment variable is not set correctly.");
 				}
 			}
 
