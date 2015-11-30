@@ -187,7 +187,6 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectTemplatesService.prepareTemplate("default@1.4.0").wait()).wait();
 		});
 
-		/* Uncomment when tns-template-hello-world-ts is public
 		it("creates valid project from typescript template", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("projectTypescript");
@@ -213,7 +212,6 @@ describe("Project Service Tests", () => {
 			let projectTemplatesService: IProjectTemplatesService = projectIntegrationTest.testInjector.resolve("projectTemplatesService");
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectTemplatesService.prepareTemplate("tsc").wait()).wait();
 		});
-		*/
 
 		it("creates valid project from local directory template", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();

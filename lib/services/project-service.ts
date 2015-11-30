@@ -80,6 +80,7 @@ export class ProjectService implements IProjectService {
 				// Delete app/package.json file, its just causing confusion.
 				// Also its dependencies and devDependencies are already merged in project's package.json.
 				this.$fs.deleteFile(path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME)).wait();
+				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
@@ -91,20 +92,25 @@ export class ProjectService implements IProjectService {
 
 	private mergeProjectAndTemplateProperties(projectDir: string, templatePath: string): IFuture<void> {
 		return (() => {
-			let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
-			let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath).wait();
-			this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
-			let templatePackageJsonData = this.$fs.readJson(path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME)).wait();
-			if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
-				projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
-			}
+			let templatePackageJsonPath = path.join(templatePath, constants.PACKAGE_JSON_FILE_NAME);
+			if(this.$fs.exists(templatePackageJsonPath).wait()) {
+				let projectPackageJsonPath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
+				let projectPackageJsonData = this.$fs.readJson(projectPackageJsonPath).wait();
+				this.$logger.trace("Initial project package.json data: ", projectPackageJsonData);
+				let templatePackageJsonData = this.$fs.readJson(templatePackageJsonPath).wait();
+				if(projectPackageJsonData.dependencies || templatePackageJsonData.dependencies) {
+					projectPackageJsonData.dependencies = this.mergeDependencies(projectPackageJsonData.dependencies, templatePackageJsonData.dependencies);
+				}
 
-			if(projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
-				projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
-			}
+				if(projectPackageJsonData.devDependencies || templatePackageJsonData.devDependencies) {
+					projectPackageJsonData.devDependencies = this.mergeDependencies(projectPackageJsonData.devDependencies, templatePackageJsonData.devDependencies);
+				}
 
-			this.$logger.trace("New project package.json data: ", projectPackageJsonData);
-			this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData).wait();
+				this.$logger.trace("New project package.json data: ", projectPackageJsonData);
+				this.$fs.writeJson(projectPackageJsonPath, projectPackageJsonData).wait();
+			} else {
+				this.$logger.trace(`Template ${templatePath} does not have ${constants.PACKAGE_JSON_FILE_NAME} file.`);
+			}
 		}).future<void>()();
 	}
 
