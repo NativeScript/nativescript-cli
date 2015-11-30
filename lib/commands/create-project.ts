@@ -26,13 +26,14 @@ export class CreateProjectCommand implements ICommand {
 	constructor(private $projectService: IProjectService,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $projectNameValidator: IProjectNameValidator) { }
+		private $projectNameValidator: IProjectNameValidator,
+		private $options: ICommonOptions) { }
 
 	public enableHooks = false;
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$projectService.createProject(args[0]).wait();
+			this.$projectService.createProject(args[0], this.$options.template).wait();
 		}).future<void>()();
 	}
 
