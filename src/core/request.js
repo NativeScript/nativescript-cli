@@ -12,7 +12,6 @@ const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
 const UrlPattern = require('url-pattern');
 const assign = require('lodash/object/assign');
-const merge = require('lodash/object/merge');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const indexBy = require('lodash/collection/indexBy');
@@ -150,8 +149,7 @@ class Request {
     return url.format({
       protocol: this.protocol,
       host: this.host,
-      pathname: this.path,
-      query: merge({}, this.flags, result(this.query, 'toJSON', {}))
+      pathname: this.path
     });
   }
 
@@ -304,45 +302,44 @@ class Request {
           return response;
         });
       } else if (this.dataPolicy === DataPolicy.LocalFirst) {
+        if (this.method !== HttpMethod.GET) {
+          const request = new Request({
+            method: this.method,
+            path: this.path,
+            query: this.query,
+            auth: this.auth,
+            data: this.data,
+            client: this.client,
+            dataPolicy: DataPolicy.CloudFirst
+          });
+          return request.execute().catch(err => {
+            const request2 = new Request({
+              method: this.method,
+              path: this.path,
+              query: this.query,
+              auth: this.auth,
+              data: this.data,
+              client: this.client,
+              dataPolicy: DataPolicy.LocalOnly
+            });
+            return request2.execute().then(() => {
+              throw err;
+            });
+          });
+        }
+
         return this.executeLocal().then(response => {
-          if (response && response.isSuccess()) {
-            if (this.method !== HttpMethod.GET) {
-              const request = new Request({
-                method: this.method,
-                path: this.path,
-                query: this.query,
-                auth: this.auth,
-                data: response.data,
-                client: this.client,
-                dataPolicy: DataPolicy.CloudOnly
-              });
-              return request.execute().then(() => {
-                return response;
-              }).catch(err => {
-                // TODO check err
-
-                if (!this.skipSync) {
-                  return this.notifySync(response.data).then(() => {
-                    return response;
-                  });
-                }
-
-                throw err;
-              });
-            }
-          } else {
-            if (this.method === HttpMethod.GET) {
-              const request = new Request({
-                method: this.method,
-                path: this.path,
-                query: this.query,
-                auth: this.auth,
-                data: response.data,
-                client: this.client,
-                dataPolicy: DataPolicy.CloudFirst
-              });
-              return request.execute();
-            }
+          if (response && !response.isSuccess()) {
+            const request = new Request({
+              method: this.method,
+              path: this.path,
+              query: this.query,
+              auth: this.auth,
+              data: response.data,
+              client: this.client,
+              dataPolicy: DataPolicy.CloudFirst
+            });
+            return request.execute();
           }
 
           return response;

@@ -32,7 +32,7 @@ class PrivateAcl {
     this.acl.gw = gw || false;
   }
 
-  constructor(acl) {
+  constructor(acl = {}) {
     if (!isPlainObject(acl)) {
       throw new KinveyError('acl argument must be an object');
     }

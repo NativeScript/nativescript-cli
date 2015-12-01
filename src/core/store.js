@@ -8,6 +8,7 @@ const Memory = require('./persistence/memory');
 const WebSQL = require('./persistence/websql');
 const log = require('loglevel');
 const result = require('lodash/object/result');
+const reduce = require('lodash/collection/reduce');
 const forEach = require('lodash/collection/forEach');
 const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
@@ -109,48 +110,12 @@ class Store {
   }
 
   group(collection, aggregation) {
-    if (!(aggregation instanceof Aggregation)) {
-      aggregation = new Aggregation(aggregation);
-    }
-
-    const query = new Query({ filter: aggregation.condition });
-    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-    aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
-
-    const promise = this.find(collection, query).then(documents => {
-      const groups = {};
-      const response = [];
-
-      forEach(documents, document => {
-        const group = {};
-
-        for (const name in aggregation.key) {
-          if (aggregation.key.hasOwnProperty(name)) {
-            group[name] = document[name];
-          }
-        }
-
-        const key = JSON.stringify(group);
-        if (!groups[key]) {
-          groups[key] = group;
-
-          for (const attr in aggregation.initial) {
-            if (aggregation.initial.hasOwnProperty(attr)) {
-              groups[key][attr] = aggregation.initial[attr];
-            }
-          }
-        }
-
-        aggregation.reduce(document, groups[key]);
-      });
-
-      for (const segment in groups) {
-        if (groups.hasOwnProperty(segment)) {
-          response.push(groups[segment]);
-        }
+    const promise = this.find(collection).then(documents => {
+      if (!(aggregation instanceof Aggregation)) {
+        aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
       }
 
-      return response;
+      return aggregation.process(documents);
     });
 
     return promise;
@@ -201,12 +166,30 @@ class Store {
   }
 
   deleteWhere(collection, query) {
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    // Deleting should not take the query sort, limit, and skip into account.
+    if (query) {
+      query.sort(null).limit(null).skip(0);
+    }
+
     const promise = this.find(collection, query).then(documents => {
       const promises = documents.map(document => {
         return this.delete(collection, document._id);
       });
 
       return Promise.all(promises);
+    }).then(responses => {
+      return reduce(responses, (result, response) => {
+        result.count += response.count;
+        result.documents.concat(response.documents);
+        return result;
+      }, {
+        count: 0,
+        documents: []
+      });
     });
 
     return promise;

@@ -16,15 +16,16 @@ class Cache extends Middleware {
       const appId = matches.appId;
       const collection = matches.collection;
       const id = matches.id;
+      const data = request.data;
       const store = new Store(appId, [StoreAdapter.IndexedDB, StoreAdapter.WebSQL, StoreAdapter.LocalStorage, StoreAdapter.Memory]);
       let promise;
 
       if (method === HttpMethod.GET) {
         if (id) {
           if (id === '_count') {
-            promise = store.count(collection);
+            promise = store.count(collection, query);
           } else if (id === '_group') {
-            promise = store.group(collection);
+            promise = store.group(collection, data);
           } else {
             promise = store.get(collection, id);
           }
@@ -32,7 +33,7 @@ class Cache extends Middleware {
           promise = store.find(collection, query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
-        promise = store.save(collection, request.data);
+        promise = store.save(collection, data);
       } else if (method === HttpMethod.DELETE) {
         if (id) {
           promise = store.delete(collection, id);

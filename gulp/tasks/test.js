@@ -61,3 +61,14 @@ gulp.task('test-user', ['lint-src', 'lint-test-user'], function() {
   require('babel-core/register');
   return test(['test/setup/node.js', 'test/specs/user.spec.js']);
 });
+
+// Lint and run legacy tests
+gulp.task('test-legacy', ['lint-src', 'lint-test-legacy'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', config.files.testLegacy]);
+});
+
+gulp.task('test-legacy-datastore', ['lint-src', 'lint-test-legacy-datastore'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', 'test/legacy/datastore.spec.js']);
+});

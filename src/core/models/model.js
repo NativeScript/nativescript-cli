@@ -43,8 +43,10 @@ class Model {
   get defaults() {
     const defaults = {};
     defaults[idAttribute] = this.generateObjectId();
-    defaults[aclAttribute] = {};
-    defaults[kmdAttribute] = {};
+    defaults[kmdAttribute] = {
+      ect: new Date().toISOString(),
+      lmt: new Date().toISOString()
+    };
     return defaults;
   }
 
@@ -114,7 +116,18 @@ class Model {
   }
 
   toJSON() {
-    return clone(this.attributes);
+    const json = {
+      _acl: this.acl.toJSON(),
+      _kmd: this.kmd.toJSON()
+    };
+
+    for (const key in this.attributes) {
+      if (this.attributes.hasOwnProperty(key) && (key !== aclAttribute || key !== kmdAttribute)) {
+        json[key] = this.attributes[key];
+      }
+    }
+
+    return clone(json);
   }
 }
 

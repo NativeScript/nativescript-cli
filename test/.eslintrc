@@ -19,6 +19,8 @@
     "randomString": true,
     "stub": true,
     "spy": true,
-    "loginUser": true
+    "loginUser": true,
+    "createNockQuery": true,
+    "Common": true
   }
 }

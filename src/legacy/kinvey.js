@@ -1,9 +1,9 @@
-const Promise = require('bluebird');
 const Client = require('../core/client');
+const User = require('./user');
 const Kinvey = {};
 
-// Core
-Kinvey.User = require('./core/models/user');
+// Classes
+Kinvey.User = User;
 
 /**
  * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.
@@ -27,10 +27,12 @@ Kinvey.User = require('./core/models/user');
  * });
  */
 Kinvey.init = function(options) {
-  return new Promise(resolve => {
-    Client.init(options);
-    resolve(null);
-  });
+  const client = Client.init(options);
+  return User.getActive(client);
+};
+
+Kinvey.getActiveUser = function(client) {
+  return User.getActive(client);
 };
 
 // Export

@@ -1,4 +1,5 @@
 const Aggregation = require('../aggregation');
+const Promise = require('bluebird');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
@@ -186,7 +187,7 @@ class Collection {
   group(aggregation, options = {}) {
     log.debug(`Grouping the models in the ${this.name} collection.`, aggregation, options);
 
-    if (aggregation && !(aggregation instanceof Aggregation)) {
+    if (!(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
@@ -202,20 +203,7 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      let data = response.data;
-      const models = [];
-
-      if (!isArray(data)) {
-        data = [data];
-      }
-
-      forEach(data, obj => {
-        if (obj) {
-          models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-        }
-      });
-
-      return models;
+      return response.data;
     });
 
     promise.then(response => {
@@ -329,7 +317,7 @@ class Collection {
    * Saves a model to the collection. A promise will be returned that will be resolved with
    * saved model or rejected with an error.
    *
-   * @param   {Object|Array} models                                       Model(s)
+   * @param   {Model}        model                                        Model
    * @param   {Object}       options                                      Options
    * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
@@ -344,33 +332,26 @@ class Collection {
    *   ...
    * });
    */
-  save(models, options = {}) {
-    log.debug(`Saving the models to the ${this.name} collection.`, models);
-    let singular = false;
+  save(model, options = {}) {
+    log.debug(`Saving the model to the ${this.name} collection.`, model);
 
-    if (!models) {
-      log.warn('There are no models to save.', models);
+    if (!model) {
+      log.warn('No model was provided to be saved.', model);
       Promise.resolve(null);
     }
 
-    if (!isArray(models)) {
-      models = [models];
-      singular = true;
+    if (model && !(model instanceof this.model)) {
+      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
-    models = models.map(model => {
-      if (model && !(model instanceof this.model)) {
-        model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
-      }
-
-      return model;
-    });
-
-    forEach(models, model => {
-      if (model.id && model.isNew()) {
+    if (model.id && model.isNew()) {
+      if (model.isNew()) {
         model.unset('_id');
+      } else {
+        log.warn('The model is not new. Updating the model.', model);
+        return this.update(model, options);
       }
-    });
+    }
 
     options = assign({
       dataPolicy: this.dataPolicy,
@@ -380,28 +361,12 @@ class Collection {
     }, options);
     options.method = HttpMethod.POST;
     options.path = this.getPath(options.client);
-    options.data = models.map(model => {
-      if (model) {
-        return model.toJSON();
-      }
-    });
+    options.data = model.toJSON();
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      let data = response.data;
-      const models = [];
-
-      if (!isArray(data)) {
-        data = [data];
-      }
-
-      forEach(data, obj => {
-        if (obj) {
-          models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-        }
-      });
-
-      return singular && models.length === 1 ? models[0] : models;
+      const data = response.data;
+      return new this.model(data, options); // eslint-disable-line new-cap
     });
 
     promise.then(response => {
@@ -440,13 +405,15 @@ class Collection {
       Promise.resolve(null);
     }
 
-    if (isArray(model)) {
-      log.warn(`Unable to update an array of models. Saving the models instead.`, model);
-      return this.save(model, options);
+    if (!(model instanceof this.model)) {
+      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
-    if (!model instanceof this.model) {
-      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
+    if (model.id) {
+      if (model.isNew()) {
+        log.warn('The model is new. Saving the model.', model);
+        return this.save(model, options);
+      }
     }
 
     options = assign({
@@ -552,7 +519,8 @@ class Collection {
       dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
-      skipSync: this.skipSync
+      skipSync: this.skipSync,
+      silent: false
     }, options);
     options.method = HttpMethod.DELETE;
     options.path = `${this.getPath(options.client)}/${id}`;
@@ -560,6 +528,18 @@ class Collection {
     const request = new Request(options);
     const promise = request.execute().then(response => {
       return response.data;
+    }).catch(err => {
+      // TODO: check if err is NotFoundError
+
+      if (options.silent) {
+        log.debug(`A model with id = ${id} does not exist. Returning success because of the silent flag.`);
+        return {
+          count: 0,
+          documents: []
+        };
+      }
+
+      throw err;
     });
 
     promise.then(response => {

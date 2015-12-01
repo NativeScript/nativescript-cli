@@ -11,7 +11,6 @@ const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
-const webpack = require('webpack');
 const platform = argv.platform || 'html5';
 const platformConfig = require('./config/' + platform);
 const config = {};
@@ -46,7 +45,8 @@ const paths = config.paths = assign(config.paths, platformConfig.paths);
  */
 config.files = {
   src: 'src/**/*.js',
-  test: 'test/**/*.spec.js',
+  test: 'test/specs/**/*.js',
+  testLegacy: 'test/legacy/**/*.js',
   entry: {
     filename: 'kinvey'
   },
@@ -85,6 +85,14 @@ config.webpack = {
         loader: 'json-loader'
       }
     ]
+  },
+  node: {
+    fs: 'empty',
+    net: 'empty',
+    tls: 'empty'
+  },
+  resolve: {
+    extensions: ['', '.webpack.js', '.web.js', '.js']
   },
   target: 'web'
 };
