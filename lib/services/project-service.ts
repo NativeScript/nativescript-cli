@@ -77,9 +77,6 @@ export class ProjectService implements IProjectService {
 				//update dependencies and devDependencies of newly created project with data from template
 				this.mergeProjectAndTemplateProperties(projectDir, appPath).wait();
 				this.updateAppResourcesDir(appDirectory).wait();
-				// Delete app/package.json file, its just causing confusion.
-				// Also its dependencies and devDependencies are already merged in project's package.json.
-				this.$fs.deleteFile(path.join(projectDir, constants.APP_FOLDER_NAME, constants.PACKAGE_JSON_FILE_NAME)).wait();
 				this.$npm.install(projectDir, projectDir, { "ignore-scripts": this.$options.ignoreScripts }).wait();
 			} catch (err) {
 				this.$fs.deleteDirectory(projectDir).wait();
