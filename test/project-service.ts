@@ -90,14 +90,11 @@ class ProjectIntegrationTest {
 
 			let expectedFiles = fs.enumerateFilesInDirectorySync(sourceDir);
 			let actualFiles = fs.enumerateFilesInDirectorySync(appDirectoryPath);
-			assert.isTrue(actualFiles.length >= (expectedFiles.length - 1), "Files in created project must be at least as files in app dir (without package.json).");
+			assert.isTrue(actualFiles.length >= expectedFiles.length, "Files in created project must be at least as files in app dir.");
 			_.each(expectedFiles, file => {
 				let relativeToProjectDir = helpers.getRelativeToRootPath(sourceDir, file);
-				if(path.basename(file) === "package.json") {
-					assert.isFalse(fs.exists(path.join(appDirectoryPath, relativeToProjectDir)).wait());
-				} else {
-					assert.isTrue(fs.exists(path.join(appDirectoryPath, relativeToProjectDir)).wait());
-				}
+				let filePathInApp = path.join(appDirectoryPath, relativeToProjectDir);
+				assert.isTrue(fs.exists(filePathInApp).wait(), `File ${filePathInApp} does not exist.`);
 			});
 
 			// assert dependencies and devDependencies are copied from template to real project
