@@ -8,6 +8,7 @@ import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as minimatch from "minimatch";
 import Future = require("fibers/future");
+import {EOL} from "os";
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
@@ -179,7 +180,11 @@ export class PlatformService implements IPlatformService {
 				.forEach(file => {
 					let fileContents = this.$fs.readText(file).wait();
 					let hasErrors = false;
-					let domErrorHandler = (level:any, msg:string) => hasErrors = true;
+					let errorOutput = "";
+					let domErrorHandler = (level:any, msg:string) => {
+						errorOutput += level + EOL + msg + EOL;
+						hasErrors = true;
+					};
 					let parser = new DomParser({
 						locator:{},
 						errorHandler: domErrorHandler
@@ -187,7 +192,8 @@ export class PlatformService implements IPlatformService {
 					parser.parseFromString(fileContents, "text/xml");
 					xmlHasErrors = xmlHasErrors || hasErrors;
 					if (xmlHasErrors) {
-						this.$logger.out("Error: ".red.bold + file +  " has syntax errors.".red.bold);
+						this.$logger.warn(`${file} has syntax errors.`);
+						this.$logger.out(errorOutput);
 					}
 				});
 			return !xmlHasErrors;
