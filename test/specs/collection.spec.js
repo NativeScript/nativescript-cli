@@ -52,7 +52,7 @@ describe('Collection', function() {
           });
 
         const promise = this.collection.find(null, {
-          dataPolicy: DataPolicy.CloudOnly
+          dataPolicy: DataPolicy.NetworkOnly
         });
 
         return promise.then(books => {
@@ -83,7 +83,7 @@ describe('Collection', function() {
           });
 
         const promise = this.collection.find(null, {
-          dataPolicy: DataPolicy.CloudFirst
+          dataPolicy: DataPolicy.NetworkFirst
         });
 
         return promise.then(books => {
@@ -106,7 +106,7 @@ describe('Collection', function() {
           });
 
         const promise = this.collection.find(null, {
-          dataPolicy: DataPolicy.CloudFirst
+          dataPolicy: DataPolicy.NetworkFirst
         });
 
         return promise.then(books => {
@@ -169,7 +169,7 @@ describe('Collection', function() {
           });
 
         const promise = this.collection.get(reply._id, {
-          dataPolicy: DataPolicy.CloudOnly
+          dataPolicy: DataPolicy.NetworkOnly
         });
 
         return promise.then(book => {
@@ -195,7 +195,7 @@ describe('Collection', function() {
           });
 
         const promise = this.collection.get(id, {
-          dataPolicy: DataPolicy.CloudOnly
+          dataPolicy: DataPolicy.NetworkOnly
         });
 
         return promise.catch(err => {

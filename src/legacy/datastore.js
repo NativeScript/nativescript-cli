@@ -16,7 +16,7 @@ function normalizeOptions(options = {}) {
       options.dataPolicy = DataPolicy.LocalOnly;
     }
   } else {
-    options.dataPolicy = DataPolicy.CloudOnly;
+    options.dataPolicy = DataPolicy.NetworkOnly;
   }
 
   return options;

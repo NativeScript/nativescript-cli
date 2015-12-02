@@ -21,6 +21,20 @@ gulp.task('build-dev', function(done) {
   });
 });
 
+gulp.task('build-dev-legacy', function(done) {
+  const webpackConfig = clone(config.webpack, true);
+  webpackConfig.context = config.paths.legacy;
+  webpackConfig.output.filename = webpackConfig.output.filename + '.js';
+  webpack(webpackConfig, function(err, stats) {
+    if (err) {
+      errorHandler(err);
+      throw new $.util.PluginError('[build]', err);
+    }
+
+    done();
+  });
+});
+
 // Build minified version of the library
 gulp.task('build-release', function(done) {
   const webpackConfig = clone(config.webpack, true);
@@ -36,4 +50,20 @@ gulp.task('build-release', function(done) {
   });
 });
 
+gulp.task('build-release-legacy', function(done) {
+  const webpackConfig = clone(config.webpack, true);
+  webpackConfig.context = config.paths.legacy;
+  webpackConfig.output.filename = webpackConfig.output.filename + '.min.js';
+  webpackConfig.plugins = [new webpack.optimize.UglifyJsPlugin({ minimize: true })];
+  webpack(webpackConfig, function(err, stats) {
+    if (err) {
+      errorHandler(err);
+      throw new $.util.PluginError('[build]', err);
+    }
+
+    done();
+  });
+});
+
 gulp.task('build', ['clean', 'build-dev', 'build-release']);
+gulp.task('build-legacy', ['clean', 'build-dev-legacy', 'build-release-legacy']);

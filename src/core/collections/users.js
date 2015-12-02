@@ -50,7 +50,7 @@ class Users extends Collection {
     let promise;
 
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.POST;
@@ -87,7 +87,7 @@ class Users extends Collection {
 
   verifyEmail(username, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
@@ -103,7 +103,7 @@ class Users extends Collection {
 
   forgotUsername(email, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
@@ -119,7 +119,7 @@ class Users extends Collection {
 
   resetPassword(username, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
@@ -135,7 +135,7 @@ class Users extends Collection {
 
   exists(username, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
@@ -158,7 +158,7 @@ class Users extends Collection {
 
   restore(id, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.master
     }, options);
     options.method = HttpMethod.POST;

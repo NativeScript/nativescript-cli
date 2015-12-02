@@ -1,8 +1,6 @@
 const DataPolicy = {
   LocalFirst: 'LocalFist',
   LocalOnly: 'LocalOnly',
-  CloudFirst: 'CloudFirst',
-  CloudOnly: 'CloudOnly',
   NetworkFirst: 'NetworkFirst',
   NetworkOnly: 'NetworkOnly'
 };

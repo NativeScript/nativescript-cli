@@ -14,7 +14,7 @@ class File extends Model {
     }
 
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
@@ -51,7 +51,7 @@ class File extends Model {
 
   download(name, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
@@ -99,7 +99,7 @@ class File extends Model {
 
   destroy(name, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.DELETE;

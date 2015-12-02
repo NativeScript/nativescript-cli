@@ -108,8 +108,8 @@ describe('Request', function() {
   });
 
   describe('dataPolicy', function() {
-    it('should be equal to `DataPolicy.CloudFirst` by default', function() {
-      expect(this.request).to.have.property('dataPolicy', DataPolicy.CloudFirst);
+    it('should be equal to `DataPolicy.NetworkFirst` by default', function() {
+      expect(this.request).to.have.property('dataPolicy', DataPolicy.NetworkFirst);
     });
 
     it('should be able to be set to a data policy', function() {

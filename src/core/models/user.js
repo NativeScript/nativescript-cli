@@ -116,7 +116,7 @@ class User extends Model {
         method: HttpMethod.POST,
         path: `/${usersNamespace}/${options.client.appId}/login`,
         data: usernameOrData,
-        dataPolicy: DataPolicy.CloudOnly,
+        dataPolicy: DataPolicy.NetworkOnly,
         auth: Auth.app,
         client: options.client
       });
@@ -232,7 +232,7 @@ class User extends Model {
 
       options.method = HttpMethod.POST;
       options.path = `/${usersNamespace}/${options.client.appId}/_logout`;
-      options.dataPolicy = DataPolicy.CloudOnly;
+      options.dataPolicy = DataPolicy.NetworkOnly;
       options.auth = Auth.session;
 
       const request = new Request(options);

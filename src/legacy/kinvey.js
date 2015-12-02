@@ -4,6 +4,7 @@ const Kinvey = {};
 
 // Classes
 Kinvey.User = User;
+Kinvey.DataStore = require('./datastore');
 
 /**
  * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.

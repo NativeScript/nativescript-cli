@@ -33,6 +33,7 @@ process.env = assign(process.env, config.env);
 config.paths = {
   root: path.join(__dirname, '..'),
   src: path.join(__dirname, '..', 'src'),
+  legacy: path.join(__dirname, '..', 'src', 'legacy'),
   dist: path.join(__dirname, '..', 'dist', config.env.KINVEY_PLATFORM_ENV),
   tmp: path.join(__dirname, '..', 'tmp'),
   test: path.join(__dirname, '..', 'test'),

@@ -53,7 +53,7 @@ class Files extends Collection {
    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
    * @param   {Boolean}       [options.download]                            Download the files
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.CloudFirst]    Data policy
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
    * @return  {Promise}                                                     Promise
    *
@@ -109,7 +109,7 @@ class Files extends Collection {
    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
    * @param   {Boolean}       [options.stream]                              Stream the file
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.CloudFirst]    Data policy
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
    * @return  {Promise}                                                     Promise
    *
@@ -127,7 +127,7 @@ class Files extends Collection {
    */
   download(name, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.CloudFirst,
+      dataPolicy: DataPolicy.NetworkFirst,
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
@@ -205,7 +205,7 @@ class Files extends Collection {
    * @param   {Object}        [options]                                     Options
    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.CloudFirst]    Data policy
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
    * @return  {Promise}                                                     Promise
    *
@@ -300,7 +300,7 @@ class Files extends Collection {
    *
    * @param   {string}       name                                         File name
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *

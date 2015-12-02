@@ -103,7 +103,7 @@ class Collection {
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -171,7 +171,7 @@ class Collection {
    *
    * @param   {Aggregation}  [aggregation]                                Aggregation
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -223,7 +223,7 @@ class Collection {
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -274,7 +274,7 @@ class Collection {
    *
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -319,7 +319,7 @@ class Collection {
    *
    * @param   {Model}        model                                        Model
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -384,7 +384,7 @@ class Collection {
    *
    * @param   {Object}       model                                        Model
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -449,7 +449,7 @@ class Collection {
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -500,7 +500,7 @@ class Collection {
    *
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.CloudFirst]   Data policy
+   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
@@ -607,7 +607,7 @@ class Collection {
         const savePromises = saved.map(model => {
           const metadata = documents[model.id];
           const requestOptions = clone(assign(metadata, options));
-          requestOptions.dataPolicy = DataPolicy.CloudFirst;
+          requestOptions.dataPolicy = DataPolicy.NetworkFirst;
 
           // If the model is new then just save it
           if (model.isNew()) {
@@ -656,7 +656,7 @@ class Collection {
         const deletePromises = deleted.map(id => {
           const metadata = documents[id];
           const requestOptions = clone(assign(metadata, options));
-          requestOptions.dataPolicy = DataPolicy.CloudFirst;
+          requestOptions.dataPolicy = DataPolicy.NetworkFirst;
           return this.delete(id, requestOptions).then(response => {
             size = size - 1;
             delete documents[id];
@@ -723,7 +723,7 @@ class Collection {
     }, options);
 
     const promise = this.push(options).then(pushResponse => {
-      options.dataPolicy = DataPolicy.CloudOnly;
+      options.dataPolicy = DataPolicy.NetworkOnly;
       return this.find(query, options).then(models => {
         options.dataPolicy = DataPolicy.LocalOnly;
         options.skipSync = true;

@@ -36,7 +36,7 @@ class Request {
       data: null,
       auth: null,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.CloudOnly,
+      dataPolicy: DataPolicy.LocalFirst,
       responseType: ResponseType.Text,
       timeout: defaultTimeout,
       skipSync: false
@@ -310,7 +310,7 @@ class Request {
             auth: this.auth,
             data: this.data,
             client: this.client,
-            dataPolicy: DataPolicy.CloudFirst
+            dataPolicy: DataPolicy.NetworkFirst
           });
           return request.execute().catch(err => {
             const request2 = new Request({
@@ -337,17 +337,17 @@ class Request {
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.CloudFirst
+              dataPolicy: DataPolicy.NetworkFirst
             });
             return request.execute();
           }
 
           return response;
         });
-      } else if (this.dataPolicy === DataPolicy.CloudOnly) {
-        return this.executeCloud();
-      } else if (this.dataPolicy === DataPolicy.CloudFirst) {
-        return this.executeCloud().then(response => {
+      } else if (this.dataPolicy === DataPolicy.NetworkOnly) {
+        return this.executeNetwork();
+      } else if (this.dataPolicy === DataPolicy.NetworkFirst) {
+        return this.executeNetwork().then(response => {
           if (response && response.isSuccess()) {
             const request = new Request({
               method: this.method,
@@ -407,7 +407,7 @@ class Request {
     return rack.execute(this);
   }
 
-  executeCloud() {
+  executeNetwork() {
     const rack = Rack.networkRack;
     return rack.execute(this);
   }
@@ -515,7 +515,7 @@ class DeltaSetRequest extends Request {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
-    if (this.dataPolicy === DataPolicy.CloudFirst && this.method === HttpMethod.GET) {
+    if (this.dataPolicy === DataPolicy.NetworkFirst && this.method === HttpMethod.GET) {
       const origQuery = this.query;
       this.query = new Query();
       this.query.fields(['_id', '_kmd']);
@@ -523,32 +523,32 @@ class DeltaSetRequest extends Request {
 
       return this.executeLocal().then(localResponse => {
         if (localResponse && localResponse.isSuccess()) {
-          const localEntities = indexBy(localResponse.data, '_id');
+          const localDocuments = indexBy(localResponse.data, '_id');
 
-          return this.executeCloud().then(cloudResponse => {
-            if (cloudResponse && cloudResponse.isSuccess()) {
-              const cloudEntities = indexBy(cloudResponse.data, '_id');
+          return this.executeNetwork().then(networkResponse => {
+            if (networkResponse && networkResponse.isSuccess()) {
+              const networkDocuments = indexBy(networkResponse.data, '_id');
 
-              for (const id in cloudEntities) {
-                if (cloudEntities.hasOwnProperty(id)) {
-                  const cloudEntity = cloudEntities[id];
-                  const localEntity = localEntities[id];
+              for (const id in networkDocuments) {
+                if (networkDocuments.hasOwnProperty(id)) {
+                  const networkDocument = networkDocuments[id];
+                  const localDocument = localDocuments[id];
 
-                  // Push id onto delta set if local entity doesn't exist
-                  if (cloudEntity && !localEntity) {
+                  // Push id onto delta set if local document doesn't exist
+                  if (networkDocument && !localDocument) {
                     continue;
-                  } else if (cloudEntity && localEntity) {
+                  } else if (networkDocument && localDocument) {
                     // Push id onto delta set if lmt differs
-                    if (cloudEntity._kmd && localEntity._kmd && cloudEntity._kmd.lmt > localEntity._kmd.lmt) {
+                    if (networkDocument._kmd && localDocument._kmd && networkDocument._kmd.lmt > localDocument._kmd.lmt) {
                       continue;
                     }
                   }
 
-                  delete cloudEntities[id];
+                  delete networkDocuments[id];
                 }
               }
 
-              const ids = Object.keys(cloudEntities);
+              const ids = Object.keys(networkDocuments);
               const promises = [];
               let i = 0;
 
