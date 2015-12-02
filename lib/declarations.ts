@@ -87,6 +87,7 @@ interface IOptions extends ICommonOptions {
 	compileSdk: number;
 	port: Number;
 	copyTo: string;
+	baseConfig: string;
 }
 
 interface IProjectFilesManager {

@@ -34,6 +34,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			compileSdk: {type: OptionType.Number },
 			port: { type: OptionType.Number },
 			copyTo: { type: OptionType.String },
+			baseConfig: { type: OptionType.String }
 		},
 		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);
