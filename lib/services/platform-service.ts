@@ -237,10 +237,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// verify .xml files are well-formed
-			let validXmlFiles = this.checkXmlFiles(sourceFiles).wait();
-			if (!validXmlFiles) {
-				return false;
-			}
+			this.checkXmlFiles(sourceFiles).wait();
 
 			// Remove .ts and .js.map files
 			PlatformService.EXCLUDE_FILES_PATTERN.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));

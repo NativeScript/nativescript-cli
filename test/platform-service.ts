@@ -331,10 +331,17 @@ describe('Platform Service Tests', () => {
 			projectData.projectDir = tempFolder;
 
 			platformService = testInjector.resolve("platformService");
-			let result = platformService.preparePlatform("android").wait();
+			let oldLoggerWarner = testInjector.resolve("$logger").warn;
+			let warnings: string = "";
+			try {
+				testInjector.resolve("$logger").warn = (text: string) => warnings += text;
+				platformService.preparePlatform("android").wait();
+			} finally {
+				testInjector.resolve("$logger").warn = oldLoggerWarner;
+			}
 
 			// Asserts that prepare has caught invalid xml
-			assert.isFalse(result);
+			assert.isFalse(warnings.indexOf("has errors") !== -1);
 		});
 	});
 });
