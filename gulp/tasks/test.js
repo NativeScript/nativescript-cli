@@ -68,7 +68,17 @@ gulp.task('test-legacy', ['lint-src', 'lint-test-legacy'], function() {
   return test(['test/setup/node.js', config.files.testLegacy]);
 });
 
+gulp.task('test-legacy-acl', ['lint-src', 'lint-test-legacy-acl'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', 'test/legacy/acl.spec.js']);
+});
+
 gulp.task('test-legacy-datastore', ['lint-src', 'lint-test-legacy-datastore'], function() {
   require('babel-core/register');
   return test(['test/setup/node.js', 'test/legacy/datastore.spec.js']);
+});
+
+gulp.task('test-legacy-file', ['lint-src', 'lint-test-legacy-file'], function() {
+  require('babel-core/register');
+  return test(['test/setup/node.js', 'test/legacy/file.spec.js']);
 });

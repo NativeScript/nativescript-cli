@@ -65,8 +65,7 @@ class RequestProperties {
    * @param {Object} properties Request properties
    */
   set properties(properties) {
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    privateRequestProperties.properties = properties;
+    this.clear().addProperties(properties);
   }
 
   /**
@@ -178,6 +177,15 @@ class RequestProperties {
     const privateRequestProperties = this[privateRequestPropertiesSymbol];
     privateRequestProperties.clearProperty(key);
     return this;
+  }
+
+  /**
+   * Clears the app version property.
+   *
+   * @return {RequestProperties} The request properties instance.
+   */
+  clearAppVersion() {
+    return this.clearProperty(appVersionKey);
   }
 
   /**

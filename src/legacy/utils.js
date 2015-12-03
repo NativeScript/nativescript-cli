@@ -1,4 +1,20 @@
+const DataPolicy = require('../core/enums').DataPolicy;
 const isFunction = require('lodash/lang/isFunction');
+
+// Transform options from legacy into next version
+function transformOptions(options = {}) {
+  if (options.offline) {
+    if (options.fallback) {
+      options.dataPolicy = DataPolicy.LocalFirst;
+    } else {
+      options.dataPolicy = DataPolicy.LocalOnly;
+    }
+  } else {
+    options.dataPolicy = DataPolicy.NetworkOnly;
+  }
+
+  return options;
+}
 
 // Use the fastest possible means to execute a task in a future turn of the
 // event loop. Borrowed from [q](http://documentup.com/kriskowal/q/).
@@ -37,5 +53,6 @@ function wrapCallbacks(promise, options = {}) {
 }
 
 module.exports = {
+  transformOptions: transformOptions,
   wrapCallbacks: wrapCallbacks
 };

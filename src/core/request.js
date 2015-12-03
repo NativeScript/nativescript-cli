@@ -8,9 +8,12 @@ const Client = require('./client');
 const DataPolicy = require('./enums').DataPolicy;
 const StatusCode = require('./enums').StatusCode;
 const KinveyError = require('./errors').KinveyError;
+const BlobNotFoundError = require('./errors').BlobNotFoundError;
+const NotFoundError = require('./errors').NotFoundError;
 const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
 const UrlPattern = require('url-pattern');
+const qs = require('qs');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
@@ -31,8 +34,9 @@ class Request {
   constructor(options = {}) {
     options = assign({
       method: HttpMethod.GET,
-      path: '/',
+      pathname: '/',
       query: null,
+      search: null,
       data: null,
       auth: null,
       client: Client.sharedInstance(),
@@ -46,18 +50,14 @@ class Request {
       options.client = new Client(result(options.client, 'toJSON', options.client));
     }
 
-    if (options.query && !(options.query instanceof Query)) {
-      options.query = new Query(result(options.query, 'toJSON', options.query));
-    }
-
     this.method = options.method;
     this.headers = {};
     this.requestProperties = options.requestProperties;
     this.protocol = options.client.apiProtocol;
     this.host = options.client.apiHost;
-    this.path = options.path;
-    this.query = options.query;
-    this.flags = options.flags;
+    this.pathname = options.pathname || options.path;
+    this.query = result(options.query, 'toJSON', options.query);
+    this.search = qs.parse(options.search);
     this.data = options.data;
     this.responseType = options.responseType;
     this.client = options.client;
@@ -149,26 +149,16 @@ class Request {
     return url.format({
       protocol: this.protocol,
       host: this.host,
-      pathname: this.path
+      pathname: this.pathname
     });
   }
 
   get body() {
-    return this._data;
+    return this.data;
   }
 
   set body(body) {
-    if (body) {
-      const contentTypeHeader = this.getHeader('Content-Type');
-
-      if (!contentTypeHeader) {
-        this.setHeader('Content-Type', 'application/json; charset=utf-8');
-      }
-    } else {
-      this.removeHeader('Content-Type');
-    }
-
-    this._data = body;
+    this.data = body;
   }
 
   get data() {
@@ -178,7 +168,6 @@ class Request {
   set data(data) {
     if (data) {
       const contentTypeHeader = this.getHeader('Content-Type');
-
       if (!contentTypeHeader) {
         this.setHeader('Content-Type', 'application/json; charset=utf-8');
       }
@@ -242,12 +231,8 @@ class Request {
       header = String(header);
     }
 
-    if (!isString(value)) {
-      value = String(value);
-    }
-
     const headers = this.headers;
-    headers[header.toLowerCase()] = value;
+    headers[header] = value;
     this.headers = headers;
   }
 
@@ -266,6 +251,10 @@ class Request {
 
   removeHeader(header) {
     delete this.headers[header.toLowerCase()];
+  }
+
+  clearHeaders() {
+    this.headers = {};
   }
 
   execute() {
@@ -305,7 +294,7 @@ class Request {
         if (this.method !== HttpMethod.GET) {
           const request = new Request({
             method: this.method,
-            path: this.path,
+            pathname: this.pathname,
             query: this.query,
             auth: this.auth,
             data: this.data,
@@ -315,7 +304,7 @@ class Request {
           return request.execute().catch(err => {
             const request2 = new Request({
               method: this.method,
-              path: this.path,
+              pathname: this.pathname,
               query: this.query,
               auth: this.auth,
               data: this.data,
@@ -332,7 +321,7 @@ class Request {
           if (response && !response.isSuccess()) {
             const request = new Request({
               method: this.method,
-              path: this.path,
+              pathname: this.pathname,
               query: this.query,
               auth: this.auth,
               data: response.data,
@@ -369,7 +358,7 @@ class Request {
           } else if (this.method === HttpMethod.GET) {
             const request = new Request({
               method: this.method,
-              path: this.path,
+              pathname: this.pathname,
               query: this.query,
               auth: this.auth,
               data: response.data,
@@ -387,15 +376,28 @@ class Request {
         throw new KinveyError('No response');
       } else if (!response.isSuccess()) {
         const data = response.data || {
-          description: 'Error',
+          name: 'KinveyError',
+          message: 'An error has occurred.',
           debug: ''
         };
+
+        if (data.description && !data.message) {
+          data.message = data.descrition;
+        }
+
+        if (data.name === 'BlobNotFound') {
+          throw new BlobNotFoundError(data.message, data.debug);
+        } else if (data.name === 'EntityNotFound') {
+          throw new NotFoundError(data.message, data.debug);
+        }
+
         throw new KinveyError(data.message, data.debug);
       }
 
       this.response = response;
       return response;
     }).catch(err => {
+      this.response = null;
       throw err;
     }).finally(() => {
       this.executing = false;
@@ -404,12 +406,12 @@ class Request {
 
   executeLocal() {
     const rack = Rack.cacheRack;
-    return rack.execute(this);
+    return rack.execute(this.toJSON());
   }
 
   executeNetwork() {
     const rack = Rack.networkRack;
-    return rack.execute(this);
+    return rack.execute(this.toJSON());
   }
 
   /**
@@ -426,10 +428,10 @@ class Request {
    */
   notifySync(data = []) {
     const pattern = new UrlPattern('/:namespace/:appId/:collection(/)(:id)(/)');
-    const matches = pattern.match(this.path);
+    const matches = pattern.match(this.pathname);
     const getRequest = new Request({
       method: HttpMethod.GET,
-      path: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
+      pathname: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
       auth: this.auth,
       client: this.client,
       dataPolicy: DataPolicy.LocalOnly
@@ -472,7 +474,7 @@ class Request {
 
       const updateRequest = new Request({
         method: HttpMethod.PUT,
-        path: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
+        pathname: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
         auth: this.auth,
         data: syncCollection,
         client: this.client,
@@ -497,9 +499,9 @@ class Request {
       method: this.method,
       headers: this.headers,
       url: this.url,
-      path: this.path,
-      query: result(this.query, 'toJSON', null),
-      flags: this.flags,
+      pathname: this.pathname,
+      query: this.query,
+      search: this.search,
       data: this.data,
       responseType: this.responseType,
       timeout: this.timeout
@@ -517,8 +519,9 @@ class DeltaSetRequest extends Request {
 
     if (this.dataPolicy === DataPolicy.NetworkFirst && this.method === HttpMethod.GET) {
       const origQuery = this.query;
-      this.query = new Query();
-      this.query.fields(['_id', '_kmd']);
+      const query = new Query();
+      query.fields(['_id', '_kmd']);
+      this.query = query;
       this.executing = true;
 
       return this.executeLocal().then(localResponse => {
@@ -558,7 +561,7 @@ class DeltaSetRequest extends Request {
                 query.contains('_id', ids.slice(i, ids.length > maxIdsPerRequest + i ? maxIdsPerRequest : ids.length));
                 const request = new Request({
                   method: this.method,
-                  path: this.path,
+                  pathname: this.pathname,
                   query: query,
                   auth: this.auth,
                   client: this.client,

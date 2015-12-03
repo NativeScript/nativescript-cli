@@ -29,20 +29,20 @@ class Users extends Collection {
   }
 
   /**
-   * The path for the users where requests will be sent.
+   * The pathname for the users where requests will be sent.
    *
    * @return   {string}    Path
    */
-  get path() {
+  get pathname() {
     return `/${usersNamespace}/${this.client.appId}`;
   }
 
   /**
-   * The path for the rpc where requests will be sent.
+   * The pathname for the rpc where requests will be sent.
    *
    * @return   {string}    Path
    */
-  get rpcPath() {
+  get rpcPathname() {
     return `/${rpcNamespace}/${this.client.appId}`;
   }
 
@@ -54,7 +54,7 @@ class Users extends Collection {
       auth: Auth.default
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.path}/_lookup`;
+    options.pathname = `${this.pathname}/_lookup`;
     options.query = query;
 
     if (query && !(query instanceof Query)) {
@@ -91,7 +91,7 @@ class Users extends Collection {
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.rpcPath}/${username}/user-email-verification-initiate`;
+    options.pathname = `${this.rpcPathname}/${username}/user-email-verification-initiate`;
 
     const request = new Request(options);
     const promise = request.execute().then(() => {
@@ -107,7 +107,7 @@ class Users extends Collection {
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.rpcPath}/user-forgot-username`;
+    options.pathname = `${this.rpcPathname}/user-forgot-username`;
     options.data = { email: email };
 
     const request = new Request(options);
@@ -123,7 +123,7 @@ class Users extends Collection {
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.rpcPath}/${username}/user-password-reset-initiate`;
+    options.pathname = `${this.rpcPathname}/${username}/user-password-reset-initiate`;
 
     const request = new Request(options);
     const promise = request.execute().then(() => {
@@ -139,7 +139,7 @@ class Users extends Collection {
       auth: Auth.app
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.rpcPath}/check-username-exists`;
+    options.pathname = `${this.rpcPathname}/check-username-exists`;
     options.data = { username: username };
 
     const request = new Request(options);
@@ -162,7 +162,7 @@ class Users extends Collection {
       auth: Auth.master
     }, options);
     options.method = HttpMethod.POST;
-    options.path = `${this.path}/${id}/_restore`;
+    options.pathname = `${this.pathname}/${id}/_restore`;
 
     const request = new Request(options);
     const promise = request.execute().then(() => {

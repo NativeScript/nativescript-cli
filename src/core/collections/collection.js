@@ -3,6 +3,7 @@ const Promise = require('bluebird');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
+const NotFoundError = require('../errors').NotFoundError;
 const Client = require('../client');
 const Query = require('../query');
 const Auth = require('../auth');
@@ -76,21 +77,21 @@ class Collection {
   }
 
   /**
-   * The path for the collection where requests will be sent.
+   * The pathname for the collection where requests will be sent.
    *
    * @param  {Client}  Client
    * @return {string}  Path
    */
-  getPath(client) {
+  getPathname(client) {
     client = client || this.client;
 
-    let path = `/${appdataNamespace}/${client.appId}`;
+    let pathname = `/${appdataNamespace}/${client.appId}`;
 
     if (this.name) {
-      path = `${path}/${this.name}`;
+      pathname = `${pathname}/${this.name}`;
     }
 
-    return path;
+    return pathname;
   }
 
   /**
@@ -131,7 +132,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
-    options.path = this.getPath(options.client);
+    options.pathname = this.getPathname(options.client);
     options.query = query;
 
     const request = new Request(options);
@@ -198,7 +199,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `${this.getPath(options.client)}/_group`;
+    options.pathname = `${this.getPathname(options.client)}/_group`;
     options.data = aggregation.toJSON();
 
     const request = new Request(options);
@@ -251,7 +252,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `${this.getPath(options.client)}/_count`;
+    options.pathname = `${this.getPathname(options.client)}/_count`;
     options.query = query;
 
     const request = new Request(options);
@@ -296,7 +297,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `${this.getPath(options.client)}/${id}`;
+    options.pathname = `${this.getPathname(options.client)}/${id}`;
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
@@ -360,7 +361,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.POST;
-    options.path = this.getPath(options.client);
+    options.pathname = this.getPathname(options.client);
     options.data = model.toJSON();
 
     const request = new Request(options);
@@ -423,7 +424,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.PUT;
-    options.path = `${this.getPath(options.client)}/${model.id}`;
+    options.pathname = `${this.getPathname(options.client)}/${model.id}`;
     options.data = model.toJSON();
 
     const request = new Request(options);
@@ -477,7 +478,7 @@ class Collection {
       skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.DELETE;
-    options.path = this.getPath(options.client);
+    options.pathname = this.getPathname(options.client);
     options.query = query;
 
     const request = new Request(options);
@@ -523,15 +524,13 @@ class Collection {
       silent: false
     }, options);
     options.method = HttpMethod.DELETE;
-    options.path = `${this.getPath(options.client)}/${id}`;
+    options.pathname = `${this.getPathname(options.client)}/${id}`;
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
       return response.data;
     }).catch(err => {
-      // TODO: check if err is NotFoundError
-
-      if (options.silent) {
+      if (options.silent && err instanceof NotFoundError) {
         log.debug(`A model with id = ${id} does not exist. Returning success because of the silent flag.`);
         return {
           count: 0,

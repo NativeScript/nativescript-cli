@@ -114,7 +114,7 @@ class User extends Model {
 
       const request = new Request({
         method: HttpMethod.POST,
-        path: `/${usersNamespace}/${options.client.appId}/login`,
+        pathname: `/${usersNamespace}/${options.client.appId}/login`,
         data: usernameOrData,
         dataPolicy: DataPolicy.NetworkOnly,
         auth: Auth.app,
@@ -231,7 +231,7 @@ class User extends Model {
       }
 
       options.method = HttpMethod.POST;
-      options.path = `/${usersNamespace}/${options.client.appId}/_logout`;
+      options.pathname = `/${usersNamespace}/${options.client.appId}/_logout`;
       options.dataPolicy = DataPolicy.NetworkOnly;
       options.auth = Auth.session;
 

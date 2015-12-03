@@ -1,34 +1,35 @@
+const util = require('util');
 const isFunction = require('lodash/lang/isFunction');
 
-class KinveyError extends Error {
-  constructor(message = 'An error occurred.', debug = '') {
-    super();
-    this.name = this.constructor.name;
+Error.extend = function(name) {
+  const SubType = function(message, debug) {
+    if (!(this instanceof SubType)) {
+      return new SubType(message, debug);
+    }
+
+    this.name = name;
     this.message = message;
+    this.description = message;
     this.debug = debug;
 
     if (isFunction(Error.captureStackTrace)) {
-      Error.captureStackTrace(this, this.constructor.name);
-    } else {
-      this.stack = (new Error(message)).stack;
+      Error.captureStackTrace(this, this.constructor);
     }
-  }
-}
+  };
 
-class ActiveUserError extends KinveyError {
-  constructor(message = 'An active user already exists.', debug) {
-    super(message, debug);
-  }
-}
+  util.inherits(SubType, this);
 
-class NotFoundError extends KinveyError {
-  constructor(message = 'The item was not found.', debug) {
-    super(message, debug);
-  }
-}
+  SubType.prototype.toString = function() {
+    return `${this.name}: ${util.inspect(this.message)}`;
+  };
+
+  SubType.extend = this.extend;
+  return SubType;
+};
 
 module.exports = {
-  KinveyError: KinveyError,
-  ActiveUserError: ActiveUserError,
-  NotFoundError: NotFoundError
+  ActiveUserError: Error.extend('ActiveUserError'),
+  BlobNotFoundError: Error.extend('BlobNotFoundError'),
+  KinveyError: Error.extend('KinveyError'),
+  NotFoundError: Error.extend('NotFoundError')
 };

@@ -18,7 +18,7 @@ class UserUtils {
 
     const request = new Request({
       method: HttpMethod.GET,
-      path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
+      pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
       client: client,
       dataPolicy: DataPolicy.LocalOnly
     });
@@ -45,18 +45,20 @@ class UserUtils {
       if (activeUser) {
         const request = new Request({
           method: HttpMethod.DELETE,
-          path: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
+          pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
           client: client,
           dataPolicy: DataPolicy.LocalOnly,
           skipSync: true
         });
-        return request.execute();
+        return request.execute().then(() => {
+          UserUtils[activeUserSymbol] = null;
+        });
       }
     }).then(() => {
       if (user) {
         const request = new Request({
           method: HttpMethod.POST,
-          path: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
+          pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
           client: client,
           dataPolicy: DataPolicy.LocalOnly,
           data: result(user, 'toJSON', user),
@@ -76,4 +78,5 @@ class UserUtils {
   }
 }
 
+UserUtils[activeUserSymbol] = null;
 module.exports = UserUtils;

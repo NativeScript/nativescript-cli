@@ -4,6 +4,14 @@ const clone = require('lodash/lang/clone');
 const privateAclSymbol = Symbol();
 
 class PrivateAcl {
+  constructor(acl = {}) {
+    if (!isPlainObject(acl)) {
+      throw new KinveyError('acl argument must be an object');
+    }
+
+    this.acl = acl;
+  }
+
   get creator() {
     return this.acl.creator;
   }
@@ -32,14 +40,6 @@ class PrivateAcl {
     this.acl.gw = gw || false;
   }
 
-  constructor(acl = {}) {
-    if (!isPlainObject(acl)) {
-      throw new KinveyError('acl argument must be an object');
-    }
-
-    this.acl = acl;
-  }
-
   addReader(user) {
     const r = this.acl.r || [];
 
@@ -53,13 +53,13 @@ class PrivateAcl {
 
   addReaderGroup(group) {
     const groups = this.acl.groups || {};
-    const w = groups.w || [];
+    const r = groups.r || [];
 
-    if (w.indexOf(group) === -1) {
-      w.push(group);
+    if (r.indexOf(group) === -1) {
+      r.push(group);
     }
 
-    groups.w = w;
+    groups.r = r;
     this.acl.groups = groups;
     return this;
   }
@@ -72,6 +72,19 @@ class PrivateAcl {
     }
 
     this.acl.w = w;
+    return this;
+  }
+
+  addWriterGroup(group) {
+    const groups = this.acl.groups || {};
+    const w = groups.w || [];
+
+    if (w.indexOf(group) === -1) {
+      w.push(group);
+    }
+
+    groups.w = w;
+    this.acl.groups = groups;
     return this;
   }
 
@@ -141,6 +154,10 @@ class PrivateAcl {
 }
 
 class Acl {
+  constructor(acl) {
+    this[privateAclSymbol] = new PrivateAcl(acl);
+  }
+
   get creator() {
     return this[privateAclSymbol].creator;
   }
@@ -169,10 +186,6 @@ class Acl {
     this[privateAclSymbol].globallyWritable = gw;
   }
 
-  constructor(acl) {
-    this[privateAclSymbol] = new PrivateAcl(acl);
-  }
-
   addReader(user) {
     this[privateAclSymbol].addReader(user);
     return this;
@@ -185,6 +198,11 @@ class Acl {
 
   addWriter(user) {
     this[privateAclSymbol].addWriter(user);
+    return this;
+  }
+
+  addWriterGroup(group) {
+    this[privateAclSymbol].addWriterGroup(group);
     return this;
   }
 

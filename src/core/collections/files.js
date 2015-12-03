@@ -2,15 +2,15 @@ const Collection = require('./collection');
 const Client = require('../client');
 const Request = require('../request').Request;
 const KinveyError = require('../errors').KinveyError;
-const HttpMethod = require('../enums/httpMethod');
-const ResponseType = require('../enums/responseType');
-const DataPolicy = require('../enums/dataPolicy');
+const BlobNotFoundError = require('../errors').BlobNotFoundError;
+const HttpMethod = require('../enums').HttpMethod;
+const ResponseType = require('../enums').ResponseType;
+const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
 const File = require('../models/file');
 const url = require('url');
 const Promise = require('bluebird');
 const assign = require('lodash/object/assign');
-const defaults = require('lodash/object/defaults');
 const isObject = require('lodash/lang/isObject');
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const pathReplaceRegex = /[^\/]$/;
@@ -33,11 +33,13 @@ class Files extends Collection {
   }
 
   /**
-   * The path for the files where requests will be sent.
+   * The pathname for the collection where requests will be sent.
    *
-   * @return   {string}    Path
+   * @param  {Client}  Client
+   * @return {string}  Path
    */
-  get path() {
+  getPathname(client) {
+    client = client || this.client;
     return `/${filesNamespace}/${this.client.appId}`;
   }
 
@@ -72,21 +74,27 @@ class Files extends Collection {
    * });
    */
   find(query, options = {}) {
-    options.flags = {};
+    options = assign({
+      download: false,
+      tls: false,
+      ttl: undefined,
+      search: {}
+    }, options);
+    options.dataPolicy = DataPolicy.NetworkOnly;
 
     if (options.tls !== false) {
-      options.flags.tls = true;
+      options.search.tls = true;
     }
 
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (options.ttl) {
-      options.flags.ttl_in_seconds = options.ttl;
+      options.search.ttl_in_seconds = options.ttl;
     }
 
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
-    const promise = super.find(query, options).then((files) => {
+    const promise = super.find(query, options).then(files => {
       if (options.download) {
         const promises = files.map((file) => {
           return this.downloadByUrl(file, options);
@@ -131,7 +139,7 @@ class Files extends Collection {
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(name)}`;
+    options.pathname = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(name)}`;
     options.flags = {};
 
     if (options.tls !== false) {
@@ -179,7 +187,7 @@ class Files extends Collection {
 
     const request = new Request({
       method: HttpMethod.GET,
-      path: url.parse(metadata._downloadURL).path,
+      pathname: url.parse(metadata._downloadURL).path,
       client: client
     });
     request.setHeader('Accept', metadata.mimeType || 'application-octet-stream');
@@ -187,7 +195,7 @@ class Files extends Collection {
     request.removeHeader('X-Kinvey-Api-Version');
     request.setResponseType = ResponseType.Blob;
 
-    const promise = request.execute().then((data) => {
+    const promise = request.execute().then(data => {
       metadata._data = data;
       return metadata;
     }).catch((err) => {
@@ -225,69 +233,74 @@ class Files extends Collection {
     return this.download(name, options);
   }
 
-  upload(file = {}, data = {}, options = {}) {
-    data._filename = data._filename || file._filename || file.name;
-    data.size = data.size || file.size || file.length;
-    data.mimeType = data.mimeType || file.mimeType || file.type || 'application/octet-stream';
+  upload(file, metadata = {}, options = {}) {
+    metadata = metadata || {};
+    metadata._filename = metadata._filename || file._filename || file.name;
+    metadata.size = metadata.size || file.size || file.length;
+    metadata.mimeType = metadata.mimeType || file.mimeType || file.type || 'application/octet-stream';
+
+    options = assign({
+      auth: this.auth,
+      client: this.client,
+      skipSync: this.skipSync,
+      public: false,
+      contentType: metadata.mimeType
+    }, options);
+    options.dataPolicy = DataPolicy.NetworkOnly;
 
     if (options.public) {
-      data._public = true;
+      metadata._public = true;
     }
 
-    if (data._id) {
-      options = defaults({
-        method: HttpMethod.PUT,
-        path: `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(data._id)}`,
-        data: data
-      }, options);
+    if (metadata._id) {
+      options.method = HttpMethod.PUT;
+      options.pathname = `${this.getPathname(options.client)}/${metadata._id}`;
     } else {
-      options = defaults({
-        method: HttpMethod.POST,
-        path: this.path,
-        data: data
-      }, options);
+      options.method = HttpMethod.POST;
+      options.pathname = this.getPathname(options.client);
     }
 
+    options.data = metadata;
     const request = new Request(options);
-    request.setHeader('Content-Type', data.mimeType);
 
-    const promise = request.execute().then((response) => {
-      const uploadUrl = response._uploadURL;
-      const headers = response._requiredHeaders || {};
-      headers['Content-Type'] = data.mimeType;
+    const promise = request.execute().then(response => {
+      const uploadUrl = response.data._uploadURL;
+      const uploadUrlParts = url.parse(uploadUrl);
+      const headers = response.data._requiredHeaders || {};
+      headers['Content-Type'] = metadata.mimeType;
+      headers['Content-Length'] = metadata.size;
 
       // Delete fields from the response
-      delete response._expiresAt;
-      delete response._requiredHeaders;
-      delete response._uploadURL;
+      delete response.data._expiresAt;
+      delete response.data._requiredHeaders;
+      delete response.data._uploadURL;
 
       // Create a client
-      const sharedClient = Client.sharedInstance();
       const client = new Client({
-        appId: sharedClient.appId,
-        appSecret: sharedClient.appSecret,
-        masterSecret: sharedClient.masterSecret,
-        encryptionKey: sharedClient.encryptionKey,
+        appId: options.client.appId,
+        appSecret: options.client.appSecret,
+        masterSecret: options.client.masterSecret,
+        encryptionKey: options.client.encryptionKey,
         apiUrl: uploadUrl,
         allowHttp: true
       });
 
-      // Parse the path
-      const path = url.parse(uploadUrl).path;
-
       // Upload the file
       const uploadRequest = new Request({
+        dataPolicy: DataPolicy.NetworkOnly,
+        auth: Auth.none,
         method: HttpMethod.PUT,
-        path: path,
+        pathname: uploadUrlParts.pathname,
+        search: uploadUrlParts.query,
         data: file,
         client: client
       });
+      uploadRequest.clearHeaders();
       uploadRequest.addHeaders(headers);
-      uploadRequest.removeHeader('X-Kinvey-Api-Version');
 
       return uploadRequest.execute().then(() => {
-        response._data = file;
-        return response;
+        response.data._data = file;
+        return new this.model(response.data, options); // eslint-disable-line new-cap
       });
     });
 
@@ -306,15 +319,15 @@ class Files extends Collection {
    *
    * @example
    * var files = new Kinvey.Files();
-   * files.destroy('BostonTeaParty.png').then(function(response) {
+   * files.delete('BostonTeaParty.png').then(function(response) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  destroy(name, options = {}) {
-    const promise = super.destroy(name, options).catch((err) => {
-      if (err.name === 'BLOB_NOT_FOUND') {
+  delete(name, options = {}) {
+    const promise = super.delete(name, options).catch((err) => {
+      if (options.silent && err instanceof BlobNotFoundError) {
         return { count: 0 };
       }
 

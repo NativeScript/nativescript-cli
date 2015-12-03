@@ -19,7 +19,7 @@ function execute(index, middlewares, request) {
   const middleware = middlewares[index];
 
   // Process the request on the middleware
-  return middleware.handle(request).then((response) => {
+  return middleware.handle(request).then(response => {
     // Add 1 to the index
     index = index + 1;
 

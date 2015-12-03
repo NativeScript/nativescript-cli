@@ -2,9 +2,8 @@ const Middleware = require('./middleware');
 const HttpMethod = require('../core/enums').HttpMethod;
 const Promise = require('bluebird');
 const http = require('request');
-const result = require('lodash/object/result');
-const isString = require('lodash/lang/isString');
 const isEmpty = require('lodash/lang/isEmpty');
+const isString = require('lodash/lang/isString');
 
 class Http extends Middleware {
   constructor() {
@@ -17,11 +16,11 @@ class Http extends Middleware {
         url: request.url,
         method: request.method,
         headers: request.headers,
-        qs: request.flags || {}
+        qs: request.search || {}
       };
 
       if (request.query) {
-        const query = result(request.query, 'toJSON', request.query);
+        const query = request.query;
         options.qs.query = query.filter;
 
         if (!isEmpty(query.fields)) {
@@ -47,10 +46,7 @@ class Http extends Middleware {
         }
       }
 
-      if (request.data &&
-        (request.method === HttpMethod.PATCH
-          || request.method === HttpMethod.POST
-          || request.method === HttpMethod.PUT)) {
+      if (request.data && (request.method === HttpMethod.PATCH || request.method === HttpMethod.POST || request.method === HttpMethod.PUT)) {
         options.body = request.data;
       }
 

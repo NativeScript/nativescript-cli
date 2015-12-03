@@ -56,14 +56,6 @@ class Cache extends Middleware {
         };
 
         return request;
-      }).catch(err => {
-        request.response = {
-          statusCode: StatusCode.ServerError,
-          headers: {},
-          data: err
-        };
-
-        return request;
       });
     });
   }

@@ -1,25 +1,45 @@
+/**
+ * Copyright 2015 Kinvey, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 const DataStore = require('../../src/legacy/datastore');
-const Query = require('../../src/core/query');
-const Aggregation = require('../../src/core/aggregation');
+const Query = require('../../src/legacy/query');
+const Aggregation = require('../../src/legacy/group');
 const nock = require('nock');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const collectionName = 'books';
 
 describe('DataStore', function() {
   before(function() {
-    return loginUser().then(user => {
+    return Common.loginUser().then(user => {
       this.activeUser = user;
     });
   });
 
-  // after(function() {
-  //   return logoutUser();
-  // });
+  after(function() {
+    return Common.logoutUser();
+  });
+
+  after(function() {
+    delete this.activeUser;
+  });
 
   describe('find()', function() {
     before(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -31,7 +51,7 @@ describe('DataStore', function() {
 
     before(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -185,7 +205,7 @@ describe('DataStore', function() {
     describe('with a GeoSpatial query', function() {
       before(function() {
         const reply = {
-          _id: randomString(24),
+          _id: Common.randomString(24),
           _kmd: {
             lmt: new Date().toISOString(),
             ect: new Date().toISOString()
@@ -235,7 +255,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -251,7 +271,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -267,7 +287,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -283,7 +303,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -299,7 +319,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -315,7 +335,7 @@ describe('DataStore', function() {
 
         nock(this.client.apiUrl)
           .get(`/${appdataNamespace}/${this.client.appId}/${collectionName}`)
-          .query(createNockQuery(query))
+          .query(Common.createNockQuery(query))
           .reply(200, reply, {
             'content-type': 'application/json'
           });
@@ -500,7 +520,7 @@ describe('DataStore', function() {
   describe('get()', function() {
     before(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -522,7 +542,7 @@ describe('DataStore', function() {
     });
 
     it('should fail when the document does not exist', function() {
-      const id = randomString();
+      const id = Common.randomString();
       const promise = DataStore.get(collectionName, id, {
         offline: true,
         fallback: false
@@ -551,7 +571,7 @@ describe('DataStore', function() {
     it('should support both deferreds and callbacks on failure', Common.failure(function(options) {
       options.offline = true;
       options.fallack = false;
-      return DataStore.get(collectionName, randomString(), options);
+      return DataStore.get(collectionName, Common.randomString(), options);
     }));
   });
 
@@ -577,7 +597,7 @@ describe('DataStore', function() {
 
     it('should create a new document', function() {
       const doc = {
-        attribute: randomString()
+        attribute: Common.randomString()
       };
       const promise = DataStore.save(collectionName, doc, {
         offline: true,
@@ -592,7 +612,7 @@ describe('DataStore', function() {
 
     it('should update an existing document', function() {
       const doc = {
-        _id: randomString(24)
+        _id: Common.randomString(24)
       };
       const promise = DataStore.save(collectionName, doc, {
         offline: true,
@@ -607,7 +627,7 @@ describe('DataStore', function() {
 
     it('should support both deferreds and callbacks on success', Common.success(function(options) {
       const doc = {
-        attribute: randomString()
+        attribute: Common.randomString()
       };
       options.offline = true;
       options.fallack = false;
@@ -634,8 +654,8 @@ describe('DataStore', function() {
   describe('update()', function() {
     before(function() {
       const promise = DataStore.save(collectionName, {
-        _id: randomString(24),
-        attribute: randomString()
+        _id: Common.randomString(24),
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -662,7 +682,7 @@ describe('DataStore', function() {
     });
 
     it('should update an existing document', function() {
-      this.doc.attribute = randomString();
+      this.doc.attribute = Common.randomString();
       const promise = DataStore.update(collectionName, this.doc, {
         offline: true,
         fallback: false
@@ -675,7 +695,7 @@ describe('DataStore', function() {
     });
 
     it('should support both deferreds and callbacks on success', Common.success(function(options) {
-      this.doc.attribute = randomString();
+      this.doc.attribute = Common.randomString();
       options.offline = true;
       options.fallack = false;
       return DataStore.update(collectionName, this.doc, options);
@@ -694,7 +714,7 @@ describe('DataStore', function() {
           'content-type': 'application/json'
         });
 
-      this.doc.attribute = randomString;
+      this.doc.attribute = Common.randomString;
       return DataStore.update(collectionName, this.doc, options);
     }));
   });
@@ -702,7 +722,7 @@ describe('DataStore', function() {
   describe('clean()', function() {
     beforeEach(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -714,7 +734,7 @@ describe('DataStore', function() {
 
     beforeEach(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -850,7 +870,7 @@ describe('DataStore', function() {
   describe('destroy()', function() {
     beforeEach(function() {
       const promise = DataStore.save(collectionName, {
-        attribute: randomString()
+        attribute: Common.randomString()
       }, {
         offline: true,
         fallback: false
@@ -881,7 +901,7 @@ describe('DataStore', function() {
     });
 
     it('should fail when the document does not exist', function() {
-      const promise = DataStore.destroy(collectionName, randomString(), {
+      const promise = DataStore.destroy(collectionName, Common.randomString(), {
         offline: true,
         fallback: false
       });

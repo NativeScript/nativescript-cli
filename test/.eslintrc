@@ -16,11 +16,8 @@
     "expect": true,
     "chai": true,
     "sinon": true,
-    "randomString": true,
     "stub": true,
     "spy": true,
-    "loginUser": true,
-    "createNockQuery": true,
     "Common": true
   }
 }

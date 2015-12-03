@@ -1,10 +1,23 @@
 const Client = require('../core/client');
 const User = require('./user');
+const RequestProperties = require('./requestProperties');
 const Kinvey = {};
 
 // Classes
-Kinvey.User = User;
+Kinvey.Acl = require('./acl');
+Kinvey.ClientAppVersion = RequestProperties.ClientAppVersion;
+Kinvey.CustomRequestProperties = RequestProperties.CustomRequestProperties;
 Kinvey.DataStore = require('./datastore');
+Kinvey.Defer = require('./defer');
+Kinvey.Error = require('./error');
+Kinvey.File = require('./file');
+Kinvey.Group = require('./group');
+Kinvey.Metadata = require('./metadata');
+Kinvey.Query = require('./query');
+Kinvey.Social = require('./social');
+Kinvey.Sycn = require('./sync');
+Kinvey.User = User;
+Kinvey.User.MIC = require('./mic');
 
 /**
  * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.

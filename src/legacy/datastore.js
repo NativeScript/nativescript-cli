@@ -3,24 +3,10 @@ const Query = require('../core/query');
 const Aggregation = require('../core/aggregation');
 const Promise = require('bluebird');
 const KinveyError = require('../core/errors').KinveyError;
-const DataPolicy = require('../core/enums').DataPolicy;
 const log = require('loglevel');
 const forEach = require('lodash/collection/forEach');
+const transformOptions = require('./utils').transformOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
-
-function normalizeOptions(options = {}) {
-  if (options.offline) {
-    if (options.fallback) {
-      options.dataPolicy = DataPolicy.LocalFirst;
-    } else {
-      options.dataPolicy = DataPolicy.LocalOnly;
-    }
-  } else {
-    options.dataPolicy = DataPolicy.NetworkOnly;
-  }
-
-  return options;
-}
 
 class DataStore {
   static find(name, query, options) {
@@ -29,8 +15,8 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.find(query, normalizeOptions(options)).then(models => {
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.find(query, transformOptions(options)).then(models => {
       const documents = [];
 
       forEach(models, model => {
@@ -48,20 +34,20 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.group(aggregation, normalizeOptions(options));
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.group(aggregation, transformOptions(options));
     return wrapCallbacks(promise, options);
   }
 
   static count(name, query, options) {
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.count(query, normalizeOptions(options));
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.count(query, transformOptions(options));
     return wrapCallbacks(promise, options);
   }
 
   static get(name, id, options) {
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.get(id, normalizeOptions(options)).then(model => {
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.get(id, transformOptions(options)).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -73,8 +59,8 @@ class DataStore {
       return this.update(name, document, options);
     }
 
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.save(document, normalizeOptions(options)).then(model => {
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.save(document, transformOptions(options)).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -86,8 +72,8 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.update(document, normalizeOptions(options)).then(model => {
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.update(document, transformOptions(options)).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -99,14 +85,14 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.clear(query, normalizeOptions(options));
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.clear(query, transformOptions(options));
     return wrapCallbacks(promise, options);
   }
 
   static destroy(name, id, options) {
-    const collection = new Collection(name, normalizeOptions(options));
-    const promise = collection.delete(id, normalizeOptions(options));
+    const collection = new Collection(name, transformOptions(options));
+    const promise = collection.delete(id, transformOptions(options));
     return wrapCallbacks(promise, options);
   }
 }

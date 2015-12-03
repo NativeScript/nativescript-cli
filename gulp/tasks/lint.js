@@ -27,4 +27,7 @@ createLintTask('lint-test-sync', 'test/specs/sync.spec.js');
 createLintTask('lint-test-user', 'test/specs/user.spec.js');
 
 // Lint legacy test code
+createLintTask('lint-test-legacy', config.files.testLegacy);
+createLintTask('lint-test-legacy-acl', 'test/legacy/acl.spec.js');
 createLintTask('lint-test-legacy-datastore', 'test/legacy/datastore.spec.js');
+createLintTask('lint-test-legacy-file', 'test/legacy/file.spec.js');

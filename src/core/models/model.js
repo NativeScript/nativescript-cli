@@ -1,5 +1,5 @@
 const Acl = require('../acl');
-const Metadata = require('../metadata');
+const Kmd = require('../kmd');
 const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
@@ -33,7 +33,7 @@ class Model {
   }
 
   get kmd() {
-    return new Metadata(this.get(kmdAttribute));
+    return new Kmd(this.get(kmdAttribute));
   }
 
   get _kmd() {

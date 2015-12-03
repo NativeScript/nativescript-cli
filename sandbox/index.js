@@ -1,24 +1,36 @@
 require('babel-core/register');
 const Kinvey = require('../src/kinvey');
+const Files = require('../src/core/collections/files');
+const User = require('../src/core/models/user');
+const fs = require('fs');
+const path = require('path');
+
 Kinvey.Logger.setLevel(Kinvey.Logger.levels.DEBUG);
 
-const client = Kinvey.init({
+Kinvey.init({
   appKey: 'kid_byGoHmnX2',
   appSecret: '9b8431f34279434bbedaceb2fe6b8fb5'
 });
 
-Kinvey.User.getActive().then(user => {
-  if (!user) {
-    return Kinvey.User.login('admin', 'admin');
-  }
+User.login('admin', 'admin').then(() => {
+  const filename = 'test.png';
+  fs.readFile(path.normalize(path.join(__dirname, filename)), (err, data) => {
+    if (err) {
+      return console.log(err);
+    }
 
-  return user;
-}).then(user => {
-  const booksCollection = new Kinvey.Collection('books');
-  const query = new Kinvey.Query();
-  query.equalTo('title', 'Harry Potter');
-  query.limit(2);
-  return booksCollection.find(query);
-}).then(books => {
-  console.log(books);
+    const files = new Files();
+    files.upload(data, null, {
+      public: true
+    }).then(response => {
+      console.log(response);
+    });
+  });
 });
+
+// User.login('admin', 'admin').then(() => {
+//   const files = new Files();
+//   return files.find();
+// }).then(files => {
+//   console.log(files);
+// });

@@ -18,7 +18,7 @@ class File extends Model {
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `/${filesNamespace}/${this.client.appId}`;
+    options.pathname = `/${filesNamespace}/${this.client.appId}`;
     options.query = query;
     options.flags = {};
 
@@ -55,7 +55,7 @@ class File extends Model {
       auth: Auth.default
     }, options);
     options.method = HttpMethod.GET;
-    options.path = `/${filesNamespace}/${this.client.appId}/${name}`;
+    options.pathname = `/${filesNamespace}/${this.client.appId}/${name}`;
     options.flags = {};
 
     if (options.tls !== false) {
@@ -103,7 +103,7 @@ class File extends Model {
       auth: Auth.default
     }, options);
     options.method = HttpMethod.DELETE;
-    options.path = `/${filesNamespace}/${this.client.appId}/${name}`;
+    options.pathname = `/${filesNamespace}/${this.client.appId}/${name}`;
 
     const request = new Request(options);
     const promise = request.execute().catch((err) => {
