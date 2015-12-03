@@ -1,6 +1,20 @@
 NativeScript CLI Changelog
 ================
 
+1.5.1 (2015, December 03)
+==
+### New
+* [Implemented #452](https://github.com/NativeScript/nativescript-cli/issues/452): Build should report malformed XML.
+* [Implemented #1263](https://github.com/NativeScript/nativescript-cli/issues/1263): Add timestamps to LiveSync messages.
+
+### Fixed
+* [Fixed #1234](https://github.com/NativeScript/nativescript-cli/issues/1234): LiveSync does not work for iOS platform specific .xml/.css files on iOS Simulator.
+* [Fixed #1242](https://github.com/NativeScript/nativescript-cli/issues/1242): `ANDROID_HOME environment variable is not set correctly` error is thrown when `tns run ios --log trace` command is executed.
+* [Fixed #1245](https://github.com/NativeScript/nativescript-cli/issues/1245): `TypeError: Cannot read property 'match' of null` error is thrown on various commands.
+* [Fixed #1246](https://github.com/NativeScript/nativescript-cli/issues/1246): LiveSync on android device is throwing ENAMTOOLONG error on Windows.
+* [Fixed #1253](https://github.com/NativeScript/nativescript-cli/issues/1253): iOS debugger does not work with iOS Simulator with Xcode7+.
+* [Fixed #1268](https://github.com/NativeScript/nativescript-cli/issues/1268): Hook failures treated as bad user input.
+
 1.5.0 (2015, November 24)
 ==
 
@@ -280,7 +294,7 @@ Building NativeScript projects for Android requires Android SDK 22, Android SDK 
 * Introduced new project structure. To migrate to the new structure, complete the following steps.
 	1. Manually move all files and folders from the inner `app` folder one level up inside the outer `app` folder.
 	1. Remove the now empty inner `app` folder.
-	1. Verify that your project structure reflects the structure described [here](README.md#create-project).
+	1. Verify that your project structure reflects the structure described [here](https://github.com/NativeScript/nativescript-cli/blob/production/README.md#create-project).
 
 ### New
 
