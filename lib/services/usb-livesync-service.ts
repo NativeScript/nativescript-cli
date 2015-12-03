@@ -9,6 +9,7 @@ import * as semver from "semver";
 import * as net from "net";
 import Future = require("fibers/future");
 import * as helpers from "../common/helpers";
+import * as moment from "moment";
 
 export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncServiceBase implements IUsbLiveSyncService {
 
@@ -149,7 +150,7 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 							});
 						}
 
-						this.$logger.info(`Successfully synced application ${this.$projectData.projectId}.`);
+						this.$logger.info(`Successfully synced application ${this.$projectData.projectId} at ${moment().format("ll LTS")}.`);
 					}).future<void>()();
 				});
 			};
