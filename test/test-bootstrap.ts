@@ -1,3 +1,5 @@
+import * as shelljs from "shelljs";
+shelljs.config.silent = true;
 global._ = require("lodash");
 global.$injector = require("../lib/common/yok").injector;
 
