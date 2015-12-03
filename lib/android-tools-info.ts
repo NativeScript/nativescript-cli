@@ -38,8 +38,11 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		private $logger: ILogger,
 		private $options: IOptions) {}
 
-	public getPathToAndroidExecutable(): IFuture<string> {
+	public getPathToAndroidExecutable(options?: {showWarningsAsErrors: boolean}): IFuture<string> {
 		return ((): string => {
+			if(options) {
+				this.showWarningsAsErrors = options.showWarningsAsErrors;
+			}
 			if (!this.pathToAndroidExecutable) {
 				if(this.validateAndroidHomeEnvVariable(this.androidHome).wait()) {
 					let androidPath = path.join(this.androidHome, "tools", this.androidExecutableName);
@@ -47,7 +50,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 						this.printMessage(`Unable to find "${this.androidExecutableName}" executable file. Make sure you have set ANDROID_HOME environment variable correctly.`);
 					}
 				} else {
-					this.printMessage("ANDROID_HOME environment variable is not set correctly.");
+					this.$logger.trace("ANDROID_HOME environment variable is not set correctly.");
 				}
 			}
 
@@ -338,11 +341,14 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		return (() => {
 			if (!this.installedTargetsCache) {
 				try {
-					let result = this.$childProcess.spawnFromEvent(this.getPathToAndroidExecutable().wait(), ["list", "targets"], "close", {}, {throwError: false}).wait();
-					if(result.stdout) {
-						this.$logger.trace(result.stdout);
-						this.installedTargetsCache = [];
-						result.stdout.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
+					let pathToAndroidExecutable = this.getPathToAndroidExecutable().wait();
+					if(pathToAndroidExecutable) {
+						let result = this.$childProcess.spawnFromEvent(pathToAndroidExecutable, ["list", "targets"], "close", {}, {throwError: false}).wait();
+						if(result && result.stdout) {
+							this.$logger.trace(result.stdout);
+							this.installedTargetsCache = [];
+							result.stdout.replace(/id: \d+ or "(.+)"/g, (m:string, p1:string) => (this.installedTargetsCache.push(p1), m));
+						}
 					}
 				} catch(err) {
 					this.$logger.trace("Unable to get Android targets. Error is: " + err);
