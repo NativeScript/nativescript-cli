@@ -6,13 +6,12 @@ const Client = require('../client');
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
-const isString = require('lodash/lang/isString');
 const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
-const Promise = require('bluebird');
 const UserUtils = require('../utils/user');
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 class User extends Model {
   get authtoken() {
@@ -130,82 +129,6 @@ class User extends Model {
   }
 
   /**
-   * Login a Kinvey user using a provider.
-   *
-   * @param   {string}        provider            Provider
-   * @param   {Object}        token               Token
-   * @param   {string}        token.access_token  Access token
-   * @param   {number}        token.expires_in    Expires in
-   * @param   {Options}       [options]           Options
-   * @returns {Promise}                           Resolved with the active user or rejected with an error.
-  */
-  static loginWithProvider(provider, token = {}, options) {
-    if (!isString(provider)) {
-      provider = String(provider);
-    }
-
-    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
-    if (!token.access_token || !token.expires_in) {
-      return Promise.reject(
-        new KinveyError('token argument must contain both an access_token and expires_in property.', token)
-      );
-    }
-
-    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-
-    const data = { _socialIdentity: { } };
-    data._socialIdentity[provider] = token;
-
-    return User.login(data, options);
-  }
-
-  /**
-   * Connect with a social identity.
-   *
-   * @param   {string|Object}      Adapter          Social Adapter
-   * @return  {Promise}                             Resolved with the active user or rejected with an error.
-   */
-
-  // static connect(Adapter = SocialAdapter.Facebook, options) {
-  //   let adapter = Adapter;
-  //   let promise;
-  //
-  //   if (isString(Adapter)) {
-  //     switch (Adapter) {
-  //     case SocialAdapter.Google:
-  //       Adapter = Google;
-  //       break;
-  //     case SocialAdapter.LinkedIn:
-  //       Adapter = LinkedIn;
-  //       break;
-  //     case SocialAdapter.Twitter:
-  //       Adapter = Twitter;
-  //       break;
-  //     default:
-  //       Adapter = Facebook;
-  //     }
-  //   }
-  //
-  //   if (isFunction(Adapter)) {
-  //     adapter = new Adapter();
-  //   }
-  //
-  //   if (!isFunction(adapter.connect)) {
-  //     return Promise.reject(
-  //       new KinveyError('Unable to connect with the social adapter.',
-  //                       'Please provide a connect function for the adapter.')
-  //     );
-  //   }
-  //
-  //   promise = adapter.connect(options).then((token) => {
-  //     return User.loginWithProvider(adapter.name, token, options);
-  //   });
-  //
-  //   return promise;
-  // }
-
-  /**
    * Logout the active user. A promise will be returned that will be resolved
    * with null or rejected with an error.
    *
@@ -241,6 +164,104 @@ class User extends Model {
       return User.setActive(null, options.client);
     });
 
+    return promise;
+  }
+
+  me(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    const promise = this.isActive().then(active => {
+      if (!active) {
+        throw new KinveyError('User is not active. Please login first.');
+      }
+
+      options.method = HttpMethod.GET;
+      options.pathname = `/${usersNamespace}/${options.client.appId}/_me`;
+      options.dataPolicy = DataPolicy.NetworkOnly;
+      options.auth = Auth.session;
+
+      const request = new Request(options);
+      return request.execute();
+    }).then(response => {
+      const user = new User(response.data);
+
+      if (!user.kmd.authtoken) {
+        return User.getActive().then(activeUser => {
+          const kmd = user.kmd;
+          kmd.authtoken = activeUser.kmd.authtoken;
+          user.kmd = kmd;
+          return user;
+        });
+      }
+
+      return user;
+    }).then(user => {
+      return User.setActive(user, options.client);
+    });
+
+    return promise;
+  }
+
+  verifyEmail(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    options.method = HttpMethod.POST;
+    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-email-verification-initiate`;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.auth = Auth.app;
+
+    const request = new Request(options);
+    const promise = request.execute();
+    return promise;
+  }
+
+  forgotUsername(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    options.method = HttpMethod.POST;
+    options.pathname = `/${rpcNamespace}/${options.client.appId}/user-forgot-username`;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.auth = Auth.app;
+    options.data = { email: this.get('email') };
+
+    const request = new Request(options);
+    const promise = request.execute();
+    return promise;
+  }
+
+  resetPassword(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    options.method = HttpMethod.POST;
+    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-password-reset-initiate`;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.auth = Auth.app;
+
+    const request = new Request(options);
+    const promise = request.execute();
+    return promise;
+  }
+
+  resetPassword(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    options.method = HttpMethod.POST;
+    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-password-reset-initiate`;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.auth = Auth.app;
+
+    const request = new Request(options);
+    const promise = request.execute();
     return promise;
   }
 }

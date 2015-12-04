@@ -1,5 +1,7 @@
 const Auth = require('../auth');
 const DataPolicy = require('../enums/dataPolicy');
+const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
+const UserNotFoundError = require('../errors').UserNotFoundError;
 const Request = require('../request').Request;
 const HttpMethod = require('../enums/httpMethod');
 const Collection = require('./collection');
@@ -7,6 +9,7 @@ const Query = require('../query');
 const User = require('../models/user');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
+const forEach = require('lodash/collection/forEach');
 const isArray = require('lodash/lang/isArray');
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -31,39 +34,42 @@ class Users extends Collection {
   /**
    * The pathname for the users where requests will be sent.
    *
-   * @return   {string}    Path
+   * @return   {string}    Pathname
    */
-  get pathname() {
-    return `/${usersNamespace}/${this.client.appId}`;
+  getPathname(client) {
+    client = client || this.client;
+    return `/${usersNamespace}/${client.appId}`;
   }
 
   /**
    * The pathname for the rpc where requests will be sent.
    *
-   * @return   {string}    Path
+   * @return   {string}    Pathname
    */
-  get rpcPathname() {
-    return `/${rpcNamespace}/${this.client.appId}`;
+  getRpcPathname(client) {
+    client = client || this.client;
+    return `/${rpcNamespace}/${client.appId}`;
   }
 
   find(query, options = {}) {
     let promise;
 
-    options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.default
-    }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = `${this.pathname}/_lookup`;
-    options.query = query;
-
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
-      options.query = query;
     }
 
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client,
+      skipSync: this.skipSync
+    }, options);
+    options.method = HttpMethod.POST;
+    options.pathname = `${this.getPathname(options.client)}/_lookup`;
+
     if (options.discover) {
-      const request = new Request(options); // TODO: should be query.toJSON().filter
+      options.data = query ? query.toJSON().filter : null;
+      const request = new Request(options);
       promise = request.execute().then(response => {
         let data = response.data;
         const models = [];
@@ -85,49 +91,99 @@ class Users extends Collection {
     return promise;
   }
 
-  verifyEmail(username, options = {}) {
-    options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.app
-    }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = `${this.rpcPathname}/${username}/user-email-verification-initiate`;
+  create(user, options = {}) {
+    const promise = User.getActive().then(activeUser => {
+      if (options.state && activeUser) {
+        throw new AlreadyLoggedInError('A user is already logged in. Please logout before saving the new user.');
+      }
 
-    const request = new Request(options);
-    const promise = request.execute().then(() => {
-      return null;
+      return super.create(user, options);
+    }).then(user => {
+      if (options.state) {
+        return User.setActive(user, options.client);
+      }
+
+      return user;
     });
 
     return promise;
   }
 
-  forgotUsername(email, options = {}) {
-    options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.app
-    }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = `${this.rpcPathname}/user-forgot-username`;
-    options.data = { email: email };
+  update(user, options = {}) {
+    if (!user) {
+      return Promise.resolve(null);
+    }
 
-    const request = new Request(options);
-    const promise = request.execute().then(() => {
-      return null;
+    if (!(user instanceof this.model)) {
+      user = new this.model(result(user, 'toJSON', user), options); // eslint-disable-line new-cap
+    }
+
+    const socialIdentity = user.get('_socialIdentity');
+    const tokens = [];
+
+    if (socialIdentity) {
+      for (const identity in socialIdentity) {
+        if (socialIdentity.hasOwnProperty(identity)) {
+          if (socialIdentity[identity] && identity !== options._provider) {
+            tokens.push({
+              provider: identity,
+              access_token: socialIdentity[identity].access_token;
+              access_token_secret: socialIdentity[identity].access_token_secret;
+            });
+            delete socialIdentity[identity].access_token;
+            delete socialIdentity[identity].access_token_secret;
+          }
+        }
+      }
+    }
+
+    user.set('_socialIdentity', socialIdentity);
+    const promise = super.update(user, options).then(user => {
+      const socialIdentity = user.get('_socialIdentity');
+
+      forEach(tokens, identity => {
+        const provider = identity.provider;
+
+        if (socialIdentity && socialIdentity[provider]) {
+          forEach(['access_token', 'access_token_secret'], field => {
+            if (identity[field]) {
+              socialIdentity[provider][field] = identity[field];
+            }
+          });
+        }
+      });
+
+      user.set('_socialIdentity', socialIdentity);
+      return User.getActive().then(activeUser => {
+        if (activeUser && activeUser.id === user.id) {
+          return User.setActive(user, options.client);
+        }
+
+        return user;
+      });
     });
-    return promise;
   }
 
-  resetPassword(username, options = {}) {
+  delete(id, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.app
+      client: this.client,
+      search: options.hard ? { hard: true } : {}
     }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = `${this.rpcPathname}/${username}/user-password-reset-initiate`;
 
-    const request = new Request(options);
-    const promise = request.execute().then(() => {
-      return null;
+    const promise = super.delete(id, options).then(response => {
+      return User.getActive().then(activeUser => {
+        if (activeUser && activeUser.id === id) {
+          return User.setActive(null, options.client);
+        }
+      }).then(() => {
+        return response;
+      });
+    }).catch(err => {
+      if (options.silent && err instanceof UserNotFoundError) {
+        return null;
+      }
+
+      throw err;
     });
 
     return promise;
@@ -135,11 +191,13 @@ class Users extends Collection {
 
   exists(username, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.app
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.POST;
-    options.pathname = `${this.rpcPathname}/check-username-exists`;
+    options.auth = Auth.app;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.pathname = `${this.getRpcPathname(options.client)}/check-username-exists`;
     options.data = { username: username };
 
     const request = new Request(options);
@@ -158,17 +216,16 @@ class Users extends Collection {
 
   restore(id, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.master
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
     options.method = HttpMethod.POST;
-    options.pathname = `${this.pathname}/${id}/_restore`;
+    options.auth = Auth.master;
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.pathname = `${this.getPathname(options.client)}/${id}/_restore`;
 
     const request = new Request(options);
-    const promise = request.execute().then(() => {
-      return null;
-    });
-
+    const promise = request.execute();
     return promise;
   }
 }

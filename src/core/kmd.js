@@ -35,6 +35,10 @@ class PrivateKmd {
     return this.kmd.authtoken;
   }
 
+  set authtoken(authtoken) {
+    this.kmd.authtoken = authtoken;
+  }
+
   toJSON() {
     return clone(this.kmd);
   }
@@ -63,6 +67,10 @@ class Kmd {
 
   get authtoken() {
     return this[privateKmdSymbol].authtoken;
+  }
+
+  set authtoken(authtoken) {
+    this[privateKmdSymbol].authtoken = authtoken;
   }
 
   toJSON() {

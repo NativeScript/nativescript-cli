@@ -29,7 +29,9 @@ Error.extend = function(name) {
 
 module.exports = {
   ActiveUserError: Error.extend('ActiveUserError'),
+  AlreadyLoggedInError: Error.extend('AlreadyLoggedInError'),
   BlobNotFoundError: Error.extend('BlobNotFoundError'),
   KinveyError: Error.extend('KinveyError'),
-  NotFoundError: Error.extend('NotFoundError')
+  NotFoundError: Error.extend('NotFoundError'),
+  UserNotFoundError: Error.extend('UserNotFoundError')
 };

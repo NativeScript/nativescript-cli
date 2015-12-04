@@ -60,7 +60,7 @@ class DataStore {
     }
 
     const collection = new Collection(name, transformOptions(options));
-    const promise = collection.save(document, transformOptions(options)).then(model => {
+    const promise = collection.create(document, transformOptions(options)).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);

@@ -24,6 +24,14 @@ class Model {
     return this.id;
   }
 
+  set id(id) {
+    this.set(idAttribute, id);
+  }
+
+  set _id(id) {
+    this.id = id;
+  }
+
   get acl() {
     return new Acl(this.get(aclAttribute));
   }
@@ -32,12 +40,28 @@ class Model {
     return this.acl;
   }
 
+  set acl(acl) {
+    this.set(aclAttribute, result(acl, 'toJSON', acl));
+  }
+
+  set _acl(kmd) {
+    this.kmd = kmd;
+  }
+
   get kmd() {
     return new Kmd(this.get(kmdAttribute));
   }
 
   get _kmd() {
     return this.kmd;
+  }
+
+  set kmd(kmd) {
+    this.set(kmdAttribute, result(kmd, 'toJSON', kmd));
+  }
+
+  set _kmd(kmd) {
+    this.kmd = kmd;
   }
 
   get defaults() {

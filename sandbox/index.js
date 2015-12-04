@@ -12,19 +12,26 @@ Kinvey.init({
   appSecret: '9b8431f34279434bbedaceb2fe6b8fb5'
 });
 
-User.login('admin', 'admin').then(() => {
-  const filename = 'test.png';
-  fs.readFile(path.normalize(path.join(__dirname, filename)), (err, data) => {
-    if (err) {
-      return console.log(err);
-    }
+// User.login('admin', 'admin').then(() => {
+//   const filename = 'test.png';
+//   fs.readFile(path.normalize(path.join(__dirname, filename)), (err, data) => {
+//     if (err) {
+//       return console.log(err);
+//     }
+//
+//     const files = new Files();
+//     files.upload(data, null, {
+//       public: true
+//     }).then(response => {
+//       console.log(response);
+//     });
+//   });
+// });
 
-    const files = new Files();
-    files.upload(data, null, {
-      public: true
-    }).then(response => {
-      console.log(response);
-    });
+User.login('admin', 'admin').then(() => {
+  const files = new Files();
+  files.download('53287e66-93ad-41ac-b8b3-901a04ef6639').then(file => {
+    console.log(file);
   });
 });
 

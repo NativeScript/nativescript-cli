@@ -327,31 +327,29 @@ class Collection {
    * @example
    * var collection = new Kinvey.Collection('books');
    * var book = { name: 'JavaScript: The Definitive Guide', author: 'David Flanagan' };
-   * collection.save(book).then(function(book) {
+   * collection.create(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  save(model, options = {}) {
+  create(model, options = {}) {
     log.debug(`Saving the model to the ${this.name} collection.`, model);
 
     if (!model) {
       log.warn('No model was provided to be saved.', model);
-      Promise.resolve(null);
+      return Promise.resolve(null);
     }
 
     if (model && !(model instanceof this.model)) {
       model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
-    if (model.id && model.isNew()) {
-      if (model.isNew()) {
-        model.unset('_id');
-      } else {
-        log.warn('The model is not new. Updating the model.', model);
-        return this.update(model, options);
-      }
+    if (model.isNew()) {
+      model.id = undefined;
+    } else {
+      log.warn('The model is not new. Updating the model.', model);
+      return this.update(model, options);
     }
 
     options = assign({
@@ -403,18 +401,16 @@ class Collection {
 
     if (!model) {
       log.warn('No model was provided to be updated.', model);
-      Promise.resolve(null);
+      return Promise.resolve(null);
     }
 
     if (!(model instanceof this.model)) {
       model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
-    if (model.id) {
-      if (model.isNew()) {
-        log.warn('The model is new. Saving the model.', model);
-        return this.save(model, options);
-      }
+    if (model.isNew()) {
+      log.warn('The model is new. Creating the model.', model);
+      return this.create(model, options);
     }
 
     options = assign({
@@ -611,8 +607,8 @@ class Collection {
           // If the model is new then just save it
           if (model.isNew()) {
             const originalId = model.id;
-            model.unset('_id');
-            return this.save(model, requestOptions).then(model => {
+            model.id = undefined;
+            return this.create(model, requestOptions).then(model => {
               // Remove the locally created model
               requestOptions.dataPolicy = DataPolicy.LocalOnly;
               requestOptions.skipSync = true;
@@ -704,7 +700,7 @@ class Collection {
         syncModel.set('size', size);
         syncModel.set('documents', documents);
         options.skipSync = true;
-        return syncCollection.save(syncModel, options).then(() => {
+        return syncCollection.create(syncModel, options).then(() => {
           return result;
         });
       });
@@ -726,7 +722,7 @@ class Collection {
       return this.find(query, options).then(models => {
         options.dataPolicy = DataPolicy.LocalOnly;
         options.skipSync = true;
-        return this.save(models, options);
+        return this.create(models, options);
       }).then(syncResponse => {
         return {
           push: pushResponse,

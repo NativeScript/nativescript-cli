@@ -9,11 +9,11 @@ const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
 const File = require('../models/file');
 const url = require('url');
+const log = require('loglevel');
 const Promise = require('bluebird');
 const assign = require('lodash/object/assign');
 const isObject = require('lodash/lang/isObject');
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
-const pathReplaceRegex = /[^\/]$/;
 
 /**
  * The Files class is used to perform operations on files on the Kinvey platform.
@@ -135,38 +135,42 @@ class Files extends Collection {
    */
   download(name, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.NetworkFirst,
-      auth: Auth.default
+      auth: this.auth,
+      client: this.client,
+      skipSync: this.skipSync
     }, options);
+    options.dataPolicy = DataPolicy.NetworkOnly;
     options.method = HttpMethod.GET;
-    options.pathname = `${this.path.replace(pathReplaceRegex, '$&/')}${encodeURIComponent(name)}`;
-    options.flags = {};
+    options.pathname = `${this.getPathname(options.client)}/${name}`;
+    options.search = {};
 
     if (options.tls !== false) {
-      options.flags.tls = true;
+      options.search.tls = true;
     }
 
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (options.ttl) {
-      options.flags.ttl_in_seconds = options.ttl;
+      options.search.ttl_in_seconds = options.ttl;
     }
 
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     const request = new Request(options);
-    const promise = request.execute().then((response) => {
+    const promise = request.execute().then(response => {
       if (options.stream) {
-        return response.data;
+        log.info('Returning the file only because of the stream flag.');
+        return new this.model(response.data, options); // eslint-disable-line new-cap
       }
 
-      return this.downloadByUrl(response.data, options);
+      // return this.downloadByUrl(response.data, options);
+      return new this.model(response.data, options);
     });
 
     return promise;
   }
 
-  donwloadByUrl(metadataOrUrl) {
+  downloadByUrl(metadataOrUrl) {
     let metadata = metadataOrUrl;
 
     if (!isObject(metadataOrUrl)) {

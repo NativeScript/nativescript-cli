@@ -21,6 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const qs = require('qs');
+const clone = require('lodash/lang/clone');
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 
 describe('File', function() {
@@ -48,9 +49,10 @@ describe('File', function() {
       this.file = {
         _id: Common.randomString(24),
         _filename: filename,
+        size: data.length,
         _data: data,
+        mimeType: 'image/png',
         _acl: {
-          gr: true,
           creator: this.user._id
         },
         _kmd: {
@@ -60,7 +62,7 @@ describe('File', function() {
       };
 
       const expiresAt = new Date();
-      expiresAt.setYear(expiresAt.getYear() + 1);
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       this.file._expiresAt = expiresAt.toISOString();
 
       done();
@@ -77,7 +79,7 @@ describe('File', function() {
   });
 
   beforeEach(function() {
-    this.expiresAt = parseInt(new Date().getTime() / 1000, 10) + this.ttl;
+    this.expiresAt = parseInt(new Date(this.file._expiresAt) / 1000, 10) + this.ttl;
   });
 
   after(function() {
@@ -88,22 +90,12 @@ describe('File', function() {
 
   describe('destroy()', function() {
     beforeEach(function() {
-      const reply = {
-        size: 25123,
-        mimeType: 'application/octet-stream',
-        _id: Common.randomString(24),
-        _filename: Common.randomString(24),
-        _acl: {
-          creator: this.user._id
-        },
-        _kmd: {
-          lmt: new Date().toISOString(),
-          ect: new Date().toISOString()
-        },
-        _uploadURL: 'http://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/767ca4c8-faf3-4c42-bad7-a25505257f78/ec37de0b-5aee-4d97-97e6-df938697b4de?GoogleAccessId=558440376631@developer.gserviceaccount.com&Expires=1449160465&Signature=Dw8SwoZwhVcvZ%2Fuwz5z8TIZYrOxzj9SPxbvNxk5FZcZlJ6R7ADgHCz3m7hAnfmMFWSAxMm02H7QfNRhDRH5DH2UR5F3SQMDzTEZKzg5uUhDdc6hCE4nWyq4F5Zu6Lct0bgbPn5BZcpkbtG%2B%2Bf3l7yQeSJJdkLU0DLBVapewWVt8%3D',
-        _expiresAt: '2015-12-03T16:34:25.798Z',
-        _requiredHeaders: {}
-      };
+      const reply = clone(this.file);
+      const expiresAt = new Date();
+      expiresAt.setSeconds(expiresAt.getSeconds() + 30);
+      reply._expiresAt = expiresAt.toISOString();
+      reply._uploadURL = 'http://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/767ca4c8-faf3-4c42-bad7-a25505257f78/ec37de0b-5aee-4d97-97e6-df938697b4de?GoogleAccessId=558440376631@developer.gserviceaccount.com&Expires=1449160465&Signature=Dw8SwoZwhVcvZ%2Fuwz5z8TIZYrOxzj9SPxbvNxk5FZcZlJ6R7ADgHCz3m7hAnfmMFWSAxMm02H7QfNRhDRH5DH2UR5F3SQMDzTEZKzg5uUhDdc6hCE4nWyq4F5Zu6Lct0bgbPn5BZcpkbtG%2B%2Bf3l7yQeSJJdkLU0DLBVapewWVt8%3D';
+      reply._requiredHeaders = {};
 
       nock(this.client.apiUrl)
         .post(`/${filesNamespace}/${this.client.appId}`)
@@ -212,63 +204,118 @@ describe('File', function() {
     }));
   });
 
-/*
-  // Kinvey.File.download.
-  describe('the download method', function() {
-    // Test suite.
-    it('should download a file.', function() {
-      var _this   = this;
-      var promise = Kinvey.File.download(this.file._id);
-      return promise.then(function(response) {
-        expect(response).to.contain.keys([
-          '_id', '_downloadURL', 'mimeType', 'size'
-        ]);
-        expect(response.size).to.equal(_this.file.size);
-        expect(response.mimeType).to.equal(_this.file.mimeType);
+  describe('download()', function() {
+    it('should download a file', function() {
+      const reply = clone(this.file);
+      reply._downloadURL = 'https://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/53287e66-93ad-41ac-b8b3-901a04ef6639/2c10f5b0-4367-4ed1-bd5d-98cd78691bbe';
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${this.file._id}`)
+        .query({ tls: true })
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
+
+      const promise = File.download(this.file._id);
+      return promise.then(response => {
+        expect(response).to.contain.keys(['_id', '_downloadURL', 'mimeType', 'size']);
+        expect(response.size).to.equal(this.file.size);
+        expect(response.mimeType).to.equal(this.file.mimeType);
       });
     });
-    it('should return a _downloadURL over TLS by default.', function() {
-      var promise = Kinvey.File.download(this.file._id);
-      return promise.then(function(response) {
+
+    it('should return a _downloadURL over TLS by default', function() {
+      const reply = clone(this.file);
+      reply._downloadURL = 'https://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/53287e66-93ad-41ac-b8b3-901a04ef6639/2c10f5b0-4367-4ed1-bd5d-98cd78691bbe';
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${this.file._id}`)
+        .query({ tls: true })
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
+
+      const promise = File.download(this.file._id);
+      return promise.then(response => {
         expect(response).to.have.property('_downloadURL');
         expect(response._downloadURL).to.match(/^https\:\/\//);
       });
     });
-    it('should return an unsafe _downloadURL if `options.tls` was set to false.', function() {
-      var promise = Kinvey.File.download(this.file._id, { tls: false });
-      return promise.then(function(response) {
+
+    it('should return an unsafe _downloadURL if `options.tls` was set to false', function() {
+      const reply = clone(this.file);
+      reply._downloadURL = 'http://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/53287e66-93ad-41ac-b8b3-901a04ef6639/2c10f5b0-4367-4ed1-bd5d-98cd78691bbe';
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${this.file._id}`)
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
+
+      const promise = File.download(this.file._id, { tls: false });
+      return promise.then(response => {
         expect(response).to.have.property('_downloadURL');
         expect(response._downloadURL).to.match(/^http\:\/\//);
       });
     });
-    it('should support the ttl option.', function() {
-      var _this    = this;
-      var promise  = Kinvey.File.download(this.file._id, { ttl: this.ttl });
-      return promise.then(function(response) {
-        expect(response).to.have.property('_expiresAt');
 
-        // Check expires range.
-        var ttl = parseInt(new Date(response._expiresAt).getTime() / 1000, 10);
-        expect(ttl).to.be.closeTo(_this.expiresAt, _this.ttlRange);
-      });
-    });
-    it('should fail when the file does not exist.', function() {
-      var promise = Kinvey.File.download(this.randomID());
-      return promise.then(function() {
-        // We should not reach this code branch.
+    it('should fail when the file does not exist', function() {
+      const id = Common.randomString(24);
+      const reply = {
+        name: 'BlobNotFound',
+        description: 'The blob was not found.',
+        debug: ''
+      };
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${id}`)
+        .query({ tls: true })
+        .reply(404, reply, {
+          'content-type': 'application/json'
+        });
+
+      const promise = File.download(id);
+      return promise.then(() => {
         return expect(promise).to.be.rejected;
-      }, function(error) {
-        expect(error).to.have.property('name', Kinvey.Error.BLOB_NOT_FOUND);
+      }).catch(err => {
+        expect(err).to.be.instanceof(BlobNotFoundError);
       });
     });
-    it('should support both deferreds and callbacks on success.', Common.success(function(options) {
-      return Kinvey.File.download(this.file._id, options);
+
+    it('should support both deferreds and callbacks on success', Common.success(function(options) {
+      const reply = clone(this.file);
+      reply._downloadURL = 'https://storage.googleapis.com/d2d53e8f99b64980ae43fd80a2bda953/53287e66-93ad-41ac-b8b3-901a04ef6639/2c10f5b0-4367-4ed1-bd5d-98cd78691bbe';
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${this.file._id}`)
+        .query({ tls: true })
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
+
+      return File.download(this.file._id, options);
     }));
-    it('should support both deferreds and callbacks on failure.', Common.failure(function(options) {
-      return Kinvey.File.download(this.randomID(), options);
+
+    it('should support both deferreds and callbacks on failure', Common.failure(function(options) {
+      const id = Common.randomString(24);
+      const reply = {
+        name: 'BlobNotFound',
+        description: 'The blob was not found.',
+        debug: ''
+      };
+
+      nock(this.client.apiUrl)
+        .get(`/${filesNamespace}/${this.client.appId}/${id}`)
+        .query({ tls: true })
+        .reply(404, reply, {
+          'content-type': 'application/json'
+        });
+
+      return File.download(id, options);
     }));
   });
 
+/*
   // Kinvey.File.downloadByUrl.
   describe('the downloadByUrl method', function() {
     // Test suite.

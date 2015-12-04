@@ -15,8 +15,15 @@ class LegacyFile {
 
       return documents;
     });
+    return wrapCallbacks(promise, options);
+  }
 
-    return promise;
+  static download(name, options) {
+    const collection = new Files(transformOptions(options));
+    const promise = collection.download(name, transformOptions(options)).then(file => {
+      return file.toJSON();
+    });
+    return wrapCallbacks(promise, options);
   }
 
   static upload(file, data, options) {
@@ -28,7 +35,7 @@ class LegacyFile {
     const promise = collection.upload(file, data, transformOptions(options)).then(file => {
       return file.toJSON();
     });
-    return promise;
+    return wrapCallbacks(promise, options);
   }
 
   static destroy(name, options) {
