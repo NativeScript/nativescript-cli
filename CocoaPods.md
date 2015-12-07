@@ -12,14 +12,14 @@ To work with such libraries, you need to wrap them as a custom NativeScript plug
 ## Install CocoaPods
 You need to install CocoaPods. If you haven't yet, you can do so by running:
 
-```
+```bash
 $ sudo gem install cocoapods
 ```
 > **NOTE:** All operations and code in this article are verified against CocoaPods 0.38.2.
 
 To check your current version, run the following command.
 
-```
+```bash
 $ pod --version
 ```
 
@@ -33,8 +33,8 @@ sudo gem install cocoapods
 To start, create a project and add the iOS platform.
 
 ```bash
-$ tns create MYCocoaPods
-$ cd MYCocoaPods
+$ tns create MYCocoaPodsApp
+$ cd MYCocoaPodsApp
 $ tns platform add ios
 ```
 
@@ -42,17 +42,17 @@ $ tns platform add ios
 
 For more information about working with NativeScript plugins, click [here](PLUGINS.md).
 
-```
+```bash
 cd ..
 mkdir my-plugin
 cd my-plugin
 ```
 
-Create a package.json file with the following content:
+Create a `package.json` file with the following content:
 
-```
+```json
 {
-  "name": "myplugin",
+  "name": "my-plugin",
   "version": "0.0.1",
   "nativescript": {
     "platforms": {
@@ -72,18 +72,31 @@ my-plugin/
         └── Podfile
 ```
 
+Podfile:
+```
+pod 'GoogleMaps'
+```
+
+## Install the Plugin
+
 Next, install the plugin:
 
-```
+```bash
 tns plugin add ../my-plugin
 ```
 
-## Build the project
+> **NOTE:** Installing CocoaPods sets the deployment target of your app to iOS 8, if not already set to iOS 8 or later. This change is required because CocoaPods are installed as shared frameworks to ensure that all symbols are available at runtime.
 
-```
+## Build the Project
+
+```bash
 tns build ios
 ```
 
-This modifies the `MYCocoaPods.xcodeproj` and creates a workspace with the same name.
+This modifies the `MYCocoaPodsApp.xcodeproj` and creates a workspace with the same name.
 
-> **IMPORTANT:** You will no longer be able to run the `xcodeproj` alone. NativeScript CLI will build the newly created workspace and produce the correct .ipa.
+> **IMPORTANT:** You will no longer be able to run the `xcodeproj` alone. NativeScript CLI will build the newly created workspace and produce the correct package.
+
+## Troubleshooting
+
+In case of post-build linker errors, you might need to resolve missing dependencies to native frameworks required by the installed CocoaPod. For more information about how to create the required links, see the [build.xcconfig specification](PLUGINS.md#buildxcconfig-specification).
