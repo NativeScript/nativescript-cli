@@ -229,7 +229,7 @@ export class PlatformService implements IPlatformService {
 				.value();
 
 			// Copy all files from app dir, but make sure to exclude tns_modules
-			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath);
+			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath, null, { includeEmptyDirectories: true });
 
 			if (this.$options.release) {
 				sourceFiles = sourceFiles.filter(source => source !== 'tests');
@@ -247,8 +247,11 @@ export class PlatformService implements IPlatformService {
 			// Remove .ts and .js.map files
 			PlatformService.EXCLUDE_FILES_PATTERN.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));
 			let copyFileFutures = sourceFiles.map(source => {
-										let destinationFile = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
-										return this.$fs.copyFile(source, destinationFile);
+										let destinationPath = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
+										if (this.$fs.getFsStats(source).wait().isDirectory()) {
+											return this.$fs.createDirectory(destinationPath);
+										}
+										return this.$fs.copyFile(source, destinationPath);
 									});
 			Future.wait(copyFileFutures);
 
