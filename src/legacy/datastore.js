@@ -4,95 +4,111 @@ const Aggregation = require('../core/aggregation');
 const Promise = require('bluebird');
 const KinveyError = require('../core/errors').KinveyError;
 const log = require('loglevel');
-const forEach = require('lodash/collection/forEach');
-const transformOptions = require('./utils').transformOptions;
+const map = require('lodash/collection/map');
+const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
 
 class DataStore {
   static find(name, query, options) {
+    options = mapLegacyOptions(options);
+
     if (query && !(query instanceof Query)) {
       const error = new KinveyError('query argument must be of type: Kinvey.Query');
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.find(query, transformOptions(options)).then(models => {
-      const documents = [];
-
-      forEach(models, model => {
-        documents.push(model.toJSON());
+    const collection = new Collection(name, options);
+    const promise = collection.find(query, options).then(models => {
+      return map(models, model => {
+        return model.toJSON();
       });
-
-      return documents;
     });
     return wrapCallbacks(promise, options);
   }
 
   static group(name, aggregation, options) {
+    options = mapLegacyOptions(options);
+
     if (!(aggregation instanceof Aggregation)) {
       const error = new KinveyError('aggregation argument must be of type: Kinvey.Group');
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.group(aggregation, transformOptions(options));
+    const collection = new Collection(name, options);
+    const promise = collection.group(aggregation, options).then(models => {
+      return map(models, model => {
+        return model.toJSON();
+      });
+    });
     return wrapCallbacks(promise, options);
   }
 
   static count(name, query, options) {
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.count(query, transformOptions(options));
+    options = mapLegacyOptions(options);
+
+    const collection = new Collection(name, options);
+    const promise = collection.count(query, options);
     return wrapCallbacks(promise, options);
   }
 
   static get(name, id, options) {
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.get(id, transformOptions(options)).then(model => {
+    options = mapLegacyOptions(options);
+
+    const collection = new Collection(name, options);
+    const promise = collection.get(id, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
   }
 
   static save(name, document, options) {
+    options = mapLegacyOptions(options);
+
     if (document._id) {
       log.warn('The document has an _id, updating instead.', arguments);
       return this.update(name, document, options);
     }
 
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.create(document, transformOptions(options)).then(model => {
+    const collection = new Collection(name, options);
+    const promise = collection.create(document, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
   }
 
   static update(name, document, options) {
+    options = mapLegacyOptions(options);
+
     if (!document._id) {
       const error = new KinveyError('document argument must contain: _id');
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.update(document, transformOptions(options)).then(model => {
+    const collection = new Collection(name, options);
+    const promise = collection.update(document, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
   }
 
   static clean(name, query, options) {
+    options = mapLegacyOptions(options);
+
     if (query && !(query instanceof Query)) {
       const error = new KinveyError('query argument must be of type: Kinvey.Query');
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.clear(query, transformOptions(options));
+    const collection = new Collection(name, options);
+    const promise = collection.clear(query, options);
     return wrapCallbacks(promise, options);
   }
 
   static destroy(name, id, options) {
-    const collection = new Collection(name, transformOptions(options));
-    const promise = collection.delete(id, transformOptions(options));
+    options = mapLegacyOptions(options);
+
+    const collection = new Collection(name, options);
+    const promise = collection.delete(id, options);
     return wrapCallbacks(promise, options);
   }
 }

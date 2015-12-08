@@ -19,7 +19,7 @@ const config = {};
  * Environment variables for the project.
  */
 config.env = {
-  KINVEY_API_PROTOCOL: 'https',
+  KINVEY_API_PROTOCOL: 'https:',
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
   KINVEY_LOKI_ENV: 'BROWSER'

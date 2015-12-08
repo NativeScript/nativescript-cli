@@ -163,8 +163,9 @@ class Files extends Collection {
         return new this.model(response.data, options); // eslint-disable-line new-cap
       }
 
-      // return this.downloadByUrl(response.data, options);
-      return new this.model(response.data, options);
+      return this.downloadByUrl(response.data, options);
+
+      // return new this.model(response.data, options);
     });
 
     return promise;

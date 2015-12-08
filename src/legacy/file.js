@@ -1,12 +1,14 @@
 const Files = require('../core/collections/files');
-const transformOptions = require('./utils').transformOptions;
+const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
 const forEach = require('lodash/collection/forEach');
 
 class LegacyFile {
   static find(query, options) {
-    const collection = new Files(transformOptions(options));
-    const promise = collection.find(query, transformOptions(options)).then(models => {
+    options = mapLegacyOptions(options);
+
+    const collection = new Files(options);
+    const promise = collection.find(query, options).then(models => {
       const documents = [];
 
       forEach(models, model => {
@@ -19,28 +21,34 @@ class LegacyFile {
   }
 
   static download(name, options) {
-    const collection = new Files(transformOptions(options));
-    const promise = collection.download(name, transformOptions(options)).then(file => {
+    options = mapLegacyOptions(options);
+
+    const collection = new Files(options);
+    const promise = collection.download(name, options).then(file => {
       return file.toJSON();
     });
     return wrapCallbacks(promise, options);
   }
 
   static upload(file, data, options) {
+    options = mapLegacyOptions(options);
+
     if (arguments.length === 2) {
       options = data;
     }
 
-    const collection = new Files(transformOptions(options));
-    const promise = collection.upload(file, data, transformOptions(options)).then(file => {
+    const collection = new Files(options);
+    const promise = collection.upload(file, data, options).then(file => {
       return file.toJSON();
     });
     return wrapCallbacks(promise, options);
   }
 
   static destroy(name, options) {
-    const collection = new Files(transformOptions(options));
-    const promise = collection.delete(name, transformOptions(options));
+    options = mapLegacyOptions(options);
+
+    const collection = new Files(options);
+    const promise = collection.delete(name, options);
     return wrapCallbacks(promise, options);
   }
 }

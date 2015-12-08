@@ -1,9 +1,9 @@
 const Auth = require('../auth');
-const DataPolicy = require('../enums/dataPolicy');
+const DataPolicy = require('../enums').DataPolicy;
 const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const UserNotFoundError = require('../errors').UserNotFoundError;
 const Request = require('../request').Request;
-const HttpMethod = require('../enums/httpMethod');
+const HttpMethod = require('../enums').HttpMethod;
 const Collection = require('./collection');
 const Query = require('../query');
 const User = require('../models/user');
@@ -91,10 +91,32 @@ class Users extends Collection {
     return promise;
   }
 
+  signup(user, options = {}) {
+    options.state = true;
+
+    if (!(user instanceof this.model)) {
+      user = new this.model(result(user, 'toJSON', user), options); // eslint-disable-line new-cap
+    }
+
+    user.id = undefined; // Remove the id
+    return this.create(user, options);
+  }
+
   create(user, options = {}) {
-    const promise = User.getActive().then(activeUser => {
+    options = assign({
+      client: this.client,
+      skipSync: this.skipSync
+    }, options);
+    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.auth = Auth.app;
+
+    const promise = User.getActive(options.client).then(activeUser => {
       if (options.state && activeUser) {
         throw new AlreadyLoggedInError('A user is already logged in. Please logout before saving the new user.');
+      }
+
+      if (!(user instanceof this.model)) {
+        user = new this.model(result(user, 'toJSON', user), options); // eslint-disable-line new-cap
       }
 
       return super.create(user, options);
@@ -127,8 +149,8 @@ class Users extends Collection {
           if (socialIdentity[identity] && identity !== options._provider) {
             tokens.push({
               provider: identity,
-              access_token: socialIdentity[identity].access_token;
-              access_token_secret: socialIdentity[identity].access_token_secret;
+              access_token: socialIdentity[identity].access_token,
+              access_token_secret: socialIdentity[identity].access_token_secret
             });
             delete socialIdentity[identity].access_token;
             delete socialIdentity[identity].access_token_secret;
@@ -162,6 +184,8 @@ class Users extends Collection {
         return user;
       });
     });
+
+    return promise;
   }
 
   delete(id, options = {}) {

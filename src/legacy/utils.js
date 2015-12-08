@@ -1,8 +1,8 @@
 const DataPolicy = require('../core/enums').DataPolicy;
 const isFunction = require('lodash/lang/isFunction');
 
-// Transform options from legacy into next version
-function transformOptions(options = {}) {
+// Maps options from legacy library
+function mapLegacyOptions(options = {}) {
   if (options.offline) {
     if (options.fallback) {
       options.dataPolicy = DataPolicy.LocalFirst;
@@ -53,6 +53,6 @@ function wrapCallbacks(promise, options = {}) {
 }
 
 module.exports = {
-  transformOptions: transformOptions,
+  mapLegacyOptions: mapLegacyOptions,
   wrapCallbacks: wrapCallbacks
 };

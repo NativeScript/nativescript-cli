@@ -204,7 +204,22 @@ class Collection {
 
     const request = new Request(options);
     const promise = request.execute().then(response => {
-      return response.data;
+      let data = response.data;
+      const models = [];
+
+      if (data) {
+        if (!isArray(data)) {
+          data = [data];
+        }
+
+        forEach(data, obj => {
+          if (obj) {
+            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
+          }
+        });
+      }
+
+      return models;
     });
 
     promise.then(response => {
@@ -341,13 +356,11 @@ class Collection {
       return Promise.resolve(null);
     }
 
-    if (model && !(model instanceof this.model)) {
+    if (!(model instanceof this.model)) {
       model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
     }
 
-    if (model.isNew()) {
-      model.id = undefined;
-    } else {
+    if (!model.isNew()) {
       log.warn('The model is not new. Updating the model.', model);
       return this.update(model, options);
     }
@@ -361,6 +374,7 @@ class Collection {
     options.method = HttpMethod.POST;
     options.pathname = this.getPathname(options.client);
     options.data = model.toJSON();
+    delete options.data._id;
 
     const request = new Request(options);
     const promise = request.execute().then(response => {

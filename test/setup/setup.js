@@ -11,6 +11,7 @@ const sinon = require('sinon');
 const chai = require('chai');
 chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
+const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 
 // Disable logs
 Logger.disableAll();
@@ -35,13 +36,12 @@ global.Common = {
         ect: new Date().toISOString(),
         authtoken: Common.randomString(81)
       },
-      _acl: {
-        creator: '56182658b510e473120252da'
-      }
+      _acl: {}
     };
+    reply._acl.creator = reply._id;
 
     nock('https://baas.kinvey.com')
-      .post(`/user/${client.appId}/login`, {
+      .post(`/${usersNamespace}/${client.appId}/login`, {
         username: 'admin',
         password: 'admin'
       })
@@ -55,7 +55,7 @@ global.Common = {
   logoutUser: function() {
     const client = Client.sharedInstance();
     nock('https://baas.kinvey.com')
-      .post(`/user/${client.appId}/_logout`)
+      .post(`/${usersNamespace}/${client.appId}/_logout`)
       .reply(200, null, {
         'content-type': 'application/json',
       });
@@ -154,7 +154,7 @@ module.exports = function() {
     this.sandbox.restore();
   });
 
-  after(function() {
+  afterEach(function() {
     nock.cleanAll();
   });
 

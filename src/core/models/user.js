@@ -1,5 +1,5 @@
 const KinveyError = require('../errors').KinveyError;
-const ActiveUserError = require('../errors').ActiveUserError;
+const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const Model = require('./model');
 const Request = require('../request').Request;
 const Client = require('../client');
@@ -94,7 +94,7 @@ class User extends Model {
 
     const promise = User.getActive(options.client).then(user => {
       if (user) {
-        throw new ActiveUserError('A user is already logged in.');
+        throw new AlreadyLoggedInError('A user is already logged in.');
       }
 
       if (!isObject(usernameOrData)) {
@@ -229,21 +229,6 @@ class User extends Model {
     options.dataPolicy = DataPolicy.NetworkOnly;
     options.auth = Auth.app;
     options.data = { email: this.get('email') };
-
-    const request = new Request(options);
-    const promise = request.execute();
-    return promise;
-  }
-
-  resetPassword(options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-
-    options.method = HttpMethod.POST;
-    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-password-reset-initiate`;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.auth = Auth.app;
 
     const request = new Request(options);
     const promise = request.execute();
