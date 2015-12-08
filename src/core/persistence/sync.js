@@ -693,7 +693,7 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
 
     // Return the response.
     return wrapCallbacks(promise, options);
-  }
+  },
 
   /**
    * Initiates a synchronization operation.
