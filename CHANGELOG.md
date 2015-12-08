@@ -2,7 +2,6 @@
 #### 1.6.2 (2015-12-08)
 * Bugfix(MLIBZ-729): Fixed a bug that caused a second sync operation to trigger a DELETE request when using the WebSQL adapter.
 * Bugfix(MLIBZ-733): Fixed a bug that would miss data created offline when running a query.
-* Bugfix(MLIBZ-730): Added `Kinvey.Sync.clean()`.
 
 #### 1.6.1 (2015-11-11)
 * Bugfix: Fix bug when trying to configure the promise-queue library.
