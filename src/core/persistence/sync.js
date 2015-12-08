@@ -325,23 +325,30 @@ var Sync = /** @lends Sync */{
       requestOptions.customRequestProperties = metadata != null && metadata.customRequestProperties != null ?
                                                metadata.customRequestProperties : null;
 
-      // Build the request.
-      var request = {
-        namespace  : USERS === collection ? USERS : DATA_STORE,
-        collection : USERS === collection ? null  : collection,
-        query      : new Kinvey.Query().contains('_id', [id]),
-        auth       : Auth.Default
-      };
-
       if (Database.isTemporaryObjectID(id)) {
-        return Kinvey.Persistence.Local.read(request, requestOptions).then(function(response) {
+        return Kinvey.Persistence.Local.read({
+          namespace: USERS === collection ? USERS : DATA_STORE,
+          collection: USERS === collection ? null  : collection,
+          id: id,
+          auth: Auth.Default
+        }, requestOptions).then(function(response) {
           return { local: response, net: [] };
         });
       } else {
         // Read from local and net in parallel.
         return Kinvey.Defer.all([
-          Kinvey.Persistence.Local.read(request, requestOptions),
-          Kinvey.Persistence.Net.read(request, requestOptions)
+          Kinvey.Persistence.Local.read({
+            namespace: USERS === collection ? USERS : DATA_STORE,
+            collection: USERS === collection ? null  : collection,
+            id: id,
+            auth: Auth.Default
+          }, requestOptions),
+          Kinvey.Persistence.Net.read({
+            namespace: USERS === collection ? USERS : DATA_STORE,
+            collection: USERS === collection ? null  : collection,
+            query: new Kinvey.Query().contains('_id', [id]),
+            auth: Auth.Default
+          }, requestOptions)
         ]).then(function(responses) {
           return { local: responses[0], net: responses[1] };
         });
@@ -353,29 +360,30 @@ var Sync = /** @lends Sync */{
       var error;
 
       responses.forEach(function(composite) {
-        var locals = composite.local;
-        var nets = composite.net;
+        var local = composite.local;
+        var net = composite.net.length === 1 ? composite.net[0] : null;
 
-        locals.forEach(function(document) {
-          // Check document for property _id. Thrown error will reject promise.
-          if (document._id == null) {
+        // Check document for property _id. Thrown error will reject promise.
+        if (local) {
+          if (local._id == null) {
             error = new Kinvey.Error('Document does not have _id property defined. ' +
                                      'It is required to do proper synchronization.');
             throw error;
           }
 
-          response.local[document._id] = document;
-        });
-        nets.forEach(function(document) {
-          // Check document for property _id. Thrown error will reject promise.
-          if (document._id == null) {
+          response.local[local._id] = local;
+        }
+
+        // Check document for property _id. Thrown error will reject promise.
+        if (net) {
+          if (net._id == null) {
             error = new Kinvey.Error('Document does not have _id property defined. ' +
                                      'It is required to do proper synchronization.');
             throw error;
           }
 
-          response.net[document._id] = document;
-        });
+          response.net[net._id] = net;
+        }
       });
 
       return response;

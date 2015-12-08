@@ -66,14 +66,6 @@ var WebSqlAdapter = {
    * @type {Queue}
    */
   transactionQueue: new Queue(1, Infinity),
-  cacheQueue: new Queue(1, Infinity),
-
-  /**
-   * Cache to store collections in memory.
-   *
-   * @type {Object}
-   */
-  cache: {},
 
   /**
    * Opens a database.
@@ -275,7 +267,6 @@ var WebSqlAdapter = {
 
     // Return the response.
     return promise.then(function() {
-      WebSqlAdapter.flushCache(collection);
       return documents;
     });
   },
@@ -319,8 +310,6 @@ var WebSqlAdapter = {
 
         // Return the response.
         return promise.then(function(response) {
-          WebSqlAdapter.flushCache(collection);
-
           // NOTE Some implementations do not return a `rowCount`.
           response.rowCount = null != response.rowCount ? response.rowCount : documents.length;
           return { count: response.rowCount, documents: documents };
@@ -356,8 +345,6 @@ var WebSqlAdapter = {
 
     // Return the response.
     return promise.then(function(response) {
-      WebSqlAdapter.flushCache(collection);
-
       // Extract the response.
       var count     = response[1].rowCount;
       var documents = response[0].result;
@@ -406,7 +393,6 @@ var WebSqlAdapter = {
         });
         return WebSqlAdapter.transaction('sqlite_master', queries, null, true, options);
       }).then(function() {
-        WebSqlAdapter.flushCache();
         return null;
       });
     });
@@ -416,40 +402,29 @@ var WebSqlAdapter = {
    * @augments {Database.find}
    */
   find: function(collection, query, options) {
-    return WebSqlAdapter.cacheQueue.add(function() {
-      var data = WebSqlAdapter.cache[collection];
-      var promise;
+    var sql = 'SELECT value FROM #{collection}';
+    var promise = WebSqlAdapter.transaction(collection, sql, [], false, options);
 
-      if (data) {
-        promise = Kinvey.Defer.resolve({ result: data });
-      } else {
-        // Prepare the response.
-        var sql     = 'SELECT value FROM #{collection}';
-        promise = WebSqlAdapter.transaction(collection, sql, [], false, options);
+    // Return the response.
+    return promise.then(function(response) {
+      response = response.result;// The documents.
+
+      // Apply the query.
+      if(null == query) {
+        return response;
       }
 
-      // Return the response.
-      return promise.then(function(response) {
-        response = response.result;// The documents.
-        WebSqlAdapter.cache[collection] = response;
+      // Filters.
+      response = root.sift(query.toJSON().filter, response);
 
-        // Apply the query.
-        if(null == query) {
-          return response;
-        }
-
-        // Filters.
-        response = root.sift(query.toJSON().filter, response);
-
-        // Post process.
-        return query._postProcess(response);
-      }, function(error) {
-        // If `COLLECTION_NOT_FOUND`, return the empty set.
-        if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
-          return [];
-        }
-        return Kinvey.Defer.reject(error);
-      });
+      // Post process.
+      return query._postProcess(response);
+    }, function(error) {
+      // If `COLLECTION_NOT_FOUND`, return the empty set.
+      if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
+        return [];
+      }
+      return Kinvey.Defer.reject(error);
     });
   },
 
@@ -480,45 +455,32 @@ var WebSqlAdapter = {
    * @augments {Database.get}
    */
   get: function(collection, id, options) {
-    return WebSqlAdapter.cacheQueue.add(function() {
-      var data = WebSqlAdapter.cache[collection];
-      var promise;
+    var sql = 'SELECT value FROM #{collection} WHERE key = ?';
+    var promise = WebSqlAdapter.transaction(collection, sql, [ id ], false, options);
 
-      if (data) {
-        var query = new Kinvey.Query();
-        query.contains('_id', [id]);
-        data = root.sift(query.toJSON().filter, data);
-        promise = Kinvey.Defer.resolve({ result: data });
-      } else {
-        // Prepare the response.
-        var sql     = 'SELECT value FROM #{collection} WHERE key = ?';
-        promise = WebSqlAdapter.transaction(collection, sql, [ id ], false, options);
-      }
+    // Return the response.
+    return promise.then(function(response) {
+      // Extract the documents.
+      var documents = response.result;
 
-      // Return the response.
-      return promise.then(function(response) {
-        // Extract the documents.
-        var documents = response.result;
-
-        // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
-        if(0 === documents.length) {
-          var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-            description : 'This entity not found in the collection',
-            debug       : { collection: collection, id: id }
-          });
-          return Kinvey.Defer.reject(error);
-        }
-        return documents[0];
-      }, function(error) {
-        // If `COLLECTION_NOT_FOUND`, convert to `ENTITY_NOT_FOUND`.
-        if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
-          error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
-            description : 'This entity not found in the collection',
-            debug       : { collection: collection, id: id }
-          });
-        }
+      // If the document could not be found, throw an `ENTITY_NOT_FOUND` error.
+      if(0 === documents.length) {
+        var error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+          description : 'This entity not found in the collection',
+          debug       : { collection: collection, id: id }
+        });
         return Kinvey.Defer.reject(error);
-      });
+      }
+      return documents[0];
+    }, function(error) {
+      // If `COLLECTION_NOT_FOUND`, convert to `ENTITY_NOT_FOUND`.
+      if(Kinvey.Error.COLLECTION_NOT_FOUND === error.name) {
+        error = clientError(Kinvey.Error.ENTITY_NOT_FOUND, {
+          description : 'This entity not found in the collection',
+          debug       : { collection: collection, id: id }
+        });
+      }
+      return Kinvey.Defer.reject(error);
     });
   },
 
@@ -589,7 +551,6 @@ var WebSqlAdapter = {
 
     // Return the response.
     return promise.then(function() {
-      WebSqlAdapter.flushCache(collection);
       return document;
     });
   },
@@ -600,20 +561,6 @@ var WebSqlAdapter = {
   update: function(collection, document, options) {
     // Forward to `WebSqlAdapter.save`.
     return WebSqlAdapter.save(collection, document, options);
-  },
-
-  flushCache: function(collections) {
-    if (collections && !isArray(collections)) {
-      collections = [collections];
-    }
-
-    if (collections && collections.length > 0) {
-      collections.forEach(function(collection) {
-        delete IDBAdapter.cache[collection];
-      });
-    } else {
-      IDBAdapter.cache = {};
-    }
   }
 };
 
