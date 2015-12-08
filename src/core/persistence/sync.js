@@ -669,33 +669,6 @@ Kinvey.Sync = /** @lends Kinvey.Sync */{
   },
 
   /**
-   * Cleans the sync table.
-   *
-   * @param {Options} options Options.
-   * @returns {Promise} The response.
-   */
-  clean: function(query, options) {
-    // Debug.
-    logger.debug('Cleaning the local sync table.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Database.clean(Sync.system, query, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Cleaned the sync table.', response);
-    }, function(error) {
-      logger.error('Failed to clean the sync table.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
    * Initiates a synchronization operation.
    *
    * @param {Options}  [options]          Options.
