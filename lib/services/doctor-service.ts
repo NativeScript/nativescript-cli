@@ -47,9 +47,9 @@ class DoctorService implements IDoctorService {
 			}
 
 			if(!sysInfo.cocoapodVer) {
-				this.$logger.warn("WARNING: CocoaPod is not installed or is not configured properly.");
+				this.$logger.warn("WARNING: CocoaPods is not installed or is not configured properly.");
 				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ "To be able to build such projects, verify that you have installed CocoaPod.");
+					+ "To be able to build such projects, verify that you have installed CocoaPods.");
 				result = true;
 			}
 
