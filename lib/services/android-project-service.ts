@@ -222,6 +222,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 
 				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+				if (this.$hostInfo.isWindows) {
+					gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
+				}
 				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 			} else {
 				this.checkAnt().wait();
@@ -368,11 +371,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private spawn(command: string, args: string[], opts?: any): IFuture<void> {
-		if (this.$hostInfo.isWindows) {
-			args.unshift('/s', '/c', command);
-			command = process.env.COMSPEC || 'cmd.exe';
-		}
-
 		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit"});
 	}
 
