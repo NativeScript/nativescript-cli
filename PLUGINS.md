@@ -100,12 +100,17 @@ my-plugin/
         ├── MyiOSFramework.framework
         ├── build.xcconfig
         ├── Podfile
-        └── Info.plist
+        ├── Info.plist
+        ├── MyStaticiOSLibrary.a
+        └── include/
+            └── MyStaticiOSLibrary/
+                └── ...
 ```
 
 * `platforms\android`: This directory contains any native Android libraries packaged as `*.jar` and `*.aar` packages. These native libraries can reside in the root of this directory or in a user-created sub-directory. During the plugin installation, the NativeScript CLI will configure the Android project in `platforms\android` to work with the plugin.
+* `platforms\android\res`:  (Optional) This directory contains resources declared by the `AndroidManifest.xml` file. You can look at the folder structure [here](http://developer.android.com/guide/topics/resources/providing-resources.html#ResourceTypes).
 * `platforms\android\include.gradle`: This file modifies the native Android configuration of your NativeScript project such as native dependencies, build types and configurations. For more information about the format of `include.gradle`, see [`include.gradle` file](#includegradle-specification).
-* `platforms\ios`: This directory contains native iOS frameworks (both static and shared). During the plugin installation, the NativeScript CLI will copy these files to `lib\iOS` in your project and will configure the iOS project in `platforms\ios` to work with the frameworks. If the library is written in Swift, only APIs exposed to Objective-C are exposed to NativeScript.
+* `platforms\ios`: This directory contains native dynamic iOS Cocoa Touch Frameworks (`.framework`) and Cocoa Touch Static Libraries (`.a`). During the plugin installation, the NativeScript CLI will copy these files to `lib\iOS` in your project and will configure the iOS project in `platforms\ios` to work with the libraries.  If the library is written in Swift, only APIs exposed to Objective-C are exposed to NativeScript. In case the plugin contains a Cocoa Touch Static Library (`.a`), you must place all public headers (`.h`) under `include\<Static Library Name>\`. Make sure that the static libraries are built at least for the following processor architectures - armv7, arm64, i386.
 * `platforms\ios\build.xcconfig`: This file modifies the native iOS configuration of your NativeScript project such as native dependencies and configurations. For more information about the format of `build.xcconfig`, see [`build.xcconfig` file](#buildxcconfig-specification).
 * `platforms\ios\Podfile`: This file describes the dependency to the library that you want to use. For more information, see [CocoaPods.md](CocoaPods.md).
 
