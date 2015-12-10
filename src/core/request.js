@@ -270,13 +270,11 @@ class Request {
       return isFunction(auth) ? auth(this.client) : auth;
     }).then(authInfo => {
       if (authInfo) {
-        // Format credentials
         let credentials = authInfo.credentials;
         if (authInfo.username) {
           credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
         }
 
-        // Set the header
         this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
       }
     }).then(() => {
@@ -381,9 +379,7 @@ class Request {
           debug: ''
         };
 
-        if (data.description && !data.message) {
-          data.message = data.descrition;
-        }
+        data.message = data.message || data.description || data.error;
 
         if (data.name === 'BlobNotFound') {
           throw new BlobNotFoundError(data.message, data.debug);

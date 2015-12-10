@@ -4,13 +4,18 @@ const Client = require('../client');
 const DataPolicy = require('../enums').DataPolicy;
 const HttpMethod = require('../enums').HttpMethod;
 const result = require('lodash/object/result');
+const assign = require('lodash/object/assign');
 const activeUserSymbol = Symbol();
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 
 class UserUtils {
-  static getActive(client = Client.sharedInstance()) {
-    let user = UserUtils[activeUserSymbol];
+  static getActive(options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    let user = UserUtils[activeUserSymbol][options.client.appId];
 
     if (user) {
       return Promise.resolve(user);
@@ -18,11 +23,10 @@ class UserUtils {
 
     const request = new Request({
       method: HttpMethod.GET,
-      pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
-      client: client,
+      pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
+      client: options.client,
       dataPolicy: DataPolicy.LocalOnly
     });
-
     const promise = request.execute().then(response => {
       const data = response.data;
 
@@ -31,7 +35,7 @@ class UserUtils {
       }
 
       user = data[0];
-      UserUtils[activeUserSymbol] = user;
+      UserUtils[activeUserSymbol][options.client.appId] = user;
       return user;
     }).catch(() => {
       return null;
@@ -40,26 +44,30 @@ class UserUtils {
     return promise;
   }
 
-  static setActive(user, client = Client.sharedInstance()) {
-    const promise = UserUtils.getActive().then(activeUser => {
+  static setActive(user, options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    const promise = UserUtils.getActive(options).then(activeUser => {
       if (activeUser) {
         const request = new Request({
           method: HttpMethod.DELETE,
-          pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}/${activeUser._id}`,
-          client: client,
+          pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}/${activeUser._id}`,
+          client: options.client,
           dataPolicy: DataPolicy.LocalOnly,
           skipSync: true
         });
         return request.execute().then(() => {
-          UserUtils[activeUserSymbol] = null;
+          UserUtils[activeUserSymbol][options.client.appId] = null;
         });
       }
     }).then(() => {
       if (user) {
         const request = new Request({
           method: HttpMethod.POST,
-          pathname: `/${localNamespace}/${client.appId}/${activeUserCollection}`,
-          client: client,
+          pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
+          client: options.client,
           dataPolicy: DataPolicy.LocalOnly,
           data: result(user, 'toJSON', user),
           skipSync: true
@@ -69,7 +77,7 @@ class UserUtils {
     }).then(response => {
       if (response) {
         user = response.data;
-        UserUtils[activeUserSymbol] = user;
+        UserUtils[activeUserSymbol][options.client.appId] = user;
         return user;
       }
     });
@@ -78,5 +86,5 @@ class UserUtils {
   }
 }
 
-UserUtils[activeUserSymbol] = null;
+UserUtils[activeUserSymbol] = {};
 module.exports = UserUtils;

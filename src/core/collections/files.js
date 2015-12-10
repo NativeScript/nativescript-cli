@@ -9,7 +9,7 @@ const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
 const File = require('../models/file');
 const url = require('url');
-const log = require('loglevel');
+const log = require('../log');
 const Promise = require('bluebird');
 const assign = require('lodash/object/assign');
 const isObject = require('lodash/lang/isObject');
@@ -137,12 +137,9 @@ class Files extends Collection {
     options = assign({
       auth: this.auth,
       client: this.client,
-      skipSync: this.skipSync
+      skipSync: this.skipSync,
+      search: {}
     }, options);
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.method = HttpMethod.GET;
-    options.pathname = `${this.getPathname(options.client)}/${name}`;
-    options.search = {};
 
     if (options.tls !== false) {
       options.search.tls = true;
@@ -156,7 +153,15 @@ class Files extends Collection {
 
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: DataPolicy.NetworkOnly,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      method: HttpMethod.GET,
+      pathname: `${this.getPathname(options.client)}/${name}`,
+      search: options.search
+    });
     const promise = request.execute().then(response => {
       if (options.stream) {
         log.info('Returning the file only because of the stream flag.');
@@ -251,22 +256,26 @@ class Files extends Collection {
       public: false,
       contentType: metadata.mimeType
     }, options);
-    options.dataPolicy = DataPolicy.NetworkOnly;
 
     if (options.public) {
       metadata._public = true;
     }
 
-    if (metadata._id) {
-      options.method = HttpMethod.PUT;
-      options.pathname = `${this.getPathname(options.client)}/${metadata._id}`;
-    } else {
-      options.method = HttpMethod.POST;
-      options.pathname = this.getPathname(options.client);
-    }
+    const request = new Request({
+      dataPolicy: DataPolicy.NetworkOnly,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      data: metadata
+    });
 
-    options.data = metadata;
-    const request = new Request(options);
+    if (metadata._id) {
+      request.method = HttpMethod.PUT;
+      request.pathname = `${this.getPathname(options.client)}/${metadata._id}`;
+    } else {
+      request.method = HttpMethod.POST;
+      request.pathname = this.getPathname(options.client);
+    }
 
     const promise = request.execute().then(response => {
       const uploadUrl = response.data._uploadURL;

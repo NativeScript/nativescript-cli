@@ -1,8 +1,8 @@
 const util = require('util');
 const isFunction = require('lodash/lang/isFunction');
 
-Error.extend = function(name) {
-  const SubType = function(message, debug) {
+Error.extend = function extend(name) {
+  const SubType = function SubType(message, debug) {
     if (!(this instanceof SubType)) {
       return new SubType(message, debug);
     }
@@ -19,7 +19,7 @@ Error.extend = function(name) {
 
   util.inherits(SubType, this);
 
-  SubType.prototype.toString = function() {
+  SubType.prototype.toString = function toString() {
     return `${this.name}: ${util.inspect(this.message)}`;
   };
 

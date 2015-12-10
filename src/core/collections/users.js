@@ -54,22 +54,26 @@ class Users extends Collection {
   find(query, options = {}) {
     let promise;
 
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
-
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
       skipSync: this.skipSync
     }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = `${this.getPathname(options.client)}/_lookup`;
+
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
 
     if (options.discover) {
-      options.data = query ? query.toJSON().filter : null;
-      const request = new Request(options);
+      const request = new Request({
+        dataPolicy: options.dataPolicy,
+        auth: options.auth,
+        client: options.client,
+        method: HttpMethod.POST,
+        pathname: `${this.getPathname(options.client)}/_lookup`,
+        data: query ? query.toJSON().filter : null
+      });
       promise = request.execute().then(response => {
         let data = response.data;
         const models = [];
@@ -105,12 +109,13 @@ class Users extends Collection {
   create(user, options = {}) {
     options = assign({
       client: this.client,
-      skipSync: this.skipSync
+      skipSync: this.skipSync,
+      state: false
     }, options);
     options.dataPolicy = DataPolicy.NetworkOnly;
     options.auth = Auth.app;
 
-    const promise = User.getActive(options.client).then(activeUser => {
+    const promise = User.getActive(options).then(activeUser => {
       if (options.state && activeUser) {
         throw new AlreadyLoggedInError('A user is already logged in. Please logout before saving the new user.');
       }
@@ -132,6 +137,10 @@ class Users extends Collection {
   }
 
   update(user, options = {}) {
+    options = assign({
+      client: this.client
+    }, options);
+
     if (!user) {
       return Promise.resolve(null);
     }
@@ -142,6 +151,8 @@ class Users extends Collection {
 
     const socialIdentity = user.get('_socialIdentity');
     const tokens = [];
+
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (socialIdentity) {
       for (const identity in socialIdentity) {
@@ -158,6 +169,8 @@ class Users extends Collection {
         }
       }
     }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
 
     user.set('_socialIdentity', socialIdentity);
     const promise = super.update(user, options).then(user => {
@@ -176,7 +189,7 @@ class Users extends Collection {
       });
 
       user.set('_socialIdentity', socialIdentity);
-      return User.getActive().then(activeUser => {
+      return User.getActive(options).then(activeUser => {
         if (activeUser && activeUser.id === user.id) {
           return User.setActive(user, options.client);
         }
@@ -195,7 +208,7 @@ class Users extends Collection {
     }, options);
 
     const promise = super.delete(id, options).then(response => {
-      return User.getActive().then(activeUser => {
+      return User.getActive(options).then(activeUser => {
         if (activeUser && activeUser.id === id) {
           return User.setActive(null, options.client);
         }

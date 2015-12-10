@@ -3,7 +3,7 @@ const isPlainObject = require('lodash/lang/isPlainObject');
 const privateKmdSymbol = Symbol();
 
 class PrivateKmd {
-  constructor(kmd) {
+  constructor(kmd = {}) {
     if (!isPlainObject(kmd)) {
       throw new Error('kmd argument must be an object');
     }

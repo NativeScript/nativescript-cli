@@ -1,5 +1,6 @@
 const Acl = require('../acl');
 const Kmd = require('../kmd');
+const Client = require('../client');
 const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
@@ -11,9 +12,13 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 class Model {
   constructor(attributes = {}, options = {}) {
+    options = assign({
+      client: Client.sharedInstance()
+    }, options);
+
+    this.client = options.client;
     this.attributes = {};
-    attributes = defaults({}, attributes, result(this, 'defaults', {}));
-    this.set(attributes, options);
+    this.set(defaults({}, attributes, result(this, 'defaults', {})), options);
   }
 
   get id() {
@@ -106,7 +111,7 @@ class Model {
     let attrs;
     if (typeof key === 'object') {
       attrs = key;
-      options = val;
+      options = val || {};
     } else {
       (attrs = {})[key] = val;
     }

@@ -1,20 +1,16 @@
-const fs = require('fs');
-const path = require('path');
 const config = {};
-
-/**
- * Environment variables for the project.
- */
-config.env = {
-  KINVEY_INDEXEDDB_LIB: 'indexeddbshim',
-  KINVEY_PLATFORM_ENV: 'angular'
-};
 
 /**
  * Intro and outro that wraps the library.
  */
-config.intro = fs.readFileSync(path.join(__dirname, './angular/intro.js'));
-config.outro = fs.readFileSync(path.join(__dirname, './angular/outro.js'));
+config.header = '' +
+'// Define the Angular.js Kinvey module.\n' +
+'var module = angular.module(\'kinvey\', []);\n' +
+'module.factory(\'$kinvey\', [\'$http\', function($http) {\n';
+
+config.footer = '' +
+'  return Kinvey;\n' +
+'}]);\n';
 
 // Export
 module.exports = config;

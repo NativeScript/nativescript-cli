@@ -11,7 +11,7 @@ const Model = require('../models/model');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
-const log = require('loglevel');
+const log = require('../log');
 const clone = require('lodash/lang/clone');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -121,21 +121,25 @@ class Collection {
   find(query, options = {}) {
     log.debug(`Retrieving the models in the ${this.name} collection.`, query);
 
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
-
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
       skipSync: this.skipSync
     }, options);
-    options.method = HttpMethod.GET;
-    options.pathname = this.getPathname(options.client);
-    options.query = query;
 
-    const request = new Request(options);
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      method: HttpMethod.GET,
+      pathname: this.getPathname(options.client),
+      query: query
+    });
     const promise = request.execute().then(response => {
       let data = response.data;
       const models = [];
@@ -188,21 +192,24 @@ class Collection {
   group(aggregation, options = {}) {
     log.debug(`Grouping the models in the ${this.name} collection.`, aggregation, options);
 
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client
+    }, options);
+
     if (!(aggregation instanceof Aggregation)) {
       aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.method = HttpMethod.GET;
-    options.pathname = `${this.getPathname(options.client)}/_group`;
-    options.data = aggregation.toJSON();
-
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      method: HttpMethod.GET,
+      pathname: `${this.getPathname(options.client)}/_group`,
+      data: aggregation.toJSON()
+    });
     const promise = request.execute().then(response => {
       let data = response.data;
       const models = [];
@@ -256,21 +263,24 @@ class Collection {
   count(query, options = {}) {
     log.debug(`Counting the number of models in the ${this.name} collection.`, query);
 
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client
+    }, options);
+
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.method = HttpMethod.GET;
-    options.pathname = `${this.getPathname(options.client)}/_count`;
-    options.query = query;
-
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      method: HttpMethod.GET,
+      pathname: `${this.getPathname(options.client)}/_count`,
+      query: query
+    });
     const promise = request.execute().then(response => {
       return response.data;
     });
@@ -308,13 +318,16 @@ class Collection {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
-    options.method = HttpMethod.GET;
-    options.pathname = `${this.getPathname(options.client)}/${id}`;
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      method: HttpMethod.GET,
+      pathname: `${this.getPathname(options.client)}/${id}`,
+    });
     const promise = request.execute().then(response => {
       const data = response.data;
       return new this.model(data, options); // eslint-disable-line new-cap
@@ -351,6 +364,13 @@ class Collection {
   create(model, options = {}) {
     log.debug(`Saving the model to the ${this.name} collection.`, model);
 
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client,
+      skipSync: this.skipSync
+    }, options);
+
     if (!model) {
       log.warn('No model was provided to be saved.', model);
       return Promise.resolve(null);
@@ -365,18 +385,18 @@ class Collection {
       return this.update(model, options);
     }
 
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.method = HttpMethod.POST;
-    options.pathname = this.getPathname(options.client);
-    options.data = model.toJSON();
-    delete options.data._id;
+    const data = model.toJSON();
+    delete data._id;
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      method: HttpMethod.POST,
+      pathname: this.getPathname(options.client),
+      data: data
+    });
     const promise = request.execute().then(response => {
       const data = response.data;
       return new this.model(data, options); // eslint-disable-line new-cap
@@ -413,6 +433,13 @@ class Collection {
   update(model, options = {}) {
     log.debug(`Update the model to the ${this.name} collection.`, model);
 
+    options = assign({
+      dataPolicy: this.dataPolicy,
+      auth: this.auth,
+      client: this.client,
+      skipSync: this.skipSync
+    }, options);
+
     if (!model) {
       log.warn('No model was provided to be updated.', model);
       return Promise.resolve(null);
@@ -427,17 +454,15 @@ class Collection {
       return this.create(model, options);
     }
 
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.method = HttpMethod.PUT;
-    options.pathname = `${this.getPathname(options.client)}/${model.id}`;
-    options.data = model.toJSON();
-
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      method: HttpMethod.PUT,
+      pathname: `${this.getPathname(options.client)}/${model.id}`,
+      data: model.toJSON()
+    });
     const promise = request.execute().then(response => {
       const data = response.data;
       return new this.model(data, options); // eslint-disable-line new-cap
@@ -477,21 +502,26 @@ class Collection {
   clear(query, options = {}) {
     log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
 
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
-
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
       skipSync: this.skipSync
     }, options);
-    options.method = HttpMethod.DELETE;
-    options.pathname = this.getPathname(options.client);
-    options.query = query;
 
-    const request = new Request(options);
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      method: HttpMethod.DELETE,
+      pathname: this.getPathname(options.client),
+      query: query
+    });
     const promise = request.execute().then(response => {
       return response.data;
     });
@@ -533,10 +563,15 @@ class Collection {
       skipSync: this.skipSync,
       silent: false
     }, options);
-    options.method = HttpMethod.DELETE;
-    options.pathname = `${this.getPathname(options.client)}/${id}`;
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: options.dataPolicy,
+      auth: options.auth,
+      client: options.client,
+      skipSync: options.skipSync,
+      method: HttpMethod.DELETE,
+      pathname: `${this.getPathname(options.client)}/${id}`
+    });
     const promise = request.execute().then(response => {
       return response.data;
     }).catch(err => {
@@ -578,7 +613,6 @@ class Collection {
 
   push(options = {}) {
     options = assign({
-      dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
       skipSync: this.skipSync
@@ -726,7 +760,7 @@ class Collection {
   sync(query, options = {}) {
     options = assign({
       dataPolicy: this.dataPolicy,
-      auth: Auth.default,
+      auth: this.auth,
       client: this.client,
       skipSync: this.skipSync
     }, options);
@@ -754,7 +788,7 @@ class Collection {
   clearSync(options = {}) {
     options = assign({
       dataPolicy: this.dataPolicy,
-      auth: Auth.default,
+      auth: this.auth,
       client: this.client
     }, options);
     options.skipSync = true;

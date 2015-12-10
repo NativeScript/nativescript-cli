@@ -112,7 +112,7 @@ class Client {
   }
 
   /**
-   * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.
+   * Initializes the library by creating a new instance of the Client class and storing it as a shared instance.
    *
    * @param {Object} options - Options
    * @param {string} options.appId - My app's id

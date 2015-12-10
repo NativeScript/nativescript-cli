@@ -12,8 +12,21 @@ const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
 const platform = argv.platform || 'html5';
-const platformConfig = require('./config/' + platform);
-const config = {};
+const config = {
+  header: '',
+  footer: ''
+};
+var platformConfig = {};
+
+try {
+  platformConfig = require('./config/' + platform);
+} catch (err) {}
+
+/**
+ * Header and footer.
+ */
+config.header = platformConfig.header || config.header;
+config.footer = platformConfig.footer || config.footer;
 
 /**
  * Environment variables for the project.
@@ -22,7 +35,7 @@ config.env = {
   KINVEY_API_PROTOCOL: 'https:',
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
-  KINVEY_LOKI_ENV: 'BROWSER'
+  KINVEY_PLATFORM_ENV: platform
 };
 config.env = assign(config.env, platformConfig.env);
 process.env = assign(process.env, config.env);
@@ -55,18 +68,18 @@ config.files = {
     filename: 'kinvey'
   }
 };
-config.files = assign(config.files, platformConfig.files);
+const files = config.files = assign(config.files, platformConfig.files);
 
 /**
  * Webpack is the lib used to link external dependencies to provide the
  * ability to run the library in a browser.
  */
 config.webpack = {
-  context: config.paths.src,
-  entry: './' + config.files.entry.filename,
+  context: paths.src,
+  entry: './' + files.entry.filename,
   output: {
-    path: config.paths.dist,
-    filename: config.files.output.filename,
+    path: paths.dist,
+    filename: files.output.filename,
     library: 'Kinvey',
     libraryTarget: 'umd'
   },

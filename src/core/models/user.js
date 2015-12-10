@@ -2,7 +2,6 @@ const KinveyError = require('../errors').KinveyError;
 const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const Model = require('./model');
 const Request = require('../request').Request;
-const Client = require('../client');
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
 const Auth = require('../auth');
@@ -19,14 +18,34 @@ class User extends Model {
   }
 
   /**
+   * The pathname for the users where requests will be sent.
+   *
+   * @return   {string}    Pathname
+   */
+  getPathname(client) {
+    client = client || this.client;
+    return `/${usersNamespace}/${client.appId}`;
+  }
+
+  /**
+   * The pathname for the rpc where requests will be sent.
+   *
+   * @return   {string}    Pathname
+   */
+  getRpcPathname(client) {
+    client = client || this.client;
+    return `/${rpcNamespace}/${client.appId}`;
+  }
+
+  /**
    * Active user that is logged in.
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static getActive(client = Client.sharedInstance()) {
-    const promise = UserUtils.getActive(client).then(data => {
+  static getActive(options = {}) {
+    const promise = UserUtils.getActive(options).then(data => {
       if (data) {
-        return new User(data);
+        return new User(data, options);
       }
 
       return null;
@@ -40,14 +59,14 @@ class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static setActive(user, client = Client.sharedInstance()) {
+  static setActive(user, options = {}) {
     if (user && !(user instanceof User)) {
-      user = new User(result(user, 'toJSON', user));
+      user = new User(result(user, 'toJSON', user), options);
     }
 
-    const promise = UserUtils.setActive(user, client).then(data => {
+    const promise = UserUtils.setActive(user, options).then(data => {
       if (data) {
-        return new User(data);
+        return new User(data, options);
       }
 
       return null;
@@ -61,8 +80,8 @@ class User extends Model {
    *
    * @returns {Promise} Resolved with `true` if the user is active, `false` otherwise.
    */
-  isActive(client) {
-    return User.getActive(client).then(user => {
+  isActive(options = {}) {
+    return User.getActive(options).then(user => {
       if (user) {
         return this.id === user.id;
       }
@@ -88,24 +107,28 @@ class User extends Model {
    * });
    */
   static login(usernameOrData, password, options = {}) {
+    if (!isObject(usernameOrData)) {
+      usernameOrData = {
+        username: usernameOrData,
+        password: password
+      };
+    }
+
+    const user = new User(usernameOrData, options);
+    return user.login();
+  }
+
+  login(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    const promise = User.getActive(options.client).then(user => {
-      if (user) {
+    const promise = User.getActive(options).then(activeUser => {
+      if (activeUser) {
         throw new AlreadyLoggedInError('A user is already logged in.');
       }
 
-      if (!isObject(usernameOrData)) {
-        usernameOrData = {
-          username: usernameOrData,
-          password: password
-        };
-        options.data = usernameOrData;
-      }
-
-      if ((!usernameOrData.username || !usernameOrData.password) && !usernameOrData._socialIdentity) {
+      if ((!this.get('username') || !this.get('password')) && !this.get('_socialIdentity')) {
         throw new KinveyError(
           'Username and/or password missing. Please provide both a username and password to login.'
         );
@@ -113,16 +136,16 @@ class User extends Model {
 
       const request = new Request({
         method: HttpMethod.POST,
-        pathname: `/${usersNamespace}/${options.client.appId}/login`,
-        data: usernameOrData,
+        pathname: `${this.getPathname(this.client)}/login`,
+        data: this.toJSON(),
         dataPolicy: DataPolicy.NetworkOnly,
         auth: Auth.app,
-        client: options.client
+        client: this.client
       });
       return request.execute();
     }).then(response => {
-      const user = new User(response.data);
-      return User.setActive(user, options.client);
+      this.set(response.data, options);
+      return User.setActive(this, options);
     });
 
     return promise;
@@ -145,20 +168,21 @@ class User extends Model {
    */
   logout(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    const promise = this.isActive().then(active => {
+    const promise = this.isActive(options).then(active => {
       if (!active) {
         return null;
       }
 
-      options.method = HttpMethod.POST;
-      options.pathname = `/${usersNamespace}/${options.client.appId}/_logout`;
-      options.dataPolicy = DataPolicy.NetworkOnly;
-      options.auth = Auth.session;
-
-      const request = new Request(options);
+      const request = new Request({
+        method: HttpMethod.POST,
+        pathname: `${this.getPathname(options.client)}/_logout`,
+        dataPolicy: DataPolicy.NetworkOnly,
+        auth: Auth.session,
+        client: options.client
+      });
       return request.execute();
     }).then(() => {
       return User.setActive(null, options.client);
@@ -169,20 +193,21 @@ class User extends Model {
 
   me(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    const promise = this.isActive().then(active => {
+    const promise = this.isActive(options).then(active => {
       if (!active) {
         throw new KinveyError('User is not active. Please login first.');
       }
 
-      options.method = HttpMethod.GET;
-      options.pathname = `/${usersNamespace}/${options.client.appId}/_me`;
-      options.dataPolicy = DataPolicy.NetworkOnly;
-      options.auth = Auth.session;
-
-      const request = new Request(options);
+      const request = new Request({
+        method: HttpMethod.GET,
+        pathname: `${this.getPathname(options.client)}/_me`,
+        dataPolicy: DataPolicy.NetworkOnly,
+        auth: Auth.session,
+        client: options.client
+      });
       return request.execute();
     }).then(response => {
       const user = new User(response.data);
@@ -206,46 +231,49 @@ class User extends Model {
 
   verifyEmail(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    options.method = HttpMethod.POST;
-    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-email-verification-initiate`;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.auth = Auth.app;
-
-    const request = new Request(options);
+    const request = new Request({
+      method: HttpMethod.POST,
+      pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-email-verification-initiate`,
+      dataPolicy: DataPolicy.NetworkOnly,
+      auth: Auth.app,
+      client: options.client
+    });
     const promise = request.execute();
     return promise;
   }
 
   forgotUsername(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    options.method = HttpMethod.POST;
-    options.pathname = `/${rpcNamespace}/${options.client.appId}/user-forgot-username`;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.auth = Auth.app;
-    options.data = { email: this.get('email') };
-
-    const request = new Request(options);
+    const request = new Request({
+      method: HttpMethod.POST,
+      pathname: `${this.getRpcPathname(options.client)}/user-forgot-username`,
+      dataPolicy: DataPolicy.NetworkOnly,
+      auth: Auth.app,
+      client: options.client,
+      data: { email: this.get('email') }
+    });
     const promise = request.execute();
     return promise;
   }
 
   resetPassword(options = {}) {
     options = assign({
-      client: Client.sharedInstance()
+      client: this.client
     }, options);
 
-    options.method = HttpMethod.POST;
-    options.pathname = `/${rpcNamespace}/${options.client.appId}/${this.get('username')}/user-password-reset-initiate`;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.auth = Auth.app;
-
-    const request = new Request(options);
+    const request = new Request({
+      method: HttpMethod.POST,
+      pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-password-reset-initiate`,
+      dataPolicy: DataPolicy.NetworkOnly,
+      auth: Auth.app,
+      client: options.client
+    });
     const promise = request.execute();
     return promise;
   }
