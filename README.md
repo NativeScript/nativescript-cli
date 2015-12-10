@@ -604,3 +604,4 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
 [Android SDK Build-tools 22.0.0]: http://developer.android.com/sdk/index.html
 [Android Support Repository]: http://developer.android.com/sdk/index.html
+![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel) 
