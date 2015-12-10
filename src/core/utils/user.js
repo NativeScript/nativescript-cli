@@ -3,6 +3,7 @@ const Request = require('../request').Request;
 const Client = require('../client');
 const DataPolicy = require('../enums').DataPolicy;
 const HttpMethod = require('../enums').HttpMethod;
+const NotFoundError = require('../errors').NotFoundError;
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
 const activeUserSymbol = Symbol();
@@ -37,8 +38,12 @@ class UserUtils {
       user = data[0];
       UserUtils[activeUserSymbol][options.client.appId] = user;
       return user;
-    }).catch(() => {
-      return null;
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return null;
+      }
+
+      throw err;
     });
 
     return promise;

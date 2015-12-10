@@ -1,10 +1,10 @@
 const Promise = require('bluebird');
-const Collection = require('./collections/collection');
+const Store = require('./stores/store');
 const Query = require('./query');
 const DataPolicy = require('./enums').DataPolicy;
 const reduce = require('lodash/collection/reduce');
 const enabledSymbol = Symbol();
-const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+const syncStoreName = process.env.KINVEY_SYNC_STORE_NAME || 'sync';
 
 class Sync {
   static isEnabled() {
@@ -22,8 +22,8 @@ class Sync {
   static count(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.find(null, options).then(syncModels => {
+    const syncStore = new Store(syncStoreName, options);
+    const promise = syncStore.find(null, options).then(syncModels => {
       return reduce(syncModels, function(result, syncModel) {
         return result + syncModel.get('size');
       }, 0);
@@ -37,13 +37,13 @@ class Sync {
   static push(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncCollection = new Collection(syncCollectionName, options);
+    const syncStore = new Store(syncStoreName, options);
     const query = new Query();
     query.greaterThan('size', 0);
-    const promise = syncCollection.find(query, options).then(syncModels => {
+    const promise = syncStore.find(query, options).then(syncModels => {
       const promises = syncModels.map(syncModel => {
-        const collection = new Collection(syncModel.id, options);
-        return collection.push();
+        const store = new Store(syncModel.id, options);
+        return store.push();
       });
 
       return Promise.all(promises);
@@ -55,11 +55,11 @@ class Sync {
   static sync(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.find(null, options).then(syncModels => {
+    const syncStore = new Store(syncStoreName, options);
+    const promise = syncStore.find(null, options).then(syncModels => {
       const promises = syncModels.map(syncModel => {
-        const collection = new Collection(syncModel.id, options);
-        return collection.sync();
+        const store = new Store(syncModel.id, options);
+        return store.sync();
       });
 
       return Promise.all(promises);
@@ -72,8 +72,8 @@ class Sync {
     options.dataPolicy = DataPolicy.LocalOnly;
     options.skipSync = true;
 
-    const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.clear(query, options);
+    const syncStore = new Store(syncStoreName, options);
+    const promise = syncStore.clear(query, options);
     return promise;
   }
 }

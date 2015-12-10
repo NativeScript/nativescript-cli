@@ -1,4 +1,4 @@
-const StoreAdapter = require('./enums').StoreAdapter;
+const CacheAdapter = require('./enums').CacheAdapter;
 const Promise = require('bluebird');
 const Query = require('./query');
 const Aggregation = require('./aggregation');
@@ -14,36 +14,36 @@ const isString = require('lodash/lang/isString');
 const isArray = require('lodash/lang/isArray');
 const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
-class Store {
-  constructor(dbName = 'kinvey', adapters = [StoreAdapter.Memory]) {
+class Cache {
+  constructor(dbName = 'kinvey', adapters = [CacheAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }
 
     forEach(adapters, adapter => {
       switch (adapter) {
-      case StoreAdapter.IndexedDB:
+      case CacheAdapter.IndexedDB:
         if (IndexedDB.isSupported()) {
           this.db = new IndexedDB(dbName);
           return false;
         }
 
         break;
-      case StoreAdapter.LocalStorage:
+      case CacheAdapter.LocalStorage:
         if (LocalStorage.isSupported()) {
           this.db = new LocalStorage(dbName);
           return false;
         }
 
         break;
-      case StoreAdapter.Memory:
+      case CacheAdapter.Memory:
         if (Memory.isSupported()) {
           this.db = new Memory(dbName);
           return false;
         }
 
         break;
-      case StoreAdapter.WebSQL:
+      case CacheAdapter.WebSQL:
         if (WebSQL.isSupported()) {
           this.db = new WebSQL(dbName);
           return false;
@@ -196,4 +196,4 @@ class Store {
   }
 }
 
-module.exports = Store;
+module.exports = Cache;

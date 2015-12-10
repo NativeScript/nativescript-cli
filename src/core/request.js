@@ -278,7 +278,7 @@ class Request {
         this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
       }
     }).then(() => {
-      if (this.dataPolicy === DataPolicy.LocalOnly) {
+      if (this.dataPolicy === DataPolicy.ForceLocal) {
         return this.executeLocal().then(response => {
           if (!this.skipSync && this.method !== HttpMethod.GET && response && response.isSuccess()) {
             return this.notifySync(response.data).then(() => {
@@ -288,7 +288,7 @@ class Request {
 
           return response;
         });
-      } else if (this.dataPolicy === DataPolicy.LocalFirst) {
+      } else if (this.dataPolicy === DataPolicy.PreferLocal) {
         if (this.method !== HttpMethod.GET) {
           const request = new Request({
             method: this.method,
@@ -297,7 +297,7 @@ class Request {
             auth: this.auth,
             data: this.data,
             client: this.client,
-            dataPolicy: DataPolicy.NetworkFirst
+            dataPolicy: DataPolicy.PreferNetwork
           });
           return request.execute().catch(err => {
             const request2 = new Request({
@@ -307,7 +307,7 @@ class Request {
               auth: this.auth,
               data: this.data,
               client: this.client,
-              dataPolicy: DataPolicy.LocalOnly
+              dataPolicy: DataPolicy.ForceLocal
             });
             return request2.execute().then(() => {
               throw err;
@@ -315,7 +315,13 @@ class Request {
           });
         }
 
-        return this.executeLocal().then(response => {
+        return this.executeLocal().catch(err => {
+          if (err instanceof NotFoundError) {
+            return new Response(StatusCode.NotFound, {}, []);
+          }
+
+          throw err;
+        }).then(response => {
           if (response && !response.isSuccess()) {
             const request = new Request({
               method: this.method,
@@ -324,26 +330,26 @@ class Request {
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.NetworkFirst
+              dataPolicy: DataPolicy.PreferNetwork
             });
             return request.execute();
           }
 
           return response;
         });
-      } else if (this.dataPolicy === DataPolicy.NetworkOnly) {
+      } else if (this.dataPolicy === DataPolicy.ForceNetwork) {
         return this.executeNetwork();
-      } else if (this.dataPolicy === DataPolicy.NetworkFirst) {
+      } else if (this.dataPolicy === DataPolicy.PreferNetwork) {
         return this.executeNetwork().then(response => {
           if (response && response.isSuccess()) {
             const request = new Request({
               method: this.method,
-              path: this.path,
+              pathname: this.pathname,
               query: this.query,
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.LocalOnly
+              dataPolicy: DataPolicy.ForceLocal
             });
 
             if (this.method === HttpMethod.GET) {
@@ -361,7 +367,7 @@ class Request {
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.LocalOnly
+              dataPolicy: DataPolicy.ForceLocal
             });
             return request.execute();
           }

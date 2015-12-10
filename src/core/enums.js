@@ -1,8 +1,20 @@
+const CacheAdapter = {
+  IndexedDB: 'IndexedDB',
+  LocalStorage: 'LocalStorage',
+  Memory: 'Memory',
+  WebSQL: 'WebSQL'
+};
+Object.freeze(CacheAdapter);
+
 const DataPolicy = {
-  LocalFirst: 'LocalFist',
-  LocalOnly: 'LocalOnly',
-  NetworkFirst: 'NetworkFirst',
-  NetworkOnly: 'NetworkOnly'
+  ForceLocal: 'ForceLocal',
+  LocalOnly: 'ForceLocal',
+  PreferLocal: 'PreferLocal',
+  LocalFirst: 'PreferLocal',
+  ForceNetwork: 'ForceNetwork',
+  NetworkOnly: 'ForceNetwork',
+  PreferNetwork: 'PreferNetwork',
+  NetworkFirst: 'PreferNetwork'
 };
 Object.freeze(DataPolicy);
 
@@ -39,7 +51,7 @@ const SocialAdapter = {
 Object.freeze(SocialAdapter);
 
 const StatusCode = {
-  OK: 200,
+  Ok: 200,
   Created: 201,
   RedirectTemporarily: 301,
   RedirectPermanetly: 302,
@@ -48,14 +60,6 @@ const StatusCode = {
 };
 Object.freeze(StatusCode);
 
-const StoreAdapter = {
-  IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage',
-  Memory: 'Memory',
-  WebSQL: 'WebSQL'
-};
-Object.freeze(StoreAdapter);
-
 module.exports = {
   DataPolicy: DataPolicy,
   HttpMethod: HttpMethod,
@@ -63,5 +67,5 @@ module.exports = {
   ResponseType: ResponseType,
   SocialAdapter: SocialAdapter,
   StatusCode: StatusCode,
-  StoreAdapter: StoreAdapter
+  CacheAdapter: CacheAdapter
 };

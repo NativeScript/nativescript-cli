@@ -4,7 +4,7 @@ const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const UserNotFoundError = require('../errors').UserNotFoundError;
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
-const Collection = require('./collection');
+const NetworkStore = require('./networkStore');
 const Query = require('../query');
 const User = require('../models/user');
 const assign = require('lodash/object/assign');
@@ -20,7 +20,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * @example
  * var users = new Kinvey.Users();
  */
-class Users extends Collection {
+class Users extends NetworkStore {
   /**
    * Creates a new instance of the Users class.
    *
@@ -109,10 +109,9 @@ class Users extends Collection {
   create(user, options = {}) {
     options = assign({
       client: this.client,
-      skipSync: this.skipSync,
       state: false
     }, options);
-    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.dataPolicy = DataPolicy.ForceNetwork;
     options.auth = Auth.app;
 
     const promise = User.getActive(options).then(activeUser => {
@@ -228,16 +227,17 @@ class Users extends Collection {
 
   exists(username, options = {}) {
     options = assign({
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
-    options.method = HttpMethod.POST;
-    options.auth = Auth.app;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.pathname = `${this.getRpcPathname(options.client)}/check-username-exists`;
-    options.data = { username: username };
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: DataPolicy.ForceNetwork,
+      auth: Auth.app,
+      client: options.client,
+      method: HttpMethod.POST,
+      pathname: `${this.getRpcPathname(options.client)}/check-username-exists`,
+      data: { username: username }
+    });
     const promise = request.execute().then(response => {
       const data = response.data;
 
@@ -253,15 +253,16 @@ class Users extends Collection {
 
   restore(id, options = {}) {
     options = assign({
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
-    options.method = HttpMethod.POST;
-    options.auth = Auth.master;
-    options.dataPolicy = DataPolicy.NetworkOnly;
-    options.pathname = `${this.getPathname(options.client)}/${id}/_restore`;
 
-    const request = new Request(options);
+    const request = new Request({
+      dataPolicy: DataPolicy.ForceNetwork,
+      auth: Auth.master,
+      client: options.client,
+      method: HttpMethod.POST,
+      pathname: `${this.getPathname(options.client)}/${id}/_restore`
+    });
     const promise = request.execute();
     return promise;
   }

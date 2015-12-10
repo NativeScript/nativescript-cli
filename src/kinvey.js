@@ -4,16 +4,17 @@ const Kinvey = {};
 // Core
 Kinvey.Acl = require('./core/acl');
 Kinvey.Aggregation = require('./core/aggregation');
+Kinvey.Cache = require('./core/cache');
 Kinvey.Client = Client;
-Kinvey.Collection = require('./core/collections/collection');
 Kinvey.Enums = require('./core/enums');
 Kinvey.File = require('./core/models/file');
-Kinvey.Group = require('./core/aggregation');
+Kinvey.LocalStore = require('./core/stores/localStore');
 Kinvey.Log = require('./core/log');
-Kinvey.Metadata = require('./core/kmd');
+Kinvey.Kmd = require('./core/kmd');
 Kinvey.Model = require('./core/models/model');
+Kinvey.NetworkStore = require('./core/stores/networkStore');
 Kinvey.Query = require('./core/query');
-Kinvey.Store = require('./core/store');
+Kinvey.Store = require('./core/stores/store');
 Kinvey.Sync = require('./core/sync');
 Kinvey.User = require('./core/models/user');
 

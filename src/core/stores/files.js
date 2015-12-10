@@ -1,4 +1,4 @@
-const Collection = require('./collection');
+const NetworkStore = require('./networkStore');
 const Client = require('../client');
 const Request = require('../request').Request;
 const KinveyError = require('../errors').KinveyError;
@@ -21,7 +21,7 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
  * @example
  * var files = new Kinvey.Files();
  */
-class Files extends Collection {
+class Files extends NetworkStore {
   /**
    * Creates a new instance of the Files class.
    *
