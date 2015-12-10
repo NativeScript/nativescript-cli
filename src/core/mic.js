@@ -98,40 +98,40 @@ var MIC = {
     }
     // Step 1: Check authorization grant type
     else if (MIC.AuthorizationGrant.AuthorizationCodeLoginPage === authorizationGrant) {
-      if (this.isNode()) {
+      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap() || this.isTitanium()) {
+        // Step 2: Request a code
+        promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
+      } else {
         error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeLoginPage + ' grant is not supported.');
         return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
-
-      // Step 2: Request a code
-      promise = MIC.requestCodeWithPopup(clientId, redirectUri, options);
     }
     else if (MIC.AuthorizationGrant.AuthorizationCodeAPI === authorizationGrant) {
-      if (this.isHTML5() || this.isAngular() || this.isBackbone() || this.isPhoneGap() || this.isTitanium()) {
+      if (this.isTitanium() || this.isNode()) {
+        if (null == options.username) {
+          error = new Kinvey.Error('A username must be provided to login with MIC using the ' +
+                                   MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
+          return wrapCallbacks(Kinvey.Defer.reject(error), options);
+        }
+
+        if (null == options.password) {
+          error = new Kinvey.Error('A password must be provided to login with MIC using the ' +
+                                   MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
+          return wrapCallbacks(Kinvey.Defer.reject(error), options);
+        }
+
+        // Step 2a: Request a temp login uri
+        promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
+          // Step 2b: Request a code
+          // options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
+          //   '&response_type=code&username=' + encodeURIComponent(options.username) +
+          //   '&password=' + encodeURIComponent(options.password);
+          return MIC.requestCodeWithUrl(url, clientId, redirectUri, options);
+        });
+      } else {
         error = new Kinvey.Error(MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant is not supported.');
         return wrapCallbacks(Kinvey.Defer.reject(error), options);
       }
-
-      if (null == options.username) {
-        error = new Kinvey.Error('A username must be provided to login with MIC using the ' +
-                                 MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return wrapCallbacks(Kinvey.Defer.reject(error), options);
-      }
-
-      if (null == options.password) {
-        error = new Kinvey.Error('A password must be provided to login with MIC using the ' +
-                                 MIC.AuthorizationGrant.AuthorizationCodeAPI + ' grant.');
-        return wrapCallbacks(Kinvey.Defer.reject(error), options);
-      }
-
-      // Step 2a: Request a temp login uri
-      promise = MIC.requestUrl(clientId, redirectUri, options).then(function(url) {
-        // Step 2b: Request a code
-        // options.url = url + '?client_id=' + encodeURIComponent(clientId) + '&redirect_uri=' + encodeURIComponent(redirectUri) +
-        //   '&response_type=code&username=' + encodeURIComponent(options.username) +
-        //   '&password=' + encodeURIComponent(options.password);
-        return MIC.requestCodeWithUrl(url, clientId, redirectUri, options);
-      });
     }
     else {
       // Reject with error because of invalid authorization grant
@@ -224,6 +224,7 @@ var MIC = {
   requestUrl: function(clientId, redirectUri, options) {
     var url = Kinvey.MICHostName;
     options.micApiVersion = options.micApiVersion || Kinvey.MICAPIVersion;
+    options.autoRedirect = false;
 
     // Set the MIC API version
     if (options.micApiVersion != null) {
@@ -523,6 +524,8 @@ var MIC = {
    * @return {Promise}            Code.
    */
   requestCodeWithUrl: function(url, clientId, redirectUri, options) {
+    options.autoRedirect = false;
+
     // Create a request
     var request = {
       method: 'POST',
@@ -862,4 +865,3 @@ Kinvey.User.MIC = /** @lends Kinvey.User.MIC */ {
     return Kinvey.User.logout(options);
   }
 };
-

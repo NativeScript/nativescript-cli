@@ -84,6 +84,7 @@ var TiHttp = {
     }
 
     xhr.timeout = options.timeout || 0;
+    xhr.autoRedirect = options.autoRedirect || true;
 
     // Listen for request completion.
     xhr.onerror = xhr.onload = function(e) {
