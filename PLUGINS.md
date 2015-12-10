@@ -117,7 +117,7 @@ Every NativeScript plugin should contain a valid `package.json` file in its root
 * It must contain a `nativescript` section which describes the supported NativeScript runtimes and their versions. This section can be empty. If you want to define supported platforms and runtimes, you can nest a `platforms` section. In this `platforms` section, you can nest `ios` and `android` key-value pairs. The values in these pairs must be valid runtime versions or ranges of values specified by a valid semver(7) syntax.
 * If the plugin depends on other npm modules, it must contain a `dependencies` section as described [here](https://docs.npmjs.com/files/package.json#dependencies).<br/>The NativeScript CLI will resolve the dependencies during the plugin installation.
 
-#### `package.json` Example
+#### Package.json Example
 
 The following is an example of a `package.json` file for a NativeScript plugin which supports the 1.0.0 version of the iOS runtime and the 1.1.0 version of the Android runtime.
 
@@ -134,7 +134,7 @@ The following is an example of a `package.json` file for a NativeScript plugin w
 }
 ```
 
-### `include.gradle` Specification
+### Include.gradle Specification
 
 Every NativeScript plugin, which contains native Android dependencies, should also contain a valid `include.gradle` file in the root of its `platforms\android` directory. This `include.gradle` file must meet the following requirements.
 
@@ -144,7 +144,7 @@ Every NativeScript plugin, which contains native Android dependencies, should al
 
 > **IMPORTANT:** If you don't have an `include.gradle` file, at build time, gradle will create a default one containing all default elements.
 
-#### `include.gradle` Example
+#### Include.gradle Example
 ```gradle
 //default elements
 android {
@@ -161,10 +161,10 @@ dependencies {
 }
 ```
 
-### `build.xcconfig` Specification
+### Build.xcconfig Specification
 Every NativeScript plugin, which contains native iOS dependencies, can also contain a [valid](https://pewpewthespells.com/blog/xcconfig_guide.html) `build.xcconfig` file in the root of its `platforms\ios` directory. This `build.xcconfig` file might contain native dependencies required to build the plugin properly.
 
-#### `build.xcconfig` Example
+#### Build.xcconfig Example
 ```
 OTHER_LDFLAGS = $(inherited) -framework "QuartzCore" -l"sqlite3"
 ```
