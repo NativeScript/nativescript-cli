@@ -524,6 +524,7 @@ var MIC = {
    * @return {Promise}            Code.
    */
   requestCodeWithUrl: function(url, clientId, redirectUri, options) {
+    options = options || {};
     options.autoRedirect = false;
 
     // Create a request
@@ -551,6 +552,8 @@ var MIC = {
       request.headers,
       options
     ).then(function(response) {
+      options.autoRedirect = true;
+
       try {
         response = JSON.parse(response);
       } catch(e)  {}
