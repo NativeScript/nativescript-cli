@@ -379,7 +379,8 @@ Kinvey.Persistence.Net = /** @lends Kinvey.Persistence.Net */{
           response = {
             name        : response.error,
             description : response.description || '',
-            debug       : response.debug       || ''
+            debug       : response.debug       || '',
+            stack       : response.stack       || ''
           };
 
           // If `options.trace`, add the `requestId`.
