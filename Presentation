@@ -1,0 +1,27 @@
+JavaScript Next Revision
+- 2 sections
+  - What we have learned and how we are applying this
+  - What problems did we solve with the next version
+
+- Gather problems from Austin, Ivo and Matt Delacey that they have faced with the JS library the past.
+- Internal development problems
+
+- Share code snippets around problems
+  - Rack
+  - DDO
+  - Interally Testing for better maintenance
+  - Wrote in es6 for future development
+    - introductory slide about es6
+
+Missing Features
+  - Execute a command - MVP
+  - Social connect including MIC EA
+  - Push - MVP
+  - KinveyReferences- Not now
+  - PhoneGap Crypto- EA
+  - Automated Release Process - GA
+  - Docs - EA
+  - Complete Unit and Integration Tests - EA
+  - Performance Benchmark - EA
+  - Write Policies - MVP
+  - Delta Set Request - MVP

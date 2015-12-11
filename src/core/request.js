@@ -519,7 +519,7 @@ class DeltaSetRequest extends Request {
       return Promise.reject(new KinveyError('The request is already executing.'));
     }
 
-    if (this.dataPolicy === DataPolicy.NetworkFirst && this.method === HttpMethod.GET) {
+    if (this.dataPolicy === DataPolicy.PreferNetwork && this.method === HttpMethod.GET) {
       const origQuery = this.query;
       const query = new Query();
       query.fields(['_id', '_kmd']);

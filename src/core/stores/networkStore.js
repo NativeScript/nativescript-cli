@@ -5,7 +5,7 @@ const assign = require('lodash/object/assign');
 class NetworkStore extends Store {
   constructor(name, options = {}) {
     options = assign({
-      dataPolicy: DataPolicy.PreferNetwork,
+      dataPolicy: DataPolicy.ForceNetwork,
     }, options);
     super(name, options);
   }
