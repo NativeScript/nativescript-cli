@@ -1,5 +1,5 @@
 const Kinvey = require('../../src/kinvey');
-const Logger = require('../../src/core/logger');
+const Log = require('../../src/core/log');
 const User = require('../../src/core/models/user');
 const Client = require('../../src/core/client');
 const uid = require('uid');
@@ -14,7 +14,7 @@ chai.use(require('chai-as-promised'));
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 
 // Disable logs
-Logger.disableAll();
+Log.disableAll();
 
 // Globals
 global.sinon = sinon;
@@ -41,10 +41,7 @@ global.Common = {
     reply._acl.creator = reply._id;
 
     nock('https://baas.kinvey.com')
-      .post(`/${usersNamespace}/${client.appId}/login`, {
-        username: 'admin',
-        password: 'admin'
-      })
+      .post(`/${usersNamespace}/${client.appId}/login`)
       .reply(200, reply, {
         'content-type': 'application/json',
       });

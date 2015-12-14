@@ -67,7 +67,7 @@
     "json-loader": "^0.5.3",
     "mocha": "^2.1.0",
     "mocha-jenkins-reporter": "^0.1.9",
-    "nock": "^3.3.0",
+    "nock": "^3.3.2",
     "request-debug": "^0.2.0",
     "run-sequence": "^1.1.4",
     "sinon": "^1.12.2",

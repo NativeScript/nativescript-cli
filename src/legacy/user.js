@@ -1,5 +1,5 @@
 const User = require('../core/models/user');
-const Users = require('../core/collections/users');
+const Users = require('../core/stores/users');
 const map = require('lodash/collection/map');
 const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;

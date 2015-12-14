@@ -367,6 +367,7 @@ describe('User', function() {
         });
 
       const promise = User.login(this.data.username, this.data.password).then(user => {
+        console.log(user);
         expect(user).to.have.property('username', this.data.username);
         expect(user).not.to.have.property('password');
 
@@ -514,7 +515,7 @@ describe('User', function() {
     }));
   });
 */
-
+/*
   describe('the logout method', function() {
     before(function() {
       const reply = {
@@ -592,7 +593,7 @@ describe('User', function() {
       return Kinvey.User.logout(options);
     }));
   });
-
+*/
 /*
   // Kinvey.User.me.
   describe('the me method', function() {

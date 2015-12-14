@@ -14,11 +14,11 @@ JavaScript Next Revision
     - introductory slide about es6
 
 Missing Features
-  - Execute a command - MVP
-  - Social connect including MIC EA
+  - Execute a command - MVP (DONE)
+  - Social connect including MIC - EA
   - Push - MVP
-  - KinveyReferences- Not now
-  - PhoneGap Crypto- EA
+  - KinveyReferences - Not now
+  - PhoneGap Crypto - EA
   - Automated Release Process - GA
   - Docs - EA
   - Complete Unit and Integration Tests - EA

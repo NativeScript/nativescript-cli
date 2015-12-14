@@ -212,22 +212,7 @@ class Store {
       data: aggregation.toJSON()
     });
     const promise = request.execute().then(response => {
-      let data = response.data;
-      const models = [];
-
-      if (data) {
-        if (!isArray(data)) {
-          data = [data];
-        }
-
-        forEach(data, obj => {
-          if (obj) {
-            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-          }
-        });
-      }
-
-      return models;
+      return response.data;
     });
 
     promise.then(response => {

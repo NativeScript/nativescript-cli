@@ -1,4 +1,4 @@
-const Collection = require('../core/collections/collection');
+const Store = require('../core/stores/store');
 const Query = require('../core/query');
 const Aggregation = require('../core/aggregation');
 const Promise = require('bluebird');
@@ -17,8 +17,8 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, options);
-    const promise = collection.find(query, options).then(models => {
+    const store = new Store(name, options);
+    const promise = store.find(query, options).then(models => {
       return map(models, model => {
         return model.toJSON();
       });
@@ -34,28 +34,24 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, options);
-    const promise = collection.group(aggregation, options).then(models => {
-      return map(models, model => {
-        return model.toJSON();
-      });
-    });
+    const store = new Store(name, options);
+    const promise = store.group(aggregation, options);
     return wrapCallbacks(promise, options);
   }
 
   static count(name, query, options) {
     options = mapLegacyOptions(options);
 
-    const collection = new Collection(name, options);
-    const promise = collection.count(query, options);
+    const store = new Store(name, options);
+    const promise = store.count(query, options);
     return wrapCallbacks(promise, options);
   }
 
   static get(name, id, options) {
     options = mapLegacyOptions(options);
 
-    const collection = new Collection(name, options);
-    const promise = collection.get(id, options).then(model => {
+    const store = new Store(name, options);
+    const promise = store.get(id, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -69,8 +65,8 @@ class DataStore {
       return this.update(name, document, options);
     }
 
-    const collection = new Collection(name, options);
-    const promise = collection.create(document, options).then(model => {
+    const store = new Store(name, options);
+    const promise = store.create(document, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -84,8 +80,8 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, options);
-    const promise = collection.update(document, options).then(model => {
+    const store = new Store(name, options);
+    const promise = store.update(document, options).then(model => {
       return model.toJSON();
     });
     return wrapCallbacks(promise, options);
@@ -99,16 +95,16 @@ class DataStore {
       return wrapCallbacks(Promise.reject(error), options);
     }
 
-    const collection = new Collection(name, options);
-    const promise = collection.clear(query, options);
+    const store = new Store(name, options);
+    const promise = store.clear(query, options);
     return wrapCallbacks(promise, options);
   }
 
   static destroy(name, id, options) {
     options = mapLegacyOptions(options);
 
-    const collection = new Collection(name, options);
-    const promise = collection.delete(id, options);
+    const store = new Store(name, options);
+    const promise = store.delete(id, options);
     return wrapCallbacks(promise, options);
   }
 }

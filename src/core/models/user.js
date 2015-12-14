@@ -145,6 +145,7 @@ class User extends Model {
       return request.execute();
     }).then(response => {
       this.set(response.data, options);
+      this.unset('password');
       return User.setActive(this, options);
     });
 

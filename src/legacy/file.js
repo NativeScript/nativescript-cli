@@ -1,4 +1,4 @@
-const Files = require('../core/collections/files');
+const Files = require('../core/stores/files');
 const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
 const forEach = require('lodash/collection/forEach');
