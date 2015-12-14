@@ -4,6 +4,7 @@ const Request = require('../request').Request;
 const DeltaSetRequest = require('../request').DeltaSetRequest;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
+const WritePolicy = require('../enums').WritePolicy;
 const NotFoundError = require('../errors').NotFoundError;
 const Client = require('../client');
 const Query = require('../query');
@@ -13,10 +14,8 @@ const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
 const log = require('../log');
-const clone = require('lodash/lang/clone');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 
 // const syncBatchSize = process.env.KINVEY_SYCN_BATCH_SIZE || 1000;
 
@@ -31,19 +30,20 @@ class Store {
   /**
    * Creates a new instance of the Store class.
    *
-   * @param {string}      name                                            Name of the collection.
-   * @param {Object}      [options]                                       Options.
-   * @param {Client}      [options.client=Client.sharedInstance()]        Client to use.
-   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.PreferNetwork]   Data policy to use.
-   * @param {Model}       [options.model=Model]                           Model class to use.
+   * @param {string}      name                                                Name of the collection.
+   * @param {Object}      [options]                                           Options.
+   * @param {Client}      [options.client=Client.sharedInstance()]            Client to use.
+   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.PreferNetwork]       Data policy to use.
+   * @param {WritePolicy} [options.writePolicy=WritePolicy.WriteAutomatic]    Write policy to use.
+   * @param {Model}       [options.model=Model]                               Model class to use.
    */
   constructor(name, options = {}) {
     options = assign({
       auth: Auth.default,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.PreferNetwork,
-      model: Model,
-      skipSync: false
+      writePolicy: WritePolicy.Network,
+      model: Model
     }, options);
 
     /**
@@ -67,14 +67,14 @@ class Store {
     this.dataPolicy = options.dataPolicy;
 
     /**
+     * @type {WritePolicy}
+     */
+    this.writePolicy = options.writePolicy;
+
+    /**
      * @type {Model}
      */
     this.model = options.model;
-
-    /**
-     * @type {boolean}
-     */
-    this.skipSync = options.skipSync;
   }
 
   /**
@@ -125,8 +125,7 @@ class Store {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -158,6 +157,12 @@ class Store {
       }
 
       return models;
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return [];
+      }
+
+      throw err;
     });
 
     promise.then(response => {
@@ -332,11 +337,11 @@ class Store {
    * Saves a model to the collection. A promise will be returned that will be resolved with
    * saved model or rejected with an error.
    *
-   * @param   {Model}        model                                        Model
-   * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {Model}        model                                              Model
+   * @param   {Object}       options                                            Options
+   * @param   {DataPolicy}   [options.writePolicy=WritePolicy.WriteAutomatic]   Data policy
+   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @return  {Promise}                                                         Promise
    *
    * @example
    * var collection = new Kinvey.Collection('books');
@@ -351,10 +356,9 @@ class Store {
     log.debug(`Saving the model to the ${this.name} collection.`, model);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
+      writePolicy: this.writePolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
 
     if (!model) {
@@ -375,10 +379,9 @@ class Store {
     delete data._id;
 
     const request = new Request({
-      dataPolicy: options.dataPolicy,
+      writePolicy: options.writePolicy,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       method: HttpMethod.POST,
       pathname: this.getPathname(options.client),
       data: data
@@ -401,11 +404,11 @@ class Store {
    * Updates a model in the collection. A promise will be returned that will be resolved with
    * the updated model or rejected with an error.
    *
-   * @param   {Object}       model                                        Model
-   * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {Object}       model                                              Model
+   * @param   {Object}       options                                            Options
+   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
+   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @return  {Promise}                                                         Promise
    *
    * @example
    * var collection = new Kinvey.Collection('books');
@@ -420,10 +423,9 @@ class Store {
     log.debug(`Update the model to the ${this.name} collection.`, model);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
+      writePolicy: this.writePolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
 
     if (!model) {
@@ -441,10 +443,9 @@ class Store {
     }
 
     const request = new Request({
-      dataPolicy: options.dataPolicy,
+      writePolicy: options.writePolicy,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       method: HttpMethod.PUT,
       pathname: `${this.getPathname(options.client)}/${model.id}`,
       data: model.toJSON()
@@ -469,11 +470,11 @@ class Store {
    * collection. A promise will be returned that will be resolved with a count of the
    * number of models deleted or rejected with an error.
    *
-   * @param   {Query}        [query]                                      Query
-   * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {Query}        [query]                                            Query
+   * @param   {Object}       [options]                                          Options
+   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
+   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @return  {Promise}                                                         Promise
    *
    * @example
    * var collection = new Kinvey.Collection('books');
@@ -489,10 +490,9 @@ class Store {
     log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
+      writePolicy: this.writePolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -500,10 +500,9 @@ class Store {
     }
 
     const request = new Request({
-      dataPolicy: options.dataPolicy,
+      writePolicy: options.writePolicy,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       method: HttpMethod.DELETE,
       pathname: this.getPathname(options.client),
       query: query
@@ -525,11 +524,11 @@ class Store {
    * Delete a model in the collection. A promise will be returned that will be
    * resolved with a count of the number of models deleted or rejected with an error.
    *
-   * @param   {string}       id                                           Document Id
-   * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {string}       id                                                 Document Id
+   * @param   {Object}       options                                            Options
+   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
+   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @return  {Promise}                                                         Promise
    *
    * @example
    * var collection = new Kinvey.Collection('books');
@@ -543,18 +542,16 @@ class Store {
     log.debug(`Deleting a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
+      writePolicy: this.writePolicy,
       auth: this.auth,
       client: this.client,
-      skipSync: this.skipSync,
       silent: false
     }, options);
 
     const request = new Request({
-      dataPolicy: options.dataPolicy,
+      writePolicy: options.writePolicy,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       method: HttpMethod.DELETE,
       pathname: `${this.getPathname(options.client)}/${id}`
     });
@@ -578,211 +575,6 @@ class Store {
       log.error(`Failed to delete the model in the ${this.name} collection with id = ${id}.`, err);
     });
 
-    return promise;
-  }
-
-  countSync(options = {}) {
-    options = assign({
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.dataPolicy = DataPolicy.LocalOnly;
-
-    const syncStore = new Store(syncCollectionName, options);
-    const promise = syncStore.get(this.name, options).then(row => {
-      return row.get('size') || 0;
-    });
-
-    return promise;
-  }
-
-  push(options = {}) {
-    options = assign({
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-    options.dataPolicy = DataPolicy.LocalOnly;
-
-    // Get the documents to sync
-    const syncStore = new Store(syncCollectionName, options);
-    const promise = syncStore.get(this.name, options).then(syncModel => {
-      const documents = syncModel.get('documents');
-      const identifiers = Object.keys(documents);
-      let size = syncModel.get('size');
-
-      // Get the document. If it is found, push it onto the saved array and if
-      // it is not (aka a NotFoundError is thrown) then push the id onto the destroyed
-      // array.
-      const saved = [];
-      const deleted = [];
-      const promises = identifiers.map(id => {
-        const metadata = documents[id];
-        const requestOptions = clone(assign(metadata, options));
-        requestOptions.dataPolicy = DataPolicy.LocalOnly;
-        return this.get(id, requestOptions).then(model => {
-          saved.push(model);
-          return model;
-        }).catch(() => {
-          deleted.push(id);
-          return null;
-        });
-      });
-
-      // Save and delete everything that needs to be synced
-      return Promise.all(promises).then(() => {
-        // Save the models that need to be saved
-        const savePromises = saved.map(model => {
-          const metadata = documents[model.id];
-          const requestOptions = clone(assign(metadata, options));
-          requestOptions.dataPolicy = DataPolicy.NetworkFirst;
-
-          // If the model is new then just save it
-          if (model.isNew()) {
-            const originalId = model.id;
-            model.id = undefined;
-            return this.create(model, requestOptions).then(model => {
-              // Remove the locally created model
-              requestOptions.dataPolicy = DataPolicy.LocalOnly;
-              requestOptions.skipSync = true;
-              return this.delete(originalId, requestOptions).then(() => {
-                size = size - 1;
-                delete documents[originalId];
-
-                return {
-                  _id: model.id,
-                  model: model
-                };
-              });
-            }).catch(err => {
-              model.set('_id', originalId);
-              return {
-                _id: model.id,
-                error: err
-              };
-            });
-          }
-
-          // Else just update the model
-          return this.update(model, requestOptions).then(model => {
-            size = size - 1;
-            delete documents[model.id];
-
-            return {
-              _id: model.id,
-              model: model
-            };
-          }).catch(err => {
-            return {
-              _id: model.id,
-              error: err
-            };
-          });
-        });
-
-        // Delete the models that need to be deleted
-        const deletePromises = deleted.map(id => {
-          const metadata = documents[id];
-          const requestOptions = clone(assign(metadata, options));
-          requestOptions.dataPolicy = DataPolicy.NetworkFirst;
-          return this.delete(id, requestOptions).then(response => {
-            size = size - 1;
-            delete documents[id];
-
-            return {
-              _id: id,
-              model: response.documents[0]
-            };
-          }).catch(err => {
-            return {
-              _id: id,
-              error: err
-            };
-          });
-        });
-
-        return Promise.all([Promise.all(savePromises), Promise.all(deletePromises)]);
-      }).then(responses => {
-        const saveResponses = responses[0];
-        const deletedResponses = responses[1];
-
-        const result = {
-          collection: syncModel.id,
-          success: [],
-          error: []
-        };
-
-        forEach(saveResponses, saveResponse => {
-          if (saveResponse.error) {
-            result.error.push(saveResponse);
-          } else {
-            result.success.push(saveResponse);
-          }
-        });
-
-        forEach(deletedResponses, deleteResponse => {
-          if (deleteResponse.error) {
-            result.error.push(deleteResponse);
-          } else {
-            result.success.push(deleteResponse);
-          }
-        });
-
-        return result;
-      }).then(result => {
-        syncModel.set('size', size);
-        syncModel.set('documents', documents);
-        options.skipSync = true;
-        return syncStore.create(syncModel, options).then(() => {
-          return result;
-        });
-      });
-    });
-
-    return promise;
-  }
-
-  sync(query, options = {}) {
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
-    }, options);
-
-    const promise = this.push(options).then(pushResponse => {
-      options.dataPolicy = DataPolicy.NetworkOnly;
-      return this.find(query, options).then(models => {
-        options.dataPolicy = DataPolicy.LocalOnly;
-        options.skipSync = true;
-        return this.create(models, options);
-      }).then(syncResponse => {
-        return {
-          push: pushResponse,
-          sync: {
-            collection: this.name,
-            models: syncResponse
-          }
-        };
-      });
-    });
-
-    return promise;
-  }
-
-  clearSync(options = {}) {
-    options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
-      client: this.client
-    }, options);
-    options.skipSync = true;
-
-    const syncStore = new Store(syncCollectionName, options);
-    const query = new Query();
-    query.contains('_id', [this.name]);
-    const promise = syncStore.clear(query, options);
     return promise;
   }
 }

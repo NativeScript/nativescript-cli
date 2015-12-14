@@ -7,12 +7,12 @@ const CacheAdapter = {
 Object.freeze(CacheAdapter);
 
 const DataPolicy = {
-  ForceLocal: 'ForceLocal',
-  LocalOnly: 'ForceLocal',
+  ForceLocal: 'LocalOnly',
+  LocalOnly: 'LocalOnly',
   PreferLocal: 'PreferLocal',
   LocalFirst: 'PreferLocal',
-  ForceNetwork: 'ForceNetwork',
-  NetworkOnly: 'ForceNetwork',
+  ForceNetwork: 'NetworkOnly',
+  NetworkOnly: 'NetworkOnly',
   PreferNetwork: 'PreferNetwork',
   NetworkFirst: 'PreferNetwork'
 };
@@ -60,6 +60,12 @@ const StatusCode = {
 };
 Object.freeze(StatusCode);
 
+const WritePolicy = {
+  Local: 'Local',
+  Network: 'Network'
+};
+Object.freeze(WritePolicy);
+
 module.exports = {
   DataPolicy: DataPolicy,
   HttpMethod: HttpMethod,
@@ -67,5 +73,6 @@ module.exports = {
   ResponseType: ResponseType,
   SocialAdapter: SocialAdapter,
   StatusCode: StatusCode,
-  CacheAdapter: CacheAdapter
+  CacheAdapter: CacheAdapter,
+  WritePolicy: WritePolicy
 };

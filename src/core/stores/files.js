@@ -137,7 +137,6 @@ class Files extends NetworkStore {
     options = assign({
       auth: this.auth,
       client: this.client,
-      skipSync: this.skipSync,
       search: {}
     }, options);
 
@@ -157,7 +156,6 @@ class Files extends NetworkStore {
       dataPolicy: DataPolicy.NetworkOnly,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       method: HttpMethod.GET,
       pathname: `${this.getPathname(options.client)}/${name}`,
       search: options.search
@@ -252,7 +250,6 @@ class Files extends NetworkStore {
     options = assign({
       auth: this.auth,
       client: this.client,
-      skipSync: this.skipSync,
       public: false,
       contentType: metadata.mimeType
     }, options);
@@ -265,7 +262,6 @@ class Files extends NetworkStore {
       dataPolicy: DataPolicy.NetworkOnly,
       auth: options.auth,
       client: options.client,
-      skipSync: options.skipSync,
       data: metadata
     });
 

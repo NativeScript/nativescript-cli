@@ -1,5 +1,6 @@
 const Auth = require('../auth');
 const DataPolicy = require('../enums').DataPolicy;
+const WritePolicy = require('../enums').WritePolicy;
 const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const UserNotFoundError = require('../errors').UserNotFoundError;
 const Request = require('../request').Request;
@@ -57,8 +58,7 @@ class Users extends NetworkStore {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client,
-      skipSync: this.skipSync
+      client: this.client
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -111,7 +111,7 @@ class Users extends NetworkStore {
       client: this.client,
       state: false
     }, options);
-    options.dataPolicy = DataPolicy.ForceNetwork;
+    options.writePolicy = WritePolicy.Network;
     options.auth = Auth.app;
 
     const promise = User.getActive(options).then(activeUser => {

@@ -6,26 +6,23 @@ const Query = require('./query');
 const url = require('url');
 const Client = require('./client');
 const DataPolicy = require('./enums').DataPolicy;
+const WritePolicy = require('./enums').WritePolicy;
 const StatusCode = require('./enums').StatusCode;
 const KinveyError = require('./errors').KinveyError;
 const BlobNotFoundError = require('./errors').BlobNotFoundError;
 const NotFoundError = require('./errors').NotFoundError;
 const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
-const UrlPattern = require('url-pattern');
 const qs = require('qs');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const indexBy = require('lodash/collection/indexBy');
 const reduce = require('lodash/collection/reduce');
-const forEach = require('lodash/collection/forEach');
 const byteCount = require('./utils/string').byteCount;
-const isArray = require('lodash/lang/isArray');
 const isFunction = require('lodash/lang/isFunction');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
-const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 const customRequestPropertiesMaxBytes = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 10000;
 const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
@@ -41,9 +38,9 @@ class Request {
       auth: null,
       client: Client.sharedInstance(),
       dataPolicy: DataPolicy.LocalFirst,
+      writePolicy: WritePolicy.Network,
       responseType: ResponseType.Text,
-      timeout: defaultTimeout,
-      skipSync: false
+      timeout: defaultTimeout
     }, options);
 
     if (!(options.client instanceof Client)) {
@@ -63,9 +60,9 @@ class Request {
     this.client = options.client;
     this.auth = options.auth;
     this.dataPolicy = options.dataPolicy;
+    this.writePolicy = options.writePolicy;
     this.timeout = options.timeout;
     this.executing = false;
-    this.skipSync = options.skipSync;
 
     const headers = {};
     headers.Accept = 'application/json';
@@ -286,68 +283,71 @@ class Request {
         this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
       }
     }).then(() => {
-      if (this.dataPolicy === DataPolicy.ForceLocal) {
-        return this.executeLocal().then(response => {
-          if (!this.skipSync && this.method !== HttpMethod.GET && response && response.isSuccess()) {
-            return this.notifySync(response.data).then(() => {
-              return response;
-            });
-          }
+      if (this.method === HttpMethod.GET) {
+        switch (this.dataPolicy) {
+        case DataPolicy.LocalOnly:
+          return this.executeLocal();
+        case DataPolicy.PreferLocal:
+          return this.executeLocal().catch(err => {
+            if (err instanceof NotFoundError) {
+              return new Response(StatusCode.NotFound, {}, []);
+            }
 
-          return response;
-        });
-      } else if (this.dataPolicy === DataPolicy.PreferLocal) {
-        if (this.method !== HttpMethod.GET) {
-          const request = new Request({
-            method: this.method,
-            pathname: this.pathname,
-            query: this.query,
-            auth: this.auth,
-            data: this.data,
-            client: this.client,
-            dataPolicy: DataPolicy.PreferNetwork
+            throw err;
+          }).then(response => {
+            if (response && !response.isSuccess()) {
+              const request = new Request({
+                method: this.method,
+                pathname: this.pathname,
+                query: this.query,
+                auth: this.auth,
+                client: this.client,
+                dataPolicy: DataPolicy.PreferNetwork
+              });
+              return request.execute();
+            }
+
+            return response;
           });
-          return request.execute().catch(err => {
-            const request2 = new Request({
-              method: this.method,
-              pathname: this.pathname,
-              query: this.query,
-              auth: this.auth,
-              data: this.data,
-              client: this.client,
-              dataPolicy: DataPolicy.ForceLocal
-            });
-            return request2.execute().then(() => {
-              throw err;
-            });
-          });
-        }
+        case DataPolicy.NetworkOnly:
+          return this.executeNetwork();
+        case DataPolicy.PreferNetwork:
+        default:
+          return this.executeNetwork().then(response => {
+            if (response && response.isSuccess()) {
+              const request = new Request({
+                method: HttpMethod.PUT,
+                pathname: this.pathname,
+                query: this.query,
+                auth: this.auth,
+                data: response.data,
+                client: this.client,
+                writePolicy: WritePolicy.Local
+              });
 
-        return this.executeLocal().catch(err => {
-          if (err instanceof NotFoundError) {
-            return new Response(StatusCode.NotFound, {}, []);
-          }
+              return request.execute().then(() => {
+                return response;
+              });
+            }
 
-          throw err;
-        }).then(response => {
-          if (response && !response.isSuccess()) {
             const request = new Request({
               method: this.method,
               pathname: this.pathname,
               query: this.query,
               auth: this.auth,
-              data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.PreferNetwork
+              dataPolicy: DataPolicy.LocalOnly
             });
             return request.execute();
-          }
+          });
+        }
+      }
 
-          return response;
-        });
-      } else if (this.dataPolicy === DataPolicy.ForceNetwork) {
-        return this.executeNetwork();
-      } else if (this.dataPolicy === DataPolicy.PreferNetwork) {
+      switch (this.writePolicy) {
+      case WritePolicy.Local:
+        return this.executeLocal();
+      case WritePolicy.Network:
+      default:
         return this.executeNetwork().then(response => {
           if (response && response.isSuccess()) {
             const request = new Request({
@@ -357,27 +357,12 @@ class Request {
               auth: this.auth,
               data: response.data,
               client: this.client,
-              dataPolicy: DataPolicy.ForceLocal
+              writePolicy: WritePolicy.Local
             });
-
-            if (this.method === HttpMethod.GET) {
-              request.method = HttpMethod.PUT;
-            }
 
             return request.execute().then(() => {
               return response;
             });
-          } else if (this.method === HttpMethod.GET) {
-            const request = new Request({
-              method: this.method,
-              pathname: this.pathname,
-              query: this.query,
-              auth: this.auth,
-              data: response.data,
-              client: this.client,
-              dataPolicy: DataPolicy.ForceLocal
-            });
-            return request.execute();
           }
 
           return response;
@@ -390,7 +375,8 @@ class Request {
         const data = response.data || {
           name: 'KinveyError',
           message: 'An error has occurred.',
-          debug: ''
+          debug: '',
+          stack: ''
         };
 
         data.message = data.message || data.description || data.error;
@@ -422,81 +408,6 @@ class Request {
   executeNetwork() {
     const rack = Rack.networkRack;
     return rack.execute(this.toJSON());
-  }
-
-  /**
-   * {
-    _id = 'books',
-    documents = {
-      '1231uhds089kjhsd0923': {
-        operation: 'POST',
-        requestProperties: ...
-      }
-    },
-    size: 1
-  }
-   */
-  notifySync(data = []) {
-    const pattern = new UrlPattern('/:namespace/:appId/:collection(/)(:id)(/)');
-    const matches = pattern.match(this.pathname);
-    const getRequest = new Request({
-      method: HttpMethod.GET,
-      pathname: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
-      auth: this.auth,
-      client: this.client,
-      dataPolicy: DataPolicy.LocalOnly
-    });
-
-    const promise = getRequest.execute().catch(() => {
-      return new Response(StatusCode.OK, {}, {
-        _id: matches.collection,
-        documents: {},
-        size: 0
-      });
-    }).then(response => {
-      const syncCollection = response.data || {
-        _id: matches.collection,
-        documents: {},
-        size: 0
-      };
-      const documents = syncCollection.documents;
-      let size = syncCollection.size;
-
-      if (!isArray(data)) {
-        data = [data];
-      }
-
-      forEach(data, item => {
-        if (item._id) {
-          if (!documents.hasOwnProperty(item._id)) {
-            size = size + 1;
-          }
-
-          documents[item._id] = {
-            request: this.toJSON(),
-            lmt: item._kmd ? item._kmd.lmt : null
-          };
-        }
-      });
-
-      syncCollection.documents = documents;
-      syncCollection.size = size;
-
-      const updateRequest = new Request({
-        method: HttpMethod.PUT,
-        pathname: `/${matches.namespace}/${matches.appId}/${syncCollectionName}/${matches.collection}`,
-        auth: this.auth,
-        data: syncCollection,
-        client: this.client,
-        dataPolicy: DataPolicy.LocalOnly,
-        skipSync: true
-      });
-      return updateRequest.execute();
-    }).then(() => {
-      return null;
-    });
-
-    return promise;
   }
 
   abort() {
@@ -587,8 +498,6 @@ class DeltaSetRequest extends Request {
                 const promises = [];
                 let i = 0;
 
-                console.log('Network Ids:' + networkIds);
-
                 // Batch the requests to retrieve 200 items per request
                 while (i < networkIds.length) {
                   const query = new Query(result(origQuery, 'toJSON', origQuery));
@@ -615,9 +524,6 @@ class DeltaSetRequest extends Request {
 
                 const localIds = Object.keys(localDocuments);
                 i = 0;
-
-                console.log('Local Ids:' + localIds);
-
 
                 while (i < localIds.length) {
                   const query = new Query(result(origQuery, 'toJSON', origQuery));

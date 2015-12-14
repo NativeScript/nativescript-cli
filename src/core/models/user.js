@@ -4,6 +4,7 @@ const Model = require('./model');
 const Request = require('../request').Request;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
+const WritePolicy = require('../enums').WritePolicy;
 const Auth = require('../auth');
 const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
@@ -138,9 +139,9 @@ class User extends Model {
         method: HttpMethod.POST,
         pathname: `${this.getPathname(this.client)}/login`,
         data: this.toJSON(),
-        dataPolicy: DataPolicy.NetworkOnly,
+        writePolicy: WritePolicy.Network,
         auth: Auth.app,
-        client: this.client
+        client: options.client
       });
       return request.execute();
     }).then(response => {
@@ -180,7 +181,7 @@ class User extends Model {
       const request = new Request({
         method: HttpMethod.POST,
         pathname: `${this.getPathname(options.client)}/_logout`,
-        dataPolicy: DataPolicy.NetworkOnly,
+        writePolicy: WritePolicy.Network,
         auth: Auth.session,
         client: options.client
       });
@@ -238,7 +239,7 @@ class User extends Model {
     const request = new Request({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-email-verification-initiate`,
-      dataPolicy: DataPolicy.NetworkOnly,
+      writePolicy: WritePolicy.Network,
       auth: Auth.app,
       client: options.client
     });
@@ -254,7 +255,7 @@ class User extends Model {
     const request = new Request({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/user-forgot-username`,
-      dataPolicy: DataPolicy.NetworkOnly,
+      writePolicy: WritePolicy.Network,
       auth: Auth.app,
       client: options.client,
       data: { email: this.get('email') }
@@ -271,7 +272,7 @@ class User extends Model {
     const request = new Request({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-password-reset-initiate`,
-      dataPolicy: DataPolicy.NetworkOnly,
+      writePolicy: WritePolicy.Network,
       auth: Auth.app,
       client: options.client
     });

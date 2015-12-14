@@ -70,8 +70,6 @@ class Sync {
 
   static clear(query, options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
-    options.skipSync = true;
-
     const syncStore = new Store(syncStoreName, options);
     const promise = syncStore.clear(query, options);
     return promise;

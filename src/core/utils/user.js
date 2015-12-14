@@ -2,6 +2,7 @@ const Promise = require('bluebird');
 const Request = require('../request').Request;
 const Client = require('../client');
 const DataPolicy = require('../enums').DataPolicy;
+const WritePolicy = require('../enums').WritePolicy;
 const HttpMethod = require('../enums').HttpMethod;
 const NotFoundError = require('../errors').NotFoundError;
 const result = require('lodash/object/result');
@@ -60,8 +61,7 @@ class UserUtils {
           method: HttpMethod.DELETE,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}/${activeUser._id}`,
           client: options.client,
-          dataPolicy: DataPolicy.LocalOnly,
-          skipSync: true
+          writePolicy: WritePolicy.Local
         });
         return request.execute().then(() => {
           UserUtils[activeUserSymbol][options.client.appId] = null;
@@ -73,9 +73,8 @@ class UserUtils {
           method: HttpMethod.POST,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
           client: options.client,
-          dataPolicy: DataPolicy.LocalOnly,
-          data: result(user, 'toJSON', user),
-          skipSync: true
+          writePolicy: WritePolicy.Local,
+          data: result(user, 'toJSON', user)
         });
         return request.execute();
       }

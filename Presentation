@@ -14,7 +14,6 @@ JavaScript Next Revision
     - introductory slide about es6
 
 Missing Features
-  - Execute a command - MVP (DONE)
   - Social connect including MIC - EA
   - Push - MVP
   - KinveyReferences - Not now
@@ -23,5 +22,3 @@ Missing Features
   - Docs - EA
   - Complete Unit and Integration Tests - EA
   - Performance Benchmark - EA
-  - Write Policies - MVP
-  - Delta Set Request - MVP
