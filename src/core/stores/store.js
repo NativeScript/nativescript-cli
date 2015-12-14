@@ -1,6 +1,7 @@
 const Aggregation = require('../aggregation');
 const Promise = require('bluebird');
 const Request = require('../request').Request;
+const DeltaSetRequest = require('../request').DeltaSetRequest;
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
 const NotFoundError = require('../errors').NotFoundError;
@@ -20,15 +21,15 @@ const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 // const syncBatchSize = process.env.KINVEY_SYCN_BATCH_SIZE || 1000;
 
 /**
- * The Collection class is used to retrieve, create, update, destroy, count and group documents
+ * The Store class is used to retrieve, create, update, destroy, count and group documents
  * in collections.
  * a
  * @example
- * var collection = new Kinvey.Collection('books');
+ * var store = new Kinvey.Store('books');
  */
-class Collection {
+class Store {
   /**
-   * Creates a new instance of the Collection class.
+   * Creates a new instance of the Store class.
    *
    * @param {string}      name                                        Name of the collection.
    * @param {Object}      [options]                                   Options.
@@ -132,7 +133,7 @@ class Collection {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    const request = new Request({
+    const request = new DeltaSetRequest({
       dataPolicy: options.dataPolicy,
       auth: options.auth,
       client: options.client,
@@ -202,7 +203,7 @@ class Collection {
       aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
-    const request = new Request({
+    const request = new DeltaSetRequest({
       dataPolicy: options.dataPolicy,
       auth: options.auth,
       client: options.client,
@@ -273,7 +274,7 @@ class Collection {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    const request = new Request({
+    const request = new DeltaSetRequest({
       dataPolicy: options.dataPolicy,
       auth: options.auth,
       client: options.client,
@@ -321,7 +322,7 @@ class Collection {
       client: this.client
     }, options);
 
-    const request = new Request({
+    const request = new DeltaSetRequest({
       dataPolicy: options.dataPolicy,
       auth: options.auth,
       client: options.client,
@@ -603,8 +604,8 @@ class Collection {
     }, options);
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.get(this.name, options).then(row => {
+    const syncStore = new Store(syncCollectionName, options);
+    const promise = syncStore.get(this.name, options).then(row => {
       return row.get('size') || 0;
     });
 
@@ -620,8 +621,8 @@ class Collection {
     options.dataPolicy = DataPolicy.LocalOnly;
 
     // Get the documents to sync
-    const syncCollection = new Collection(syncCollectionName, options);
-    const promise = syncCollection.get(this.name, options).then(syncModel => {
+    const syncStore = new Store(syncCollectionName, options);
+    const promise = syncStore.get(this.name, options).then(syncModel => {
       const documents = syncModel.get('documents');
       const identifiers = Object.keys(documents);
       let size = syncModel.get('size');
@@ -748,7 +749,7 @@ class Collection {
         syncModel.set('size', size);
         syncModel.set('documents', documents);
         options.skipSync = true;
-        return syncCollection.create(syncModel, options).then(() => {
+        return syncStore.create(syncModel, options).then(() => {
           return result;
         });
       });
@@ -793,12 +794,12 @@ class Collection {
     }, options);
     options.skipSync = true;
 
-    const syncCollection = new Collection(syncCollectionName, options);
+    const syncStore = new Store(syncCollectionName, options);
     const query = new Query();
     query.contains('_id', [this.name]);
-    const promise = syncCollection.clear(query, options);
+    const promise = syncStore.clear(query, options);
     return promise;
   }
 }
 
-module.exports = Collection;
+module.exports = Store;
