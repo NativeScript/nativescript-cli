@@ -5,12 +5,12 @@ const isFunction = require('lodash/lang/isFunction');
 function mapLegacyOptions(options = {}) {
   if (options.offline) {
     if (options.fallback) {
-      options.dataPolicy = DataPolicy.LocalFirst;
+      options.dataPolicy = DataPolicy.PreferLocal;
     } else {
-      options.dataPolicy = DataPolicy.LocalOnly;
+      options.dataPolicy = DataPolicy.ForceLocal;
     }
   } else {
-    options.dataPolicy = DataPolicy.NetworkOnly;
+    options.dataPolicy = DataPolicy.ForceNetwork;
   }
 
   return options;

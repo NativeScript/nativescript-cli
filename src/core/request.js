@@ -56,7 +56,7 @@ class Request {
     this.protocol = options.client.apiProtocol;
     this.host = options.client.apiHost;
     this.pathname = options.pathname || options.path;
-    this.query = result(options.query, 'toJSON', options.query);
+    this.query = options.query;
     this.search = qs.parse(options.search);
     this.data = options.data;
     this.responseType = options.responseType;
@@ -206,6 +206,14 @@ class Request {
     }
 
     this._responseType = responseType;
+  }
+
+  get query() {
+    return this._query;
+  }
+
+  set query(query) {
+    this._query = result(query, 'toJSON', query);
   }
 
   getHeader(header) {
@@ -440,7 +448,7 @@ class Request {
     });
 
     const promise = getRequest.execute().catch(() => {
-      return new Response(StatusCode.OK, {
+      return new Response(StatusCode.OK, {}, {
         _id: matches.collection,
         documents: {},
         size: 0
@@ -520,79 +528,139 @@ class DeltaSetRequest extends Request {
     }
 
     if (this.dataPolicy === DataPolicy.PreferNetwork && this.method === HttpMethod.GET) {
-      const origQuery = this.query;
-      const query = new Query();
-      query.fields(['_id', '_kmd']);
-      this.query = query;
+      const promise = Promise.resolve();
+      const auth = this.auth;
       this.executing = true;
 
-      return this.executeLocal().then(localResponse => {
-        if (localResponse && localResponse.isSuccess()) {
-          const localDocuments = indexBy(localResponse.data, '_id');
+      return promise.then(() => {
+        return isFunction(auth) ? auth(this.client) : auth;
+      }).then(authInfo => {
+        if (authInfo) {
+          let credentials = authInfo.credentials;
+          if (authInfo.username) {
+            credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+          }
 
-          return this.executeNetwork().then(networkResponse => {
-            if (networkResponse && networkResponse.isSuccess()) {
-              const networkDocuments = indexBy(networkResponse.data, '_id');
+          this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
+        }
+      }).then(() => {
+        const origQuery = this.query;
+        const query = new Query();
+        query.fields(['_id', '_kmd']);
+        this.query = query;
+        this.executing = true;
 
-              for (const id in networkDocuments) {
-                if (networkDocuments.hasOwnProperty(id)) {
-                  const networkDocument = networkDocuments[id];
-                  const localDocument = localDocuments[id];
+        return this.executeLocal().catch(err => {
+          if (err instanceof NotFoundError) {
+            return new Response(StatusCode.Ok, {}, []);
+          }
 
-                  // Push id onto delta set if local document doesn't exist
-                  if (networkDocument && !localDocument) {
-                    continue;
-                  } else if (networkDocument && localDocument) {
-                    // Push id onto delta set if lmt differs
-                    if (networkDocument._kmd && localDocument._kmd && networkDocument._kmd.lmt > localDocument._kmd.lmt) {
+          throw err;
+        }).then(localResponse => {
+          if (localResponse && localResponse.isSuccess()) {
+            const localDocuments = indexBy(localResponse.data, '_id');
+
+            return this.executeNetwork().then(networkResponse => {
+              if (networkResponse && networkResponse.isSuccess()) {
+                const networkDocuments = indexBy(networkResponse.data, '_id');
+
+                for (const id in networkDocuments) {
+                  if (networkDocuments.hasOwnProperty(id)) {
+                    const networkDocument = networkDocuments[id];
+                    const localDocument = localDocuments[id];
+
+                    // Push id onto delta set if local document doesn't exist
+                    if (networkDocument && !localDocument) {
                       continue;
+                    } else if (networkDocument && localDocument) {
+                      // Push id onto delta set if lmt differs
+                      if (networkDocument._kmd && localDocument._kmd && networkDocument._kmd.lmt > localDocument._kmd.lmt) {
+                        continue;
+                      }
                     }
+
+                    delete networkDocuments[id];
+                  }
+                }
+
+                const networkIds = Object.keys(networkDocuments);
+                const promises = [];
+                let i = 0;
+
+                console.log('Network Ids:' + networkIds);
+
+                // Batch the requests to retrieve 200 items per request
+                while (i < networkIds.length) {
+                  const query = new Query(result(origQuery, 'toJSON', origQuery));
+                  query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : networkIds.length));
+
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    query: query
+                  });
+
+                  if (origQuery) {
+                    const query = new Query(result(origQuery, 'toJSON', origQuery));
+                    query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : networkIds.length));
+                    request.query = query;
                   }
 
-                  delete networkDocuments[id];
+                  promises.push(request.execute());
+                  i += maxIdsPerRequest;
                 }
-              }
 
-              const ids = Object.keys(networkDocuments);
-              const promises = [];
-              let i = 0;
+                const localIds = Object.keys(localDocuments);
+                i = 0;
 
-              // Batch the requests to retrieve 200 items per request
-              while (i < ids.length) {
-                const query = new Query(origQuery.toJSON());
-                query.contains('_id', ids.slice(i, ids.length > maxIdsPerRequest + i ? maxIdsPerRequest : ids.length));
-                const request = new Request({
-                  method: this.method,
-                  pathname: this.pathname,
-                  query: query,
-                  auth: this.auth,
-                  client: this.client,
-                  dataPolicy: this.dataPolicy
+                console.log('Local Ids:' + localIds);
+
+
+                while (i < localIds.length) {
+                  const query = new Query(result(origQuery, 'toJSON', origQuery));
+                  query.contains('_id', localIds.slice(i, localIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : localIds.length));
+
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.ForceLocal,
+                    query: query
+                  });
+
+                  promises.push(request.execute());
+                  i += maxIdsPerRequest;
+                }
+
+                // Reduce all the responses into one response
+                return Promise.all(promises).then(responses => {
+                  const initialResponse = new Response(StatusCode.Ok, {}, []);
+                  return reduce(responses, (result, response) => {
+                    if (response.headers) {
+                      result.addHeaders(response.headers);
+                    }
+
+                    result.data = result.data.concat(response.data);
+                    return result;
+                  }, initialResponse);
+                }).finally(() => {
+                  this.executing = false;
+                  this.query = origQuery;
                 });
-                promises.push(request.execute());
-
-                i += maxIdsPerRequest;
               }
 
-              // Reduce all the responses into one response
-              return Promise.all(promises).then(responses => {
-                const initialResponse = new Response(null, null, []);
-                return reduce(responses, (result, response) => {
-                  result.addHeaders(response.headers);
-                  result.data.concat(response.data);
-                  return result;
-                }, initialResponse);
-              }).finally(() => {
-                this.executing = false;
-                this.query = origQuery;
-              });
-            }
+              this.executing = false;
+              return super.execute();
+            });
+          }
 
-            return super.execute();
-          });
-        }
-
-        return super.execute();
+          this.executing = false;
+          return super.execute();
+        });
       });
     }
 

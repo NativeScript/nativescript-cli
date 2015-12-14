@@ -31,17 +31,17 @@ class Store {
   /**
    * Creates a new instance of the Store class.
    *
-   * @param {string}      name                                        Name of the collection.
-   * @param {Object}      [options]                                   Options.
-   * @param {Client}      [options.client=Client.sharedInstance()]    Client to use.
-   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.LocalFirst]  Data policy to use.
-   * @param {Model}       [options.model=Model]                       Model class to use.
+   * @param {string}      name                                            Name of the collection.
+   * @param {Object}      [options]                                       Options.
+   * @param {Client}      [options.client=Client.sharedInstance()]        Client to use.
+   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.PreferNetwork]   Data policy to use.
+   * @param {Model}       [options.model=Model]                           Model class to use.
    */
   constructor(name, options = {}) {
     options = assign({
       auth: Auth.default,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.LocalFirst,
+      dataPolicy: DataPolicy.PreferNetwork,
       model: Model,
       skipSync: false
     }, options);

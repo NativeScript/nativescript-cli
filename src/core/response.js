@@ -1,9 +1,12 @@
-const isString = require('lodash/lang/isString');
 const StatusCode = require('./enums').StatusCode;
+const KinveyError = require('./errors').KinveyError;
+const isString = require('lodash/lang/isString');
+const isPlainObject = require('lodash/lang/isPlainObject');
 
 class Response {
   constructor(statusCode = StatusCode.OK, headers = {}, data) {
     this.statusCode = statusCode;
+    this.headers = {};
     this.addHeaders(headers);
     this.data = data;
   }
@@ -41,6 +44,10 @@ class Response {
   }
 
   addHeaders(headers) {
+    if (!isPlainObject(headers)) {
+      throw new KinveyError('headers argument must be an object');
+    }
+
     const keys = Object.keys(headers);
 
     keys.forEach((header) => {
