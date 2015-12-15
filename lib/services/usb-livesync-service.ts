@@ -157,6 +157,10 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 
 			let getApplicationPathForiOSSimulatorAction = (): IFuture<string> => {
 				return (() => {
+					if (!this.$fs.exists(platformData.emulatorBuildOutputPath).wait()) {
+						this.$platformService.buildPlatform(platformData.normalizedPlatformName).wait();
+					}
+
 					return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 				}).future<string>()();
 			};

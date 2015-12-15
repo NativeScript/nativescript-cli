@@ -69,22 +69,13 @@ You can install and run the NativeScript CLI on Windows or OS X.
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Windows Vista or later
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/) or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
 * [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
-
-If you want to develop for Android, verify that you have added the following paths in the `PATH` system environment variable.
-
-```
-Path to tools directory in the Android SDK installation folder
-Path to platform-tools directory in the Android SDK installation folder
-```
-
-For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools;
 
 If you have installed Chocolatey, you can complete these steps to set up JDK, and Android SDK.
 
@@ -97,7 +88,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 1. If not present, create the following environment variables.
 
 	```
-	JAVA_HOME=Path to the jdk* install folder
+	JAVA_HOME=Path to the jdk* install directory
 	```
 
 	For example: JAVA_HOME=C:\Program Files\Java\jdk1.8.0_66
@@ -107,19 +98,14 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 	```
 
 	For example: ANDROID_HOME=C:\Android\android-sdk
+
+> NOTE: This is the directory that contains `tools` and `platform-tools` directories.
+
 1. To install the Android SDK, run the following command.
 
 	```Shell
 	choco install android-sdk
 	```
-1. If not present, add the following file path to the `PATH` system environment variable.
-
-	```
-	Path to tools directory in the Android SDK installation folder
-	Path to platform-tools directory in the Android SDK installation folder
-	```
-
-	For example: PATH=...;...;C:\Users\MyUser\AppData\Local\Android\android-sdk\tools;C:\Users\MyUser\AppData\Local\Android\android-sdk\platform-tools
 1. To update the Android SDK to 22 or later, run the following command.
 
 	```Shell
@@ -139,7 +125,7 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
@@ -151,22 +137,10 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 	* [Android Support Repository][Android Support Repository]
 	* (Optional) [Genymotion][Genymotion]
 
-If you want to develop for Android, verify that you have added the following paths in your `PATH` in `~/.bash_profile`.
-
-```
-Path to the tools subdirectory in the Android SDK installation directory
-Path to the platform-tools subdirectory in the Android SDK installation directory
-```
-
-For example:
-```
-export PATH=${PATH}:/Applications/Android\ Studio.app/sdk/tools:/Applications/Android\ Studio.app/sdk/platform-tools
-```
-
 If not present, create the following environment variables.
 
 ```
-JAVA_HOME=Path to the jdk* install folder
+JAVA_HOME=Path to the jdk* install directory
 ```
 
 For example: JAVA_HOME=/usr/bin/java
@@ -175,7 +149,9 @@ For example: JAVA_HOME=/usr/bin/java
 ANDROID_HOME=Path to Android installation directory
 ```
 
-For example: ANDROID_HOME=/Applications/Android\ Studio.app/sdk/
+For example: ANDROID_HOME=/usr/local/Cellar/android-sdk/24/
+
+> NOTE: This is the directory that contains `tools` and `platform-tools` directories.
 
 You can install the required Android tools with the following command:
 
@@ -188,7 +164,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/) or [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), or [4.2.x](https://nodejs.org/dist/latest-v4.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 
 	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
@@ -209,22 +185,10 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 * [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
 
-Verify that you have added the following paths in your `PATH`.
-
-```
-Path to the tools subdirectory in the Android SDK installation directory
-Path to the platform-tools subdirectory in the Android SDK installation directory
-```
-
-For example:
-```
-export PATH=${PATH}:/home/user/android-sdk/tools:/home/user/android-sdk/platform-tools
-```
-
 If not present, create the following environment variables.
 
 ```
-JAVA_HOME=Path to the jdk* install folder
+JAVA_HOME=Path to the jdk* install directory
 ```
 
 For example: JAVA_HOME=/usr/bin/java
@@ -234,6 +198,8 @@ ANDROID_HOME=Path to Android installation directory
 ```
 
 For example: ANDROID_HOME=/home/user/android-sdk
+
+> NOTE: This is the directory that contains `tools` and `platform-tools` directories.
 
 You can install required Android Tools with the following command.
 

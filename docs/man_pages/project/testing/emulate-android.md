@@ -36,8 +36,12 @@ Before running your app in the Android emulator from the Android SDK, verify tha
     * Verify that you have installed Genymotion.
 	* On Windows and Linux systems, verify that you have added the Genymotion installation directory to the `PATH` environment variable.
 	* On OS X systems, verify that you have added the following paths to the PATH environment variable.
-        * `/Applications/Genymotion.app/Contents/MacOS/`
-        * `/Applications/Genymotion Shell.app/Contents/MacOS/`
+        * For Genymotion earlier than 2.6:
+            * `/Applications/Genymotion.app/Contents/MacOS/`
+            * `/Applications/Genymotion Shell.app/Contents/MacOS/`
+        * For Genymotion 2.6:
+            * `/Applications/Genymotion.app/Contents/MacOS/player.app/Contents/MacOS`
+            * `/Applications/Genymotion Shell.app/Contents/MacOS/`
 
 ### Command Limitations
 
