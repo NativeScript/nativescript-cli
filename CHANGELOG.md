@@ -1,6 +1,17 @@
 NativeScript CLI Changelog
 ================
 
+1.5.2 (2015, December 12)
+==
+### New
+* [Implemented #1247](https://github.com/NativeScript/nativescript-cli/issues/1247): Do not kill adb server if possible.
+
+### Fixed
+* [Fixed #956](https://github.com/NativeScript/nativescript-cli/issues/956): Better error reporting for deploy on device.
+* [Fixed #1210](https://github.com/NativeScript/nativescript-cli/issues/1210): LiveSync does not handle correctly removed files on iOS simulator.
+* [Fixes #1308](https://github.com/NativeScript/nativescript-cli/issues/1308): Livesync ends up with an endless loop for projects that have before-prepare hook that changes some project file.
+* [Fixed #1313](https://github.com/NativeScript/nativescript-cli/issues/1313): `tns livesync ios --watch --emulator` command does not process platform specific files.
+
 1.5.1 (2015, December 03)
 ==
 ### New

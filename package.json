@@ -66,7 +66,7 @@
     "ref-struct": "https://github.com/telerik/ref-struct/tarball/v1.0.2.1",
     "rimraf": "2.4.2",
     "semver": "5.0.1",
-    "shelljs": "0.5.1",
+    "shelljs": "0.5.3",
     "tabtab": "https://github.com/Icenium/node-tabtab/tarball/master",
     "temp": "0.8.3",
     "through2": "2.0.0",

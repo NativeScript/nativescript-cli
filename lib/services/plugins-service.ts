@@ -114,7 +114,7 @@ export class PluginsService implements IPluginsService {
 			npmInstallationManager.addToCache(platformData.frameworkPackageName, frameworkVersion).wait();
 
 			let cachedPackagePath = npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, frameworkVersion);
-			let cachedConfigurationFilePath = path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, platformData.relativeToFrameworkConfigurationFilePath);
+			let cachedConfigurationFilePath =  this.$options.baseConfig ? path.resolve(this.$options.baseConfig) : path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, platformData.relativeToFrameworkConfigurationFilePath);
 			let cachedConfigurationFileContent = this.$fs.readText(cachedConfigurationFilePath).wait();
 			this.$fs.writeFile(platformData.configurationFilePath, cachedConfigurationFileContent).wait();
 
