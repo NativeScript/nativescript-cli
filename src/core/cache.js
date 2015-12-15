@@ -69,18 +69,6 @@ class Cache {
     return objectIdPrefix;
   }
 
-  generateObjectId(length = 24) {
-    const chars = 'abcdef0123456789';
-    let objectId = '';
-
-    for (let i = 0, j = chars.length; i < length; i += 1) {
-      const pos = Math.floor(Math.random() * j);
-      objectId += chars.substring(pos, pos + 1);
-    }
-
-    return `${this.objectIdPrefix}${objectId}`;
-  }
-
   isLocalObjectId(id) {
     return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }

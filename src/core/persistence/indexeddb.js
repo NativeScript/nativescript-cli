@@ -1,7 +1,7 @@
 const KinveyError = require('../errors').KinveyError;
 const NotFoundError = require('../errors').NotFoundError;
 const Promise = require('bluebird');
-const StoreUtils = require('../utils/store');
+const generateObjectId = require('../utils/store').generateObjectId;
 const forEach = require('lodash/collection/forEach');
 const isArray = require('lodash/lang/isArray');
 let indexedDB = undefined;
@@ -185,7 +185,7 @@ class IndexedDB {
     }
 
     if (!document._id) {
-      document._id = StoreUtils.generateObjectId();
+      document._id = generateObjectId();
     }
 
     const promise = new Promise((resolve, reject) => {
@@ -219,7 +219,7 @@ class IndexedDB {
         const request = store.transaction;
 
         forEach(documents, document => {
-          document._id = document._id || StoreUtils.generateObjectId();
+          document._id = document._id || generateObjectId();
           store.put(document);
         });
 

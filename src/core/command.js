@@ -2,7 +2,7 @@ const Client = require('./client');
 const Auth = require('./auth');
 const DataPolicy = require('./enums').DataPolicy;
 const HttpMethod = require('./enums').HttpMethod;
-const Request = require('../request').Request;
+const Request = require('./request').Request;
 const assign = require('lodash/object/assign');
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 

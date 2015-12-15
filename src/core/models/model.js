@@ -1,6 +1,7 @@
 const Acl = require('../acl');
 const Kmd = require('../kmd');
 const Client = require('../client');
+const generateObjectId = require('../utils/store').generateObjectId;
 const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
@@ -71,7 +72,7 @@ class Model {
 
   get defaults() {
     const defaults = {};
-    defaults[idAttribute] = this.generateObjectId();
+    defaults[idAttribute] = generateObjectId(24, this.objectIdPrefix);
     defaults[kmdAttribute] = {
       ect: new Date().toISOString(),
       lmt: new Date().toISOString()
@@ -81,18 +82,6 @@ class Model {
 
   get objectIdPrefix() {
     return objectIdPrefix;
-  }
-
-  generateObjectId(length = 24) {
-    const chars = 'abcdef0123456789';
-    let result = '';
-
-    for (let i = 0, j = chars.length; i < length; i += 1) {
-      const pos = Math.floor(Math.random() * j);
-      result += chars.substring(pos, pos + 1);
-    }
-
-    return `${this.objectIdPrefix}${result}`;
   }
 
   get(attr) {

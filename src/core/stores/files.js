@@ -78,18 +78,18 @@ class Files extends NetworkStore {
       download: false,
       tls: false,
       ttl: undefined,
-      search: {}
+      flags: {}
     }, options);
     options.dataPolicy = DataPolicy.NetworkOnly;
 
     if (options.tls !== false) {
-      options.search.tls = true;
+      options.flags.tls = true;
     }
 
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (options.ttl) {
-      options.search.ttl_in_seconds = options.ttl;
+      options.flags.ttl_in_seconds = options.ttl;
     }
 
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
@@ -137,17 +137,17 @@ class Files extends NetworkStore {
     options = assign({
       auth: this.auth,
       client: this.client,
-      search: {}
+      flags: {}
     }, options);
 
     if (options.tls !== false) {
-      options.search.tls = true;
+      options.flags.tls = true;
     }
 
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (options.ttl) {
-      options.search.ttl_in_seconds = options.ttl;
+      options.flags.ttl_in_seconds = options.ttl;
     }
 
     // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
@@ -158,7 +158,7 @@ class Files extends NetworkStore {
       client: options.client,
       method: HttpMethod.GET,
       pathname: `${this.getPathname(options.client)}/${name}`,
-      search: options.search
+      flags: options.flags
     });
     const promise = request.execute().then(response => {
       if (options.stream) {
@@ -301,7 +301,7 @@ class Files extends NetworkStore {
         auth: Auth.none,
         method: HttpMethod.PUT,
         pathname: uploadUrlParts.pathname,
-        search: uploadUrlParts.query,
+        flags: uploadUrlParts.query,
         data: file,
         client: client
       });

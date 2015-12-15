@@ -203,7 +203,7 @@ class Users extends NetworkStore {
   delete(id, options = {}) {
     options = assign({
       client: this.client,
-      search: options.hard ? { hard: true } : {}
+      flags: options.hard ? { hard: true } : {}
     }, options);
 
     const promise = super.delete(id, options).then(response => {

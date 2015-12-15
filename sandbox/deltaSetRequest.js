@@ -4,18 +4,33 @@ const assert = require('assert');
 const SyncStore = require('../src/core/stores/syncStore');
 const store = new SyncStore('books');
 
+// promise.then(() => {
+//   return store.find();
+// }).then(books => {
+//   assert(books, []);
+//   return store.create({
+//     title: 'Kinvey: Mobile Library Development 101'
+//   });
+// }).then(() => {
+//   return store.find();
+// }).then(books => {
+//   console.log(books);
+//   return store.push();
+// }).then(result => {
+//   console.log(result);
+//   return store.syncCount();
+// }).then(result => {
+//   console.log(result);
+// });
+
 promise.then(() => {
   return store.find();
 }).then(books => {
   assert(books, []);
-  return store.create({
-    title: 'Kinvey: Mobile Library Development 101'
-  });
-}).then(() => {
+  return store.sync();
+}).then(result => {
+  console.log(result);
   return store.find();
 }).then(books => {
   console.log(books);
-  return store.push();
-}).then(result => {
-  console.log(result);
 });

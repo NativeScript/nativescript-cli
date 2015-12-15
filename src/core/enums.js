@@ -67,12 +67,12 @@ const WritePolicy = {
 Object.freeze(WritePolicy);
 
 module.exports = {
+  CacheAdapter: CacheAdapter,
   DataPolicy: DataPolicy,
   HttpMethod: HttpMethod,
   RackType: RackType,
   ResponseType: ResponseType,
   SocialAdapter: SocialAdapter,
   StatusCode: StatusCode,
-  CacheAdapter: CacheAdapter,
   WritePolicy: WritePolicy
 };

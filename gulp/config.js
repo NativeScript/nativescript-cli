@@ -16,11 +16,13 @@ const config = {
   header: '',
   footer: ''
 };
-var platformConfig = {};
+let platformConfig = {};
 
 try {
   platformConfig = require('./config/' + platform);
-} catch (err) {}
+} catch (err) {
+  // Catch err
+}
 
 /**
  * Header and footer.

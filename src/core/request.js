@@ -33,11 +33,11 @@ class Request {
       method: HttpMethod.GET,
       pathname: '/',
       query: null,
-      search: null,
+      flags: null,
       data: null,
       auth: null,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.LocalFirst,
+      dataPolicy: DataPolicy.NetworkOnly,
       writePolicy: WritePolicy.Network,
       responseType: ResponseType.Text,
       timeout: defaultTimeout
@@ -54,7 +54,7 @@ class Request {
     this.host = options.client.apiHost;
     this.pathname = options.pathname || options.path;
     this.query = options.query;
-    this.search = qs.parse(options.search);
+    this.flags = qs.parse(options.flags);
     this.data = options.data;
     this.responseType = options.responseType;
     this.client = options.client;
@@ -268,11 +268,9 @@ class Request {
     }
 
     const promise = Promise.resolve();
-    const auth = this.auth;
-    this.executing = true;
 
-    return promise.then(() => {
-      return isFunction(auth) ? auth(this.client) : auth;
+    this.executing = promise.then(() => {
+      return isFunction(this.auth) ? this.auth(this.client) : this.auth;
     }).then(authInfo => {
       if (authInfo) {
         let credentials = authInfo.credentials;
@@ -398,6 +396,8 @@ class Request {
     }).finally(() => {
       this.executing = false;
     });
+
+    return this.executing;
   }
 
   executeLocal() {
@@ -422,7 +422,7 @@ class Request {
       url: this.url,
       pathname: this.pathname,
       query: this.query,
-      search: this.search,
+      flags: this.flags,
       data: this.data,
       responseType: this.responseType,
       timeout: this.timeout
@@ -440,11 +440,9 @@ class DeltaSetRequest extends Request {
 
     if (this.dataPolicy === DataPolicy.PreferNetwork && this.method === HttpMethod.GET) {
       const promise = Promise.resolve();
-      const auth = this.auth;
-      this.executing = true;
 
-      return promise.then(() => {
-        return isFunction(auth) ? auth(this.client) : auth;
+      this.executing = promise.then(() => {
+        return isFunction(this.auth) ? this.auth(this.client) : this.auth;
       }).then(authInfo => {
         if (authInfo) {
           let credentials = authInfo.credentials;
@@ -568,6 +566,8 @@ class DeltaSetRequest extends Request {
           return super.execute();
         });
       });
+
+      return this.executing;
     }
 
     return super.execute();

@@ -6,6 +6,7 @@ Kinvey.Acl = require('./core/acl');
 Kinvey.Aggregation = require('./core/aggregation');
 Kinvey.Cache = require('./core/cache');
 Kinvey.Client = Client;
+Kinvey.Command = require('./core/command');
 Kinvey.Enums = require('./core/enums');
 Kinvey.File = require('./core/models/file');
 Kinvey.LocalStore = require('./core/stores/localStore');

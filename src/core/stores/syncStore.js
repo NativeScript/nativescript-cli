@@ -5,6 +5,7 @@ const WritePolicy = require('../enums').WritePolicy;
 const HttpMethod = require('../enums').HttpMethod;
 const StatusCode = require('../enums').StatusCode;
 const Request = require('../request').Request;
+const NotFoundError = require('../errors').NotFoundError;
 const Response = require('../response');
 const Query = require('../query');
 const UrlPattern = require('url-pattern');
@@ -135,7 +136,7 @@ class SyncStore extends LocalStore {
     return promise;
   }
 
-  countSync(options = {}) {
+  syncCount(options = {}) {
     options = assign({
       auth: this.auth,
       client: this.client
@@ -159,7 +160,7 @@ class SyncStore extends LocalStore {
     // Get the documents to sync
     const syncCollectionLocalStore = new LocalStore(syncCollectionName, options);
     const promise = syncCollectionLocalStore.get(this.name, options).then(syncModel => {
-      const collectionLocalStore = new LocalStore(this.name, options);
+      const collectionLocalStore = new LocalStore(syncModel.id, options);
       const documents = syncModel.get('documents');
       const identifiers = Object.keys(documents);
       let size = syncModel.get('size');
@@ -287,6 +288,16 @@ class SyncStore extends LocalStore {
           return result;
         });
       });
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return {
+          collection: this.name,
+          success: [],
+          error: []
+        };
+      }
+
+      throw err;
     });
 
     return promise;
@@ -300,16 +311,13 @@ class SyncStore extends LocalStore {
     }, options);
 
     const promise = this.push(options).then(pushResponse => {
-      options.dataPolicy = DataPolicy.NetworkOnly;
-      return this.find(query, options).then(models => {
-        options.writePolicy = WritePolicy.Local;
-        return this.create(models, options);
-      }).then(syncResponse => {
+      options.dataPolicy = DataPolicy.PreferNetwork;
+      return this.find(query, options).then(syncResponse => {
         return {
           push: pushResponse,
           sync: {
             collection: this.name,
-            models: syncResponse
+            documents: syncResponse
           }
         };
       });
