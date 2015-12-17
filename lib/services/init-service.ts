@@ -60,7 +60,9 @@ export class InitService implements IInitService {
 				if(!dependencies) {
 					projectData.dependencies = Object.create(null);
 				}
-				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
+				// In case console is interactive and --force is not specified, do not read the version from package.json, show all available versions to the user.
+				let tnsCoreModulesVersionInPackageJson = this.useDefaultValue ? projectData.dependencies[constants.TNS_CORE_MODULES_NAME] : null;
+				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
 
 				this.$fs.writeJson(this.projectFilePath, projectData).wait();
 			} catch(err) {
@@ -106,7 +108,7 @@ export class InitService implements IInitService {
 			let data = this.$npm.view(packageName, "versions").wait();
 			let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
 			if(versions.length === 1) {
-				this.$logger.info(`Only ${versions[0]} version is available for ${packageName} framework.`);
+				this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 				return this.buildVersionData(versions[0]);
 			}
 			let sortedVersions = versions.sort(helpers.versionCompare).reverse();
