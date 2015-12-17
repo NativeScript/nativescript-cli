@@ -84,6 +84,7 @@ var TiHttp = {
     }
 
     xhr.timeout = options.timeout || 0;
+    xhr.autoRedirect = options.autoRedirect === false ? false : true;
 
     // Listen for request completion.
     xhr.onerror = xhr.onload = function(e) {
@@ -103,7 +104,19 @@ var TiHttp = {
       // Success implicates 2xx (Successful), or 304 (Not Modified).
       var status = 'timeout' === e.type || e.type === 'cancelled' ? 0 : this.status;
 
-      if(2 === parseInt(status / 100, 10) || 304 === this.status) {
+      // Handle redirects
+      if (3 === parseInt(status / 100, 10) && url.indexOf(Kinvey.MICHostName) === 0) {
+        var location = this.getResponseHeader('location');
+
+        if (location) {
+          var queryString = '?' + location.split('?')[1];
+          var params = parseQueryString(queryString);
+          return deferred.resolve(params);
+        }
+
+        return deferred.reject(new Kinvey.Error('No location header found. There might be a problem with your MIC setup on the backend.'));
+      }
+      else if(2 === parseInt(status / 100, 10) || 304 === status) {
         var response;
 
         // Mobile web response.

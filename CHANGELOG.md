@@ -1,4 +1,8 @@
 ## Changelog
+#### 1.6.3 (2015-12-17)
+* Enhancement(MLIBZ-759): Added automated MIC login flow to Titanium library.
+* Enhancement: Add stack traces to error messages reported from BL.
+
 #### 1.6.2 (2015-12-08)
 * Bugfix(MLIBZ-729): Fixed a bug that caused a second sync operation to trigger a DELETE request when using the WebSQL adapter.
 * Bugfix(MLIBZ-733): Fixed a bug that would miss data created offline when running a query.

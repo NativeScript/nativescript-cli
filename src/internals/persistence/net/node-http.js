@@ -111,18 +111,15 @@ var NodeHttp = {
         }
 
         // Handle redirects
-        if (3 === parseInt(status / 100, 10) && 304 !== status) {
-          if ((path.protocol + '//' + path.hostname).indexOf(Kinvey.MICHostName) === 0) {
-            var location = response.headers.location;
+        if (3 === parseInt(status / 100, 10) && url.indexOf(Kinvey.MICHostName) === 0) {
+          var location = response.headers.location;
+
+          if (location) {
             var redirectPath = NodeHttp.url.parse(location);
             return deferred.resolve(parseQueryString(redirectPath.search));
           }
 
-          // Unless `options.file`, convert the response to a string.
-          if (!options.file) {
-            responseData = responseData.toString() || null;
-          }
-          deferred.resolve(responseData);
+          return deferred.reject(new Kinvey.Error('No location header found. There might be a problem with your MIC setup on the backend.'));
         }
         else if(2 === parseInt(status / 100, 10) || 304 === status) {
           // Unless `options.file`, convert the response to a string.
