@@ -40,6 +40,7 @@ interface IPlatformData {
 	configurationFilePath?: string;
 	relativeToFrameworkConfigurationFilePath: string;
 	mergeXmlConfig?: any[];
+	fastLivesyncFileExtensions: string[];
 }
 
 interface IPlatformsData {
