@@ -13,6 +13,7 @@ const BlobNotFoundError = require('./errors').BlobNotFoundError;
 const NotFoundError = require('./errors').NotFoundError;
 const RequestProperties = require('./requestProperties');
 const Promise = require('bluebird');
+const Device = require('./device');
 const qs = require('qs');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
@@ -67,7 +68,9 @@ class Request {
     const headers = {};
     headers.Accept = 'application/json';
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
-    headers['X-Kinvey-Device-Information'] = 'nodejs-sdk v1.9.0';
+
+    const device = new Device();
+    headers['X-Kinvey-Device-Information'] = JSON.stringify(device.toJSON());
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;
@@ -308,7 +311,25 @@ class Request {
             return response;
           });
         case DataPolicy.NetworkOnly:
-          return this.executeNetwork();
+          return this.executeNetwork().then(response => {
+            if (response && response.isSuccess()) {
+              const request = new Request({
+                method: HttpMethod.PUT,
+                pathname: this.pathname,
+                query: this.query,
+                auth: this.auth,
+                data: response.data,
+                client: this.client,
+                writePolicy: WritePolicy.Local
+              });
+
+              return request.execute().then(() => {
+                return response;
+              });
+            }
+
+            return response;
+          });
         case DataPolicy.PreferNetwork:
         default:
           return this.executeNetwork().then(response => {

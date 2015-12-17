@@ -19,7 +19,7 @@ class Model {
 
     this.client = options.client;
     this.attributes = {};
-    this.set(defaults({}, attributes, result(this, 'defaults', {})), options);
+    this.set(defaults({}, attributes, result(this, 'defaults', {})));
   }
 
   get id() {

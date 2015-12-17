@@ -4,8 +4,9 @@ const HttpMethod = require('../core/enums').HttpMethod;
 const StatusCode = require('../core/enums').StatusCode;
 const CacheAdapter = require('../core/enums').CacheAdapter;
 class CacheMiddleware extends Middleware {
-  constructor() {
+  constructor(adapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory]) {
     super('Kinvey Cache Middleware');
+    this.adapters = adapters;
   }
 
   handle(request) {
@@ -16,7 +17,7 @@ class CacheMiddleware extends Middleware {
       const collection = matches.collection;
       const id = matches.id;
       const data = request.data;
-      const cache = new Cache(appId, [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory]);
+      const cache = new Cache(appId, this.adapters);
       let promise;
 
       if (method === HttpMethod.GET) {

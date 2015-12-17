@@ -6,10 +6,10 @@ const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
 const WritePolicy = require('../enums').WritePolicy;
 const Auth = require('../auth');
+const UserUtils = require('../utils/user');
 const isObject = require('lodash/lang/isObject');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
-const UserUtils = require('../utils/user');
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
