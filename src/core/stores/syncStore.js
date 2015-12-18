@@ -146,6 +146,12 @@ class SyncStore extends LocalStore {
     const store = new SyncStore(syncCollectionName, options);
     const promise = store.get(this.name, options).then(model => {
       return model.get('size') || 0;
+    }).catch(error => {
+      if (error instanceof NotFoundError) {
+        return 0;
+      }
+
+      throw error;
     });
     return promise;
   }
@@ -172,7 +178,7 @@ class SyncStore extends LocalStore {
       const deleted = [];
       const promises = map(identifiers, id => {
         const metadata = documents[id];
-        const requestOptions = clone(assign(metadata, options));
+        const requestOptions = assign(clone(metadata), options);
         requestOptions.dataPolicy = DataPolicy.LocalOnly;
         return collectionLocalStore.get(id, requestOptions).then(model => {
           saved.push(model);
@@ -190,7 +196,7 @@ class SyncStore extends LocalStore {
         // Save the models that need to be saved
         const savePromises = map(saved, model => {
           const metadata = documents[model.id];
-          const requestOptions = clone(assign(metadata, options));
+          const requestOptions = assign(clone(metadata), options);
 
           // If the model is new then just save it
           if (model.isNew()) {
@@ -236,7 +242,7 @@ class SyncStore extends LocalStore {
         // Delete the models that need to be deleted
         const deletePromises = map(deleted, id => {
           const metadata = documents[id];
-          const requestOptions = clone(assign(metadata, options));
+          const requestOptions = assign(clone(metadata), options);
           return networkStore.delete(id, requestOptions).then(response => {
             size = size - 1;
             delete documents[id];
@@ -316,7 +322,9 @@ class SyncStore extends LocalStore {
 
       options.dataPolicy = DataPolicy.NetworkOnly;
       return this.find(query, options);
-    })
+    });
+
+    return promise;
   }
 
   sync(query, options = {}) {

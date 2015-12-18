@@ -1,5 +1,7 @@
 require('babel-core/register');
 var Kinvey = require('../src/kinvey');
+var Log = require('../src/core/log');
+Log.disableAll();
 
 // Initialize the library
 Kinvey.init({
@@ -18,7 +20,12 @@ promise.then(function() {
   // Lets pull some data from the Kinvey Backend
   // into our store
   return store.pull();
-}).then(function() {
+}).then(function(books) {
+  books.forEach(function(book) {
+    console.log(book.toJSON());
+  });
+  console.log('\n');
+
   // Lets create a book that can be synced
   // at a later time
   return store.create({
@@ -28,7 +35,10 @@ promise.then(function() {
   // Lets see what data we have in our store
   return store.find();
 }).then(function(books) {
-  console.log(books);
+  books.forEach(function(book) {
+    console.log(book.toJSON());
+  });
+  console.log('\n');
 
   // Lets update a book that can be synced
   // at a later time
@@ -42,9 +52,15 @@ promise.then(function() {
   return store.syncCount();
 }).then(function(count) {
   console.log('Sync count = %d', count);
+  console.log('\n');
 
   // Lets sync these items
   return store.push();
 }).then(function(result) {
-  console.log('Sync result: %s', result);
+  console.log('Sync result:');
+  console.log(result);
+  console.log('\n');
+}).catch(function(error) {
+  console.log(error);
+  console.log('\n');
 });
