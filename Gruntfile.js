@@ -184,6 +184,6 @@ module.exports = function(grunt) {
 		"copy:package_to_qa_drop_folder"
 	]);
 	grunt.registerTask("lint", ["tslint:build"]);
-
+	grunt.registerTask("all", ["clean", "test", "lint"]);
 	grunt.registerTask("default", "ts:devlib");
 };
