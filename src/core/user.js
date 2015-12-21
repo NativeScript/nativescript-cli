@@ -172,14 +172,8 @@ Kinvey.User = /** @lends Kinvey.User */{
         namespace  : USERS,
         collection : '_logout',
         auth       : Auth.Session
-      }, options).then(null, function(error) {
-        // Clear the active user on `INVALID_CREDENTIALS`.
-        if (Kinvey.Error.INVALID_CREDENTIALS === error.name || Kinvey.Error.EMAIL_VERIFICATION_REQUIRED === error.name) {
-          // Debug.
-          logger.error('The user credentials are invalid. Returning success because of the force flag.');
-          return null;
-        }
-        return Kinvey.Defer.reject(error);
+      }, options).then(null, function() {
+        return null;
       }).then(function() {
         // Disconnect MIC
         return MIC.disconnect();
