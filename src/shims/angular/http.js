@@ -1,0 +1,73 @@
+/* global $http */
+const Middleware = require('../../rack/middleware');
+const HttpMethod = require('../../core/enums').HttpMethod;
+const isEmpty = require('lodash/lang/isEmpty');
+const isString = require('lodash/lang/isString');
+
+class Http extends Middleware {
+  constructor(name = 'Kinvey Angular Http Middleware') {
+    super(name);
+  }
+
+  handle(request) {
+    return super.handle(request).then(() => {
+      const options = {
+        url: request.url,
+        method: request.method,
+        headers: request.headers,
+        params: request.flags || {}
+      };
+
+      if (request.query) {
+        const query = request.query;
+        options.params.query = query.filter;
+
+        if (!isEmpty(query.fields)) {
+          options.params.fields = query.fields.join(',');
+        }
+
+        if (query.limit) {
+          options.params.limit = query.limit;
+        }
+
+        if (query.skip > 0) {
+          options.params.skip = query.skip;
+        }
+
+        if (!isEmpty(query.sort)) {
+          options.params.sort = query.sort;
+        }
+      }
+
+      for (const key in options.params) {
+        if (options.params.hasOwnProperty(key)) {
+          options.params[key] = isString(options.params[key]) ? options.params[key] : JSON.stringify(options.params[key]);
+        }
+      }
+
+      if (request.data && (request.method === HttpMethod.PATCH || request.method === HttpMethod.POST || request.method === HttpMethod.PUT)) {
+        options.data = request.data;
+      }
+
+      return $http(options).then(response => {
+        request.response = {
+          statusCode: response.status,
+          headers: response.headers(),
+          data: response.data
+        };
+
+        return request;
+      }).catch(response => {
+        request.response = {
+          statusCode: response.status,
+          headers: response.headers(),
+          data: response.data
+        };
+
+        return request;
+      });
+    });
+  }
+}
+
+module.exports = Http;

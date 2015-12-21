@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  *  This file contains the variables used in other gulp files
  *  which defines tasks
@@ -11,6 +13,7 @@ const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
+const webpack = require('webpack');
 const platform = argv.platform || 'html5';
 const config = {
   header: '',
@@ -21,7 +24,7 @@ let platformConfig = {};
 try {
   platformConfig = require('./config/' + platform);
 } catch (err) {
-  // Catch err
+  platformConfig = {};
 }
 
 /**
@@ -34,10 +37,33 @@ config.footer = platformConfig.footer || config.footer;
  * Environment variables for the project.
  */
 config.env = {
+  KINVEY_ACL_ATTRIBUTE: '_acl',
   KINVEY_API_PROTOCOL: 'https:',
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
-  KINVEY_PLATFORM_ENV: platform
+  KINVEY_ACTIVE_USER_COLLECTION: 'kinvey-activeUser',
+  KINVEY_CACHE_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'cache'),
+  KINVEY_DATASTORE_NAMESPACE: 'appdata',
+  KINVEY_DEFAULT_TIMEOUT: 10000,
+  KINVEY_DEVICE_COLLECTION: 'kinvey-device',
+  KINVEY_FILE_NAMESPACE: 'blob',
+  KINVEY_HTTP_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'http'),
+  KINVEY_ID_ATTRIBUTE: '_id',
+  KINVEY_KMD_ATTRIBUTE: '_kmd',
+  KINVEY_LOCAL_NAMESPACE: 'local',
+  KINVEY_MAX_HEADER_BYTES: 2000,
+  KINVEY_MAX_IDS: 200,
+  KINVEY_NOTIFICATION_EVENT: 'notification',
+  KINVEY_OBJECT_ID_PREFIX: 'local_',
+  KINVEY_PARSER_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'parse'),
+  KINVEY_PLATFORM_ENV: platform,
+  KINVEY_PUSH_NAMESPACE: 'push',
+  KINVEY_RPC_NAMESPACE: 'rpc',
+  KINVEY_SERIALIZER_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'serialize'),
+  KINVEY_SYCN_BATCH_SIZE: 1000,
+  KINVEY_SYNC_COLLECTION_NAME: 'kinvey-sync',
+  KINVEY_SYNC_DEFAULT_STATE: true,
+  KINVEY_USERS_NAMESPACE: 'user'
 };
 config.env = assign(config.env, platformConfig.env);
 process.env = assign(process.env, config.env);
@@ -113,6 +139,12 @@ config.webpack = {
   target: 'web'
 };
 config.webpack = assign(config.webpack, platformConfig.webpack);
+
+config.browserify = {
+  debug: true, // turns on/off creating .map file
+  standalone: 'Kinvey'
+};
+config.browserify = assign(config.browserify, platformConfig.browserify);
 
 /**
  * Istanbul is the lib used to create a coverage report the details how

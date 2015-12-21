@@ -1,6 +1,6 @@
 const Middleware = require('./middleware');
 
-class Parser extends Middleware {
+class Parse extends Middleware {
   constructor(name = 'Kinvey Parser Middleware') {
     super(name);
   }
@@ -28,4 +28,4 @@ class Parser extends Middleware {
   }
 }
 
-module.exports = Parser;
+module.exports = Parse;

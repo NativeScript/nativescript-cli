@@ -14,12 +14,12 @@ class Defer {
   }
 
   static deferred() {
-    const deferred = {};
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
+    const future = {};
+    future.promise = new Promise((resolve, reject) => {
+      future.resolve = resolve;
+      future.reject = reject;
     });
-    return deferred;
+    return future;
   }
 }
 

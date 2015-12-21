@@ -1,8 +1,8 @@
 const clone = require('lodash/lang/clone');
 const Response = require('../core/response');
-const Serializer = require('./serializer');
+const Serialize = require('./serialize');
 const Http = require('./http');
-const Parser = require('./parser');
+const Parse = require('./parse');
 const Cache = require('./cache');
 const Middleware = require('./middleware');
 const result = require('lodash/object/result');
@@ -156,9 +156,9 @@ class KinveyRack extends Rack {
   static get networkRack() {
     if (!KinveyRack[networkRackSymbol]) {
       const rack = new KinveyRack('Kinvey Network Rack');
-      rack.use(new Serializer());
+      rack.use(new Serialize());
       rack.use(new Http());
-      rack.use(new Parser());
+      rack.use(new Parse());
       Rack[networkRackSymbol] = rack;
     }
 

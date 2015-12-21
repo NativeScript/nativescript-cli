@@ -14,7 +14,7 @@ const assign = require('lodash/object/assign');
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
-const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey_device';
+const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey-device';
 const emitter = new EventEmitter();
 
 class Push {
@@ -47,7 +47,7 @@ class Push {
   }
 
   static emit(event, ...args) {
-    return emitter.emit(event, args)
+    return emitter.emit(event, args);
   }
 
   static removeAllListeners(event) {
@@ -94,7 +94,7 @@ class Push {
           resolve(data);
         });
 
-        push.on('notification', function(data) => {
+        push.on('notification', function(data) {
           Push.emit(notificationEvent, data);
         });
 

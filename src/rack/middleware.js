@@ -1,4 +1,4 @@
-const AsciiTree = require('./asciitree');
+const AsciiTree = require('./asciiTree');
 const Promise = require('bluebird');
 const UrlPattern = require('url-pattern');
 const KinveyError = require('../core/errors').KinveyError;

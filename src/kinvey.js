@@ -27,10 +27,10 @@ Kinvey.NotFoundError = require('./core/errors').NotFoundError;
 // Rack
 Kinvey.Rack = require('./rack/rack');
 Kinvey.Rack.Middleware = require('./rack/middleware');
-Kinvey.Rack.Cache = require('./rack/cache');
-Kinvey.Rack.Http = require('./rack/http');
-Kinvey.Rack.Parser = require('./rack/parser');
-Kinvey.Rack.Serializer = require('./rack/serializer');
+Kinvey.Rack.Cache = require(process.env.KINVEY_CACHE_MIDDLEWARE || './rack/cache');
+Kinvey.Rack.Http = require(process.env.KINVEY_HTTP_MIDDLEWARE || './rack/http');
+Kinvey.Rack.Parser = require(process.env.KINVEY_PARSER_MIDDLEWARE || './rack/parse');
+Kinvey.Rack.Serializer = require(process.env.KINVEY_SERIALIZER_MIDDLEWARE || './rack/serialize');
 
 /**
  * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.

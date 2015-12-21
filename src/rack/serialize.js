@@ -1,6 +1,6 @@
 const Middleware = require('./middleware');
 
-class Serializer extends Middleware {
+class Serialize extends Middleware {
   constructor() {
     super('Kinvey Serializer Middleware');
   }
@@ -20,4 +20,4 @@ class Serializer extends Middleware {
   }
 }
 
-module.exports = Serializer;
+module.exports = Serialize;
