@@ -187,11 +187,13 @@ export class UsbLiveSyncService extends usbLivesyncServiceBaseLib.UsbLiveSyncSer
 		}).future<void>()();
 	}
 
-	protected preparePlatformForSync(platform: string) {
-		if (!this.$platformService.preparePlatform(platform).wait()) {
-			this.$logger.out("Verify that listed files are well-formed and try again the operation.");
-			return;
-		}
+	protected preparePlatformForSync(platform: string): IFuture<void> {
+		return (() => {
+			if (!this.$platformService.preparePlatform(platform).wait()) {
+				this.$logger.out("Verify that listed files are well-formed and try again the operation.");
+				return;
+			}
+		}).future<void>()();
 	}
 
 	private resolveUsbLiveSyncService(platform: string, device: Mobile.IDevice): IPlatformSpecificUsbLiveSyncService {
