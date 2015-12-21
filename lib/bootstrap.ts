@@ -1,4 +1,5 @@
 require("./common/bootstrap");
+$injector.require("logger", "./common/logger");
 $injector.require("config", "./config");
 $injector.require("options", "./options");
 // note: order above is important!
@@ -90,3 +91,4 @@ $injector.require("iOSNotificationService", "./services/ios-notification-service
 $injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
 $injector.require("iOSNotification", "./device-sockets/ios/notification");
 $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");
+$injector.require("messages", "./messages");

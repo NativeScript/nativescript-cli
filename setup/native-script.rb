@@ -1,5 +1,11 @@
 # coding: utf-8
 
+# A script to setup developer's workstation for developing with NativeScript
+# To run it against RELEASE branch (recommended) use
+# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/release/setup/native-script.rb)"
+# To run it against MASTER branch (usually only developers of NativeScript need to) use
+# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/master/setup/native-script.rb)"
+
 # Only the user can manually download and install Xcode from App Store
 puts "NativeScript requires Xcode."
 puts "If you do not have Xcode installed, download and install it from App Store and run it once to complete its setup."
@@ -36,41 +42,19 @@ system('brew install caskroom/cask/brew-cask')
 
 puts "Installing the Java SE Development Kit... This might take some time, please, be patient. (You might need to provide your password.)"
 system('brew cask install java')
-system('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.bash_profile')
-system('echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.bash_profile')
+system('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.profile')
 
-puts "Installing node.js 0.12"
-system('brew install homebrew/versions/node012')
+puts "Installing Android SDK"
+system('brew install android-sdk')
+system('echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.profile')
 
-puts "Creating Homebrew formula for NativeScript."
-File.open("/usr/local/Library/Formula/native-script.rb", "w:utf-8") do |f|
-  f.write DATA.read
-end
+puts "Configuring your system for Android development... This might take some time, please, be patient."
+system "echo yes | /usr/local/opt/android-sdk/tools/android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,extra-android-m2repository --all --no-ui"
 
-puts "Installing NativeScript formula... This might take some time, please, be patient."
-system('brew install native-script')
+puts "Installing Node.js 4"
+system('brew install homebrew/versions/node4-lts')
 
-__END__
+puts "Installing NativeScript CLI..."
+system "/usr/local/bin/npm install -g nativescript"
 
-class NativeScript < Formula
-  desc "NativeScript"
-  homepage "https://www.nativescript.org"
-  version "1.3.0"
-  url "https://raw.githubusercontent.com/NativeScript/nativescript-cli/brew/setup/empty.tar.gz"
-  sha256 "813e1b809c094d29255191c14892a32a498e2ca298abbf5ce5cb4081faa4e88f"
-
-  depends_on :macos => :yosemite
-  depends_on "pkg-config" => :build
-#  depends_on "node" # currently we do not work with latest node, and we manually install 0.12 (see above)
-  depends_on "android-sdk"
-
-  def install
-    ohai "Installing NativeScript CLI..."
-    system "/usr/local/bin/npm install -g nativescript"
-
-    ohai "Configuring your system for Android development... This might take some time, please, be patient."
-    system "echo yes | android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui"
-
-    ohai "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .bash_profile. Restart the terminal to use them."
-  end
-end
+puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile. Restart the terminal to use them."

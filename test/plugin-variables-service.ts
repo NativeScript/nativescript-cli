@@ -13,6 +13,7 @@ import {ProjectData} from "../lib/project-data";
 import {ProjectDataService} from "../lib/services/project-data-service";
 import {ProjectHelper} from "../lib/common/project-helper";
 import {StaticConfig} from "../lib/config";
+import {MessagesService} from "../lib/common/services/messages-service";
 import {Yok} from '../lib/common/yok';
 import * as stubs from './stubs';
 import * as path from "path";
@@ -22,6 +23,7 @@ temp.track();
 function createTestInjector(): IInjector {
 	let testInjector = new Yok();
 
+	testInjector.register("messagesService", MessagesService);
 	testInjector.register("errors", Errors);
 	testInjector.register("fs", FileSystem);
 	testInjector.register("hostInfo", HostInfo);
