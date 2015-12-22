@@ -6,6 +6,7 @@ const HttpMethod = require('../enums').HttpMethod;
 const StatusCode = require('../enums').StatusCode;
 const Request = require('../request').Request;
 const NotFoundError = require('../errors').NotFoundError;
+const KinveyError = require('../errors').KinveyError;
 const Response = require('../response');
 const Query = require('../query');
 const UrlPattern = require('url-pattern');

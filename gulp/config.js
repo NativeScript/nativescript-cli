@@ -13,7 +13,6 @@ const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
-const webpack = require('webpack');
 const platform = argv.platform || 'html5';
 const config = {
   header: '',
@@ -22,7 +21,7 @@ const config = {
 let platformConfig = {};
 
 try {
-  platformConfig = require('./config/' + platform);
+  platformConfig = require(`./config/${platform}`);
 } catch (err) {
   platformConfig = {};
 }
@@ -42,12 +41,10 @@ config.env = {
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
   KINVEY_ACTIVE_USER_COLLECTION: 'kinvey-activeUser',
-  KINVEY_CACHE_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'cache'),
   KINVEY_DATASTORE_NAMESPACE: 'appdata',
   KINVEY_DEFAULT_TIMEOUT: 10000,
   KINVEY_DEVICE_COLLECTION: 'kinvey-device',
   KINVEY_FILE_NAMESPACE: 'blob',
-  KINVEY_HTTP_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'http'),
   KINVEY_ID_ATTRIBUTE: '_id',
   KINVEY_KMD_ATTRIBUTE: '_kmd',
   KINVEY_LOCAL_NAMESPACE: 'local',
@@ -55,11 +52,9 @@ config.env = {
   KINVEY_MAX_IDS: 200,
   KINVEY_NOTIFICATION_EVENT: 'notification',
   KINVEY_OBJECT_ID_PREFIX: 'local_',
-  KINVEY_PARSER_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'parse'),
   KINVEY_PLATFORM_ENV: platform,
   KINVEY_PUSH_NAMESPACE: 'push',
   KINVEY_RPC_NAMESPACE: 'rpc',
-  KINVEY_SERIALIZER_MIDDLEWARE: path.join(__dirname, '..', 'src', 'rack', 'serialize'),
   KINVEY_SYCN_BATCH_SIZE: 1000,
   KINVEY_SYNC_COLLECTION_NAME: 'kinvey-sync',
   KINVEY_SYNC_DEFAULT_STATE: true,
@@ -142,6 +137,7 @@ config.webpack = assign(config.webpack, platformConfig.webpack);
 
 config.browserify = {
   debug: true, // turns on/off creating .map file
+  entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
   standalone: 'Kinvey'
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);

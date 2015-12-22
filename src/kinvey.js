@@ -7,6 +7,7 @@ Kinvey.Aggregation = require('./core/aggregation');
 Kinvey.Cache = require('./core/cache');
 Kinvey.Client = Client;
 Kinvey.Command = require('./core/command');
+Kinvey.Defer = require('./core/defer');
 Kinvey.Enums = require('./core/enums');
 Kinvey.File = require('./core/models/file');
 Kinvey.LocalStore = require('./core/stores/localStore');
@@ -27,10 +28,10 @@ Kinvey.NotFoundError = require('./core/errors').NotFoundError;
 // Rack
 Kinvey.Rack = require('./rack/rack');
 Kinvey.Rack.Middleware = require('./rack/middleware');
-Kinvey.Rack.Cache = require(process.env.KINVEY_CACHE_MIDDLEWARE || './rack/cache');
-Kinvey.Rack.Http = require(process.env.KINVEY_HTTP_MIDDLEWARE || './rack/http');
-Kinvey.Rack.Parser = require(process.env.KINVEY_PARSER_MIDDLEWARE || './rack/parse');
-Kinvey.Rack.Serializer = require(process.env.KINVEY_SERIALIZER_MIDDLEWARE || './rack/serialize');
+Kinvey.Rack.Cache = require('./rack/cache');
+Kinvey.Rack.Http = require('./rack/http');
+Kinvey.Rack.Parse = require('./rack/parse');
+Kinvey.Rack.Serialize = require('./rack/serialize');
 
 /**
  * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.

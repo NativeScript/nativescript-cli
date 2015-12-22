@@ -1,12 +1,12 @@
-/* global $http */
 const Middleware = require('../../rack/middleware');
 const HttpMethod = require('../../core/enums').HttpMethod;
 const isEmpty = require('lodash/lang/isEmpty');
 const isString = require('lodash/lang/isString');
 
-class Http extends Middleware {
-  constructor(name = 'Kinvey Angular Http Middleware') {
-    super(name);
+class AngularHttp extends Middleware {
+  constructor($http) {
+    super('Kinvey Angular Http Middleware');
+    this.$http = $http;
   }
 
   handle(request) {
@@ -49,7 +49,7 @@ class Http extends Middleware {
         options.data = request.data;
       }
 
-      return $http(options).then(response => {
+      return this.$http(options).then(response => {
         request.response = {
           statusCode: response.status,
           headers: response.headers(),
@@ -70,4 +70,4 @@ class Http extends Middleware {
   }
 }
 
-module.exports = Http;
+module.exports = AngularHttp;

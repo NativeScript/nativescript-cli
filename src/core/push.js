@@ -3,7 +3,7 @@ const EventEmitter = require('events').EventEmitter;
 const Request = require('./request').Request;
 const LocalStore = require('./stores/localStore');
 const WritePolicy = require('./enums').WritePolicy;
-const DevicePolicy = require('./enums').DevicePolicy;
+const DataPolicy = require('./enums').DataPolicy;
 const HttpMethod = require('./enums').HttpMethod;
 const User = require('./models/user');
 const Client = require('./client');
@@ -13,7 +13,6 @@ const Device = require('./device');
 const assign = require('lodash/object/assign');
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
-const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey-device';
 const emitter = new EventEmitter();
 
@@ -111,7 +110,7 @@ class Push {
                   resolve(e.deviceToken);
                 },
                 error: function(e) {
-                  reject(new KinveyError('An error occurred registering this device for push notifications.', error));
+                  reject(new KinveyError('An error occurred registering this device for push notifications.', e));
                 },
                 callback: function(data) {
                   Push.emit(notificationEvent, data);
@@ -161,7 +160,7 @@ class Push {
                 resolve(e.deviceToken);
               },
               error: function(e) {
-                reject(new KinveyError('An error occurred registering this device for push notifications.', error));
+                reject(new KinveyError('An error occurred registering this device for push notifications.', e));
               },
               callback: function(data) {
                 Push.emit(notificationEvent, data);
@@ -174,7 +173,7 @@ class Push {
               resolve(e.deviceToken);
             },
             error: function(e) {
-              reject(new KinveyError('An error occurred registering this device for push notifications.', error));
+              reject(new KinveyError('An error occurred registering this device for push notifications.', e));
             }
           });
 
