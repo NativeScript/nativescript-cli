@@ -1,4 +1,8 @@
 ## Changelog
+#### 1.6.4 (2015-12-22)
+* Bugfix: Fixed a bug where a device without a network connection would prevent the user from being logged out.
+* Bugfix: Fixed a bug where a device without a network connection would fail when initializing the library.
+
 #### 1.6.3 (2015-12-17)
 * Enhancement(MLIBZ-759): Added automated MIC login flow to Titanium library.
 * Enhancement: Add stack traces to error messages reported from BL.
