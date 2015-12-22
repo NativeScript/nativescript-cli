@@ -166,7 +166,7 @@ var restoreActiveUser = function(options) {
       // Restore the options and return the response.
       options.success = fnSuccess;
       options.error   = fnError;
-      return Kinvey.Defer.reject(error);
+      return Kinvey.Defer.resolve(null);
     });
   });
 };
