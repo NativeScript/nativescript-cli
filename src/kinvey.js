@@ -18,6 +18,7 @@ Kinvey.NetworkStore = require('./core/stores/networkStore');
 Kinvey.Query = require('./core/query');
 Kinvey.Store = require('./core/stores/store');
 Kinvey.Sync = require('./core/sync');
+Kinvey.SyncStore = require('./core/stores/syncStore');
 Kinvey.User = require('./core/models/user');
 
 // Errors

@@ -7,7 +7,6 @@ gulp.task('clean', function(done) {
   return del([config.paths.dist], done);
 });
 
-// Remove our temporary files
-gulp.task('clean-tmp', function(done) {
-  return del([config.paths.tmp], done);
+gulp.task('clean-legacy', function(done) {
+  return del([config.paths.legacy.dist], done);
 });

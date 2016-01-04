@@ -1,5 +1,5 @@
 /* global angular:false */
-const Kinvey = require('../../kinvey');
+const Kinvey = require('../../legacy/kinvey');
 const Rack = require('../../rack/rack');
 const Http = require('../../rack/http');
 const AngularHttp = require('./http');

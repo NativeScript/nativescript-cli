@@ -1,17 +1,14 @@
 const Kinvey = require('../../src/kinvey');
 const Log = require('../../src/core/log');
 const User = require('../../src/core/models/user');
-const Client = require('../../src/core/client');
 const uid = require('uid');
 const result = require('lodash/object/result');
-const nock = require('nock');
 const isString = require('lodash/lang/isString');
 const isEmpty = require('lodash/lang/isEmpty');
 const sinon = require('sinon');
 const chai = require('chai');
 chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
-const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 
 // Disable logs
 Log.disableAll();
@@ -27,36 +24,10 @@ global.Common = {
   },
 
   loginUser: function() {
-    const client = Client.sharedInstance();
-    const reply = {
-      _id: Common.randomString(24),
-      username: 'admin',
-      _kmd: {
-        lmt: new Date().toISOString(),
-        ect: new Date().toISOString(),
-        authtoken: Common.randomString(81)
-      },
-      _acl: {}
-    };
-    reply._acl.creator = reply._id;
-
-    nock('https://baas.kinvey.com')
-      .post(`/${usersNamespace}/${client.appId}/login`)
-      .reply(200, reply, {
-        'content-type': 'application/json',
-      });
-
     return User.login('admin', 'admin');
   },
 
   logoutUser: function() {
-    const client = Client.sharedInstance();
-    nock('https://baas.kinvey.com')
-      .post(`/${usersNamespace}/${client.appId}/_logout`)
-      .reply(200, null, {
-        'content-type': 'application/json',
-      });
-
     return User.getActive().then(user => {
       if (user) {
         return user.logout();
@@ -131,31 +102,25 @@ global.Common = {
   }
 };
 
-module.exports = function() {
-  before(function() {
-    this.client = Kinvey.init({
-      appId: Common.randomString(9, 'kid_'),
-      appSecret: Common.randomString(32)
-    });
+before(function() {
+  this.client = Kinvey.init({
+    appId: 'kid_-kGcCYykhe',
+    appSecret: 'e2dd9e52710c437e9b727995fcb5ba33'
   });
+});
 
-  beforeEach(function() {
-    this.sandbox = global.sinon.sandbox.create();
-    global.stub = this.sandbox.stub.bind(this.sandbox);
-    global.spy = this.sandbox.spy.bind(this.sandbox);
-  });
+beforeEach(function() {
+  this.sandbox = global.sinon.sandbox.create();
+  global.stub = this.sandbox.stub.bind(this.sandbox);
+  global.spy = this.sandbox.spy.bind(this.sandbox);
+});
 
-  afterEach(function() {
-    delete global.stub;
-    delete global.spy;
-    this.sandbox.restore();
-  });
+afterEach(function() {
+  delete global.stub;
+  delete global.spy;
+  this.sandbox.restore();
+});
 
-  afterEach(function() {
-    nock.cleanAll();
-  });
-
-  after(function() {
-    delete this.client;
-  });
-};
+after(function() {
+  delete this.client;
+});

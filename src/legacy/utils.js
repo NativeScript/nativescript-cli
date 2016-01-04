@@ -20,12 +20,12 @@ function mapLegacyOptions(options = {}) {
 // event loop. Borrowed from [q](http://documentup.com/kriskowal/q/).
 let nextTick;
 if (typeof window !== 'undefined' && isFunction(window.setImmediate)) { // IE10, Node.js 0.9+.
-  nextTick = root.setImmediate;
+  nextTick = global.setImmediate;
 } else if (typeof process !== 'undefined' && process.nextTick) { // Node.js <0.9.
   nextTick = process.nextTick;
 } else { // Most browsers.
   nextTick = function(fn) {
-    root.setTimeout(fn, 0);
+    global.setTimeout(fn, 0);
   };
 }
 

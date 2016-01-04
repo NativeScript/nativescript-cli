@@ -1,19 +1,19 @@
 const Promise = require('bluebird');
 
-class Defer {
-  static all(promises = []) {
+const Defer = {
+  all: function all(promises = []) {
     return Promise.all(promises);
-  }
+  },
 
-  static resolve(value) {
+  resolve: function resolve(value) {
     return Promise.resolve(value);
-  }
+  },
 
-  static reject(reason) {
+  reject: function reject(reason) {
     return Promise.reject(reason);
-  }
+  },
 
-  static deferred() {
+  defer: function defer() {
     const future = {};
     future.promise = new Promise((resolve, reject) => {
       future.resolve = resolve;
@@ -21,6 +21,6 @@ class Defer {
     });
     return future;
   }
-}
+};
 
 module.exports = Defer;

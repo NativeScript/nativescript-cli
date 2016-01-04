@@ -23,67 +23,67 @@ const test = module.exports.test = function(files) {
 
 // Lint and run our tests
 gulp.task('test', ['lint-src', 'lint-test'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', config.files.test]);
 });
 
 gulp.task('test-acl', ['lint-src', 'lint-test-acl'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/acl.spec.js']);
 });
 
 gulp.task('test-collection', ['lint-src', 'lint-test-collection'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/collection.spec.js']);
 });
 
 gulp.task('test-indexeddb', ['lint-src', 'lint-test-indexeddb'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/indexeddb.spec.js']);
 });
 
 gulp.task('test-query', ['lint-src', 'lint-test-query'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/query.spec.js']);
 });
 
 gulp.task('test-request', ['lint-src', 'lint-test-request'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/request.spec.js']);
 });
 
 gulp.task('test-sync', ['lint-src', 'lint-test-sync'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/sync.spec.js']);
 });
 
 gulp.task('test-user', ['lint-src', 'lint-test-user'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/specs/user.spec.js']);
 });
 
 // Lint and run legacy tests
 gulp.task('test-legacy', ['lint-src', 'lint-test-legacy'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', config.files.testLegacy]);
 });
 
 gulp.task('test-legacy-acl', ['lint-src', 'lint-test-legacy-acl'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/legacy/acl.spec.js']);
 });
 
 gulp.task('test-legacy-datastore', ['lint-src', 'lint-test-legacy-datastore'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/legacy/datastore.spec.js']);
 });
 
 gulp.task('test-legacy-file', ['lint-src', 'lint-test-legacy-file'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/legacy/file.spec.js']);
 });
 
 gulp.task('test-legacy-user', ['lint-src', 'lint-test-legacy-user'], function() {
-  require('babel-core/register');
+  require('babel-register');
   return test(['test/setup/node.js', 'test/legacy/user.spec.js']);
 });

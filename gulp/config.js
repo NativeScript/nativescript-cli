@@ -1,3 +1,5 @@
+/* eslint strict: 0 */
+
 'use strict';
 
 /**
@@ -13,17 +15,21 @@ const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
 const assign = require('lodash/object/assign');
+const clone = require('lodash/lang/clone');
 const platform = argv.platform || 'html5';
 const config = {
   header: '',
-  footer: ''
+  footer: '',
+  legacy: {}
 };
-let platformConfig = {};
+let platformConfig;
 
 try {
   platformConfig = require(`./config/${platform}`);
 } catch (err) {
-  platformConfig = {};
+  platformConfig = {
+    legacy: {}
+  };
 }
 
 /**
@@ -69,11 +75,14 @@ process.env = assign(process.env, config.env);
 config.paths = {
   root: path.join(__dirname, '..'),
   src: path.join(__dirname, '..', 'src'),
-  legacy: path.join(__dirname, '..', 'src', 'legacy'),
-  dist: path.join(__dirname, '..', 'dist', config.env.KINVEY_PLATFORM_ENV),
+  dist: path.join(__dirname, '..', 'dist', platform),
   tmp: path.join(__dirname, '..', 'tmp'),
   test: path.join(__dirname, '..', 'test'),
-  coverage: path.join(__dirname, '..', 'coverage')
+  coverage: path.join(__dirname, '..', 'coverage'),
+  legacy: {
+    src: path.join(__dirname, '..', 'src', 'legacy'),
+    dist: path.join(__dirname, '..', 'dist', 'legacy', platform)
+  }
 };
 const paths = config.paths = assign(config.paths, platformConfig.paths);
 
@@ -91,56 +100,30 @@ config.files = {
     filename: 'kinvey'
   }
 };
-const files = config.files = assign(config.files, platformConfig.files);
+config.files = assign(config.files, platformConfig.files);
 
 /**
- * Webpack is the lib used to link external dependencies to provide the
+ * Browserify is the lib used to link external dependencies to provide the
  * ability to run the library in a browser.
  */
-config.webpack = {
-  context: paths.src,
-  entry: './' + files.entry.filename,
-  output: {
-    path: paths.dist,
-    filename: files.output.filename,
-    library: 'Kinvey',
-    libraryTarget: 'umd'
-  },
-  module: {
-    loaders: [
-      {
-        test: /\.js?$/,
-        exclude: /(node_modules|test|gulp)/,
-        loader: 'babel',
-        query: {
-          comments: false,
-          presets: ['es2015', 'stage-2']
-        }
-      },
-      {
-        test: /\.json$/,
-        loader: 'json-loader'
-      }
-    ]
-  },
-  node: {
-    fs: 'empty',
-    net: 'empty',
-    tls: 'empty'
-  },
-  resolve: {
-    extensions: ['', '.webpack.js', '.web.js', '.js']
-  },
-  target: 'web'
-};
-config.webpack = assign(config.webpack, platformConfig.webpack);
-
 config.browserify = {
   debug: true, // turns on/off creating .map file
   entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
   standalone: 'Kinvey'
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
+config.legacy.browserify = clone(config.browserify);
+config.legacy.browserify.entries = path.join(config.paths.legacy.src, `${config.files.entry.filename}.js`);
+config.legacy.browserify = assign(config.legacy.browserify, platformConfig.legacy.browserify);
+
+/**
+ * Babelify is used to transform ES6 to ES5
+ */
+config.babelify = {
+  global: true,
+  ignore: /\/node_modules\/(?!qs\/)/ // Ignore all node_modules except qs
+};
+config.babelify = assign(config.babelify, platformConfig.babelify);
 
 /**
  * Istanbul is the lib used to create a coverage report the details how
