@@ -11,6 +11,7 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import Future = require("fibers/future");
+import { PlistSession } from "plist-merge-patch";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -33,7 +34,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
-		private $config: IConfiguration) {
+		private $config: IConfiguration,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -350,12 +352,89 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public prepareAppResources(appResourcesDirectoryPath: string): IFuture<void> {
 		return (() => {
+			let platformFolder = path.join(appResourcesDirectoryPath, this.platformData.normalizedPlatformName);
+			let filterFile = (filename: string) => this.$fs.deleteFile(path.join(platformFolder, filename)).wait();
+
+			filterFile(this.platformData.configurationFileName);
+
 			this.$fs.deleteDirectory(this.getAppResourcesDestinationDirectoryPath().wait()).wait();
 		}).future<void>()();
 	}
 
 	public processConfigurationFilesFromAppResources(): IFuture<void> {
-		return Future.fromResult();
+		return (() => {
+			this.mergeInfoPlists().wait();
+		}).future<void>()();
+	}
+
+	private mergeInfoPlists(): IFuture<void> {
+		return (() => {
+			let projectDir = this.$projectData.projectDir;
+			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+
+			if (!this.$fs.exists(infoPlistPath).wait()) {
+				// The project is missing Info.plist, try to populate it from the project tempalte.
+				let projectTemplateService: IProjectTemplatesService = this.$injector.resolve("projectTemplatesService");
+				let defaultTemplatePath = projectTemplateService.defaultTemplatePath.wait();
+				let templateInfoPlist = path.join(defaultTemplatePath, constants.APP_RESOURCES_FOLDER_NAME, this.$devicePlatformsConstants.iOS, this.platformData.configurationFileName);
+				if (this.$fs.exists(templateInfoPlist).wait()) {
+					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing. Upgrading the source of the project with one from the new project template. Copy " + templateInfoPlist + " to " + infoPlistPath);
+					try {
+						this.$fs.copyFile(templateInfoPlist, infoPlistPath).wait();
+					} catch(e) {
+						this.$logger.trace("Copying template's Info.plist failed. " + e);
+					}
+				} else {
+					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing but the template " + templateInfoPlist + " is missing too, can not upgrade Info.plist.");
+				}
+			}
+
+			if (!this.$fs.exists(infoPlistPath).wait()) {
+				this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");
+				return;
+			}
+
+			let session = new PlistSession({ log: (txt: string) => this.$logger.trace("Info.plist: " + txt) });
+			let makePatch = (plistPath: string) => {
+				if (!this.$fs.exists(plistPath).wait()) {
+					return;
+				}
+
+				session.patch({
+					name: path.relative(projectDir, plistPath),
+					read: () => this.$fs.readFile(plistPath).wait().toString()
+				});
+			};
+
+			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
+			for (let plugin of allPlugins) {
+				let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.platformData.configurationFileName);
+				makePatch(pluginInfoPlistPath);
+			}
+
+			makePatch(infoPlistPath);
+
+			if (this.$projectData.projectId) {
+				session.patch({
+					name: "CFBundleIdentifier from package.json nativescript.id",
+					read: () =>
+						`<?xml version="1.0" encoding="UTF-8"?>
+						<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+						<plist version="1.0">
+						<dict>
+							<key>CFBundleIdentifier</key>
+							<string>${ this.$projectData.projectId }</string>
+						</dict>
+						</plist>`
+				});
+			}
+
+			let plistContent = session.build();
+
+			this.$logger.trace("Info.plist: Write to: " + this.platformData.configurationFilePath);
+			this.$fs.writeFile(this.platformData.configurationFilePath, plistContent).wait();
+
+		}).future<void>()();
 	}
 
 	private get projectPodFilePath(): string {

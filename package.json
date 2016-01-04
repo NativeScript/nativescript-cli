@@ -58,6 +58,7 @@
     "open": "0.0.5",
     "osenv": "0.1.3",
     "plist": "1.1.0",
+    "plist-merge-patch": "0.0.9",
     "plistlib": "0.2.1",
     "progress-stream": "1.1.1",
     "prompt": "https://github.com/Icenium/prompt/tarball/master",

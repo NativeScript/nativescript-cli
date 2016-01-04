@@ -38,6 +38,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", {});
 	testInjector.register("prompter", {});
+	testInjector.register("devicePlatformsConstants", { iOS: "iOS" });
 	return testInjector;
 }
 
