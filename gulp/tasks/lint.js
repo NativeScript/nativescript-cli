@@ -14,7 +14,7 @@ function createLintTask(taskName, files) {
 }
 
 // Lint our source code
-createLintTask('lint-src', config.files.src);
+createLintTask('lint', config.files.src);
 
 // Lint our test code
 createLintTask('lint-test', config.files.test);

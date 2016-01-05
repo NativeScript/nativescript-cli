@@ -34,15 +34,12 @@ try {
 }
 
 /**
- * Header and footer.
+ * Basic stuff
  */
 config.header = platformConfig.header || config.header;
 config.footer = platformConfig.footer || config.footer;
-
-/**
- * Environment variables for the project.
- */
-process.env = assign(process.env, platformConfig.env);
+config.version = require('../package.json').version;
+config.git = platformConfig.git || 'git@github.com:Kinvey/kinvey-html5-lib.git';
 
 /**
  *  The main paths of your project.
@@ -82,7 +79,7 @@ config.files = assign(config.files, platformConfig.files);
  * ability to run the library in a browser.
  */
 config.browserify = {
-  debug: true, // turns on/off creating .map file
+  debug: false, // turns on/off creating .map file
   entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
   standalone: 'Kinvey'
 };
@@ -135,6 +132,14 @@ config.mocha = {
   timeout: 2000
 };
 config.mocha = assign(config.mocha, platformConfig.mocha);
+
+/**
+ * Library builds are uploaded to AWS S3 to allow users to download using a CDN.
+ */
+config.s3 = {
+  Bucket: 'kinvey/downloads',
+  ACL: 'public-read'
+};
 
 /**
  *  Common implementation for an error handler of a Gulp plugin

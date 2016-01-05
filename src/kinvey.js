@@ -60,5 +60,12 @@ Kinvey.init = function(options) {
   return client;
 };
 
+/**
+ * Alias to Kinvey.init
+ */
+Kinvey.initialize = function(options) {
+  return Kinvey.init(options);
+};
+
 // Export
 module.exports = Kinvey;

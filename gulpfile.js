@@ -21,15 +21,6 @@ wrench.readdirSyncRecursive('./gulp/tasks').filter(function cb(file) {
   require('./gulp/tasks/' + file);
 });
 
-// Ensure that linting occurs before build runs. This prevents
-// the build from breaking due to poorly formatted code.
-gulp.task('build-release-sequence', function(done) {
-  runSequence(['lint-src', 'lint-test'], 'test', 'build-release', done);
-});
-gulp.task('build-legacy-release-sequence', function(done) {
-  runSequence(['lint-src', 'lint-legacy-test'], 'test-legacy', 'build-legacy-release', done);
-});
-
 // Run the headless unit tests as you make changes.
 const watchFiles = ['src/**/*', 'test/**/*', 'package.json', '**/.eslintrc', '.jscsrc'];
 gulp.task('watch', function cb() {
@@ -37,8 +28,12 @@ gulp.task('watch', function cb() {
 });
 
 // Release
-gulp.task('release', ['build-release-sequence', 'docs']);
-gulp.task('release-legacy', ['build-legacy-release', 'docs']);
+gulp.task('release', function(done) {
+  runSequence(['e2e', 'clone'], ['bump', 'build'], 'commit', 'tag', ['push', 'uploadS3'], done);
+});
+gulp.task('release-legacy', function(done) {
+  runSequence(['e2e', 'clone'], ['bump', 'build-legacy'], 'commit', 'tag', ['push', 'uploadS3'], done);
+});
 
 // An alias of test
 gulp.task('default', ['test']);

@@ -9,30 +9,32 @@ module.exports = function(config) {
       browserName: 'iphone',
       version: '9.2'
     },
-    Android51: {
-      base: 'SauceLabs',
-      platform: 'Android',
-      browserName: 'android',
-      version: '5.1',
-      deviceName: 'Android Emulator',
-      deviceType: 'phone'
-    },
-    Android44: {
-      base: 'SauceLabs',
-      platform: 'Android',
-      browserName: 'android',
-      version: '4.4',
-      deviceName: 'Android Emulator',
-      deviceType: 'phone'
-    },
-    Android23: {
-      base: 'SauceLabs',
-      platform: 'Android',
-      browserName: 'android',
-      version: '2.3',
-      deviceName: 'Android Emulator',
-      deviceType: 'phone'
-    },
+
+    // Android51: {
+    //   base: 'SauceLabs',
+    //   platform: 'Android',
+    //   browserName: 'android',
+    //   version: '5.1',
+    //   deviceName: 'Android Emulator',
+    //   deviceType: 'phone'
+    // },
+    // Android44: {
+    //   base: 'SauceLabs',
+    //   platform: 'Android',
+    //   browserName: 'android',
+    //   version: '4.4',
+    //   deviceName: 'Android Emulator',
+    //   deviceType: 'phone'
+    // },
+    // Android23: {
+    //   base: 'SauceLabs',
+    //   platform: 'Android',
+    //   browserName: 'android',
+    //   version: '2.3',
+    //   deviceName: 'Android Emulator',
+    //   deviceType: 'phone'
+    // },
+
     MacChrome: {
       base: 'SauceLabs',
       platform: 'OS X 10.11',
@@ -100,7 +102,7 @@ module.exports = function(config) {
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_DEBUG,
+    logLevel: config.LOG_WARN,
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
