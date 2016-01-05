@@ -1,10 +1,14 @@
+clean:
+	@echo "Cleaning" && rm -rf node_modules
+
 install:
-	@echo "Install Dependencies" && npm install
+	@echo "Installing Dependencies" && npm install
 
 release:
 	@./node_modules/.bin/gulp release
 
-all: install /
+all: clean /
+	install /
 	release
 
 .PHONY: install release
