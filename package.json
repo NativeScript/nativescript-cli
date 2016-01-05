@@ -7,7 +7,8 @@
     "test": "./node_modules/.bin/gulp",
     "build": "./node_modules/.bin/gulp build",
     "coverage": "./node_modules/.bin/gulp coverage",
-    "validate": "npm ls"
+    "validate": "npm ls",
+    "lint": "jshint ."
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,6 @@
     "url": "https://github.com/Kinvey/js-library-dev/issues"
   },
   "dependencies": {
-    "babel-polyfill": "^6.3.14",
     "bluebird": "^2.0.0",
     "crypto-js": "^3.1.5",
     "fake-indexeddb": "^1.0.3",
@@ -43,6 +43,7 @@
     "chai": "^3.1.0",
     "chai-as-promised": "^5.1.0",
     "del": "^2.0.2",
+    "dotenv": "^1.2.0",
     "envify": "^3.4.0",
     "esdoc": "^0.4.0",
     "eslint": "^1.8.0",
@@ -56,11 +57,11 @@
     "gulp-filter": "^3.0.1",
     "gulp-gzip": "^1.2.0",
     "gulp-istanbul": "^0.10.0",
-    "gulp-jscs": "^3.0.1",
     "gulp-load-plugins": "^1.0.0",
     "gulp-mocha": "^2.0.0",
     "gulp-plumber": "^1.0.1",
     "gulp-rename": "^1.2.2",
+    "gulp-s3-upload": "^1.5.1",
     "gulp-shell": "^0.5.0",
     "gulp-size": "^2.0.0",
     "gulp-sourcemaps": "^1.6.0",

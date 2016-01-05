@@ -17,6 +17,7 @@ const forEach = require('lodash/collection/forEach');
 const map = require('lodash/collection/map');
 const isArray = require('lodash/lang/isArray');
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+// const syncBatchSize = parseInt(process.env.KINVEY_SYCN_BATCH_SIZE) || 1000;
 
 class SyncStore extends LocalStore {
   constructor(name, options = {}) {

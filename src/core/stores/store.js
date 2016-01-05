@@ -17,8 +17,6 @@ const log = require('../log');
 const isArray = require('lodash/lang/isArray');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
-// const syncBatchSize = process.env.KINVEY_SYCN_BATCH_SIZE || 1000;
-
 /**
  * The Store class is used to retrieve, create, update, destroy, count and group documents
  * in collections.

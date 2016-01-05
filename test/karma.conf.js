@@ -48,6 +48,8 @@ module.exports = function(config) {
       transform: [
         ['babelify', {
           global: true,
+          comments: false,
+          presets: ['es2015', 'stage-2'],
           ignore: /\/node_modules\/(?!qs\/)/ // Ignore all node_modules except qs
         }],
         'envify'

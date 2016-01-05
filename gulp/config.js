@@ -10,6 +10,7 @@
  *  of the tasks
  */
 
+require('dotenv').load();
 const $ = require('gulp-load-plugins')();
 const argv = require('yargs').argv;
 const path = require('path');
@@ -41,33 +42,7 @@ config.footer = platformConfig.footer || config.footer;
 /**
  * Environment variables for the project.
  */
-config.env = {
-  KINVEY_ACL_ATTRIBUTE: '_acl',
-  KINVEY_API_PROTOCOL: 'https:',
-  KINVEY_API_HOST: 'baas.kinvey.com',
-  KINVEY_API_VERSION: 3,
-  KINVEY_ACTIVE_USER_COLLECTION: 'kinvey-activeUser',
-  KINVEY_DATASTORE_NAMESPACE: 'appdata',
-  KINVEY_DEFAULT_TIMEOUT: 10000,
-  KINVEY_DEVICE_COLLECTION: 'kinvey-device',
-  KINVEY_FILE_NAMESPACE: 'blob',
-  KINVEY_ID_ATTRIBUTE: '_id',
-  KINVEY_KMD_ATTRIBUTE: '_kmd',
-  KINVEY_LOCAL_NAMESPACE: 'local',
-  KINVEY_MAX_HEADER_BYTES: 2000,
-  KINVEY_MAX_IDS: 200,
-  KINVEY_NOTIFICATION_EVENT: 'notification',
-  KINVEY_OBJECT_ID_PREFIX: 'local_',
-  KINVEY_PLATFORM_ENV: platform,
-  KINVEY_PUSH_NAMESPACE: 'push',
-  KINVEY_RPC_NAMESPACE: 'rpc',
-  KINVEY_SYCN_BATCH_SIZE: 1000,
-  KINVEY_SYNC_COLLECTION_NAME: 'kinvey-sync',
-  KINVEY_SYNC_DEFAULT_STATE: true,
-  KINVEY_USERS_NAMESPACE: 'user'
-};
-config.env = assign(config.env, platformConfig.env);
-process.env = assign(process.env, config.env);
+process.env = assign(process.env, platformConfig.env);
 
 /**
  *  The main paths of your project.
@@ -121,6 +96,8 @@ config.legacy.browserify = assign(config.legacy.browserify, platformConfig.legac
  */
 config.babelify = {
   global: true,
+  comments: false,
+  presets: ['es2015', 'stage-2'],
   ignore: /\/node_modules\/(?!qs\/)/ // Ignore all node_modules except qs
 };
 config.babelify = assign(config.babelify, platformConfig.babelify);

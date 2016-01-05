@@ -8,3 +8,10 @@ gulp.task('unit', function(done) {
     configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf.js')
   }, done).start();
 });
+
+gulp.task('e2e', function(done) {
+  new Server({
+    singleRun: true,
+    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf-ci.js')
+  }, done).start();
+});

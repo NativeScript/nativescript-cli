@@ -24,9 +24,10 @@ const byteCount = require('./utils/string').byteCount;
 const isFunction = require('lodash/lang/isFunction');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
-const customRequestPropertiesMaxBytes = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
-const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 10000;
-const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
+const customRequestPropertiesMaxBytes = parseInt(process.env.KINVEY_MAX_HEADER_BYTES, 10) || 2000;
+const defaultTimeout = parseInt(process.env.KINVEY_DEFAULT_TIMEOUT, 10) || 10000;
+const maxIdsPerRequest = parseInt(process.env.KINVEY_MAX_IDS, 10) || 200;
+const apiVersion = parseInt(process.env.KINVEY_API_VERSION, 10) || 3;
 
 class Request {
   constructor(options = {}) {
@@ -67,7 +68,7 @@ class Request {
 
     const headers = {};
     headers.Accept = 'application/json';
-    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
+    headers['X-Kinvey-Api-Version'] = apiVersion;
 
     const device = new Device();
     headers['X-Kinvey-Device-Information'] = JSON.stringify(device.toJSON());

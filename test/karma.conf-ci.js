@@ -9,39 +9,58 @@ module.exports = function(config) {
       browserName: 'iphone',
       version: '9.2'
     },
-    iOS91: {
+    Android51: {
       base: 'SauceLabs',
-      platform: 'OS X 10.11',
-      browserName: 'iphone',
-      version: '9.1'
-    },
-    iOS90: {
-      base: 'SauceLabs',
-      platform: 'OS X 10.11',
-      browserName: 'iphone',
-      version: '9.0'
+      platform: 'Android',
+      browserName: 'android',
+      version: '5.1',
+      deviceName: 'Android Emulator',
+      deviceType: 'phone'
     },
     Android44: {
       base: 'SauceLabs',
-      platform: 'Linux',
+      platform: 'Android',
       browserName: 'android',
-      deviceName: 'Samsung Galaxy S3 Emulator',
-      version: '4.4'
+      version: '4.4',
+      deviceName: 'Android Emulator',
+      deviceType: 'phone'
+    },
+    Android23: {
+      base: 'SauceLabs',
+      platform: 'Android',
+      browserName: 'android',
+      version: '2.3',
+      deviceName: 'Android Emulator',
+      deviceType: 'phone'
+    },
+    MacChrome: {
+      base: 'SauceLabs',
+      platform: 'OS X 10.11',
+      browserName: 'chrome',
+      customData: {
+        awesome: true
+      }
+    },
+    MacFirefox: {
+      base: 'SauceLabs',
+      platform: 'OS X 10.11',
+      browserName: 'firefox'
+    },
+    MacSafari: {
+      base: 'SauceLabs',
+      platform: 'OS X 10.11',
+      browserName: 'safari'
+    },
+    Windows10IE: {
+      base: 'SauceLabs',
+      platform: 'Windows 10',
+      browserName: 'internet explorer'
+    },
+    Windows8IE: {
+      base: 'SauceLabs',
+      platform: 'Windows 8',
+      browserName: 'internet explorer'
     }
-
-    // 'SL_Chrome': {
-    //   base: 'SauceLabs',
-    //   platform: 'OS X 10.11',
-    //   browserName: 'chrome',
-    //   customData: {
-    //     awesome: true
-    //   }
-    // },
-    // 'SL_Firefox': {
-    //   base: 'SauceLabs',
-    //   platform: 'OS X 10.11',
-    //   browserName: 'firefox'
-    // }
   };
 
   config.set({
@@ -81,7 +100,7 @@ module.exports = function(config) {
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_WARN,
+    logLevel: config.LOG_DEBUG,
 
     // enable / disable watching file and executing tests whenever any file changes
     autoWatch: false,
@@ -92,6 +111,8 @@ module.exports = function(config) {
       transform: [
         ['babelify', {
           global: true,
+          comments: false,
+          presets: ['es2015', 'stage-2'],
           ignore: /\/node_modules\/(?!qs\/)/ // Ignore all node_modules except qs
         }],
         'envify'
@@ -101,30 +122,25 @@ module.exports = function(config) {
     // SauceLabs
     // Used to run unit tests on several browsers
     sauceLabs: {
-      username: 'MobileKinvey',
-      accessKey: '985610da-2716-441b-b0bd-9a3c570ec31b',
+      username: process.env.SAUCELABS_USERNAME,
+      accessKey: process.env.SAUCELABS_ACCESSKEY,
       testName: 'Kinvey JavaScript Library Unit Tests'
     },
     customLaunchers: customLaunchers,
 
     // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    // browsers: [
-    //   'Chrome',
-    //   'PhantomJS'
-    // ],
     browsers: Object.keys(customLaunchers),
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['dots', 'saucelabs'],
+    reporters: ['mocha', 'saucelabs'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
     singleRun: true,
 
     // Increase timeout in case connection in CI is slow
-    captureTimeout: 120000
+    captureTimeout: 300000
   });
 };
