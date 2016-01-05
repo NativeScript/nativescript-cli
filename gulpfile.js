@@ -4,6 +4,11 @@
  *  because putting all here was really too long
  */
 
+require('babel-register')({
+  // This will override `node_modules` ignoring - you can alternatively pass
+  // an array of strings to be explicitly matched or a regex / glob
+  ignore: /\/node_modules\/(?!qs\/)/
+});
 const gulp = require('gulp');
 const wrench = require('wrench');
 const runSequence = require('run-sequence');
