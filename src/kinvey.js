@@ -57,7 +57,7 @@ Kinvey.Rack.Serialize = require('./rack/serialize');
  */
 Kinvey.init = function(options) {
   const client = Client.init(options);
-  return client;
+  return client;;
 };
 
 // Export
