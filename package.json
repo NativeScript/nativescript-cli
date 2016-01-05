@@ -6,7 +6,8 @@
   "scripts": {
     "test": "./node_modules/.bin/gulp",
     "build": "./node_modules/.bin/gulp build",
-    "coverage": "./node_modules/.bin/gulp coverage"
+    "coverage": "./node_modules/.bin/gulp coverage",
+    "validate": "npm ls"
   },
   "repository": {
     "type": "git",
@@ -83,6 +84,7 @@
     "mocha-phantomjs": "^4.0.2",
     "nock": "^3.3.2",
     "phantomjs": "^1.9.19",
+    "precommit-hook": "^3.0.0",
     "run-sequence": "^1.1.4",
     "sinon": "^1.12.2",
     "sinon-chai": "^2.7.0",
@@ -92,5 +94,9 @@
     "vinyl-transform": "^1.0.0",
     "wrench": "^1.5.8",
     "yargs": "^3.27.0"
-  }
+  },
+  "pre-commit": [
+    "validate",
+    "test"
+  ]
 }
