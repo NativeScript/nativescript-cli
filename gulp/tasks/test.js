@@ -4,6 +4,8 @@ const $ = require('gulp-load-plugins')({
 });
 const assign = require('lodash/object/assign');
 const config = require('../config');
+const path = require('path');
+const Server = require('karma').Server;
 
 const test = module.exports.test = function(files) {
   if (process.env.user === 'jenkins' || process.env.USER === 'jenkins') {
@@ -25,6 +27,19 @@ const test = module.exports.test = function(files) {
 gulp.task('test', ['lint-src', 'lint-test'], function() {
   require('babel-register');
   return test(['test/setup.js', config.files.test]);
+});
+
+gulp.task('unit', ['lint-src', 'lint-test'], function(done) {
+  new Server({
+    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf.js')
+  }, done).start();
+});
+
+gulp.task('e2e', ['lint-src', 'lint-test'], function(done) {
+  new Server({
+    singleRun: true,
+    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf-ci.js')
+  }, done).start();
 });
 
 gulp.task('test-acl', ['lint-src', 'lint-test-acl'], function() {
