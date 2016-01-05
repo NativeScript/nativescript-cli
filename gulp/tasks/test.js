@@ -2,22 +2,22 @@ const gulp = require('gulp');
 const $ = require('gulp-load-plugins')({
   camelize: true
 });
-const assign = require('lodash/object/assign');
+// const assign = require('lodash/object/assign');
 const config = require('../config');
 const path = require('path');
 const Server = require('karma').Server;
 
 const test = module.exports.test = function(files) {
-  if (process.env.user === 'jenkins' || process.env.USER === 'jenkins') {
-    config.mocha = assign(config.mocha, {
-      reporter: 'mocha-jenkins-reporter',
-      reporterOptions: {
-        'junit_report_name': 'Tests',
-        'junit_report_path': 'report.xml',
-        'junit_report.stack': 1
-      }
-    });
-  }
+  // if (process.env.user === 'jenkins' || process.env.USER === 'jenkins') {
+  //   config.mocha = assign(config.mocha, {
+  //     reporter: 'mocha-jenkins-reporter',
+  //     reporterOptions: {
+  //       'junit_report_name': 'Tests',
+  //       'junit_report_path': 'report.xml',
+  //       'junit_report.stack': 1
+  //     }
+  //   });
+  // }
 
   return gulp.src(files, {read: false})
     .pipe($.mocha(config.mocha));

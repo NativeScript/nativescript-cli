@@ -7,8 +7,8 @@ install:
 release:
 	@./node_modules/.bin/gulp release
 
-all: clean /
-	install /
+all: clean \
+	install \
 	release
 
 .PHONY: install release
