@@ -53,6 +53,7 @@ $injector.requireCommand("dev-test|ios", "./commands/test");
 $injector.requireCommand("test|android", "./commands/test");
 $injector.requireCommand("test|ios", "./commands/test");
 $injector.requireCommand("test|init", "./commands/test-init");
+$injector.requireCommand("dev-generate-help", "./commands/generate-help");
 
 $injector.require("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
