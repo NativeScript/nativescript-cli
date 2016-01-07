@@ -20,14 +20,18 @@ const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
 const indexBy = require('lodash/collection/indexBy');
 const reduce = require('lodash/collection/reduce');
+const fromISO8601 = require('./utils/date').fromISO8601;
+const map = require('lodash/collection/map');
 const byteCount = require('./utils/string').byteCount;
 const isFunction = require('lodash/lang/isFunction');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
+const isArray = require('lodash/lang/isArray');
 const customRequestPropertiesMaxBytes = parseInt(process.env.KINVEY_MAX_HEADER_BYTES, 10) || 2000;
 const defaultTimeout = parseInt(process.env.KINVEY_DEFAULT_TIMEOUT, 10) || 10000;
 const maxIdsPerRequest = parseInt(process.env.KINVEY_MAX_IDS, 10) || 200;
 const apiVersion = parseInt(process.env.KINVEY_API_VERSION, 10) || 3;
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 class Request {
   constructor(options = {}) {
@@ -64,6 +68,7 @@ class Request {
     this.dataPolicy = options.dataPolicy;
     this.writePolicy = options.writePolicy;
     this.timeout = options.timeout;
+    this.ttl = options.ttl;
     this.executing = false;
 
     const headers = {};
@@ -288,7 +293,40 @@ class Request {
       if (this.method === HttpMethod.GET) {
         switch (this.dataPolicy) {
           case DataPolicy.LocalOnly:
-            return this.executeLocal();
+            return this.executeLocal().then(response => {
+              if (response && response.isSuccess()) {
+                const data = response.data;
+                const status = this.status(data);
+
+                if (status === false) {
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    query: this.query,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    ttl: this.ttl
+                  });
+                  return request.execute();
+                }
+
+                if (status.refresh === true) {
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    query: this.query,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    ttl: this.ttl
+                  });
+                  return request.execute();
+                }
+              }
+
+              return response;
+            });
           case DataPolicy.PreferLocal:
             return this.executeLocal().catch(err => {
               if (err instanceof NotFoundError) {
@@ -297,16 +335,48 @@ class Request {
 
               throw err;
             }).then(response => {
-              if (response && !response.isSuccess()) {
-                const request = new Request({
-                  method: this.method,
-                  pathname: this.pathname,
-                  query: this.query,
-                  auth: this.auth,
-                  client: this.client,
-                  dataPolicy: DataPolicy.PreferNetwork
-                });
-                return request.execute();
+              if (response) {
+                if (!response.isSuccess()) {
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    query: this.query,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    ttl: this.ttl
+                  });
+                  return request.execute();
+                }
+
+                const data = response.data;
+                const status = this.status(data);
+
+                if (status === false) {
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    query: this.query,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    ttl: this.ttl
+                  });
+                  return request.execute();
+                }
+
+                if (status.refresh === true) {
+                  const request = new Request({
+                    method: this.method,
+                    pathname: this.pathname,
+                    query: this.query,
+                    auth: this.auth,
+                    client: this.client,
+                    dataPolicy: DataPolicy.PreferNetwork,
+                    ttl: this.ttl
+                  });
+                  request.execute();
+                }
               }
 
               return response;
@@ -321,6 +391,7 @@ class Request {
                   auth: this.auth,
                   data: response.data,
                   client: this.client,
+                  ttl: this.ttl,
                   writePolicy: WritePolicy.Local
                 });
 
@@ -335,13 +406,15 @@ class Request {
           default:
             return this.executeNetwork().then(response => {
               if (response && response.isSuccess()) {
+                const data = this.addMetadata(response.data);
                 const request = new Request({
                   method: HttpMethod.PUT,
                   pathname: this.pathname,
                   query: this.query,
                   auth: this.auth,
-                  data: response.data,
+                  data: data,
                   client: this.client,
+                  ttl: this.ttl,
                   writePolicy: WritePolicy.Local
                 });
 
@@ -356,6 +429,7 @@ class Request {
                 query: this.query,
                 auth: this.auth,
                 client: this.client,
+                ttl: this.ttl,
                 dataPolicy: DataPolicy.LocalOnly
               });
               return request.execute();
@@ -377,6 +451,7 @@ class Request {
                 auth: this.auth,
                 data: response.data,
                 client: this.client,
+                ttl: this.ttl,
                 writePolicy: WritePolicy.Local
               });
 
@@ -432,6 +507,48 @@ class Request {
     return rack.execute(this.toJSON());
   }
 
+  addMetadata(data) {
+    const lastRefreshedAt = new Date().toISOString();
+    const isArray = isArray(data);
+
+    let response = isArray ? data : [data];
+    response = map(response, (item) => {
+      if (item) {
+        item[kmdAttribute] = item[kmdAttribute] || {};
+        item[kmdAttribute].lastRefreshedAt = lastRefreshedAt;
+      }
+    });
+
+    return isArray ? response : response[0];
+  }
+
+  status(data) {
+    let needsRefresh = false;
+    const response = isArray(data) ? data : [data];
+    const length = response.length;
+    const now = new Date().getTime();
+
+    for (let i = 0; i < length; i += 1) {
+      const item = response[i];
+
+      if (item && item[kmdAttribute] && item[kmdAttribute].lastRefreshedAt) {
+        const lastRefreshedAt = fromISO8601(item[kmdAttribute].lastRefreshedAt).getTime();
+        const threshold = lastRefreshedAt + this.ttl;
+
+        if (now > threshold) {
+          return false;
+        }
+
+        const refreshThreshold = lastRefreshedAt + this.ttl * 0.9; // 90%
+        if (now > refreshThreshold) {
+          needsRefresh = true;
+        }
+      }
+    }
+
+    return needsRefresh ? { refresh: true } : true;
+  }
+
   abort() {
     // TODO
     throw new KinveyError('Method not supported');
@@ -447,7 +564,8 @@ class Request {
       flags: this.flags,
       data: this.data,
       responseType: this.responseType,
-      timeout: this.timeout
+      timeout: this.timeout,
+      ttl: this.ttl
     };
 
     return clone(json);
@@ -531,7 +649,8 @@ class DeltaSetRequest extends Request {
                     auth: this.auth,
                     client: this.client,
                     dataPolicy: DataPolicy.PreferNetwork,
-                    query: query
+                    query: query,
+                    ttl: this.ttl
                   });
 
                   if (origQuery) {
@@ -559,7 +678,8 @@ class DeltaSetRequest extends Request {
                     auth: this.auth,
                     client: this.client,
                     dataPolicy: DataPolicy.ForceLocal,
-                    query: query
+                    query: query,
+                    ttl: this.ttl
                   });
 
                   promises.push(request.execute());

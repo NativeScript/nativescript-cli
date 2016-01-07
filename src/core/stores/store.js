@@ -73,6 +73,11 @@ class Store {
      * @type {Model}
      */
     this.model = options.model;
+
+    /**
+     * @type {Number}
+     */
+    this.ttl = options.ttl;
   }
 
   /**
@@ -123,7 +128,8 @@ class Store {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      ttl: this.ttl
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -136,7 +142,8 @@ class Store {
       client: options.client,
       method: HttpMethod.GET,
       pathname: this.getPathname(options.client),
-      query: query
+      query: query,
+      ttl: options.ttl
     });
     const promise = request.execute().then(response => {
       let data = response.data;
@@ -199,7 +206,8 @@ class Store {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      ttl: this.ttl
     }, options);
 
     if (!(aggregation instanceof Aggregation)) {
@@ -212,7 +220,8 @@ class Store {
       client: options.client,
       method: HttpMethod.GET,
       pathname: `${this.getPathname(options.client)}/_group`,
-      data: aggregation.toJSON()
+      data: aggregation.toJSON(),
+      ttl: options.ttl
     });
     const promise = request.execute().then(response => {
       return response.data;
@@ -255,7 +264,8 @@ class Store {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      ttl: this.ttl,
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -268,7 +278,8 @@ class Store {
       client: options.client,
       method: HttpMethod.GET,
       pathname: `${this.getPathname(options.client)}/_count`,
-      query: query
+      query: query,
+      ttl: options.ttl
     });
     const promise = request.execute().then(response => {
       return response.data;
@@ -307,7 +318,8 @@ class Store {
     options = assign({
       dataPolicy: this.dataPolicy,
       auth: this.auth,
-      client: this.client
+      client: this.client,
+      ttl: this.ttl
     }, options);
 
     const request = new DeltaSetRequest({
@@ -316,6 +328,7 @@ class Store {
       client: options.client,
       method: HttpMethod.GET,
       pathname: `${this.getPathname(options.client)}/${id}`,
+      ttl: options.ttl
     });
     const promise = request.execute().then(response => {
       const data = response.data;
