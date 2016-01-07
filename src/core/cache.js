@@ -22,42 +22,43 @@ class Cache {
 
     forEach(adapters, adapter => {
       switch (adapter) {
-      case CacheAdapter.IndexedDB:
-        if (IndexedDB.isSupported()) {
-          this.db = new IndexedDB(dbName);
-          return false;
-        }
+        case CacheAdapter.IndexedDB:
+          if (IndexedDB.isSupported()) {
+            this.db = new IndexedDB(dbName);
+            return false;
+          }
 
-        break;
-      case CacheAdapter.LocalStorage:
-        if (LocalStorage.isSupported()) {
-          this.db = new LocalStorage(dbName);
-          return false;
-        }
+          break;
+        case CacheAdapter.LocalStorage:
+          if (LocalStorage.isSupported()) {
+            this.db = new LocalStorage(dbName);
+            return false;
+          }
 
-        break;
-      case CacheAdapter.Memory:
-        if (Memory.isSupported()) {
-          this.db = new Memory(dbName);
-          return false;
-        }
+          break;
+        case CacheAdapter.Memory:
+          if (Memory.isSupported()) {
+            this.db = new Memory(dbName);
+            return false;
+          }
 
-        break;
-      case CacheAdapter.WebSQL:
-        if (WebSQL.isSupported()) {
-          this.db = new WebSQL(dbName);
-          return false;
-        }
+          break;
+        case CacheAdapter.WebSQL:
+          if (WebSQL.isSupported()) {
+            this.db = new WebSQL(dbName);
+            return false;
+          }
 
-        break;
-      default:
-        log.warn(`The ${adapter} adapter is is not recognized.`);
+          break;
+        default:
+          log.warn(`The ${adapter} adapter is is not recognized.`);
       }
     });
 
     if (!this.db) {
       if (Memory.isSupported()) {
-        log.error('Provided adapters are unsupported on this platform. Defaulting to StoreAdapter.Memory adapter.', adapters);
+        log.error('Provided adapters are unsupported on this platform. ' +
+          'Defaulting to StoreAdapter.Memory adapter.', adapters);
         this.db = new Memory(dbName);
       } else {
         log.error('Provided adapters are unsupported on this platform.', adapters);

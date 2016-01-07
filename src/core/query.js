@@ -226,7 +226,8 @@ class PrivateQuery {
     }
 
     if (regExp.source.indexOf('^') !== 0) {
-      throw new Error('regExp must have `^` at the beginning of the expression to make it an anchored expression.');
+      throw new Error('regExp must have `^` at the beginning of the expression ' +
+        'to make it an anchored expression.');
     }
 
     const flags = [];
@@ -287,7 +288,7 @@ class PrivateQuery {
       [bottomLeftCoord[0], bottomLeftCoord[1]],
       [upperRightCoord[0], upperRightCoord[1]]
     ];
-    return this.addFilter(field, '$within', {$box: coords});
+    return this.addFilter(field, '$within', { $box: coords });
   }
 
   withinPolygon(field, coords) {
@@ -295,7 +296,7 @@ class PrivateQuery {
       throw new Error('coords argument must be of type: [[number, number]]');
     }
 
-    coords = coords.map(function(coord) {
+    coords = coords.map(function (coord) {
       if (!coord[0] || !coord[1]) {
         throw new Error('coords argument must be of type: [number, number]');
       }
@@ -303,7 +304,7 @@ class PrivateQuery {
       return [parseFloat(coord[0]), parseFloat(coord[1])];
     });
 
-    return this.addFilter(field, '$within', {$polygon: coords});
+    return this.addFilter(field, '$within', { $polygon: coords });
   }
 
   size(field, size) {
@@ -436,7 +437,7 @@ class PrivateQuery {
     // Cast, validate, and parse arguments. If `queries` are supplied, obtain
     // the `filter` for joining. The eventual return function will be the
     // current query.
-    queries = queries.map(function(query) {
+    queries = queries.map(function (query) {
       if (!(query instanceof PrivateQuery)) {
         if (isObject(query)) {
           query = new PrivateQuery(query);

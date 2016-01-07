@@ -36,11 +36,13 @@ class Client {
     let apiUrlComponents;
 
     if (!options.appId && !options.appKey) {
-      throw new KinveyError('No App Id was provided. Unable to create a new Client without an App Id.');
+      throw new KinveyError('No App Id was provided. ' +
+        'Unable to create a new Client without an App Id.');
     }
 
     if (!options.appSecret && !options.masterSecret) {
-      throw new KinveyError('No App Secret or Master Secret was provided. Unable to create a new Client without an App Key.');
+      throw new KinveyError('No App Secret or Master Secret was provided. ' +
+        'Unable to create a new Client without an App Key.');
     }
 
     // Parse the API url
@@ -112,7 +114,8 @@ class Client {
   }
 
   /**
-   * Initializes the library by creating a new instance of the Client class and storing it as a shared instance.
+   * Initializes the library by creating a new instance of the
+   * Client class and storing it as a shared instance.
    *
    * @param {Object} options - Options
    * @param {string} options.appId - My app's id
@@ -149,7 +152,8 @@ class Client {
     const client = Client[sharedInstanceSymbol];
 
     if (!client) {
-      throw new KinveyError('You have not initialized the library. Please call Kinvey.init() to initialize the library.');
+      throw new KinveyError('You have not initialized the library. ' +
+        'Please call Kinvey.init() to initialize the library.');
     }
 
     return client;

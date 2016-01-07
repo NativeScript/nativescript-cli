@@ -5,13 +5,13 @@ const Http = require('../../rack/http');
 const AngularHttp = require('./http');
 const ngKinvey = angular.module('kinvey', []);
 
-ngKinvey.provider('$kinvey', function() {
-  this.init = function(options = {}) {
+ngKinvey.provider('$kinvey', function () {
+  this.init = function (options = {}) {
     // Initialize the library
     return Kinvey.init(options);
   };
 
-  this.$get = ['$q', '$http', function($q, $http) {
+  this.$get = ['$q', '$http', function ($q, $http) {
     // Swap out the Http middleware with the AngularHttp middleware
     const networkRack = Rack.networkRack;
     networkRack.swap(Http, new AngularHttp($http));

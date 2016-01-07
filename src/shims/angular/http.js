@@ -41,11 +41,14 @@ class AngularHttp extends Middleware {
 
       for (const key in options.params) {
         if (options.params.hasOwnProperty(key)) {
-          options.params[key] = isString(options.params[key]) ? options.params[key] : JSON.stringify(options.params[key]);
+          options.params[key] = isString(options.params[key]) ?
+                                options.params[key] : JSON.stringify(options.params[key]);
         }
       }
 
-      if (request.data && (request.method === HttpMethod.PATCH || request.method === HttpMethod.POST || request.method === HttpMethod.PUT)) {
+      if (request.data && (request.method === HttpMethod.PATCH ||
+                           request.method === HttpMethod.POST ||
+                           request.method === HttpMethod.PUT)) {
         options.data = request.data;
       }
 

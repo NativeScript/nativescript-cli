@@ -35,7 +35,8 @@ Kinvey.Rack.Parse = require('./rack/parse');
 Kinvey.Rack.Serialize = require('./rack/serialize');
 
 /**
- * Initializes the library by creating a new instance of the CLient class and storing it as a shared instance.
+ * Initializes the library by creating a new instance of the Client
+ * class and storing it as a shared instance.
  *
  * @param {Object} options - Options
  * @param {string} options.appId - My app's id
@@ -55,7 +56,7 @@ Kinvey.Rack.Serialize = require('./rack/serialize');
  *   appSecret: 'appSecret'
  * });
  */
-Kinvey.init = function(options) {
+Kinvey.init = function (options) {
   const client = Client.init(options);
   return client;
 };
@@ -63,7 +64,7 @@ Kinvey.init = function(options) {
 /**
  * Alias to Kinvey.init
  */
-Kinvey.initialize = function(options) {
+Kinvey.initialize = function (options) {
   return Kinvey.init(options);
 };
 

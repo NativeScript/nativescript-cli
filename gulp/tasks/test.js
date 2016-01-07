@@ -7,7 +7,7 @@ const config = require('../config');
 const path = require('path');
 const Server = require('karma').Server;
 
-const test = module.exports.test = function(files) {
+const test = module.exports.test = function (files) {
   // if (process.env.user === 'jenkins' || process.env.USER === 'jenkins') {
   //   config.mocha = assign(config.mocha, {
   //     reporter: 'mocha-jenkins-reporter',
@@ -19,7 +19,7 @@ const test = module.exports.test = function(files) {
   //   });
   // }
 
-  return gulp.src(files, {read: false})
+  return gulp.src(files, { read: false })
     .pipe($.mocha(config.mocha));
 };
 
@@ -29,77 +29,83 @@ const test = module.exports.test = function(files) {
 //   return test(['test/setup.js', config.files.test]);
 // });
 
-gulp.task('test', ['lint', 'lint-test'], function(done) {
+gulp.task('test', ['lint', 'lint-test'], function (done) {
   new Server({
-    singleRun: true,
-    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf.js')
-  }, done).start();
+    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf.js'),
+    singleRun: true
+  }, function () {
+    done();
+    process.exit(0);
+  }).start();
 });
 
-gulp.task('e2e', ['lint', 'lint-test'], function(done) {
+gulp.task('e2e', ['lint', 'lint-test'], function (done) {
   new Server({
     singleRun: true,
-    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf-ci.js')
-  }, done).start();
+    configFile: path.join(__dirname, '..', '..', 'test', 'karma.conf-ci.js'),
+  }, function () {
+    done();
+    process.exit(0);
+  }).start();
 });
 
-gulp.task('test-acl', ['lint', 'lint-test-acl'], function() {
+gulp.task('test-acl', ['lint', 'lint-test-acl'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/acl.spec.js']);
 });
 
-gulp.task('test-collection', ['lint', 'lint-test-collection'], function() {
+gulp.task('test-collection', ['lint', 'lint-test-collection'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/collection.spec.js']);
 });
 
-gulp.task('test-indexeddb', ['lint', 'lint-test-indexeddb'], function() {
+gulp.task('test-indexeddb', ['lint', 'lint-test-indexeddb'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/indexeddb.spec.js']);
 });
 
-gulp.task('test-query', ['lint', 'lint-test-query'], function() {
+gulp.task('test-query', ['lint', 'lint-test-query'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/query.spec.js']);
 });
 
-gulp.task('test-request', ['lint', 'lint-test-request'], function() {
+gulp.task('test-request', ['lint', 'lint-test-request'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/request.spec.js']);
 });
 
-gulp.task('test-sync', ['lint', 'lint-test-sync'], function() {
+gulp.task('test-sync', ['lint', 'lint-test-sync'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/sync.spec.js']);
 });
 
-gulp.task('test-user', ['lint', 'lint-test-user'], function() {
+gulp.task('test-user', ['lint', 'lint-test-user'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/specs/user.spec.js']);
 });
 
 // Lint and run legacy tests
-gulp.task('test-legacy', ['lint', 'lint-test-legacy'], function() {
+gulp.task('test-legacy', ['lint', 'lint-test-legacy'], function () {
   require('babel-register');
   return test(['test/setup.js', config.files.testLegacy]);
 });
 
-gulp.task('test-legacy-acl', ['lint', 'lint-test-legacy-acl'], function() {
+gulp.task('test-legacy-acl', ['lint', 'lint-test-legacy-acl'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/legacy/acl.spec.js']);
 });
 
-gulp.task('test-legacy-datastore', ['lint', 'lint-test-legacy-datastore'], function() {
+gulp.task('test-legacy-datastore', ['lint', 'lint-test-legacy-datastore'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/legacy/datastore.spec.js']);
 });
 
-gulp.task('test-legacy-file', ['lint', 'lint-test-legacy-file'], function() {
+gulp.task('test-legacy-file', ['lint', 'lint-test-legacy-file'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/legacy/file.spec.js']);
 });
 
-gulp.task('test-legacy-user', ['lint', 'lint-test-legacy-user'], function() {
+gulp.task('test-legacy-user', ['lint', 'lint-test-legacy-user'], function () {
   require('babel-register');
   return test(['test/setup.js', 'test/legacy/user.spec.js']);
 });

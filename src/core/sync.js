@@ -24,7 +24,7 @@ class Sync {
 
     const syncStore = new Store(syncStoreName, options);
     const promise = syncStore.find(null, options).then(syncModels => {
-      return reduce(syncModels, function(result, syncModel) {
+      return reduce(syncModels, function (result, syncModel) {
         return result + syncModel.get('size');
       }, 0);
     }).catch(() => {

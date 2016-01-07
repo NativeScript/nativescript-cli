@@ -319,7 +319,8 @@ class SyncStore extends LocalStore {
 
     const promise = this.syncCount(options).then(count => {
       if (count > 0) {
-        throw new KinveyError('Unable to pull data. You must push the pending items to sync first.', 'Call store.push() to push the pending items to sync before you pull new data.');
+        throw new KinveyError('Unable to pull data. You must push the pending items to sync first.',
+          'Call store.push() to push the pending items to sync before you pull new data.');
       }
 
       options.dataPolicy = DataPolicy.NetworkOnly;

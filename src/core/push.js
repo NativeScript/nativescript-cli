@@ -15,6 +15,7 @@ const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey-device';
 const emitter = new EventEmitter();
+const Titanium = global.Titanium;
 
 class Push {
   static listenerCount(type) {
@@ -74,45 +75,50 @@ class Push {
     const platform = device.platform;
 
     if (!device.isCordova() || !device.isTitanium()) {
-      return Promise.reject(new KinveyError(`Kinvey currently only supports push notifications on PhoneGap/Cordova and Titanium environments.`));
+      return Promise.reject(new KinveyError(`Kinvey currently only supports push ` +
+        `notifications on PhoneGap/Cordova and Titanium environments.`));
     }
 
     if (platform.name !== 'android' || platform.name !== 'ios') {
-      return Promise.reject(new KinveyError(`Kinvey currently does not support push notifications on ${platform.name}.`));
+      return Promise.reject(new KinveyError(`Kinvey currently does not support ` +
+        `push notifications on ${platform.name}.`));
     }
 
     const promise = new Promise((resolve, reject) => {
       if (device.isCordova()) {
         if (typeof global.PushNotification === 'undefined') {
-          return reject(new KinveyError('PhoneGap Push Notification Plugin is not installed.', 'Please refer to https://github.com/KinveyApps/phonegap-plugin-push#installation.'));
+          return reject(new KinveyError('PhoneGap Push Notification Plugin is not installed.',
+            'Please refer to https://github.com/KinveyApps/phonegap-plugin-push#installation.'));
         }
 
         const push = global.PushNotification.init(options);
 
-        push.on('registration', function(data) {
+        push.on('registration', function (data) {
           resolve(data);
         });
 
-        push.on('notification', function(data) {
+        push.on('notification', function (data) {
           Push.emit(notificationEvent, data);
         });
 
-        push.on('error', function(error) {
-          reject(new KinveyError('An error occurred registering this device for push notifications.', error));
+        push.on('error', function (error) {
+          reject(new KinveyError('An error occurred registering this device ' +
+            'for push notifications.', error));
         });
       } else if (device.isTitanium()) {
         if (platform.name === 'ios') {
           if (platform.version.split('.')[0] >= 8) {
-            global.Titanium.App.iOS.addEventListener('usernotificationsettings', function registerForPush() {
-              global.Titanium.App.iOS.removeEventListener('usernotificationsettings', registerForPush);
-              global.Titanium.Network.registerForPushNotifications({
-                success: function(e) {
+            Titanium.App.iOS.addEventListener('usernotificationsettings', function registerForPush() {
+              Titanium.App.iOS.removeEventListener('usernotificationsettings', registerForPush);
+              Titanium.Network.registerForPushNotifications({
+                success(e) {
                   resolve(e.deviceToken);
                 },
-                error: function(e) {
-                  reject(new KinveyError('An error occurred registering this device for push notifications.', e));
+                error(e) {
+                  reject(new KinveyError('An error occurred registering this device ' +
+                    'for push notifications.', e));
                 },
-                callback: function(data) {
+                callback(data) {
                   Push.emit(notificationEvent, data);
                 }
               });
@@ -121,63 +127,65 @@ class Push {
             const types = [];
 
             if (options.ios.alert) {
-              types.push(global.Titanium.App.iOS.USER_NOTIFICATION_TYPE_ALERT);
+              types.push(Titanium.App.iOS.USER_NOTIFICATION_TYPE_ALERT);
             }
 
             if (options.ios.badge) {
-              types.push(global.Titanium.App.iOS.USER_NOTIFICATION_TYPE_BADGE);
+              types.push(Titanium.App.iOS.USER_NOTIFICATION_TYPE_BADGE);
             }
 
             if (options.ios.sound) {
-              types.push(global.Titanium.App.iOS.USER_NOTIFICATION_TYPE_SOUND);
+              types.push(Titanium.App.iOS.USER_NOTIFICATION_TYPE_SOUND);
             }
 
-            global.Titanium.App.iOS.registerUserNotificationSettings({
+            Titanium.App.iOS.registerUserNotificationSettings({
               types: types
             });
           } else {
             const types = [];
 
             if (options.ios.alert) {
-              types.push(global.Titanium.Network.NOTIFICATION_TYPE_ALERT);
+              types.push(Titanium.Network.NOTIFICATION_TYPE_ALERT);
             }
 
             if (options.ios.badge) {
-              types.push(global.Titanium.Network.NOTIFICATION_TYPE_BADGE);
+              types.push(Titanium.Network.NOTIFICATION_TYPE_BADGE);
             }
 
             if (options.ios.sound) {
-              types.push(global.Titanium.Network.NOTIFICATION_TYPE_SOUND);
+              types.push(Titanium.Network.NOTIFICATION_TYPE_SOUND);
             }
 
-            global.Titanium.Network.registerForPushNotifications({
+            Titanium.Network.registerForPushNotifications({
               types: [
-                global.Titanium.Network.NOTIFICATION_TYPE_ALERT,
-                global.Titanium.Network.NOTIFICATION_TYPE_SOUND,
-                global.Titanium.Network.NOTIFICATION_TYPE_BADGE
+                Titanium.Network.NOTIFICATION_TYPE_ALERT,
+                Titanium.Network.NOTIFICATION_TYPE_SOUND,
+                Titanium.Network.NOTIFICATION_TYPE_BADGE
               ],
-              success: function(e) {
+              success(e) {
                 resolve(e.deviceToken);
               },
-              error: function(e) {
-                reject(new KinveyError('An error occurred registering this device for push notifications.', e));
+              error(e) {
+                reject(new KinveyError('An error occurred registering this device for ' +
+                  'push notifications.', e));
               },
-              callback: function(data) {
+              callback(data) {
                 Push.emit(notificationEvent, data);
               }
             });
           }
         } else if (platform.name === 'android') {
           global.CloudPush.retrieveDeviceToken({
-            success: function(e) {
+            success(e) {
               resolve(e.deviceToken);
             },
-            error: function(e) {
-              reject(new KinveyError('An error occurred registering this device for push notifications.', e));
+            error(e) {
+              reject(new KinveyError('An error occurred registering this device for ' +
+                'push notifications.', e));
             }
           });
 
-          global.CloudPush.addEventListener('callback', function(data) {
+          global.CloudPush.addEventListener('callback', function (data) {
             Push.emit(notificationEvent, data);
           });
         }
@@ -227,11 +235,13 @@ class Push {
     const platform = device.platform;
 
     if (!device.isCordova() || !device.isTitanium()) {
-      return Promise.reject(new KinveyError(`Kinvey currently only support push notifications on PhoneGap/Cordova and Titanium environments.`));
+      return Promise.reject(new KinveyError(`Kinvey currently only support push notifications ' +
+        'on PhoneGap/Cordova and Titanium environments.`));
     }
 
     if (platform.name !== 'android' || platform.name !== 'ios') {
-      return Promise.reject(new KinveyError(`Kinvey currently does not support push notifications on ${platform.name}.`));
+      return Promise.reject(new KinveyError(`Kinvey currently does not support ' +
+        'push notifications on ${platform.name}.`));
     }
 
     const store = new LocalStore(deviceCollection, {

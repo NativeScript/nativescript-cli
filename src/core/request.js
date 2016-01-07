@@ -101,15 +101,15 @@ class Request {
     method = method.toUpperCase();
 
     switch (method) {
-    case HttpMethod.GET:
-    case HttpMethod.POST:
-    case HttpMethod.PATCH:
-    case HttpMethod.PUT:
-    case HttpMethod.DELETE:
-      this._method = method;
-      break;
-    default:
-      throw new KinveyError('Invalid Http Method. GET, POST, PATCH, PUT, and DELETE are allowed.');
+      case HttpMethod.GET:
+      case HttpMethod.POST:
+      case HttpMethod.PATCH:
+      case HttpMethod.PUT:
+      case HttpMethod.DELETE:
+        this._method = method;
+        break;
+      default:
+        throw new KinveyError('Invalid Http Method. GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 
@@ -188,22 +188,22 @@ class Request {
     let responseType;
 
     switch (type) {
-    case ResponseType.Blob:
-      try {
-        responseType = new global.Blob() && 'blob';
-      } catch (e) {
-        responseType = 'arraybuffer';
-      }
+      case ResponseType.Blob:
+        try {
+          responseType = new global.Blob() && 'blob';
+        } catch (e) {
+          responseType = 'arraybuffer';
+        }
 
-      break;
-    case ResponseType.Document:
-      responseType = 'document';
-      break;
-    case ResponseType.JSON:
-      responseType = 'json';
-      break;
-    default:
-      responseType = '';
+        break;
+      case ResponseType.Document:
+        responseType = 'document';
+        break;
+      case ResponseType.JSON:
+        responseType = 'json';
+        break;
+      default:
+        responseType = '';
     }
 
     this._responseType = responseType;
@@ -287,106 +287,106 @@ class Request {
     }).then(() => {
       if (this.method === HttpMethod.GET) {
         switch (this.dataPolicy) {
-        case DataPolicy.LocalOnly:
-          return this.executeLocal();
-        case DataPolicy.PreferLocal:
-          return this.executeLocal().catch(err => {
-            if (err instanceof NotFoundError) {
-              return new Response(StatusCode.NotFound, {}, []);
-            }
+          case DataPolicy.LocalOnly:
+            return this.executeLocal();
+          case DataPolicy.PreferLocal:
+            return this.executeLocal().catch(err => {
+              if (err instanceof NotFoundError) {
+                return new Response(StatusCode.NotFound, {}, []);
+              }
 
-            throw err;
-          }).then(response => {
-            if (response && !response.isSuccess()) {
+              throw err;
+            }).then(response => {
+              if (response && !response.isSuccess()) {
+                const request = new Request({
+                  method: this.method,
+                  pathname: this.pathname,
+                  query: this.query,
+                  auth: this.auth,
+                  client: this.client,
+                  dataPolicy: DataPolicy.PreferNetwork
+                });
+                return request.execute();
+              }
+
+              return response;
+            });
+          case DataPolicy.NetworkOnly:
+            return this.executeNetwork().then(response => {
+              if (response && response.isSuccess()) {
+                const request = new Request({
+                  method: HttpMethod.PUT,
+                  pathname: this.pathname,
+                  query: this.query,
+                  auth: this.auth,
+                  data: response.data,
+                  client: this.client,
+                  writePolicy: WritePolicy.Local
+                });
+
+                return request.execute().then(() => {
+                  return response;
+                });
+              }
+
+              return response;
+            });
+          case DataPolicy.PreferNetwork:
+          default:
+            return this.executeNetwork().then(response => {
+              if (response && response.isSuccess()) {
+                const request = new Request({
+                  method: HttpMethod.PUT,
+                  pathname: this.pathname,
+                  query: this.query,
+                  auth: this.auth,
+                  data: response.data,
+                  client: this.client,
+                  writePolicy: WritePolicy.Local
+                });
+
+                return request.execute().then(() => {
+                  return response;
+                });
+              }
+
               const request = new Request({
                 method: this.method,
                 pathname: this.pathname,
                 query: this.query,
                 auth: this.auth,
                 client: this.client,
-                dataPolicy: DataPolicy.PreferNetwork
+                dataPolicy: DataPolicy.LocalOnly
               });
               return request.execute();
-            }
-
-            return response;
-          });
-        case DataPolicy.NetworkOnly:
-          return this.executeNetwork().then(response => {
-            if (response && response.isSuccess()) {
-              const request = new Request({
-                method: HttpMethod.PUT,
-                pathname: this.pathname,
-                query: this.query,
-                auth: this.auth,
-                data: response.data,
-                client: this.client,
-                writePolicy: WritePolicy.Local
-              });
-
-              return request.execute().then(() => {
-                return response;
-              });
-            }
-
-            return response;
-          });
-        case DataPolicy.PreferNetwork:
-        default:
-          return this.executeNetwork().then(response => {
-            if (response && response.isSuccess()) {
-              const request = new Request({
-                method: HttpMethod.PUT,
-                pathname: this.pathname,
-                query: this.query,
-                auth: this.auth,
-                data: response.data,
-                client: this.client,
-                writePolicy: WritePolicy.Local
-              });
-
-              return request.execute().then(() => {
-                return response;
-              });
-            }
-
-            const request = new Request({
-              method: this.method,
-              pathname: this.pathname,
-              query: this.query,
-              auth: this.auth,
-              client: this.client,
-              dataPolicy: DataPolicy.LocalOnly
             });
-            return request.execute();
-          });
         }
       }
 
       switch (this.writePolicy) {
-      case WritePolicy.Local:
-        return this.executeLocal();
-      case WritePolicy.Network:
-      default:
-        return this.executeNetwork().then(response => {
-          if (response && response.isSuccess()) {
-            const request = new Request({
-              method: this.method,
-              pathname: this.pathname,
-              query: this.query,
-              auth: this.auth,
-              data: response.data,
-              client: this.client,
-              writePolicy: WritePolicy.Local
-            });
+        case WritePolicy.Local:
+          return this.executeLocal();
+        case WritePolicy.Network:
+        default:
+          return this.executeNetwork().then(response => {
+            if (response && response.isSuccess()) {
+              const request = new Request({
+                method: this.method,
+                pathname: this.pathname,
+                query: this.query,
+                auth: this.auth,
+                data: response.data,
+                client: this.client,
+                writePolicy: WritePolicy.Local
+              });
 
-            return request.execute().then(() => {
-              return response;
-            });
-          }
+              return request.execute().then(() => {
+                return response;
+              });
+            }
 
-          return response;
-        });
+            return response;
+          });
       }
     }).then(response => {
       if (!response) {
@@ -505,7 +505,8 @@ class DeltaSetRequest extends Request {
                       continue;
                     } else if (networkDocument && localDocument) {
                       // Push id onto delta set if lmt differs
-                      if (networkDocument._kmd && localDocument._kmd && networkDocument._kmd.lmt > localDocument._kmd.lmt) {
+                      if (networkDocument._kmd && localDocument._kmd &&
+                          networkDocument._kmd.lmt > localDocument._kmd.lmt) {
                         continue;
                       }
                     }
@@ -521,7 +522,8 @@ class DeltaSetRequest extends Request {
                 // Batch the requests to retrieve 200 items per request
                 while (i < networkIds.length) {
                   const query = new Query(result(origQuery, 'toJSON', origQuery));
-                  query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : networkIds.length));
+                  query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ?
+                                                            maxIdsPerRequest : networkIds.length));
 
                   const request = new Request({
                     method: this.method,
@@ -534,7 +536,8 @@ class DeltaSetRequest extends Request {
 
                   if (origQuery) {
                     const query = new Query(result(origQuery, 'toJSON', origQuery));
-                    query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : networkIds.length));
+                    query.contains('_id', networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ?
+                                                              maxIdsPerRequest : networkIds.length));
                     request.query = query;
                   }
 
@@ -547,7 +550,8 @@ class DeltaSetRequest extends Request {
 
                 while (i < localIds.length) {
                   const query = new Query(result(origQuery, 'toJSON', origQuery));
-                  query.contains('_id', localIds.slice(i, localIds.length > maxIdsPerRequest + i ? maxIdsPerRequest : localIds.length));
+                  query.contains('_id', localIds.slice(i, localIds.length > maxIdsPerRequest + i ?
+                                                          maxIdsPerRequest : localIds.length));
 
                   const request = new Request({
                     method: this.method,

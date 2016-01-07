@@ -13,7 +13,11 @@ if (typeof window !== 'undefined') {
   // Require indexeddbshim to patch buggy indexed db implementations
   require('indexeddbshim');
   window.shimIndexedDB.__useShim();
-  indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
+  indexedDB = window.indexedDB ||
+              window.mozIndexedDB ||
+              window.webkitIndexedDB ||
+              window.msIndexedDB ||
+              window.shimIndexedDB;
 } else {
   indexedDB = require('fake-indexeddb');
 }
@@ -35,12 +39,14 @@ class IndexedDB {
             return success(store);
           }
 
-          throw new KinveyError(`Unable to open a transaction for the ${collection} collection on the ${this.dbName} indexedDB database.`);
+          throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
+            `collection on the ${this.dbName} indexedDB database.`);
         } catch (err) {
           return error(err);
         }
       } else if (!write) {
-        return error(new NotFoundError(`The ${collection} collection was not found on the ${this.dbName} indexedDB database.`));
+        return error(new NotFoundError(`The ${collection} collection was not found on ` +
+          `the ${this.dbName} indexedDB database.`));
       }
     }
 
@@ -98,7 +104,7 @@ class IndexedDB {
       // to empty the queue upon success and failure. Set the `force` flag so
       // all but the current transaction remain queued.
       const wrap = function wrap(done) {
-        return function(arg) {
+        return function (arg) {
           done(arg);
 
           // Switch flag
@@ -110,7 +116,7 @@ class IndexedDB {
           if (queue.length > 0) {
             const pending = queue;
             queue = [];
-            forEach(pending, function(fn) {
+            forEach(pending, function (fn) {
               fn();
             });
           }
@@ -121,11 +127,13 @@ class IndexedDB {
     };
 
     request.onblocked = () => {
-      error(new KinveyError(`The ${this.dbName} indexedDB database version can't be upgraded because the database is already open.`));
+      error(new KinveyError(`The ${this.dbName} indexedDB database version can't be upgraded ` +
+        `because the database is already open.`));
     };
 
     request.onerror = (e) => {
-      error(new KinveyError(`Unable to open the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+      error(new KinveyError(`Unable to open the ${this.dbName} indexedDB database. ` +
+        `Received the error code ${e.target.errorCode}.`));
     };
   }
 
@@ -147,7 +155,8 @@ class IndexedDB {
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while fetching data from the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+          reject(new KinveyError(`An error occurred while fetching data from the ${collection} ` +
+            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -167,11 +176,14 @@ class IndexedDB {
             return resolve(document);
           }
 
-          reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} collection on the ${this.dbName} indexedDB database.`));
+          reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} ` +
+            `collection on the ${this.dbName} indexedDB database.`));
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while retrieving a document with id = ${id} from the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+          reject(new KinveyError(`An error occurred while retrieving a document with id = ${id} ` +
+            `from the ${collection} collection on the ${this.dbName} indexedDB database. ` +
+            `Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -197,7 +209,8 @@ class IndexedDB {
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving a document to the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+          reject(new KinveyError(`An error occurred while saving a document to the ${collection} ` +
+            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -228,7 +241,8 @@ class IndexedDB {
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving the documents to the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+          reject(new KinveyError(`An error occurred while saving the documents to the ${collection} ` +
+            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -245,7 +259,8 @@ class IndexedDB {
 
         request.oncomplete = () => {
           if (!document.result) {
-            return reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} collection on the ${this.dbName} indexedDB database.`));
+            return reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} `
+              + `collection on the ${this.dbName} indexedDB database.`));
           }
 
           resolve({
@@ -255,7 +270,9 @@ class IndexedDB {
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while deleting a document with id = ${id} in the ${collection} collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+          reject(new KinveyError(`An error occurred while deleting a document with id = ${id} ` +
+            `in the ${collection} collection on the ${this.dbName} indexedDB database. ` +
+            `Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -277,7 +294,8 @@ class IndexedDB {
       };
 
       request.onerror = (e) => {
-        reject(new KinveyError(`An error occurred while destroying the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        reject(new KinveyError(`An error occurred while destroying the ${this.dbName} ` +
+          `indexedDB database. Received the error code ${e.target.errorCode}.`));
       };
     });
 

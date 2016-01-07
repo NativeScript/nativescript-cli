@@ -40,12 +40,12 @@ Kinvey.User.MIC = require('./mic');
  *   appSecret: 'appSecret'
  * });
  */
-Kinvey.init = function(options) {
+Kinvey.init = function (options) {
   const client = Client.init(options);
   return User.getActive(client);
 };
 
-Kinvey.getActiveUser = function(client) {
+Kinvey.getActiveUser = function (client) {
   return User.getActive(client);
 };
 

@@ -5,6 +5,8 @@
     "no-param-reassign": 0,
     "comma-dangle": 0,
     "no-shadow": 0,
-    "func-names": 0
+    "func-names": 0,
+    "object-shorthand": [2, "methods"],
+    "max-len": [2, 120, 2]
   }
 }

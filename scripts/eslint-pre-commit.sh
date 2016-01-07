@@ -1,0 +1,20 @@
+#!/bin/bash
+
+git stash -q --keep-index
+
+branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
+
+if [ "$branch" ==  "master" ]; then
+    echo 'Commit on master: Running eslint and unit tests on entire repo.'
+    $(npm bin)/gulp test
+else
+    echo 'Commit on non-master branch: Running eslint on current changeset.'
+    git diff-index --cached HEAD --name-only --diff-filter ACMR | egrep '.js$' | xargs $(npm bin)/eslint
+fi
+
+RESULT=$?
+
+git stash pop -q
+
+[ $RESULT -ne 0 ] && exit 1
+exit 0

@@ -15,7 +15,7 @@ class PrivateAggregation {
       query: null,
       initial: {},
       key: {},
-      reduce: function() {}.toString()
+      reduce: function () {}.toString()
     }, options);
 
     this.query(options.query);
@@ -162,7 +162,7 @@ class Aggregation {
     }
 
     aggregation.initial({ result: 0 });
-    aggregation.reduce(function(doc, out) {
+    aggregation.reduce(function (doc, out) {
       out.result += 1;
     });
     return aggregation;

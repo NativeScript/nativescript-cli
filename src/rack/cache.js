@@ -3,8 +3,10 @@ const Cache = require('../core/cache');
 const HttpMethod = require('../core/enums').HttpMethod;
 const StatusCode = require('../core/enums').StatusCode;
 const CacheAdapter = require('../core/enums').CacheAdapter;
+const defaultAdapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory];
+
 class CacheMiddleware extends Middleware {
-  constructor(adapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory]) {
+  constructor(adapters = defaultAdapters) {
     super('Kinvey Cache Middleware');
     this.adapters = adapters;
   }

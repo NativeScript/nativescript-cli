@@ -7,8 +7,9 @@ class Device {
       name = global.device.platform;
       version = global.device.version;
     } else if (this.isTitanium()) {
-      name = global.Titanium.Platform.getName() === 'iPhone OS' ? 'ios' : global.Titanium.Platform.getName();
-      version = global.Titanium.Platform.getVersion();
+      const platform = global.Titanium.Platform;
+      name = platform.getName() === 'iPhone OS' ? 'ios' : platform.getName();
+      version = platform.getVersion();
     }
 
     return {
@@ -31,7 +32,12 @@ class Device {
       const rIE = /(msie) ([\w.]+)/i;
       const rOpera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
       const rSafari = /(safari)\/([\w.]+)/;
-      const browser = rChrome.exec(userAgent) || rFirefox.exec(userAgent) || rIE.exec(userAgent) || rOpera.exec(userAgent) || rSafari.exec(userAgent) || [];
+      const browser = rChrome.exec(userAgent) ||
+                      rFirefox.exec(userAgent) ||
+                      rIE.exec(userAgent) ||
+                      rOpera.exec(userAgent) ||
+                      rSafari.exec(userAgent) ||
+                      [];
       name = browser[1];
       version = browser[2];
     } else if (this.isNode()) {

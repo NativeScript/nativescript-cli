@@ -6,9 +6,8 @@
   "scripts": {
     "test": "./node_modules/.bin/gulp",
     "build": "./node_modules/.bin/gulp build",
-    "coverage": "./node_modules/.bin/gulp coverage",
-    "validate": "npm ls",
-    "lint": "./node_modules/.bin/gulp lint"
+    "lint": "./node_modules/.bin/gulp lint",
+    "eslint-pre-commit": "./scripts/eslint-pre-commit.sh"
   },
   "repository": {
     "type": "git",
@@ -48,7 +47,7 @@
     "envify": "^3.4.0",
     "esdoc": "^0.4.0",
     "eslint": "^1.8.0",
-    "eslint-config-airbnb": "^1.0.0",
+    "eslint-config-airbnb": "^3.0.2",
     "exorcist": "^0.4.0",
     "glob": "^6.0.0",
     "gulp": "^3.9.0",
@@ -88,7 +87,7 @@
     "mocha": "^2.3.4",
     "mocha-jenkins-reporter": "^0.1.9",
     "mocha-phantomjs": "^4.0.2",
-    "nock": "^3.3.2",
+    "nock": "^4.0.0",
     "phantomjs": "^1.9.19",
     "precommit-hook": "^3.0.0",
     "run-sequence": "^1.1.4",
@@ -103,7 +102,6 @@
     "yargs": "^3.27.0"
   },
   "pre-commit": [
-    "validate",
-    "test"
+    "eslint-pre-commit"
   ]
 }

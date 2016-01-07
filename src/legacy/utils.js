@@ -24,7 +24,7 @@ if (typeof window !== 'undefined' && isFunction(window.setImmediate)) { // IE10,
 } else if (typeof process !== 'undefined' && process.nextTick) { // Node.js <0.9.
   nextTick = process.nextTick;
 } else { // Most browsers.
-  nextTick = function(fn) {
+  nextTick = function (fn) {
     global.setTimeout(fn, 0);
   };
 }
@@ -33,19 +33,19 @@ if (typeof window !== 'undefined' && isFunction(window.setImmediate)) { // IE10,
 // rejects. The `success` and `error` properties are extracted from `options`
 // at run-time, allowing intermediate process to alter the callbacks.
 function wrapCallbacks(promise, options = {}) {
-  promise.then(function(value) {
+  promise.then(function (value) {
     if (options.success) { // Invoke the success handler.
       options.success(value);
     }
-  }, function(reason) {
+  }, function (reason) {
     if (options.error) { // Invoke the error handler.
       options.error(reason);
     }
-  }).then(null, function(err) {
+  }).then(null, function (err) {
     // If an exception occurs, the promise would normally catch it. Since we
     // are using asynchronous callbacks, exceptions should be thrown all the
     // way.
-    nextTick(function() {
+    nextTick(function () {
       throw err;
     });
   });

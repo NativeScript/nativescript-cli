@@ -46,7 +46,9 @@ class Http extends Middleware {
         }
       }
 
-      if (request.data && (request.method === HttpMethod.PATCH || request.method === HttpMethod.POST || request.method === HttpMethod.PUT)) {
+      if (request.data && (request.method === HttpMethod.PATCH ||
+                           request.method === HttpMethod.POST ||
+                           request.method === HttpMethod.PUT)) {
         options.body = request.data;
       }
 
