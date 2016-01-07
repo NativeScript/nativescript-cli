@@ -137,6 +137,7 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName).wait();
 			this.$logger.info("device: " + deviceId + " debug port: " + port + "\n");
+			this.$logger.info("client options " + this.$options.client);
 		}).future<void>()();
 	}
 
@@ -144,10 +145,13 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-debug\"', "--ez", "enable", "true"];
 			this.device.adb.executeShellCommand(startDebuggerCommand).wait();
-
-			let port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName).wait();
-			this.startDebuggerClient(port).wait();
-			this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
+			
+			if (this.$options.client)
+			{
+				let port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName).wait();
+				this.startDebuggerClient(port).wait();
+				this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + port);
+			}
 		}).future<void>()();
 	}
 
@@ -185,9 +189,12 @@ class AndroidDebugService implements IDebugService {
 			this.device.applicationManager.stopApplication(packageName).wait();
 			this.device.applicationManager.startApplication(packageName).wait();
 
-			let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
-			this.startDebuggerClient(localDebugPort).wait();
-			this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
+			if (this.$options.client)
+			{
+				let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
+				this.startDebuggerClient(localDebugPort).wait();
+				this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
+			}
 		}).future<void>()();
 	}
 
