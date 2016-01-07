@@ -137,7 +137,6 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let port = this.getForwardedLocalDebugPortForPackageName(deviceId, packageName).wait();
 			this.$logger.info("device: " + deviceId + " debug port: " + port + "\n");
-			this.$logger.info("client options " + this.$options.client);
 		}).future<void>()();
 	}
 
