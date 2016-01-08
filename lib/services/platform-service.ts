@@ -113,11 +113,6 @@ export class PlatformService implements IPlatformService {
 
 			let sourceFrameworkDir = isFrameworkPathDirectory && this.$options.symlink ? path.join(this.$options.frameworkPath, "framework") : frameworkDir;
 			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion).wait();
-			if(this.$options.baseConfig) {
-				let newConfigFile = path.resolve(this.$options.baseConfig);
-				this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
-				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
-			}
 
 			if(isFrameworkPathDirectory || isFrameworkPathNotSymlinkedFile) {
 				// Need to remove unneeded node_modules folder
@@ -127,6 +122,12 @@ export class PlatformService implements IPlatformService {
 
 			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
+
+			if(this.$options.baseConfig) {
+				let newConfigFile = path.resolve(this.$options.baseConfig);
+				this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
+				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
+			}
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);
 			this.$projectDataService.setValue(platformData.frameworkPackageName, {version: installedVersion}).wait();
