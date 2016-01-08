@@ -82,7 +82,11 @@ function createProject(testInjector: IInjector, dependencies?: any): string {
 			"tns-android": {
 				"version": "1.0.0"
 			}
-		}
+		},
+		"description": "dummy",
+		"license": "MIT",
+		"readme": "dummy",
+		"repository": "dummy"
 	};
 	packageJsonData["dependencies"] = dependencies;
 	packageJsonData["devDependencies"] = {};

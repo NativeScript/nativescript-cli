@@ -227,7 +227,11 @@ describe("Project Service Tests", () => {
 				},
 				devDependencies: {
 					"minimist": "1.2.0"
-				}
+				},
+				"description": "dummy",
+				"license": "MIT",
+				"readme": "dummy",
+				"repository": "dummy"
 			}).wait();
 
 			projectIntegrationTest.createProject(projectName, tempDir).wait();
@@ -329,7 +333,11 @@ describe("project upgrade procedure tests", () => {
 			"id": "org.nativescript.Test",
 			"tns-ios": {
 				"version": "1.0.0"
-			}
+			},
+			"description": "dummy",
+			"license": "MIT",
+			"readme": "dummy",
+			"repository": "dummy"
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
@@ -360,7 +368,11 @@ describe("project upgrade procedure tests", () => {
 			"version": "0.0.0",
 			"dependencies": {
 				"myFirstDep": "0.0.1"
-			}
+			},
+			"description": "dummy",
+			"license": "MIT",
+			"readme": "dummy",
+			"repository": "dummy"
 		};
 		let tnsProjectFilePath = path.join(tempFolder, ".tnsproject");
 		fs.writeJson(tnsProjectFilePath, tnsProjectData).wait();
@@ -396,7 +408,11 @@ describe("project upgrade procedure tests", () => {
 				"tns-ios": {
 					"version": "1.0.2"
 				}
-			}
+			},
+			"description": "dummy",
+			"license": "MIT",
+			"readme": "dummy",
+			"repository": "dummy"
 		};
 
 		fs.writeJson(path.join(tempFolder, ".tnsproject"), tnsProjectData).wait();
