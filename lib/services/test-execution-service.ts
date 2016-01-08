@@ -18,14 +18,11 @@ class TestExecutionService implements ITestExecutionService {
 	private static CONFIG_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/config.js`;
 	private static SOCKETIO_JS_FILE_NAME = `node_modules/${constants.TEST_RUNNER_NAME}/socket.io.js`;
 
-	constructor(
-		private $injector: IInjector,
+	constructor(private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $usbLiveSyncServiceBase: IUsbLiveSyncServiceBase,
-		private $androidUsbLiveSyncServiceLocator: {factory: Function},
-		private $iosUsbLiveSyncServiceLocator: {factory: Function},
+		private $liveSyncServiceBase: ILiveSyncServiceBase,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $resources: IResourceLoader,
 		private $httpClient: Server.IHttpClient,
@@ -64,66 +61,14 @@ class TestExecutionService implements ITestExecutionService {
 						}
 						this.detourEntryPoint(projectFilesPath).wait();
 
-						let watchGlob = path.join(projectDir, constants.APP_FOLDER_NAME);
-
-						let platformSpecificLiveSyncServices: IDictionary<any> = {
-							android: (_device: Mobile.IDevice, $injector: IInjector): IPlatformSpecificLiveSyncService => {
-								return $injector.resolve(this.$androidUsbLiveSyncServiceLocator.factory, {_device: _device});
-							},
-							ios: (_device: Mobile.IDevice, $injector: IInjector) => {
-								return $injector.resolve(this.$iosUsbLiveSyncServiceLocator.factory, {_device: _device});
-							}
-						};
-
-						let notInstalledAppOnDeviceAction = (device: Mobile.IDevice): IFuture<void> => {
-							return (() => {
-								this.$platformService.installOnDevice(platform).wait();
-								this.detourEntryPoint(projectFilesPath).wait();
-							}).future<void>()();
-						};
-
-						let notRunningiOSSimulatorAction = (): IFuture<void> => {
-							return (() => {
-								this.$platformService.deployOnEmulator(this.$devicePlatformsConstants.iOS.toLowerCase()).wait();
-								this.detourEntryPoint(projectFilesPath).wait();
-							}).future<void>()();
-						};
-
-						let beforeBatchLiveSyncAction = (filePath: string): IFuture<string> => {
-							return (() => {
-								if (!this.$platformService.preparePlatform(platform).wait()) {
-									this.$logger.out("Verify that listed files are well-formed and try again the operation.");
-									return;
-								}
-								return path.join(projectFilesPath, path.relative(path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME), filePath));
-							}).future<string>()();
-						};
-
-						let localProjectRootPath = platform.toLowerCase() === "ios" ? platformData.appDestinationDirectoryPath : null;
-
-						let getApplicationPathForiOSSimulatorAction = (): IFuture<string> => {
-							return (() => {
-								return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
-							}).future<string>()();
-						};
-
 						let liveSyncData = {
 							platform: platform,
 							appIdentifier: this.$projectData.projectId,
 							projectFilesPath: projectFilesPath,
-							excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_DIRECTORIES,
-							watchGlob: watchGlob,
-							platformSpecificLiveSyncServices: platformSpecificLiveSyncServices,
-							notInstalledAppOnDeviceAction: notInstalledAppOnDeviceAction,
-							notRunningiOSSimulatorAction: notRunningiOSSimulatorAction,
-							getApplicationPathForiOSSimulatorAction: getApplicationPathForiOSSimulatorAction,
-							localProjectRootPath: localProjectRootPath,
-							beforeBatchLiveSyncAction: beforeBatchLiveSyncAction,
-							shouldRestartApplication: (localToDevicePaths: Mobile.ILocalToDevicePathData[]) => Future.fromResult(!this.$options.debugBrk),
-							canExecuteFastLiveSync: (filePath: string) => false,
+							syncWorkingDirectory: path.join(projectDir, constants.APP_FOLDER_NAME)
 						};
 
-						this.$usbLiveSyncServiceBase.sync(liveSyncData).wait();
+						this.$liveSyncServiceBase.sync(liveSyncData).wait();
 
 						if (this.$options.debugBrk) {
 							this.$logger.info('Starting debugger...');

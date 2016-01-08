@@ -1,7 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import * as iOSDevice from "../common/mobile/ios/ios-device";
+import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 
 import * as net from "net";
 import * as path from "path";
@@ -76,7 +76,7 @@ class IOSDebugService implements IDebugService {
             this.$platformService.buildPlatform(this.platform).wait();
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
-            let child_process = this.$iOSEmulatorServices.startEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true,
+            let child_process = this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true,
                 args: "--nativescript-debug-brk", appId: this.$projectData.projectId }).wait();
             let lineStream = byline(child_process.stdout);
 

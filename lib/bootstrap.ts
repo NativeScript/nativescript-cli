@@ -25,8 +25,6 @@ $injector.require("analyticsSettingsService", "./services/analytics-settings-ser
 
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
-$injector.require("usbLiveSyncService", "./services/usb-livesync-service");
-
 $injector.require("platformCommandParameter", "./platform-command-param");
 $injector.requireCommand("create", "./commands/create-project");
 $injector.requireCommand("platform|*list", "./commands/list-platforms");
@@ -64,6 +62,8 @@ $injector.require("commandsServiceProvider", "./providers/commands-service-provi
 $injector.require("deviceAppDataProvider", "./providers/device-app-data-provider");
 
 $injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
+$injector.require("liveSyncProvider", "./providers/livesync-provider");
+$injector.require("projectFilesProvider", "./providers/project-files-provider");
 
 $injector.require("broccoliBuilder", "./tools/broccoli/builder");
 $injector.require("nodeModulesTree", "./tools/broccoli/trees/node-modules-tree");
@@ -80,12 +80,13 @@ $injector.requireCommand("install", "./commands/install");
 $injector.require("initService", "./services/init-service");
 $injector.requireCommand("init", "./commands/init");
 
-$injector.require("projectFilesManager", "./services/project-files-manager");
-$injector.requireCommand("livesync", "./commands/livesync");
 $injector.require("androidToolsInfo", "./android-tools-info");
 
-$injector.require("iosUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
-$injector.require("androidUsbLiveSyncServiceLocator", "./services/usb-livesync-service");
+$injector.requireCommand("livesync", "./commands/livesync");
+$injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
+$injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-livesync-service");
+$injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-livesync-service");
+
 $injector.require("sysInfo", "./sys-info");
 
 $injector.require("iOSNotificationService", "./services/ios-notification-service");
