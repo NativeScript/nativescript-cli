@@ -268,7 +268,8 @@ export class PlatformsDataStub implements IPlatformsData {
 			deviceBuildOutputPath: "",
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
-			relativeToFrameworkConfigurationFilePath: ""
+			relativeToFrameworkConfigurationFilePath: "",
+			fastLivesyncFileExtensions: []
 		};
 	}
 
@@ -289,7 +290,8 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 			validPackageNamesForDevice: [],
 			frameworkFilesExtensions: [],
 			appDestinationDirectoryPath: "",
-			relativeToFrameworkConfigurationFilePath: ""
+			relativeToFrameworkConfigurationFilePath: "",
+			fastLivesyncFileExtensions: []
 		};
 	}
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>{
