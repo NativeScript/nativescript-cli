@@ -64,7 +64,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
 			relativeToFrameworkConfigurationFilePath: path.join("__PROJECT_NAME__", "__PROJECT_NAME__-Info.plist"),
-			mergeXmlConfig: [{ "nodename": "plist", "attrname": "*" }, {"nodename": "dict", "attrname": "*"}]
+			mergeXmlConfig: [{ "nodename": "plist", "attrname": "*" }, {"nodename": "dict", "attrname": "*"}],
+			fastLivesyncFileExtensions: [".tiff", ".tif", ".jpg", "jpeg", "gif", ".png", ".bmp", ".BMPf", ".ico", ".cur", ".xbm"] // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 		};
 	}
 

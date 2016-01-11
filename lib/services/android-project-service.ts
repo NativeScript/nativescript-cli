@@ -56,7 +56,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
 				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
-				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}]
+				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}],
+				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
 		}
 
