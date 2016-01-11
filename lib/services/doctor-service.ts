@@ -10,7 +10,12 @@ class DoctorService implements IDoctorService {
 	constructor(private $androidToolsInfo: IAndroidToolsInfo,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
-		private $sysInfo: ISysInfo) {	}
+		private $progressIndicator: IProgressIndicator,
+		private $sysInfo: ISysInfo,
+		private $childProcess: IChildProcess,
+		private $config: IConfiguration,
+		private $npm: INodePackageManager,
+		private $fs: IFileSystem) {	}
 
 	public printWarnings(): boolean {
 		let result = false;
@@ -53,6 +58,15 @@ class DoctorService implements IDoctorService {
 				result = true;
 			}
 
+			if (sysInfo.xcodeVer && sysInfo.cocoapodVer) {
+				let problemWithCocoaPods = this.verifyCocoaPods();
+				if (problemWithCocoaPods) {
+					this.$logger.warn("WARNING: There was a problem with CocoaPods");
+					this.$logger.out("Verify that CocoaPods are configured properly.");
+					result = true;
+				}
+			}
+
 			if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) === null) {
 				this.$logger.warn(`WARNING: CocoaPods version is not a valid semver version.`);
 				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
@@ -81,6 +95,37 @@ class DoctorService implements IDoctorService {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." + EOL);
 		} else if (this.$hostInfo.isDarwin) {
 			this.$logger.out("TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." + EOL);
+		}
+	}
+
+	private verifyCocoaPods(): boolean {
+		this.$logger.out("Verifying CocoaPods. This may take more than a minute, please be patient.");
+
+		let temp = require("temp");
+		temp.track();
+		let projDir = temp.mkdirSync("nativescript-check-cocoapods");
+
+		try {
+			this.$npm.install("tns-ios", projDir).wait();
+			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
+			this.$fs.writeFile(
+				path.join(iosDir, "Podfile"),
+				"pod 'AFNetworking', '~> 1.0'\n"
+			).wait();
+
+			let future = this.$childProcess.spawnFromEvent(
+				this.$config.USE_POD_SANDBOX ? "sandbox-pod": "pod",
+				["install"],
+				"exit",
+				{stdio: "inherit", cwd: iosDir},
+				{ throwError: true }
+				);
+
+			this.$progressIndicator.showProgressIndicator(future, 5000).wait();
+
+			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
+		} catch(err) {
+			return true;
 		}
 	}
 }
