@@ -1,4 +1,7 @@
 ## Changelog
+#### 1.6.5 (2015-1-12)
+* Bugfix (MLIBZ-784): Removed password from MIC error message.
+
 #### 1.6.4 (2015-12-22)
 * Bugfix: Fixed a bug where a device without a network connection would prevent the user from being logged out.
 * Bugfix: Fixed a bug where a device without a network connection would fail when initializing the library.
