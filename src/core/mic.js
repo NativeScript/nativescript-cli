@@ -561,8 +561,7 @@ var MIC = {
       return response.code;
     }, function(error) {
       error = clientError(Kinvey.Error.MIC_ERROR, {
-        debug: 'Unable to authorize user with username ' + options.username + ' and ' +
-               'password ' + options.password + '.'
+        debug: 'Unable to authorize user with username ' + options.username + '.'
       });
       throw error;
     });
