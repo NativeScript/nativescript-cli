@@ -1,5 +1,5 @@
 ## Changelog
-#### 1.6.5 (2015-1-12)
+#### 1.6.5 (2016-1-12)
 * Bugfix (MLIBZ-784): Removed password from MIC error message.
 
 #### 1.6.4 (2015-12-22)
