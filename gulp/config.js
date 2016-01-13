@@ -144,7 +144,7 @@ config.s3 = {
 /**
  *  Common implementation for an error handler of a Gulp plugin
  */
-config.errorHandler = function(title) {
+config.errorHandler = function (title) {
   return function errorHandler(err) {
     $.util.log($.util.colors.red('[' + title + ']'), err.toString());
     this.emit('end');

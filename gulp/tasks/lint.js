@@ -5,7 +5,7 @@ const $ = require('gulp-load-plugins')({
 const config = require('../config');
 
 function createLintTask(taskName, files) {
-  gulp.task(taskName, function() {
+  gulp.task(taskName, function () {
     return gulp.src(files)
       .pipe($.eslint())
       .pipe($.eslint.format())

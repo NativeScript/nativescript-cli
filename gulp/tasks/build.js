@@ -9,7 +9,7 @@ const buffer = require('vinyl-buffer');
 const errorHandler = config.errorHandler('build');
 
 // Build unminified version of the library
-gulp.task('build', function() {
+gulp.task('build', function () {
   return browserify(config.browserify)
     .transform('envify', config.env)
     .transform('babelify', config.babelify)
@@ -26,7 +26,7 @@ gulp.task('build', function() {
     .on('error', errorHandler);
 });
 
-gulp.task('build-legacy', function() {
+gulp.task('build-legacy', function () {
   return browserify(config.legacy.browserify)
     .transform('envify', config.env)
     .transform('babelify', config.babelify)
