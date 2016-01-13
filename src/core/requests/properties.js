@@ -1,10 +1,10 @@
 const clone = require('lodash/lang/clone');
 const isPlainObject = require('lodash/lang/isPlainObject');
 const KinveyError = require('./errors').KinveyError;
-const privateRequestPropertiesSymbol = Symbol();
+const privatePropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
 
-class PrivateRequestProperties {
+class PrivateProperties {
   constructor(properties = {}) {
     this.properties = properties;
   }
@@ -47,16 +47,16 @@ class PrivateRequestProperties {
 }
 
 /**
- * Request Properties class
+ * Properties class
  */
-class RequestProperties {
+class Properties {
   /**
    * This is the constructor.
    *
    * @param  {Object} properties Request properties
    */
   constructor(properties) {
-    this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
+    this[privatePropertiesSymbol] = new PrivateProperties(properties);
   }
 
   /**
@@ -151,8 +151,8 @@ class RequestProperties {
       throw new KinveyError('properties argument must be an object');
     }
 
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    privateRequestProperties.addProperties(properties);
+    const privateProperties = this[privatePropertiesSymbol];
+    privateProperties.addProperties(properties);
     return this;
   }
 
@@ -162,8 +162,8 @@ class RequestProperties {
    * @return {RequestProperties} The request properties instance.
    */
   clear() {
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    privateRequestProperties.clear();
+    const privateProperties = this[privatePropertiesSymbol];
+    privateProperties.clear();
     return this;
   }
 
@@ -174,8 +174,8 @@ class RequestProperties {
    * @return {RequestProperties} The request properties instance.
    */
   clearProperty(key) {
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    privateRequestProperties.clearProperty(key);
+    const privateProperties = this[privatePropertiesSymbol];
+    privateProperties.clearProperty(key);
     return this;
   }
 
@@ -194,9 +194,9 @@ class RequestProperties {
    * @return {Object} Request properties JSON.
    */
   toJSON() {
-    const privateRequestProperties = this[privateRequestPropertiesSymbol];
-    return privateRequestProperties.toJSON();
+    const privateProperties = this[privatePropertiesSymbol];
+    return privateProperties.toJSON();
   }
 }
 
-module.exports = RequestProperties;
+module.exports = Properties;

@@ -1,41 +1,13 @@
 const clone = require('lodash/lang/clone');
-const Response = require('../core/response');
-const Serialize = require('./serialize');
-const Http = require('./http');
-const Parse = require('./parse');
-const Cache = require('./cache');
+const Response = require('../requests/response');
 const Middleware = require('./middleware');
 const result = require('lodash/object/result');
-const networkRackSymbol = Symbol();
-const cacheRackSymbol = Symbol();
-
-function execute(index, middlewares, request) {
-  // Throw error of an index that is out of bounds
-  if (index < -1 || index >= middlewares.length) {
-    throw new Error(`Index ${index} is out of bounds.`);
-  }
-
-  // Get the middleware at index
-  const middleware = middlewares[index];
-
-  // Process the request on the middleware
-  return middleware.handle(request).then(response => {
-    // Add 1 to the index
-    index = index + 1;
-
-    // Execute the next middleware in the stack
-    if (index < middlewares.length) {
-      return execute.call(this, index, middlewares, response);
-    }
-
-    return response;
-  });
-}
 
 class Rack extends Middleware {
   constructor(name = 'Rack') {
     super(name);
     this._middlewares = [];
+    this.canceled = false;
   }
 
   get middlewares() {
@@ -133,7 +105,32 @@ class Rack extends Middleware {
   }
 
   execute(request) {
-    return execute.call(this, 0, this.middlewares, request);
+    if (!request) {
+      return Promise.reject(new Error('Request is null. Please provide a valid request.'));
+    }
+
+    return this._execute(0, this.middlewares, request);
+  }
+
+  _execute(index, middlewares, request) {
+    if (index < -1 || index >= middlewares.length) {
+      throw new Error(`Index ${index} is out of bounds.`);
+    }
+
+    const middleware = middlewares[index];
+    return middleware.handle(request).then(response => {
+      index = index + 1;
+
+      if (index < middlewares.length) {
+        return this._execute(index, middlewares, response);
+      }
+
+      return response;
+    });
+  }
+
+  cancel() {
+    this.canceled = true;
   }
 
   handle(request) {
@@ -153,36 +150,6 @@ class Rack extends Middleware {
 }
 
 class KinveyRack extends Rack {
-  static get networkRack() {
-    if (!KinveyRack[networkRackSymbol]) {
-      const rack = new KinveyRack('Kinvey Network Rack');
-      rack.use(new Serialize());
-      rack.use(new Http());
-      rack.use(new Parse());
-      Rack[networkRackSymbol] = rack;
-    }
-
-    return KinveyRack[networkRackSymbol];
-  }
-
-  static set networkRack(rack) {
-    KinveyRack[networkRackSymbol] = rack;
-  }
-
-  static get cacheRack() {
-    if (!KinveyRack[cacheRackSymbol]) {
-      const rack = new KinveyRack('Kinvey Cache Rack');
-      rack.use(new Cache());
-      KinveyRack[cacheRackSymbol] = rack;
-    }
-
-    return KinveyRack[cacheRackSymbol];
-  }
-
-  static set cacheRack(rack) {
-    KinveyRack[cacheRackSymbol] = rack;
-  }
-
   execute(request) {
     const requestClone = clone(result(request, 'toJSON', request));
     const promise = super.execute(requestClone).then(request => {

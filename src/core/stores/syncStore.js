@@ -1,4 +1,4 @@
-const LocalStore = require('./localStore');
+const CacheStore = require('./cacheStore');
 const NetworkStore = require('./networkStore');
 const DataPolicy = require('../enums').DataPolicy;
 const WritePolicy = require('../enums').WritePolicy;
@@ -19,7 +19,7 @@ const isArray = require('lodash/lang/isArray');
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 // const syncBatchSize = parseInt(process.env.KINVEY_SYCN_BATCH_SIZE) || 1000;
 
-class SyncStore extends LocalStore {
+class SyncStore extends CacheStore {
   constructor(name, options = {}) {
     options = assign({
       dataPolicy: DataPolicy.LocalOnly
@@ -166,9 +166,9 @@ class SyncStore extends LocalStore {
     options.dataPolicy = DataPolicy.LocalOnly;
 
     // Get the documents to sync
-    const syncCollectionLocalStore = new LocalStore(syncCollectionName, options);
+    const syncCollectionLocalStore = new CacheStore(syncCollectionName, options);
     const promise = syncCollectionLocalStore.get(this.name, options).then(syncModel => {
-      const collectionLocalStore = new LocalStore(syncModel.id, options);
+      const collectionLocalStore = new CacheStore(syncModel.id, options);
       const documents = syncModel.get('documents');
       const identifiers = Object.keys(documents);
       let size = syncModel.get('size');
@@ -359,7 +359,7 @@ class SyncStore extends LocalStore {
       client: this.client
     }, options);
 
-    const syncStore = new LocalStore(syncCollectionName, options);
+    const syncStore = new CacheStore(syncCollectionName, options);
     const query = new Query();
     query.contains('_id', [this.name]);
     const promise = syncStore.clear(query, options);

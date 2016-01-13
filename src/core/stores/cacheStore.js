@@ -3,7 +3,7 @@ const DataPolicy = require('../enums').DataPolicy;
 const WritePolicy = require('../enums').WritePolicy;
 const assign = require('lodash/object/assign');
 
-class LocalStore extends Store {
+class CacheStore extends Store {
   constructor(name, options = {}) {
     options = assign({
       dataPolicy: DataPolicy.PreferLocal
@@ -13,4 +13,4 @@ class LocalStore extends Store {
   }
 }
 
-module.exports = LocalStore;
+module.exports = CacheStore;

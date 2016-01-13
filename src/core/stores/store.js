@@ -1,10 +1,7 @@
 const Aggregation = require('../aggregation');
 const Promise = require('bluebird');
-const Request = require('../request').Request;
-const DeltaSetRequest = require('../request').DeltaSetRequest;
+const DeltaSetRequest = require('../requests/deltaSetRequest');
 const HttpMethod = require('../enums').HttpMethod;
-const DataPolicy = require('../enums').DataPolicy;
-const WritePolicy = require('../enums').WritePolicy;
 const NotFoundError = require('../errors').NotFoundError;
 const Client = require('../client');
 const Query = require('../query');
@@ -15,12 +12,13 @@ const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
 const log = require('../log');
 const isArray = require('lodash/lang/isArray');
+const isString = require('lodash/lang/isString');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
  * The Store class is used to retrieve, create, update, destroy, count and group documents
  * in collections.
- * a
+ *
  * @example
  * var store = new Kinvey.Store('books');
  */
@@ -28,21 +26,27 @@ class Store {
   /**
    * Creates a new instance of the Store class.
    *
-   * @param {string}      name                                                Name of the collection.
-   * @param {Object}      [options]                                           Options.
-   * @param {Client}      [options.client=Client.sharedInstance()]            Client to use.
-   * @param {DataPolicy}  [options.dataPolicy=DataPolicy.PreferNetwork]       Data policy to use.
-   * @param {WritePolicy} [options.writePolicy=WritePolicy.WriteAutomatic]    Write policy to use.
-   * @param {Model}       [options.model=Model]                               Model class to use.
+   * @param {string}      name                                                Name of the collection
+   * @param {Object}      [options]                                           Options
+   * @param {Auth}        [options.auth=Auth.default]                         Auth function to use to set the
+   *                                                                          authorization header for requests.
+   * @param {Client}      [options.client=Client.sharedInstance()]            Client to use for sending requests
+   *                                                                          for data.
+   * @param {Model}       [options.modelClass=Model]                          Model Class to instantiate with returned
+   *                                                                          data.
+   * @param {Number}      [options.ttl=undefined]                             TTL for data returned from cache.
    */
   constructor(name, options = {}) {
     options = assign({
       auth: Auth.default,
       client: Client.sharedInstance(),
-      dataPolicy: DataPolicy.PreferNetwork,
-      writePolicy: WritePolicy.Network,
-      model: Model
+      modelClass: Model,
+      ttl: undefined
     }, options);
+
+    if (name && !isString(name)) {
+      throw new Error('Name must be a string.');
+    }
 
     /**
      * @type {string}
@@ -60,19 +64,9 @@ class Store {
     this.client = options.client;
 
     /**
-     * @type {DataPolicy}
-     */
-    this.dataPolicy = options.dataPolicy;
-
-    /**
-     * @type {WritePolicy}
-     */
-    this.writePolicy = options.writePolicy;
-
-    /**
      * @type {Model}
      */
-    this.model = options.model;
+    this.modelClass = options.modelClass;
 
     /**
      * @type {Number}
@@ -106,17 +100,20 @@ class Store {
    * promise will be returned that will be resolved with the models or rejected with
    * an error.
    *
-   * @param   {Query}        [query]                                      Query
-   * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param {Query}     [query]                                        Query
+   * @param {Object}    [options]                                      Options
+   * @param {Auth}      [options.auth=Auth.default]                    Auth function to use to set the
+   *                                                                   authorization header for requests.
+   * @param {Client}    [options.client=Client.sharedInstance()]       Client to use for sending requests
+   *                                                                   for data.
+   * @param {Number}    [options.ttl]                                  TTL for data returned from cache.
+   * @return {Promise}                                                 Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
+   * var store = new Kinvey.Store('books');
    * var query = new Kinvey.Query();
-   * query.equalTo('author', 'David Flanagan');
-   * collection.find(query).then(function(books) {
+   * query.equalTo('author', 'Kinvey');
+   * store.find(query).then(function(books) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -126,10 +123,13 @@ class Store {
     log.debug(`Retrieving the models in the ${this.name} collection.`, query);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
       client: this.client,
-      ttl: this.ttl
+      properties: null,
+      headers: null,
+      auth: this.auth,
+      flags: null,
+      timeout: undefined,
+      ttl: this.ttl,
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -137,37 +137,36 @@ class Store {
     }
 
     const request = new DeltaSetRequest({
-      dataPolicy: options.dataPolicy,
-      auth: options.auth,
-      client: options.client,
       method: HttpMethod.GET,
-      pathname: this.getPathname(options.client),
+      client: options.client,
+      properties: options.properties,
+      headers: options.headers,
+      auth: options.auth,
+      flags: options.flags,
       query: query,
-      ttl: options.ttl
+      timeout: options.timeout
     });
     const promise = request.execute().then(response => {
-      let data = response.data;
-      const models = [];
+      if (response && response.isSuccess()) {
+        let data = response.data;
+        const models = [];
 
-      if (data) {
-        if (!isArray(data)) {
-          data = [data];
+        if (data) {
+          if (!isArray(data)) {
+            data = [data];
+          }
+
+          forEach(data, doc => {
+            if (doc) {
+              models.push(new this.modelClass(doc, options)); // eslint-disable-line new-cap
+            }
+          });
         }
 
-        forEach(data, obj => {
-          if (obj) {
-            models.push(new this.model(obj, options)); // eslint-disable-line new-cap
-          }
-        });
+        return models;
       }
 
-      return models;
-    }).catch(err => {
-      if (err instanceof NotFoundError) {
-        return [];
-      }
-
-      throw err;
+      return response;
     });
 
     promise.then(response => {

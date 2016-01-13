@@ -7,7 +7,8 @@
     "test": "./node_modules/.bin/gulp",
     "build": "./node_modules/.bin/gulp build",
     "lint": "./node_modules/.bin/gulp lint",
-    "eslint-pre-commit": "./scripts/eslint-pre-commit.sh"
+    "eslint-pre-commit": "./scripts/eslint-pre-commit.sh",
+    "validate": "npm ls"
   },
   "repository": {
     "type": "git",

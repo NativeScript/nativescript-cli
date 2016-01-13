@@ -1,5 +1,5 @@
 const Middleware = require('./middleware');
-const HttpMethod = require('../core/enums').HttpMethod;
+const HttpMethod = require('../enums').HttpMethod;
 const Promise = require('bluebird');
 const http = require('request');
 const isEmpty = require('lodash/lang/isEmpty');

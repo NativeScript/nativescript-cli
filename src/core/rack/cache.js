@@ -1,8 +1,8 @@
 const Middleware = require('./middleware');
-const Cache = require('../core/cache');
-const HttpMethod = require('../core/enums').HttpMethod;
-const StatusCode = require('../core/enums').StatusCode;
-const CacheAdapter = require('../core/enums').CacheAdapter;
+const Cache = require('../cache');
+const HttpMethod = require('../enums').HttpMethod;
+const StatusCode = require('../enums').StatusCode;
+const CacheAdapter = require('../enums').CacheAdapter;
 const defaultAdapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory];
 
 class CacheMiddleware extends Middleware {

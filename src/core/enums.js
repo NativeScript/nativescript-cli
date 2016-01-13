@@ -7,14 +7,10 @@ const CacheAdapter = {
 Object.freeze(CacheAdapter);
 
 const DataPolicy = {
-  ForceLocal: 'LocalOnly',
   LocalOnly: 'LocalOnly',
   PreferLocal: 'PreferLocal',
-  LocalFirst: 'PreferLocal',
-  ForceNetwork: 'NetworkOnly',
   NetworkOnly: 'NetworkOnly',
   PreferNetwork: 'PreferNetwork',
-  NetworkFirst: 'PreferNetwork'
 };
 Object.freeze(DataPolicy);
 

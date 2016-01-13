@@ -1,7 +1,7 @@
 const AsciiTree = require('./asciiTree');
 const Promise = require('bluebird');
 const UrlPattern = require('url-pattern');
-const KinveyError = require('../core/errors').KinveyError;
+const KinveyError = require('../errors').KinveyError;
 
 class Middleware {
   constructor(name = 'Middleware') {
