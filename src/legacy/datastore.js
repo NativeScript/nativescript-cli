@@ -1,7 +1,6 @@
 const Store = require('../core/stores/store');
 const Query = require('../core/query');
 const Aggregation = require('../core/aggregation');
-const Promise = require('bluebird');
 const KinveyError = require('../core/errors').KinveyError;
 const log = require('../core/log');
 const map = require('lodash/collection/map');

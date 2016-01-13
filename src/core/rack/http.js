@@ -1,7 +1,7 @@
 const Middleware = require('./middleware');
 const HttpMethod = require('../enums').HttpMethod;
-const Promise = require('bluebird');
 const http = require('request');
+const result = require('lodash/object/result');
 const isEmpty = require('lodash/lang/isEmpty');
 const isString = require('lodash/lang/isString');
 
@@ -20,7 +20,7 @@ class Http extends Middleware {
       };
 
       if (request.query) {
-        const query = request.query;
+        const query = result(request.query, 'toJSON', request.query);
         options.qs.query = query.filter;
 
         if (!isEmpty(query.fields)) {

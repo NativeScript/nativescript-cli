@@ -1,6 +1,7 @@
 const KinveyError = require('./errors').KinveyError;
 const url = require('url');
 const clone = require('lodash/lang/clone');
+const assign = require('lodash/object/assign');
 const sharedInstanceSymbol = Symbol();
 
 /**
@@ -28,12 +29,11 @@ class Client {
    *   appSecret: 'appSecret'
    * });
    */
-  constructor(options) {
-    options = options || {};
-    const apiProtocol = process.env.KINVEY_API_PROTOCOL || 'https:';
-    const apiHost = process.env.KINVEY_API_HOST || 'baas.kinvey.com';
-    let apiUrl;
-    let apiUrlComponents;
+  constructor(options = {}) {
+    options = assign({
+      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
+      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
+    }, options);
 
     if (!options.appId && !options.appKey) {
       throw new KinveyError('No App Id was provided. ' +
@@ -45,29 +45,21 @@ class Client {
         'Unable to create a new Client without an App Key.');
     }
 
-    // Parse the API url
-    apiUrl = options.apiUrl || `${apiProtocol}//${apiHost}`;
-    apiUrlComponents = url.parse(apiUrl);
-
-    // Check the protocol of the apiUrl
-    if (apiUrlComponents.protocol.indexOf(apiProtocol) !== 0 && options.allowHttp === false) {
-      apiUrlComponents.protocol = apiProtocol;
-    }
+    /**
+     * @type {string}
+     */
+    this.protocol = options.protocol;
 
     /**
      * @type {string}
      */
-    this.apiProtocol = apiUrlComponents.protocol;
-
-    /**
-     * @type {string}
-     */
-    this.apiHost = apiUrlComponents.host;
+    this.host = options.host;
 
     /**
      * @type {string}
      */
     this.appId = options.appId || options.appKey;
+    this.appKey = options.appKey || options.appId;
 
     /**
      * @type {string|undefined}
@@ -90,8 +82,8 @@ class Client {
    */
   get apiUrl() {
     return url.format({
-      protocol: this.apiProtocol,
-      host: this.apiHost
+      protocol: this.protocol,
+      host: this.host
     });
   }
 
@@ -102,9 +94,10 @@ class Client {
    */
   toJSON() {
     const json = {
-      apiProtocol: this.apiProtocol,
-      apiHost: this.apiHost,
+      protocol: this.protocol,
+      host: this.host,
       appId: this.appId,
+      appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
       encryptionKey: this.encryptionKey

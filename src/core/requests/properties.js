@@ -1,6 +1,6 @@
 const clone = require('lodash/lang/clone');
 const isPlainObject = require('lodash/lang/isPlainObject');
-const KinveyError = require('./errors').KinveyError;
+const KinveyError = require('../errors').KinveyError;
 const privatePropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
 

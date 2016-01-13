@@ -1,12 +1,12 @@
 const Client = require('../core/client');
 const User = require('./user');
-const RequestProperties = require('./requestProperties');
+const Properties = require('./requests/properties');
 const Kinvey = {};
 
 // Classes
 Kinvey.Acl = require('./acl');
-Kinvey.ClientAppVersion = RequestProperties.ClientAppVersion;
-Kinvey.CustomRequestProperties = RequestProperties.CustomRequestProperties;
+Kinvey.ClientAppVersion = Properties.ClientAppVersion;
+Kinvey.CustomRequestProperties = Properties.CustomRequestProperties;
 Kinvey.DataStore = require('./datastore');
 Kinvey.Defer = require('./defer');
 Kinvey.Error = require('./error');

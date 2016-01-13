@@ -1,6 +1,6 @@
 const HttpMethod = require('../enums').HttpMethod;
 const Client = require('../client');
-const Device = require('./device');
+const Device = require('../device');
 const Properties = require('./properties');
 const url = require('url');
 const byteCount = require('../utils/string').byteCount;
@@ -38,7 +38,7 @@ class Request {
     this.timeout = options.timeout;
     this.executing = false;
 
-    const headers = isPlainObject(options.headers) ? options.headers : {};
+    const headers = options.headers && isPlainObject(options.headers) ? options.headers : {};
 
     if (!headers.Accept || !headers.accept) {
       headers.Accept = options.headers.Accept;
@@ -125,23 +125,23 @@ class Request {
   }
 
   setHeader(name, value) {
-    if (name && value) {
-      if (!isString(name)) {
-        name = String(name);
-      }
-
-      const headers = this.headers;
-
-      if (!isString(value)) {
-        headers[name] = JSON.stringify(value);
-      } else {
-        headers[name] = value;
-      }
-
-      this.headers = headers;
+    if (!name || !value) {
+      throw new Error('A name and value must be provided to set a header.');
     }
 
-    throw new Error('A name and value must be provided to set a header.');
+    if (!isString(name)) {
+      name = String(name);
+    }
+
+    const headers = this.headers;
+
+    if (!isString(value)) {
+      headers[name] = JSON.stringify(value);
+    } else {
+      headers[name] = value;
+    }
+
+    this.headers = headers;
   }
 
   addHeaders(headers) {
@@ -176,14 +176,16 @@ class Request {
       return Promise.reject(new Error('Unable to execute the request. The request is already executing.'));
     }
 
-    this.executing = Promise.resolve().finally(() => {
+    this.executing = Promise.resolve().then(value => {
       this.executing = false;
+      return value;
+    }).catch(reason => {
+      this.executing = false;
+      throw reason;
     });
 
     return this.executing;
   }
-
-  cancel() {}
 
   toJSON() {
     const json = {
@@ -195,7 +197,7 @@ class Request {
       data: this.data
     };
 
-    return clone(json);
+    return clone(json, true);
   }
 }
 
@@ -217,6 +219,7 @@ class KinveyRequest extends Request {
     this.properties = options.properties;
     this.protocol = options.client.protocol;
     this.host = options.client.host;
+    this.client = options.client;
     this.auth = options.auth;
     this.query = options.query;
 
@@ -293,8 +296,8 @@ class KinveyRequest extends Request {
 
   toJSON() {
     const json = super.toJSON();
-    json.query = this.query;
-    return clone(json);
+    json.query = result(this.query, 'toJSON', this.query);
+    return clone(json, true);
   }
 }
 

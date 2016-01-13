@@ -1,5 +1,6 @@
-const Middleware = require('../../rack/middleware');
+const Middleware = require('../../core/rack/middleware');
 const HttpMethod = require('../../core/enums').HttpMethod;
+const result = require('lodash/object/result');
 const isEmpty = require('lodash/lang/isEmpty');
 const isString = require('lodash/lang/isString');
 
@@ -19,7 +20,7 @@ class AngularHttp extends Middleware {
       };
 
       if (request.query) {
-        const query = request.query;
+        const query = result(request.query, 'toJSON', request.query);
         options.params.query = query.filter;
 
         if (!isEmpty(query.fields)) {

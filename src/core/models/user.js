@@ -1,7 +1,7 @@
 const KinveyError = require('../errors').KinveyError;
 const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
 const Model = require('./model');
-const Request = require('../request').Request;
+const NetworkRequest = require('../requests/networkRequest');
 const HttpMethod = require('../enums').HttpMethod;
 const DataPolicy = require('../enums').DataPolicy;
 const WritePolicy = require('../enums').WritePolicy;
@@ -129,25 +129,31 @@ class User extends Model {
         throw new AlreadyLoggedInError('A user is already logged in.');
       }
 
-      if ((!this.get('username') || !this.get('password')) && !this.get('_socialIdentity')) {
+      const username = this.get('username');
+      const password = this.get('password');
+      const _socialIdentity = this.get('_socialIdentity');
+      if ((!username || username === '' || !password || password === '') && !_socialIdentity) {
         throw new KinveyError(
           'Username and/or password missing. Please provide both a username and password to login.'
         );
       }
 
-      const request = new Request({
+      const request = new NetworkRequest({
         method: HttpMethod.POST,
         pathname: `${this.getPathname(this.client)}/login`,
         data: this.toJSON(),
-        writePolicy: WritePolicy.Network,
         auth: Auth.app,
         client: options.client
       });
       return request.execute();
     }).then(response => {
-      this.set(response.data, options);
-      this.unset('password');
-      return User.setActive(this, options);
+      if (response && response.isSuccess()) {
+        this.set(response.data, options);
+        this.unset('password');
+        return User.setActive(this, options);
+      }
+
+      return response;
     });
 
     return promise;
@@ -178,7 +184,7 @@ class User extends Model {
         return null;
       }
 
-      const request = new Request({
+      const request = new NetworkRequest({
         method: HttpMethod.POST,
         pathname: `${this.getPathname(options.client)}/_logout`,
         writePolicy: WritePolicy.Network,
@@ -203,7 +209,7 @@ class User extends Model {
         throw new KinveyError('User is not active. Please login first.');
       }
 
-      const request = new Request({
+      const request = new NetworkRequest({
         method: HttpMethod.GET,
         pathname: `${this.getPathname(options.client)}/_me`,
         dataPolicy: DataPolicy.NetworkOnly,
@@ -236,7 +242,7 @@ class User extends Model {
       client: this.client
     }, options);
 
-    const request = new Request({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-email-verification-initiate`,
       writePolicy: WritePolicy.Network,
@@ -252,7 +258,7 @@ class User extends Model {
       client: this.client
     }, options);
 
-    const request = new Request({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/user-forgot-username`,
       writePolicy: WritePolicy.Network,
@@ -269,7 +275,7 @@ class User extends Model {
       client: this.client
     }, options);
 
-    const request = new Request({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-password-reset-initiate`,
       writePolicy: WritePolicy.Network,

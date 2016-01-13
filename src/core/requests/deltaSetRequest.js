@@ -1,6 +1,8 @@
 const Request = require('./request');
+const Response = require('./response');
 const HttpMethod = require('../enums').HttpMethod;
 const StatusCode = require('../enums').StatusCode;
+const NotFoundError = require('../errors').NotFoundError;
 const Query = require('../query');
 const CacheRequest = require('./cacheRequest');
 const NetworkRequest = require('./networkRequest');
@@ -24,6 +26,12 @@ class DeltaSetRequest extends Request {
 
       const cacheRequest = new CacheRequest(this);
       return cacheRequest.execute();
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return new Response(StatusCode.Ok, {}, []);
+      }
+
+      throw err;
     }).then(cacheResponse => {
       if (cacheResponse && cacheResponse.isSuccess()) {
         const cacheDocuments = indexBy(cacheResponse.data, idAttribute);
@@ -43,15 +51,16 @@ class DeltaSetRequest extends Request {
                 const cacheDocument = cacheDocuments[id];
 
                 if (networkDocument && !cacheDocument) {
-                  delete cacheDocuments[id];
+                  continue;
                 } else if (networkDocument && cacheDocument) {
                   if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute] &&
                       networkDocument[kmdAttribute].lmt > cacheDocument[kmdAttribute].lmt) {
                     delete cacheDocuments[id];
+                    continue;
                   }
-                } else {
-                  delete networkDocuments[id];
                 }
+
+                delete networkDocuments[id];
               }
             }
 
@@ -63,8 +72,8 @@ class DeltaSetRequest extends Request {
               const query = new Query(result(origQuery, 'toJSON', origQuery));
               query.contains(idAttribute, networkIds.slice(i, networkIds.length > maxIdsPerRequest + i ?
                                                               maxIdsPerRequest : networkIds.length));
-              this.query = query;
               const networkRequest = new NetworkRequest(this);
+              networkRequest.query = query;
               promises.push(networkRequest.execute());
               i += maxIdsPerRequest;
             }
@@ -79,8 +88,12 @@ class DeltaSetRequest extends Request {
                 result.data = result.data.concat(response.data);
                 return result;
               }, initialResponse);
-            }).finally(() => {
+            }).then(response => {
               this.query = origQuery;
+              return response;
+            }).catch(err => {
+              this.query = origQuery;
+              throw err;
             });
           }
 

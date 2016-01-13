@@ -1,6 +1,5 @@
 const KinveyError = require('../errors').KinveyError;
 const NotFoundError = require('../errors').NotFoundError;
-const Promise = require('bluebird');
 const generateObjectId = require('../utils/store').generateObjectId;
 const forEach = require('lodash/collection/forEach');
 const isArray = require('lodash/lang/isArray');

@@ -9,43 +9,15 @@ class NetworkRequest extends Request {
       const networkRack = NetworkRack.sharedInstance();
       return networkRack.execute(this);
     }).then(response => {
-      if (response) {
-        const data = response.data;
-        let promise;
+      if (response && response.isSuccess()) {
+        const cacheRequest = new CacheRequest(this);
+        cacheRequest.data = response.data;
 
         if (this.method === HttpMethod.GET) {
-          const cacheRequest = new CacheRequest({
-            method: HttpMethod.PUT,
-            properties: this.properties,
-            protocol: this.protocol,
-            host: this.host,
-            pathname: this.pathname,
-            headers: this.headers,
-            auth: this.auth,
-            flags: this.flags,
-            query: this.query,
-            data: data,
-            timeout: this.timeout
-          });
-          promise = cacheRequest.execute();
-        } else {
-          const cacheRequest = new CacheRequest({
-            method: this.method,
-            properties: this.properties,
-            protocol: this.protocol,
-            host: this.host,
-            pathname: this.pathname,
-            headers: this.headers,
-            auth: this.auth,
-            flags: this.flags,
-            query: this.query,
-            data: data,
-            timeout: this.timeout
-          });
-          promise = cacheRequest.execute();
+          cacheRequest.method = HttpMethod.PUT;
         }
 
-        return promise.then(() => {
+        return cacheRequest.execute().then(() => {
           return response;
         });
       }

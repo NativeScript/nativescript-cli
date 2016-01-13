@@ -1,8 +1,5 @@
-const Promise = require('bluebird');
-const Request = require('../request').Request;
+const CacheRequest = require('../requests/cacheRequest');
 const Client = require('../client');
-const DataPolicy = require('../enums').DataPolicy;
-const WritePolicy = require('../enums').WritePolicy;
 const HttpMethod = require('../enums').HttpMethod;
 const NotFoundError = require('../errors').NotFoundError;
 const result = require('lodash/object/result');
@@ -23,11 +20,10 @@ class UserUtils {
       return Promise.resolve(user);
     }
 
-    const request = new Request({
+    const request = new CacheRequest({
       method: HttpMethod.GET,
       pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
-      client: options.client,
-      dataPolicy: DataPolicy.LocalOnly
+      client: options.client
     });
     const promise = request.execute().then(response => {
       const data = response.data;
@@ -57,11 +53,10 @@ class UserUtils {
 
     const promise = UserUtils.getActive(options).then(activeUser => {
       if (activeUser) {
-        const request = new Request({
+        const request = new CacheRequest({
           method: HttpMethod.DELETE,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}/${activeUser._id}`,
-          client: options.client,
-          writePolicy: WritePolicy.Local
+          client: options.client
         });
         return request.execute().then(() => {
           UserUtils[activeUserSymbol][options.client.appId] = null;
@@ -69,17 +64,16 @@ class UserUtils {
       }
     }).then(() => {
       if (user) {
-        const request = new Request({
+        const request = new CacheRequest({
           method: HttpMethod.POST,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
           client: options.client,
-          writePolicy: WritePolicy.Local,
           data: result(user, 'toJSON', user)
         });
         return request.execute();
       }
     }).then(response => {
-      if (response) {
+      if (response && response.isSuccess()) {
         user = response.data;
         UserUtils[activeUserSymbol][options.client.appId] = user;
         return user;

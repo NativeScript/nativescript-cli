@@ -1,5 +1,4 @@
 const CacheAdapter = require('./enums').CacheAdapter;
-const Promise = require('bluebird');
 const Query = require('./query');
 const Aggregation = require('./aggregation');
 const IndexedDB = require('./persistence/indexeddb');

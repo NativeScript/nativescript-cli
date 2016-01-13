@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const Store = require('./stores/store');
 const Query = require('./query');
 const DataPolicy = require('./enums').DataPolicy;

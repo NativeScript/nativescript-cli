@@ -1,5 +1,4 @@
 const Aggregation = require('../aggregation');
-const Promise = require('bluebird');
 const DeltaSetRequest = require('../requests/deltaSetRequest');
 const HttpMethod = require('../enums').HttpMethod;
 const NotFoundError = require('../errors').NotFoundError;
@@ -140,8 +139,8 @@ class Store {
       method: HttpMethod.GET,
       client: options.client,
       properties: options.properties,
-      headers: options.headers,
       auth: options.auth,
+      pathname: this.getPathname(options.client),
       flags: options.flags,
       query: query,
       timeout: options.timeout

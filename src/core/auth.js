@@ -1,5 +1,4 @@
 const UserUtils = require('./utils/user');
-const Promise = require('bluebird');
 
 class Auth {
   static all(client) {

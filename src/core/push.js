@@ -1,6 +1,6 @@
 const KinveyError = require('./errors').KinveyError;
 const EventEmitter = require('events').EventEmitter;
-const Request = require('./request').Request;
+const Request = require('./requests/networkRequest');
 const LocalStore = require('./stores/localStore');
 const WritePolicy = require('./enums').WritePolicy;
 const DataPolicy = require('./enums').DataPolicy;

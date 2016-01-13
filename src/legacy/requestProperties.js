@@ -1,53 +1,53 @@
-const RequestProperties = require('../core/requestProperties');
-const requestProperties = new RequestProperties();
+const Properties = require('../core/requests/properties');
+const properties = new Properties();
 
 class CustomRequestProperties {
   static properties() {
-    return requestProperties.properties;
+    return properties.properties;
   }
 
   static property(key) {
-    return requestProperties.getProperty(key);
+    return properties.getProperty(key);
   }
 
   static setProperties(properties) {
-    requestProperties.properties = properties;
+    properties.properties = properties;
     return this;
   }
 
   static setProperty(key, value) {
-    requestProperties.setProperty(key, value);
+    properties.setProperty(key, value);
     return this;
   }
 
   static addProperties(properties) {
-    requestProperties.addProperties(properties);
+    properties.addProperties(properties);
     return this;
   }
 
   static clear() {
-    requestProperties.clear();
+    properties.clear();
     return this;
   }
 
   static clearProperty(key) {
-    requestProperties.clearProperty(key);
+    properties.clearProperty(key);
     return this;
   }
 }
 
 class ClientAppVersion {
   static stringValue() {
-    return requestProperties.appVersion;
+    return properties.appVersion;
   }
 
   static setVersion() {
-    requestProperties.appVersion = arguments;
+    properties.appVersion = arguments;
     return this;
   }
 
   static clear() {
-    requestProperties.clearAppVersion();
+    properties.clearAppVersion();
   }
 }
 

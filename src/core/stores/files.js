@@ -1,6 +1,6 @@
 const NetworkStore = require('./networkStore');
 const Client = require('../client');
-const Request = require('../request').Request;
+const Request = require('../requests/networkRequest');
 const KinveyError = require('../errors').KinveyError;
 const BlobNotFoundError = require('../errors').BlobNotFoundError;
 const HttpMethod = require('../enums').HttpMethod;
@@ -10,7 +10,6 @@ const Auth = require('../auth');
 const File = require('../models/file');
 const url = require('url');
 const log = require('../log');
-const Promise = require('bluebird');
 const assign = require('lodash/object/assign');
 const isObject = require('lodash/lang/isObject');
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';

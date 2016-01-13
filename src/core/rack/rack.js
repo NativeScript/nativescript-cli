@@ -1,4 +1,3 @@
-const clone = require('lodash/lang/clone');
 const Response = require('../requests/response');
 const Middleware = require('./middleware');
 const result = require('lodash/object/result');
@@ -151,8 +150,8 @@ class Rack extends Middleware {
 
 class KinveyRack extends Rack {
   execute(request) {
-    const requestClone = clone(result(request, 'toJSON', request));
-    const promise = super.execute(requestClone).then(request => {
+    request = result(request, 'toJSON', request);
+    const promise = super.execute(request).then(request => {
       const response = request.response;
 
       if (response) {

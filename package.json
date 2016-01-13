@@ -20,7 +20,6 @@
     "url": "https://github.com/Kinvey/js-library-dev/issues"
   },
   "dependencies": {
-    "bluebird": "^2.0.0",
     "crypto-js": "^3.1.5",
     "fake-indexeddb": "^1.0.3",
     "indexeddbshim": "^2.2.1",
