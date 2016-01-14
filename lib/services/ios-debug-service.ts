@@ -32,7 +32,7 @@ class IOSDebugService implements IDebugService {
         private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
         private $socketProxyFactory: ISocketProxyFactory) { }
 
-    get platform(): string {
+    public get platform(): string {
         return "ios";
     }
 

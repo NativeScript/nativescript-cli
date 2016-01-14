@@ -3,6 +3,7 @@
 import * as path from "path";
 import * as net from "net";
 import Future = require("fibers/future");
+import { sleep } from "../common/helpers";
 
 class AndroidDebugService implements IDebugService {
 	private static DEFAULT_NODE_INSPECTOR_URL = "http://127.0.0.1:8080/debug";
@@ -21,7 +22,7 @@ class AndroidDebugService implements IDebugService {
 		private $opener: IOpener,
 		private $config: IConfiguration) { }
 
-	private get platform() { return "android"; }
+	public get platform() { return "android"; }
 
 	private get device(): Mobile.IAndroidDevice {
 		return this._device;
@@ -182,10 +183,31 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let packageName = this.$projectData.projectId;
 
+			// Arguments passed to executeShellCommand must be in array ([]), but it turned out adb shell "arg with intervals" still works correctly.
+			// As we need to redirect output of a command on the device, keep using only one argument.
+			// We could rewrite this with two calls - touch and rm -f , but -f flag is not available on old Android, so rm call will fail when file does not exist.
 			this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${packageName}-debugbreak`]).wait();
 
 			this.device.applicationManager.stopApplication(packageName).wait();
 			this.device.applicationManager.startApplication(packageName).wait();
+
+			let waitText: string = `0 /data/local/tmp/${packageName}-debugbreak`;
+			let maxWait = 6;
+			let debugerStarted: boolean = false;
+			while (maxWait > 0 && !debugerStarted) {
+				let forwardsResult = this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugbreak`]).wait();
+				maxWait--;
+				debugerStarted = forwardsResult.indexOf(waitText) === -1;
+				if (!debugerStarted) {
+					sleep(500);
+				}
+			}
+
+			if (debugerStarted) {
+				this.$logger.info("# NativeScript Debugger started #");
+			} else {
+				this.$logger.warn("# NativeScript Debugger did not start in time #");
+			}
 
 			if (this.$options.client) {
 				let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
