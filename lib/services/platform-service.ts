@@ -306,6 +306,19 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<string> {
+		return (() => {
+			platform = platform.toLowerCase();
+			if (!this.preparePlatform(platform).wait()) {
+				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			}
+
+			let platformData = this.$platformsData.getPlatformData(platform);
+			platformData.platformProjectService.buildForDeploy(platformData.projectRoot, buildConfig).wait();
+			this.$logger.out("Project successfully built");
+		}).future<string>()();
+	}
+
 	public copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void> {
 		return (() => {
 			let packageFile: string;
