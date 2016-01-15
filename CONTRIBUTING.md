@@ -63,6 +63,10 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     grunt test
 ```
+* Ensure that your code passes the linter.
+```bash
+    grunt lint
+```
 * Commit your changes and create a descriptive commit message (the commit message is used to generate release notes).
 ```bash
     git commit -a
