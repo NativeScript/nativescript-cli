@@ -400,12 +400,12 @@ export class PlatformService implements IPlatformService {
 				return (() => {
 					if (!packageFile) {
 						if (this.$devicesService.isiOSSimulator(device)) {
-							this.buildPlatform(platform, buildConfig).wait();
+							this.buildForDeploy(platform, buildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						} else {
 							buildConfig = buildConfig || {};
 							buildConfig.buildForDevice = true;
-							this.buildPlatform(platform, buildConfig).wait();
+							this.buildForDeploy(platform, buildConfig).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}

@@ -318,6 +318,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	buildProject(projectRoot: string): IFuture<void> {
 		return Future.fromResult();
 	}
+	buildForDeploy(projectRoot: string): IFuture<void> {
+		return Future.fromResult();
+	}
 	isPlatformPrepared(projectRoot: string): IFuture<boolean> {
 		return Future.fromResult(false);
 	}
