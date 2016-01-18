@@ -127,13 +127,6 @@ class DeltaSetRequest extends Request {
               return updateCacheRequest.execute().then(() => {
                 return response;
               });
-            }).then(response => {
-              if (this.query) {
-                response.data = this.query._process(response.data);
-                return response;
-              }
-
-              return response;
             });
           }
 

@@ -80,7 +80,7 @@ export default class Client {
   /**
    * @type {string}
    */
-  get apiUrl() {
+  get url() {
     return url.format({
       protocol: this.protocol,
       host: this.host

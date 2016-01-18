@@ -159,7 +159,7 @@ config.mocha = {
     'spy',
     'expect'
   ],
-  slow: 100,
+  slow: 500,
   timeout: 2000
 };
 config.mocha = assign(config.mocha, platformConfig.mocha);
