@@ -1,5 +1,5 @@
 const CacheAdapter = require('./enums').CacheAdapter;
-const Query = require('./query');
+import Query from './query';
 const Aggregation = require('./aggregation');
 const IndexedDB = require('./persistence/indexeddb');
 const LocalStorage = require('./persistence/localstorage');
@@ -80,7 +80,7 @@ class Cache {
       }
 
       if (documents.length > 0 && query) {
-        documents = query.process(documents);
+        documents = query._process(documents);
       }
 
       return documents;

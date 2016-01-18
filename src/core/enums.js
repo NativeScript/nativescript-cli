@@ -5,14 +5,16 @@ const CacheAdapter = {
   WebSQL: 'WebSQL'
 };
 Object.freeze(CacheAdapter);
+export { CacheAdapter };
 
-const DataPolicy = {
+const ReadPolicy = {
   LocalOnly: 'LocalOnly',
-  PreferLocal: 'PreferLocal',
+  LocalFirst: 'LocalFirst',
   NetworkOnly: 'NetworkOnly',
-  PreferNetwork: 'PreferNetwork',
+  NetworkFirst: 'NetworkFirst',
 };
-Object.freeze(DataPolicy);
+Object.freeze(ReadPolicy);
+export { ReadPolicy };
 
 const HttpMethod = {
   GET: 'GET',
@@ -22,12 +24,14 @@ const HttpMethod = {
   DELETE: 'DELETE'
 };
 Object.freeze(HttpMethod);
+export { HttpMethod };
 
 const RackType = {
   Network: 'Network',
   Cache: 'Cache'
 };
 Object.freeze(RackType);
+export { RackType };
 
 const ResponseType = {
   Blob: 'blob',
@@ -37,6 +41,7 @@ const ResponseType = {
   Text: 'text'
 };
 Object.freeze(ResponseType);
+export { ResponseType };
 
 const SocialAdapter = {
   Facebook: 'Facebook',
@@ -45,6 +50,7 @@ const SocialAdapter = {
   Twitter: 'Twitter'
 };
 Object.freeze(SocialAdapter);
+export { SocialAdapter };
 
 const StatusCode = {
   Ok: 200,
@@ -55,20 +61,21 @@ const StatusCode = {
   ServerError: 500
 };
 Object.freeze(StatusCode);
+export { StatusCode };
+
+const StoreType = {
+  Local: 'Local',
+  Network: 'Network',
+  Default: 'Default'
+};
+Object.freeze(StoreType);
+export { StoreType };
 
 const WritePolicy = {
-  Local: 'Local',
-  Network: 'Network'
+  LocalOnly: 'LocalOnly',
+  LocalFirst: 'LocalFirst',
+  NetworkOnly: 'NetworkOnly',
+  NetworkFirst: 'NetworkFirst'
 };
 Object.freeze(WritePolicy);
-
-module.exports = {
-  CacheAdapter: CacheAdapter,
-  DataPolicy: DataPolicy,
-  HttpMethod: HttpMethod,
-  RackType: RackType,
-  ResponseType: ResponseType,
-  SocialAdapter: SocialAdapter,
-  StatusCode: StatusCode,
-  WritePolicy: WritePolicy
-};
+export { WritePolicy };

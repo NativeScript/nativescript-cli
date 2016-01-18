@@ -1,6 +1,6 @@
-const defaultObjectIdPrefix = 'local_';
+const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
-function generateObjectId(length = 24, prefix = defaultObjectIdPrefix) {
+export function generateObjectId(length = 24, prefix = objectIdPrefix) {
   const chars = 'abcdef0123456789';
   let objectId = '';
 
@@ -12,7 +12,3 @@ function generateObjectId(length = 24, prefix = defaultObjectIdPrefix) {
   objectId = prefix + objectId;
   return objectId;
 }
-
-module.exports = {
-  generateObjectId: generateObjectId
-};

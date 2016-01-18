@@ -6,7 +6,7 @@ const UserNotFoundError = require('../errors').UserNotFoundError;
 const Request = require('../requests/networkRequest');
 const HttpMethod = require('../enums').HttpMethod;
 const NetworkStore = require('./networkStore');
-const Query = require('../query');
+import Query from '../query';
 const User = require('../models/user');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
@@ -154,7 +154,7 @@ class Users extends NetworkStore {
     // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
 
     if (socialIdentity) {
-      for (const identity in socialIdentity) {
+      for (const identity of socialIdentity) {
         if (socialIdentity.hasOwnProperty(identity)) {
           if (socialIdentity[identity] && identity !== options._provider) {
             tokens.push({

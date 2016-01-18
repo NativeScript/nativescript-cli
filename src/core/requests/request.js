@@ -1,5 +1,5 @@
 const HttpMethod = require('../enums').HttpMethod;
-const Client = require('../client');
+import Client from '../client';
 const Device = require('../device');
 const Properties = require('./properties');
 const url = require('url');
@@ -23,13 +23,14 @@ class Request {
       protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com',
       pathname: '/',
-      flags: null,
+      flags: {
+        _: Math.random().toString(36).substr(2)
+      },
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000
     }, options);
 
     this.method = options.method;
-    this.headers = {};
     this.protocol = options.protocol;
     this.host = options.host;
     this.pathname = options.pathname;
@@ -110,13 +111,14 @@ class Request {
         name = String(name);
       }
 
-      const keys = Object.keys(this.headers);
+      const headers = this.headers || {};
+      const keys = Object.keys(headers);
 
       for (let i = 0, len = keys.length; i < len; i++) {
         const key = keys[i];
 
         if (key.toLowerCase() === name.toLowerCase()) {
-          return this.headers[key];
+          return headers[key];
         }
       }
     }
@@ -133,7 +135,7 @@ class Request {
       name = String(name);
     }
 
-    const headers = this.headers;
+    const headers = this.headers || {};
 
     if (!isString(value)) {
       headers[name] = JSON.stringify(value);
@@ -163,7 +165,9 @@ class Request {
         name = String(name);
       }
 
-      delete this.headers[name];
+      const headers = this.headers || {};
+      delete headers[name];
+      this.headers = headers;
     }
   }
 
@@ -171,17 +175,21 @@ class Request {
     this.headers = {};
   }
 
+  isExecuting() {
+    return this.executing ? true : false;
+  }
+
   execute() {
     if (this.executing) {
       return Promise.reject(new Error('Unable to execute the request. The request is already executing.'));
     }
 
-    this.executing = Promise.resolve().then(value => {
+    this.executing = Promise.resolve().then(response => {
       this.executing = false;
-      return value;
-    }).catch(reason => {
+      return response;
+    }).catch(err => {
       this.executing = false;
-      throw reason;
+      throw err;
     });
 
     return this.executing;
@@ -217,8 +225,6 @@ class KinveyRequest extends Request {
     }
 
     this.properties = options.properties;
-    this.protocol = options.client.protocol;
-    this.host = options.client.host;
     this.client = options.client;
     this.auth = options.auth;
     this.query = options.query;
@@ -274,6 +280,19 @@ class KinveyRequest extends Request {
 
       this.setHeader('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
     }
+  }
+
+  get client() {
+    return this._client;
+  }
+
+  set client(client) {
+    if (client) {
+      this.protocol = client.protocol;
+      this.host = client.host;
+    }
+
+    this._client = client;
   }
 
   execute() {

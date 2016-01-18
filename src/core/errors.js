@@ -32,6 +32,7 @@ module.exports = {
   AlreadyLoggedInError: Error.extend('AlreadyLoggedInError'),
   BlobNotFoundError: Error.extend('BlobNotFoundError'),
   KinveyError: Error.extend('KinveyError'),
+  NetworkConnectionError: Error.extend('NetworkConnectionError'),
   NotFoundError: Error.extend('NotFoundError'),
   UserNotFoundError: Error.extend('UserNotFoundError')
 };

@@ -1,4 +1,4 @@
-const Client = require('./core/client');
+import Client from './core/client';
 const Kinvey = {};
 
 // Core
@@ -10,15 +10,12 @@ Kinvey.Command = require('./core/command');
 Kinvey.Promise = Promise;
 Kinvey.Enums = require('./core/enums');
 Kinvey.File = require('./core/models/file');
-Kinvey.CacheStore = require('./core/stores/cacheStore');
 Kinvey.Log = require('./core/log');
 Kinvey.Kmd = require('./core/kmd');
 Kinvey.Model = require('./core/models/model');
-Kinvey.NetworkStore = require('./core/stores/networkStore');
 Kinvey.Query = require('./core/query');
 Kinvey.Store = require('./core/stores/store');
 Kinvey.Sync = require('./core/sync');
-Kinvey.SyncStore = require('./core/stores/syncStore');
 Kinvey.User = require('./core/models/user');
 
 // Errors
@@ -69,4 +66,4 @@ Kinvey.initialize = function (options) {
 };
 
 // Export
-module.exports = Kinvey;
+export default Kinvey;

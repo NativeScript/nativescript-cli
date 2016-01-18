@@ -1,5 +1,5 @@
 const Store = require('./stores/store');
-const Query = require('./query');
+import Query from './query';
 const DataPolicy = require('./enums').DataPolicy;
 const reduce = require('lodash/collection/reduce');
 const enabledSymbol = Symbol();

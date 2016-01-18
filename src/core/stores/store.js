@@ -1,48 +1,40 @@
 const Aggregation = require('../aggregation');
 const DeltaSetRequest = require('../requests/deltaSetRequest');
-const HttpMethod = require('../enums').HttpMethod;
+const NetworkRequest = require('../requests/networkRequest');
+const LocalRequest = require('../requests/localRequest');
+const Response = require('../requests/response');
+import { HttpMethod, StatusCode, StoreType, ReadPolicy, WritePolicy } from '../enums';
 const NotFoundError = require('../errors').NotFoundError;
-const Client = require('../client');
-const Query = require('../query');
+import Client from '../client';
+import Query from '../query';
 const Auth = require('../auth');
-const Model = require('../models/model');
 const assign = require('lodash/object/assign');
 const result = require('lodash/object/result');
 const forEach = require('lodash/collection/forEach');
+const clone = require('lodash/lang/clone');
+const map = require('lodash/collection/map');
 const log = require('../log');
+import find from 'lodash/collection/find';
 const isArray = require('lodash/lang/isArray');
 const isString = require('lodash/lang/isString');
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
 
 /**
  * The Store class is used to retrieve, create, update, destroy, count and group documents
  * in collections.
  *
  * @example
- * var store = new Kinvey.Store('books');
+ * var store = Kinvey.Store.getInstance('books');
  */
-class Store {
+export default class Store {
   /**
    * Creates a new instance of the Store class.
    *
-   * @param {string}      name                                                Name of the collection
-   * @param {Object}      [options]                                           Options
-   * @param {Auth}        [options.auth=Auth.default]                         Auth function to use to set the
-   *                                                                          authorization header for requests.
-   * @param {Client}      [options.client=Client.sharedInstance()]            Client to use for sending requests
-   *                                                                          for data.
-   * @param {Model}       [options.modelClass=Model]                          Model Class to instantiate with returned
-   *                                                                          data.
-   * @param {Number}      [options.ttl=undefined]                             TTL for data returned from cache.
+   * @param {string}  name   Name of the collection
    */
-  constructor(name, options = {}) {
-    options = assign({
-      auth: Auth.default,
-      client: Client.sharedInstance(),
-      modelClass: Model,
-      ttl: undefined
-    }, options);
-
+  constructor(name) {
     if (name && !isString(name)) {
       throw new Error('Name must be a string.');
     }
@@ -53,36 +45,40 @@ class Store {
     this.name = name;
 
     /**
+     * @type {ReadPolicy}
+     */
+    this.readPolicy = ReadPolicy.NetworkOnly;
+
+    /**
+     * @type {WritePolicy}
+     */
+    this.writePolicy = WritePolicy.NetworkOnly;
+
+    /**
      * @type {Auth}
      */
-    this.auth = options.auth;
+    this.auth = Auth.default;
 
     /**
      * @type {Client}
      */
-    this.client = options.client;
-
-    /**
-     * @type {Model}
-     */
-    this.modelClass = options.modelClass;
+    this.client = Client.sharedInstance();
 
     /**
      * @type {Number}
      */
-    this.ttl = options.ttl;
+    this.ttl = undefined;
   }
 
   /**
-   * The pathname for the collection where requests will be sent.
+   * The pathname for the store.
    *
-   * @param  {Client}  Client
-   * @return {string}  Path
+   * @param   {Client}   [client]     Client
+   * @return  {string}                Pathname
    */
   getPathname(client) {
     client = client || this.client;
-
-    let pathname = `/${appdataNamespace}/${client.appId}`;
+    let pathname = `/${appdataNamespace}/${client.appKey}`;
 
     if (this.name) {
       pathname = `${pathname}/${this.name}`;
@@ -92,25 +88,44 @@ class Store {
   }
 
   /**
-   * Finds all models in the collection. A query can be optionally provided to return
-   * a subset of all models in the collection or omitted to return all models in
-   * the collection. The number of models returned will adhere to the limits specified
+   * The sync pathname for the store.
+   *
+   * @param   {Client}   [client]     Client
+   * @return  {string}                Sync pathname
+   */
+  _getSyncPathname(client) {
+    if (!this.name) {
+      throw new Error('Unable to get a sync pathname for a collection with no name.');
+    }
+
+    client = client || this.client;
+    return `/${appdataNamespace}/${client.appKey}/${syncCollectionName}/${this.name}`;
+  }
+
+  /**
+   * Finds all documents in a collection. A query can be optionally provided to return
+   * a subset of all documents in a collection or omitted to return all documents in
+   * a collection. The number of documents returned will adhere to the limits specified
    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
-   * promise will be returned that will be resolved with the models or rejected with
+   * promise will be returned that will be resolved with the documents or rejected with
    * an error.
    *
-   * @param {Query}     [query]                                        Query
-   * @param {Object}    [options]                                      Options
-   * @param {Auth}      [options.auth=Auth.default]                    Auth function to use to set the
-   *                                                                   authorization header for requests.
-   * @param {Client}    [options.client=Client.sharedInstance()]       Client to use for sending requests
-   *                                                                   for data.
-   * @param {Number}    [options.ttl]                                  TTL for data returned from cache.
-   * @return {Promise}                                                 Promise
+   * @param   {Query}                 [query]                                   Query used to filter result.
+   * @param   {Object}                [options]                                 Options
+   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request for data.
+   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
+   *                                                                            pathname.
+   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
+   *                                                                            the local cache.
+   * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = new Kinvey.Store('books');
-   * var query = new Kinvey.Query();
+   * var store = Store.getInstance('books');
+   * var query = new Query();
    * query.equalTo('author', 'Kinvey');
    * store.find(query).then(function(books) {
    *   ...
@@ -119,50 +134,50 @@ class Store {
    * });
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the models in the ${this.name} collection.`, query);
+    log.debug(`Retrieving the documents in the ${this.name} collection.`, query);
 
     options = assign({
+      auth: this.auth,
       client: this.client,
       properties: null,
-      headers: null,
-      auth: this.auth,
-      flags: null,
       timeout: undefined,
       ttl: this.ttl,
+      readPolicy: this.readPolicy,
+      handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+      return Promise.reject(new Error('Invalid query. It must be an instance of the Query class.'));
     }
 
-    const request = new DeltaSetRequest({
-      method: HttpMethod.GET,
-      client: options.client,
-      properties: options.properties,
-      auth: options.auth,
-      pathname: this.getPathname(options.client),
-      flags: options.flags,
-      query: query,
-      timeout: options.timeout
-    });
-    const promise = request.execute().then(response => {
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this.getPathname(options.client),
+        query: query,
+        timeout: options.timeout
+      };
+
+      switch (options.readPolicy) {
+        case ReadPolicy.LocalOnly:
+          request = new LocalRequest(requestOptions);
+          break;
+        case ReadPolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case ReadPolicy.LocalFirst:
+        default:
+          request = new DeltaSetRequest(requestOptions);
+      }
+
+      return request.execute();
+    }).then(response => {
       if (response && response.isSuccess()) {
-        let data = response.data;
-        const models = [];
-
-        if (data) {
-          if (!isArray(data)) {
-            data = [data];
-          }
-
-          forEach(data, doc => {
-            if (doc) {
-              models.push(new this.modelClass(doc, options)); // eslint-disable-line new-cap
-            }
-          });
-        }
-
-        return models;
+        return response.data;
       }
 
       return response;
@@ -185,14 +200,13 @@ class Store {
    *
    * @param   {Aggregation}  [aggregation]                                Aggregation
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
+   * var store = new Kinvey.Store('books');
    * var aggregation = new Kinvey.Aggregation();
-   * collection.group(aggregation).then(function(response) {
+   * store.group(aggregation).then(function(result) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -202,10 +216,12 @@ class Store {
     log.debug(`Grouping the models in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
       client: this.client,
-      ttl: this.ttl
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      ttl: this.ttl,
+      handler() {}
     }, options);
 
     if (!(aggregation instanceof Aggregation)) {
@@ -213,16 +229,21 @@ class Store {
     }
 
     const request = new DeltaSetRequest({
-      dataPolicy: options.dataPolicy,
-      auth: options.auth,
-      client: options.client,
       method: HttpMethod.GET,
+      client: options.client,
+      properties: options.properties,
+      auth: options.auth,
       pathname: `${this.getPathname(options.client)}/_group`,
       data: aggregation.toJSON(),
-      ttl: options.ttl
+      timeout: options.timeout
     });
+
     const promise = request.execute().then(response => {
-      return response.data;
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
 
     promise.then(response => {
@@ -242,15 +263,14 @@ class Store {
    *
    * @param   {Query}        [query]                                      Query
    * @param   {Object}       [options]                                    Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
+   * var store = new Kinvey.Store('books');
    * var query = new Kinvey.Query();
-   * query.equalTo('author', 'David Flanagan');
-   * collection.count(query).then(function(response) {
+   * query.equalTo('author', 'Kinvey');
+   * store.count(query).then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -260,10 +280,12 @@ class Store {
     log.debug(`Counting the number of models in the ${this.name} collection.`, query);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
-      auth: this.auth,
       client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
       ttl: this.ttl,
+      handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -271,16 +293,21 @@ class Store {
     }
 
     const request = new DeltaSetRequest({
-      dataPolicy: options.dataPolicy,
-      auth: options.auth,
-      client: options.client,
       method: HttpMethod.GET,
+      client: options.client,
+      properties: options.properties,
+      auth: options.auth,
       pathname: `${this.getPathname(options.client)}/_count`,
       query: query,
-      ttl: options.ttl
+      timeout: options.timeout
     });
+
     const promise = request.execute().then(response => {
-      return response.data;
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
 
     promise.then(response => {
@@ -293,181 +320,306 @@ class Store {
   }
 
   /**
-   * Retrieves a single model in the collection by id. A promise will be returned that will
-   * be resolved with the model or rejected with an error.
+   * Retrieves a single document in the collection by id. A promise will be returned that will
+   * be resolved with the document or rejected with an error.
    *
    * @param   {string}       id                                           Document Id
    * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
    * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
    * @return  {Promise}                                                   Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
-   * collection.get('507f191e810c19729de860ea').then(function(book) {
+   * var store = Store.getInstance('books');
+   * store.get('507f191e810c19729de860ea').then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   get(id, options = {}) {
-    log.debug(`Retrieving a model in the ${this.name} collection with id = ${id}.`);
+    if (!id) {
+      log.warn('No id was provided to retrieve a document.', id);
+      return Promise.resolve(null);
+    }
+
+    log.debug(`Retrieving a document in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      dataPolicy: this.dataPolicy,
       auth: this.auth,
       client: this.client,
-      ttl: this.ttl
+      properties: null,
+      timeout: undefined,
+      ttl: this.ttl,
+      readPolicy: this.readPolicy,
+      handler() {}
     }, options);
 
-    const request = new DeltaSetRequest({
-      dataPolicy: options.dataPolicy,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.GET,
-      pathname: `${this.getPathname(options.client)}/${id}`,
-      ttl: options.ttl
-    });
-    const promise = request.execute().then(response => {
-      const data = response.data;
-      return new this.model(data, options); // eslint-disable-line new-cap
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `${this.getPathname(options.client)}/${id}`,
+        timeout: options.timeout
+      };
+
+      switch (options.readPolicy) {
+        case ReadPolicy.LocalOnly:
+          request = new LocalRequest(requestOptions);
+          break;
+        case ReadPolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case ReadPolicy.LocalFirst:
+        default:
+          request = new DeltaSetRequest(requestOptions);
+      }
+
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
 
     promise.then(response => {
-      log.info(`Retrieved the model in the ${this.name} collection with id = ${id}.`, response);
+      log.info(`Retrieved the document in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the model in the ${this.name} collection with id = ${id}.`, err);
+      log.error(`Failed to retrieve the document in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Saves a model to the collection. A promise will be returned that will be resolved with
-   * saved model or rejected with an error.
+   * Save a document or an array of documents to a collection. A promise will be returned that
+   * will be resolved with the saved document/documents or rejected with an error.
    *
-   * @param   {Model}        model                                              Model
-   * @param   {Object}       options                                            Options
-   * @param   {DataPolicy}   [options.writePolicy=WritePolicy.WriteAutomatic]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @param   {Model|Array}           doc                                       Document or documents to save.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request for data.
+   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
+   *                                                                            pathname.
+   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
+   *                                                                            the local cache.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
-   * var book = { name: 'JavaScript: The Definitive Guide', author: 'David Flanagan' };
-   * collection.create(book).then(function(book) {
+   * var store = Store.getInstance('books');
+   * var book = { name: 'How to Write a JavaScript Library', author: 'Kinvey' };
+   * store.save(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  create(model, options = {}) {
-    log.debug(`Saving the model to the ${this.name} collection.`, model);
-
-    options = assign({
-      writePolicy: this.writePolicy,
-      auth: this.auth,
-      client: this.client
-    }, options);
-
-    if (!model) {
-      log.warn('No model was provided to be saved.', model);
+  save(doc, options = {}) {
+    if (!doc) {
+      log.warn('No doc was provided to be saved.', doc);
       return Promise.resolve(null);
     }
 
-    if (!(model instanceof this.model)) {
-      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
-    }
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      ttl: this.ttl,
+      writePolicy: this.writePolicy,
+      handler() {}
+    }, options);
 
-    if (!model.isNew()) {
-      log.warn('The model is not new. Updating the model.', model);
-      return this.update(model, options);
-    }
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.POST,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this.getPathname(options.client),
+        data: doc,
+        timeout: options.timeout
+      };
 
-    const data = model.toJSON();
-    delete data._id;
+      switch (options.writePolicy) {
+        case WritePolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case WritePolicy.LocalOnly:
+        case WritePolicy.LocalFirst:
+        default:
+          request = new LocalRequest(requestOptions);
+      }
 
-    const request = new Request({
-      writePolicy: options.writePolicy,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.POST,
-      pathname: this.getPathname(options.client),
-      data: data
-    });
-    const promise = request.execute().then(response => {
-      const data = response.data;
-      return new this.model(data, options); // eslint-disable-line new-cap
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalOnly
+            || options.writePolicy === WritePolicy.LocalFirst) {
+          return this._addModelsToSync(response.data, options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalFirst) {
+          return this.push(options).then(result => {
+            let singular = false;
+            let data = response.data;
+
+            if (!isArray(data)) {
+              singular = true;
+              data = [data];
+            }
+
+            data = map(data, doc => {
+              const syncResult = find(result.success, syncResult => {
+                return syncResult._id === doc._id;
+              });
+
+              if (syncResult) {
+                return syncResult.doc;
+              }
+            });
+
+            if (singular) {
+              response.data = data[0];
+            } else {
+              response.data = data;
+            }
+
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
 
     promise.then(response => {
-      log.info(`Saved the model to the ${this.name} collection.`, response);
+      log.info(`Saved the document(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to save the model to the ${this.name} collection.`, err);
+      log.error(`Failed to save the document(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Updates a model in the collection. A promise will be returned that will be resolved with
-   * the updated model or rejected with an error.
+   * Updates a document or an array of documents in a collection. A promise will be returned that
+   * will be resolved with the updated document/documents or rejected with an error.
    *
-   * @param   {Object}       model                                              Model
-   * @param   {Object}       options                                            Options
-   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @param   {Model|Array}           doc                                       Document or documents to update.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request for data.
+   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
+   *                                                                            pathname.
+   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
+   *                                                                            the local cache.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
-   * var book = { name: 'JavaScript: The Definitive Guide 2.0', author: 'David Flanagan' };
-   * collection.update(book).then(function(book) {
+   * var store = Store.getInstance('books');
+   * var book = { id: 1, name: 'How to Write a JavaScript Library', author: 'Kinvey' };
+   * store.update(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  update(model, options = {}) {
-    log.debug(`Update the model to the ${this.name} collection.`, model);
-
-    options = assign({
-      writePolicy: this.writePolicy,
-      auth: this.auth,
-      client: this.client
-    }, options);
-
-    if (!model) {
-      log.warn('No model was provided to be updated.', model);
+  update(doc, options = {}) {
+    if (!doc) {
+      log.warn('No doc was provided to be saved.', doc);
       return Promise.resolve(null);
     }
 
-    if (!(model instanceof this.model)) {
-      model = new this.model(result(model, 'toJSON', model), options); // eslint-disable-line new-cap
-    }
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      ttl: this.ttl,
+      writePolicy: this.writePolicy,
+      handler() {}
+    }, options);
 
-    if (model.isNew()) {
-      log.warn('The model is new. Creating the model.', model);
-      return this.create(model, options);
-    }
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.PUT,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this.getPathname(options.client),
+        data: doc,
+        timeout: options.timeout
+      };
 
-    const request = new Request({
-      writePolicy: options.writePolicy,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.PUT,
-      pathname: `${this.getPathname(options.client)}/${model.id}`,
-      data: model.toJSON()
-    });
-    const promise = request.execute().then(response => {
-      const data = response.data;
-      return new this.model(data, options); // eslint-disable-line new-cap
+      switch (options.writePolicy) {
+        case WritePolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case WritePolicy.LocalOnly:
+        case WritePolicy.LocalFirst:
+        default:
+          request = new LocalRequest(requestOptions);
+      }
+
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalOnly
+            || options.writePolicy === WritePolicy.LocalFirst) {
+          return this._addModelsToSync(response.data, options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalFirst) {
+          return this.push(options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
 
     promise.then(response => {
-      log.info(`Updated the model to the ${this.name} collection.`, response);
+      log.info(`Updated the document(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to update the model to the ${this.name} collection.`, err);
+      log.error(`Failed to update the document(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -530,13 +682,20 @@ class Store {
   }
 
   /**
-   * Delete a model in the collection. A promise will be returned that will be
-   * resolved with a count of the number of models deleted or rejected with an error.
+   * Remove a model in the collection. A promise will be returned that will be
+   * resolved with a count of the number of models removed or rejected with an error.
    *
-   * @param   {string}       id                                                 Document Id
-   * @param   {Object}       options                                            Options
-   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @param   {string}                id                                        Document Id
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request for data.
+   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
+   *                                                                            pathname.
+   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
+   *                                                                            the local cache.
    * @return  {Promise}                                                         Promise
    *
    * @example
@@ -547,45 +706,458 @@ class Store {
    *   ...
    * });
    */
-  delete(id, options = {}) {
-    log.debug(`Deleting a model in the ${this.name} collection with id = ${id}.`);
+  remove(id, options = {}) {
+    if (!id) {
+      log.warn('No id was provided to be removed.', id);
+      return Promise.resolve(null);
+    }
+
+    log.debug(`Removing a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      writePolicy: this.writePolicy,
-      auth: this.auth,
       client: this.client,
-      silent: false
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      ttl: this.ttl,
+      writePolicy: this.writePolicy,
+      handler() {}
     }, options);
 
-    const request = new Request({
-      writePolicy: options.writePolicy,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.DELETE,
-      pathname: `${this.getPathname(options.client)}/${id}`
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.DELETE,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `${this.getPathname(options.client)}/${id}`,
+        timeout: options.timeout
+      };
+
+      switch (options.writePolicy) {
+        case WritePolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case WritePolicy.LocalOnly:
+        case WritePolicy.LocalFirst:
+        default:
+          request = new LocalRequest(requestOptions);
+      }
+
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalOnly
+            || options.writePolicy === WritePolicy.LocalFirst) {
+          return this._addModelsToSync(response.data.documents, options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (options.writePolicy === WritePolicy.LocalFirst) {
+          return this.push(options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        return response.data;
+      }
+
+      return response;
     });
-    const promise = request.execute().then(response => {
-      return response.data;
+
+    promise.then(response => {
+      log.info(`Removed the model in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      if (options.silent && err instanceof NotFoundError) {
-        log.debug(`A model with id = ${id} does not exist. Returning success because of the silent flag.`);
+      log.error(`Failed to remove the model in the ${this.name} collection with id = ${id}.`, err);
+    });
+
+    return promise;
+  }
+
+  push(query, options = {}) {
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    const promise = Promise.resolve().then(() => {
+      const request = new LocalRequest({
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this._getSyncPathname(options.client),
+        query: query,
+        timeout: options.timeout
+      });
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        const localStore = Store.getInstance(this.name, StoreType.Local);
+        const shouldSave = [];
+        const shouldRemove = [];
+        const docs = response.data.docs;
+        const ids = Object.keys(docs);
+        let size = response.data.size;
+
+        const promises = map(ids, id => {
+          const metadata = docs[id];
+          const requestOptions = clone(metadata);
+          return localStore.get(id, requestOptions).then(doc => {
+            shouldSave.push(doc);
+            return doc;
+          }).catch(err => {
+            if (err instanceof NotFoundError) {
+              shouldRemove.push(id);
+              return null;
+            }
+
+            throw err;
+          });
+        });
+
+        return Promise.all(promises).then(() => {
+          const networkStore = Store.getInstance(this.name, StoreType.Network);
+
+          const saved = map(shouldSave, doc => {
+            const metadata = docs[doc._id];
+            const requestOptions = clone(metadata);
+
+            if (doc._id.indexOf(localIdPrefix) === 0) {
+              const prevId = doc._id;
+              doc._id = undefined;
+              return networkStore.save(doc, requestOptions).then(doc => {
+                return localStore.remove(prevId, requestOptions).then(() => {
+                  size = size - 1;
+                  delete docs[prevId];
+                  return {
+                    _id: prevId,
+                    doc: doc
+                  };
+                });
+              }).catch(err => {
+                doc._id = prevId;
+                return {
+                  _id: doc._id,
+                  error: err
+                };
+              });
+            }
+
+            return networkStore.update(doc, requestOptions).then(doc => {
+              size = size - 1;
+              delete docs[doc._id];
+              return {
+                _id: doc._id,
+                doc: doc
+              };
+            }).catch(err => {
+              return {
+                _id: doc._id,
+                error: err
+              };
+            });
+          });
+
+          const removed = map(shouldRemove, id => {
+            const metadata = docs[id];
+            const requestOptions = clone(metadata);
+
+            return networkStore.remove(id, requestOptions).then(response => {
+              if (response && response.isSuccess()) {
+                size = size - 1;
+                delete docs[id];
+                return {
+                  _id: id,
+                  doc: response.documents[0]
+                };
+              }
+
+              return response;
+            }).catch(err => {
+              return {
+                _id: id,
+                error: err
+              };
+            });
+          });
+
+          return Promise.all([Promise.all(saved), Promise.all(removed)]);
+        }).then(responses => {
+          const savedResponses = responses[0];
+          const removedResponses = responses[1];
+          const result = {
+            collection: this.name,
+            success: [],
+            error: []
+          };
+
+          forEach(savedResponses, savedResponse => {
+            if (savedResponse.error) {
+              result.error.push(savedResponse);
+            } else {
+              result.success.push(savedResponse);
+            }
+          });
+
+          forEach(removedResponses, removedResponse => {
+            if (removedResponse.error) {
+              result.error.push(removedResponse);
+            } else {
+              result.success.push(removedResponse);
+            }
+          });
+
+          return result;
+        }).then(result => {
+          const data = response.data;
+          data.size = size;
+          data.docs = docs;
+          const request = new LocalRequest({
+            method: HttpMethod.PUT,
+            client: options.client,
+            properties: options.properties,
+            auth: options.auth,
+            pathname: this._getSyncPathname(options.client),
+            data: data,
+            timeout: options.timeout
+          });
+          return request.execute().then(() => {
+            return result;
+          });
+        });
+      }
+
+      return response;
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
         return {
-          count: 0,
-          documents: []
+          collection: this.name,
+          success: [],
+          error: []
         };
       }
 
       throw err;
     });
 
-    promise.then(response => {
-      log.info(`Deleted the model in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      log.error(`Failed to delete the model in the ${this.name} collection with id = ${id}.`, err);
+    return promise;
+  }
+
+  pull(query, options) {
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    const promise = this.syncCount(null, options).then(count => {
+      if (count > 0) {
+        throw new Error('Unable to pull data. You must push the pending items to sync first.',
+          'Call store.push() to push the pending items to sync before you pull new data.');
+      }
+
+      options.readPolicy = ReadPolicy.NetworkOnly;
+      return this.find(query, options);
     });
 
     return promise;
   }
-}
 
-module.exports = Store;
+  sync(query, options = {}) {
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    const promise = this.push(null, options).then(pushResponse => {
+      options.readPolicy = ReadPolicy.NetworkOnly;
+      return this.find(query, options).then(syncResponse => {
+        return {
+          push: pushResponse,
+          sync: {
+            collection: this.name,
+            documents: syncResponse
+          }
+        };
+      });
+    });
+
+    return promise;
+  }
+
+  syncCount(query, options = {}) {
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    const promise = Promise.resolve().then(() => {
+      const request = new LocalRequest({
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this._getSyncPathname(options.client),
+        query: query,
+        timeout: options.timeout
+      });
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        return response.data.size || 0;
+      }
+
+      return response;
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return 0;
+      }
+
+      throw err;
+    });
+
+    return promise;
+  }
+
+  _addModelsToSync(models, options = {}) {
+    if (!this.name) {
+      throw new Error('Unable to add models to sync for a store with no name.');
+    }
+
+    if (!models) {
+      return Promise.resolve(null);
+    }
+
+    options = assign({
+      client: this.client,
+      properties: null,
+      auth: this.auth,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    const promise = Promise.resolve(). then(() => {
+      const request = new LocalRequest({
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this._getSyncPathname(options.client),
+        timeout: options.timeout
+      });
+      return request.execute();
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return new Response({
+          statusCode: StatusCode.Ok,
+          data: {
+            _id: this.name,
+            docs: {},
+            size: 0
+          }
+        });
+      }
+
+      throw err;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        const syncData = response.data || {
+          _id: this.name,
+          docs: {},
+          size: 0
+        };
+        const docs = syncData.docs;
+
+        if (!isArray(models)) {
+          models = [models];
+        }
+
+        forEach(models, model => {
+          if (model._id) {
+            docs[model._id] = {
+              lmt: model._kmd ? model._kmd.lmt : null
+            };
+          }
+        });
+
+        syncData.docs = docs;
+        syncData.size = docs.length;
+
+        const request = new LocalRequest({
+          method: HttpMethod.PUT,
+          client: options.client,
+          properties: options.properties,
+          auth: options.auth,
+          pathname: this._getSyncPathname(options.client),
+          data: syncData,
+          timeout: options.timeout
+        });
+        return request.execute();
+      }
+
+      return response;
+    }).then(() => {
+      return null;
+    });
+
+    return promise;
+  }
+
+  /**
+   * Returns an instance of the Store class based on the type provided.
+   *
+   * @param  {string}       name                      Name of the collection.
+   * @param  {StoreType}    [type=StoreType.Default]  Type of store to return.
+   * @return {Store}                                  Store
+   */
+  static getInstance(name, type = StoreType.Default) {
+    const store = new Store(name);
+
+    switch (type) {
+      case StoreType.Local:
+        store.readPolicy = ReadPolicy.LocalOnly;
+        store.writePolicy = WritePolicy.LocalOnly;
+        break;
+      case StoreType.Network:
+        store.readPolicy = ReadPolicy.NetworkOnly;
+        store.writePolicy = WritePolicy.NetworkOnly;
+        break;
+      case StoreType.Default:
+      default:
+        store.readPolicy = ReadPolicy.LocalFirst;
+        store.writePolicy = WritePolicy.LocalFirst;
+    }
+
+    return store;
+  }
+}

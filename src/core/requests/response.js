@@ -1,14 +1,22 @@
 const StatusCode = require('../enums').StatusCode;
+const assign = require('lodash/object/assign');
 const forEach = require('lodash/collection/forEach');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
 
 class Response {
-  constructor(statusCode = StatusCode.OK, headers = {}, data) {
-    this.statusCode = statusCode;
-    this.headers = {};
-    this.addHeaders(headers);
-    this.data = data;
+  constructor(options = {}) {
+    options = assign({
+      statusCode: StatusCode.Ok,
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8'
+      },
+      data: null
+    }, options);
+
+    this.statusCode = options.statusCode;
+    this.addHeaders(options.headers);
+    this.data = options.data;
   }
 
   getHeader(name) {
@@ -17,13 +25,14 @@ class Response {
         name = String(name);
       }
 
-      const keys = Object.keys(this.headers);
+      const headers = this.headers || {};
+      const keys = Object.keys(headers);
 
       for (let i = 0, len = keys.length; i < len; i++) {
         const key = keys[i];
 
         if (key.toLowerCase() === name.toLowerCase()) {
-          return this.headers[key];
+          return headers[key];
         }
       }
     }
@@ -40,7 +49,7 @@ class Response {
       name = String(name);
     }
 
-    const headers = this.headers;
+    const headers = this.headers || {};
 
     if (!isString(value)) {
       headers[name] = JSON.stringify(value);
@@ -70,7 +79,9 @@ class Response {
         name = String(name);
       }
 
-      delete this.headers[name];
+      const headers = this.headers || {};
+      delete headers[name];
+      this.headers = headers;
     }
   }
 

@@ -155,7 +155,11 @@ class KinveyRack extends Rack {
       const response = request.response;
 
       if (response) {
-        return new Response(response.statusCode, response.headers, response.data);
+        return new Response({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
       }
 
       return response;

@@ -1,4 +1,4 @@
-const Kinvey = require('../../src/kinvey');
+import Kinvey from '../../src/kinvey';
 
 describe('Kinvey', function () {
   describe('init()', function () {

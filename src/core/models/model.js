@@ -1,12 +1,12 @@
 const Acl = require('../acl');
 const Kmd = require('../kmd');
-const Client = require('../client');
-const generateObjectId = require('../utils/store').generateObjectId;
+import Client from '../client';
 const defaults = require('lodash/object/defaults');
 const result = require('lodash/object/result');
 const clone = require('lodash/lang/clone');
-const assign = require('lodash/object/assign');
-const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
+import assign from 'lodash/object/assign';
+// import uniqueId from 'lodash/utility/uniqueId';
+const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
@@ -72,16 +72,11 @@ class Model {
 
   get defaults() {
     const defaults = {};
-    defaults[idAttribute] = generateObjectId(24, this.objectIdPrefix);
     defaults[kmdAttribute] = {
       ect: new Date().toISOString(),
       lmt: new Date().toISOString()
     };
     return defaults;
-  }
-
-  get objectIdPrefix() {
-    return objectIdPrefix;
   }
 
   get(attr) {
@@ -129,8 +124,7 @@ class Model {
   }
 
   isNew() {
-    const id = this.id;
-    return !this.has(idAttribute) || id.indexOf(this.objectIdPrefix) === 0;
+    return !this.has(idAttribute) || this.id.indexOf(localIdPrefix) === 0;
   }
 
   toJSON() {
@@ -140,12 +134,16 @@ class Model {
     };
 
     for (const key in this.attributes) {
-      if (this.attributes.hasOwnProperty(key) && (key !== aclAttribute || key !== kmdAttribute)) {
+      if (this.attributes.hasOwnProperty(key)) {
+        if (key === aclAttribute || key === kmdAttribute) {
+          continue;
+        }
+
         json[key] = this.attributes[key];
       }
     }
 
-    return clone(json);
+    return clone(json, true);
   }
 }
 

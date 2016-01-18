@@ -1,5 +1,5 @@
 const KinveyError = require('./errors').KinveyError;
-const Query = require('./query');
+import Query from './query';
 const clone = require('lodash/lang/clone');
 const result = require('lodash/object/result');
 const assign = require('lodash/object/assign');
@@ -66,8 +66,8 @@ class PrivateAggregation {
     forEach(documents, document => {
       const group = {};
 
-      for (const name in aggregation.key) {
-        if (aggregation.key.hasOwnProperty(name)) {
+      for (const name in document) {
+        if (document.hasOwnProperty(name)) {
           group[name] = document[name];
         }
       }

@@ -1,5 +1,5 @@
-const CacheRequest = require('../requests/cacheRequest');
-const Client = require('../client');
+const LocalRequest = require('../requests/LocalRequest');
+import Client from '../client';
 const HttpMethod = require('../enums').HttpMethod;
 const NotFoundError = require('../errors').NotFoundError;
 const result = require('lodash/object/result');
@@ -20,7 +20,7 @@ class UserUtils {
       return Promise.resolve(user);
     }
 
-    const request = new CacheRequest({
+    const request = new LocalRequest({
       method: HttpMethod.GET,
       pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
       client: options.client
@@ -53,7 +53,7 @@ class UserUtils {
 
     const promise = UserUtils.getActive(options).then(activeUser => {
       if (activeUser) {
-        const request = new CacheRequest({
+        const request = new LocalRequest({
           method: HttpMethod.DELETE,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}/${activeUser._id}`,
           client: options.client
@@ -64,7 +64,7 @@ class UserUtils {
       }
     }).then(() => {
       if (user) {
-        const request = new CacheRequest({
+        const request = new LocalRequest({
           method: HttpMethod.POST,
           pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
           client: options.client,

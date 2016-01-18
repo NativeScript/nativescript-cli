@@ -1,5 +1,6 @@
 const Middleware = require('./middleware');
 const HttpMethod = require('../enums').HttpMethod;
+const NetworkConnectionError = require('../errors').NetworkConnectionError;
 const http = require('request');
 const result = require('lodash/object/result');
 const isEmpty = require('lodash/lang/isEmpty');
@@ -55,6 +56,11 @@ class Http extends Middleware {
       return new Promise((resolve, reject) => {
         http(options, (err, response, body) => {
           if (err) {
+            if (err.code === 'ENOTFOUND') {
+              return reject(new NetworkConnectionError('It looks like you do not have a network connection. ' +
+                'Please check that you are connected to a network and try again.'));
+            }
+
             return reject(err);
           }
 

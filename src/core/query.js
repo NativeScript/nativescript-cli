@@ -477,26 +477,26 @@ class PrivateQuery {
   }
 
   /**
-   * Processes the response by applying fields, sort, limit, and skip.
+   * Processes the data by applying fields, sort, limit, and skip.
    *
-   * @param   {Array}   response    The raw response.
-   * @throws  {Error}               `response` must be of type: `Array`.
-   * @returns {Array}               The processed response.
+   * @param   {Array}   data    The raw data.
+   * @throws  {Error}               `data` must be of type: `Array`.
+   * @returns {Array}               The processed data.
    */
-  process(response) {
-    if (response) {
+  _process(data) {
+    if (data) {
       // Validate arguments.
-      if (!isArray(response)) {
-        throw new Error('response argument must be of type: Array.');
+      if (!isArray(data)) {
+        throw new Error('data argument must be of type: Array.');
       }
 
       // Apply the query
       const json = this.toJSON();
-      response = sift(json.filter, response);
+      data = sift(json.filter, data);
 
       // Remove fields
       if (json.fields && json.fields.length > 0) {
-        response = response.map((item) => {
+        data = data.map((item) => {
           for (const key in item) {
             if (item.hasOwnProperty(key) && json.fields.indexOf(key) === -1) {
               delete item[key];
@@ -508,7 +508,7 @@ class PrivateQuery {
       }
 
       // Sorting.
-      response = response.sort((a, b) => {
+      data = data.sort((a, b) => {
         for (const field in json.sort) {
           if (json.sort.hasOwnProperty(field)) {
             // Find field in objects.
@@ -540,13 +540,13 @@ class PrivateQuery {
 
       // Limit and skip.
       if (json.limit) {
-        return response.slice(json.skip, json.skip + json.limit);
+        return data.slice(json.skip, json.skip + json.limit);
       }
 
-      return response.slice(json.skip);
+      return data.slice(json.skip);
     }
 
-    return response;
+    return data;
   }
 
   /**
@@ -572,7 +572,7 @@ class PrivateQuery {
   }
 }
 
-class Query {
+export default class Query {
   constructor(options) {
     this[privateQuerySymbol] = new PrivateQuery(options);
   }
@@ -741,8 +741,8 @@ class Query {
     return this;
   }
 
-  process(response) {
-    return this[privateQuerySymbol].process(response);
+  _process(data) {
+    return this[privateQuerySymbol]._process(data);
   }
 
   /**
@@ -754,5 +754,3 @@ class Query {
     return this[privateQuerySymbol].toJSON();
   }
 }
-
-module.exports = Query;

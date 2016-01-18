@@ -7,7 +7,7 @@ const DataPolicy = require('./enums').DataPolicy;
 const HttpMethod = require('./enums').HttpMethod;
 const User = require('./models/user');
 const Client = require('./client');
-const Query = require('./query');
+import Query from './query';
 const Auth = require('./auth');
 const Device = require('./device');
 const assign = require('lodash/object/assign');
