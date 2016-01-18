@@ -14,7 +14,7 @@ Creates a new project for native development with NativeScript.
 * `--path` - Specifies the directory where you want to create the project, if different from the current directory. The directory must be empty.
 * `--appid` - Sets the application identifier for your project.
 * `--copy-from` - Specifies a directory which contains an existing NativeScript project. If `--copy-from` and `--template` are not set, the NativeScript CLI creates the project from the default JavaScript hello-world template.
-* `--template` - Specifies a valid na in the default hello-world template.
+* `--template` - Specifies a valid npm package which you want to use to create your project. If `--copy-from` and `--template` are not set, the NativeScript CLI creates the project from the default JavaScript hello-world template.<% if(isHtml) { %> If one or more application assets are missing from the `App_Resources` directory in the package, the CLI adds them using the assets available in the default hello-world template.<% } %>
 
 ### Attributes
 * `<App Name>` is the name of project. The specified name must meet the requirements of all platforms that you want to target. <% if(isConsole) { %>For more information about the `<App Name>` requirements, run `$ tns help create`<% } %><% if(isHtml) { %>For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores. The name must start with a letter.
