@@ -51,12 +51,18 @@ class AndroidDebugService implements IDebugService {
 		server.on("error", (err: Error) => {
 			future.return(false);
 		});
-		server.listen(candidatePort, (err: Error) => {
-			server.once("close", () => {
+		server.once("close", () => {
+			if (!future.isResolved()) { // "close" will be emitted right after "error"
 				future.return(true);
-			});
+			}
+		});
+		server.on("listening", (err: Error) => {
+			if (err) {
+				future.return(false);
+			}
 			server.close();
 		});
+		server.listen(candidatePort, "localhost");
 
 		return future;
 	}
@@ -73,7 +79,7 @@ class AndroidDebugService implements IDebugService {
 				port = parseInt(match[1]);
 			} else {
 				let candidatePort = 40000;
-				while (!this.isPortAvailable(candidatePort++).wait()) {
+				for (; !this.isPortAvailable(candidatePort).wait(); ++candidatePort) {
 					if (candidatePort > 65534) {
 						this.$errors.failWithoutHelp("Unable to find free local port.");
 					}
@@ -88,7 +94,7 @@ class AndroidDebugService implements IDebugService {
 	}
 
 	private unixSocketForward(local: number, remote: string): IFuture<void> {
-		return this.device.adb.executeCommand(["forward", `tcp:${local.toString() }`, `localabstract:${remote}`]);
+		return this.device.adb.executeCommand(["forward", `tcp:${local}`, `localabstract:${remote}`]);
 	}
 
 	private debugOnDevice(): IFuture<void> {
