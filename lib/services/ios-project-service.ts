@@ -217,9 +217,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public buildForDeploy(platform: string): IFuture<void> {
+	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		if (this.$options.release) {
-			return this.buildProject(this.platformData.projectRoot);
+			return this.buildProject(this.platformData.projectRoot, buildConfig);
 		}
 
 		let devicesArchitectures = _(this.$devicesService.getDeviceInstances())
@@ -237,7 +237,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			architectures.push('ONLY_ACTIVE_ARCH=NO');
 		}
 
-		return this.buildProject(this.platformData.projectRoot, { architectures: architectures });
+		buildConfig = buildConfig || { };
+		buildConfig.architectures = architectures;
+
+		return this.buildProject(this.platformData.projectRoot, buildConfig);
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {
