@@ -129,7 +129,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.interpolateConfigurationFile(infoPlistFilePath).wait();
 
 			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
-			this.replaceFileName("-Info.plist", projectRootFilePath).wait();
+			// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
+			// but in the hello-world app template as a platform specific resource.
+			if(this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist")).wait()) {
+				this.replaceFileName("-Info.plist", projectRootFilePath).wait();
+			}
 			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot).wait();
 
