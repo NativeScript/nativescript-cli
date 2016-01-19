@@ -18,8 +18,6 @@ Lets you manage the plugins for your project.
 
 Command | Description
 ----------|----------
-[library](library.html) | You must run the library command with a related command.
-[library add](library-add.html) | Adds a native library to the current project.
 [plugin add](plugin-add.html) | Installs the specified plugin and its dependencies.
 [plugin remove](plugin-remove.html) | Uninstalls the specified plugin and its dependencies.
 <% } %>

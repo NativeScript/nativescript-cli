@@ -64,7 +64,6 @@ interface IPlatformProjectService {
 	prepareProject(): IFuture<void>;
 	prepareAppResources(appResourcesDirectoryPath: string): IFuture<void>;
 	isPlatformPrepared(projectRoot: string): IFuture<boolean>;
-	addLibrary(libraryPath: string): IFuture<void>;
 	canUpdatePlatform(currentVersion: string, newVersion: string): IFuture<boolean>;
 	/**
 	* Provides a platform specific update logic for the specified runtime versions.

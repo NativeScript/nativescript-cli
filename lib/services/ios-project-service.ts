@@ -247,17 +247,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return this.$fs.exists(path.join(projectRoot, this.$projectData.projectName, constants.APP_FOLDER_NAME));
 	}
 
-	public addLibrary(libraryPath: string): IFuture<void> {
-		return (() => {
-			let extension = path.extname(libraryPath);
-			if (extension === ".framework") {
-				this.addDynamicFramework(libraryPath).wait();
-			} else {
-				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not appear to be a dynamic framework package.`);
-			}
-		}).future<void>()();
-	}
-
 	public deploy(deviceIdentifier: string): IFuture<void> {
 		return Future.fromResult();
 	}
