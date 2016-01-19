@@ -9,6 +9,7 @@ import * as semver from "semver";
 import * as minimatch from "minimatch";
 import Future = require("fibers/future");
 import {EOL} from "os";
+let clui = require("clui");
 
 export class PlatformService implements IPlatformService {
 	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
@@ -85,7 +86,9 @@ export class PlatformService implements IPlatformService {
 				npmOptions["version"] = version;
 			}
 
+			let spinner = new clui.Spinner("Installing " + packageToInstall);
 			try {
+				spinner.start();
 				let downloadedPackagePath = this.$npmInstallationManager.install(packageToInstall, npmOptions).wait();
 				let frameworkDir = path.join(downloadedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME);
 				frameworkDir = path.resolve(frameworkDir);
@@ -94,6 +97,8 @@ export class PlatformService implements IPlatformService {
 			} catch(err) {
 				this.$fs.deleteDirectory(platformPath).wait();
 				throw err;
+			} finally {
+				spinner.stop();
 			}
 
 			this.$logger.out("Project successfully created.");
