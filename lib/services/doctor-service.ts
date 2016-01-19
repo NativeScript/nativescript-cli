@@ -3,6 +3,7 @@
 import {EOL} from "os";
 import * as semver from "semver";
 import * as path from "path";
+let clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
@@ -105,14 +106,19 @@ class DoctorService implements IDoctorService {
 		temp.track();
 		let projDir = temp.mkdirSync("nativescript-check-cocoapods");
 
+		let spinner = new clui.Spinner("Installing iOS runtime.");
 		try {
+			spinner.start();
 			this.$npm.install("tns-ios", projDir).wait();
+			spinner.stop();
 			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
 				"pod 'AFNetworking', '~> 1.0'\n"
 			).wait();
 
+			spinner.update("Verifying CocoaPods. This may take some time, please be patient.");
+			spinner.start();
 			let future = this.$childProcess.spawnFromEvent(
 				this.$config.USE_POD_SANDBOX ? "sandbox-pod": "pod",
 				["install"],
@@ -126,6 +132,8 @@ class DoctorService implements IDoctorService {
 			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
 		} catch(err) {
 			return true;
+		} finally {
+			spinner.stop();
 		}
 	}
 }
