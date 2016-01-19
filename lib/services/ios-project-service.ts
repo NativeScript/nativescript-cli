@@ -37,7 +37,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $config: IConfiguration,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
-		private $mobileHelper: Mobile.IMobileHelper) {
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $pluginVariablesService: IPluginVariablesService) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -66,7 +67,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			configurationFileName: "Info.plist",
 			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
 			relativeToFrameworkConfigurationFilePath: path.join("__PROJECT_NAME__", "__PROJECT_NAME__-Info.plist"),
-			mergeXmlConfig: [{ "nodename": "plist", "attrname": "*" }, {"nodename": "dict", "attrname": "*"}],
 			fastLivesyncFileExtensions: [".tiff", ".tif", ".jpg", "jpeg", "gif", ".png", ".bmp", ".BMPf", ".ico", ".cur", ".xbm"] // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 		};
 	}
@@ -396,6 +396,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public processConfigurationFilesFromAppResources(): IFuture<void> {
 		return (() => {
 			this.mergeInfoPlists().wait();
+			_(this.getAllInstalledPlugins().wait())
+				.map(pluginData => this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.platformData.configurationFilePath).wait())
+				.value();
+			this.$pluginVariablesService.interpolateAppIdentifier(this.platformData.configurationFilePath).wait();
 		}).future<void>()();
 	}
 
@@ -405,7 +409,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
 
 			if (!this.$fs.exists(infoPlistPath).wait()) {
-				// The project is missing Info.plist, try to populate it from the project tempalte.
+				// The project is missing Info.plist, try to populate it from the project template.
 				let projectTemplateService: IProjectTemplatesService = this.$injector.resolve("projectTemplatesService");
 				let defaultTemplatePath = projectTemplateService.defaultTemplatePath.wait();
 				let templateInfoPlist = path.join(defaultTemplatePath, constants.APP_RESOURCES_FOLDER_NAME, this.$devicePlatformsConstants.iOS, this.platformData.configurationFileName);
@@ -438,7 +442,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				});
 			};
 
-			let allPlugins: IPluginData[] = (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins().wait();
+			let allPlugins = this.getAllInstalledPlugins().wait();
 			for (let plugin of allPlugins) {
 				let pluginInfoPlistPath = path.join(plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME), this.platformData.configurationFileName);
 				makePatch(pluginInfoPlistPath);
@@ -467,6 +471,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.$fs.writeFile(this.platformData.configurationFilePath, plistContent).wait();
 
 		}).future<void>()();
+	}
+
+	private getAllInstalledPlugins(): IFuture<IPluginData[]> {
+		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins();
 	}
 
 	private get projectPodFilePath(): string {

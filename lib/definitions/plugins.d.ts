@@ -43,10 +43,20 @@ interface IPluginVariablesService {
 	/**
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
-	 * @param {pluginConfigurationFileContent}		pluginConfigurationFileContent for the plugin.
-	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
+	 * @param {pluginConfigurationFilePath}		pluginConfigurationFilePath for the plugin.
+	 * @return {IFuture<void>}
 	 */
-	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFileContent: string): IFuture<string>;
+	interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
+	/**
+	 * Replaces {nativescript.id} expression with the application identifier from package.json.
+	 * @param {pluginConfigurationFilePath}	pluginConfigurationFilePath for the plugin.
+	 * @return {IFuture<void>}
+	 */
+	interpolateAppIdentifier(pluginConfigurationFilePath: string): IFuture<void>;
+	/**
+	 * Replaces both plugin variables and appIdentifier
+	 */
+	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
 	/**
 	 * Returns the
 	 * @param {IPluginData}		pluginData for the plugin.

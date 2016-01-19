@@ -45,7 +45,7 @@ function createTestInjector(): IInjector {
 	return testInjector;
 }
 
-function createProjectFile(testInjector: IInjector): IFuture<void> {
+function createProjectFile(testInjector: IInjector): IFuture<string> {
 	return (() => {
 		let tempFolder = temp.mkdirSync("pluginVariablesService");
 
@@ -57,7 +57,9 @@ function createProjectFile(testInjector: IInjector): IFuture<void> {
 			"nativescript": { }
 		};
 		testInjector.resolve("fs").writeJson(path.join(tempFolder, "package.json"), projectData).wait();
-	}).future<void>()();
+
+		return tempFolder;
+	}).future<string>()();
 }
 
 function createPluginData(pluginVariables: any): IPluginData {
@@ -211,17 +213,21 @@ describe("Plugin Variables service", () => {
 
 	describe("plugin interpolation", () => {
 		it("fails when the plugin value is undefined", () => {
-			createProjectFile(testInjector).wait();
+			let tempFolder = createProjectFile(testInjector).wait();
 
 			let pluginVariables = { "MY_VAR": { } };
 			let pluginData = createPluginData(pluginVariables);
+
+			let fs: IFileSystem = testInjector.resolve("fs");
+			let filePath = path.join(tempFolder, "myfile");
+			fs.writeFile(filePath, "").wait();
 
 			let pluginVariablesService = testInjector.resolve("pluginVariablesService");
 
 			let expectedError = "Unable to find the value for MY_VAR plugin variable into project package.json file. Verify that your package.json file is correct and try again.";
 			let error: string = null;
 			try {
-				pluginVariablesService.interpolatePluginVariables(pluginData, "").wait();
+				pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 			} catch(err) {
 				error = err.message;
 			}
@@ -230,7 +236,7 @@ describe("Plugin Variables service", () => {
 		});
 
 		it("interpolates correctly plugin variable value", () => {
-			createProjectFile(testInjector).wait();
+			let tempFolder = createProjectFile(testInjector).wait();
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
 			let fs: IFileSystem = testInjector.resolve("fs");
@@ -252,8 +258,12 @@ describe("Plugin Variables service", () => {
 						'<activity android:label="@string/{FB_APP_NAME}" android:name="com.facebook.LoginActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>' +
 					'</application>' +
 				'</manifest>';
-			let result = pluginVariablesService.interpolatePluginVariables(pluginData, pluginConfigurationFileContent).wait();
+			let filePath = path.join(tempFolder, "myfile");
+			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
 
+			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
+
+			let result = fs.readText(filePath).wait();
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -265,7 +275,7 @@ describe("Plugin Variables service", () => {
 		});
 
 		it("interpolates correctly case sensive plugin variable value", () => {
-			createProjectFile(testInjector).wait();
+			let tempFolder = createProjectFile(testInjector).wait();
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
 			let fs: IFileSystem = testInjector.resolve("fs");
@@ -287,8 +297,12 @@ describe("Plugin Variables service", () => {
 						'<activity android:label="@string/{Fb_App_NaMe}" android:name="com.facebook.LoginActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>' +
 					'</application>' +
 				'</manifest>';
-			let result = pluginVariablesService.interpolatePluginVariables(pluginData, pluginConfigurationFileContent).wait();
+			let filePath = path.join(tempFolder, "myfile");
+			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
 
+			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
+
+			let result = fs.readText(filePath).wait();
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +
@@ -300,7 +314,7 @@ describe("Plugin Variables service", () => {
 		});
 
 		it("interpolates correctly more than one plugin variables values", () => {
-			createProjectFile(testInjector).wait();
+			let tempFolder = createProjectFile(testInjector).wait();
 
 			let projectData: IProjectData = testInjector.resolve("projectData");
 			let fs: IFileSystem = testInjector.resolve("fs");
@@ -323,9 +337,12 @@ describe("Plugin Variables service", () => {
 						'<activity android:label="@string/{FB_APP_url}" />' +
 					'</application>' +
 				'</manifest>';
+			let filePath = path.join(tempFolder, "myfile");
+			fs.writeFile(filePath, pluginConfigurationFileContent).wait();
 
-			let result = pluginVariablesService.interpolatePluginVariables(pluginData, pluginConfigurationFileContent).wait();
+			pluginVariablesService.interpolatePluginVariables(pluginData, filePath).wait();
 
+			let result = fs.readText(filePath).wait();
 			let expectedResult = '<?xml version="1.0" encoding="UTF-8"?>' +
 				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
 					'<application android:allowBackup="true" android:icon="@drawable/ic_launcher" android:label="@string/app_name" android:theme="@style/Theme.Sample" >' +

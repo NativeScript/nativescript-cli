@@ -10,7 +10,8 @@ export class PluginVariablesService implements IPluginVariablesService {
 		private $pluginVariablesHelper: IPluginVariablesHelper,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter) { }
+		private $prompter: IPrompter,
+		private $fs: IFileSystem) { }
 
 	public getPluginVariablePropertyName(pluginData: IPluginData): string {
 		return `${pluginData.name}-${PluginVariablesService.PLUGIN_VARIABLES_KEY}`;
@@ -38,15 +39,35 @@ export class PluginVariablesService implements IPluginVariablesService {
 		return this.$projectDataService.removeProperty(this.getPluginVariablePropertyName(pluginData));
 	}
 
-	public interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFileContent: string): IFuture<string> {
+	public interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
 		return (() => {
+			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
 			this.executeForAllPluginVariables(pluginData, (pluginVariableData: IPluginVariableData) =>
 				(() => {
 					this.ensurePluginVariableValue(pluginVariableData.value, `Unable to find the value for ${pluginVariableData.name} plugin variable into project package.json file. Verify that your package.json file is correct and try again.`);
-					pluginConfigurationFileContent = pluginConfigurationFileContent.replace(new RegExp(`{${pluginVariableData.name}}`, "gi"), pluginVariableData.value);
+					pluginConfigurationFileContent = this.interpolateCore(pluginVariableData.name, pluginVariableData.value, pluginConfigurationFileContent);
 				}).future<void>()()).wait();
-			return pluginConfigurationFileContent;
-		}).future<string>()();
+			this.$fs.writeFile(pluginConfigurationFilePath, pluginConfigurationFileContent).wait();
+		}).future<void>()();
+	}
+
+	public interpolateAppIdentifier(pluginConfigurationFilePath: string): IFuture<void> {
+		return (() => {
+			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
+			let newContent = this.interpolateCore("nativescript.id", this.$projectData.projectId, pluginConfigurationFileContent);
+			this.$fs.writeFile(pluginConfigurationFilePath, newContent).wait();
+		}).future<void>()();
+	}
+
+	public interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
+		return (() => {
+			this.interpolatePluginVariables(pluginData, pluginConfigurationFilePath).wait();
+			this.interpolateAppIdentifier(pluginConfigurationFilePath).wait();
+		}).future<void>()();
+	}
+
+	private interpolateCore(name: string, value: string, content: string): string {
+		return content.replace(new RegExp(`{${name}}`, "gi"), value);
 	}
 
 	private ensurePluginVariableValue(pluginVariableValue: string, errorMessage: string): void {

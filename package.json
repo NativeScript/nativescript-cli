@@ -78,7 +78,6 @@
     "xcode": "https://github.com/NativeScript/node-xcode/archive/1.4.0.tar.gz",
     "xmldom": "0.1.21",
     "xmlhttprequest": "https://github.com/telerik/node-XMLHttpRequest/tarball/master",
-    "xmlmerge-js": "0.2.4",
     "yargs": "3.15.0"
   },
   "analyze": true,

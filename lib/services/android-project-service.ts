@@ -28,7 +28,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		$projectDataService: IProjectDataService,
 		private $sysInfo: ISysInfo,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		private $pluginVariablesService: IPluginVariablesService) {
 			super($fs, $projectData, $projectDataService);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -56,7 +57,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				configurationFileName: "AndroidManifest.xml",
 				configurationFilePath: path.join(projectRoot, "src", "main", "AndroidManifest.xml"),
 				relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
-				mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }, {"nodename": "application", "attrname": "*"}],
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
 		}
@@ -284,7 +284,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public preparePluginNativeCode(pluginData: IPluginData): IFuture<void> {
 		return (() => {
 			let pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(pluginData, AndroidProjectService.ANDROID_PLATFORM_NAME);
-			this.processResourcesFromPlugin(pluginData.name, pluginPlatformsFolderPath).wait();
+			this.processResourcesFromPlugin(pluginData, pluginPlatformsFolderPath).wait();
 		}).future<void>()();
 	}
 
@@ -292,19 +292,24 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return Future.fromResult();
 	}
 
-	private processResourcesFromPlugin(pluginName: string, pluginPlatformsFolderPath: string): IFuture<void> {
+	private processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): IFuture<void> {
 		return (() => {
 			let configurationsDirectoryPath = path.join(this.platformData.projectRoot, "configurations");
 			this.$fs.ensureDirectoryExists(configurationsDirectoryPath).wait();
 
-			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginName);
+			let pluginConfigurationDirectoryPath = path.join(configurationsDirectoryPath, pluginData.name);
 			if (this.$fs.exists(pluginPlatformsFolderPath).wait()) {
 				this.$fs.ensureDirectoryExists(pluginConfigurationDirectoryPath).wait();
 
 				// Copy all resources from plugin
-				let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginName);
+				let resourcesDestinationDirectoryPath = path.join(this.platformData.projectRoot, "src", pluginData.name);
 				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
 				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
+
+				let pluginConfigurationFilePath = path.join(resourcesDestinationDirectoryPath, this.platformData.configurationFileName);
+				if (this.$fs.exists(pluginConfigurationFilePath).wait()) {
+					this.$pluginVariablesService.interpolate(pluginData, pluginConfigurationFilePath).wait();
+				}
 			}
 
 			// Copy include.gradle file
