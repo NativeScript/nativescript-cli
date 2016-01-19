@@ -35,7 +35,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		$projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $config: IConfiguration,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) {
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $devicesService: Mobile.IDevicesService,
+		private $mobileHelper: Mobile.IMobileHelper) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -177,12 +179,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let args: string[] = [];
 			let buildForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
 			if (buildForDevice) {
+				let defaultArchitectures = [
+					'ARCHS=armv7 arm64',
+					'VALID_ARCHS=armv7 arm64'
+				];
+
 				args = basicArgs.concat([
 					"-sdk", "iphoneos",
-					'ARCHS=armv7 arm64',
-					'VALID_ARCHS=armv7 arm64',
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "device")
 				]);
+
+				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 			} else {
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
@@ -208,6 +215,29 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
 			}
 		}).future<void>()();
+	}
+
+	public buildForDeploy(platform: string): IFuture<void> {
+		if (this.$options.release) {
+			return this.buildProject(this.platformData.projectRoot);
+		}
+
+		let devicesArchitectures = _(this.$devicesService.getDeviceInstances())
+			.filter(d => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform))
+			.map(d => d.deviceInfo.activeArchitecture)
+			.uniq()
+			.value();
+
+		let architectures = [
+			`ARCHS=${devicesArchitectures.join(" ")}`,
+			`VALID_ARCHS=${devicesArchitectures.join(" ")}`
+		];
+
+		if (devicesArchitectures.length > 1) {
+			architectures.push('ONLY_ACTIVE_ARCH=NO');
+		}
+
+		return this.buildProject(this.platformData.projectRoot, { architectures: architectures });
 	}
 
 	public isPlatformPrepared(projectRoot: string): IFuture<boolean> {

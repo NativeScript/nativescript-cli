@@ -12,9 +12,30 @@ import * as iOSProjectServiceLib from "../lib/services/ios-project-service";
 import * as LoggerLib from "../lib/common/logger";
 import * as OptionsLib from "../lib/options";
 import * as yok from "../lib/common/yok";
+import {DevicesService} from "../lib/common/mobile/mobile-core/devices-service";
+import {MobileHelper} from "../lib/common/mobile/mobile-helper";
+import {Messages} from "../lib/common/messages/messages";
+import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
+import {DeviceLogProvider} from "../lib/common/mobile/device-log-provider";
+import {LogFilter} from "../lib/common/mobile/log-filter";
+import {LoggingLevels} from "../lib/common/mobile/logging-levels";
+import {DeviceDiscovery} from "../lib/common/mobile/mobile-core/device-discovery";
+import {IOSDeviceDiscovery} from "../lib/common/mobile/mobile-core/ios-device-discovery";
+import {AndroidDeviceDiscovery} from "../lib/common/mobile/mobile-core/android-device-discovery";
+import {Utils} from "../lib/common/utils";
 import { assert } from "chai";
 import temp = require("temp");
 temp.track();
+
+class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
+	public startLookingForDevices(): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public checkForDevices(): IFuture<void> {
+		return Future.fromResult();
+	}
+}
 
 function createTestInjector(projectPath: string, projectName: string): IInjector {
 	let testInjector = new yok.Yok();
@@ -39,6 +60,19 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("projectDataService", {});
 	testInjector.register("prompter", {});
 	testInjector.register("devicePlatformsConstants", { iOS: "iOS" });
+	testInjector.register("devicesService", DevicesService);
+	testInjector.register("iOSDeviceDiscovery", IOSDeviceDiscovery);
+	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryMock);
+	testInjector.register("iOSSimResolver", {});
+	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);
+	testInjector.register("messages", Messages);
+	testInjector.register("mobileHelper", MobileHelper);
+	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
+	testInjector.register("deviceLogProvider", DeviceLogProvider);
+	testInjector.register("logFilter", LogFilter);
+	testInjector.register("loggingLevels", LoggingLevels);
+	testInjector.register("utils", Utils);
+	testInjector.register("iTunesValidator", {});
 	return testInjector;
 }
 
