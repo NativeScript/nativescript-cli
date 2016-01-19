@@ -2,48 +2,52 @@
 "use strict";
 import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-app-data-base";
 import Future = require("fibers/future");
+import * as path from "path";
 
 export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData  {
-	private static DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync";
+	private static DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync/app";
+	private _deviceProjectRootPath: string = null;
 
-	constructor(_appIdentifier: string) {
+	constructor(_appIdentifier: string,
+		public device: Mobile.IDevice,
+		public platform: string,
+		private $iOSSimResolver: Mobile.IiOSSimResolver) {
 		super(_appIdentifier);
 	}
 
 	public get deviceProjectRootPath(): string {
-		return this.getDeviceProjectRootPath(IOSAppIdentifier.DEVICE_PROJECT_ROOT_PATH);
+		if (!this._deviceProjectRootPath) {
+			if (this.device.isEmulator) {
+				let applicationPath = this.$iOSSimResolver.iOSSim.getApplicationPath(this.device.deviceInfo.identifier, this.appIdentifier);
+				this._deviceProjectRootPath = path.join(applicationPath, "app");
+			} else {
+				this._deviceProjectRootPath = IOSAppIdentifier.DEVICE_PROJECT_ROOT_PATH;
+			}
+		}
+
+		return this.getDeviceProjectRootPath(this._deviceProjectRootPath);
 	}
 
-	public isLiveSyncSupported(device: Mobile.IDevice): IFuture<boolean> {
+	public isLiveSyncSupported(): IFuture<boolean> {
 		return Future.fromResult(true);
 	}
 }
 
 export class AndroidAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData {
-	constructor(_appIdentifier: string) {
+	constructor(_appIdentifier: string,
+		public device: Mobile.IDevice,
+		public platform: string,
+		private $options: IOptions) {
 		super(_appIdentifier);
 	}
 
 	public get deviceProjectRootPath(): string {
-		let options: IOptions = $injector.resolve("options");
-		let syncFolderName = options.watch ? "sync" : "fullsync";
+		let syncFolderName = this.$options.watch ? "sync" : "fullsync";
 		return `/data/local/tmp/${this.appIdentifier}/${syncFolderName}`;
 	}
 
-	public isLiveSyncSupported(device: Mobile.IDevice): IFuture<boolean> {
+	public isLiveSyncSupported(): IFuture<boolean> {
 		return Future.fromResult(true);
-	}
-}
-
-export class AndroidCompanionAppIdentifier extends deviceAppDataBaseLib.CompanionDeviceAppDataBase implements Mobile.IDeviceAppData {
-	private static APP_IDENTIFIER = "com.telerik.NativeScript";
-
-	constructor() {
-		super(AndroidCompanionAppIdentifier.APP_IDENTIFIER);
-	}
-
-	public get deviceProjectRootPath(): string {
-		return `/mnt/sdcard/Android/data/${this.appIdentifier}/files/12590FAA-5EDD-4B12-856D-F52A0A1599F2`;
 	}
 }
 
@@ -54,8 +58,7 @@ export class DeviceAppDataProvider implements Mobile.IDeviceAppDataProvider {
 				vanilla: IOSAppIdentifier
 			},
 			Android: {
-				vanilla: AndroidAppIdentifier,
-				companion: AndroidCompanionAppIdentifier
+				vanilla: AndroidAppIdentifier
 			}
 		};
 	}

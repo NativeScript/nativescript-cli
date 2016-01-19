@@ -151,7 +151,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public buildProject(projectRoot: string): IFuture<void> {
+	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			let basicArgs = [
 				"-configuration", this.$options.release ? "Release" : "Debug",
@@ -175,7 +175,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			let args: string[] = [];
-			if(this.$options.forDevice) {
+			let buildForDevice = this.$options.forDevice || (buildConfig && buildConfig.buildForDevice);
+			if (buildForDevice) {
 				args = basicArgs.concat([
 					"-sdk", "iphoneos",
 					'ARCHS=armv7 arm64',
@@ -193,7 +194,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
 
-			if(this.$options.forDevice) {
+			if (buildForDevice) {
 				let buildOutputPath = path.join(projectRoot, "build", "device");
 
 				// Produce ipa file

@@ -18,7 +18,7 @@ export class PlatformsData implements IPlatformsData {
 	}
 
 	public getPlatformData(platform: string): IPlatformData {
-		return this.platformsData[platform];
+		return this.platformsData[platform.toLowerCase()];
 	}
 
 	public get availablePlatforms(): any {

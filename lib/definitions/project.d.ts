@@ -48,6 +48,7 @@ interface IPlatformProjectServiceBase {
 
 interface IBuildConfig {
 	runSbGenerator?: boolean;
+	buildForDevice?: boolean;
 }
 
 interface IPlatformProjectService {

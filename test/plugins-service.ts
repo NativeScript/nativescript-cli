@@ -19,7 +19,7 @@ import {ProjectHelper} from "../lib/common/project-helper";
 import {PlatformsData} from "../lib/platforms-data";
 import {ProjectDataService} from "../lib/services/project-data-service";
 import * as helpers from "../lib/common/helpers";
-import {ProjectFilesManager} from "../lib/services/project-files-manager";
+import {ProjectFilesManager} from "../lib/common/services/project-files-manager";
 import {ResourceLoader} from "../lib/common/resource-loader";
 import {EOL} from "os";
 import {PluginsService} from "../lib/services/plugins-service";
@@ -30,6 +30,13 @@ import {AndroidProjectService} from "../lib/services/android-project-service";
 import {AndroidToolsInfo} from "../lib/android-tools-info";
 import {assert} from "chai";
 import NodeModulesTreeLib = require("../lib/tools/broccoli/trees/node-modules-tree");
+import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
+import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
+import {MobileHelper} from "../lib/common/mobile/mobile-helper";
+import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
+import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
+import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
+import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
 import * as temp from "temp";
 temp.track();
@@ -49,7 +56,6 @@ function createTestInjector() {
 	testInjector.register("androidEmulatorServices", {});
 	testInjector.register("androidToolsInfo", AndroidToolsInfo);
 	testInjector.register("sysInfo", {});
-	testInjector.register("mobileHelper", {});
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("iOSProjectService", {});
 	testInjector.register("devicesService", {});
@@ -83,6 +89,14 @@ function createTestInjector() {
 		interpolatePluginVariables: (pluginData: IPluginData, pluginConfigurationFileContent: string) => future.fromResult(pluginConfigurationFileContent)
 	});
 	testInjector.register("npmInstallationManager", NpmInstallationManager);
+
+	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
+	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
+	testInjector.register("mobileHelper", MobileHelper);
+	testInjector.register("projectFilesProvider", ProjectFilesProvider);
+	testInjector.register("deviceAppDataProvider", DeviceAppDataProvider);
+	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	return testInjector;
 }

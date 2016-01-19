@@ -3,7 +3,7 @@
 
 export class LivesyncCommand implements ICommand {
 	constructor(private $logger: ILogger,
-		private $usbLiveSyncService: IUsbLiveSyncService,
+		private $usbLiveSyncService: ILiveSyncService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $options: IOptions,
 		private $errors: IErrors) { }

@@ -8,10 +8,18 @@ import * as StaticConfigLib from "../lib/config";
 import * as fsLib from "../lib/common/file-system";
 import * as optionsLib from "../lib/options";
 import * as hostInfoLib from "../lib/common/host-info";
-import * as ProjectFilesManagerLib from "../lib/services/project-files-manager";
+import * as ProjectFilesManagerLib from "../lib/common/services/project-files-manager";
 import * as path from "path";
 import Future = require("fibers/future");
 import {assert} from "chai";
+import {DeviceAppDataFactory} from "../lib/common/mobile/device-app-data/device-app-data-factory";
+import {LocalToDevicePathDataFactory} from "../lib/common/mobile/local-to-device-path-data-factory";
+import {MobileHelper} from "../lib/common/mobile/mobile-helper";
+import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
+import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
+import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
+import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
+
 require("should");
 let temp = require("temp");
 temp.track();
@@ -53,6 +61,14 @@ function createTestInjector() {
 	});
 	testInjector.register("projectFilesManager", ProjectFilesManagerLib.ProjectFilesManager);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
+
+	testInjector.register("deviceAppDataFactory", DeviceAppDataFactory);
+	testInjector.register("localToDevicePathDataFactory", LocalToDevicePathDataFactory);
+	testInjector.register("mobileHelper", MobileHelper);
+	testInjector.register("projectFilesProvider", ProjectFilesProvider);
+	testInjector.register("deviceAppDataProvider", DeviceAppDataProvider);
+	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	return testInjector;
 }

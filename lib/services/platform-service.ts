@@ -31,7 +31,9 @@ export class PlatformService implements IPlatformService {
 		private $options: IOptions,
 		private $broccoliBuilder: IBroccoliBuilder,
 		private $pluginsService: IPluginsService,
-		private $projectFilesManager: IProjectFilesManager) { }
+		private $projectFilesManager: IProjectFilesManager,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $hostInfo: IHostInfo) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -300,7 +302,7 @@ export class PlatformService implements IPlatformService {
 
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
-			this.$logger.out("Project successfully built");
+			this.$logger.out("Project successfully built.");
 		}).future<void>()();
 	}
 
@@ -328,18 +330,6 @@ export class PlatformService implements IPlatformService {
 			}
 			this.$fs.copyFile(packageFile, targetPath).wait();
 			this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
-		}).future<void>()();
-	}
-
-	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			platform = platform.toLowerCase();
-
-			if (this.$options.emulator) {
-				this.deployOnEmulator(platform, buildConfig).wait();
-			} else {
-				this.deployOnDevice(platform, buildConfig).wait();
-			}
 		}).future<void>()();
 	}
 
@@ -374,6 +364,16 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public runPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
+		platform = platform.toLowerCase();
+
+		if (this.$options.emulator) {
+			return this.deployOnEmulator(platform, buildConfig);
+		}
+
+		return this.deployOnDevice(platform, buildConfig);
+	}
+
 	public installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
@@ -381,26 +381,28 @@ export class PlatformService implements IPlatformService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 
 			this.$devicesService.initialize({platform: platform, deviceId: this.$options.device}).wait();
-			if (this.$devicesService.deviceCount < 1) {
-				this.$errors.failWithoutHelp("Cannot find connected devices. Reconnect any connected devices, verify that your system recognizes them, and run this command again.");
-			}
-
-			let cachedDeviceOption = this.$options.forDevice;
-			this.$options.forDevice = true;
-			this.buildPlatform(platform, buildConfig).wait();
-			this.$options.forDevice = !!cachedDeviceOption;
-
-			// Get latest package that is produced from build
-			let packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
-			this.$logger.out("Using ", packageFile);
+			let packageFile: string = null;
 
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
+					if (!packageFile) {
+						if (this.$devicesService.isiOSSimulator(device)) {
+							this.buildPlatform(platform, buildConfig).wait();
+							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+						} else {
+							buildConfig = buildConfig || {};
+							buildConfig.buildForDevice = true;
+							this.buildPlatform(platform, buildConfig).wait();
+							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+						}
+					}
+
 					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
-					device.deploy(packageFile, this.$projectData.projectId).wait();
+					device.applicationManager.reinstallApplication(this.$projectData.projectId, packageFile).wait();
+					this.$logger.info(`Successfully deployed on device with identifier '${device.deviceInfo.identifier}'.`);
 				}).future<void>()();
 			};
-			this.$devicesService.execute(action).wait();
+			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
 	}
 
@@ -408,8 +410,28 @@ export class PlatformService implements IPlatformService {
 		return (() => {
 			this.installOnDevice(platform, buildConfig).wait();
 			let action = (device: Mobile.IDevice) => device.applicationManager.startApplication(this.$projectData.projectId);
-			this.$devicesService.execute(action).wait();
+			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
+	}
+
+	private getCanExecuteAction(platform: string): any {
+		let canExecute = (device: Mobile.IDevice): boolean => {
+			if (this.$options.device) {
+				return device.deviceInfo.identifier === this.$devicesService.getDeviceByDeviceOption().deviceInfo.identifier;
+			}
+
+			if (this.$mobileHelper.isiOSPlatform(platform) && this.$hostInfo.isDarwin) {
+				if (this.$devicesService.isOnlyiOSSimultorRunning()) {
+					return true;
+				}
+
+				return this.$options.emulator ? this.$devicesService.isiOSSimulator(device) : this.$devicesService.isiOSDevice(device);
+			}
+
+			return true;
+		};
+
+		return canExecute;
 	}
 
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
@@ -427,7 +449,7 @@ export class PlatformService implements IPlatformService {
 			let emulatorId = emulatorServices.getEmulatorId().wait();
 			platformData.platformProjectService.deploy(emulatorId).wait();
 
-			if(!this.$options.availableDevices) {
+			if (!this.$options.availableDevices) {
 				this.buildPlatform(platform, buildConfig).wait();
 
 				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
@@ -436,7 +458,7 @@ export class PlatformService implements IPlatformService {
 				logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
 			}
 
-			emulatorServices.startEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
+			emulatorServices.runApplicationOnEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
 		}).future<void>()();
 	}
 

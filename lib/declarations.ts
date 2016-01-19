@@ -54,12 +54,8 @@ interface IOpener {
     open(target: string, appname: string): void;
 }
 
-interface IUsbLiveSyncService {
+interface ILiveSyncService {
 	liveSync(platform: string): IFuture<void>;
-}
-
-interface IiOSUsbLiveSyncService extends IPlatformSpecificUsbLiveSyncService {
-	sendPageReloadMessageToSimulator(): IFuture<void>;
 }
 
 interface IOptions extends ICommonOptions {
@@ -88,10 +84,6 @@ interface IOptions extends ICommonOptions {
 	port: Number;
 	copyTo: string;
 	baseConfig: string;
-}
-
-interface IProjectFilesManager {
-	processPlatformSpecificFiles(directoryPath: string, platform: string, excludedDirs?: string[]): IFuture<void>;
 }
 
 interface IInitService {

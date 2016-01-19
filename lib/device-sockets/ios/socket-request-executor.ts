@@ -2,7 +2,7 @@
 "use strict";
 
 import * as helpers from "../../common/helpers";
-import * as iOSProxyServices from "../../common/mobile/ios/ios-proxy-services";
+import * as iOSProxyServices from "../../common/mobile/ios/device/ios-proxy-services";
 
 export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(private $errors: IErrors,
