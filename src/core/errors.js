@@ -27,12 +27,8 @@ Error.extend = function extend(name) {
   return SubType;
 };
 
-module.exports = {
-  ActiveUserError: Error.extend('ActiveUserError'),
-  AlreadyLoggedInError: Error.extend('AlreadyLoggedInError'),
-  BlobNotFoundError: Error.extend('BlobNotFoundError'),
-  KinveyError: Error.extend('KinveyError'),
-  NetworkConnectionError: Error.extend('NetworkConnectionError'),
-  NotFoundError: Error.extend('NotFoundError'),
-  UserNotFoundError: Error.extend('UserNotFoundError')
-};
+export const ActiveUserError = Error.extend('ActiveUserError');
+export const KinveyError = Error.extend('KinveyError');
+export const NetworkConnectionError = Error.extend('NetworkConnectionError');
+export const NotFoundError = Error.extend('NotFoundError');
+export const NoResponseError = Error.extend('NoResponseError');

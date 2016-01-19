@@ -1,5 +1,7 @@
-const StatusCode = require('../enums').StatusCode;
+import { StatusCode } from '../enums';
+import { KinveyError, NotFoundError } from '../errors';
 const assign = require('lodash/object/assign');
+const clone = require('lodash/lang/clone');
 const forEach = require('lodash/collection/forEach');
 const isString = require('lodash/lang/isString');
 const isPlainObject = require('lodash/lang/isPlainObject');
@@ -17,6 +19,28 @@ class Response {
     this.statusCode = options.statusCode;
     this.addHeaders(options.headers);
     this.data = options.data;
+  }
+
+  get error() {
+    if (this.isSuccess()) {
+      return null;
+    }
+
+    const data = clone(this.data);
+    const name = data.name || data.error;
+    const message = data.message || data.description;
+    const debug = data.debug;
+
+    if (name === 'EntityNotFound'
+        || name === 'CollectionNotFound'
+        || name === 'AppNotFound'
+        || name === 'UserNotFound'
+        || name === 'BlobNotFound'
+        || name === 'DocumentNotFound') {
+      return new NotFoundError(message, debug);
+    }
+
+    return new KinveyError(message, debug);
   }
 
   getHeader(name) {

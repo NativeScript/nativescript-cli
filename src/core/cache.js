@@ -119,16 +119,16 @@ class Cache {
     return promise;
   }
 
-  save(collection, document) {
-    if (!document) {
+  save(collection, doc) {
+    if (!doc) {
       return Promise.resolve(null);
     }
 
-    if (isArray(document)) {
-      return this.saveBulk(collection, document);
+    if (isArray(doc)) {
+      return this.saveBulk(collection, doc);
     }
 
-    const promise = this.db.save(collection, document);
+    const promise = this.db.save(collection, doc);
     return promise;
   }
 
@@ -141,7 +141,7 @@ class Cache {
     return promise;
   }
 
-  delete(collection, id) {
+  remove(collection, id) {
     if (!id) {
       return Promise.resolve({
         count: 0,
@@ -149,23 +149,23 @@ class Cache {
       });
     }
 
-    const promise = this.db.delete(collection, id);
+    const promise = this.db.remove(collection, id);
     return promise;
   }
 
-  deleteWhere(collection, query) {
+  removeWhere(collection, query) {
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    // Deleting should not take the query sort, limit, and skip into account.
+    // Removing should not take the query sort, limit, and skip into account.
     if (query) {
       query.sort(null).limit(null).skip(0);
     }
 
     const promise = this.find(collection, query).then(documents => {
       const promises = documents.map(document => {
-        return this.delete(collection, document._id);
+        return this.remove(collection, document._id);
       });
 
       return Promise.all(promises);

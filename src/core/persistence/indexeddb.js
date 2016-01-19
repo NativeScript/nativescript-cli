@@ -249,7 +249,7 @@ class IndexedDB {
     return promise;
   }
 
-  delete(collection, id) {
+  remove(collection, id) {
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
         const request = store.transaction;

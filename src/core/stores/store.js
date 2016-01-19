@@ -4,7 +4,7 @@ const NetworkRequest = require('../requests/networkRequest');
 const LocalRequest = require('../requests/localRequest');
 const Response = require('../requests/response');
 import { HttpMethod, StatusCode, StoreType, ReadPolicy, WritePolicy } from '../enums';
-const NotFoundError = require('../errors').NotFoundError;
+import { NoResponseError, NotFoundError } from '../errors';
 import Client from '../client';
 import Query from '../query';
 const Auth = require('../auth');
@@ -176,11 +176,15 @@ export default class Store {
 
       return request.execute();
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -239,11 +243,15 @@ export default class Store {
     });
 
     const promise = request.execute().then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -303,11 +311,15 @@ export default class Store {
     });
 
     const promise = request.execute().then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -379,11 +391,15 @@ export default class Store {
 
       return request.execute();
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return isArray(response.data) && response.data.length === 1 ? response.data[0] : response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -427,6 +443,11 @@ export default class Store {
       return Promise.resolve(null);
     }
 
+    if (doc._id) {
+      log.warn('Doc argument contains an _id. Calling update instead.', doc);
+      return this.update(doc, options);
+    }
+
     options = assign({
       client: this.client,
       properties: null,
@@ -434,6 +455,7 @@ export default class Store {
       timeout: undefined,
       ttl: this.ttl,
       writePolicy: this.writePolicy,
+      skipSync: false,
       handler() {}
     }, options);
 
@@ -462,9 +484,9 @@ export default class Store {
       return request.execute();
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalOnly
-            || options.writePolicy === WritePolicy.LocalFirst) {
-          return this._addModelsToSync(response.data, options).then(() => {
+        if (!options.skipSync
+            && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
+          return this._updateSync(response.data, options).then(() => {
             return response;
           });
         }
@@ -473,7 +495,7 @@ export default class Store {
       return response;
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalFirst) {
+        if (!options.skipSync && options.writePolicy === WritePolicy.LocalFirst) {
           return this.push(options).then(result => {
             let singular = false;
             let data = response.data;
@@ -506,11 +528,15 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -554,6 +580,11 @@ export default class Store {
       return Promise.resolve(null);
     }
 
+    if (!doc._id) {
+      log.warn('Doc argument does not contain an _id. Calling save instead.', doc);
+      return this.save(doc, options);
+    }
+
     options = assign({
       client: this.client,
       properties: null,
@@ -561,6 +592,7 @@ export default class Store {
       timeout: undefined,
       ttl: this.ttl,
       writePolicy: this.writePolicy,
+      skipSync: false,
       handler() {}
     }, options);
 
@@ -571,7 +603,7 @@ export default class Store {
         client: options.client,
         properties: options.properties,
         auth: options.auth,
-        pathname: this.getPathname(options.client),
+        pathname: `${this.getPathname(options.client)}/${doc._id}`,
         data: doc,
         timeout: options.timeout
       };
@@ -589,9 +621,9 @@ export default class Store {
       return request.execute();
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalOnly
-            || options.writePolicy === WritePolicy.LocalFirst) {
-          return this._addModelsToSync(response.data, options).then(() => {
+        if (!options.skipSync
+            && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
+          return this._updateSync(response.data, options).then(() => {
             return response;
           });
         }
@@ -600,8 +632,33 @@ export default class Store {
       return response;
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalFirst) {
-          return this.push(options).then(() => {
+        if (!options.skipSync && options.writePolicy === WritePolicy.LocalFirst) {
+          return this.push(options).then(result => {
+            console.log(result);
+            let singular = false;
+            let data = response.data;
+
+            if (!isArray(data)) {
+              singular = true;
+              data = [data];
+            }
+
+            data = map(data, doc => {
+              const syncResult = find(result.success, syncResult => {
+                return syncResult._id === doc._id;
+              });
+
+              if (syncResult) {
+                return syncResult.doc;
+              }
+            });
+
+            if (singular) {
+              response.data = data[0];
+            } else {
+              response.data = data;
+            }
+
             return response;
           });
         }
@@ -609,11 +666,15 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -626,22 +687,29 @@ export default class Store {
   }
 
   /**
-   * Delete models in the collection. A query can be optionally provided to delete
-   * a subset of modsels in the collection or omitted to delete all models in the
+   * Remove documents in a collection. A query can be optionally provided to remove
+   * a subset of documents in a collection or omitted to remove all documents in a
    * collection. A promise will be returned that will be resolved with a count of the
-   * number of models deleted or rejected with an error.
+   * number of documents removed or rejected with an error.
    *
-   * @param   {Query}        [query]                                            Query
-   * @param   {Object}       [options]                                          Options
-   * @param   {WritePolicy}  [options.writePolicy=WritePolicy.WriteAutomatic]   Write policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]                Auth type
+   * @param   {Query}                 [query]                                   Query
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request for data.
+   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
+   *                                                                            pathname.
+   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
+   *                                                                            the local cache.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
+   * var store = Store.getInstance('books');
    * var query = new Kinvey.Query();
-   * query.equalTo('author', 'David Flanagan');
-   * collection.clear(query).then(function(response) {
+   * query.equalTo('author', 'Kinvey');
+   * store.clear(query).then(function(result) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -651,25 +719,74 @@ export default class Store {
     log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
 
     options = assign({
-      writePolicy: this.writePolicy,
+      client: this.client,
+      properties: null,
       auth: this.auth,
-      client: this.client
+      timeout: undefined,
+      ttl: this.ttl,
+      writePolicy: this.writePolicy,
+      skipSync: false,
+      handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    const request = new Request({
-      writePolicy: options.writePolicy,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.DELETE,
-      pathname: this.getPathname(options.client),
-      query: query
-    });
-    const promise = request.execute().then(response => {
-      return response.data;
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.DELETE,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: this.getPathname(options.client),
+        query: query,
+        timeout: options.timeout
+      };
+
+      switch (options.writePolicy) {
+        case WritePolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case WritePolicy.LocalOnly:
+        case WritePolicy.LocalFirst:
+        default:
+          request = new LocalRequest(requestOptions);
+      }
+
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (!options.skipSync
+            && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
+          return this._updateSync(response.data.documents, options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        if (!options.skipSync && options.writePolicy === WritePolicy.LocalFirst) {
+          return this.push(options).then(() => {
+            return response;
+          });
+        }
+      }
+
+      return response;
+    }).then(response => {
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
+      }
+
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -682,7 +799,7 @@ export default class Store {
   }
 
   /**
-   * Remove a model in the collection. A promise will be returned that will be
+   * Remove a model in a collection. A promise will be returned that will be
    * resolved with a count of the number of models removed or rejected with an error.
    *
    * @param   {string}                id                                        Document Id
@@ -721,6 +838,7 @@ export default class Store {
       timeout: undefined,
       ttl: this.ttl,
       writePolicy: this.writePolicy,
+      skipSync: false,
       handler() {}
     }, options);
 
@@ -748,9 +866,9 @@ export default class Store {
       return request.execute();
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalOnly
-            || options.writePolicy === WritePolicy.LocalFirst) {
-          return this._addModelsToSync(response.data.documents, options).then(() => {
+        if (!options.skipSync
+            && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
+          return this._updateSync(response.data.documents, options).then(() => {
             return response;
           });
         }
@@ -759,7 +877,7 @@ export default class Store {
       return response;
     }).then(response => {
       if (response && response.isSuccess()) {
-        if (options.writePolicy === WritePolicy.LocalFirst) {
+        if (!options.skipSync && options.writePolicy === WritePolicy.LocalFirst) {
           return this.push(options).then(() => {
             return response;
           });
@@ -768,11 +886,15 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     });
 
     promise.then(response => {
@@ -835,22 +957,29 @@ export default class Store {
 
         return Promise.all(promises).then(() => {
           const networkStore = Store.getInstance(this.name, StoreType.Network);
-
           const saved = map(shouldSave, doc => {
             const metadata = docs[doc._id];
             const requestOptions = clone(metadata);
+            requestOptions.skipSync = true;
 
             if (doc._id.indexOf(localIdPrefix) === 0) {
               const prevId = doc._id;
               doc._id = undefined;
+
               return networkStore.save(doc, requestOptions).then(doc => {
-                return localStore.remove(prevId, requestOptions).then(() => {
-                  size = size - 1;
-                  delete docs[prevId];
-                  return {
-                    _id: prevId,
-                    doc: doc
-                  };
+                return localStore.save(doc, requestOptions);
+              }).then(doc => {
+                return localStore.remove(prevId, requestOptions).then(result => {
+                  if (result.count === 1) {
+                    size = size - 1;
+                    delete docs[prevId];
+                    return {
+                      _id: prevId,
+                      doc: doc
+                    };
+                  }
+
+                  return result;
                 });
               }).catch(err => {
                 doc._id = prevId;
@@ -880,17 +1009,16 @@ export default class Store {
             const metadata = docs[id];
             const requestOptions = clone(metadata);
 
-            return networkStore.remove(id, requestOptions).then(response => {
-              if (response && response.isSuccess()) {
+            return networkStore.remove(id, requestOptions).then(result => {
+              if (result.count === 1) {
                 size = size - 1;
                 delete docs[id];
                 return {
-                  _id: id,
-                  doc: response.documents[0]
+                  _id: id
                 };
               }
 
-              return response;
+              return result;
             }).catch(err => {
               return {
                 _id: id,
@@ -1033,11 +1161,15 @@ export default class Store {
       });
       return request.execute();
     }).then(response => {
-      if (response && response.isSuccess()) {
-        return response.data.size || 0;
+      if (response) {
+        if (response.isSuccess()) {
+          return response.data.size || 0;
+        }
+
+        throw response.error;
       }
 
-      return response;
+      throw new NoResponseError('No response was received.');
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return 0;
@@ -1049,12 +1181,12 @@ export default class Store {
     return promise;
   }
 
-  _addModelsToSync(models, options = {}) {
+  _updateSync(docs, options = {}) {
     if (!this.name) {
-      throw new Error('Unable to add models to sync for a store with no name.');
+      throw new Error('Unable to add docs to sync for a store with no name.');
     }
 
-    if (!models) {
+    if (!docs) {
       return Promise.resolve(null);
     }
 
@@ -1096,22 +1228,22 @@ export default class Store {
           docs: {},
           size: 0
         };
-        const docs = syncData.docs;
 
-        if (!isArray(models)) {
-          models = [models];
+        if (!isArray(docs)) {
+          docs = [docs];
         }
 
-        forEach(models, model => {
-          if (model._id) {
-            docs[model._id] = {
-              lmt: model._kmd ? model._kmd.lmt : null
+        forEach(docs, doc => {
+          if (doc._id) {
+            if (!syncData.docs.hasOwnProperty(doc._id)) {
+              syncData.size = syncData.size + 1;
+            }
+
+            syncData.docs[doc._id] = {
+              lmt: doc._kmd ? doc._kmd.lmt : null
             };
           }
         });
-
-        syncData.docs = docs;
-        syncData.size = docs.length;
 
         const request = new LocalRequest({
           method: HttpMethod.PUT,

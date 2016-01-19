@@ -38,9 +38,9 @@ class CacheMiddleware extends Middleware {
         promise = cache.save(collection, data);
       } else if (method === HttpMethod.DELETE) {
         if (id) {
-          promise = cache.delete(collection, id);
+          promise = cache.remove(collection, id);
         } else {
-          promise = cache.deleteWhere(collection, query);
+          promise = cache.removeWhere(collection, query);
         }
       }
 

@@ -10,6 +10,7 @@ const indexBy = require('lodash/collection/indexBy');
 const reduce = require('lodash/collection/reduce');
 const result = require('lodash/object/result');
 const values = require('lodash/object/values');
+const isEmpty = require('lodash/lang/isEmpty');
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
@@ -44,15 +45,15 @@ class DeltaSetRequest extends Request {
     }).then(cacheResponse => {
       if (cacheResponse && cacheResponse.isSuccess()) {
         const cacheDocuments = indexBy(cacheResponse.data, idAttribute);
-        const deltaSetQuery = new Query(result(this.query, 'toJSON', this.query));
-        deltaSetQuery.fields([idAttribute, kmdAttribute]);
+        const query = new Query(result(this.query, 'toJSON', this.query));
+        query.fields([idAttribute, kmdAttribute]);
         const networkRequest = new NetworkRequest({
           method: HttpMethod.GET,
           client: this.client,
           headers: this.headers,
           auth: this.auth,
           pathname: this.pathname,
-          query: deltaSetQuery,
+          query: query,
           timeout: this.timeout
         });
 
@@ -84,7 +85,7 @@ class DeltaSetRequest extends Request {
             let i = 0;
 
             while (i < deltaSetIds.length) {
-              const query = new Query(result(this.query, 'toJSON', this.query));
+              const query = new Query();
               const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
                                                maxIdsPerRequest : deltaSetIds.length);
               query.contains(idAttribute, ids);
@@ -104,7 +105,7 @@ class DeltaSetRequest extends Request {
             return Promise.all(promises).then(responses => {
               const initialResponse = new Response({
                 statusCode: StatusCode.Ok,
-                data: values(cacheDocuments)
+                data: []
               });
               return reduce(responses, (result, response) => {
                 if (response && response.isSuccess()) {
@@ -115,18 +116,32 @@ class DeltaSetRequest extends Request {
                 return result;
               }, initialResponse);
             }).then(response => {
-              const updateCacheRequest = new LocalRequest({
-                method: HttpMethod.PUT,
-                client: this.client,
-                headers: this.headers,
-                auth: this.auth,
-                pathname: this.pathname,
-                data: response.data,
-                timeout: this.timeout
-              });
-              return updateCacheRequest.execute().then(() => {
-                return response;
-              });
+              if (!isEmpty(response.data)) {
+                const updateCacheRequest = new LocalRequest({
+                  method: HttpMethod.PUT,
+                  client: this.client,
+                  headers: this.headers,
+                  auth: this.auth,
+                  pathname: this.pathname,
+                  data: response.data,
+                  timeout: this.timeout
+                });
+                return updateCacheRequest.execute().then(() => {
+                  return response;
+                });
+              }
+
+              return response;
+            }).then(response => {
+              response.data = response.data.concat(values(cacheDocuments));
+
+              if (this.query) {
+                const query = new Query(result(this.query, 'toJSON', this.query));
+                query.skip(0).limit(0);
+                response.data = query._process(response.data);
+              }
+
+              return response;
             });
           }
 
