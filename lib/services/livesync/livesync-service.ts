@@ -42,12 +42,13 @@ class LiveSyncService implements ILiveSyncService {
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
 			platform = this.$liveSyncServiceBase.getPlatform(platform).wait();
-			this._isInitialized = true;
 			let platformLowerCase = platform.toLowerCase();
 
 			if (!this.$platformService.preparePlatform(platformLowerCase).wait()) {
 				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 			}
+
+			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
 			this.ensureAndroidFrameworkVersion(platformData).wait();
