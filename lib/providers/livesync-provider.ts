@@ -43,8 +43,10 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		}).future<void>()();
 	}
 
-	public canExecuteFastSync(filePath: string): boolean {
-		return _.contains(LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS, path.extname(filePath));
+	public canExecuteFastSync(filePath: string, platform: string): boolean {
+		let platformData = this.$platformsData.getPlatformData(platform);
+		let fastSyncFileExtensions = LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
+		return _.contains(fastSyncFileExtensions, path.extname(filePath));
 	}
 }
 $injector.register("liveSyncProvider", LiveSyncProvider);
