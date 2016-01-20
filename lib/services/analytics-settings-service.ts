@@ -18,7 +18,6 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public getPrivacyPolicyLink(): string {
-		// TODO: Replace with nativescript privacy-policy link, when such exists.
 		return "http://www.telerik.com/company/privacy-policy";
 	}
 }
