@@ -117,7 +117,7 @@ class DoctorService implements IDoctorService {
 				"pod 'AFNetworking', '~> 1.0'\n"
 			).wait();
 
-			spinner.update("Verifying CocoaPods. This may take some time, please be patient.");
+			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
 			let future = this.$childProcess.spawnFromEvent(
 				this.$config.USE_POD_SANDBOX ? "sandbox-pod": "pod",
@@ -131,6 +131,7 @@ class DoctorService implements IDoctorService {
 
 			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
 		} catch(err) {
+			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;
 		} finally {
 			spinner.stop();
