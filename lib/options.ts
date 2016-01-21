@@ -36,8 +36,24 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			copyTo: { type: OptionType.String },
 			baseConfig: { type: OptionType.String }
 		},
-		path.join($hostInfo.isWindows ? process.env.LocalAppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
+		path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);
+
+		// On Windows we moved settings from LocalAppData to AppData. Move the existing file to keep the existing settings
+		// I guess we can remove this code after some grace period, say after 1.7 is out
+		if ($hostInfo.isWindows) {
+			try {
+				let shelljs = require("shelljs"),
+					oldSettings = path.join(process.env.LocalAppData, ".nativescript-cli", "user-settings.json"),
+					newSettings = path.join(process.env.AppData, ".nativescript-cli", "user-settings.json");
+				if (shelljs.test("-e", oldSettings) && !shelljs.test("-e", newSettings)) {
+					shelljs.mkdir(path.join(process.env.AppData, ".nativescript-cli"));
+					shelljs.mv(oldSettings, newSettings);
+				}
+			} catch (err) {
+				// ignore the error - it is too early to use $logger here
+			}
+		}
 	}
 }
 $injector.register("options", Options);
