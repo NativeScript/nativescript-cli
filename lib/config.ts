@@ -2,10 +2,10 @@
 "use strict";
 
 import * as path from "path";
-import * as staticConfigBaseLibPath from "./common/static-config-base";
-import * as configBaseLib from "./common/config-base";
+import {StaticConfigBase} from "./common/static-config-base";
+import {ConfigBase} from "./common/config-base";
 
-export class Configuration extends configBaseLib.ConfigBase implements IConfiguration { // User specific config
+export class Configuration extends ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
 	DEBUG = false;
 	TYPESCRIPT_COMPILER_OPTIONS = {};
@@ -21,7 +21,7 @@ export class Configuration extends configBaseLib.ConfigBase implements IConfigur
 }
 $injector.register("config", Configuration);
 
-export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase implements IStaticConfig {
+export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 	public PROJECT_FILE_NAME = "package.json";
 	public CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 	public CLIENT_NAME = "tns";
@@ -37,7 +37,8 @@ export class StaticConfig extends staticConfigBaseLibPath.StaticConfigBase imple
 		this.RESOURCE_DIR_PATH = path.join(this.RESOURCE_DIR_PATH, "../../resources");
 	}
 
-	public get disableHooks() {
+	public get disableCommandHooks() {
+		// Never set this to false because it will duplicate execution of hooks realized through method decoration
 		return true;
 	}
 
