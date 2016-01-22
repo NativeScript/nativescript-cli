@@ -18,10 +18,8 @@ import {Errors} from "../lib/common/errors";
 import {ProjectHelper} from "../lib/common/project-helper";
 import {PlatformsData} from "../lib/platforms-data";
 import {ProjectDataService} from "../lib/services/project-data-service";
-import * as helpers from "../lib/common/helpers";
 import {ProjectFilesManager} from "../lib/common/services/project-files-manager";
 import {ResourceLoader} from "../lib/common/resource-loader";
-import {EOL} from "os";
 import {PluginsService} from "../lib/services/plugins-service";
 import {AddPluginCommand} from "../lib/commands/plugin/add-plugin";
 import {MessagesService} from "../lib/common/services/messages-service";
@@ -546,95 +544,6 @@ describe("Plugins service", () => {
 				`\n@#[line:1,col:39].`;
 			mockBeginCommand(testInjector, expectedErrorMessage);
 			pluginsService.prepare(pluginJsonData, "android").wait();
-		});
-		it("merges AndroidManifest.xml and produces correct xml", () => {
-			let pluginName = "mySamplePlugin";
-			let projectFolder = createProjectFile(testInjector);
-			let pluginFolderPath = path.join(projectFolder, pluginName);
-			let pluginJsonData = {
-				"name": pluginName,
-				"version": "0.0.1",
-				"nativescript": {
-					"platforms": {
-						"android": "0.10.0"
-					}
-				}
-			};
-			let fs = testInjector.resolve("fs");
-			fs.writeJson(path.join(pluginFolderPath, "package.json"), pluginJsonData).wait();
-
-			// Adds AndroidManifest.xml file in platforms/android folder
-			createAndroidManifestFile(projectFolder, fs);
-
-			// Mock plugins service
-			let pluginsService = testInjector.resolve("pluginsService");
-			pluginsService.getAllInstalledPlugins = () => {
-				return (() => {
-					return [{
-						name: ""
-					}];
-				}).future<IPluginData[]>()();
-			};
-
-			let appDestinationDirectoryPath = path.join(projectFolder, "platforms", "android");
-			fs.ensureDirectoryExists(path.join(appDestinationDirectoryPath, "app")).wait();
-
-			// Mock projectData
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectId = "com.example.android.basiccontactables";
-
-			let configurationFilePath = path.join(appDestinationDirectoryPath, "src", "main", "AndroidManifest.xml");
-
-			let shelljs = require("shelljs");
-
-			// Mock platformsData
-			let platformsData = testInjector.resolve("platformsData");
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: appDestinationDirectoryPath,
-					frameworkPackageName: "tns-android",
-					configurationFileName: "AndroidManifest.xml",
-					configurationFilePath: configurationFilePath,
-					relativeToFrameworkConfigurationFilePath: path.join("src", "main", "AndroidManifest.xml"),
-					mergeXmlConfig: [{ "nodename": "manifest", "attrname": "*" }],
-					platformProjectService:  {
-						preparePluginNativeCode: (pluginData: IPluginData) => future.fromResult(),
-						interpolateConfigurationFile: () => {
-							return (() => {
-								shelljs.sed('-i', /__PACKAGE__/, projectData.projectId, configurationFilePath);
-								shelljs.sed('-i', /__APILEVEL__/, "23", configurationFilePath);
-							}).future<void>()();
-						}
-					},
-					normalizedPlatformName: "Android"
-				};
-			};
-
-			// Ensure the pluginDestinationPath folder exists
-			let pluginPlatformsDirPath = path.join(projectFolder, "node_modules", pluginName, "platforms", "android");
-			fs.ensureDirectoryExists(pluginPlatformsDirPath).wait();
-
-			shelljs.cp("-R", path.join(pluginFolderPath, "*"), path.join(projectFolder, "node_modules", pluginName));
-
-			// Creates valid plugin's AndroidManifest.xml file
-			let xml = '<?xml version="1.0" encoding="UTF-8"?>' +
-				'<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.example.android.basiccontactables" android:versionCode="1" android:versionName="1.0" >' +
-				'<uses-permission android:name="android.permission.READ_CONTACTS"/>' +
-				'</manifest>';
-			let pluginConfigurationFilePath = path.join(pluginPlatformsDirPath, "AndroidManifest.xml");
-			fs.writeFile(pluginConfigurationFilePath, xml).wait();
-
-			pluginsService.prepare(pluginJsonData, "android").wait();
-
-			let expectedXml = '<?xmlversion="1.0"encoding="utf-8"?><manifestxmlns:android="http://schemas.android.com/apk/res/android"package="com.example.android.basiccontactables"android:versionCode="1"android:versionName="1.0"><supports-screensandroid:smallScreens="true"android:normalScreens="true"android:largeScreens="true"android:xlargeScreens="true"/><uses-sdkandroid:minSdkVersion="17"android:targetSdkVersion="23"/><uses-permissionandroid:name="android.permission.READ_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.WRITE_EXTERNAL_STORAGE"/><uses-permissionandroid:name="android.permission.INTERNET"/><applicationandroid:name="com.tns.NativeScriptApplication"android:allowBackup="true"android:icon="@drawable/icon"android:label="@string/app_name"android:theme="@style/AppTheme"><activityandroid:name="com.tns.NativeScriptActivity"android:label="@string/title_activity_kimera"android:configChanges="keyboardHidden|orientation|screenSize"><intent-filter><actionandroid:name="android.intent.action.MAIN"/><categoryandroid:name="android.intent.category.LAUNCHER"/></intent-filter></activity><activityandroid:name="com.tns.ErrorReportActivity"/></application><uses-permissionandroid:name="android.permission.READ_CONTACTS"/></manifest>';
-			expectedXml = helpers.stringReplaceAll(expectedXml, EOL, "");
-			expectedXml = helpers.stringReplaceAll(expectedXml, " ", "");
-
-			let actualXml = fs.readText(path.join(appDestinationDirectoryPath, "src", "main", "AndroidManifest.xml")).wait();
-			actualXml = helpers.stringReplaceAll(actualXml, "\n", "");
-			actualXml = helpers.stringReplaceAll(actualXml, " ", "");
-
-			assert.equal(expectedXml, actualXml);
 		});
 	});
 });

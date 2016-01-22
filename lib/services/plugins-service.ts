@@ -3,10 +3,7 @@
 import * as path from "path";
 import * as shelljs from "shelljs";
 import * as semver from "semver";
-import Future = require("fibers/future");
 import * as constants from "../constants";
-let xmlmerge = require("xmlmerge-js");
-let DOMParser = require('xmldom').DOMParser;
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -72,12 +69,6 @@ export class PluginsService implements IPluginsService {
 
 					platformData.platformProjectService.removePluginNativeCode(pluginData).wait();
 
-					// Remove the plugin and call merge for another plugins that have configuration file
-					let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
-					if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-						this.merge(pluginData, platformData, (data: IPluginData) => data.name !== pluginData.name).wait();
-					}
-
 					if(pluginData.pluginVariables) {
 						this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginData).wait();
 					}
@@ -104,24 +95,6 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 
-	private initializeConfigurationFileFromCache(platformData: IPlatformData): IFuture<void> {
-		return (() => {
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let frameworkVersion = this.$projectDataService.getValue(platformData.frameworkPackageName).wait().version;
-
-			// We need to resolve this manager here due to some restrictions from npm api and in order to load PluginsService.NPM_CONFIG config
-			let npmInstallationManager: INpmInstallationManager = this.$injector.resolve("npmInstallationManager");
-			npmInstallationManager.addToCache(platformData.frameworkPackageName, frameworkVersion).wait();
-
-			let cachedPackagePath = npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, frameworkVersion);
-			let cachedConfigurationFilePath =  this.$options.baseConfig ? path.resolve(this.$options.baseConfig) : path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, platformData.relativeToFrameworkConfigurationFilePath);
-			let cachedConfigurationFileContent = this.$fs.readText(cachedConfigurationFilePath).wait();
-			this.$fs.writeFile(platformData.configurationFilePath, cachedConfigurationFileContent).wait();
-
-			platformData.platformProjectService.interpolateConfigurationFile().wait();
-		}).future<void>()();
-	}
-
 	public prepare(dependencyData: IDependencyData, platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
@@ -136,12 +109,6 @@ export class PluginsService implements IPluginsService {
 			if(this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
 				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 				shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
-
-				let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
-
-				if(this.$fs.exists(pluginConfigurationFilePath).wait()) {
-					this.merge(pluginData, platformData).wait();
-				}
 
 				this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
 
@@ -288,83 +255,6 @@ export class PluginsService implements IPluginsService {
 			let frameworkData = this.$projectDataService.getValue(platformData.frameworkPackageName).wait();
 			return frameworkData.version;
 		}).future<string>()();
-	}
-
-	private mergeXml(xml1: string, xml2: string, config: any[]): IFuture<string> {
-		let future = new Future<string>();
-
-		try {
-			xmlmerge.merge(xml1, xml2, config, (mergedXml: string) => {
-				future.return(mergedXml);
-			});
-		} catch(err) {
-			future.throw(err);
-		}
-
-		return future;
-	}
-
-	private validateXml(xml: string, xmlFilePath?: string): void {
-		let doc = new DOMParser({
-			locator: {},
-			errorHandler: (level: any, msg: string) => {
-				let errorMessage = xmlFilePath ? `Invalid xml file ${xmlFilePath}.` : `Invalid xml ${xml}.`;
-				this.$errors.fail(errorMessage + ` Additional technical information: ${msg}.` );
-			}
-		});
-		doc.parseFromString(xml, 'text/xml');
-	}
-
-	private mergeCore(pluginData: IPluginData, platformData: IPlatformData): IFuture<void> {
-		return (() => {
-			let pluginConfigurationFilePath = this.getPluginConfigurationFilePath(pluginData, platformData);
-			let configurationFilePath = platformData.configurationFilePath;
-
-			// Validate plugin configuration file
-			let pluginConfigurationFileContent = this.$fs.readText(pluginConfigurationFilePath).wait();
-			pluginConfigurationFileContent = this.$pluginVariablesService.interpolatePluginVariables(pluginData, pluginConfigurationFileContent).wait();
-			this.validateXml(pluginConfigurationFileContent, pluginConfigurationFilePath);
-
-			// Validate configuration file
-			let configurationFileContent = this.$fs.readText(configurationFilePath).wait();
-			this.validateXml(configurationFileContent, configurationFilePath);
-
-			// Merge xml
-			let resultXml = this.mergeXml(configurationFileContent, pluginConfigurationFileContent, platformData.mergeXmlConfig || []).wait();
-			this.validateXml(resultXml);
-			this.$fs.writeFile(configurationFilePath, resultXml).wait();
-		}).future<void>()();
-	}
-
-	private merge(pluginData: IPluginData, platformData: IPlatformData, mergeCondition?: (_pluginData: IPluginData) => boolean): IFuture<void> {
-		return (() => {
-			let tnsModulesDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
-			let nodeModules = this.$broccoliBuilder.getChangedNodeModules(tnsModulesDestinationPath, platformData.normalizedPlatformName.toLowerCase()).wait();
-
-			_(nodeModules)
-				.keys()
-				.filter(nodeModule => this.$fs.exists(path.join(nodeModule, "package.json")).wait())
-				.map(nodeModule => this.getNodeModuleData(path.join(nodeModule, "package.json")).wait())
-				.map(nodeModuleData => this.convertToPluginData(nodeModuleData))
-				.filter(data => data.isPlugin && this.$fs.exists(this.getPluginConfigurationFilePath(data, platformData)).wait())
-				.forEach((data, index) => {
-					if(index === 0) {
-						this.initializeConfigurationFileFromCache(platformData).wait();
-					}
-
-					if(!mergeCondition || (mergeCondition && mergeCondition(data))) {
-						this.mergeCore(data, platformData).wait();
-					}
-				})
-				.value();
-
-		}).future<void>()();
-	}
-
-	private getPluginConfigurationFilePath(pluginData: IPluginData, platformData: IPlatformData): string {
-		 let pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(platformData.normalizedPlatformName.toLowerCase());
-		 let pluginConfigurationFilePath = path.join(pluginPlatformsFolderPath, platformData.configurationFileName);
-		 return pluginConfigurationFilePath;
 	}
 
 	private isPluginDataValidForPlatform(pluginData: IPluginData, platform: string): IFuture<boolean> {

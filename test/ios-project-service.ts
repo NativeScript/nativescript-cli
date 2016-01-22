@@ -22,6 +22,8 @@ import {LoggingLevels} from "../lib/common/mobile/logging-levels";
 import {DeviceDiscovery} from "../lib/common/mobile/mobile-core/device-discovery";
 import {IOSDeviceDiscovery} from "../lib/common/mobile/mobile-core/ios-device-discovery";
 import {AndroidDeviceDiscovery} from "../lib/common/mobile/mobile-core/android-device-discovery";
+import {PluginVariablesService} from "../lib/services/plugin-variables-service";
+import {PluginVariablesHelper} from "../lib/common/plugin-variables-helper";
 import {Utils} from "../lib/common/utils";
 import { assert } from "chai";
 import temp = require("temp");
@@ -73,6 +75,8 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
 	testInjector.register("iTunesValidator", {});
+	testInjector.register("pluginVariablesService", PluginVariablesService);
+	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
 	return testInjector;
 }
 
