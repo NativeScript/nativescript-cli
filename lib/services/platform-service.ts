@@ -311,7 +311,7 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
-	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<string> {
+	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
 			if (!this.preparePlatform(platform).wait()) {
@@ -321,7 +321,7 @@ export class PlatformService implements IPlatformService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildForDeploy(platformData.projectRoot, buildConfig).wait();
 			this.$logger.out("Project successfully built");
-		}).future<string>()();
+		}).future<void>()();
 	}
 
 	public copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void> {
