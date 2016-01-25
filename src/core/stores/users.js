@@ -1,17 +1,14 @@
-const Auth = require('../auth');
-const DataPolicy = require('../enums').DataPolicy;
-const WritePolicy = require('../enums').WritePolicy;
-const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
-const UserNotFoundError = require('../errors').UserNotFoundError;
-const Request = require('../requests/networkRequest');
-const HttpMethod = require('../enums').HttpMethod;
-const NetworkStore = require('./networkStore');
+import Auth from '../auth';
+import { ReadPolicy as DataPolicy, WritePolicy, HttpMethod } from '../enums';
+import { NotFoundError, ActiveUserError } from '../errors';
+import Request from '../requests/networkRequest';
+import Store from './store';
 import Query from '../query';
-const User = require('../models/user');
-const assign = require('lodash/object/assign');
-const result = require('lodash/object/result');
-const forEach = require('lodash/collection/forEach');
-const isArray = require('lodash/lang/isArray');
+import User from '../models/user';
+import assign from 'lodash/object/assign';
+import result from 'lodash/object/result';
+import forEach from 'lodash/collection/forEach';
+import isArray from 'lodash/lang/isArray';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -21,7 +18,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * @example
  * var users = new Kinvey.Users();
  */
-class Users extends NetworkStore {
+export default class Users extends Store {
   /**
    * Creates a new instance of the Users class.
    *
@@ -116,7 +113,7 @@ class Users extends NetworkStore {
 
     const promise = User.getActive(options).then(activeUser => {
       if (options.state && activeUser) {
-        throw new AlreadyLoggedInError('A user is already logged in. Please logout before saving the new user.');
+        throw new ActiveUserError('A user is already logged in. Please logout before saving the new user.');
       }
 
       if (!(user instanceof this.model)) {
@@ -215,7 +212,7 @@ class Users extends NetworkStore {
         return response;
       });
     }).catch(err => {
-      if (options.silent && err instanceof UserNotFoundError) {
+      if (options.silent && err instanceof NotFoundError) {
         return null;
       }
 
@@ -267,5 +264,3 @@ class Users extends NetworkStore {
     return promise;
   }
 }
-
-module.exports = Users;

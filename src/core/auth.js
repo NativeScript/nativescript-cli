@@ -1,6 +1,6 @@
-const UserUtils = require('./utils/user');
+import UserUtils from './utils/user';
 
-class Auth {
+export default class Auth {
   static all(client) {
     return Auth.session(client).catch(() => {
       return Auth.basic(client);
@@ -68,5 +68,3 @@ class Auth {
     });
   }
 }
-
-module.exports = Auth;

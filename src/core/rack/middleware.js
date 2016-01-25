@@ -1,6 +1,6 @@
-const AsciiTree = require('./asciiTree');
-const UrlPattern = require('url-pattern');
-const KinveyError = require('../errors').KinveyError;
+import AsciiTree from './asciiTree';
+import UrlPattern from 'url-pattern';
+import { KinveyError } from '../errors';
 
 class Middleware {
   constructor(name = 'Middleware') {
@@ -26,7 +26,7 @@ class Middleware {
   }
 }
 
-class KinveyMiddleware extends Middleware {
+export default class KinveyMiddleware extends Middleware {
   constructor(name = 'Kinvey Middleware') {
     super(name);
   }
@@ -43,5 +43,3 @@ class KinveyMiddleware extends Middleware {
     });
   }
 }
-
-module.exports = KinveyMiddleware;

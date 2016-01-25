@@ -1,8 +1,8 @@
-const Rack = require('./rack');
-const Cache = require('./cache');
+import Rack from './rack';
+import Cache from './cache';
 const sharedInstanceSymbol = Symbol();
 
-class CacheRack extends Rack {
+export default class CacheRack extends Rack {
   constructor(name = 'Kinvey Cache Rack') {
     super(name);
     this.use(new Cache());
@@ -19,5 +19,3 @@ class CacheRack extends Rack {
     return instance;
   }
 }
-
-module.exports = CacheRack;

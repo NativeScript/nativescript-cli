@@ -1,6 +1,6 @@
-const Middleware = require('./middleware');
+import Middleware from './middleware';
 
-class Serialize extends Middleware {
+export default class Serialize extends Middleware {
   constructor() {
     super('Kinvey Serializer Middleware');
   }
@@ -12,6 +12,17 @@ class Serialize extends Middleware {
 
         if (contentType.indexOf('application/json') === 0) {
           request.data = JSON.stringify(request.data);
+        } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
+          const data = request.data;
+          const str = [];
+
+          for (const p in data) {
+            if (data.hasOwnProperty(p)) {
+              str.push(`${global.encodeURIComponent(p)}=${global.encodeURIComponent(data[p])}`);
+            }
+          }
+
+          request.data = str.join('&');
         }
       }
 
@@ -19,5 +30,3 @@ class Serialize extends Middleware {
     });
   }
 }
-
-module.exports = Serialize;

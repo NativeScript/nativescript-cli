@@ -11,7 +11,7 @@ const errorHandler = config.errorHandler('build');
 // Build unminified version of the library
 gulp.task('build', function () {
   return browserify(config.browserify)
-    .transform('envify', config.env)
+    // .transform('envify', config.env)
     .transform('babelify', config.babelify)
     .bundle()
     .pipe($.plumber())
@@ -28,7 +28,7 @@ gulp.task('build', function () {
 
 gulp.task('build-legacy', function () {
   return browserify(config.legacy.browserify)
-    .transform('envify', config.env)
+    // .transform('envify', config.env)
     .transform('babelify', config.babelify)
     .bundle()
     .pipe($.plumber())

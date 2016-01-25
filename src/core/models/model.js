@@ -1,9 +1,9 @@
-const Acl = require('../acl');
-const Kmd = require('../kmd');
+import Acl from '../acl';
+import Kmd from '../kmd';
 import Client from '../client';
-const defaults = require('lodash/object/defaults');
-const result = require('lodash/object/result');
-const clone = require('lodash/lang/clone');
+import defaults from 'lodash/object/defaults';
+import result from 'lodash/object/result';
+import clone from 'lodash/lang/clone';
 import assign from 'lodash/object/assign';
 // import uniqueId from 'lodash/utility/uniqueId';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
@@ -11,7 +11,7 @@ const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
-class Model {
+export default class Model {
   constructor(attributes = {}, options = {}) {
     options = assign({
       client: Client.sharedInstance()
@@ -146,5 +146,3 @@ class Model {
     return clone(json, true);
   }
 }
-
-module.exports = Model;

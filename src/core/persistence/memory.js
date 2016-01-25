@@ -1,4 +1,4 @@
-class Memory {
+export default class Memory {
   constructor() {
     this.data = {};
   }
@@ -16,5 +16,3 @@ class Memory {
     return true;
   }
 }
-
-module.exports = Memory;

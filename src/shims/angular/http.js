@@ -1,10 +1,10 @@
-const Middleware = require('../../core/rack/middleware');
-const HttpMethod = require('../../core/enums').HttpMethod;
-const result = require('lodash/object/result');
-const isEmpty = require('lodash/lang/isEmpty');
-const isString = require('lodash/lang/isString');
+import Middleware from '../../core/rack/middleware';
+import { HttpMethod } from '../../core/enums';
+import result from 'lodash/object/result';
+import isEmpty from 'lodash/lang/isEmpty';
+import isString from 'lodash/lang/isString';
 
-class AngularHttp extends Middleware {
+export default class AngularHttp extends Middleware {
   constructor($http) {
     super('Kinvey Angular Http Middleware');
     this.$http = $http;
@@ -73,5 +73,3 @@ class AngularHttp extends Middleware {
     });
   }
 }
-
-module.exports = AngularHttp;

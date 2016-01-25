@@ -1,23 +1,21 @@
-const KinveyError = require('./errors').KinveyError;
-const EventEmitter = require('events').EventEmitter;
-const Request = require('./requests/networkRequest');
-const LocalStore = require('./stores/localStore');
-const WritePolicy = require('./enums').WritePolicy;
-const DataPolicy = require('./enums').DataPolicy;
-const HttpMethod = require('./enums').HttpMethod;
-const User = require('./models/user');
-const Client = require('./client');
+import { KinveyError } from './errors';
+import { EventEmitter } from 'events';
+import Request from './requests/networkRequest';
+import LocalStore from './stores/store';
+import { WritePolicy, ReadPolicy as DataPolicy, HttpMethod } from './enums';
+import User from './models/user';
+import Client from './client';
 import Query from './query';
-const Auth = require('./auth');
-const Device = require('./device');
-const assign = require('lodash/object/assign');
+import Auth from './auth';
+import Device from './device';
+import assign from 'lodash/object/assign';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey-device';
 const emitter = new EventEmitter();
 const Titanium = global.Titanium;
 
-class Push {
+export default class Push {
   static listenerCount(type) {
     return emitter.listenerCount(type);
   }
@@ -289,5 +287,3 @@ class Push {
     return notificationEvent;
   }
 }
-
-module.exports = Push;

@@ -1,5 +1,5 @@
-const clone = require('lodash/lang/clone');
-const isPlainObject = require('lodash/lang/isPlainObject');
+import clone from 'lodash/lang/clone';
+import isPlainObject from 'lodash/lang/isPlainObject';
 const privateKmdSymbol = Symbol();
 
 class PrivateKmd {
@@ -44,7 +44,7 @@ class PrivateKmd {
   }
 }
 
-class Kmd {
+export default class Kmd {
   constructor(kmd) {
     this[privateKmdSymbol] = new PrivateKmd(kmd);
   }
@@ -77,5 +77,3 @@ class Kmd {
     return this[privateKmdSymbol].toJSON();
   }
 }
-
-module.exports = Kmd;

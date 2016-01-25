@@ -1,12 +1,12 @@
-const nested = require('./utils/object').nested;
-const sift = require('sift');
-const clone = require('lodash/lang/clone');
-const assign = require('lodash/object/assign');
-const isArray = require('lodash/lang/isArray');
-const isNumber = require('lodash/lang/isNumber');
-const isString = require('lodash/lang/isString');
-const isObject = require('lodash/lang/isObject');
-const isRegExp = require('lodash/lang/isRegExp');
+import { nested } from './utils/object';
+import sift from 'sift';
+import clone from 'lodash/lang/clone';
+import assign from 'lodash/object/assign';
+import isArray from 'lodash/lang/isArray';
+import isNumber from 'lodash/lang/isNumber';
+import isString from 'lodash/lang/isString';
+import isObject from 'lodash/lang/isObject';
+import isRegExp from 'lodash/lang/isRegExp';
 const privateQuerySymbol = Symbol();
 
 class PrivateQuery {

@@ -1,7 +1,7 @@
-const Request = require('./request');
-const CacheRack = require('../rack/cacheRack');
+import Request from './request';
+import CacheRack from '../rack/cacheRack';
 
-class LocalRequest extends Request {
+export default class LocalRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {
       const rack = CacheRack.sharedInstance();
@@ -16,5 +16,3 @@ class LocalRequest extends Request {
     rack.cancel();
   }
 }
-
-module.exports = LocalRequest;

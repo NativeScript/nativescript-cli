@@ -1,4 +1,4 @@
-function byteCount(str) {
+export function byteCount(str) {
   let count = 0;
   const stringLength = str.length;
   str = String(str || '');
@@ -10,7 +10,3 @@ function byteCount(str) {
 
   return count;
 }
-
-module.exports = {
-  byteCount: byteCount
-};

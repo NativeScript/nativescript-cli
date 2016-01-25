@@ -1,19 +1,19 @@
-const CacheAdapter = require('./enums').CacheAdapter;
+import { CacheAdapter } from './enums';
 import Query from './query';
-const Aggregation = require('./aggregation');
-const IndexedDB = require('./persistence/indexeddb');
-const LocalStorage = require('./persistence/localstorage');
-const Memory = require('./persistence/memory');
-const WebSQL = require('./persistence/websql');
-const log = require('./log');
-const result = require('lodash/object/result');
-const reduce = require('lodash/collection/reduce');
-const forEach = require('lodash/collection/forEach');
-const isString = require('lodash/lang/isString');
-const isArray = require('lodash/lang/isArray');
+import Aggregation from './aggregation';
+import IndexedDB from './persistence/indexeddb';
+import LocalStorage from './persistence/localstorage';
+import Memory from './persistence/memory';
+import WebSQL from './persistence/websql';
+import log from './log';
+import result from 'lodash/object/result';
+import reduce from 'lodash/collection/reduce';
+import forEach from 'lodash/collection/forEach';
+import isString from 'lodash/lang/isString';
+import isArray from 'lodash/lang/isArray';
 const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
-class Cache {
+export default class Cache {
   constructor(dbName = 'kinvey', adapters = [CacheAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
@@ -132,12 +132,16 @@ class Cache {
     return promise;
   }
 
-  saveBulk(collection, documents = []) {
-    if (!isArray(documents)) {
-      return this.save(collection, documents);
+  saveBulk(collection, docs = []) {
+    if (!docs) {
+      return Promise.resolve(null);
     }
 
-    const promise = this.db.saveBulk(collection, documents);
+    if (!isArray(docs)) {
+      return this.save(collection, docs);
+    }
+
+    const promise = this.db.saveBulk(collection, docs);
     return promise;
   }
 
@@ -183,5 +187,3 @@ class Cache {
     return promise;
   }
 }
-
-module.exports = Cache;

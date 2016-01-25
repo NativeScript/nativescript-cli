@@ -1,13 +1,12 @@
-const Auth = require('../auth');
-const DataPolicy = require('../enums').DataPolicy;
-const Model = require('./model');
+import Auth from '../auth';
+import Model from './model';
 import Query from '../query';
-const KinveyError = require('../errors').KinveyError;
-const HttpMethod = require('../enums').HttpMethod;
-const assign = require('lodash/object/assign');
+import { KinveyError } from '../errors';
+import { HttpMethod, ReadPolicy as DataPolicy } from '../enums';
+import assign from 'lodash/object/assign';
 const filesNamespace = process.env.KINVEY_FILE_NAMESPACE || 'blob';
 
-class File extends Model {
+export default class File extends Model {
   find(query, options = {}) {
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('query argument must be an instance of Kinvey.Query'));
@@ -117,5 +116,3 @@ class File extends Model {
     return promise;
   }
 }
-
-module.exports = File;

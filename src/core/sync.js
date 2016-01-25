@@ -1,11 +1,11 @@
-const Store = require('./stores/store');
+import Store from './stores/store';
 import Query from './query';
-const DataPolicy = require('./enums').DataPolicy;
-const reduce = require('lodash/collection/reduce');
+import { DataPolicy } from './enums';
+import reduce from 'lodash/collection/reduce';
 const enabledSymbol = Symbol();
 const syncStoreName = process.env.KINVEY_SYNC_STORE_NAME || 'sync';
 
-class Sync {
+export default class Sync {
   static isEnabled() {
     return Sync[enabledSymbol];
   }
@@ -77,4 +77,3 @@ class Sync {
 
 // Set sync default state
 Sync[enabledSymbol] = process.env.KINVEY_SYNC_DEFAULT_STATE || true;
-module.exports = Sync;

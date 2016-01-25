@@ -1,7 +1,7 @@
-const Request = require('./request');
-const NetworkRack = require('../rack/networkRack');
+import Request from './request';
+import NetworkRack from '../rack/networkRack';
 
-class NetworkRequest extends Request {
+export default class NetworkRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {
       const networkRack = NetworkRack.sharedInstance();
@@ -16,5 +16,3 @@ class NetworkRequest extends Request {
     networkRack.cancel();
   }
 }
-
-module.exports = NetworkRequest;

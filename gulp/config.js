@@ -45,6 +45,7 @@ config.git = platformConfig.git || 'git@github.com:Kinvey/kinvey-html5-lib.git';
  * Environment variables for the project.
  */
 config.env = {
+  _: 'purge',
   KINVEY_ACL_ATTRIBUTE: '_acl',
   KINVEY_API_PROTOCOL: 'https:',
   KINVEY_API_HOST: 'baas.kinvey.com',
@@ -64,13 +65,12 @@ config.env = {
   KINVEY_PLATFORM_ENV: platform,
   KINVEY_PUSH_NAMESPACE: 'push',
   KINVEY_RPC_NAMESPACE: 'rpc',
-  KINVEY_SYCN_BATCH_SIZE: 1000,
+  KINVEY_SYNC_BATCH_SIZE: 1000,
   KINVEY_SYNC_COLLECTION_NAME: 'kinvey_sync_',
   KINVEY_SYNC_DEFAULT_STATE: true,
   KINVEY_USERS_NAMESPACE: 'user'
 };
-config.env = assign(config.env, platformConfig.env);
-process.env = assign(process.env, config.env);
+config.env = assign(config.env, process.env, platformConfig.env);
 
 /**
  *  The main paths of your project.
@@ -112,7 +112,7 @@ config.files = assign(config.files, platformConfig.files);
 config.browserify = {
   debug: false, // turns on/off creating .map file
   entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
-  standalone: 'Kinvey'
+  standalone: 'Kinvey',
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
 config.legacy.browserify = clone(config.browserify);
@@ -125,7 +125,7 @@ config.legacy.browserify = assign(config.legacy.browserify, platformConfig.legac
 config.babelify = {
   global: true,
   comments: false,
-  presets: ['es2015', 'stage-2'],
+  presets: ['es2015', 'stage-0'],
   ignore: /\/node_modules\/(?!qs\/)/ // Ignore all node_modules except qs
 };
 config.babelify = assign(config.babelify, platformConfig.babelify);

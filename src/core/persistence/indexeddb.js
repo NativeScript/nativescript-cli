@@ -1,8 +1,7 @@
-const KinveyError = require('../errors').KinveyError;
-const NotFoundError = require('../errors').NotFoundError;
-const generateObjectId = require('../utils/store').generateObjectId;
-const forEach = require('lodash/collection/forEach');
-const isArray = require('lodash/lang/isArray');
+import { KinveyError, NotFoundError } from '../errors';
+import { generateObjectId } from '../utils/store';
+import forEach from 'lodash/collection/forEach';
+import isArray from 'lodash/lang/isArray';
 let indexedDB = undefined;
 let db = null;
 let inTransaction = false;
@@ -21,7 +20,7 @@ if (typeof window !== 'undefined') {
   indexedDB = require('fake-indexeddb');
 }
 
-class IndexedDB {
+export default class IndexedDB {
   constructor(dbName = 'kinvey') {
     this.dbName = dbName;
   }
@@ -169,10 +168,10 @@ class IndexedDB {
         const request = store.get(id);
 
         request.onsuccess = (e) => {
-          const document = e.target.result;
+          const doc = e.target.result;
 
-          if (document) {
-            return resolve(document);
+          if (doc) {
+            return resolve(doc);
           }
 
           reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} ` +
@@ -190,21 +189,21 @@ class IndexedDB {
     return promise;
   }
 
-  save(collection, document) {
-    if (isArray(document)) {
-      return this.saveBulk(collection, document);
+  save(collection, doc) {
+    if (isArray(doc)) {
+      return this.saveBulk(collection, doc);
     }
 
-    if (!document._id) {
-      document._id = generateObjectId();
+    if (!doc._id) {
+      doc._id = generateObjectId();
     }
 
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
-        const request = store.put(document);
+        const request = store.put(doc);
 
         request.onsuccess = function onSuccess() {
-          resolve(document);
+          resolve(doc);
         };
 
         request.onerror = (e) => {
@@ -217,26 +216,26 @@ class IndexedDB {
     return promise;
   }
 
-  saveBulk(collection, documents) {
-    if (!isArray(documents)) {
-      return this.save(collection, document);
+  saveBulk(collection, docs) {
+    if (!isArray(docs)) {
+      return this.save(collection, docs);
     }
 
-    if (documents.length === 0) {
-      return Promise.resolve(documents);
+    if (docs.length === 0) {
+      return Promise.resolve(docs);
     }
 
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
         const request = store.transaction;
 
-        forEach(documents, document => {
-          document._id = document._id || generateObjectId();
-          store.put(document);
+        forEach(docs, doc => {
+          doc._id = doc._id || generateObjectId();
+          store.put(doc);
         });
 
         request.oncomplete = function onComplete() {
-          resolve(documents);
+          resolve(docs);
         };
 
         request.onerror = (e) => {
@@ -253,18 +252,18 @@ class IndexedDB {
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
         const request = store.transaction;
-        const document = store.get(id);
+        const doc = store.get(id);
         store.delete(id);
 
         request.oncomplete = () => {
-          if (!document.result) {
+          if (!doc.result) {
             return reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} `
               + `collection on the ${this.dbName} indexedDB database.`));
           }
 
           resolve({
             count: 1,
-            documents: [document.result]
+            docs: [doc.result]
           });
         };
 
@@ -305,5 +304,3 @@ class IndexedDB {
     return indexedDB ? true : false;
   }
 }
-
-module.exports = IndexedDB;

@@ -1,3 +1,10 @@
+const AuthorizationGrant = {
+  AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
+  AuthorizationCodeAPI: 'AuthorizationCodeAPI'
+};
+Object.freeze(AuthorizationGrant);
+export { AuthorizationGrant };
+
 const CacheAdapter = {
   IndexedDB: 'IndexedDB',
   LocalStorage: 'LocalStorage',
@@ -43,14 +50,15 @@ const ResponseType = {
 Object.freeze(ResponseType);
 export { ResponseType };
 
-const SocialAdapter = {
-  Facebook: 'Facebook',
-  Google: 'Google',
-  LinkedIn: 'LinkedIn',
-  Twitter: 'Twitter'
+const Social = {
+  Facebook: 'facebook',
+  Google: 'google',
+  LinkedIn: 'linkedin',
+  MIC: 'mic',
+  Twitter: 'twitter'
 };
-Object.freeze(SocialAdapter);
-export { SocialAdapter };
+Object.freeze(Social);
+export { Social };
 
 const StatusCode = {
   Ok: 200,

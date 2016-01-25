@@ -1,6 +1,6 @@
-const Response = require('../requests/response');
-const Middleware = require('./middleware');
-const result = require('lodash/object/result');
+import Response from '../requests/response';
+import Middleware from './middleware';
+import result from 'lodash/object/result';
 
 class Rack extends Middleware {
   constructor(name = 'Rack') {
@@ -148,7 +148,7 @@ class Rack extends Middleware {
   }
 }
 
-class KinveyRack extends Rack {
+export default class KinveyRack extends Rack {
   execute(request) {
     request = result(request, 'toJSON', request);
     const promise = super.execute(request).then(request => {
@@ -167,5 +167,3 @@ class KinveyRack extends Rack {
     return promise;
   }
 }
-
-module.exports = KinveyRack;

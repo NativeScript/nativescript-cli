@@ -1,19 +1,23 @@
-const KinveyError = require('../errors').KinveyError;
-const AlreadyLoggedInError = require('../errors').AlreadyLoggedInError;
-const Model = require('./model');
-const NetworkRequest = require('../requests/networkRequest');
-const HttpMethod = require('../enums').HttpMethod;
-const DataPolicy = require('../enums').DataPolicy;
-const WritePolicy = require('../enums').WritePolicy;
-const Auth = require('../auth');
-const UserUtils = require('../utils/user');
-const isObject = require('lodash/lang/isObject');
-const result = require('lodash/object/result');
-const assign = require('lodash/object/assign');
+import { ActiveUserError, KinveyError } from '../errors';
+import Model from './model';
+import Client from '../client';
+import NetworkRequest from '../requests/networkRequest';
+import { NotFoundError } from '../errors';
+import { HttpMethod, ReadPolicy as DataPolicy, WritePolicy } from '../enums';
+import Query from '../query';
+import Auth from '../auth';
+import UserUtils from '../utils/user';
+import MobileIdentityConnect from '../mic';
+import hello from 'hellojs';
+import isObject from 'lodash/lang/isObject';
+import result from 'lodash/object/result';
+import assign from 'lodash/object/assign';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
+const micAuthProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
 
-class User extends Model {
+export default class User extends Model {
   get authtoken() {
     return this.metadata.authtoken;
   }
@@ -119,6 +123,114 @@ class User extends Model {
     return user.login();
   }
 
+  static connect(user = {}, accessToken, expiresIn, authProvider, options = {}) {
+    if (user && !(user instanceof User)) {
+      user = new User(result(user, 'toJSON', user), options);
+    }
+    return user.connect(accessToken, expiresIn, authProvider, options);
+  }
+
+  static connectWithFacebook(options = {}) {
+    options = assign({
+      client: Client.sharedInstance(),
+      auth: Auth.default,
+      collectionName: 'SocialProviders',
+      handler() {}
+    }, options);
+
+    const promise = Promise.resolve().then(() => {
+      const query = new Query();
+      query.equalTo('provider', 'facebook');
+      const request = new NetworkRequest({
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `/${appdataNamespace}/${options.client.appKey}/${options.collectionName}`,
+        query: query,
+        timeout: options.timeout
+      });
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        if (response.data.length === 1) {
+          hello.init({
+            facebook: response.data[0].appId
+          });
+
+          return hello('facebook').login().then(() => {
+            const authResponse = hello('facebook').getAuthResponse();
+            return authResponse;
+          });
+        }
+
+        throw new Error('Unsupported social provider');
+      }
+
+      throw response.error;
+    }).then(() => {
+      const authResponse = hello('facebook').getAuthResponse();
+      return authResponse;
+    });
+
+    return promise;
+  }
+
+  static connectWithGoogle(options = {}) {
+    options = assign({
+      client: Client.sharedInstance(),
+      auth: Auth.default,
+      collectionName: 'SocialProviders',
+      handler() {}
+    }, options);
+
+    const promise = Promise.resolve().then(() => {
+      const query = new Query();
+      query.equalTo('provider', 'google');
+      const request = new NetworkRequest({
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `/${appdataNamespace}/${options.client.appKey}/${options.collectionName}`,
+        query: query,
+        timeout: options.timeout
+      });
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        if (response.data.length === 1) {
+          hello.init({
+            google: response.data[0].appId
+          });
+
+          return hello('google').login().then(() => {
+            const authResponse = hello('google').getAuthResponse();
+            return authResponse;
+          });
+        }
+
+        throw new Error('Unsupported social provider');
+      }
+
+      throw response.error;
+    }).then(() => {
+      const authResponse = hello('google').getAuthResponse();
+      return authResponse;
+    });
+
+    return promise;
+  }
+
+  static connectWithMIC(redirectUri, authorizationGrant, user, options = {}) {
+    const mic = new MobileIdentityConnect();
+    const promise = mic.login(redirectUri, authorizationGrant, options).then(token => {
+      return User.connect(user, token.access_token, token.expires_in, micAuthProvider, options);
+    });
+
+    return promise;
+  }
+
   login(options = {}) {
     options = assign({
       client: this.client
@@ -126,7 +238,7 @@ class User extends Model {
 
     const promise = User.getActive(options).then(activeUser => {
       if (activeUser) {
-        throw new AlreadyLoggedInError('A user is already logged in.');
+        throw new ActiveUserError('A user is already logged in.');
       }
 
       const username = this.get('username');
@@ -154,6 +266,33 @@ class User extends Model {
       }
 
       return response;
+    });
+
+    return promise;
+  }
+
+  connect(accessToken, expiresIn, authProvider, options = {}) {
+    const socialIdentity = {};
+    socialIdentity[authProvider] = {
+      access_token: accessToken,
+      expires_in: expiresIn
+    };
+    this.set('_socialIdentity', socialIdentity);
+
+    const promise = this.isActive().then(active => {
+      if (active) {
+        return this.update(options);
+      }
+
+      return this.login(options);
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return this.signup(options).then(() => {
+          return this.connect(accessToken, expiresIn, authProvider, options);
+        });
+      }
+
+      throw err;
     });
 
     return promise;
@@ -194,6 +333,44 @@ class User extends Model {
       return request.execute();
     }).then(() => {
       return User.setActive(null, options.client);
+    });
+
+    return promise;
+  }
+
+  static signup(user, options = {}) {
+    if (!user) {
+      return Promise.reject(new Error('User is required.'));
+    }
+
+    if (!(user instanceof User)) {
+      user = new User(result(user, 'toJSON', user), options);
+    }
+
+    return user.signup();
+  }
+
+  signup(options = {}) {
+    options = assign({
+      client: this.client,
+      state: false
+    }, options);
+
+    options.writePolicy = WritePolicy.Network;
+    options.auth = Auth.app;
+
+    const promise = User.getActive(options).then(activeUser => {
+      if (options.state && activeUser) {
+        throw new ActiveUserError('A user is already logged in. Please logout before saving the new user.');
+      }
+
+      return super.create(user, options);
+    }).then(user => {
+      if (options.state) {
+        return User.setActive(user, options.client);
+      }
+
+      return user;
     });
 
     return promise;
@@ -286,5 +463,3 @@ class User extends Model {
     return promise;
   }
 }
-
-module.exports = User;

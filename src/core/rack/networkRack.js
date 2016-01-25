@@ -1,10 +1,10 @@
-const Rack = require('./rack');
-const Serialize = require('./serialize');
-const Http = require('./http');
-const Parse = require('./parse');
+import Rack from './rack';
+import Serialize from './serialize';
+import Http from './http';
+import Parse from './parse';
 const sharedInstanceSymbol = Symbol();
 
-class NetworkRack extends Rack {
+export default class NetworkRack extends Rack {
   constructor(name = 'Kinvey Network Rack') {
     super(name);
     this.use(new Serialize());
@@ -23,5 +23,3 @@ class NetworkRack extends Rack {
     return instance;
   }
 }
-
-module.exports = NetworkRack;

@@ -1,12 +1,12 @@
 import { StatusCode } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';
-const assign = require('lodash/object/assign');
-const clone = require('lodash/lang/clone');
-const forEach = require('lodash/collection/forEach');
-const isString = require('lodash/lang/isString');
-const isPlainObject = require('lodash/lang/isPlainObject');
+import assign from 'lodash/object/assign';
+import clone from 'lodash/lang/clone';
+import forEach from 'lodash/collection/forEach';
+import isString from 'lodash/lang/isString';
+import isPlainObject from 'lodash/lang/isPlainObject';
 
-class Response {
+export default class Response {
   constructor(options = {}) {
     options = assign({
       statusCode: StatusCode.Ok,
@@ -126,5 +126,3 @@ class Response {
     return json;
   }
 }
-
-module.exports = Response;

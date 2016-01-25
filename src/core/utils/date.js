@@ -1,6 +1,6 @@
 // Patch JavaScript implementations lacking ISO-8601 date support.
 // http://jsfiddle.net/mplungjan/QkasD/
-function fromISO8601(dateString) {
+export function fromISO8601(dateString) {
   const date = Date.parse(dateString);
 
   if (date) {
@@ -29,7 +29,3 @@ function fromISO8601(dateString) {
   }
   return NaN;
 }
-
-module.exports = {
-  fromISO8601: fromISO8601
-};

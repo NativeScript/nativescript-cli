@@ -1,12 +1,12 @@
-const Middleware = require('./middleware');
-const HttpMethod = require('../enums').HttpMethod;
-const NetworkConnectionError = require('../errors').NetworkConnectionError;
-const http = require('request');
-const result = require('lodash/object/result');
-const isEmpty = require('lodash/lang/isEmpty');
-const isString = require('lodash/lang/isString');
+import Middleware from './middleware';
+import { HttpMethod } from '../enums';
+import { NetworkConnectionError } from '../errors';
+import http from 'request';
+import result from 'lodash/object/result';
+import isEmpty from 'lodash/lang/isEmpty';
+import isString from 'lodash/lang/isString';
 
-class Http extends Middleware {
+export default class Http extends Middleware {
   constructor() {
     super('Kinvey Http Middleware');
   }
@@ -76,5 +76,3 @@ class Http extends Middleware {
     });
   }
 }
-
-module.exports = Http;

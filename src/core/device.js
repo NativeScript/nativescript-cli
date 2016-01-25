@@ -1,4 +1,4 @@
-class Device {
+export default class Device {
   get os() {
     let name = 'mobileweb';
     let version;
@@ -99,5 +99,3 @@ class Device {
     };
   }
 }
-
-module.exports = Device;

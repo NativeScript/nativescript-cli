@@ -1,17 +1,14 @@
-const NetworkStore = require('./networkStore');
-const Client = require('../client');
-const Request = require('../requests/networkRequest');
-const KinveyError = require('../errors').KinveyError;
-const BlobNotFoundError = require('../errors').BlobNotFoundError;
-const HttpMethod = require('../enums').HttpMethod;
-const ResponseType = require('../enums').ResponseType;
-const DataPolicy = require('../enums').DataPolicy;
-const Auth = require('../auth');
-const File = require('../models/file');
-const url = require('url');
-const log = require('../log');
-const assign = require('lodash/object/assign');
-const isObject = require('lodash/lang/isObject');
+import NetworkStore from './store';
+import Client from '../client';
+import Request from '../requests/networkRequest';
+import { KinveyError, BlobNotFoundError } from '../errors';
+import { HttpMethod, ResponseType, DataPolicy } from '../enums';
+import Auth from '../auth';
+import File from '../models/file';
+import url from 'url';
+import log from '../log';
+import assign from 'lodash/object/assign';
+import isObject from 'lodash/lang/isObject';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 
 /**
@@ -20,7 +17,7 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
  * @example
  * var files = new Kinvey.Files();
  */
-class Files extends NetworkStore {
+export default class Files extends NetworkStore {
   /**
    * Creates a new instance of the Files class.
    *
@@ -346,5 +343,3 @@ class Files extends NetworkStore {
     return promise;
   }
 }
-
-module.exports = Files;

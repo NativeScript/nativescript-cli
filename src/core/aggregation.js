@@ -1,12 +1,12 @@
-const KinveyError = require('./errors').KinveyError;
+import { KinveyError } from './errors';
 import Query from './query';
-const clone = require('lodash/lang/clone');
-const result = require('lodash/object/result');
-const assign = require('lodash/object/assign');
-const forEach = require('lodash/collection/forEach');
-const isObject = require('lodash/lang/isObject');
-const isString = require('lodash/lang/isString');
-const isFunction = require('lodash/lang/isFunction');
+import clone from 'lodash/lang/clone';
+import result from 'lodash/object/result';
+import assign from 'lodash/object/assign';
+import forEach from 'lodash/collection/forEach';
+import isObject from 'lodash/lang/isObject';
+import isString from 'lodash/lang/isString';
+import isFunction from 'lodash/lang/isFunction';
 const privateAggregationSymbol = Symbol();
 
 class PrivateAggregation {
@@ -121,7 +121,7 @@ class PrivateAggregation {
   }
 }
 
-class Aggregation {
+export default class Aggregation {
   constructor(options) {
     this[privateAggregationSymbol] = new PrivateAggregation(options);
   }
@@ -217,5 +217,3 @@ class Aggregation {
     return aggregation;
   }
 }
-
-module.exports = Aggregation;

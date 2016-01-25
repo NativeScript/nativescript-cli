@@ -1,8 +1,8 @@
 /* global angular:false */
-const Kinvey = require('../../kinvey');
-const NetworkRack = require('../../core/rack/networkRack');
-const Http = require('../../core/rack/http');
-const AngularHttp = require('./http');
+import Kinvey from '../../kinvey';
+import NetworkRack from '../../core/rack/networkRack';
+import Http from '../../core/rack/http';
+import AngularHttp from './http';
 const ngKinvey = angular.module('kinvey', []);
 
 ngKinvey.provider('$kinvey', function () {
@@ -20,15 +20,12 @@ ngKinvey.provider('$kinvey', function () {
     const networkRack = NetworkRack.sharedInstance();
     networkRack.swap(Http, new AngularHttp($http));
 
-    // Replace Http with AngularHttp
-    Kinvey.Rack.Http = AngularHttp;
-
     // Replace Defer with $q
-    Kinvey.Defer = $q;
+    Kinvey.Promise = $q;
 
     // Return the library
     return Kinvey;
   }];
 });
 
-module.exports = ngKinvey;
+export default ngKinvey;

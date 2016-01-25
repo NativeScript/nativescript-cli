@@ -1,11 +1,11 @@
-const Client = require('./client');
-const Auth = require('./auth');
-const HttpMethod = require('./enums').HttpMethod;
-const Request = require('./requests/networkRequest');
-const assign = require('lodash/object/assign');
+import Client from './client';
+import Auth from './auth';
+import { HttpMethod } from './enums';
+import Request from './requests/networkRequest';
+import assign from 'lodash/object/assign';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
-class Command {
+export default class Command {
   constructor(id, options = {}) {
     options = assign({
       auth: Auth.default,
@@ -39,5 +39,3 @@ class Command {
     return promise;
   }
 }
-
-module.exports = Command;

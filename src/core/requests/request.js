@@ -1,17 +1,17 @@
-const HttpMethod = require('../enums').HttpMethod;
+import { HttpMethod } from '../enums';
 import Client from '../client';
-const Device = require('../device');
-const Properties = require('./properties');
-const url = require('url');
-const byteCount = require('../utils/string').byteCount;
-const assign = require('lodash/object/assign');
-const result = require('lodash/object/result');
-const clone = require('lodash/lang/clone');
-const forEach = require('lodash/collection/forEach');
-const isString = require('lodash/lang/isString');
-const isPlainObject = require('lodash/lang/isPlainObject');
-const isFunction = require('lodash/lang/isFunction');
-const qs = require('qs');
+import Device from '../device';
+import Properties from './properties';
+import url from 'url';
+import { byteCount } from '../utils/string';
+import assign from 'lodash/object/assign';
+import result from 'lodash/object/result';
+import clone from 'lodash/lang/clone';
+import forEach from 'lodash/collection/forEach';
+import isString from 'lodash/lang/isString';
+import isPlainObject from 'lodash/lang/isPlainObject';
+import isFunction from 'lodash/lang/isFunction';
+import qs from 'qs';
 
 class Request {
   constructor(options = {}) {
@@ -209,7 +209,7 @@ class Request {
   }
 }
 
-class KinveyRequest extends Request {
+export default class KinveyRequest extends Request {
   constructor(options = {}) {
     super(options);
 
@@ -319,5 +319,3 @@ class KinveyRequest extends Request {
     return clone(json, true);
   }
 }
-
-module.exports = KinveyRequest;

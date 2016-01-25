@@ -1,35 +1,34 @@
+import Acl from './core/acl';
+import Aggregation from './core/aggregation';
+import Cache from './core/cache';
 import Client from './core/client';
-const Kinvey = {};
-
-// Core
-Kinvey.Acl = require('./core/acl');
-Kinvey.Aggregation = require('./core/aggregation');
-Kinvey.Cache = require('./core/cache');
-Kinvey.Client = Client;
-Kinvey.Command = require('./core/command');
-Kinvey.Promise = Promise;
-Kinvey.Enums = require('./core/enums');
-Kinvey.File = require('./core/models/file');
-Kinvey.Log = require('./core/log');
-Kinvey.Kmd = require('./core/kmd');
-Kinvey.Model = require('./core/models/model');
-Kinvey.Query = require('./core/query');
-Kinvey.Store = require('./core/stores/store');
-Kinvey.Sync = require('./core/sync');
-Kinvey.User = require('./core/models/user');
-
-// Errors
-Kinvey.Error = require('./core/errors').KinveyError;
-Kinvey.ActiveUserError = require('./core/errors').ActiveUserError;
-Kinvey.NotFoundError = require('./core/errors').NotFoundError;
-
-// Rack
-Kinvey.Rack = require('./core/rack/rack');
-Kinvey.Rack.Middleware = require('./core/rack/middleware');
-Kinvey.Rack.Cache = require('./core/rack/cache');
-Kinvey.Rack.Http = require('./core/rack/http');
-Kinvey.Rack.Parse = require('./core/rack/parse');
-Kinvey.Rack.Serialize = require('./core/rack/serialize');
+import Command from './core/command';
+import Enums from './core/enums';
+import File from './core/models/file';
+import Log from './core/log';
+import Kmd from './core/kmd';
+import Model from './core/models/model';
+import Query from './core/query';
+import Store from './core/stores/store';
+import Sync from './core/sync';
+import User from './core/models/user';
+const Kinvey = {
+  Acl,
+  Aggregation,
+  Cache,
+  Client,
+  Command,
+  Enums,
+  File,
+  Log,
+  Kmd,
+  Model,
+  Promise,
+  Query,
+  Store,
+  Sync,
+  User
+};
 
 /**
  * Initializes the library by creating a new instance of the Client

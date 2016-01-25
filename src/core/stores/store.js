@@ -1,22 +1,22 @@
-const Aggregation = require('../aggregation');
-const DeltaSetRequest = require('../requests/deltaSetRequest');
-const NetworkRequest = require('../requests/networkRequest');
-const LocalRequest = require('../requests/localRequest');
-const Response = require('../requests/response');
+import Aggregation from '../aggregation';
+import DeltaSetRequest from '../requests/deltaSetRequest';
+import NetworkRequest from '../requests/networkRequest';
+import LocalRequest from '../requests/localRequest';
+import Response from '../requests/response';
 import { HttpMethod, StatusCode, StoreType, ReadPolicy, WritePolicy } from '../enums';
 import { NoResponseError, NotFoundError } from '../errors';
 import Client from '../client';
 import Query from '../query';
-const Auth = require('../auth');
-const assign = require('lodash/object/assign');
-const result = require('lodash/object/result');
-const forEach = require('lodash/collection/forEach');
-const clone = require('lodash/lang/clone');
-const map = require('lodash/collection/map');
-const log = require('../log');
+import Auth from '../auth';
+import assign from 'lodash/object/assign';
+import result from 'lodash/object/result';
+import forEach from 'lodash/collection/forEach';
+import clone from 'lodash/lang/clone';
+import map from 'lodash/collection/map';
+import log from '../log';
 import find from 'lodash/collection/find';
-const isArray = require('lodash/lang/isArray');
-const isString = require('lodash/lang/isString');
+import isArray from 'lodash/lang/isArray';
+import isString from 'lodash/lang/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
@@ -634,7 +634,6 @@ export default class Store {
       if (response && response.isSuccess()) {
         if (!options.skipSync && options.writePolicy === WritePolicy.LocalFirst) {
           return this.push(options).then(result => {
-            console.log(result);
             let singular = false;
             let data = response.data;
 

@@ -1,7 +1,7 @@
-const KinveyError = require('./errors').KinveyError;
-const url = require('url');
-const clone = require('lodash/lang/clone');
-const assign = require('lodash/object/assign');
+import { KinveyError } from './errors';
+import url from 'url';
+import clone from 'lodash/lang/clone';
+import assign from 'lodash/object/assign';
 const sharedInstanceSymbol = Symbol();
 
 /**

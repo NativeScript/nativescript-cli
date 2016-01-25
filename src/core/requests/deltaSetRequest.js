@@ -1,22 +1,21 @@
-const Request = require('./request');
-const Response = require('./response');
-const HttpMethod = require('../enums').HttpMethod;
-const StatusCode = require('../enums').StatusCode;
-const NotFoundError = require('../errors').NotFoundError;
+import Request from './request';
+import Response from './response';
+import { HttpMethod, StatusCode } from '../enums';
+import { NotFoundError } from '../errors';
 import Query from '../query';
-const LocalRequest = require('./localRequest');
-const NetworkRequest = require('./networkRequest');
-const indexBy = require('lodash/collection/indexBy');
-const reduce = require('lodash/collection/reduce');
-const result = require('lodash/object/result');
-const values = require('lodash/object/values');
-const isEmpty = require('lodash/lang/isEmpty');
+import LocalRequest from './localRequest';
+import NetworkRequest from './networkRequest';
+import indexBy from 'lodash/collection/indexBy';
+import reduce from 'lodash/collection/reduce';
+import result from 'lodash/object/result';
+import values from 'lodash/object/values';
+import isEmpty from 'lodash/lang/isEmpty';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
 const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
 
-class DeltaSetRequest extends Request {
+export default class DeltaSetRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {
       if (this.method !== HttpMethod.GET) {
@@ -155,5 +154,3 @@ class DeltaSetRequest extends Request {
     return promise;
   }
 }
-
-module.exports = DeltaSetRequest;

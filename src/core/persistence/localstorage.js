@@ -4,7 +4,7 @@ if (typeof window !== 'undefined') {
   localStorage = window.localStorage;
 }
 
-class LocalStorage {
+export default class LocalStorage {
   loadDatabase(dbName, callback) {
     callback(localStorage.getItem(dbName));
   }
@@ -25,5 +25,3 @@ class LocalStorage {
     }
   }
 }
-
-module.exports = LocalStorage;

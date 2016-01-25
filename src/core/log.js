@@ -1,4 +1,4 @@
-const log = require('loglevel');
+import log from 'loglevel';
 const originalFactory = log.methodFactory;
 
 log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
@@ -10,4 +10,4 @@ log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
 };
 
 log.setLevel(log.levels.ERROR);
-module.exports = log;
+export default log;

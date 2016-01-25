@@ -1,14 +1,14 @@
-const LocalRequest = require('../requests/LocalRequest');
+import LocalRequest from '../requests/LocalRequest';
 import Client from '../client';
-const HttpMethod = require('../enums').HttpMethod;
-const NotFoundError = require('../errors').NotFoundError;
-const result = require('lodash/object/result');
-const assign = require('lodash/object/assign');
+import { HttpMethod } from '../enums';
+import { NotFoundError } from '../errors';
+import result from 'lodash/object/result';
+import assign from 'lodash/object/assign';
 const activeUserSymbol = Symbol();
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 
-class UserUtils {
+export default class UserUtils {
   static getActive(options = {}) {
     options = assign({
       client: Client.sharedInstance()
@@ -85,4 +85,3 @@ class UserUtils {
 }
 
 UserUtils[activeUserSymbol] = {};
-module.exports = UserUtils;

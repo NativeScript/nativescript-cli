@@ -1,5 +1,5 @@
-const util = require('util');
-const isFunction = require('lodash/lang/isFunction');
+import util from 'util';
+import isFunction from 'lodash/lang/isFunction';
 
 Error.extend = function extend(name) {
   const SubType = function SubType(message, debug) {

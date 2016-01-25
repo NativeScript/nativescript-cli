@@ -1,11 +1,9 @@
-const Middleware = require('./middleware');
-const Cache = require('../cache');
-const HttpMethod = require('../enums').HttpMethod;
-const StatusCode = require('../enums').StatusCode;
-const CacheAdapter = require('../enums').CacheAdapter;
+import Middleware from './middleware';
+import Cache from '../cache';
+import { HttpMethod, StatusCode, CacheAdapter } from '../enums';
 const defaultAdapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory];
 
-class CacheMiddleware extends Middleware {
+export default class CacheMiddleware extends Middleware {
   constructor(adapters = defaultAdapters) {
     super('Kinvey Cache Middleware');
     this.adapters = adapters;
@@ -62,5 +60,3 @@ class CacheMiddleware extends Middleware {
     });
   }
 }
-
-module.exports = CacheMiddleware;

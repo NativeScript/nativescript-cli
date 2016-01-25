@@ -1,6 +1,6 @@
-const KinveyError = require('./errors').KinveyError;
-const isPlainObject = require('lodash/lang/isPlainObject');
-const clone = require('lodash/lang/clone');
+import { KinveyError } from './errors';
+import isPlainObject from 'lodash/lang/isPlainObject';
+import clone from 'lodash/lang/clone';
 const privateAclSymbol = Symbol();
 
 class PrivateAcl {
@@ -153,7 +153,7 @@ class PrivateAcl {
   }
 }
 
-class Acl {
+export default class Acl {
   constructor(acl) {
     this[privateAclSymbol] = new PrivateAcl(acl);
   }
@@ -238,5 +238,3 @@ class Acl {
     return this[privateAclSymbol].toJSON();
   }
 }
-
-module.exports = Acl;

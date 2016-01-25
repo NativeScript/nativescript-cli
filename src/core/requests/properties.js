@@ -1,6 +1,6 @@
-const clone = require('lodash/lang/clone');
-const isPlainObject = require('lodash/lang/isPlainObject');
-const KinveyError = require('../errors').KinveyError;
+import clone from 'lodash/lang/clone';
+import isPlainObject from 'lodash/lang/isPlainObject';
+import { KinveyError } from '../errors';
 const privatePropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
 
@@ -49,7 +49,7 @@ class PrivateProperties {
 /**
  * Properties class
  */
-class Properties {
+export default class Properties {
   /**
    * This is the constructor.
    *
@@ -198,5 +198,3 @@ class Properties {
     return privateProperties.toJSON();
   }
 }
-
-module.exports = Properties;
