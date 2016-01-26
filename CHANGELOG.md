@@ -1,5 +1,8 @@
 ## Changelog
-#### 1.6.5 (2016-1-12)
+#### 1.6.6 (2016-01-26)
+* Bugfix (MLIBZ-753): Fixed a bug that would remove all sync items when a network connection is lost.
+
+#### 1.6.5 (2016-01-12)
 * Bugfix (MLIBZ-784): Removed password from MIC error message.
 
 #### 1.6.4 (2015-12-22)
