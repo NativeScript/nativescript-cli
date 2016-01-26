@@ -1,5 +1,6 @@
 import Response from '../requests/response';
 import Middleware from './middleware';
+import { NoResponseError } from '../errors';
 import result from 'lodash/object/result';
 
 class Rack extends Middleware {
@@ -162,7 +163,7 @@ export default class KinveyRack extends Rack {
         });
       }
 
-      return response;
+      throw new NoResponseError();
     });
     return promise;
   }
