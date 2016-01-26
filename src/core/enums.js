@@ -50,15 +50,13 @@ const ResponseType = {
 Object.freeze(ResponseType);
 export { ResponseType };
 
-const Social = {
+const SocialIdentity = {
   Facebook: 'facebook',
   Google: 'google',
-  LinkedIn: 'linkedin',
-  MIC: 'mic',
-  Twitter: 'twitter'
+  LinkedIn: 'linkedin'
 };
-Object.freeze(Social);
-export { Social };
+Object.freeze(SocialIdentity);
+export { SocialIdentity };
 
 const StatusCode = {
   Ok: 200,

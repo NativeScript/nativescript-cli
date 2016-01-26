@@ -3,7 +3,7 @@ import Model from './model';
 import Client from '../client';
 import NetworkRequest from '../requests/networkRequest';
 import { NotFoundError } from '../errors';
-import { HttpMethod, ReadPolicy as DataPolicy, WritePolicy } from '../enums';
+import { HttpMethod, ReadPolicy as DataPolicy, WritePolicy, SocialIdentity } from '../enums';
 import Query from '../query';
 import Auth from '../auth';
 import UserUtils from '../utils/user';
@@ -163,63 +163,29 @@ export default class User extends Model {
     return promise;
   }
 
-  static connectWithFacebook(options = {}) {
-    options = assign({
-      client: Client.sharedInstance(),
-      auth: Auth.default,
-      collectionName: 'SocialProviders',
-      handler() {}
-    }, options);
-
-    const promise = Promise.resolve().then(() => {
-      const query = new Query();
-      query.equalTo('provider', 'facebook');
-      const request = new NetworkRequest({
-        method: HttpMethod.GET,
-        client: options.client,
-        properties: options.properties,
-        auth: options.auth,
-        pathname: `/${appdataNamespace}/${options.client.appKey}/${options.collectionName}`,
-        query: query,
-        timeout: options.timeout
-      });
-      return request.execute();
-    }).then(response => {
-      if (response.isSuccess()) {
-        if (response.data.length === 1) {
-          hello.init({
-            facebook: response.data[0].appId
-          });
-
-          return hello('facebook').login().then(() => {
-            const authResponse = hello('facebook').getAuthResponse();
-            return authResponse;
-          });
-        }
-
-        throw new Error('Unsupported social provider');
-      }
-
-      throw response.error;
-    }).then(() => {
-      const authResponse = hello('facebook').getAuthResponse();
-      return authResponse;
-    });
-
-    return promise;
+  static connectWithFacebook(user, options = {}) {
+    return User.connectWithSocial(SocialIdentity.Facebook, user, options);
   }
 
-  static connectWithGoogle(options = {}) {
+  static connectWithGoogle(user, options = {}) {
+    return User.connectWithSocial(SocialIdentity.Google, user, options);
+  }
+
+  static connectWithLinkedIn(user, options = {}) {
+    return User.connectWithSocial(SocialIdentity.LinkedIn, user, options);
+  }
+
+  static connectWithSocial(identity, user, options = {}) {
     options = assign({
       client: Client.sharedInstance(),
       auth: Auth.default,
-      collectionName: 'SocialProviders',
+      collectionName: 'SocialIdentities',
       handler() {}
     }, options);
 
     const promise = Promise.resolve().then(() => {
       const query = new Query();
-      query.equalTo('provider', 'google');
+      query.equalTo('identity', identity);
       const request = new NetworkRequest({
         method: HttpMethod.GET,
         client: options.client,
@@ -233,23 +199,19 @@ export default class User extends Model {
     }).then(response => {
       if (response.isSuccess()) {
         if (response.data.length === 1) {
-          hello.init({
-            google: response.data[0].appId
-          });
-
-          return hello('google').login().then(() => {
-            const authResponse = hello('google').getAuthResponse();
-            return authResponse;
-          });
+          const helloSettings = {};
+          helloSettings[identity] = response.data[0].key || response.data[0].appId || response.data[0].clientId;
+          hello.init(helloSettings);
+          return hello(identity).login();
         }
 
-        throw new Error('Unsupported social provider');
+        throw new Error('Unsupported social identity');
       }
 
       throw response.error;
     }).then(() => {
-      const authResponse = hello('google').getAuthResponse();
-      return authResponse;
+      const authResponse = hello(identity).getAuthResponse();
+      return User.connect(user, authResponse.access_token, authResponse.expires_in, identity, options);
     });
 
     return promise;

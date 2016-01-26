@@ -1,61 +1,61 @@
 import UserUtils from './utils/user';
 
-export default class Auth {
-  static all(client) {
+const Auth = {
+  all(client) {
     return Auth.session(client).catch(() => {
       return Auth.basic(client);
     });
-  }
+  },
 
-  static app(client) {
-    if (!client.appId || !client.appSecret) {
+  app(client) {
+    if (!client.appKey || !client.appSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
 
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: client.appId,
+      username: client.appKey,
       password: client.appSecret
     });
 
     return promise;
-  }
+  },
 
-  static basic(client) {
+  basic(client) {
     return Auth.master(client).catch(() => {
       return Auth.app(client);
     });
-  }
+  },
 
-  static default(client) {
+  default(client) {
     return Auth.session().catch((err) => {
       return Auth.master(client).catch(() => {
         return Promise.reject(err);
       });
     });
-  }
+  },
 
-  static master(client) {
-    if (!client.appId || !client.masterSecret) {
+  master(client) {
+    if (!client.appKey || !client.masterSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
     }
 
     const promise = Promise.resolve({
       scheme: 'Basic',
-      username: client.appId,
+      username: client.appKey,
       password: client.masterSecret
     });
 
     return promise;
-  }
+  },
 
-  static none() {
+  none() {
     return Promise.resolve(null);
-  }
+  },
 
-  static session() {
+  session() {
     return UserUtils.getActive().then(user => {
       if (!user) {
         throw new Error('There is not an active user.');
@@ -67,4 +67,5 @@ export default class Auth {
       };
     });
   }
-}
+};
+export default Auth;
