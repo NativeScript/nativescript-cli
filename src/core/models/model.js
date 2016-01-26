@@ -12,13 +12,8 @@ const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 export default class Model {
-  constructor(attributes = {}, options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-
-    this.client = options.client;
-    this.attributes = {};
+  constructor(attributes = {}) {
+    this.client = Client.sharedInstance();
     this.set(defaults({}, attributes, result(this, 'defaults', {})));
   }
 
@@ -101,7 +96,7 @@ export default class Model {
     }
 
     const unset = options.unset;
-    const currentAttributes = clone(this.attributes);
+    const currentAttributes = clone(this.attributes || {});
 
     for (const attr in attrs) {
       if (attrs.hasOwnProperty(attr)) {

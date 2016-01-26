@@ -29,7 +29,7 @@ export default class User extends Model {
    */
   getPathname(client) {
     client = client || this.client;
-    return `/${usersNamespace}/${client.appId}`;
+    return `/${usersNamespace}/${client.appKey}`;
   }
 
   /**
@@ -39,7 +39,7 @@ export default class User extends Model {
    */
   getRpcPathname(client) {
     client = client || this.client;
-    return `/${rpcNamespace}/${client.appId}`;
+    return `/${rpcNamespace}/${client.appKey}`;
   }
 
   /**
@@ -50,7 +50,7 @@ export default class User extends Model {
   static getActive(options = {}) {
     const promise = UserUtils.getActive(options).then(data => {
       if (data) {
-        return new User(data, options);
+        return new User(data);
       }
 
       return null;
@@ -66,12 +66,12 @@ export default class User extends Model {
    */
   static setActive(user, options = {}) {
     if (user && !(user instanceof User)) {
-      user = new User(result(user, 'toJSON', user), options);
+      user = new User(result(user, 'toJSON', user));
     }
 
     const promise = UserUtils.setActive(user, options).then(data => {
       if (data) {
-        return new User(data, options);
+        return new User(data);
       }
 
       return null;
@@ -119,15 +119,48 @@ export default class User extends Model {
       };
     }
 
-    const user = new User(usernameOrData, options);
-    return user.login();
+    const user = new User(usernameOrData);
+    return user.login(options);
   }
 
-  static connect(user = {}, accessToken, expiresIn, authProvider, options = {}) {
-    if (user && !(user instanceof User)) {
-      user = new User(result(user, 'toJSON', user), options);
-    }
-    return user.connect(accessToken, expiresIn, authProvider, options);
+  login(options = {}) {
+    options = assign({
+      client: this.client
+    }, options);
+
+    const promise = User.getActive(options).then(activeUser => {
+      if (activeUser) {
+        throw new ActiveUserError('A user is already logged in.');
+      }
+
+      const username = this.get('username');
+      const password = this.get('password');
+      const _socialIdentity = this.get('_socialIdentity');
+      if ((!username || username === '' || !password || password === '') && !_socialIdentity) {
+        throw new KinveyError(
+          'Username and/or password missing. Please provide both a username and password to login.'
+        );
+      }
+
+      const request = new NetworkRequest({
+        method: HttpMethod.POST,
+        pathname: `${this.getPathname(this.client)}/login`,
+        data: this.toJSON(),
+        auth: Auth.app,
+        client: options.client
+      });
+      return request.execute();
+    }).then(response => {
+      if (response && response.isSuccess()) {
+        this.set(response.data, options);
+        this.unset('password');
+        return User.setActive(this, options);
+      }
+
+      return response;
+    });
+
+    return promise;
   }
 
   static connectWithFacebook(options = {}) {
@@ -231,49 +264,16 @@ export default class User extends Model {
     return promise;
   }
 
-  login(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
-    const promise = User.getActive(options).then(activeUser => {
-      if (activeUser) {
-        throw new ActiveUserError('A user is already logged in.');
-      }
-
-      const username = this.get('username');
-      const password = this.get('password');
-      const _socialIdentity = this.get('_socialIdentity');
-      if ((!username || username === '' || !password || password === '') && !_socialIdentity) {
-        throw new KinveyError(
-          'Username and/or password missing. Please provide both a username and password to login.'
-        );
-      }
-
-      const request = new NetworkRequest({
-        method: HttpMethod.POST,
-        pathname: `${this.getPathname(this.client)}/login`,
-        data: this.toJSON(),
-        auth: Auth.app,
-        client: options.client
-      });
-      return request.execute();
-    }).then(response => {
-      if (response && response.isSuccess()) {
-        this.set(response.data, options);
-        this.unset('password');
-        return User.setActive(this, options);
-      }
-
-      return response;
-    });
-
-    return promise;
+  static connect(user = {}, accessToken, expiresIn, identity, options = {}) {
+    if (user && !(user instanceof User)) {
+      user = new User(result(user, 'toJSON', user));
+    }
+    return user.connect(accessToken, expiresIn, identity, options);
   }
 
-  connect(accessToken, expiresIn, authProvider, options = {}) {
+  connect(accessToken, expiresIn, identity, options = {}) {
     const socialIdentity = {};
-    socialIdentity[authProvider] = {
+    socialIdentity[identity] = {
       access_token: accessToken,
       expires_in: expiresIn
     };
@@ -288,7 +288,7 @@ export default class User extends Model {
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return this.signup(options).then(() => {
-          return this.connect(accessToken, expiresIn, authProvider, options);
+          return this.connect(accessToken, expiresIn, identity, options);
         });
       }
 
@@ -315,7 +315,10 @@ export default class User extends Model {
    */
   logout(options = {}) {
     options = assign({
-      client: this.client
+      client: this.client,
+      properties: null,
+      timeout: undefined,
+      handler() {}
     }, options);
 
     const promise = this.isActive(options).then(active => {
@@ -325,10 +328,11 @@ export default class User extends Model {
 
       const request = new NetworkRequest({
         method: HttpMethod.POST,
-        pathname: `${this.getPathname(options.client)}/_logout`,
-        writePolicy: WritePolicy.Network,
+        client: options.client,
+        properties: options.properties,
         auth: Auth.session,
-        client: options.client
+        pathname: `${this.getPathname(options.client)}/_logout`,
+        timeout: options.timeout
       });
       return request.execute();
     }).then(() => {
@@ -344,33 +348,95 @@ export default class User extends Model {
     }
 
     if (!(user instanceof User)) {
-      user = new User(result(user, 'toJSON', user), options);
+      user = new User(result(user, 'toJSON', user));
     }
 
-    return user.signup();
+    return user.signup(options);
   }
 
   signup(options = {}) {
     options = assign({
       client: this.client,
-      state: false
+      properties: null,
+      timeout: undefined,
+      handler() {}
     }, options);
 
-    options.writePolicy = WritePolicy.Network;
-    options.auth = Auth.app;
-
-    const promise = User.getActive(options).then(activeUser => {
-      if (options.state && activeUser) {
-        throw new ActiveUserError('A user is already logged in. Please logout before saving the new user.');
+    const request = new NetworkRequest({
+      method: HttpMethod.POST,
+      client: options.client,
+      properties: options.properties,
+      auth: Auth.app,
+      pathname: this.getPathname(this.client),
+      data: this.toJSON(),
+      timeout: options.timeout
+    });
+    const promise = request.execute().then(response => {
+      if (response.isSuccess()) {
+        this.set(response.data);
+        return this;
       }
 
-      return super.create(user, options);
-    }).then(user => {
-      if (options.state) {
-        return User.setActive(user, options.client);
+      throw response.error;
+    });
+
+    return promise;
+  }
+
+  update(options = {}) {
+    options = assign({
+      client: this.client,
+      properties: null,
+      timeout: undefined,
+      handler() {}
+    }, options);
+
+    // const socialIdentity = this.get('_socialIdentity');
+    // const tokens = [];
+
+    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
+
+    // if (socialIdentity) {
+    //   for (const identity of socialIdentity) {
+    //     if (socialIdentity.hasOwnProperty(identity)) {
+    //       if (socialIdentity[identity] && identity !== options._provider) {
+    //         tokens.push({
+    //           provider: identity,
+    //           access_token: socialIdentity[identity].access_token,
+    //           access_token_secret: socialIdentity[identity].access_token_secret
+    //         });
+    //         delete socialIdentity[identity].access_token;
+    //         delete socialIdentity[identity].access_token_secret;
+    //       }
+    //     }
+    //   }
+    // }
+
+    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
+
+    // user.set('_socialIdentity', socialIdentity);
+
+    const request = new NetworkRequest({
+      method: HttpMethod.PUT,
+      client: options.client,
+      properties: options.properties,
+      auth: Auth.session,
+      pathname: `${this.getPathname(this.client)}/${this.id}`,
+      data: this.toJSON(),
+      timeout: options.timeout
+    });
+    const promise = request.execute().then(response => {
+      if (response.isSuccess()) {
+        return this.isActive();
       }
 
-      return user;
+      throw response.error;
+    }).then(active => {
+      if (active) {
+        return User.setActive(this, options);
+      }
+
+      return this;
     });
 
     return promise;

@@ -21,7 +21,7 @@ const Kinvey = {
   Enums,
   File,
   Log,
-  Kmd,
+  Metadata: Kmd,
   Model,
   Promise,
   Query,
