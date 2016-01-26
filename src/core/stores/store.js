@@ -4,7 +4,7 @@ import NetworkRequest from '../requests/networkRequest';
 import LocalRequest from '../requests/localRequest';
 import Response from '../requests/response';
 import { HttpMethod, StatusCode, StoreType, ReadPolicy, WritePolicy } from '../enums';
-import { NoResponseError, NotFoundError } from '../errors';
+import { KinveyError, NotFoundError } from '../errors';
 import Client from '../client';
 import Query from '../query';
 import Auth from '../auth';
@@ -22,8 +22,8 @@ const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
 
 /**
- * The Store class is used to retrieve, create, update, destroy, count and group documents
- * in collections.
+ * The Store class is used to retrieve, create, update, delete, count and group documents
+ * in a collection.
  *
  * @example
  * var store = Kinvey.Store.getInstance('books');
@@ -32,11 +32,13 @@ export default class Store {
   /**
    * Creates a new instance of the Store class.
    *
-   * @param {string}  name   Name of the collection
+   * @param   {string}  name   Name of the collection
+   *
+   * @throws  {KinveyError}   If the name provided is not a string.
    */
   constructor(name) {
     if (name && !isString(name)) {
-      throw new Error('Name must be a string.');
+      throw new KinveyError('Name must be a string.');
     }
 
     /**
@@ -45,27 +47,27 @@ export default class Store {
     this.name = name;
 
     /**
-     * @type {ReadPolicy}
+     * @type {ReadPolicy} readPolicy=ReadPolicy.NetworkOnly
      */
     this.readPolicy = ReadPolicy.NetworkOnly;
 
     /**
-     * @type {WritePolicy}
+     * @type {WritePolicy} writePolicy=WritePolicy.NetworkOnly
      */
     this.writePolicy = WritePolicy.NetworkOnly;
 
     /**
-     * @type {Auth}
+     * @type {Auth} auth=Auth.default
      */
     this.auth = Auth.default;
 
     /**
-     * @type {Client}
+     * @type {Client} client=Client.sharedInstance()
      */
     this.client = Client.sharedInstance();
 
     /**
-     * @type {Number}
+     * @type {Number} ttl=undefined
      */
     this.ttl = undefined;
   }
@@ -112,19 +114,21 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query used to filter result.
    * @param   {Object}                [options]                                 Options
-   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
    *                                                                            object that returns authorization info
-   *                                                                            to authorize a request for data.
-   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
-   *                                                                            pathname.
-   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
-   *                                                                            the local cache.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
+   *                                                                            from the local cache.
+   * @param   {ReadPolicy}            [options.readPolicy]                      Read policy to use for fetching
+   *                                                                            the data.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = Store.getInstance('books');
+   * var store = Kinvey.Store.getInstance('books');
    * var query = new Query();
    * query.equalTo('author', 'Kinvey');
    * store.find(query).then(function(books) {
@@ -147,7 +151,7 @@ export default class Store {
     }, options);
 
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new Error('Invalid query. It must be an instance of the Query class.'));
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
@@ -176,39 +180,45 @@ export default class Store {
 
       return request.execute();
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
-      log.info(`Retrieved the models in the ${this.name} collection.`, response);
+      log.info(`Retrieved the documents in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the models in the ${this.name} collection.`, err);
+      log.error(`Failed to retrieve the documents in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Groups models in the collection. An aggregation can be optionally provided to group
-   * a subset of models in the collection or omitted to group all the models
-   * in the collection. A promise will be returned that will be resolved with all models
-   * in the group or rejected with an error.
+   * Groups documents in a collection. An aggregation can be optionally provided to group
+   * a subset of documents in a collection or omitted to group all the documents
+   * in a collection. A promise will be returned that will be resolved with the result
+   * or rejected with an error.
    *
-   * @param   {Aggregation}  [aggregation]                                Aggregation
-   * @param   {Object}       [options]                                    Options
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {Aggregation}           aggregation                               Aggregation used to group documents.
+   * @param   {Object}                [options]                                 Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
+   *                                                                            from the local cache.
+   * @param   {ReadPolicy}            [options.readPolicy]                      Read policy to use for fetching
+   *                                                                            the data.
+   * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = new Kinvey.Store('books');
+   * var store = Kinvey.Store.getInstance('books');
    * var aggregation = new Kinvey.Aggregation();
    * store.group(aggregation).then(function(result) {
    *   ...
@@ -217,65 +227,88 @@ export default class Store {
    * });
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the models in the ${this.name} collection.`, aggregation, options);
+    log.debug(`Grouping the documents in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
+      auth: this.auth,
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       ttl: this.ttl,
+      readPolicy: this.readPolicy,
       handler() {}
     }, options);
 
     if (!(aggregation instanceof Aggregation)) {
-      aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
+      return Promise.reject(new KinveyError('Invalid aggregation. ' +
+        'It must be an instance of the Kinvey.Aggregation class.'));
     }
 
-    const request = new DeltaSetRequest({
-      method: HttpMethod.GET,
-      client: options.client,
-      properties: options.properties,
-      auth: options.auth,
-      pathname: `${this.getPathname(options.client)}/_group`,
-      data: aggregation.toJSON(),
-      timeout: options.timeout
-    });
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `${this.getPathname(options.client)}/_group`,
+        data: aggregation.toJSON(),
+        timeout: options.timeout
+      };
 
-    const promise = request.execute().then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      switch (options.readPolicy) {
+        case ReadPolicy.LocalOnly:
+          request = new LocalRequest(requestOptions);
+          break;
+        case ReadPolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case ReadPolicy.LocalFirst:
+        default:
+          request = new DeltaSetRequest(requestOptions);
       }
 
-      throw new NoResponseError('No response was received.');
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        return response.data;
+      }
+
+      throw response.error;
     });
 
     promise.then(response => {
-      log.info(`Grouped the models in the ${this.name} collection.`, response);
+      log.info(`Grouped the documents in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to group the models in the ${this.name} collection.`, err);
+      log.error(`Failed to group the documents in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Counts models in the collection. A query can be optionally provided to count
-   * a subset of models in the collection or omitted to count all the models
-   * in a collection. A promise will be returned that will be resolved with a count
-   * of the models or rejected with an error.
+   * Counts documents in a collection. A query can be optionally provided to count
+   * a subset of documents in a collection or omitted to count all the documents
+   * in a collection. A promise will be returned that will be resolved with the count
+   * or rejected with an error.
    *
-   * @param   {Query}        [query]                                      Query
-   * @param   {Object}       [options]                                    Options
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {Query}                 [query]                                   Query to count a subset of documents.
+   * @param   {Object}                [options]                                 Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
+   *                                                                            from the local cache.
+   * @param   {ReadPolicy}            [options.readPolicy]                      Read policy to use for fetching
+   *                                                                            the data.
+   * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = new Kinvey.Store('books');
+   * var store = Kinvey.Store.getInstance('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'Kinvey');
    * store.count(query).then(function(count) {
@@ -285,63 +318,85 @@ export default class Store {
    * });
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of models in the ${this.name} collection.`, query);
+    log.debug(`Counting the number of documents in the ${this.name} collection.`, query);
 
     options = assign({
+      auth: this.auth,
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       ttl: this.ttl,
+      readPolicy: this.readPolicy,
       handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const request = new DeltaSetRequest({
-      method: HttpMethod.GET,
-      client: options.client,
-      properties: options.properties,
-      auth: options.auth,
-      pathname: `${this.getPathname(options.client)}/_count`,
-      query: query,
-      timeout: options.timeout
-    });
+    const promise = Promise.resolve().then(() => {
+      let request;
+      const requestOptions = {
+        method: HttpMethod.GET,
+        client: options.client,
+        properties: options.properties,
+        auth: options.auth,
+        pathname: `${this.getPathname(options.client)}/_count`,
+        query: query,
+        timeout: options.timeout
+      };
 
-    const promise = request.execute().then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      switch (options.readPolicy) {
+        case ReadPolicy.LocalOnly:
+          request = new LocalRequest(requestOptions);
+          break;
+        case ReadPolicy.NetworkOnly:
+          request = new NetworkRequest(requestOptions);
+          break;
+        case ReadPolicy.LocalFirst:
+        default:
+          request = new DeltaSetRequest(requestOptions);
       }
 
-      throw new NoResponseError('No response was received.');
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        return response.data;
+      }
+
+      throw response.error;
     });
 
     promise.then(response => {
-      log.info(`Counted the number of models in the ${this.name} collection.`, response);
+      log.info(`Counted the number of documents in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to count the number of models in the ${this.name} collection.`, err);
+      log.error(`Failed to count the number of documents in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Retrieves a single document in the collection by id. A promise will be returned that will
+   * Retrieves a single document in a collection by id. A promise will be returned that will
    * be resolved with the document or rejected with an error.
    *
-   * @param   {string}       id                                           Document Id
-   * @param   {Object}       options                                      Options
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
+   * @param   {string}                id                                        Document Id
+   * @param   {Object}                [options]                                 Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
+   *                                                                            from the local cache.
+   * @param   {ReadPolicy}            [options.readPolicy]                      Read policy to use for fetching
+   *                                                                            the data.
+   * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = Store.getInstance('books');
+   * var store = Kinvey.Store.getInstance('books');
    * store.get('507f191e810c19729de860ea').then(function(book) {
    *   ...
    * }).catch(function(err) {
@@ -391,15 +446,11 @@ export default class Store {
 
       return request.execute();
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return isArray(response.data) && response.data.length === 1 ? response.data[0] : response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return isArray(response.data) && response.data.length === 1 ? response.data[0] : response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
@@ -415,21 +466,23 @@ export default class Store {
    * Save a document or an array of documents to a collection. A promise will be returned that
    * will be resolved with the saved document/documents or rejected with an error.
    *
-   * @param   {Model|Array}           doc                                       Document or documents to save.
+   * @param   {Object|Array}          doc                                       Document or documents to save.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
    *                                                                            object that returns authorization info
-   *                                                                            to authorize a request for data.
-   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
-   *                                                                            pathname.
-   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
-   *                                                                            the local cache.
+   * @param   {WritePolicy}           [options.writePolicy]                     Write policy to use for saving
+   *                                                                            the data.
+   * @param   {boolean}               [options.skipSync=false]                  Set to true to prevent data from being
+   *                                                                            adding to the sync table.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = Store.getInstance('books');
+   * var store = Kinvey.Store.getInstance('books');
    * var book = { name: 'How to Write a JavaScript Library', author: 'Kinvey' };
    * store.save(book).then(function(book) {
    *   ...
@@ -448,12 +501,13 @@ export default class Store {
       return this.update(doc, options);
     }
 
+    log.debug(`Saving the document(s) to the ${this.name} collection.`, doc);
+
     options = assign({
       client: this.client,
       properties: null,
       auth: this.auth,
       timeout: undefined,
-      ttl: this.ttl,
       writePolicy: this.writePolicy,
       skipSync: false,
       handler() {}
@@ -528,15 +582,11 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
@@ -554,20 +604,22 @@ export default class Store {
    *
    * @param   {Model|Array}           doc                                       Document or documents to update.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   * @param   {Auth|Function|Object}  [options.auth\]                           An auth function, custom function, or
    *                                                                            object that returns authorization info
-   *                                                                            to authorize a request for data.
-   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
-   *                                                                            pathname.
-   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
-   *                                                                            the local cache.
+   * @param   {WritePolicy}           [options.writePolicy]                     Write policy to use for saving
+   *                                                                            the data.
+   * @param   {boolean}               [options.skipSync=false]                  Set to true to prevent data from being
+   *                                                                            adding to the sync table.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = Store.getInstance('books');
-   * var book = { id: 1, name: 'How to Write a JavaScript Library', author: 'Kinvey' };
+   * var store = Kinvey.Store.getInstance('books');
+   * var book = { _id: '507f191e810c19729de860ea', name: 'How to Write a JavaScript Library', author: 'Kinvey' };
    * store.update(book).then(function(book) {
    *   ...
    * }).catch(function(err) {
@@ -585,12 +637,13 @@ export default class Store {
       return this.save(doc, options);
     }
 
+    log.debug(`Updating the document(s) to the ${this.name} collection.`, doc);
+
     options = assign({
       client: this.client,
       properties: null,
       auth: this.auth,
       timeout: undefined,
-      ttl: this.ttl,
       writePolicy: this.writePolicy,
       skipSync: false,
       handler() {}
@@ -665,15 +718,11 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
@@ -693,43 +742,44 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
    *                                                                            object that returns authorization info
-   *                                                                            to authorize a request for data.
-   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
-   *                                                                            pathname.
-   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
-   *                                                                            the local cache.
+   * @param   {WritePolicy}           [options.writePolicy]                     Write policy to use for saving
+   *                                                                            the data.
+   * @param   {boolean}               [options.skipSync=false]                  Set to true to prevent data from being
+   *                                                                            adding to the sync table.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var store = Store.getInstance('books');
+   * var store = Kinvey.Store.getInstance('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'Kinvey');
-   * store.clear(query).then(function(result) {
+   * store.clear(query).then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   clear(query, options = {}) {
-    log.debug(`Deleting the models in the ${this.name} collection by query.`, query);
+    log.debug(`Clearing the models in the ${this.name} collection.`, query);
 
     options = assign({
       client: this.client,
       properties: null,
       auth: this.auth,
       timeout: undefined,
-      ttl: this.ttl,
       writePolicy: this.writePolicy,
       skipSync: false,
       handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
@@ -777,46 +827,44 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
-      log.info(`Deleted the models in the ${this.name} collection.`, response);
+      log.info(`Cleared the models in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to delete the models in the ${this.name} collection.`, err);
+      log.error(`Failed to clear the models in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Remove a model in a collection. A promise will be returned that will be
-   * resolved with a count of the number of models removed or rejected with an error.
+   * Remove a document in a collection. A promise will be returned that will be
+   * resolved with a count of the number of documents removed or rejected with an error.
    *
    * @param   {string}                id                                        Document Id
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth=Auth.default]               An auth function, custom function, or
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
    *                                                                            object that returns authorization info
-   *                                                                            to authorize a request for data.
-   * @param   {Client}                [options.client=Client.sharedInstance()]  Client used to build the request
-   *                                                                            pathname.
-   * @param   {Properties}            [options.properties]                      Custom properties to set on the request.
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @param   {Number}                [options.ttl]                             Time to live for data retrieved from
-   *                                                                            the local cache.
+   * @param   {WritePolicy}           [options.writePolicy]                     Write policy to use for saving
+   *                                                                            the data.
+   * @param   {boolean}               [options.skipSync=false]                  Set to true to prevent data from being
+   *                                                                            adding to the sync table.
    * @return  {Promise}                                                         Promise
    *
    * @example
-   * var collection = new Kinvey.Collection('books');
-   * collection.Delete('507f191e810c19729de860ea').then(function(response) {
+   * var store = Kinvey.Store.getInstance('books');
+   * store.remove('507f191e810c19729de860ea').then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -835,7 +883,6 @@ export default class Store {
       properties: null,
       auth: this.auth,
       timeout: undefined,
-      ttl: this.ttl,
       writePolicy: this.writePolicy,
       skipSync: false,
       handler() {}
@@ -885,15 +932,11 @@ export default class Store {
 
       return response;
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     });
 
     promise.then(response => {
@@ -905,6 +948,29 @@ export default class Store {
     return promise;
   }
 
+  /**
+   * Push sync items for a collection to the network. A promise will be returned that will be
+   * resolved with the result of the push or rejected with an error.
+   *
+   * @param   {Query}                 [query]                                   Query to push a subset of items.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @return  {Promise}                                                         Promise
+   *
+   * @example
+   * var store = Kinvey.Store.getInstance('books');
+   * store.push().then(function(result) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
   push(query, options = {}) {
     options = assign({
       client: this.client,
@@ -1088,19 +1154,34 @@ export default class Store {
     return promise;
   }
 
-  pull(query, options) {
-    options = assign({
-      client: this.client,
-      properties: null,
-      auth: this.auth,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
+  /**
+   * Pull items for a collection from the network to your local cache. A promise will be
+   * returned that will be resolved with the result of the pull or rejected with an error.
+   *
+   * @param   {Query}                 [query]                                   Query to pull a subset of items.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @return  {Promise}                                                         Promise
+   *
+   * @example
+   * var store = Kinvey.Store.getInstance('books');
+   * store.pull().then(function(result) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
+  pull(query, options = {}) {
     const promise = this.syncCount(null, options).then(count => {
       if (count > 0) {
-        throw new Error('Unable to pull data. You must push the pending items to sync first.',
-          'Call store.push() to push the pending items to sync before you pull new data.');
+        throw new Error('Unable to pull data. You must push the pending sync items first.',
+          'Call store.push() to push the pending sync items before you pull new data.');
       }
 
       options.readPolicy = ReadPolicy.NetworkOnly;
@@ -1110,23 +1191,38 @@ export default class Store {
     return promise;
   }
 
+  /**
+   * Sync items for a collection. This will push pending sync items first and then
+   * pull items from the network into your local cache. A promise will be
+   * returned that will be resolved with the result of the pull or rejected with an error.
+   *
+   * @param   {Query}                 [query]                                   Query to pull a subset of items.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @return  {Promise}                                                         Promise
+   *
+   * @example
+   * var store = Kinvey.Store.getInstance('books');
+   * store.sync().then(function(result) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
   sync(query, options = {}) {
-    options = assign({
-      client: this.client,
-      properties: null,
-      auth: this.auth,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
     const promise = this.push(null, options).then(pushResponse => {
-      options.readPolicy = ReadPolicy.NetworkOnly;
-      return this.find(query, options).then(syncResponse => {
+      return this.pull(query, options).then(pullResponse => {
         return {
           push: pushResponse,
           sync: {
             collection: this.name,
-            documents: syncResponse
+            documents: pullResponse
           }
         };
       });
@@ -1135,17 +1231,43 @@ export default class Store {
     return promise;
   }
 
+  /**
+   * Count the number of sync items waiting to be pushed to the network. A promise will be
+   * returned with the count of sync items or rejected with an error.
+   *
+   * @param   {Query}                 [query]                                   Query to count a subset of items.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Number}                [options.ttl]                             Time to live for data retrieved
+   *                                                                            from the local cache.
+   * @return  {Promise}                                                         Promise
+   *
+   * @example
+   * var store = Kinvey.Store.getInstance('books');
+   * store.syncCount().then(function(count) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
   syncCount(query, options = {}) {
     options = assign({
+      auth: this.auth,
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
+      ttl: this.ttl,
       handler() {}
     }, options);
 
     if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
@@ -1160,15 +1282,11 @@ export default class Store {
       });
       return request.execute();
     }).then(response => {
-      if (response) {
-        if (response.isSuccess()) {
-          return response.data.size || 0;
-        }
-
-        throw response.error;
+      if (response.isSuccess()) {
+        return response.data.size || 0;
       }
 
-      throw new NoResponseError('No response was received.');
+      throw response.error;
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return 0;
@@ -1180,9 +1298,23 @@ export default class Store {
     return promise;
   }
 
+  /**
+   * Add items to the be synced. A promise will be returned with null or rejected with an error.
+   *
+   * @param   {Object|Array}          docs                                      Document(s) to add to the sync table.
+   * @param   {Object}                options                                   Options
+   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
+   *                                                                            object that returns authorization info
+   *                                                                            to authorize a request.
+   * @param   {Client}                [options.client]                          Client to use.
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @return  {Promise}                                                         Promise
+   */
   _updateSync(docs, options = {}) {
     if (!this.name) {
-      throw new Error('Unable to add docs to sync for a store with no name.');
+      return Promise.reject(new KinveyError('Unable to add documents to the sync table for a store with no name.'));
     }
 
     if (!docs) {
@@ -1190,14 +1322,15 @@ export default class Store {
     }
 
     options = assign({
+      auth: this.auth,
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
+      ttl: this.ttl,
       handler() {}
     }, options);
 
-    const promise = Promise.resolve(). then(() => {
+    const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
         client: options.client,

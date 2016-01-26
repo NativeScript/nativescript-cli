@@ -15,8 +15,6 @@ import User from './core/models/user';
 const Kinvey = {
   Acl,
   Aggregation,
-  Cache,
-  Client,
   Command,
   Enums,
   File,
@@ -31,24 +29,23 @@ const Kinvey = {
 };
 
 /**
- * Initializes the library by creating a new instance of the Client
- * class and storing it as a shared instance.
+ * Initializes the library with your app's information.
  *
- * @param {Object} options - Options
- * @param {string} options.appId - My app's id
- * @param {string} [options.appSecret] - My app's secret
- * @param {string} [options.masterSecret] - My app's master secret
- * @param {string} [options.encryptionKey] - My app's encryption key
- * @param {string} [options.apiUrl] - The url to send Kinvey API requests.
+ * @param   {Object}        options                         Options
+ * @param   {string}        options.appKey                  My app key
+ * @param   {string}        [options.appSecret]             My app secret
+ * @param   {string}        [options.masterSecret]          My app's master secret
+ * @param   {string}        [options.encryptionKey]         My app's encryption key
+ * @param   {string}        [options.protocol]              The protocol of the client.
+ * @param   {string}        [options.host]                  The host of the client.
+ * @return  {Client}                                        An instance of Client.
  *
- * @throws {KinveyError}  If an `options.appId` is not provided.
- * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
- *
- * @return {Client}  An instance of Client.
+ * @throws  {KinveyError}  If an `options.appKey` is not provided.
+ * @throws  {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
  *
  * @example
- * var sharedInstance = Kinvey.init({
- *   appId: 'appId',
+ * var client = Kinvey.init({
+ *   appKey: 'appKey',
  *   appSecret: 'appSecret'
  * });
  */
@@ -64,5 +61,4 @@ Kinvey.initialize = function (options) {
   return Kinvey.init(options);
 };
 
-// Export
 export default Kinvey;

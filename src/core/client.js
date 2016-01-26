@@ -31,7 +31,7 @@ export default class Client {
    */
   constructor(options = {}) {
     options = assign({
-      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
+      protocol: process.env.KINVEY_API_PROTOCOL || 'https',
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
