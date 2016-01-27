@@ -11,12 +11,8 @@ ngKinvey.provider('$kinvey', function () {
     return Kinvey.init(options);
   };
 
-  this.initialize = function (options = {}) {
-    return this.init(options);
-  };
-
   this.$get = ['$q', '$http', function ($q, $http) {
-    // Swap out the Http middleware with the AngularHttp middleware
+    // Swap out the Http middleware with the Angular Http middleware
     const networkRack = NetworkRack.sharedInstance();
     networkRack.swap(Http, new AngularHttp($http));
 

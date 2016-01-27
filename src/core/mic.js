@@ -12,6 +12,9 @@ const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 // const authProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
 // const sharedInstanceSymbol = Symbol();
 
+/**
+ * @private
+ */
 export default class MobileIdentityConnect {
   constructor() {
     const sharedClient = Client.sharedInstance();

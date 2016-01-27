@@ -47,7 +47,7 @@ config.git = platformConfig.git || 'git@github.com:Kinvey/kinvey-html5-lib.git';
 config.env = {
   _: 'purge',
   KINVEY_ACL_ATTRIBUTE: '_acl',
-  KINVEY_API_PROTOCOL: 'https:',
+  KINVEY_API_PROTOCOL: 'https',
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
   KINVEY_ACTIVE_USER_COLLECTION: 'kinvey_activeUser_',
@@ -113,6 +113,7 @@ config.browserify = {
   debug: false, // turns on/off creating .map file
   entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
   standalone: 'Kinvey',
+  transform: [['envify', { global: true, _: 'purge' }]]
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
 config.legacy.browserify = clone(config.browserify);

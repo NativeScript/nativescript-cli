@@ -1,6 +1,5 @@
 import Acl from './core/acl';
 import Aggregation from './core/aggregation';
-import Cache from './core/cache';
 import Client from './core/client';
 import Command from './core/command';
 import Enums from './core/enums';
@@ -52,13 +51,6 @@ const Kinvey = {
 Kinvey.init = function (options) {
   const client = Client.init(options);
   return client;
-};
-
-/**
- * Alias to Kinvey.init
- */
-Kinvey.initialize = function (options) {
-  return Kinvey.init(options);
 };
 
 export default Kinvey;

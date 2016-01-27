@@ -163,19 +163,53 @@ export default class User extends Model {
     return promise;
   }
 
-  static connectWithFacebook(user, options = {}) {
-    return User.connectWithSocial(SocialIdentity.Facebook, user, options);
+  static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    const user = new User();
+    return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
-  static connectWithGoogle(user, options = {}) {
-    return User.connectWithSocial(SocialIdentity.Google, user, options);
+  loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    const mic = new MobileIdentityConnect();
+    const promise = mic.login(redirectUri, authorizationGrant, options).then(token => {
+      return this.connect(token.access_token, token.expires_in, micAuthProvider, options);
+    });
+
+    return promise;
   }
 
-  static connectWithLinkedIn(user, options = {}) {
-    return User.connectWithSocial(SocialIdentity.LinkedIn, user, options);
+  static connectWithFacebook(options = {}) {
+    const user = new User();
+    return user.connectWithFacebook(options);
   }
 
-  static connectWithSocial(identity, user, options = {}) {
+  connectWithFacebook(options = {}) {
+    return this.connectWithSocial(SocialIdentity.Facebook, options);
+  }
+
+  static connectWithGoogle(options = {}) {
+    const user = new User();
+    return user.connectWithGoogle(options);
+  }
+
+  connectWithGoogle(options = {}) {
+    return this.connectWithSocial(SocialIdentity.Google, options);
+  }
+
+  static connectWithLinkedIn(options = {}) {
+    const user = new User();
+    return user.connectWithLinkedIn(options);
+  }
+
+  connectWithLinkedIn(options = {}) {
+    return this.connectWithSocial(SocialIdentity.LinkedIn, options);
+  }
+
+  static connectWithSocial(identity, options = {}) {
+    const user = new User();
+    return user.connectWithSocial(identity, options);
+  }
+
+  connectWithSocial(identity, options = {}) {
     options = assign({
       client: Client.sharedInstance(),
       auth: Auth.default,
@@ -211,16 +245,7 @@ export default class User extends Model {
       throw response.error;
     }).then(() => {
       const authResponse = hello(identity).getAuthResponse();
-      return User.connect(user, authResponse.access_token, authResponse.expires_in, identity, options);
-    });
-
-    return promise;
-  }
-
-  static connectWithMIC(redirectUri, authorizationGrant, user, options = {}) {
-    const mic = new MobileIdentityConnect();
-    const promise = mic.login(redirectUri, authorizationGrant, options).then(token => {
-      return User.connect(user, token.access_token, token.expires_in, micAuthProvider, options);
+      return this.connect(authResponse.access_token, authResponse.expires_in, identity, options);
     });
 
     return promise;
