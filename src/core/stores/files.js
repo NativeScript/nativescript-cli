@@ -1,4 +1,4 @@
-import NetworkStore from './store';
+import DataStore from './datastore';
 import Client from '../client';
 import Request from '../requests/networkRequest';
 import { KinveyError, BlobNotFoundError } from '../errors';
@@ -17,7 +17,7 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
  * @example
  * var files = new Kinvey.Files();
  */
-export default class Files extends NetworkStore {
+export default class Files extends DataStore {
   /**
    * Creates a new instance of the Files class.
    *

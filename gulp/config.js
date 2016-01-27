@@ -112,8 +112,7 @@ config.files = assign(config.files, platformConfig.files);
 config.browserify = {
   debug: false, // turns on/off creating .map file
   entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
-  standalone: 'Kinvey',
-  transform: [['envify', { global: true, _: 'purge' }]]
+  standalone: 'Kinvey'
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);
 config.legacy.browserify = clone(config.browserify);

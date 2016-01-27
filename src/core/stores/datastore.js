@@ -9,7 +9,6 @@ import Client from '../client';
 import Query from '../query';
 import Auth from '../auth';
 import assign from 'lodash/object/assign';
-import result from 'lodash/object/result';
 import forEach from 'lodash/collection/forEach';
 import clone from 'lodash/lang/clone';
 import map from 'lodash/collection/map';
@@ -20,15 +19,16 @@ import isString from 'lodash/lang/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
+const dataStoresMap = new Map();
 
 /**
- * The Store class is used to retrieve, create, update, delete, count and group documents
+ * The Store class is used to find, save, update, remove, count and group enitities
  * in a collection.
  *
  * @example
  * var store = Kinvey.Store.getInstance('books');
  */
-export default class Store {
+export default class DataStore {
   /**
    * Creates a new instance of the Store class.
    *
@@ -47,27 +47,22 @@ export default class Store {
     this.name = name;
 
     /**
-     * @type {ReadPolicy} readPolicy=ReadPolicy.NetworkOnly
+     * @type {ReadPolicy}
      */
     this.readPolicy = ReadPolicy.NetworkOnly;
 
     /**
-     * @type {WritePolicy} writePolicy=WritePolicy.NetworkOnly
+     * @type {WritePolicy}
      */
     this.writePolicy = WritePolicy.NetworkOnly;
 
     /**
-     * @type {Auth} auth=Auth.default
-     */
-    this.auth = Auth.default;
-
-    /**
-     * @type {Client} client=Client.sharedInstance()
+     * @type {Client}
      */
     this.client = Client.sharedInstance();
 
     /**
-     * @type {Number} ttl=undefined
+     * @type {Number}
      */
     this.ttl = undefined;
   }
@@ -105,18 +100,15 @@ export default class Store {
   }
 
   /**
-   * Finds all documents in a collection. A query can be optionally provided to return
-   * a subset of all documents in a collection or omitted to return all documents in
-   * a collection. The number of documents returned will adhere to the limits specified
+   * Finds all entities in a collection. A query can be optionally provided to return
+   * a subset of all entities in a collection or omitted to return all entities in
+   * a collection. The number of entities returned will adhere to the limits specified
    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
-   * promise will be returned that will be resolved with the documents or rejected with
+   * promise will be returned that will be resolved with the entities or rejected with
    * an error.
    *
    * @param   {Query}                 [query]                                   Query used to filter result.
    * @param   {Object}                [options]                                 Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -138,10 +130,9 @@ export default class Store {
    * });
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the documents in the ${this.name} collection.`, query);
+    log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -160,7 +151,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: this.getPathname(options.client),
         query: query,
         timeout: options.timeout
@@ -188,25 +179,22 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the documents in the ${this.name} collection.`, response);
+      log.info(`Retrieved the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the documents in the ${this.name} collection.`, err);
+      log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Groups documents in a collection. An aggregation can be optionally provided to group
-   * a subset of documents in a collection or omitted to group all the documents
+   * Groups entities in a collection. An aggregation can be optionally provided to group
+   * a subset of entities in a collection or omitted to group all the entities
    * in a collection. A promise will be returned that will be resolved with the result
    * or rejected with an error.
    *
-   * @param   {Aggregation}           aggregation                               Aggregation used to group documents.
+   * @param   {Aggregation}           aggregation                               Aggregation used to group entities.
    * @param   {Object}                [options]                                 Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -227,10 +215,9 @@ export default class Store {
    * });
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the documents in the ${this.name} collection.`, aggregation, options);
+    log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -250,7 +237,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: `${this.getPathname(options.client)}/_group`,
         data: aggregation.toJSON(),
         timeout: options.timeout
@@ -278,25 +265,22 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Grouped the documents in the ${this.name} collection.`, response);
+      log.info(`Grouped the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to group the documents in the ${this.name} collection.`, err);
+      log.error(`Failed to group the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Counts documents in a collection. A query can be optionally provided to count
-   * a subset of documents in a collection or omitted to count all the documents
+   * Counts entities in a collection. A query can be optionally provided to count
+   * a subset of entities in a collection or omitted to count all the entities
    * in a collection. A promise will be returned that will be resolved with the count
    * or rejected with an error.
    *
-   * @param   {Query}                 [query]                                   Query to count a subset of documents.
+   * @param   {Query}                 [query]                                   Query to count a subset of entities.
    * @param   {Object}                [options]                                 Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -318,10 +302,9 @@ export default class Store {
    * });
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of documents in the ${this.name} collection.`, query);
+    log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -340,7 +323,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: `${this.getPathname(options.client)}/_count`,
         query: query,
         timeout: options.timeout
@@ -368,23 +351,20 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Counted the number of documents in the ${this.name} collection.`, response);
+      log.info(`Counted the number of entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to count the number of documents in the ${this.name} collection.`, err);
+      log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Retrieves a single document in a collection by id. A promise will be returned that will
-   * be resolved with the document or rejected with an error.
+   * Retrieves a single entity in a collection by id. A promise will be returned that will
+   * be resolved with the entity or rejected with an error.
    *
    * @param   {string}                id                                        Document Id
    * @param   {Object}                [options]                                 Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -403,16 +383,15 @@ export default class Store {
    *   ...
    * });
    */
-  get(id, options = {}) {
+  findById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to retrieve a document.', id);
+      log.warn('No id was provided to retrieve a entity.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Retrieving a document in the ${this.name} collection with id = ${id}.`);
+    log.debug(`Retrieving a entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -427,7 +406,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: `${this.getPathname(options.client)}/${id}`,
         timeout: options.timeout
       };
@@ -454,23 +433,20 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the document in the ${this.name} collection with id = ${id}.`, response);
+      log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the document in the ${this.name} collection with id = ${id}.`, err);
+      log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Save a document or an array of documents to a collection. A promise will be returned that
-   * will be resolved with the saved document/documents or rejected with an error.
+   * Save a entity or an array of entities to a collection. A promise will be returned that
+   * will be resolved with the saved entity/entities or rejected with an error.
    *
-   * @param   {Object|Array}          doc                                       Document or documents to save.
+   * @param   {Object|Array}          doc                                       Document or entities to save.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -501,12 +477,11 @@ export default class Store {
       return this.update(doc, options);
     }
 
-    log.debug(`Saving the document(s) to the ${this.name} collection.`, doc);
+    log.debug(`Saving the entity(s) to the ${this.name} collection.`, doc);
 
     options = assign({
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       writePolicy: this.writePolicy,
       skipSync: false,
@@ -519,7 +494,7 @@ export default class Store {
         method: HttpMethod.POST,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: this.getPathname(options.client),
         data: doc,
         timeout: options.timeout
@@ -590,23 +565,20 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Saved the document(s) to the ${this.name} collection.`, response);
+      log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to save the document(s) to the ${this.name} collection.`, err);
+      log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Updates a document or an array of documents in a collection. A promise will be returned that
-   * will be resolved with the updated document/documents or rejected with an error.
+   * Updates a entity or an array of entities in a collection. A promise will be returned that
+   * will be resolved with the updated entity/entities or rejected with an error.
    *
-   * @param   {Model|Array}           doc                                       Document or documents to update.
+   * @param   {Model|Array}           doc                                       Document or entities to update.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth\]                           An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -637,12 +609,11 @@ export default class Store {
       return this.save(doc, options);
     }
 
-    log.debug(`Updating the document(s) to the ${this.name} collection.`, doc);
+    log.debug(`Updating the entity(s) to the ${this.name} collection.`, doc);
 
     options = assign({
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       writePolicy: this.writePolicy,
       skipSync: false,
@@ -655,7 +626,7 @@ export default class Store {
         method: HttpMethod.PUT,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: `${this.getPathname(options.client)}/${doc._id}`,
         data: doc,
         timeout: options.timeout
@@ -726,25 +697,22 @@ export default class Store {
     });
 
     promise.then(response => {
-      log.info(`Updated the document(s) to the ${this.name} collection.`, response);
+      log.info(`Updated the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to update the document(s) to the ${this.name} collection.`, err);
+      log.error(`Failed to update the entity(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
   }
 
   /**
-   * Remove documents in a collection. A query can be optionally provided to remove
-   * a subset of documents in a collection or omitted to remove all documents in a
+   * Remove entities in a collection. A query can be optionally provided to remove
+   * a subset of entities in a collection or omitted to remove all entities in a
    * collection. A promise will be returned that will be resolved with a count of the
-   * number of documents removed or rejected with an error.
+   * number of entities removed or rejected with an error.
    *
    * @param   {Query}                 [query]                                   Query
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -765,13 +733,12 @@ export default class Store {
    *   ...
    * });
    */
-  clear(query, options = {}) {
+  remove(query, options = {}) {
     log.debug(`Clearing the models in the ${this.name} collection.`, query);
 
     options = assign({
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       writePolicy: this.writePolicy,
       skipSync: false,
@@ -788,7 +755,7 @@ export default class Store {
         method: HttpMethod.DELETE,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: this.getPathname(options.client),
         query: query,
         timeout: options.timeout
@@ -844,14 +811,11 @@ export default class Store {
   }
 
   /**
-   * Remove a document in a collection. A promise will be returned that will be
-   * resolved with a count of the number of documents removed or rejected with an error.
+   * Remove a entity in a collection. A promise will be returned that will be
+   * resolved with a count of the number of entities removed or rejected with an error.
    *
    * @param   {string}                id                                        Document Id
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -870,7 +834,7 @@ export default class Store {
    *   ...
    * });
    */
-  remove(id, options = {}) {
+  removeById(id, options = {}) {
     if (!id) {
       log.warn('No id was provided to be removed.', id);
       return Promise.resolve(null);
@@ -881,7 +845,6 @@ export default class Store {
     options = assign({
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       writePolicy: this.writePolicy,
       skipSync: false,
@@ -894,7 +857,7 @@ export default class Store {
         method: HttpMethod.DELETE,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: `${this.getPathname(options.client)}/${id}`,
         timeout: options.timeout
       };
@@ -954,9 +917,6 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query to push a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -971,33 +931,26 @@ export default class Store {
    *   ...
    * });
    */
-  push(query, options = {}) {
+  push(options = {}) {
     options = assign({
       client: this.client,
       properties: null,
-      auth: this.auth,
       timeout: undefined,
       handler() {}
     }, options);
-
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
 
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
         pathname: this._getSyncPathname(options.client),
-        query: query,
         timeout: options.timeout
       });
       return request.execute();
     }).then(response => {
       if (response && response.isSuccess()) {
-        const localStore = Store.getInstance(this.name, StoreType.Local);
+        const localStore = DataStore.getInstance(this.name, StoreType.Local);
         const shouldSave = [];
         const shouldRemove = [];
         const docs = response.data.docs;
@@ -1021,7 +974,7 @@ export default class Store {
         });
 
         return Promise.all(promises).then(() => {
-          const networkStore = Store.getInstance(this.name, StoreType.Network);
+          const networkStore = DataStore.getInstance(this.name, StoreType.Network);
           const saved = map(shouldSave, doc => {
             const metadata = docs[doc._id];
             const requestOptions = clone(metadata);
@@ -1127,7 +1080,6 @@ export default class Store {
             method: HttpMethod.PUT,
             client: options.client,
             properties: options.properties,
-            auth: options.auth,
             pathname: this._getSyncPathname(options.client),
             data: data,
             timeout: options.timeout
@@ -1160,9 +1112,6 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -1198,9 +1147,6 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -1237,9 +1183,6 @@ export default class Store {
    *
    * @param   {Query}                 [query]                                   Query to count a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -1258,7 +1201,6 @@ export default class Store {
    */
   syncCount(query, options = {}) {
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -1275,7 +1217,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: this._getSyncPathname(options.client),
         query: query,
         timeout: options.timeout
@@ -1303,9 +1245,6 @@ export default class Store {
    *
    * @param   {Object|Array}          docs                                      Document(s) to add to the sync table.
    * @param   {Object}                options                                   Options
-   * @param   {Auth|Function|Object}  [options.auth]                            An auth function, custom function, or
-   *                                                                            object that returns authorization info
-   *                                                                            to authorize a request.
    * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
@@ -1314,7 +1253,7 @@ export default class Store {
    */
   _updateSync(docs, options = {}) {
     if (!this.name) {
-      return Promise.reject(new KinveyError('Unable to add documents to the sync table for a store with no name.'));
+      return Promise.reject(new KinveyError('Unable to add entities to the sync table for a store with no name.'));
     }
 
     if (!docs) {
@@ -1322,7 +1261,6 @@ export default class Store {
     }
 
     options = assign({
-      auth: this.auth,
       client: this.client,
       properties: null,
       timeout: undefined,
@@ -1335,7 +1273,7 @@ export default class Store {
         method: HttpMethod.GET,
         client: options.client,
         properties: options.properties,
-        auth: options.auth,
+        auth: Auth.default,
         pathname: this._getSyncPathname(options.client),
         timeout: options.timeout
       });
@@ -1401,14 +1339,19 @@ export default class Store {
    * Returns an instance of the Store class based on the type provided.
    *
    * @param  {string}       name                      Name of the collection.
-   * @param  {StoreType}    [type=StoreType.Default]  Type of store to return.
+   * @param  {StoreType}    [type=StoreType.Cache]    Type of store to return.
    * @return {Store}                                  Store
    */
-  static getInstance(name, type = StoreType.Default) {
-    const store = new Store(name);
+  static getInstance(name, type = StoreType.Cache) {
+    let store = dataStoresMap.get(`${name}_${type}`);
+
+    if (!store) {
+      store = new DataStore(name);
+      dataStoresMap.set(`${name}_${type}`, store);
+    }
 
     switch (type) {
-      case StoreType.Local:
+      case StoreType.Sync:
         store.readPolicy = ReadPolicy.LocalOnly;
         store.writePolicy = WritePolicy.LocalOnly;
         break;
@@ -1416,7 +1359,7 @@ export default class Store {
         store.readPolicy = ReadPolicy.NetworkOnly;
         store.writePolicy = WritePolicy.NetworkOnly;
         break;
-      case StoreType.Default:
+      case StoreType.Cache:
       default:
         store.readPolicy = ReadPolicy.LocalFirst;
         store.writePolicy = WritePolicy.LocalFirst;

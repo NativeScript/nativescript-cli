@@ -2,7 +2,7 @@ import Auth from '../auth';
 import { ReadPolicy as DataPolicy, HttpMethod } from '../enums';
 import { NotFoundError } from '../errors';
 import Request from '../requests/networkRequest';
-import Store from './store';
+import DataStore from './datastore';
 import Query from '../query';
 import User from '../models/user';
 import assign from 'lodash/object/assign';
@@ -17,7 +17,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * @example
  * var users = new Kinvey.Users();
  */
-export default class Users extends Store {
+export default class Users extends DataStore {
   /**
    * Creates a new instance of the Users class.
    *

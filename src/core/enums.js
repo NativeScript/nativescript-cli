@@ -70,9 +70,9 @@ Object.freeze(StatusCode);
 export { StatusCode };
 
 const StoreType = {
-  Local: 'Local',
-  Network: 'Network',
-  Default: 'Default'
+  Sync: 'Sync',
+  Cache: 'Cache',
+  Network: 'Network'
 };
 Object.freeze(StoreType);
 export { StoreType };

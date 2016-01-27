@@ -3,7 +3,6 @@ const $ = require('gulp-load-plugins')({
   camelize: true
 });
 const browserify = require('browserify');
-import envify from 'envify/custom';
 const config = require('../config');
 const source = require('vinyl-source-stream');
 const buffer = require('vinyl-buffer');
