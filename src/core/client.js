@@ -7,27 +7,28 @@ const sharedInstanceSymbol = Symbol();
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
+ *
+ * @example
+   * var client = new Kinvey.Client({
+   *   appKey: '<appKey>',
+   *   appSecret: '<appSecret>'
+   * });
  */
 export default class Client {
   /**
-   * Create a new instance of the Client class. An `options.appKey` must be provided along with
+   * Creates a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.
    *
-   * @param {Object} options - Options
-   * @param {string} options.appId - My app's id
-   * @param {string} [options.appSecret] - My app's secret
-   * @param {string} [options.masterSecret] - My app's master secret
-   * @param {string} [options.encryptionKey] - My app's encryption key
-   * @param {string} [options.apiUrl] - The url to use to send network requests.
+   * @param {Object}    options                             Options
+   * @param {string}    [options.protocol='https']          Protocl used for requests
+   * @param {string}    [options.host='baas.kinvey.com']    Host used for requests
+   * @param {string}    options.appKey                      App Key
+   * @param {string}    [options.appSecret]                 App Secret
+   * @param {string}    [options.masterSecret]              App Master Secret
+   * @param {string}    [options.encryptionKey]             App Encryption Key
    *
-   * @throws {KinveyError}  If an `options.appId` is not provided.
+   * @throws {KinveyError}  If an `options.appKey` is not provided.
    * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
-   *
-   * @example
-   * var client = new Client({
-   *   appId: 'appId',
-   *   appSecret: 'appSecret'
-   * });
    */
   constructor(options = {}) {
     options = assign({
@@ -58,7 +59,6 @@ export default class Client {
     /**
      * @type {string}
      */
-    this.appId = options.appId || options.appKey;
     this.appKey = options.appKey || options.appId;
 
     /**
@@ -88,7 +88,7 @@ export default class Client {
   }
 
   /**
-   * Returns an object containing all the information for this Kinvey instance.
+   * Returns an object containing all the information for this Client.
    *
    * @return {Object} JSON
    */
@@ -96,7 +96,6 @@ export default class Client {
     const json = {
       protocol: this.protocol,
       host: this.host,
-      appId: this.appId,
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
@@ -110,22 +109,23 @@ export default class Client {
    * Initializes the library by creating a new instance of the
    * Client class and storing it as a shared instance.
    *
-   * @param {Object} options - Options
-   * @param {string} options.appId - My app's id
-   * @param {string} [options.appSecret] - My app's secret
-   * @param {string} [options.masterSecret] - My app's master secret
-   * @param {string} [options.encryptionKey] - My app's encryption key
-   * @param {string} [options.apiUrl] - The url to send Kinvey API requests.
+   * @param {Object}    options                             Options
+   * @param {string}    [options.protocol='https']          Protocl used for requests
+   * @param {string}    [options.host='baas.kinvey.com']    Host used for requests
+   * @param {string}    options.appKey                      App Key
+   * @param {string}    [options.appSecret]                 App Secret
+   * @param {string}    [options.masterSecret]              App Master Secret
+   * @param {string}    [options.encryptionKey]             App Encryption Key
    *
-   * @throws {KinveyError}  If an `options.appId` is not provided.
+   * @throws {KinveyError}  If an `options.appKey` is not provided.
    * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
    *
    * @return {Client}  An instance of Client.
    *
    * @example
-   * var sharedInstance = Client.init({
-   *   appId: 'appId',
-   *   appSecret: 'appSecret'
+   * var client = Kinvey.Client.init({
+   *   appKey: '<appKey>',
+   *   appSecret: '<appSecret>'
    * });
    */
   static init(options) {
