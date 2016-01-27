@@ -6,7 +6,7 @@ const aclSymbol = Symbol();
 // ACL.
 // ----
 //
-// Wrapper for setting permissions on document-level (i.e. documents and users).
+// Wrapper for setting permissions on entity-level (i.e. entities and users).
 
 class LegacyAcl {
   /**

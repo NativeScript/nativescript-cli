@@ -168,18 +168,18 @@ export default class IndexedDB {
         const request = store.get(id);
 
         request.onsuccess = (e) => {
-          const doc = e.target.result;
+          const entity = e.target.result;
 
-          if (doc) {
-            return resolve(doc);
+          if (entity) {
+            return resolve(entity);
           }
 
-          reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} ` +
+          reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection} ` +
             `collection on the ${this.dbName} indexedDB database.`));
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while retrieving a document with id = ${id} ` +
+          reject(new KinveyError(`An error occurred while retrieving an entity with id = ${id} ` +
             `from the ${collection} collection on the ${this.dbName} indexedDB database. ` +
             `Received the error code ${e.target.errorCode}.`));
         };
@@ -189,25 +189,25 @@ export default class IndexedDB {
     return promise;
   }
 
-  save(collection, doc) {
-    if (isArray(doc)) {
-      return this.saveBulk(collection, doc);
+  save(collection, entity) {
+    if (isArray(entity)) {
+      return this.saveBulk(collection, entity);
     }
 
-    if (!doc._id) {
-      doc._id = generateObjectId();
+    if (!entity._id) {
+      entity._id = generateObjectId();
     }
 
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
-        const request = store.put(doc);
+        const request = store.put(entity);
 
         request.onsuccess = function onSuccess() {
-          resolve(doc);
+          resolve(entity);
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving a document to the ${collection} ` +
+          reject(new KinveyError(`An error occurred while saving an entity to the ${collection} ` +
             `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
@@ -216,30 +216,30 @@ export default class IndexedDB {
     return promise;
   }
 
-  saveBulk(collection, docs) {
-    if (!isArray(docs)) {
-      return this.save(collection, docs);
+  saveBulk(collection, entities) {
+    if (!isArray(entities)) {
+      return this.save(collection, entities);
     }
 
-    if (docs.length === 0) {
-      return Promise.resolve(docs);
+    if (entities.length === 0) {
+      return Promise.resolve(entities);
     }
 
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
         const request = store.transaction;
 
-        forEach(docs, doc => {
-          doc._id = doc._id || generateObjectId();
-          store.put(doc);
+        forEach(entities, entity => {
+          entity._id = entity._id || generateObjectId();
+          store.put(entity);
         });
 
         request.oncomplete = function onComplete() {
-          resolve(docs);
+          resolve(entities);
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving the documents to the ${collection} ` +
+          reject(new KinveyError(`An error occurred while saving the entities to the ${collection} ` +
             `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
@@ -248,7 +248,7 @@ export default class IndexedDB {
     return promise;
   }
 
-  remove(collection, id) {
+  removeById(collection, id) {
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, true, store => {
         const request = store.transaction;
@@ -257,18 +257,18 @@ export default class IndexedDB {
 
         request.oncomplete = () => {
           if (!doc.result) {
-            return reject(new NotFoundError(`A document with id = ${id} was not found in the ${collection} `
+            return reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection} `
               + `collection on the ${this.dbName} indexedDB database.`));
           }
 
           resolve({
             count: 1,
-            docs: [doc.result]
+            entities: [doc.result]
           });
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while deleting a document with id = ${id} ` +
+          reject(new KinveyError(`An error occurred while deleting an entity with id = ${id} ` +
             `in the ${collection} collection on the ${this.dbName} indexedDB database. ` +
             `Received the error code ${e.target.errorCode}.`));
         };

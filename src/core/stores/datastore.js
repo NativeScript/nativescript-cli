@@ -377,7 +377,7 @@ export default class DataStore {
    *
    * @example
    * var store = Kinvey.Store.getInstance('books');
-   * store.get('507f191e810c19729de860ea').then(function(book) {
+   * store.findById('507f191e810c19729de860ea').then(function(book) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -727,14 +727,14 @@ export default class DataStore {
    * var store = Kinvey.Store.getInstance('books');
    * var query = new Kinvey.Query();
    * query.equalTo('author', 'Kinvey');
-   * store.clear(query).then(function(count) {
+   * store.remove(query).then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
   remove(query, options = {}) {
-    log.debug(`Clearing the models in the ${this.name} collection.`, query);
+    log.debug(`Removing the models in the ${this.name} collection.`, query);
 
     options = assign({
       client: this.client,
@@ -776,7 +776,7 @@ export default class DataStore {
       if (response && response.isSuccess()) {
         if (!options.skipSync
             && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
-          return this._updateSync(response.data.documents, options).then(() => {
+          return this._updateSync(response.data.entities, options).then(() => {
             return response;
           });
         }
@@ -802,9 +802,9 @@ export default class DataStore {
     });
 
     promise.then(response => {
-      log.info(`Cleared the models in the ${this.name} collection.`, response);
+      log.info(`Removed the models in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to clear the models in the ${this.name} collection.`, err);
+      log.error(`Failed to remove the models in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -828,7 +828,7 @@ export default class DataStore {
    *
    * @example
    * var store = Kinvey.Store.getInstance('books');
-   * store.remove('507f191e810c19729de860ea').then(function(count) {
+   * store.removeById('507f191e810c19729de860ea').then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
@@ -877,7 +877,7 @@ export default class DataStore {
       if (response && response.isSuccess()) {
         if (!options.skipSync
             && (options.writePolicy === WritePolicy.LocalOnly || options.writePolicy === WritePolicy.LocalFirst)) {
-          return this._updateSync(response.data.documents, options).then(() => {
+          return this._updateSync(response.data.entities, options).then(() => {
             return response;
           });
         }
@@ -1168,7 +1168,7 @@ export default class DataStore {
           push: pushResponse,
           sync: {
             collection: this.name,
-            documents: pullResponse
+            entities: pullResponse
           }
         };
       });
@@ -1347,22 +1347,23 @@ export default class DataStore {
 
     if (!store) {
       store = new DataStore(name);
-      dataStoresMap.set(`${name}_${type}`, store);
-    }
 
-    switch (type) {
-      case StoreType.Sync:
-        store.readPolicy = ReadPolicy.LocalOnly;
-        store.writePolicy = WritePolicy.LocalOnly;
-        break;
-      case StoreType.Network:
-        store.readPolicy = ReadPolicy.NetworkOnly;
-        store.writePolicy = WritePolicy.NetworkOnly;
-        break;
-      case StoreType.Cache:
-      default:
-        store.readPolicy = ReadPolicy.LocalFirst;
-        store.writePolicy = WritePolicy.LocalFirst;
+      switch (type) {
+        case StoreType.Sync:
+          store.readPolicy = ReadPolicy.LocalOnly;
+          store.writePolicy = WritePolicy.LocalOnly;
+          break;
+        case StoreType.Network:
+          store.readPolicy = ReadPolicy.NetworkOnly;
+          store.writePolicy = WritePolicy.NetworkOnly;
+          break;
+        case StoreType.Cache:
+        default:
+          store.readPolicy = ReadPolicy.LocalFirst;
+          store.writePolicy = WritePolicy.LocalFirst;
+      }
+
+      dataStoresMap.set(`${name}_${type}`, store);
     }
 
     return store;

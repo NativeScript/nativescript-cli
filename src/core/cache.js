@@ -74,90 +74,78 @@ export default class Cache {
   }
 
   find(collection, query) {
-    const promise = this.db.find(collection).then(documents => {
+    const promise = this.db.find(collection).then(entities => {
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
 
-      if (documents.length > 0 && query) {
-        documents = query._process(documents);
+      if (entities.length > 0 && query) {
+        entities = query._process(entities);
       }
 
-      return documents;
+      return entities;
     });
 
     return promise;
   }
 
   count(collection, query) {
-    const promise = this.find(collection, query).then(documents => {
-      return documents.length;
+    const promise = this.find(collection, query).then(entities => {
+      return entities.length;
     });
 
     return promise;
   }
 
   group(collection, aggregation) {
-    const promise = this.find(collection).then(documents => {
+    const promise = this.find(collection).then(entities => {
       if (!(aggregation instanceof Aggregation)) {
         aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
       }
 
-      return aggregation.process(documents);
+      return aggregation.process(entities);
     });
 
     return promise;
   }
 
-  get(collection, id) {
+  findById(collection, id) {
     if (!isString(id)) {
       log.warn(`${id} is not a string. Casting to a string value.`, id);
       id = String(id);
     }
 
-    const promise = this.db.get(collection, id);
+    const promise = this.db.findById(collection, id);
     return promise;
   }
 
-  save(collection, doc) {
-    if (!doc) {
+  save(collection, entity) {
+    if (!entity) {
       return Promise.resolve(null);
     }
 
-    if (isArray(doc)) {
-      return this.saveBulk(collection, doc);
+    if (isArray(entity)) {
+      return this.saveBulk(collection, entity);
     }
 
-    const promise = this.db.save(collection, doc);
+    const promise = this.db.save(collection, entity);
     return promise;
   }
 
-  saveBulk(collection, docs = []) {
-    if (!docs) {
+  saveBulk(collection, entities = []) {
+    if (!entities) {
       return Promise.resolve(null);
     }
 
-    if (!isArray(docs)) {
-      return this.save(collection, docs);
+    if (!isArray(entities)) {
+      return this.save(collection, entities);
     }
 
-    const promise = this.db.saveBulk(collection, docs);
+    const promise = this.db.saveBulk(collection, entities);
     return promise;
   }
 
-  remove(collection, id) {
-    if (!id) {
-      return Promise.resolve({
-        count: 0,
-        documents: []
-      });
-    }
-
-    const promise = this.db.remove(collection, id);
-    return promise;
-  }
-
-  removeWhere(collection, query) {
+  remove(collection, query) {
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
@@ -167,23 +155,35 @@ export default class Cache {
       query.sort(null).limit(null).skip(0);
     }
 
-    const promise = this.find(collection, query).then(documents => {
-      const promises = documents.map(document => {
-        return this.remove(collection, document._id);
+    const promise = this.find(collection, query).then(entities => {
+      const promises = entities.map(entity => {
+        return this.removeById(collection, entity._id);
       });
 
       return Promise.all(promises);
     }).then(responses => {
       return reduce(responses, (result, response) => {
         result.count += response.count;
-        result.documents.concat(response.documents);
+        result.entities.concat(response.entities);
         return result;
       }, {
         count: 0,
-        documents: []
+        entities: []
       });
     });
 
+    return promise;
+  }
+
+  removeById(collection, id) {
+    if (!id) {
+      return Promise.resolve({
+        count: 0,
+        entities: []
+      });
+    }
+
+    const promise = this.db.removeById(collection, id);
     return promise;
   }
 }

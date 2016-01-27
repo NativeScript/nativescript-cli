@@ -27,7 +27,7 @@ export default class CacheMiddleware extends Middleware {
           } else if (id === '_group') {
             promise = cache.group(collection, data);
           } else {
-            promise = cache.get(collection, id);
+            promise = cache.findById(collection, id);
           }
         } else {
           promise = cache.find(collection, query);
@@ -36,9 +36,9 @@ export default class CacheMiddleware extends Middleware {
         promise = cache.save(collection, data);
       } else if (method === HttpMethod.DELETE) {
         if (id) {
-          promise = cache.remove(collection, id);
+          promise = cache.removeById(collection, id);
         } else {
-          promise = cache.removeWhere(collection, query);
+          promise = cache.remove(collection, query);
         }
       }
 
