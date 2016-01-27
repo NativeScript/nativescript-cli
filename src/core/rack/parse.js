@@ -1,5 +1,8 @@
 import Middleware from './middleware';
 
+/**
+ * @private
+ */
 export default class Parse extends Middleware {
   constructor(name = 'Kinvey Parser Middleware') {
     super(name);

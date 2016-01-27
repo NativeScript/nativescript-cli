@@ -3,6 +3,9 @@ import Middleware from './middleware';
 import { NoResponseError } from '../errors';
 import result from 'lodash/object/result';
 
+/**
+ * @private
+ */
 class Rack extends Middleware {
   constructor(name = 'Rack') {
     super(name);
@@ -149,6 +152,9 @@ class Rack extends Middleware {
   }
 }
 
+/**
+ * @private
+ */
 export default class KinveyRack extends Rack {
   execute(request) {
     request = result(request, 'toJSON', request);

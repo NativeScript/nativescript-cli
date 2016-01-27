@@ -1,5 +1,8 @@
 import Middleware from './middleware';
 
+/**
+ * @private
+ */
 export default class Serialize extends Middleware {
   constructor() {
     super('Kinvey Serializer Middleware');

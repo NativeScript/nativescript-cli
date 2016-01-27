@@ -15,6 +15,9 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
 const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
 
+/**
+ * @private
+ */
 export default class DeltaSetRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {

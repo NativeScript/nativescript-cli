@@ -2,6 +2,9 @@ import AsciiTree from './asciiTree';
 import UrlPattern from 'url-pattern';
 import { KinveyError } from '../errors';
 
+/**
+ * @private
+ */
 class Middleware {
   constructor(name = 'Middleware') {
     this.name = name;
@@ -26,6 +29,9 @@ class Middleware {
   }
 }
 
+/**
+ * @private
+ */
 export default class KinveyMiddleware extends Middleware {
   constructor(name = 'Kinvey Middleware') {
     super(name);

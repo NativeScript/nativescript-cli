@@ -20,6 +20,9 @@ if (typeof window !== 'undefined') {
   indexedDB = require('fake-indexeddb');
 }
 
+/**
+ * @private
+ */
 export default class IndexedDB {
   constructor(dbName = 'kinvey') {
     this.dbName = dbName;

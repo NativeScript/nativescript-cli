@@ -6,6 +6,9 @@ import forEach from 'lodash/collection/forEach';
 import isString from 'lodash/lang/isString';
 import isPlainObject from 'lodash/lang/isPlainObject';
 
+/**
+ * @private
+ */
 export default class Response {
   constructor(options = {}) {
     options = assign({

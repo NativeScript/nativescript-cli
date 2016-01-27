@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export function byteCount(str) {
   let count = 0;
   const stringLength = str.length;

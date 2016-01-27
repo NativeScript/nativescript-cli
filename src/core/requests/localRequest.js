@@ -1,6 +1,9 @@
 import Request from './request';
 import CacheRack from '../rack/cacheRack';
 
+/**
+ * @private
+ */
 export default class LocalRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {

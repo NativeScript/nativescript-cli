@@ -3,6 +3,9 @@ import Cache from '../cache';
 import { HttpMethod, StatusCode, CacheAdapter } from '../enums';
 const defaultAdapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory];
 
+/**
+ * @private
+ */
 export default class CacheMiddleware extends Middleware {
   constructor(adapters = defaultAdapters) {
     super('Kinvey Cache Middleware');

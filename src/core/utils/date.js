@@ -1,5 +1,8 @@
-// Patch JavaScript implementations lacking ISO-8601 date support.
-// http://jsfiddle.net/mplungjan/QkasD/
+/**
+ * @private
+ * Patch JavaScript implementations lacking ISO-8601 date support.
+ * http://jsfiddle.net/mplungjan/QkasD/
+ */
 export function fromISO8601(dateString) {
   const date = Date.parse(dateString);
 

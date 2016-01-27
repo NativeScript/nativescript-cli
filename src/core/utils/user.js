@@ -8,6 +8,9 @@ const activeUserSymbol = Symbol();
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 
+/**
+ * @private
+ */
 export default class UserUtils {
   static getActive(options = {}) {
     options = assign({

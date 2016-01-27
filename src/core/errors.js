@@ -1,6 +1,9 @@
 import util from 'util';
 import isFunction from 'lodash/lang/isFunction';
 
+/**
+ * @private
+ */
 Error.extend = function extend(name) {
   const SubType = function SubType(message, debug) {
     if (!(this instanceof SubType)) {

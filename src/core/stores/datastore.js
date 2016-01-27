@@ -57,6 +57,7 @@ export default class DataStore {
     this.writePolicy = WritePolicy.NetworkOnly;
 
     /**
+     * @private
      * @type {Client}
      */
     this.client = Client.sharedInstance();
@@ -73,7 +74,7 @@ export default class DataStore {
    * @param   {Client}   [client]     Client
    * @return  {string}                Pathname
    */
-  getPathname(client) {
+  _getPathname(client) {
     client = client || this.client;
     let pathname = `/${appdataNamespace}/${client.appKey}`;
 
@@ -109,7 +110,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query used to filter result.
    * @param   {Object}                [options]                                 Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -133,7 +133,6 @@ export default class DataStore {
     log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -149,10 +148,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: this.getPathname(options.client),
+        pathname: this._getPathname(this.client),
         query: query,
         timeout: options.timeout
       };
@@ -195,7 +194,6 @@ export default class DataStore {
    *
    * @param   {Aggregation}           aggregation                               Aggregation used to group entities.
    * @param   {Object}                [options]                                 Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -218,7 +216,6 @@ export default class DataStore {
     log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -235,10 +232,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: `${this.getPathname(options.client)}/_group`,
+        pathname: `${this._getPathname(this.client)}/_group`,
         data: aggregation.toJSON(),
         timeout: options.timeout
       };
@@ -281,7 +278,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query to count a subset of entities.
    * @param   {Object}                [options]                                 Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -305,7 +301,6 @@ export default class DataStore {
     log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -321,10 +316,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: `${this.getPathname(options.client)}/_count`,
+        pathname: `${this._getPathname(this.client)}/_count`,
         query: query,
         timeout: options.timeout
       };
@@ -365,7 +360,6 @@ export default class DataStore {
    *
    * @param   {string}                id                                        Document Id
    * @param   {Object}                [options]                                 Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -392,7 +386,6 @@ export default class DataStore {
     log.debug(`Retrieving a entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -404,10 +397,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: `${this.getPathname(options.client)}/${id}`,
+        pathname: `${this._getPathname(this.client)}/${id}`,
         timeout: options.timeout
       };
 
@@ -447,7 +440,6 @@ export default class DataStore {
    *
    * @param   {Object|Array}          doc                                       Document or entities to save.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -480,7 +472,6 @@ export default class DataStore {
     log.debug(`Saving the entity(s) to the ${this.name} collection.`, doc);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       writePolicy: this.writePolicy,
@@ -492,10 +483,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.POST,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: this.getPathname(options.client),
+        pathname: this._getPathname(this.client),
         data: doc,
         timeout: options.timeout
       };
@@ -579,7 +570,6 @@ export default class DataStore {
    *
    * @param   {Model|Array}           doc                                       Document or entities to update.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -612,7 +602,6 @@ export default class DataStore {
     log.debug(`Updating the entity(s) to the ${this.name} collection.`, doc);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       writePolicy: this.writePolicy,
@@ -624,10 +613,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.PUT,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: `${this.getPathname(options.client)}/${doc._id}`,
+        pathname: `${this._getPathname(this.client)}/${doc._id}`,
         data: doc,
         timeout: options.timeout
       };
@@ -713,7 +702,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -737,7 +725,6 @@ export default class DataStore {
     log.debug(`Removing the models in the ${this.name} collection.`, query);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       writePolicy: this.writePolicy,
@@ -753,10 +740,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.DELETE,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: this.getPathname(options.client),
+        pathname: this._getPathname(this.client),
         query: query,
         timeout: options.timeout
       };
@@ -816,7 +803,6 @@ export default class DataStore {
    *
    * @param   {string}                id                                        Document Id
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -843,7 +829,6 @@ export default class DataStore {
     log.debug(`Removing a model in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       writePolicy: this.writePolicy,
@@ -855,10 +840,10 @@ export default class DataStore {
       let request;
       const requestOptions = {
         method: HttpMethod.DELETE,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: `${this.getPathname(options.client)}/${id}`,
+        pathname: `${this._getPathname(this.client)}/${id}`,
         timeout: options.timeout
       };
 
@@ -917,7 +902,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query to push a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -933,7 +917,6 @@ export default class DataStore {
    */
   push(options = {}) {
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       handler() {}
@@ -942,9 +925,9 @@ export default class DataStore {
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
-        pathname: this._getSyncPathname(options.client),
+        pathname: this._getSyncPathname(this.client),
         timeout: options.timeout
       });
       return request.execute();
@@ -1078,9 +1061,9 @@ export default class DataStore {
           data.docs = docs;
           const request = new LocalRequest({
             method: HttpMethod.PUT,
-            client: options.client,
+            client: this.client,
             properties: options.properties,
-            pathname: this._getSyncPathname(options.client),
+            pathname: this._getSyncPathname(this.client),
             data: data,
             timeout: options.timeout
           });
@@ -1112,7 +1095,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -1147,7 +1129,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -1183,7 +1164,6 @@ export default class DataStore {
    *
    * @param   {Query}                 [query]                                   Query to count a subset of items.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -1201,7 +1181,6 @@ export default class DataStore {
    */
   syncCount(query, options = {}) {
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -1215,10 +1194,10 @@ export default class DataStore {
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: this._getSyncPathname(options.client),
+        pathname: this._getSyncPathname(this.client),
         query: query,
         timeout: options.timeout
       });
@@ -1245,7 +1224,6 @@ export default class DataStore {
    *
    * @param   {Object|Array}          docs                                      Document(s) to add to the sync table.
    * @param   {Object}                options                                   Options
-   * @param   {Client}                [options.client]                          Client to use.
    * @param   {Properties}            [options.properties]                      Custom properties to send with
    *                                                                            the request.
    * @param   {Number}                [options.timeout]                         Timeout for the request.
@@ -1261,7 +1239,6 @@ export default class DataStore {
     }
 
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       ttl: this.ttl,
@@ -1271,10 +1248,10 @@ export default class DataStore {
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
-        client: options.client,
+        client: this.client,
         properties: options.properties,
         auth: Auth.default,
-        pathname: this._getSyncPathname(options.client),
+        pathname: this._getSyncPathname(this.client),
         timeout: options.timeout
       });
       return request.execute();
@@ -1317,10 +1294,10 @@ export default class DataStore {
 
         const request = new LocalRequest({
           method: HttpMethod.PUT,
-          client: options.client,
+          client: this.client,
           properties: options.properties,
           auth: options.auth,
-          pathname: this._getSyncPathname(options.client),
+          pathname: this._getSyncPathname(this.client),
           data: syncData,
           timeout: options.timeout
         });

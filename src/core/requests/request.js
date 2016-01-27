@@ -13,6 +13,9 @@ import isPlainObject from 'lodash/lang/isPlainObject';
 import isFunction from 'lodash/lang/isFunction';
 import qs from 'qs';
 
+/**
+ * @private
+ */
 class Request {
   constructor(options = {}) {
     options = assign({
@@ -209,6 +212,9 @@ class Request {
   }
 }
 
+/**
+ * @private
+ */
 export default class KinveyRequest extends Request {
   constructor(options = {}) {
     super(options);

@@ -4,6 +4,9 @@ if (typeof window !== 'undefined') {
   localStorage = window.localStorage;
 }
 
+/**
+ * @private
+ */
 export default class LocalStorage {
   loadDatabase(dbName, callback) {
     callback(localStorage.getItem(dbName));

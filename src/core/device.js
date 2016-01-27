@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export default class Device {
   get os() {
     let name = 'mobileweb';

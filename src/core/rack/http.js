@@ -6,6 +6,9 @@ import result from 'lodash/object/result';
 import isEmpty from 'lodash/lang/isEmpty';
 import isString from 'lodash/lang/isString';
 
+/**
+ * @private
+ */
 export default class Http extends Middleware {
   constructor() {
     super('Kinvey Http Middleware');

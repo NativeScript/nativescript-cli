@@ -4,6 +4,9 @@ import Http from './http';
 import Parse from './parse';
 const sharedInstanceSymbol = Symbol();
 
+/**
+ * @private
+ */
 export default class NetworkRack extends Rack {
   constructor(name = 'Kinvey Network Rack') {
     super(name);

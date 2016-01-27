@@ -1,3 +1,6 @@
+/**
+ * Enum for Mobile Identity Connect authorization grants.
+ */
 const AuthorizationGrant = {
   AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
   AuthorizationCodeAPI: 'AuthorizationCodeAPI'
@@ -5,6 +8,10 @@ const AuthorizationGrant = {
 Object.freeze(AuthorizationGrant);
 export { AuthorizationGrant };
 
+/**
+ * @private
+ * Enum for Cache Adapters.
+ */
 const CacheAdapter = {
   IndexedDB: 'IndexedDB',
   LocalStorage: 'LocalStorage',
@@ -14,6 +21,9 @@ const CacheAdapter = {
 Object.freeze(CacheAdapter);
 export { CacheAdapter };
 
+/**
+ * Enum for Read Policies.
+ */
 const ReadPolicy = {
   LocalOnly: 'LocalOnly',
   LocalFirst: 'LocalFirst',
@@ -23,6 +33,10 @@ const ReadPolicy = {
 Object.freeze(ReadPolicy);
 export { ReadPolicy };
 
+/**
+ * @private
+ * Enum for Http Methods.
+ */
 const HttpMethod = {
   GET: 'GET',
   POST: 'POST',
@@ -33,6 +47,10 @@ const HttpMethod = {
 Object.freeze(HttpMethod);
 export { HttpMethod };
 
+/**
+ * @private
+ * Enum for Rack types.
+ */
 const RackType = {
   Network: 'Network',
   Cache: 'Cache'
@@ -40,6 +58,10 @@ const RackType = {
 Object.freeze(RackType);
 export { RackType };
 
+/**
+ * @private
+ * Enum for Response types.
+ */
 const ResponseType = {
   Blob: 'blob',
   Document: 'document',
@@ -50,6 +72,9 @@ const ResponseType = {
 Object.freeze(ResponseType);
 export { ResponseType };
 
+/**
+ * Enum for Social Identities.
+ */
 const SocialIdentity = {
   Facebook: 'facebook',
   Google: 'google',
@@ -58,6 +83,10 @@ const SocialIdentity = {
 Object.freeze(SocialIdentity);
 export { SocialIdentity };
 
+/**
+ * @provate
+ * Enum for Status Codes.
+ */
 const StatusCode = {
   Ok: 200,
   Created: 201,
@@ -69,6 +98,9 @@ const StatusCode = {
 Object.freeze(StatusCode);
 export { StatusCode };
 
+/**
+ * Enum for DataStore types.
+ */
 const StoreType = {
   Sync: 'Sync',
   Cache: 'Cache',
@@ -77,6 +109,10 @@ const StoreType = {
 Object.freeze(StoreType);
 export { StoreType };
 
+/**
+ * @private
+ * Enum for Write Policies.
+ */
 const WritePolicy = {
   LocalOnly: 'LocalOnly',
   LocalFirst: 'LocalFirst',

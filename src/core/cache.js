@@ -13,6 +13,9 @@ import isString from 'lodash/lang/isString';
 import isArray from 'lodash/lang/isArray';
 const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
+/**
+ * @private
+ */
 export default class Cache {
   constructor(dbName = 'kinvey', adapters = [CacheAdapter.Memory]) {
     if (!isArray(adapters)) {

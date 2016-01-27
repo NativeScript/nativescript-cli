@@ -4,6 +4,9 @@ import { EventEmitter } from 'events';
 import bind from 'lodash/function/bind';
 const privatePopupSymbol = Symbol();
 
+/**
+ * @private
+ */
 class PrivatePopup extends EventEmitter {
   constructor(url = '/') {
     super();
@@ -139,6 +142,9 @@ class PrivatePopup extends EventEmitter {
   }
 }
 
+/**
+ * @private
+ */
 export default class Popup {
   constructor(url) {
     this[privatePopupSymbol] = new PrivatePopup(url);

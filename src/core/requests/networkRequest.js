@@ -1,6 +1,9 @@
 import Request from './request';
 import NetworkRack from '../rack/networkRack';
 
+/**
+ * @private
+ */
 export default class NetworkRequest extends Request {
   execute() {
     const promise = super.execute().then(() => {

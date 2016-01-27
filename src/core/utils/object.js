@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export function nested(document, dotProperty, value) {
   if (!dotProperty) {// Top-level document.
     document = typeof value === 'undefined' ? document : value;
@@ -22,6 +25,9 @@ export function nested(document, dotProperty, value) {
   return null;// Property not found.
 }
 
+/**
+ * @private
+ */
 export function isDefined(obj) {
   return obj !== undefined && obj !== null;
 }

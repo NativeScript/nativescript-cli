@@ -5,6 +5,7 @@ import assign from 'lodash/object/assign';
 const sharedInstanceSymbol = Symbol();
 
 /**
+ * @private
  * The Client class stores information regarding your application. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  *

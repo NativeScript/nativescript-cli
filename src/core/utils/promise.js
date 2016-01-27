@@ -1,3 +1,6 @@
+/**
+ * @private
+ */
 export function createQueryablePromise(promise) {
   // Don't create a wrapper for promises that can already be queried.
   if (promise.isResolved) return promise;
