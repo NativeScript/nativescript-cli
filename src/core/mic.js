@@ -9,8 +9,6 @@ import assign from 'lodash/object/assign';
 import isString from 'lodash/lang/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
-// const authProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
-// const sharedInstanceSymbol = Symbol();
 
 /**
  * @private

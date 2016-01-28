@@ -3,12 +3,21 @@ import isPlainObject from 'lodash/lang/isPlainObject';
 import clone from 'lodash/lang/clone';
 const privateAclSymbol = Symbol();
 
+/**
+ * @private
+ */
 class PrivateAcl {
   constructor(acl = {}) {
     if (!isPlainObject(acl)) {
       throw new KinveyError('acl argument must be an object');
     }
 
+    /**
+     * The acl properties.
+     *
+     * @private
+     * @type {Object}
+     */
     this.acl = acl;
   }
 
@@ -153,87 +162,203 @@ class PrivateAcl {
   }
 }
 
+/**
+ * Wrapper for reading and setting permissions on an entity level.
+ *
+ * @example
+ * var entity = { _acl: {} };
+ * var acl = new Kinvey.Acl(entity);
+ */
 export default class Acl {
   constructor(acl) {
     this[privateAclSymbol] = new PrivateAcl(acl);
   }
 
+  /**
+   * Returns the user id of the user that originally created the entity.
+   *
+   * @returns {?string} The user id, or `null` if not set.
+   */
   get creator() {
     return this[privateAclSymbol].creator;
   }
 
+  /**
+   * Returns the list of users that are explicitly allowed to read the entity.
+   *
+   * @returns {Array} The list of users.
+   */
   get readers() {
     return this[privateAclSymbol].readers;
   }
 
+  /**
+   * Returns the list of user groups that are explicitly allowed to read the
+   * entity.
+   *
+   * @returns {Array} The list of user groups.
+   */
   get readerGroups() {
     return this[privateAclSymbol].readerGroups;
   }
 
+  /**
+   * Returns the list of user groups that are explicitly allowed to read the
+   * entity.
+   *
+   * @returns {Array} The list of user groups.
+   */
   get writerGroups() {
     return this[privateAclSymbol].writerGroups;
   }
 
+  /**
+   * Returns the list of users that are explicitly allowed to modify the
+   * entity.
+   *
+   * @returns {Array} The list of users.
+   */
   get writers() {
     return this[privateAclSymbol].writers;
   }
 
+  /**
+   * Specifies whether the entity is globally readable.
+   *
+   * @param {boolean} [gr=true] Make the entity globally readable.
+   */
   set globallyReadable(gr) {
     this[privateAclSymbol].globallyReadable = gr;
   }
 
+  /**
+   * Specifies whether the entity is globally writable.
+   *
+   * @param {boolean} [gw=true] Make the entity globally writable.
+   */
   set globallyWritable(gw) {
     this[privateAclSymbol].globallyWritable = gw;
   }
 
+  /**
+   * Adds a user to the list of users that are explicitly allowed to read the
+   * entity.
+   *
+   * @param   {string}  user  The user id.
+   * @returns {Acl}           The ACL.
+   */
   addReader(user) {
     this[privateAclSymbol].addReader(user);
     return this;
   }
 
+  /**
+   * Adds a user group to the list of user groups that are explicitly allowed
+   * to read the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
   addReaderGroup(group) {
     this[privateAclSymbol].addReaderGroup(group);
     return this;
   }
 
+  /**
+   * Adds a user to the list of users that are explicitly allowed to modify the
+   * entity.
+   *
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
+   */
   addWriter(user) {
     this[privateAclSymbol].addWriter(user);
     return this;
   }
 
+  /**
+   * Adds a user group to the list of user groups that are explicitly allowed
+   * to modify the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
   addWriterGroup(group) {
     this[privateAclSymbol].addWriterGroup(group);
     return this;
   }
 
+  /**
+   * Returns whether the entity is globally readable.
+   *
+   * @returns {boolean}
+   */
   isGloballyReadable() {
     return this[privateAclSymbol].isGloballyReadable();
   }
 
+  /**
+   * Returns whether the entity is globally writable.
+   *
+   * @returns {boolean}
+   */
   isGloballyWritable() {
     return this[privateAclSymbol].isGloballyWritable();
   }
 
+  /**
+   * Removes a user from the list of users that are explicitly allowed to read
+   * the entity.
+   *
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
+   */
   removeReader(user) {
     this[privateAclSymbol].removeReader(user);
     return this;
   }
 
+  /**
+   * Removes a user group from the list of user groups that are explicitly
+   * allowed to read the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
   removeReaderGroup(group) {
     this[privateAclSymbol].removeReaderGroup(group);
     return this;
   }
 
+  /**
+   * Removes a user from the list of users that are explicitly allowed to
+   * modify the entity.
+   *
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
+   */
   removeWriter(user) {
     this[privateAclSymbol].removeWriter(user);
     return this;
   }
 
+  /**
+   * Removes a user group from the list of user groups that are explicitly
+   * allowed to modify the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
   removeWriterGroup(group) {
     this[privateAclSymbol].removeWriterGroup(group);
     return this;
   }
 
+  /**
+   * Returns JSON representation of the entity ACL.
+   *
+   * @returns {Object} The entity ACL.
+   */
   toJSON() {
     return this[privateAclSymbol].toJSON();
   }

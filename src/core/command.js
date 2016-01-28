@@ -10,7 +10,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * Executes a custom command.
  */
-const Command = {
+export default class Command {
   /**
    * Execute a custom command. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.
@@ -30,7 +30,7 @@ const Command = {
    *   ...
    * });
    */
-  execute(command, args, options = {}) {
+  static execute(command, args, options = {}) {
     if (!command) {
       throw new KinveyError('A command is required.');
     }
@@ -63,6 +63,4 @@ const Command = {
     });
     return promise;
   }
-};
-
-export default Command;
+}

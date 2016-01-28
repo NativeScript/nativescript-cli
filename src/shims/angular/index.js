@@ -24,4 +24,7 @@ ngKinvey.provider('$kinvey', function () {
   }];
 });
 
+/**
+ * @private
+ */
 export default ngKinvey;

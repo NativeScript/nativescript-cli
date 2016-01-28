@@ -12,7 +12,7 @@ import Sync from './core/sync';
 import User from './core/models/user';
 import Users from './core/stores/users';
 
-class Kinvey {
+export default class Kinvey {
   /**
    * Initializes the library with your app's information.
    *
@@ -56,5 +56,3 @@ Kinvey.Users = Users;
 ['AuthorizationGrant', 'ReadPolicy', 'SocialIdentity', 'DataStoreType'].forEach(enumKey => {
   Kinvey[enumKey] = Enums[enumKey];
 });
-
-export default Kinvey;

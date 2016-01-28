@@ -1,8 +1,8 @@
 import { KinveyError } from './errors';
 import { EventEmitter } from 'events';
-import Request from './requests/networkRequest';
+import NetworkRequest from './requests/networkRequest';
 import DataStore from './stores/datastore';
-import { WritePolicy, ReadPolicy, HttpMethod } from './enums';
+import { HttpMethod, DataStoreType } from './enums';
 import User from './models/user';
 import Client from './client';
 import Query from './query';
@@ -11,54 +11,45 @@ import Device from './device';
 import assign from 'lodash/object/assign';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
-const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey-device';
+const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey_device';
 const emitter = new EventEmitter();
 const Titanium = global.Titanium;
 
-export default class Push {
-  static listenerCount(type) {
-    return emitter.listenerCount(type);
-  }
+const Push = {
+  listeners() {
+    return emitter.listeners(notificationEvent);
+  },
 
-  static listeners(event) {
-    return emitter.listeners(event);
-  }
+  onNotification(listener) {
+    return emitter.on(notificationEvent, listener);
+  },
 
-  static getMaxListeners() {
-    return emitter.getMaxListeners();
-  }
+  onceNotification(listener) {
+    return emitter.once(notificationEvent, listener);
+  },
 
-  static setMaxListeners(n) {
-    return emitter.setMaxListeners(n);
-  }
+  removeListener(listener) {
+    return emitter.removeListener(notificationEvent, listener);
+  },
 
-  static addListener(event, listener) {
-    return emitter.addListener(event, listener);
-  }
+  removeAllListeners() {
+    return emitter.removeAllListeners(notificationEvent);
+  },
 
-  static on(event, listener) {
-    return emitter.on(event, listener);
-  }
+  init(options = {}) {
+    const device = new Device();
 
-  static once(event, listener) {
-    return emitter.once(event, listener);
-  }
+    if (!device.isCordova() || !device.isTitanium()) {
+      return Promise.reject(new KinveyError(`Kinvey currently only supports push ` +
+        `notifications on PhoneGap/Cordova and Titanium environments.`));
+    }
 
-  static emit(event, ...args) {
-    return emitter.emit(event, args);
-  }
+    if (device.platform.name !== 'android' || device.platform.name !== 'ios') {
+      return Promise.reject(new KinveyError(`Kinvey currently does not support ` +
+        `push notifications on ${device.platform.name}.`));
+    }
 
-  static removeAllListeners(event) {
-    return emitter.removeAllListeners(event);
-  }
-
-  static removeListener(event, listener) {
-    return emitter.removeListener(event, listener);
-  }
-
-  static register(options = {}) {
     options = assign({
-      client: Client.sharedInstance(),
       android: {
         senderID: undefined
       },
@@ -69,24 +60,12 @@ export default class Push {
       }
     }, options);
 
-    const device = new Device();
-    const platform = device.platform;
-
-    if (!device.isCordova() || !device.isTitanium()) {
-      return Promise.reject(new KinveyError(`Kinvey currently only supports push ` +
-        `notifications on PhoneGap/Cordova and Titanium environments.`));
-    }
-
-    if (platform.name !== 'android' || platform.name !== 'ios') {
-      return Promise.reject(new KinveyError(`Kinvey currently does not support ` +
-        `push notifications on ${platform.name}.`));
-    }
-
     const promise = new Promise((resolve, reject) => {
       if (device.isCordova()) {
         if (typeof global.PushNotification === 'undefined') {
           return reject(new KinveyError('PhoneGap Push Notification Plugin is not installed.',
-            'Please refer to https://github.com/KinveyApps/phonegap-plugin-push#installation.'));
+            'Please refer to http://devcenter.kinvey.com/phonegap/guides/push#ProjectSetUp for ' +
+            'setting up your project.'));
         }
 
         const push = global.PushNotification.init(options);
@@ -104,8 +83,8 @@ export default class Push {
             'for push notifications.', error));
         });
       } else if (device.isTitanium()) {
-        if (platform.name === 'ios') {
-          if (platform.version.split('.')[0] >= 8) {
+        if (device.platform.name === 'ios') {
+          if (device.platform.version.split('.')[0] >= 8) {
             Titanium.App.iOS.addEventListener('usernotificationsettings', function registerForPush() {
               Titanium.App.iOS.removeEventListener('usernotificationsettings', registerForPush);
               Titanium.Network.registerForPushNotifications({
@@ -172,7 +151,7 @@ export default class Push {
               }
             });
           }
-        } else if (platform.name === 'android') {
+        } else if (device.platform.name === 'android') {
           global.CloudPush.retrieveDeviceToken({
             success(e) {
               resolve(e.deviceToken);
@@ -194,25 +173,25 @@ export default class Push {
       }
 
       return User.getActive(options).then(user => {
-        const request = new Request({
-          auth: user ? Auth.session : Auth.master,
-          client: options.client,
+        const client = Client.sharedInstance();
+        const request = new NetworkRequest({
           method: HttpMethod.POST,
-          pathname: `/${pushNamespace}/${options.client.appId}/register-device`,
-          writePolicy: WritePolicy.Network,
+          client: client,
+          properties: options.properties,
+          auth: user ? Auth.session : Auth.master,
+          pathname: `/${pushNamespace}/${client.appKey}/register-device`,
           data: {
-            platform: platform.name,
+            platform: device.platform.name,
             framework: device.isCordova() ? 'phonegap' : 'titanium',
             deviceId: deviceId,
             userId: user ? null : options.userId
-          }
+          },
+          timeout: options.timeout
         });
         return request.execute();
       }).then(result => {
-        const store = new DataStore(deviceCollection, {
-          readPolicy: ReadPolicy.LocalOnly
-        });
-        return store.update({
+        const store = DataStore.getInstance(deviceCollection, DataStoreType.Sync);
+        return store.save({
           _id: deviceId,
           registered: true
         }).then(() => {
@@ -222,9 +201,9 @@ export default class Push {
     });
 
     return promise;
-  }
+  },
 
-  static unregister(options = {}) {
+  unregister(options = {}) {
     options = assign({
       client: Client.sharedInstance()
     }, options);
@@ -242,14 +221,12 @@ export default class Push {
         'push notifications on ${platform.name}.`));
     }
 
-    const store = new DataStore(deviceCollection, {
-      readPolicy: ReadPolicy.LocalOnly
-    });
+    const store = DataStore.getInstance(deviceCollection, DataStoreType.Sync);
     const query = new Query();
     query.equalsTo('registered', true);
-    const promise = store.find(query).then(models => {
-      if (models.length >= 0) {
-        return models[0].id;
+    const promise = store.find(query).then(data => {
+      if (data.length === 1) {
+        return data[0]._id;
       }
 
       return undefined;
@@ -259,22 +236,24 @@ export default class Push {
       }
 
       return User.getActive(options).then(user => {
-        const request = new Request({
-          auth: user ? Auth.session : Auth.master,
-          client: options.client,
+        const client = Client.sharedInstance();
+        const request = new NetworkRequest({
           method: HttpMethod.POST,
-          pathname: `/${pushNamespace}/${options.client.appId}/unregister-device`,
-          writePolicy: WritePolicy.Network,
+          client: client,
+          properties: options.properties,
+          auth: user ? Auth.session : Auth.master,
+          pathname: `/${pushNamespace}/${client.appKey}/unregister-device`,
           data: {
             platform: platform.name,
             framework: device.isCordova() ? 'phonegap' : 'titanium',
             deviceId: deviceId,
             userId: user ? null : options.userId
-          }
+          },
+          timeout: options.timeout
         });
         return request.execute();
       }).then(result => {
-        return store.delete(deviceId).then(() => {
+        return store.removeById(deviceId).then(() => {
           return result;
         });
       });
@@ -282,8 +261,4 @@ export default class Push {
 
     return promise;
   }
-
-  static get NOTIFICATION_EVENT() {
-    return notificationEvent;
-  }
-}
+};

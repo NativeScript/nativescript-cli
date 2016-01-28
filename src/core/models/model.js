@@ -10,6 +10,9 @@ const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
+/**
+ * @private
+ */
 export default class Model {
   constructor(attributes = {}) {
     this.client = Client.sharedInstance();

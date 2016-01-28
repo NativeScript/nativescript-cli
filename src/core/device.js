@@ -59,6 +59,13 @@ export default class Device {
     };
   }
 
+  get library() {
+    return {
+      build: process.env.KINVEY_PLATFORM_ENV || 'html5',
+      version: packageJSON.version
+    };
+  }
+
   isCordova() {
     try {
       return typeof global.cordova !== 'undefined' && typeof global.device !== 'undefined';
@@ -101,10 +108,7 @@ export default class Device {
     return {
       os: this.os,
       platform: this.platform,
-      library: {
-        build: process.env.KINVEY_PLATFORM_ENV || 'html5',
-        version: packageJSON.version
-      }
+      library: this.library
     };
   }
 }
