@@ -1,8 +1,8 @@
 import { KinveyError } from './errors';
 import { EventEmitter } from 'events';
 import Request from './requests/networkRequest';
-import LocalStore from './stores/store';
-import { WritePolicy, ReadPolicy as DataPolicy, HttpMethod } from './enums';
+import DataStore from './stores/datastore';
+import { WritePolicy, ReadPolicy, HttpMethod } from './enums';
 import User from './models/user';
 import Client from './client';
 import Query from './query';
@@ -209,8 +209,8 @@ export default class Push {
         });
         return request.execute();
       }).then(result => {
-        const store = new LocalStore(deviceCollection, {
-          dataPolicy: DataPolicy.LocalOnly
+        const store = new DataStore(deviceCollection, {
+          readPolicy: ReadPolicy.LocalOnly
         });
         return store.update({
           _id: deviceId,
@@ -242,8 +242,8 @@ export default class Push {
         'push notifications on ${platform.name}.`));
     }
 
-    const store = new LocalStore(deviceCollection, {
-      dataPolicy: DataPolicy.LocalOnly
+    const store = new DataStore(deviceCollection, {
+      readPolicy: ReadPolicy.LocalOnly
     });
     const query = new Query();
     query.equalsTo('registered', true);

@@ -29,7 +29,8 @@ gulp.task('watch', function cb() {
 
 // Release
 gulp.task('release', function(done) {
-  runSequence(['e2e', 'clone'], ['bump', 'build'], 'commit', 'tag', ['push', 'uploadS3'], done);
+  // runSequence(['e2e', 'clone'], ['bump', 'build'], 'commit', 'tag', ['push', 'uploadS3'], done);
+  runSequence(['clone'], ['bump', 'build'], 'commit', 'tag', ['push'], done);
 });
 gulp.task('release-legacy', function(done) {
   runSequence(['e2e', 'clone'], ['bump', 'build-legacy'], 'commit', 'tag', ['push', 'uploadS3'], done);

@@ -1,4 +1,4 @@
-import Store from './stores/store';
+import DataStore from './stores/datastore';
 import Query from './query';
 import { DataPolicy } from './enums';
 import reduce from 'lodash/collection/reduce';
@@ -21,7 +21,7 @@ export default class Sync {
   static count(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncStore = new Store(syncStoreName, options);
+    const syncStore = new DataStore(syncStoreName, options);
     const promise = syncStore.find(null, options).then(syncModels => {
       return reduce(syncModels, function (result, syncModel) {
         return result + syncModel.get('size');
@@ -36,12 +36,12 @@ export default class Sync {
   static push(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncStore = new Store(syncStoreName, options);
+    const syncStore = new DataStore(syncStoreName, options);
     const query = new Query();
     query.greaterThan('size', 0);
     const promise = syncStore.find(query, options).then(syncModels => {
       const promises = syncModels.map(syncModel => {
-        const store = new Store(syncModel.id, options);
+        const store = new DataStore(syncModel.id, options);
         return store.push();
       });
 
@@ -54,10 +54,10 @@ export default class Sync {
   static sync(options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
 
-    const syncStore = new Store(syncStoreName, options);
+    const syncStore = new DataStore(syncStoreName, options);
     const promise = syncStore.find(null, options).then(syncModels => {
       const promises = syncModels.map(syncModel => {
-        const store = new Store(syncModel.id, options);
+        const store = new DataStore(syncModel.id, options);
         return store.sync();
       });
 
@@ -69,7 +69,7 @@ export default class Sync {
 
   static clear(query, options = {}) {
     options.dataPolicy = DataPolicy.LocalOnly;
-    const syncStore = new Store(syncStoreName, options);
+    const syncStore = new DataStore(syncStoreName, options);
     const promise = syncStore.clear(query, options);
     return promise;
   }

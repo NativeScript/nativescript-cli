@@ -1,6 +1,7 @@
 const path = require('path');
 const config = {
-  legacy: {}
+  legacy: {},
+  git: 'git@github.com:Kinvey/kinvey-angular-lib.git'
 };
 
 config.browserify = {

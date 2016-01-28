@@ -1,11 +1,10 @@
 import Acl from '../acl';
-import Kmd from '../kmd';
+import Metadata from '../metadata';
 import Client from '../client';
 import defaults from 'lodash/object/defaults';
 import result from 'lodash/object/result';
 import clone from 'lodash/lang/clone';
 import assign from 'lodash/object/assign';
-// import uniqueId from 'lodash/utility/uniqueId';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
@@ -49,28 +48,20 @@ export default class Model {
     this.kmd = kmd;
   }
 
-  get kmd() {
-    return new Kmd(this.get(kmdAttribute));
+  get metadata() {
+    return new Metadata(this.get(kmdAttribute));
   }
 
   get _kmd() {
-    return this.kmd;
-  }
-
-  set kmd(kmd) {
-    this.set(kmdAttribute, result(kmd, 'toJSON', kmd));
+    return this.get(kmdAttribute);
   }
 
   set _kmd(kmd) {
-    this.kmd = kmd;
+    this.set(kmdAttribute, result(kmd, 'toJSON', kmd));
   }
 
   get defaults() {
     const defaults = {};
-    defaults[kmdAttribute] = {
-      ect: new Date().toISOString(),
-      lmt: new Date().toISOString()
-    };
     return defaults;
   }
 
@@ -123,21 +114,6 @@ export default class Model {
   }
 
   toJSON() {
-    const json = {
-      _acl: this.acl.toJSON(),
-      _kmd: this.kmd.toJSON()
-    };
-
-    for (const key in this.attributes) {
-      if (this.attributes.hasOwnProperty(key)) {
-        if (key === aclAttribute || key === kmdAttribute) {
-          continue;
-        }
-
-        json[key] = this.attributes[key];
-      }
-    }
-
-    return clone(json, true);
+    return clone(this.attributes, true);
   }
 }

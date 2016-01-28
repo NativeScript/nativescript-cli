@@ -101,13 +101,13 @@ export { StatusCode };
 /**
  * Enum for DataStore types.
  */
-const StoreType = {
+const DataStoreType = {
   Sync: 'Sync',
   Cache: 'Cache',
   Network: 'Network'
 };
-Object.freeze(StoreType);
-export { StoreType };
+Object.freeze(DataStoreType);
+export { DataStoreType };
 
 /**
  * @private

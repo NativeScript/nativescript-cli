@@ -1,8 +1,8 @@
 import clone from 'lodash/lang/clone';
 import isPlainObject from 'lodash/lang/isPlainObject';
-const privateKmdSymbol = Symbol();
+const privateMetadataSymbol = Symbol();
 
-class PrivateKmd {
+class PrivateMetadata {
   constructor(kmd = {}) {
     if (!isPlainObject(kmd)) {
       throw new Error('kmd argument must be an object');
@@ -44,21 +44,21 @@ class PrivateKmd {
   }
 }
 
-export default class Kmd {
+export default class Metadata {
   constructor(kmd) {
-    this[privateKmdSymbol] = new PrivateKmd(kmd);
+    this[privateMetadataSymbol] = new PrivateMetadata(kmd);
   }
 
   get createdAt() {
-    return this[privateKmdSymbol].createdAt;
+    return this[privateMetadataSymbol].createdAt;
   }
 
   get emailVerification() {
-    return this[privateKmdSymbol].emailVerification;
+    return this[privateMetadataSymbol].emailVerification;
   }
 
   get lastModified() {
-    return this[privateKmdSymbol].lastModified;
+    return this[privateMetadataSymbol].lastModified;
   }
 
   get lmt() {
@@ -66,14 +66,14 @@ export default class Kmd {
   }
 
   get authtoken() {
-    return this[privateKmdSymbol].authtoken;
+    return this[privateMetadataSymbol].authtoken;
   }
 
   set authtoken(authtoken) {
-    this[privateKmdSymbol].authtoken = authtoken;
+    this[privateMetadataSymbol].authtoken = authtoken;
   }
 
   toJSON() {
-    return this[privateKmdSymbol].toJSON();
+    return this[privateMetadataSymbol].toJSON();
   }
 }

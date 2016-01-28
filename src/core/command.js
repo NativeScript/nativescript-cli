@@ -9,65 +9,37 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**
  * Executes a custom command.
- *
- * @example
- * var command = new Kinvey.Command('myCustomEndpoint');
  */
-export default class Command {
+const Command = {
   /**
-   * Creates a new instance of the Command class.
-   *
-   * @param   {string}    endpoint    The endpoint
-   *
-   * @throws  {KinveyError}   If an endpoint is not provided.
-   * @throws  {KinveyError}   If the endpoint provided is not a string.
-   */
-  constructor(endpoint) {
-    if (!endpoint) {
-      throw new KinveyError('An endpoint is required.');
-    }
-
-    if (!isString(endpoint)) {
-      throw new KinveyError('Endpoint must be a string.');
-    }
-
-    /**
-     * @type {string}
-     */
-    this.endpoint = endpoint;
-
-    /**
-     * @type {Client}
-     */
-    this.client = Client.sharedInstance();
-  }
-
-  /**
-   * The pathname for the command.
-   *
-   * @param   {Client}   [client]     Client
-   * @return  {string}                Pathname
-   */
-  getPathname(client) {
-    client = client || this.client;
-    return `/${rpcNamespace}/${client.appKey}/custom/${this.endpoint}`;
-  }
-
-  /**
-   * Execute the custom command. A promise will be returned that will be resolved
+   * Execute a custom command. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.
    *
-   * @param  {Object}           [args]                            Command arguments
-   * @param  {Object}           [options]                         Options
-   * @param   {Client}          [options.client]                  Client to use.
+   * @param   {String}          command                           Command to execute.
+   * @param   {Object}          [args]                            Command arguments
+   * @param   {Object}          [options]                         Options
    * @param   {Properties}      [options.properties]              Custom properties to send with
    *                                                              the request.
    * @param   {Number}          [options.timeout]                 Timeout for the request.
    * @return  {Promise}                                           Promise
+   *
+   * @example
+   * var promise = Kinvey.Command.execute('myCustomCommand').then(function(data) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
    */
-  execute(args, options = {}) {
+  execute(command, args, options = {}) {
+    if (!command) {
+      throw new KinveyError('A command is required.');
+    }
+
+    if (!isString(command)) {
+      throw new KinveyError('Command must be a string.');
+    }
+
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       handler() {}
@@ -75,10 +47,10 @@ export default class Command {
 
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      client: options.client,
+      client: Client.sharedInstance(),
       properties: options.properties,
       auth: Auth.default,
-      pathname: this.getPathname(options.client),
+      pathname: `/${rpcNamespace}/${options.client.appKey}/custom/${command}`,
       data: args,
       timeout: options.timeout
     });
@@ -91,4 +63,6 @@ export default class Command {
     });
     return promise;
   }
-}
+};
+
+export default Command;
