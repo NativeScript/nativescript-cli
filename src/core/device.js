@@ -1,3 +1,5 @@
+import packageJSON from '../../package.json';
+
 /**
  * @private
  */
@@ -98,7 +100,11 @@ export default class Device {
   toJSON() {
     return {
       os: this.os,
-      platform: this.platform
+      platform: this.platform,
+      library: {
+        build: process.env.KINVEY_PLATFORM_ENV || 'html5',
+        version: packageJSON.version
+      }
     };
   }
 }
