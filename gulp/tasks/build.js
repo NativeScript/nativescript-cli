@@ -37,8 +37,8 @@ gulp.task('build', function () {
     .pipe($.uglify())
     .pipe($.rename(`${config.files.output.filename}.min.js`))
     .pipe(gulp.dest(config.paths.dist))
-    .pipe($.gzip())
-    .pipe(gulp.dest(config.paths.dist))
+    // .pipe($.gzip())
+    // .pipe(gulp.dest(config.paths.dist))
     .on('error', errorHandler);
 });
 
@@ -54,7 +54,7 @@ gulp.task('build-legacy', function () {
     .pipe($.uglify())
     .pipe($.rename(`${config.files.output.filename}.min.js`))
     .pipe(gulp.dest(config.paths.legacy.dist))
-    .pipe($.gzip())
-    .pipe(gulp.dest(config.paths.legacy.dist))
+    // .pipe($.gzip())
+    // .pipe(gulp.dest(config.paths.legacy.dist))
     .on('error', errorHandler);
 });
