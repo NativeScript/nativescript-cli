@@ -20,7 +20,8 @@ export default class Http extends Middleware {
         url: request.url,
         method: request.method,
         headers: request.headers,
-        qs: request.flags || {}
+        qs: request.flags || {},
+        followRedirect: request.followRedirect
       };
 
       if (request.query) {

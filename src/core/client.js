@@ -37,9 +37,9 @@ export default class Client {
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
-    if (!options.appId && !options.appKey) {
-      throw new KinveyError('No App Id was provided. ' +
-        'Unable to create a new Client without an App Id.');
+    if (!options.appKey && !options.appId) {
+      throw new KinveyError('No App Key was provided. ' +
+        'Unable to create a new Client without an App Key.');
     }
 
     if (!options.appSecret && !options.masterSecret) {

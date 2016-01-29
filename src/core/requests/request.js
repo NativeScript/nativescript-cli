@@ -30,7 +30,8 @@ class Request {
         _: Math.random().toString(36).substr(2)
       },
       data: null,
-      timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000
+      timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
+      followRedirect: true
     }, options);
 
     this.method = options.method;
@@ -40,6 +41,7 @@ class Request {
     this.flags = qs.parse(options.flags);
     this.data = options.data || options.body;
     this.timeout = options.timeout;
+    this.followRedirect = options.followRedirect;
     this.executing = false;
 
     const headers = options.headers && isPlainObject(options.headers) ? options.headers : {};
@@ -205,7 +207,8 @@ class Request {
       url: this.url,
       pathname: this.pathname,
       flags: this.flags,
-      data: this.data
+      data: this.data,
+      followRedirect: this.followRedirect
     };
 
     return clone(json, true);

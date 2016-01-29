@@ -48,22 +48,12 @@ export default class Kinvey {
    * @returns {Promise} The response.
    */
   static ping() {
-    let client;
-
-    try {
-      client = Client.sharedInstance();
-    } catch (err) {
-      client = new Client({
-        appKey: '',
-        appSecret: ''
-      });
-    }
-
+    const client = Client.sharedInstance();
     const request = new NetworkRequest({
       method: HttpMethod.GET,
       client: client,
-      auth: client.appKey !== '' ? Auth.all : Auth.none,
-      pathname: appdataNamespace
+      auth: Auth.all,
+      pathname: `${appdataNamespace}/${client.appKey}`
     });
 
     return request.execute().then(response => {

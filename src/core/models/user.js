@@ -1,6 +1,7 @@
 import { ActiveUserError, KinveyError } from '../errors';
 import Model from './model';
 import Client from '../client';
+import Device from '../device';
 import NetworkRequest from '../requests/networkRequest';
 import { NotFoundError } from '../errors';
 import { HttpMethod, ReadPolicy as DataPolicy, WritePolicy, SocialIdentity } from '../enums';
@@ -8,7 +9,6 @@ import Query from '../query';
 import Auth from '../auth';
 import UserUtils from '../utils/user';
 import MobileIdentityConnect from '../mic';
-import hello from 'hellojs';
 import isObject from 'lodash/lang/isObject';
 import result from 'lodash/object/result';
 import assign from 'lodash/object/assign';
@@ -16,6 +16,11 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const micAuthProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
+let hello;
+
+if (typeof window !== 'undefined') {
+  hello = require('hellojs');
+}
 
 export default class User extends Model {
   get authtoken() {
@@ -210,6 +215,12 @@ export default class User extends Model {
   }
 
   connectWithSocial(identity, options = {}) {
+    const device = new Device();
+
+    if (device.isNode()) {
+      return Promise.reject(new KinveyError(`Unable to connect to social identity ${identity} on this platform.`));
+    }
+
     options = assign({
       client: Client.sharedInstance(),
       auth: Auth.default,

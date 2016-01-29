@@ -1,5 +1,7 @@
 import { HttpMethod, AuthorizationGrant } from './enums';
+import { KinveyError } from './errors';
 import NetworkRequest from './requests/networkRequest';
+import Device from './device';
 import Client from './client';
 import Popup from './utils/popup';
 import Auth from './auth';
@@ -26,17 +28,18 @@ export default class MobileIdentityConnect {
     });
   }
 
-  login(redirectUri, authorizationGrant = AuthorizationGrant.AuhthorizationCodeLoginPage, options = {}) {
+  login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     options = assign({
       client: this.client
     }, options);
     const clientId = options.client.appKey;
+    const device = new Device();
 
     const promise = Promise.resolve().then(() => {
-      if (authorizationGrant === AuthorizationGrant.AuhthorizationCodeLoginPage) {
+      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage && !device.isNode()) {
         // Step 1: Request a code
         return this.requestCodeWithPopup(clientId, redirectUri, options);
-      } else if (authorizationGrant === AuthorizationGrant.AuhthorizationCodeAPI) {
+      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI && device.isNode()) {
         // Step 1a: Request a temp login url
         return this.requestTempLoginUrl(clientId, redirectUri, options).then(url => {
           // Step 1b: Request a code
@@ -44,7 +47,7 @@ export default class MobileIdentityConnect {
         });
       }
 
-      throw new Error(`The authorization grant ${authorizationGrant} is unsupported. ` +
+      throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
         `Please use a supported authorization grant.`);
     }).then(code => {
       // Step 3: Request a token
@@ -132,6 +135,47 @@ export default class MobileIdentityConnect {
         popup.on('load', loadHandler);
         popup.on('close', closeHandler);
       });
+    });
+
+    return promise;
+  }
+
+  requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
+    const promise = Promise.resolve().then(() => {
+      const client = new Client({
+        protocol: url.parse(loginUrl).protocol,
+        host: url.parse(loginUrl).host,
+        appKey: this.client.appKey,
+        appSecret: this.client.appSecret,
+        masterSecret: this.client.masterSecret,
+        encryptionKey: this.client.encryptionKey
+      });
+      const request = new NetworkRequest({
+        method: HttpMethod.POST,
+        client: client,
+        properties: options.properties,
+        auth: Auth.app,
+        pathname: url.parse(loginUrl).pathname,
+        flags: url.parse(loginUrl, true).query,
+        data: {
+          client_id: clientId,
+          redirect_uri: redirectUri,
+          response_type: 'code',
+          username: options.username,
+          password: options.password
+        },
+        followRedirect: false
+      });
+      request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
+      return request.execute();
+    }).then(response => {
+      const location = response.getHeader('location');
+
+      if (location) {
+        return url.parse(location, true).query.code;
+      }
+
+      throw new KinveyError(`Unable to authorize user with username ${options.username}.`);
     });
 
     return promise;
