@@ -19,6 +19,7 @@ const assign = require('lodash/object/assign');
 const clone = require('lodash/lang/clone');
 const platform = argv.platform || 'html5';
 const config = {
+  platform: platform,
   header: '',
   footer: '',
   legacy: {}

@@ -1,16 +1,19 @@
 import Aggregation from './core/aggregation';
+import Auth from './core/auth';
 import Client from './core/client';
 import Command from './core/command';
-import Enums from './core/enums';
 import File from './core/models/file';
 import Files from './core/stores/files';
 import Log from './core/log';
 import Metadata from './core/metadata';
+import NetworkRequest from './core/requests/networkRequest';
 import Query from './core/query';
 import DataStore from './core/stores/datastore';
 import Sync from './core/sync';
 import User from './core/models/user';
 import Users from './core/stores/users';
+import { AuthorizationGrant, ReadPolicy, SocialIdentity, DataStoreType, HttpMethod } from './core/enums';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 export default class Kinvey {
   /**
@@ -38,21 +41,54 @@ export default class Kinvey {
     const client = Client.init(options);
     return client;
   }
+
+  /**
+   * Pings the Kinvey service.
+   *
+   * @returns {Promise} The response.
+   */
+  static ping() {
+    let client;
+
+    try {
+      client = Client.sharedInstance();
+    } catch (err) {
+      client = new Client({
+        appKey: '',
+        appSecret: ''
+      });
+    }
+
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      client: client,
+      auth: client.appKey !== '' ? Auth.all : Auth.none,
+      pathname: appdataNamespace
+    });
+
+    return request.execute().then(response => {
+      if (response.isSuccess()) {
+        return response.data;
+      }
+
+      throw response.error;
+    });
+  }
 }
 
 Kinvey.Aggregation = Aggregation;
+Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.Command = Command;
 Kinvey.DataStore = DataStore;
+Kinvey.DataStoreType = DataStoreType;
 Kinvey.File = File;
 Kinvey.Files = Files;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Promise = Promise;
 Kinvey.Query = Query;
+Kinvey.ReadPolicy = ReadPolicy;
+Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.Sync = Sync;
 Kinvey.User = User;
 Kinvey.Users = Users;
-
-['AuthorizationGrant', 'ReadPolicy', 'SocialIdentity', 'DataStoreType'].forEach(enumKey => {
-  Kinvey[enumKey] = Enums[enumKey];
-});

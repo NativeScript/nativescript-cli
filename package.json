@@ -20,7 +20,6 @@
     "url": "https://github.com/Kinvey/js-library-dev/issues"
   },
   "dependencies": {
-    "crypto-js": "^3.1.5",
     "fake-indexeddb": "^1.0.3",
     "hellojs": "^1.10.1",
     "indexeddbshim": "^2.2.1",
@@ -29,7 +28,6 @@
     "qs": "^6.0.1",
     "request": "^2.67.0",
     "sift": "^3.0.0",
-    "tiny-emitter": "^1.0.2",
     "url-pattern": "^1.0.0"
   },
   "devDependencies": {
@@ -54,7 +52,9 @@
     "glob": "^6.0.0",
     "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",
+    "gulp-babel": "^6.1.1",
     "gulp-bump": "^1.0.0",
+    "gulp-concat": "^2.6.0",
     "gulp-debug": "^2.1.2",
     "gulp-eslint": "^1.0.0",
     "gulp-file": "^0.2.0",
@@ -86,6 +86,7 @@
     "karma-mocha-reporter": "^1.1.5",
     "karma-phantomjs-launcher": "^0.2.2",
     "karma-sauce-launcher": "^0.3.0",
+    "merge-stream": "^1.0.0",
     "mocha": "^2.3.4",
     "mocha-jenkins-reporter": "^0.1.9",
     "mocha-phantomjs": "^4.0.2",
