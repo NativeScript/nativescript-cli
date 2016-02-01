@@ -55,7 +55,7 @@ Kinvey.Push = /** @lends Kinvey.Push */{
     platform = platform === 'iPhone OS' ? 'ios' : platform;
 
     // Handle unsupported platforms
-    if (platform !== 'android' || platform !== 'ios') {
+    if (platform !== 'android' && platform !== 'ios') {
       error = clientError(Kinvey.Error.PUSH_ERROR, {
         description: 'Kinvey currently does not support ' + platform + ' for push notifications.'
       });
