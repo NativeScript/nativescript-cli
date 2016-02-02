@@ -1,4 +1,4 @@
-import Store from '../../src/core/stores/store';
+import Store from '../../src/core/stores/datastore';
 import Query from '../../src/core/query';
 import { StoreType } from '../../src/core/enums';
 import { NotFoundError } from '../../src/core/errors';

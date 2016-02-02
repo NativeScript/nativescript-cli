@@ -3,8 +3,6 @@ import { generateObjectId } from '../utils/store';
 import forEach from 'lodash/collection/forEach';
 import isArray from 'lodash/lang/isArray';
 let indexedDB = undefined;
-let db = null;
-let inTransaction = false;
 let queue = [];
 
 if (typeof window !== 'undefined') {
@@ -29,47 +27,45 @@ export default class IndexedDB {
   }
 
   openTransaction(collection, write = false, success, error, force = false) {
-    if (db && db.name === this.dbName) {
-      if (db.objectStoreNames.indexOf(collection) !== -1) {
-        try {
-          const mode = write ? 'readwrite' : 'readonly';
-          const txn = db.transaction([collection], mode);
+    if (this.db && this.db.objectStoreNames.indexOf(collection) !== -1) {
+      try {
+        const mode = write ? 'readwrite' : 'readonly';
+        const txn = this.db.transaction([collection], mode);
 
-          if (txn) {
-            const store = txn.objectStore(collection);
-            return success(store);
-          }
-
-          throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
-            `collection on the ${this.dbName} indexedDB database.`);
-        } catch (err) {
-          return error(err);
+        if (txn) {
+          const store = txn.objectStore(collection);
+          return success(store);
         }
-      } else if (!write) {
-        return error(new NotFoundError(`The ${collection} collection was not found on ` +
-          `the ${this.dbName} indexedDB database.`));
+
+        throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
+          `collection on the ${this.dbName} indexedDB database.`);
+      } catch (err) {
+        return error(err);
       }
+    } else if (!write) {
+      return error(new NotFoundError(`The ${collection} collection was not found on ` +
+        `the ${this.dbName} indexedDB database.`));
     }
 
-    if (!force && inTransaction) {
+    if (!force && this.inTransaction) {
       return queue.push(() => {
         this.openTransaction(collection, write, success, error);
       });
     }
 
     // Switch flag
-    inTransaction = true;
+    this.inTransaction = true;
 
-    if (db && db.name !== this.dbName) {
-      db.close();
-      db = null;
+    if (this.db) {
+      this.db.close();
+      this.db = null;
     }
 
     let request;
 
-    if (db) {
-      const version = db.version + 1;
-      db.close();
+    if (this.db) {
+      const version = this.db.version + 1;
+      this.db.close();
       request = indexedDB.open(this.dbName, version);
     } else {
       request = indexedDB.open(this.dbName);
@@ -78,38 +74,38 @@ export default class IndexedDB {
     // If the database is opened with an higher version than its current, the
     // `upgradeneeded` event is fired. Save the handle to the database, and
     // create the collection.
-    request.onupgradeneeded = function onUpgradeNeeded(e) {
-      db = e.target.result;
+    request.onupgradeneeded = e => {
+      this.db = e.target.result;
 
       if (write) {
-        db.createObjectStore(collection, { keyPath: '_id' });
+        this.db.createObjectStore(collection, { keyPath: '_id' });
       }
     };
 
     // The `success` event is fired after `upgradeneeded` terminates.
     // Save the handle to the database.
-    request.onsuccess = (e) => {
-      db = e.target.result;
+    request.onsuccess = e => {
+      this.db = e.target.result;
 
       // If a second instance of the same IndexedDB database performs an
       // upgrade operation, the `versionchange` event is fired. Then, close the
       // database to allow the external upgrade to proceed.
-      db.onversionchange = function onVersionChange() {
-        if (db) {
-          db.close();
-          db = null;
+      this.db.onversionchange = () => {
+        if (this.db) {
+          this.db.close();
+          this.db = null;
         }
       };
 
       // Try to obtain the collection handle by recursing. Append the handlers
       // to empty the queue upon success and failure. Set the `force` flag so
       // all but the current transaction remain queued.
-      const wrap = function wrap(done) {
-        return function (arg) {
+      const wrap = done => {
+        return arg => {
           done(arg);
 
           // Switch flag
-          inTransaction = false;
+          this.inTransaction = false;
 
           // The database handle has been established, we can now safely empty
           // the queue. The queue must be emptied before invoking the concurrent
@@ -117,8 +113,8 @@ export default class IndexedDB {
           if (queue.length > 0) {
             const pending = queue;
             queue = [];
-            forEach(pending, function (fn) {
-              fn();
+            forEach(pending, fn => {
+              fn.call(this);
             });
           }
         };
@@ -132,7 +128,7 @@ export default class IndexedDB {
         `because the database is already open.`));
     };
 
-    request.onerror = (e) => {
+    request.onerror = e => {
       error(new KinveyError(`Unable to open the ${this.dbName} indexedDB database. ` +
         `Received the error code ${e.target.errorCode}.`));
     };
@@ -140,6 +136,10 @@ export default class IndexedDB {
 
   find(collection) {
     const promise = new Promise((resolve, reject) => {
+      if (!collection) {
+        return reject(new KinveyError('A collection was not provided.'));
+      }
+
       this.openTransaction(collection, false, store => {
         const request = store.openCursor();
         const response = [];
@@ -159,7 +159,13 @@ export default class IndexedDB {
           reject(new KinveyError(`An error occurred while fetching data from the ${collection} ` +
             `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
-      }, reject);
+      }, error => {
+        if (error instanceof NotFoundError) {
+          return resolve([]);
+        }
+
+        reject(error);
+      });
     });
 
     return promise;
@@ -283,9 +289,9 @@ export default class IndexedDB {
 
   destroy() {
     const promise = new Promise((resolve, reject) => {
-      if (db) {
-        db.close();
-        db = null;
+      if (this.db) {
+        this.db.close();
+        this.db = null;
       }
 
       const request = indexedDB.deleteDatabase(this.dbName);
