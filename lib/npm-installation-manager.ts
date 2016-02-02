@@ -18,6 +18,7 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	private packageSpecificDirectories: IStringDictionary = {
 		"tns-android": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
 		"tns-ios": constants.PROJECT_FRAMEWORK_FOLDER_NAME,
+		"tns-ios-inspector": "WebInspectorUI",
 		"tns-template-hello-world": constants.APP_RESOURCES_FOLDER_NAME,
 		"tns-template-hello-world-ts": constants.APP_RESOURCES_FOLDER_NAME
 	};

@@ -2,17 +2,19 @@
 "use strict";
 
 import * as iOSDevice from "../common/mobile/ios/device/ios-device";
-
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
 import byline = require("byline");
 
-let InspectorBackendPort = 18181;
+const inspectorBackendPort = 18181;
+const inspectorAppName = "NativeScript Inspector.app";
+const inspectorZipName = "NativeScript Inspector.zip";
+const inspectorNpmPackageName = "tns-ios-inspector";
+const inspectorUiDir = "WebInspectorUI/";
+const TIMEOUT_SECONDS = 90;
 
 class IOSDebugService implements IDebugService {
-    private static TIMEOUT_SECONDS = 90;
-
     constructor(
         private $platformService: IPlatformService,
         private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -91,13 +93,13 @@ class IOSDebugService implements IDebugService {
                 }
             });
 
-            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => net.connect(inspectorBackendPort)).wait();
         }).future<void>()();
     }
 
     private emulatorStart(): IFuture<void> {
         return (() => {
-            this.wireDebuggerClient(() => net.connect(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => net.connect(inspectorBackendPort)).wait();
 
             let attachRequestMessage = this.$iOSNotification.attachRequest;
 
@@ -120,11 +122,11 @@ class IOSDebugService implements IDebugService {
 
     private debugBrkCore(device: Mobile.IiOSDevice): IFuture<void> {
         return (() => {
-            let timeout = this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
+            let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
             let readyForAttachTimeout = this.getReadyForAttachTimeout(timeout);
 
             this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, readyForAttachTimeout).wait();
-            this.wireDebuggerClient(() => device.connectToPort(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => device.connectToPort(inspectorBackendPort)).wait();
         }).future<void>()();
     }
 
@@ -139,7 +141,7 @@ class IOSDebugService implements IDebugService {
         return (() => {
             let timeout = this.getReadyForAttachTimeout();
             this.$iOSSocketRequestExecutor.executeAttachRequest(device, timeout).wait();
-            this.wireDebuggerClient(() => device.connectToPort(InspectorBackendPort)).wait();
+            this.wireDebuggerClient(() => device.connectToPort(inspectorBackendPort)).wait();
         }).future<void>()();
     }
 
@@ -164,15 +166,24 @@ class IOSDebugService implements IDebugService {
         return (() => {
             let frameworkVersion = this.getProjectFrameworkVersion().wait();
             let inspectorPath = this.getInspectorPath(frameworkVersion).wait();
-            let inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
+            let inspectorSourceLocation: string;
             let cmd: string = null;
 
-            if(semver.lt(frameworkVersion, "1.2.0")) {
+            if (semver.lt(frameworkVersion, "1.2.0")) {
                 cmd = `open -a Safari "${inspectorSourceLocation}"`;
             } else {
-                let inspectorApplicationPath = path.join(inspectorPath, "NativeScript Inspector.app");
+                let inspectorApplicationDir: string;
+                if (semver.lt(frameworkVersion, "1.6.0")) {
+                    inspectorApplicationDir = inspectorPath;
+                    inspectorSourceLocation = path.join(inspectorPath, "Safari/Main.html");
+                } else {
+                    inspectorApplicationDir = path.join(inspectorPath, "..");
+                    inspectorSourceLocation = path.join(inspectorPath, "Main.html");
+                }
+
+                let inspectorApplicationPath = path.join(inspectorApplicationDir, inspectorAppName);
                 if(!this.$fs.exists(inspectorApplicationPath).wait()) {
-                    this.$fs.unzip(path.join(inspectorPath, "NativeScript Inspector.zip"), inspectorPath).wait();
+                    this.$fs.unzip(path.join(inspectorApplicationDir, inspectorZipName), inspectorApplicationDir).wait();
                 }
                 cmd = `open -a '${inspectorApplicationPath}' --args '${inspectorSourceLocation}' '${this.$projectData.projectName}' '${fileDescriptor}'`;
             }
@@ -191,6 +202,24 @@ class IOSDebugService implements IDebugService {
 
     private getInspectorPath(frameworkVersion: string): IFuture<string> {
         return (() => {
+            if (semver.lt(frameworkVersion, "1.6.0")) {
+                return this.getInspectorPathFromDebuggerPackage(frameworkVersion).wait();
+            } else {
+                return this.getInspectorPathFromTnsIosPackage(frameworkVersion).wait();
+            }
+        }).future<string>()();
+    }
+
+    private getInspectorPathFromDebuggerPackage(frameworkVersion: string): IFuture<string> {
+        return (() => {
+            let inspectorPackage = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
+            let inspectorPath = path.join(inspectorPackage, inspectorUiDir);
+            return inspectorPath;
+        }).future<string>()();
+    }
+
+    private getInspectorPathFromTnsIosPackage(frameworkVersion: string): IFuture<string> {
+        return (() => {
             let tnsIosPackage = "";
             if (this.$options.frameworkPath) {
                 if (this.$fs.getFsStats(this.$options.frameworkPath).wait().isFile()) {
@@ -201,13 +230,13 @@ class IOSDebugService implements IDebugService {
                 let platformData = this.$platformsData.getPlatformData(this.platform);
                 tnsIosPackage = this.$npmInstallationManager.install(platformData.frameworkPackageName, { version: frameworkVersion }).wait();
             }
-            let inspectorPath = path.join(tnsIosPackage, "WebInspectorUI/");
+            let inspectorPath = path.join(tnsIosPackage, inspectorUiDir);
             return inspectorPath;
         }).future<string>()();
     }
 
     private getReadyForAttachTimeout(timeoutInMilliseconds?: number): number {
-        let timeout = timeoutInMilliseconds || this.$utils.getMilliSecondsTimeout(IOSDebugService.TIMEOUT_SECONDS);
+        let timeout = timeoutInMilliseconds || this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
         let readyForAttachTimeout = timeout / 10 ;
         let defaultReadyForAttachTimeout = 5000;
         return readyForAttachTimeout > defaultReadyForAttachTimeout ? readyForAttachTimeout : defaultReadyForAttachTimeout;
