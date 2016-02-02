@@ -21,3 +21,10 @@ lib/**/*.ts
 lib/**/*.js.map
 
 test/
+.vscode
+lib/common/test/
+coverage/
+scratch/
+*.suo
+.travis.yml
+docs/html/
