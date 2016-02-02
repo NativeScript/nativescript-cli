@@ -16,12 +16,12 @@
         "src/internals/persistence/local/websql.js",
         "src/internals/persistence/local/indexeddb.js",
         "src/internals/social/html5.js",
-        "src/internals/storage/local-storage.js",
         "src/shims/angular/angular.js",
         "src/shims/angular/intro.txt",
         "src/shims/angular/defer.js",
         "src/shims/angular/persistence/net.js",
-        "src/shims/angular/outro.txt"
+        "src/shims/angular/outro.txt",
+        "src/internals/storage/local-storage.js"
       ]
     },
     "backbone": {

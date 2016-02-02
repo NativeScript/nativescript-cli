@@ -1,4 +1,7 @@
 ## Changelog
+#### 1.6.7 (2016-02-02)
+* Bugfix: Fixed bug in the Angular build that prevented the library from being loaded.
+
 #### 1.6.6 (2016-01-26)
 * Bugfix (MLIBZ-753): Fixed a bug that would remove all sync items when a network connection is lost.
 
