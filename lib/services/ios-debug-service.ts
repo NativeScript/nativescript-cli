@@ -201,16 +201,14 @@ class IOSDebugService implements IDebugService {
     }
 
     private getInspectorPath(frameworkVersion: string): IFuture<string> {
-        return (() => {
             if (semver.lt(frameworkVersion, "1.6.0")) {
-                return this.getInspectorPathFromDebuggerPackage(frameworkVersion).wait();
+                return this.getInspectorPathFromTnsIosPackage(frameworkVersion);
             } else {
-                return this.getInspectorPathFromTnsIosPackage(frameworkVersion).wait();
+                return this.getInspectorPathFromInspectorPackage();
             }
-        }).future<string>()();
     }
 
-    private getInspectorPathFromDebuggerPackage(frameworkVersion: string): IFuture<string> {
+    private getInspectorPathFromInspectorPackage(): IFuture<string> {
         return (() => {
             let inspectorPackage = this.$npmInstallationManager.install(inspectorNpmPackageName).wait();
             let inspectorPath = path.join(inspectorPackage, inspectorUiDir);
