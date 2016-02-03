@@ -2,35 +2,35 @@ import { KinveyError, NotFoundError } from '../errors';
 import { generateObjectId } from '../utils/store';
 import forEach from 'lodash/collection/forEach';
 import isArray from 'lodash/lang/isArray';
-let indexedDB = undefined;
-let queue = [];
+const indexedDB = global.indexedDB ||
+                  global.mozIndexedDB ||
+                  global.webkitIndexedDB ||
+                  global.msIndexedDB;
+const dbCache = {};
 
-if (typeof window !== 'undefined') {
-  // Require indexeddbshim to patch buggy indexed db implementations
-  require('indexeddbshim');
-  window.shimIndexedDB.__useShim();
-  indexedDB = window.indexedDB ||
-              window.mozIndexedDB ||
-              window.webkitIndexedDB ||
-              window.msIndexedDB ||
-              window.shimIndexedDB;
-} else {
-  indexedDB = require('fake-indexeddb');
-}
+const TransactionMode = {
+  ReadWrite: 'readwrite',
+  ReadOnly: 'readonly',
+};
+Object.freeze(TransactionMode);
 
 /**
  * @private
  */
 export default class IndexedDB {
-  constructor(dbName = 'kinvey') {
-    this.dbName = dbName;
+  constructor(name = 'kinvey') {
+    this.name = name;
+    this.inTransaction = false;
+    this.queue = [];
   }
 
   openTransaction(collection, write = false, success, error, force = false) {
-    if (this.db && this.db.objectStoreNames.indexOf(collection) !== -1) {
+    let db = dbCache[this.name];
+
+    if (db && db.objectStoreNames.indexOf(collection) !== -1) {
       try {
-        const mode = write ? 'readwrite' : 'readonly';
-        const txn = this.db.transaction([collection], mode);
+        const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
+        const txn = db.transaction([collection], mode);
 
         if (txn) {
           const store = txn.objectStore(collection);
@@ -38,17 +38,17 @@ export default class IndexedDB {
         }
 
         throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
-          `collection on the ${this.dbName} indexedDB database.`);
+          `collection on the ${this.name} indexedDB database.`);
       } catch (err) {
         return error(err);
       }
     } else if (!write) {
       return error(new NotFoundError(`The ${collection} collection was not found on ` +
-        `the ${this.dbName} indexedDB database.`));
+        `the ${this.name} indexedDB database.`));
     }
 
     if (!force && this.inTransaction) {
-      return queue.push(() => {
+      return this.queue.push(() => {
         this.openTransaction(collection, write, success, error);
       });
     }
@@ -56,44 +56,46 @@ export default class IndexedDB {
     // Switch flag
     this.inTransaction = true;
 
-    if (this.db) {
-      this.db.close();
-      this.db = null;
+    if (db) {
+      db.close();
+      db = null;
+      dbCache[this.name] = null;
     }
 
     let request;
 
-    if (this.db) {
-      const version = this.db.version + 1;
-      this.db.close();
-      request = indexedDB.open(this.dbName, version);
+    if (db) {
+      const version = db.version + 1;
+      request = indexedDB.open(this.name, version);
     } else {
-      request = indexedDB.open(this.dbName);
+      request = indexedDB.open(this.name);
     }
 
     // If the database is opened with an higher version than its current, the
     // `upgradeneeded` event is fired. Save the handle to the database, and
     // create the collection.
     request.onupgradeneeded = e => {
-      this.db = e.target.result;
+      db = e.target.result;
 
       if (write) {
-        this.db.createObjectStore(collection, { keyPath: '_id' });
+        db.createObjectStore(collection, { keyPath: '_id' });
       }
     };
 
     // The `success` event is fired after `upgradeneeded` terminates.
     // Save the handle to the database.
     request.onsuccess = e => {
-      this.db = e.target.result;
+      db = e.target.result;
+      dbCache[this.name] = db;
 
       // If a second instance of the same IndexedDB database performs an
       // upgrade operation, the `versionchange` event is fired. Then, close the
       // database to allow the external upgrade to proceed.
-      this.db.onversionchange = () => {
-        if (this.db) {
-          this.db.close();
-          this.db = null;
+      db.onversionchange = () => {
+        if (db) {
+          db.close();
+          db = null;
+          dbCache[this.name] = null;
         }
       };
 
@@ -110,9 +112,9 @@ export default class IndexedDB {
           // The database handle has been established, we can now safely empty
           // the queue. The queue must be emptied before invoking the concurrent
           // operations to avoid infinite recursion.
-          if (queue.length > 0) {
-            const pending = queue;
-            queue = [];
+          if (this.queue.length > 0) {
+            const pending = this.queue;
+            this.queue = [];
             forEach(pending, fn => {
               fn.call(this);
             });
@@ -124,12 +126,12 @@ export default class IndexedDB {
     };
 
     request.onblocked = () => {
-      error(new KinveyError(`The ${this.dbName} indexedDB database version can't be upgraded ` +
+      error(new KinveyError(`The ${this.name} indexedDB database version can't be upgraded ` +
         `because the database is already open.`));
     };
 
     request.onerror = e => {
-      error(new KinveyError(`Unable to open the ${this.dbName} indexedDB database. ` +
+      error(new KinveyError(`Unable to open the ${this.name} indexedDB database. ` +
         `Received the error code ${e.target.errorCode}.`));
     };
   }
@@ -157,7 +159,7 @@ export default class IndexedDB {
 
         request.onerror = (e) => {
           reject(new KinveyError(`An error occurred while fetching data from the ${collection} ` +
-            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+            `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, error => {
         if (error instanceof NotFoundError) {
@@ -183,16 +185,23 @@ export default class IndexedDB {
             return resolve(entity);
           }
 
-          reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection} ` +
-            `collection on the ${this.dbName} indexedDB database.`));
+          reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
+            `collection on the ${this.name} indexedDB database.`));
         };
 
         request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while retrieving an entity with id = ${id} ` +
-            `from the ${collection} collection on the ${this.dbName} indexedDB database. ` +
+          reject(new KinveyError(`An error occurred while retrieving an entity with _id = ${id} ` +
+            `from the ${collection} collection on the ${this.name} indexedDB database. ` +
             `Received the error code ${e.target.errorCode}.`));
         };
-      }, reject);
+      }, error => {
+        if (error instanceof NotFoundError) {
+          return reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
+            `collection on the ${this.name} indexedDB database.`));
+        }
+
+        reject(error);
+      });
     });
 
     return promise;
@@ -217,7 +226,7 @@ export default class IndexedDB {
 
         request.onerror = (e) => {
           reject(new KinveyError(`An error occurred while saving an entity to the ${collection} ` +
-            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+            `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -249,7 +258,7 @@ export default class IndexedDB {
 
         request.onerror = (e) => {
           reject(new KinveyError(`An error occurred while saving the entities to the ${collection} ` +
-            `collection on the ${this.dbName} indexedDB database. Received the error code ${e.target.errorCode}.`));
+            `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
     });
@@ -267,7 +276,7 @@ export default class IndexedDB {
         request.oncomplete = () => {
           if (!doc.result) {
             return reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection} `
-              + `collection on the ${this.dbName} indexedDB database.`));
+              + `collection on the ${this.name} indexedDB database.`));
           }
 
           resolve({
@@ -278,7 +287,7 @@ export default class IndexedDB {
 
         request.onerror = (e) => {
           reject(new KinveyError(`An error occurred while deleting an entity with id = ${id} ` +
-            `in the ${collection} collection on the ${this.dbName} indexedDB database. ` +
+            `in the ${collection} collection on the ${this.name} indexedDB database. ` +
             `Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
@@ -294,14 +303,14 @@ export default class IndexedDB {
         this.db = null;
       }
 
-      const request = indexedDB.deleteDatabase(this.dbName);
+      const request = indexedDB.deleteDatabase(this.name);
 
       request.onsuccess = function onSuccess() {
         resolve(null);
       };
 
       request.onerror = (e) => {
-        reject(new KinveyError(`An error occurred while destroying the ${this.dbName} ` +
+        reject(new KinveyError(`An error occurred while destroying the ${this.name} ` +
           `indexedDB database. Received the error code ${e.target.errorCode}.`));
       };
     });
