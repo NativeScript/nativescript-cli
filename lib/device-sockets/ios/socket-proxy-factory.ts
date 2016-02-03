@@ -11,7 +11,8 @@ import * as helpers from "../../common/helpers";
 export class SocketProxyFactory implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
 		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService) { }
+		private $projectDataService: IProjectDataService,
+		private $options: IOptions) { }
 
 	public createSocketProxy(factory: () => net.Socket): IFuture<any> {
 		return (() => {
@@ -119,6 +120,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 		let socketFileLocation = temp.path({ suffix: ".sock" });
 		server.listen(socketFileLocation);
+		if(!this.$options.client) {
+			this.$logger.info("socket-file-location: " + socketFileLocation);
+		}
 
 		return socketFileLocation;
 	}
