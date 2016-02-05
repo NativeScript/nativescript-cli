@@ -3,5 +3,10 @@
 		"target": "ES5",
 		"module": "commonjs",
 		"sourceMap": true
-	}
+	},
+	"exclude": [
+		"node_modules",
+		"scratch",
+		"coverage"
+	]
 }
