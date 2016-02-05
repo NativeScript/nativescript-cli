@@ -157,7 +157,7 @@ class IOSDebugService implements IDebugService {
             return this.openDebuggingClient(fileDescriptor);
         } else {
             return (() => {
-                this.$logger.info("Supressing debugging client.");
+                this.$logger.info("Suppressing debugging client.");
             }).future<void>()();
         }
     }
