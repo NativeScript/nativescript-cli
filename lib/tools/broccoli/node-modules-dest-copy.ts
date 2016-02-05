@@ -26,7 +26,8 @@ export class DestCopy implements IBroccoliPlugin {
 		private platform: string,
 		private $fs: IFileSystem,
 		private $projectFilesManager: IProjectFilesManager,
-		private $pluginsService: IPluginsService
+		private $pluginsService: IPluginsService,
+		private $platformsData: IPlatformsData
 	) {
 		this.dependencies = Object.create(null);
 		this.devDependencies = this.getDevDependencies(projectDir);
@@ -93,7 +94,7 @@ export class DestCopy implements IBroccoliPlugin {
 	});
 
 	if(!_.isEmpty(this.dependencies)) {
-		this.$pluginsService.afterPrepareAllPlugins().wait();
+		this.$platformsData.getPlatformData(platform).platformProjectService.afterPrepareAllPlugins().wait();
 	}
   }
 
