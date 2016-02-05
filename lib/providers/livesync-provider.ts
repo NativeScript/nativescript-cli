@@ -25,7 +25,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 
 	public buildForDevice(device: Mobile.IDevice): IFuture<string> {
 		return (() => {
-			this.$platformService.buildPlatform(device.deviceInfo.platform, {buildForDevice: !device.isEmulator}).wait();
+			this.$platformService.buildForDeploy(device.deviceInfo.platform, {buildForDevice: !device.isEmulator}).wait();
 			let platformData = this.$platformsData.getPlatformData(device.deviceInfo.platform);
 			if (device.isEmulator) {
 				return this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait().packageName;

@@ -1,6 +1,8 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
+import {AndroidDebugBridge} from "../../common/mobile/android/android-debug-bridge";
+import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
 import Future = require("fibers/future");
 import * as helpers from "../../common/helpers";
 import liveSyncServiceBaseLib = require("./livesync-service-base");
@@ -13,7 +15,9 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 	constructor(_device: Mobile.IDevice,
 		private $fs: IFileSystem,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $injector: IInjector,
+		private $projectData: IProjectData) {
 		super(_device);
 	}
 
@@ -53,7 +57,13 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 				let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
 				this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&&", "touch", deviceFilePath]).wait();
 			});
+
+			this.deviceHashService.removeHashes(localToDevicePaths).wait();
 		}).future<void>()();
+	}
+
+	public afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
+		return this.deviceHashService.uploadHashFileToDevice(localToDevicePaths);
 	}
 
 	private getDeviceRootPath(appIdentifier: string): string {
@@ -76,6 +86,16 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 		});
 
 		return future;
+	}
+
+	private _deviceHashService: Mobile.IAndroidDeviceHashService;
+	private get deviceHashService(): Mobile.IAndroidDeviceHashService {
+		if (!this._deviceHashService) {
+			let adb = this.$injector.resolve(AndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+			this._deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.$projectData.projectId });
+		}
+
+		return this._deviceHashService;
 	}
 }
 $injector.register("androidLiveSyncServiceLocator", {factory: AndroidLiveSyncService});

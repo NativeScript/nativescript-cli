@@ -7,6 +7,7 @@ import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
+import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -29,7 +30,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $sysInfo: ISysInfo,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $injector: IInjector,
-		private $pluginVariablesService: IPluginVariablesService) {
+		private $pluginVariablesService: IPluginVariablesService,
+		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory) {
 			super($fs, $projectData, $projectDataService);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -330,6 +332,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
+
+			let projectFilesManager = this.$injector.resolve("projectFilesManager"); // We need to resolve projectFilesManager here due to cyclic dependency
+			let devicesService: Mobile.IDevicesService = this.$injector.resolve("devicesService");
+			let device = _.find(devicesService.getDevicesForPlatform(this.platformData.normalizedPlatformName), d => d.deviceInfo.identifier === deviceIdentifier);
+			let deviceAppData = this.$deviceAppDataFactory.create(this.$projectData.projectId, this.platformData.normalizedPlatformName, device);
+			let localToDevicePaths = projectFilesManager.createLocalToDevicePaths(deviceAppData, path.join(this.platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME));
+			let deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.$projectData.projectId });
+			deviceHashService.uploadHashFileToDevice(localToDevicePaths).wait();
 		}).future<void>()();
 	}
 

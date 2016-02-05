@@ -3,6 +3,11 @@
 import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-app-data-base";
 import Future = require("fibers/future");
 import * as path from "path";
+import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
+import {AndroidDebugBridge} from "../common/mobile/android/android-debug-bridge";
+
+const SYNC_DIR_NAME = "sync";
+const FULLSYNC_DIR_NAME = "fullsync";
 
 export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase implements Mobile.IDeviceAppData  {
 	private static DEVICE_PROJECT_ROOT_PATH = "Library/Application Support/LiveSync/app";
@@ -37,17 +42,33 @@ export class AndroidAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase
 	constructor(_appIdentifier: string,
 		public device: Mobile.IDevice,
 		public platform: string,
-		private $options: IOptions) {
+		private $options: IOptions,
+		private $injector: IInjector) {
 		super(_appIdentifier);
 	}
 
+	private _deviceProjectRootPath: string;
+
 	public get deviceProjectRootPath(): string {
-		let syncFolderName = this.$options.watch ? "sync" : "fullsync";
-		return `/data/local/tmp/${this.appIdentifier}/${syncFolderName}`;
+		if(!this._deviceProjectRootPath) {
+			let syncFolderName = this.getSyncFolderName().wait();
+			this._deviceProjectRootPath = `/data/local/tmp/${this.appIdentifier}/${syncFolderName}`;
+		}
+
+		return this._deviceProjectRootPath;
 	}
 
 	public isLiveSyncSupported(): IFuture<boolean> {
 		return Future.fromResult(true);
+	}
+
+	private getSyncFolderName(): IFuture<string> {
+		return ((): string =>{
+			let adb =  this.$injector.resolve(AndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+			let deviceHashService = this.$injector.resolve(AndroidDeviceHashService, {adb: adb, appIdentifier: this.appIdentifier});
+			let hashFile = this.$options.force ? null : deviceHashService.doesShasumFileExistsOnDevice().wait();
+			return this.$options.watch || hashFile ? SYNC_DIR_NAME : FULLSYNC_DIR_NAME;
+		}).future<string>()();
 	}
 }
 
