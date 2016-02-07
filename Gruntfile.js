@@ -59,15 +59,15 @@ module.exports = function(grunt) {
 		},
 
 		tslint: {
-            build: {
-                files: {
-                    src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!**/*.d.ts"]
-                },
-                options: {
-                    configuration: grunt.file.readJSON("./tslint.json")
-                }
-            }
-        },
+			build: {
+				files: {
+					src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/**/*.d.ts" , "!test/**/*.ts"]
+				},
+				options: {
+					configuration: grunt.file.readJSON("./tslint.json")
+				}
+			}
+		},
 
 		watch: {
 			devall: {
