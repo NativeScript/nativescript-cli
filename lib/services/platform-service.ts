@@ -464,9 +464,6 @@ export class PlatformService implements IPlatformService {
 			emulatorServices.checkAvailability().wait();
 			emulatorServices.checkDependencies().wait();
 
-			let emulatorId = emulatorServices.getEmulatorId().wait();
-			platformData.platformProjectService.deploy(emulatorId).wait();
-
 			if (!this.$options.availableDevices) {
 				this.buildPlatform(platform, buildConfig).wait();
 
