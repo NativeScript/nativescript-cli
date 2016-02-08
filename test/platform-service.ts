@@ -19,6 +19,7 @@ import {ProjectFilesProvider} from "../lib/providers/project-files-provider";
 import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
 import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
 import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
+import { XmlValidator } from "../lib/xml-validator";
 
 require("should");
 let temp = require("temp");
@@ -69,6 +70,7 @@ function createTestInjector() {
 	testInjector.register("deviceAppDataProvider", DeviceAppDataProvider);
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
+	testInjector.register("xmlValidator", XmlValidator);
 
 	return testInjector;
 }
@@ -244,7 +246,8 @@ describe('Platform Service Tests', () => {
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string) => Future.fromResult(),
 						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-						processConfigurationFilesFromAppResources: () => Future.fromResult()
+						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: () => Future.fromResult()
 					}
 				};
 			};
@@ -295,7 +298,8 @@ describe('Platform Service Tests', () => {
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string) => Future.fromResult(),
 						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-						processConfigurationFilesFromAppResources: () => Future.fromResult()
+						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: () => Future.fromResult()
 					}
 				};
 			};
@@ -338,7 +342,8 @@ describe('Platform Service Tests', () => {
 						interpolateData: (projectRoot: string) => Future.fromResult(),
 						afterCreateProject: (projectRoot: string) => Future.fromResult(),
 						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-						processConfigurationFilesFromAppResources: () => Future.fromResult()
+						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: () => Future.fromResult()
 					}
 				};
 			};

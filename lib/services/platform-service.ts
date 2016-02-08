@@ -8,7 +8,6 @@ import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as minimatch from "minimatch";
 import Future = require("fibers/future");
-import {EOL} from "os";
 let clui = require("clui");
 
 export class PlatformService implements IPlatformService {
@@ -34,7 +33,8 @@ export class PlatformService implements IPlatformService {
 		private $pluginsService: IPluginsService,
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $hostInfo: IHostInfo) { }
+		private $hostInfo: IHostInfo,
+		private $xmlValidator: IXmlValidator) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -127,6 +127,7 @@ export class PlatformService implements IPlatformService {
 				this.$fs.deleteDirectory(path.join(frameworkDir, "../../")).wait();
 			}
 
+			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
 			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
 
@@ -184,35 +185,6 @@ export class PlatformService implements IPlatformService {
 		}).future<boolean>()();
 	}
 
-	private checkXmlFiles(sourceFiles: string[]): IFuture<boolean> {
-		return (() => {
-			let xmlHasErrors = false;
-			let DomParser = require("xmldom").DOMParser;
-			sourceFiles
-				.filter(file => _.endsWith(file, ".xml"))
-				.forEach(file => {
-					let fileContents = this.$fs.readText(file).wait();
-					let hasErrors = false;
-					let errorOutput = "";
-					let domErrorHandler = (level:any, msg:string) => {
-						errorOutput += level + EOL + msg + EOL;
-						hasErrors = true;
-					};
-					let parser = new DomParser({
-						locator:{},
-						errorHandler: domErrorHandler
-					});
-					parser.parseFromString(fileContents, "text/xml");
-					xmlHasErrors = xmlHasErrors || hasErrors;
-					if (hasErrors) {
-						this.$logger.warn(`${file} has syntax errors.`);
-						this.$logger.out(errorOutput);
-					}
-				});
-			return !xmlHasErrors;
-		}).future<boolean>()();
-	}
-
 	@helpers.hook('prepare')
 	private preparePlatformCore(platform: string): IFuture<boolean> {
 		return (() => {
@@ -250,7 +222,7 @@ export class PlatformService implements IPlatformService {
 			}
 
 			// verify .xml files are well-formed
-			this.checkXmlFiles(sourceFiles).wait();
+			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 
 			// Remove .ts and .js.map files
 			PlatformService.EXCLUDE_FILES_PATTERN.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));
