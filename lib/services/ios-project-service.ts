@@ -268,7 +268,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let project = this.createPbxProj();
 			let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
 			let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-			let isDynamic = _.contains(this.$childProcess.exec(`otool -Vh ${frameworkBinaryPath}`).wait(), " DYLIB ");
+			let isDynamic = _.contains(this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close").wait().stdout, " DYLIB ");
 
 			let frameworkAddOptions: xcode.Options = { customFramework: true };
 
@@ -577,7 +577,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp("The bundle at %s does not contain an Info.plist file.", libraryPath);
 			}
 
-			let packageType = this.$childProcess.exec(`/usr/libexec/PlistBuddy -c "Print :CFBundlePackageType" "${infoPlistPath}"`).wait().trim();
+			let packageType = this.$childProcess.spawnFromEvent("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundlePackageType", infoPlistPath], "close").wait().stdout.trim();
 			if (packageType !== "FMWK") {
 				this.$errors.failWithoutHelp("The bundle at %s does not appear to be a dynamic framework.", libraryPath);
 			}
@@ -762,7 +762,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$fs.writeFile(projectFile, "").wait();
 			}
 
-			let mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${projectFile}').merge(Xcodeproj::Config.new('${pluginFile}')).save_as(Pathname.new('${projectFile}'))`;
+			let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
+				escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
+				mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
 			this.$childProcess.exec(`ruby -e "${mergeScript}"`).wait();
 		}).future<void>()();
 	}
