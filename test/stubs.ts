@@ -348,6 +348,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	processConfigurationFilesFromAppResources(): IFuture<void> {
 		return Future.fromResult();
 	}
+	ensureConfigurationFileInAppResources(): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class ProjectDataService implements IProjectDataService {

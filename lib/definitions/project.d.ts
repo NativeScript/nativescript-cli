@@ -76,6 +76,10 @@ interface IPlatformProjectService {
 	getAppResourcesDestinationDirectoryPath(): IFuture<string>;
 	deploy(deviceIdentifier: string): IFuture<void>;
 	processConfigurationFilesFromAppResources(): IFuture<void>;
+	/**
+	 * Ensures there is configuration file (AndroidManifest.xml, Info.plist) in app/App_Resources.
+	 */
+	ensureConfigurationFileInAppResources(): IFuture<void>;
 }
 
 interface IAndroidProjectPropertiesManager {

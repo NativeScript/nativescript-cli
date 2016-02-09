@@ -400,7 +400,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private mergeInfoPlists(): IFuture<void> {
+	public ensureConfigurationFileInAppResources(): IFuture<void> {
 		return (() => {
 			let projectDir = this.$projectData.projectDir;
 			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
@@ -421,6 +421,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing but the template " + templateInfoPlist + " is missing too, can not upgrade Info.plist.");
 				}
 			}
+
+		}).future<void>()();
+	}
+
+	private mergeInfoPlists(): IFuture<void> {
+		return (() => {
+			let projectDir = this.$projectData.projectDir;
+			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+			this.ensureConfigurationFileInAppResources().wait();
 
 			if (!this.$fs.exists(infoPlistPath).wait()) {
 				this.$logger.trace("Info.plist: No app/App_Resources/iOS/Info.plist found, falling back to pre-1.6.0 Info.plist behavior.");
