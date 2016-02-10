@@ -1,4 +1,8 @@
 ## Changelog
+#### 1.6.8 (2016-02-10)
+* Bugfix (MLIBZ-574): Do not check response type for file uploads from Google.
+* Bugfix (MLIBZ-779): Do not send an empty username/password in a login request.
+
 #### 1.6.7 (2016-02-02)
 * Bugfix: Fixed bug in the Angular build that prevented the library from being loaded.
 

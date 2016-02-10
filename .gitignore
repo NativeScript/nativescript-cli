@@ -2,3 +2,4 @@
 /dist/*
 !/dist/.jshintrc
 .DS_Store
+.env

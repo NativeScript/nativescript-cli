@@ -134,7 +134,7 @@ var TiHttp = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null && 204 !== this.status) {
+        if (!options.file && url.indexOf('https://storage.googleapis.com') !== 0 && response != null && 204 !== this.status) {
           var responseContentType = this.getResponseHeader('Content-Type');
 
           if (responseContentType == null) {
