@@ -144,7 +144,9 @@ function setupProject(): IFuture<any> {
 					prepareAppResources: () => Future.fromResult(),
 					afterPrepareAllPlugins: () => Future.fromResult(),
 					getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-					processConfigurationFilesFromAppResources: () => Future.fromResult()
+					processConfigurationFilesFromAppResources: () => Future.fromResult(),
+					ensureConfigurationFileInAppResources: () => Future.fromResult(),
+					interpolateConfigurationFile: () => Future.fromResult()
 				}
 			};
 		};

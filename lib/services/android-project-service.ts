@@ -323,7 +323,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public processConfigurationFilesFromAppResources(): IFuture<void> {
-		return this.ensureConfigurationFileInAppResources();
+		return Future.fromResult();
 	}
 
 	private processResourcesFromPlugin(pluginData: IPluginData, pluginPlatformsFolderPath: string): IFuture<void> {
@@ -571,6 +571,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				return false;
 			}
 
+			this.interpolateConfigurationFile().wait();
 			return true;
 		}).future<boolean>()();
 	}
