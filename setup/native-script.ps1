@@ -21,7 +21,7 @@ write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Google Chr
 cinst googlechrome --force --yes
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing node.js"
-cinst nodejs.install -version 4.2.6 --force --yes
+cinst nodejs.install -version 4.3.0 --force --yes
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Java Development Kit"
 cinst jdk8 --force --yes
@@ -58,4 +58,5 @@ $myPath = [Environment]::GetEnvironmentVariable("PATH")
 npm install -g nativescript
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "This script has modified your environment. You need to log off and log back on for the changes to take effect."
-pause
+Write-Host "Press any key to continue..."
+[void][System.Console]::ReadKey($true)
