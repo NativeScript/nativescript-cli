@@ -116,7 +116,7 @@ var Xhr = {
       var status = request.status;
 
       // Check `Content-Type` header for application/json
-      if (!options.file && responseData != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
+      if (!options.file && url.indexOf('https://storage.googleapis.com') !== 0 && responseData != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
         var responseContentType = request.getResponseHeader('Content-Type');
         var error;
 

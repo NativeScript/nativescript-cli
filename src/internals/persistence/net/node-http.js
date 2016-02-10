@@ -90,7 +90,7 @@ var NodeHttp = {
         var status = response.statusCode;
 
         // Check `Content-Type` header for application/json
-        if (!options.file && '' !== responseData.toString() && 2 === parseInt(status / 100, 10) && 204 !== status) {
+        if (!options.file && url.indexOf('https://storage.googleapis.com') !== 0 && '' !== responseData.toString() && 2 === parseInt(status / 100, 10) && 204 !== status) {
           var responseContentType = response.headers['content-type'];
           var error;
 

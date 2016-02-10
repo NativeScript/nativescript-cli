@@ -131,7 +131,7 @@ var AngularHTTP = {
 
       // Check `Content-Type` header for application/json. Thrown error will
       // cause promise to be rejected.
-      if (!options.file && response != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
+      if (!options.file && url.indexOf('https://storage.googleapis.com') !== 0 && response != null && 2 === parseInt(status / 100, 10) && 204 !== status) {
         var responseContentType = _response.headers('Content-Type') || undefined;
         var error;
 

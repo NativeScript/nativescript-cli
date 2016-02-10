@@ -97,7 +97,7 @@ var BackboneAjax = {
         }
 
         // Check `Content-Type` header for application/json
-        if (!options.file && response != null && 204 !== request.status) {
+        if (!options.file && url.indexOf('https://storage.googleapis.com') !== 0 && response != null && 204 !== request.status) {
           var responseContentType = request.getResponseHeader('Content-Type') || undefined;
           var error;
 
