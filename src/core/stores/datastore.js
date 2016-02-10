@@ -3,7 +3,7 @@ import DeltaSetRequest from '../requests/deltaSetRequest';
 import NetworkRequest from '../requests/networkRequest';
 import LocalRequest from '../requests/localRequest';
 import Response from '../requests/response';
-import { HttpMethod, StatusCode, StoreType, ReadPolicy, WritePolicy } from '../enums';
+import { HttpMethod, StatusCode, DataStoreType, ReadPolicy, WritePolicy } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';
 import Client from '../client';
 import Query from '../query';
@@ -933,7 +933,7 @@ export default class DataStore {
       return request.execute();
     }).then(response => {
       if (response && response.isSuccess()) {
-        const localStore = DataStore.getInstance(this.name, StoreType.Local);
+        const localStore = DataStore.getInstance(this.name, DataStoreType.Sync);
         const shouldSave = [];
         const shouldRemove = [];
         const docs = response.data.docs;
@@ -943,7 +943,7 @@ export default class DataStore {
         const promises = map(ids, id => {
           const metadata = docs[id];
           const requestOptions = clone(metadata);
-          return localStore.get(id, requestOptions).then(doc => {
+          return localStore.findById(id, requestOptions).then(doc => {
             shouldSave.push(doc);
             return doc;
           }).catch(err => {
@@ -957,7 +957,7 @@ export default class DataStore {
         });
 
         return Promise.all(promises).then(() => {
-          const networkStore = DataStore.getInstance(this.name, StoreType.Network);
+          const networkStore = DataStore.getInstance(this.name, DataStoreType.Network);
           const saved = map(shouldSave, doc => {
             const metadata = docs[doc._id];
             const requestOptions = clone(metadata);
@@ -970,7 +970,7 @@ export default class DataStore {
               return networkStore.save(doc, requestOptions).then(doc => {
                 return localStore.save(doc, requestOptions);
               }).then(doc => {
-                return localStore.remove(prevId, requestOptions).then(result => {
+                return localStore.removeById(prevId, requestOptions).then(result => {
                   if (result.count === 1) {
                     size = size - 1;
                     delete docs[prevId];
@@ -1010,7 +1010,7 @@ export default class DataStore {
             const metadata = docs[id];
             const requestOptions = clone(metadata);
 
-            return networkStore.remove(id, requestOptions).then(result => {
+            return networkStore.removeById(id, requestOptions).then(result => {
               if (result.count === 1) {
                 size = size - 1;
                 delete docs[id];
@@ -1319,22 +1319,22 @@ export default class DataStore {
    * @param  {StoreType}    [type=StoreType.Cache]    Type of store to return.
    * @return {Store}                                  Store
    */
-  static getInstance(name, type = StoreType.Cache) {
+  static getInstance(name, type = DataStoreType.Cache) {
     let store = dataStoresMap.get(`${name}_${type}`);
 
     if (!store) {
       store = new DataStore(name);
 
       switch (type) {
-        case StoreType.Sync:
+        case DataStoreType.Sync:
           store.readPolicy = ReadPolicy.LocalOnly;
           store.writePolicy = WritePolicy.LocalOnly;
           break;
-        case StoreType.Network:
+        case DataStoreType.Network:
           store.readPolicy = ReadPolicy.NetworkOnly;
           store.writePolicy = WritePolicy.NetworkOnly;
           break;
-        case StoreType.Cache:
+        case DataStoreType.Cache:
         default:
           store.readPolicy = ReadPolicy.LocalFirst;
           store.writePolicy = WritePolicy.LocalFirst;

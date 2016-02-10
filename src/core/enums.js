@@ -22,6 +22,17 @@ Object.freeze(CacheAdapter);
 export { CacheAdapter };
 
 /**
+ * Enum for DataStore types.
+ */
+const DataStoreType = {
+  Sync: 'Sync',
+  Cache: 'Cache',
+  Network: 'Network'
+};
+Object.freeze(DataStoreType);
+export { DataStoreType };
+
+/**
  * Enum for Read Policies.
  */
 const ReadPolicy = {
@@ -97,17 +108,6 @@ const StatusCode = {
 };
 Object.freeze(StatusCode);
 export { StatusCode };
-
-/**
- * Enum for DataStore types.
- */
-const DataStoreType = {
-  Sync: 'Sync',
-  Cache: 'Cache',
-  Network: 'Network'
-};
-Object.freeze(DataStoreType);
-export { DataStoreType };
 
 /**
  * @private

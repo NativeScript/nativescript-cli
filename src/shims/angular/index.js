@@ -16,7 +16,7 @@ ngKinvey.provider('$kinvey', function () {
     const networkRack = NetworkRack.sharedInstance();
     networkRack.swap(Http, new AngularHttp($http));
 
-    // Replace Defer with $q
+    // Replace Promise with $q
     Kinvey.Promise = $q;
 
     // Return the library

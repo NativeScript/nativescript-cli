@@ -51,10 +51,10 @@ config.env = {
   KINVEY_API_PROTOCOL: 'https',
   KINVEY_API_HOST: 'baas.kinvey.com',
   KINVEY_API_VERSION: 3,
-  KINVEY_ACTIVE_USER_COLLECTION: 'kinvey_activeUser_',
+  KINVEY_ACTIVE_USER_COLLECTION: 'kinvey_activeUser',
   KINVEY_DATASTORE_NAMESPACE: 'appdata',
   KINVEY_DEFAULT_TIMEOUT: 10000,
-  KINVEY_DEVICE_COLLECTION: 'kinvey_device_',
+  KINVEY_DEVICE_COLLECTION: 'kinvey_device',
   KINVEY_FILE_NAMESPACE: 'blob',
   KINVEY_ID_ATTRIBUTE: '_id',
   KINVEY_KMD_ATTRIBUTE: '_kmd',
@@ -67,7 +67,7 @@ config.env = {
   KINVEY_PUSH_NAMESPACE: 'push',
   KINVEY_RPC_NAMESPACE: 'rpc',
   KINVEY_SYNC_BATCH_SIZE: 1000,
-  KINVEY_SYNC_COLLECTION_NAME: 'kinvey_sync_',
+  KINVEY_SYNC_COLLECTION_NAME: 'kinvey_sync',
   KINVEY_SYNC_DEFAULT_STATE: true,
   KINVEY_USERS_NAMESPACE: 'user'
 };
@@ -111,8 +111,8 @@ config.files = assign(config.files, platformConfig.files);
  * ability to run the library in a browser.
  */
 config.browserify = {
-  debug: false, // turns on/off creating .map file
-  entries: path.join(config.paths.src, `${config.files.entry.filename}.js`),
+  debug: true, // turns on/off creating .map file
+  entries: path.join(config.paths.dist, `src/${config.files.entry.filename}.js`),
   standalone: 'Kinvey'
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);

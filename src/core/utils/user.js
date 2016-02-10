@@ -17,7 +17,7 @@ export default class UserUtils {
       client: Client.sharedInstance()
     }, options);
 
-    let user = UserUtils[activeUserSymbol][options.client.appId];
+    let user = UserUtils[activeUserSymbol][options.client.appKey];
 
     if (user) {
       return Promise.resolve(user);
@@ -25,7 +25,7 @@ export default class UserUtils {
 
     const request = new LocalRequest({
       method: HttpMethod.GET,
-      pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
+      pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}`,
       client: options.client
     });
     const promise = request.execute().then(response => {
@@ -36,7 +36,7 @@ export default class UserUtils {
       }
 
       user = data[0];
-      UserUtils[activeUserSymbol][options.client.appId] = user;
+      UserUtils[activeUserSymbol][options.client.appKey] = user;
       return user;
     }).catch(err => {
       if (err instanceof NotFoundError) {
@@ -58,18 +58,18 @@ export default class UserUtils {
       if (activeUser) {
         const request = new LocalRequest({
           method: HttpMethod.DELETE,
-          pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}/${activeUser._id}`,
+          pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}/${activeUser._id}`,
           client: options.client
         });
         return request.execute().then(() => {
-          UserUtils[activeUserSymbol][options.client.appId] = null;
+          UserUtils[activeUserSymbol][options.client.appKey] = null;
         });
       }
     }).then(() => {
       if (user) {
         const request = new LocalRequest({
           method: HttpMethod.POST,
-          pathname: `/${localNamespace}/${options.client.appId}/${activeUserCollection}`,
+          pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}`,
           client: options.client,
           data: result(user, 'toJSON', user)
         });
@@ -78,7 +78,7 @@ export default class UserUtils {
     }).then(response => {
       if (response && response.isSuccess()) {
         user = response.data;
-        UserUtils[activeUserSymbol][options.client.appId] = user;
+        UserUtils[activeUserSymbol][options.client.appKey] = user;
         return user;
       }
     });

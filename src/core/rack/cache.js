@@ -16,11 +16,11 @@ export default class CacheMiddleware extends Middleware {
     return super.handle(request).then(matches => {
       const method = request.method;
       const query = request.query;
-      const appId = matches.appId;
+      const appKey = matches.appKey;
       const collection = matches.collection;
       const id = matches.id;
       const data = request.data;
-      const cache = new Cache(appId, this.adapters);
+      const cache = new Cache(appKey, this.adapters);
       let promise;
 
       if (method === HttpMethod.GET) {

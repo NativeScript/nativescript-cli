@@ -36,7 +36,7 @@ export default class Files extends DataStore {
    */
   getPathname(client) {
     client = client || this.client;
-    return `/${filesNamespace}/${this.client.appId}`;
+    return `/${filesNamespace}/${this.client.appKey}`;
   }
 
   /**

@@ -2,10 +2,7 @@ import { KinveyError, NotFoundError } from '../errors';
 import { generateObjectId } from '../utils/store';
 import forEach from 'lodash/collection/forEach';
 import isArray from 'lodash/lang/isArray';
-const indexedDB = global.indexedDB ||
-                  global.mozIndexedDB ||
-                  global.webkitIndexedDB ||
-                  global.msIndexedDB;
+let indexedDB = null;
 const dbCache = {};
 
 const TransactionMode = {
@@ -13,6 +10,16 @@ const TransactionMode = {
   ReadOnly: 'readonly',
 };
 Object.freeze(TransactionMode);
+
+if (typeof window !== 'undefined') {
+  require('indexeddbshim');
+  global.shimIndexedDB.__useShim();
+  indexedDB = global.indexedDB ||
+              global.mozIndexedDB ||
+              global.webkitIndexedDB ||
+              global.msIndexedDB ||
+              global.shimIndexedDB;
+}
 
 /**
  * @private
@@ -27,24 +34,26 @@ export default class IndexedDB {
   openTransaction(collection, write = false, success, error, force = false) {
     let db = dbCache[this.name];
 
-    if (db && db.objectStoreNames.indexOf(collection) !== -1) {
-      try {
-        const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
-        const txn = db.transaction([collection], mode);
+    if (db) {
+      if (db.objectStoreNames.contains(collection)) {
+        try {
+          const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
+          const txn = db.transaction([collection], mode);
 
-        if (txn) {
-          const store = txn.objectStore(collection);
-          return success(store);
+          if (txn) {
+            const store = txn.objectStore(collection);
+            return success(store);
+          }
+
+          throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
+            `collection on the ${this.name} indexedDB database.`);
+        } catch (err) {
+          return error(err);
         }
-
-        throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
-          `collection on the ${this.name} indexedDB database.`);
-      } catch (err) {
-        return error(err);
+      } else if (!write) {
+        return error(new NotFoundError(`The ${collection} collection was not found on ` +
+          `the ${this.name} indexedDB database.`));
       }
-    } else if (!write) {
-      return error(new NotFoundError(`The ${collection} collection was not found on ` +
-        `the ${this.name} indexedDB database.`));
     }
 
     if (!force && this.inTransaction) {
@@ -55,13 +64,6 @@ export default class IndexedDB {
 
     // Switch flag
     this.inTransaction = true;
-
-    if (db) {
-      db.close();
-      db = null;
-      dbCache[this.name] = null;
-    }
-
     let request;
 
     if (db) {
@@ -173,7 +175,7 @@ export default class IndexedDB {
     return promise;
   }
 
-  get(collection, id) {
+  findById(collection, id) {
     const promise = new Promise((resolve, reject) => {
       this.openTransaction(collection, false, store => {
         const request = store.get(id);

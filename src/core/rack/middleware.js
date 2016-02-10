@@ -40,7 +40,7 @@ export default class KinveyMiddleware extends Middleware {
   handle(request) {
     return new Promise((resolve, reject) => {
       if (request) {
-        const pattern = new UrlPattern('/:namespace/:appId(/)(:collection)(/)(:id)(/)');
+        const pattern = new UrlPattern('/:namespace/:appKey(/)(:collection)(/)(:id)(/)');
         const matches = pattern.match(request.pathname);
         return resolve(matches);
       }

@@ -332,8 +332,8 @@ export default class User extends Model {
         pathname: `${this.getPathname(options.client)}/_logout`,
         timeout: options.timeout
       });
-      return request.execute();
-    }).then(() => {
+      request.execute();
+
       return User.setActive(null, options.client);
     });
 

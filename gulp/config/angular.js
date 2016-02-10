@@ -5,7 +5,7 @@ const config = {
 };
 
 config.browserify = {
-  entries: path.join(__dirname, '..', '..', 'src', 'shims', 'angular', 'index.js')
+  entries: path.join(__dirname, '..', '..', 'dist', 'angular', 'src', 'shims', 'angular', 'index.js'),
 };
 
 config.legacy.browserify = {
