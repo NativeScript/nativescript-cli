@@ -192,6 +192,7 @@ export class PlatformService implements IPlatformService {
 			this.ensurePlatformInstalled(platform).wait();
 
 			let platformData = this.$platformsData.getPlatformData(platform);
+			platformData.platformProjectService.ensureConfigurationFileInAppResources().wait();
 			let appDestinationDirectoryPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			let lastModifiedTime = this.$fs.exists(appDestinationDirectoryPath).wait() ?
 				this.$fs.getFsStats(appDestinationDirectoryPath).wait().mtime : null;
@@ -264,6 +265,9 @@ export class PlatformService implements IPlatformService {
 
 			// Process configurations files from App_Resources
 			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
+
+			// Replace placeholders in configuration files
+			platformData.platformProjectService.interpolateConfigurationFile().wait();
 
 			this.$logger.out("Project successfully prepared");
 			return true;
