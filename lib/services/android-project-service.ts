@@ -8,6 +8,8 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
 import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
+import {EOL} from "os";
+import { createGUID } from "../common/helpers";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -233,12 +235,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 			} else {
-				this.checkAnt().wait();
-
-				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
-				this.spawn('ant', args).wait();
-
-				this.platformData.deviceBuildOutputPath = path.join(this.platformData.projectRoot, "bin");
+				this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
+					"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
 			}
 		}).future<void>()();
 	}
@@ -274,29 +272,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return (() => {
 			let originalAndroidManifestFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName),
 				hasAndroidManifestInAppResources = this.$fs.exists(originalAndroidManifestFilePath).wait(),
-				shouldExtractDefaultManifest = !hasAndroidManifestInAppResources,
-				isAndroidManifestBackedUp = false;
-
-			if(hasAndroidManifestInAppResources) {
-				let isFileCorrect = this.isAndroidManifestFileCorrect(originalAndroidManifestFilePath).wait();
-				if(!isFileCorrect) {
-					shouldExtractDefaultManifest = true;
-					isAndroidManifestBackedUp = true;
-					this.backupOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
-				}
-			}
+				shouldExtractDefaultManifest = !hasAndroidManifestInAppResources || !this.isAndroidManifestFileCorrect(originalAndroidManifestFilePath).wait();
 
 			// In case we should extract the manifest from default template, but for some reason we cannot, break the execution,
 			// so the original file from Android runtime will be used.
 			if(shouldExtractDefaultManifest && !this.extractAndroidManifestFromDefaultTemplate(originalAndroidManifestFilePath).wait()) {
-				// now revert back
-				this.revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
 				return;
-			}
-
-			if(isAndroidManifestBackedUp) {
-				this.$logger.warn(`Your ${this.platformData.configurationFileName} in app/App_Resources/Android will be replaced by the default one from hello-world template.`);
-				this.$logger.printMarkdown(`The original file will be moved to \`${this.configurationFileBackupName}\`. Merge it **manually** with the new \`${this.platformData.configurationFileName}\` in your app/App_Resources/Android.`);
 			}
 
 			// Overwrite the AndroidManifest from runtime.
@@ -416,32 +397,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit"});
 	}
 
-	private getAntArgs(configuration: string, projectRoot: string): string[] {
-		let args = [configuration, "-f", path.join(projectRoot, "build.xml")];
-		if(configuration === "release") {
-			if(this.$options.keyStorePath) {
-				args = args.concat(["-Dkey.store", path.resolve(this.$options.keyStorePath)]);
-			}
-
-			if(this.$options.keyStorePassword) {
-				args = args.concat(["-Dkey.store.password", this.$options.keyStorePassword]);
-			}
-
-			if(this.$options.keyStoreAlias) {
-				args = args.concat(["-Dkey.alias", this.$options.keyStoreAlias]);
-			}
-
-			if(this.$options.keyStoreAliasPassword) {
-				args = args.concat(["-Dkey.alias.password", this.$options.keyStoreAliasPassword]);
-			}
-		}
-
-		// metadata generation support
-		args = args.concat(["-Dns.resources", path.join(__dirname, "../../resources/tools")]);
-
-		return args;
-	}
-
 	private validatePackageName(packageName: string): void {
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
@@ -481,16 +436,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			return versionInManifest;
 		}).future<string>()();
-	}
-
-	private checkAnt(): IFuture<void> {
-		return (() => {
-			try {
-				this.$childProcess.exec("ant -version").wait();
-			} catch(error) {
-				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
-			}
-		}).future<void>()();
 	}
 
 	private symlinkDirectory(directoryName: string, projectRoot: string, frameworkDir: string): IFuture<void> {
@@ -533,20 +478,32 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<boolean>()();
 	}
 
-	private get configurationFileBackupName(): string {
-		return this.platformData.configurationFileName + ".backup";
+	private _configurationFileBackupName: string;
+
+	private getConfigurationFileBackupName(originalAndroidManifestFilePath: string): IFuture<string> {
+		return (() => {
+			if(!this._configurationFileBackupName) {
+				let defaultBackupName = this.platformData.configurationFileName + ".backup";
+				if(this.$fs.exists(path.join(path.dirname(originalAndroidManifestFilePath), defaultBackupName)).wait()) {
+					defaultBackupName += `_${createGUID(false)}`;
+				}
+				this._configurationFileBackupName = defaultBackupName;
+			}
+
+			return this._configurationFileBackupName;
+		}).future<string>()();
 	}
 
 	private backupOriginalAndroidManifest(originalAndroidManifestFilePath: string): IFuture<void> {
 		return (() => {
-			let newPathForOriginalManifest = path.join(path.dirname(originalAndroidManifestFilePath), this.configurationFileBackupName);
+			let newPathForOriginalManifest = path.join(path.dirname(originalAndroidManifestFilePath), this.getConfigurationFileBackupName(originalAndroidManifestFilePath).wait());
 			shell.mv(originalAndroidManifestFilePath, newPathForOriginalManifest);
 		}).future<void>()();
 	}
 
 	private revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath: string): IFuture<void> {
 		return (() => {
-			let pathToBackupFile = path.join(path.dirname(originalAndroidManifestFilePath), this.configurationFileBackupName);
+			let pathToBackupFile = path.join(path.dirname(originalAndroidManifestFilePath), this.getConfigurationFileBackupName(originalAndroidManifestFilePath).wait());
 			if(this.$fs.exists(pathToBackupFile).wait()) {
 				this.$logger.trace(`Could not extract ${this.platformData.configurationFileName} from default template. Reverting the change of your app/App_Resources/${this.platformData.configurationFileName}.`);
 				shell.mv(pathToBackupFile, originalAndroidManifestFilePath);
@@ -558,17 +515,27 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return ((): boolean => {
 			let defaultTemplatePath = this.$projectTemplatesService.defaultTemplatePath.wait();
 			let templateAndroidManifest = path.join(defaultTemplatePath, constants.APP_RESOURCES_FOLDER_NAME, this.$devicePlatformsConstants.Android, this.platformData.configurationFileName);
+			let alreadyHasAndroidManifest = this.$fs.exists(originalAndroidManifestFilePath).wait();
 			if (this.$fs.exists(templateAndroidManifest).wait()) {
 				this.$logger.trace(`${originalAndroidManifestFilePath} is missing. Upgrading the source of the project with one from the new project template. Copy ${templateAndroidManifest} to ${originalAndroidManifestFilePath}`);
 				try {
+					if(alreadyHasAndroidManifest) {
+						this.backupOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
+					}
 					this.$fs.copyFile(templateAndroidManifest, originalAndroidManifestFilePath).wait();
 				} catch(e) {
 					this.$logger.trace(`Copying template's ${this.platformData.configurationFileName} failed. `, e);
+					this.revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
 					return false;
 				}
 			} else {
 				this.$logger.trace(`${originalAndroidManifestFilePath} is missing but the template ${templateAndroidManifest} is missing too, can not upgrade ${this.platformData.configurationFileName}.`);
 				return false;
+			}
+
+			if(alreadyHasAndroidManifest) {
+				this.$logger.warn(`Your ${this.platformData.configurationFileName} in app/App_Resources/Android will be replaced by the default one from hello-world template.`);
+				this.$logger.printMarkdown(`The original file will be moved to \`${this.getConfigurationFileBackupName(originalAndroidManifestFilePath).wait()}\`. Merge it **manually** with the new \`${this.platformData.configurationFileName}\` in your app/App_Resources/Android.`);
 			}
 
 			this.interpolateConfigurationFile().wait();
