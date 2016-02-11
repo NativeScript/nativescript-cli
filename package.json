@@ -62,7 +62,6 @@
     "plist-merge-patch": "0.0.9",
     "plistlib": "0.2.1",
     "progress-stream": "1.1.1",
-    "prompt": "https://github.com/Icenium/prompt/tarball/master",
     "properties-parser": "0.2.3",
     "ref": "https://github.com/icenium/ref/tarball/v1.1.3.1",
     "ref-struct": "https://github.com/telerik/ref-struct/tarball/v1.0.2.1",
