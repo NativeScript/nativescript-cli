@@ -8,6 +8,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
 import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
+import {EOL} from "os";
 
 export class AndroidProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static VALUES_DIRNAME = "values";
@@ -233,12 +234,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 			} else {
-				this.checkAnt().wait();
-
-				let args = this.getAntArgs(this.$options.release ? "release" : "debug", projectRoot);
-				this.spawn('ant', args).wait();
-
-				this.platformData.deviceBuildOutputPath = path.join(this.platformData.projectRoot, "bin");
+				this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
+					"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
 			}
 		}).future<void>()();
 	}
@@ -416,32 +413,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit"});
 	}
 
-	private getAntArgs(configuration: string, projectRoot: string): string[] {
-		let args = [configuration, "-f", path.join(projectRoot, "build.xml")];
-		if(configuration === "release") {
-			if(this.$options.keyStorePath) {
-				args = args.concat(["-Dkey.store", path.resolve(this.$options.keyStorePath)]);
-			}
-
-			if(this.$options.keyStorePassword) {
-				args = args.concat(["-Dkey.store.password", this.$options.keyStorePassword]);
-			}
-
-			if(this.$options.keyStoreAlias) {
-				args = args.concat(["-Dkey.alias", this.$options.keyStoreAlias]);
-			}
-
-			if(this.$options.keyStoreAliasPassword) {
-				args = args.concat(["-Dkey.alias.password", this.$options.keyStoreAliasPassword]);
-			}
-		}
-
-		// metadata generation support
-		args = args.concat(["-Dns.resources", path.join(__dirname, "../../resources/tools")]);
-
-		return args;
-	}
-
 	private validatePackageName(packageName: string): void {
 		//Make the package conform to Java package types
 		//Enforce underscore limitation
@@ -481,16 +452,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			return versionInManifest;
 		}).future<string>()();
-	}
-
-	private checkAnt(): IFuture<void> {
-		return (() => {
-			try {
-				this.$childProcess.exec("ant -version").wait();
-			} catch(error) {
-				this.$errors.fail("Error executing commands 'ant', make sure you have ant installed and added to your PATH.");
-			}
-		}).future<void>()();
 	}
 
 	private symlinkDirectory(directoryName: string, projectRoot: string, frameworkDir: string): IFuture<void> {
