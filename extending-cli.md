@@ -29,8 +29,8 @@ my-app/
     └── after-prepare (this is an executable file) 
 ```
 
-To support multiple scripts extending the same action, you ccan create a sud-directory in the `hooks` directory using the naming convention described bellow.
-Tehn place the extending code into it. The CLI will execute them one after another but the order is not guaranteed.
+To support multiple scripts extending the same action, you ccan create a sub-directory in the `hooks` directory using the naming convention described below.
+When you place code files into that folder, the CLI executes each file one after another, but not in a guaranteed order.
 
 ```
 my-app/
@@ -61,11 +61,11 @@ The type of the parameters are described in the .d.ts files which are part of th
 
  - $logger: ILogger. Use the members of this class to show messages to the user cooperating with the CLI internal state.
  - $projectData: IProjectData. Contains data about the project, like project directory, id, dependencies, etc.
- - $usbLiveSyncService:ILiveSyncService. Use this service to invoke LiveSync for device or emulator.
+ - $usbLiveSyncService:ILiveSyncService. Use this variable to check whether a LiveSync or normal build is in progress.
  - hookArgs: any. Contains all the parameters of the original function in the CLI which is being hooked.
  
 The hook must return a Promise. If the hook succeeds, it must fullfil the promise, but the fullfilment value is ignored.
-The hook can also rejects the promise with an instance of Error. The returned error can have two optional members controlling the CLI:
+The hook can also reject the promise with an instance of Error. The returned error can have two optional members controlling the CLI:
  
   - stopExecution: boolean - set this to false to let the CLI continue executing this command
   - errorAsWarning: boolean: set this to treat the returned error as warning. The CLI prints the error.message colored as a warning and continues executing the current command
