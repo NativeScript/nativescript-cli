@@ -20,7 +20,8 @@ class AndroidDebugService implements IDebugService {
 		private $hostInfo: IHostInfo,
 		private $errors: IErrors,
 		private $opener: IOpener,
-		private $config: IConfiguration) { }
+		private $config: IConfiguration,
+		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery) { }
 
 	public get platform() { return "android"; }
 
@@ -41,6 +42,10 @@ class AndroidDebugService implements IDebugService {
 	private debugOnEmulator(): IFuture<void> {
 		return (() => {
 			this.$platformService.deployOnEmulator(this.platform).wait();
+			// Assure we've detected the emulator as device
+			// For example in case deployOnEmulator had stated new emulator instance
+			// we need some time to detect it. Let's force detection.
+			this.$androidDeviceDiscovery.startLookingForDevices().wait();
 			this.debugOnDevice().wait();
 		}).future<void>()();
 	}
