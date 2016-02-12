@@ -1,15 +1,15 @@
 Extending the CLI
 ================= 
 
-NativeScript CLI allows you to extend its behavior and customize it for your project. 
-When the CLI executes a particular command (for example `tns build`) it checks whether you have added such extending hooks and executes them.
+NativeScript CLI allows you to extend its behavior and customize it according to your needs.
+Each time the CLI executes a particular command (for example `tns build`) it checks whether you have added any extending hooks and executes them.
 Additionally, plugins can use these hooks to control the compilation of the program.
 
 What are the hooks
 ==================
 
-The hooks are any executable code, Node.js script or a directory placed under the `hooks` subdirectory of your project.
-The hook name must follow a strict scheme. The name describes:
+Hooks can be executable code, Node.js script, or even a directory containing other files. To be executed however, the hooks must be placed under the `hooks` subdirectory of your project.
+The hook name must follow a strict scheme, describing:
 
  - the action being hooked
  - whether the user code must be called before or after the action
@@ -29,8 +29,8 @@ my-app/
     └── after-prepare (this is an executable file) 
 ```
 
-To support multiple scripts extending the same action, you can use a different approach. Create a sud-directory in the `hooks` directory using the naming convention described above.
-Place all extending code into it. The CLI will execute them one after another but the order is not guaranteed.
+To support multiple scripts extending the same action, you ccan create a sud-directory in the `hooks` directory using the naming convention described bellow.
+Tehn place the extending code into it. The CLI will execute them one after another but the order is not guaranteed.
 
 ```
 my-app/
