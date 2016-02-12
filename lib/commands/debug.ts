@@ -16,6 +16,10 @@ export class DebugPlatformCommand implements ICommand {
 	canExecute(args: string[]): IFuture<boolean> {
 		return ((): boolean => {
 			this.$devicesService.initialize({ platform: this.debugService.platform, deviceId: this.$options.device }).wait();
+			if(this.$options.emulator) {
+				return true;
+			}
+
 			if(this.$devicesService.deviceCount === 0) {
 				this.$errors.failWithoutHelp("No devices detected. Connect a device and try again.");
 			} else if (this.$devicesService.deviceCount > 1) {
@@ -34,16 +38,6 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$options: IOptions) {
 		super($iOSDebugService, $devicesService, $errors, $options);
 	}
-
-	canExecute(args: string[]): IFuture<boolean> {
-		return ((): boolean => {
-			if(this.$options.emulator) {
-				return true;
-			}
-
-			return super.canExecute(args).wait();
-		}).future<boolean>()();
-	}
 }
 $injector.registerCommand("debug|ios", DebugIOSCommand);
 
@@ -53,10 +47,6 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$errors: IErrors,
 		$options: IOptions) {
 		super($androidDebugService, $devicesService, $errors, $options);
-	}
-
-	canExecute(args: string[]): IFuture<boolean> {
-		return super.canExecute(args);
 	}
 }
 $injector.registerCommand("debug|android", DebugAndroidCommand);
