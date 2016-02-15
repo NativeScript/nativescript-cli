@@ -1,6 +1,57 @@
 NativeScript CLI Changelog
 ================
 
+1.6.0 (2016, February 17)
+==
+
+### Breaking
+* CLI requires full `AndroidManifest.xml` in `app/App_Resources/Android`. Any project which already has such manifest will be upgraded on prepare command.
+The existing `AndroidManifest.xml` will be renamed and default manifest will be extracted. You will have to merge the files manually.
+* Remove support for `tns library add` command.
+* Remove support for `ant` builds.
+
+### New
+* [Implemented #374](https://github.com/NativeScript/nativescript-cli/issues/374): Add support for different templates by using `--template` option for `tns create` command.
+* [Implemented #625](https://github.com/NativeScript/nativescript-cli/issues/625): A script to set up Mac machine for developing with NativeScript.
+* [Implemented #921](https://github.com/NativeScript/nativescript-cli/issues/921): Initial LiveSync is extremly slow if the project has thousands of files.
+* [Implemented #952](https://github.com/NativeScript/nativescript-cli/issues/952): Add `--sdk` option to specify SDK version of iOS Simulator.
+* [Implemented #1026](https://github.com/NativeScript/nativescript-cli/issues/1026): Out of the box support for application id in plugins.
+* [Implemented #1089](https://github.com/NativeScript/nativescript-cli/issues/1089): Allow full `Info.plist` and `AndroidManifest.xml` files to be placed in `app/App_Resources/<platform>`.
+* [Implemented #1239](https://github.com/NativeScript/nativescript-cli/issues/1239): Remove support for `library add` command.
+* [Implemented #1243](https://github.com/NativeScript/nativescript-cli/issues/1243): Fast livesync for images in `app` directory.
+* [Implemented #1262](https://github.com/NativeScript/nativescript-cli/issues/1262): LiveSync with console.log support for iOS simulators.
+* [Implemented #1294](https://github.com/NativeScript/nativescript-cli/issues/1294): `tns doctor` should check CocoaPods/Ruby version.
+* [Implemented #1302](https://github.com/NativeScript/nativescript-cli/issues/1302): Add command for generating html help pages - `dev-generate-help`.
+* [Implemented #1329](https://github.com/NativeScript/nativescript-cli/issues/1329): `tns device` to show status of connected devices.
+* [Implemented #1338](https://github.com/NativeScript/nativescript-cli/issues/1338): Remove the requirement for external watchers.
+* [Implemented #1363](https://github.com/NativeScript/nativescript-cli/issues/1363): Support debug commands with `--no-client` argument.
+* [Implemented #1375](https://github.com/NativeScript/nativescript-cli/issues/1375): Improve the output of `tns debug android --get-port`.
+* [Implemented #1382](https://github.com/NativeScript/nativescript-cli/issues/1382): Show a progress indicator when downloading platforms.
+* [Implemented #1412](https://github.com/NativeScript/nativescript-cli/issues/1412): Store settings in the Roaming Windows profile.
+* [Implemented #1420](https://github.com/NativeScript/nativescript-cli/issues/1420): Log how often CLI users "opt out" of CLI usage tracking.
+* [Implemented #1440](https://github.com/NativeScript/nativescript-cli/issues/1440): Show loading indicator when an exception is tracked.
+* [Implemented #1486](https://github.com/NativeScript/nativescript-cli/issues/1486): Implement Android debugging with unix sockets redirection.
+
+### Fixed
+* [Fixed #575](https://github.com/NativeScript/nativescript-cli/issues/575): Plugin remove does not work with `--path` option.
+* [Fixed #1027](https://github.com/NativeScript/nativescript-cli/issues/1027): Prepare android/ios command prepares both platforms when added.
+* [Fixed #1236](https://github.com/NativeScript/nativescript-cli/issues/1236): The command `tns device log` prints only the log of the app on Android.
+* [Fixed #1237](https://github.com/NativeScript/nativescript-cli/issues/1237): `tns livesync --watch` fails when ios device is not attached and simulator is running.
+* [Fixed #1292](https://github.com/NativeScript/nativescript-cli/issues/1292): Livesync fails when using typescript in VisualStudio.
+* [Fixed #1307](https://github.com/NativeScript/nativescript-cli/issues/1307): Infinite loop when trying to validate xml.
+* [Fixed #1315](https://github.com/NativeScript/nativescript-cli/issues/1315): LiveSync does not respect deleted files on some android devices.
+* [Fixed #1328](https://github.com/NativeScript/nativescript-cli/issues/1328): Terminal hangs if tns device is run and there is an untrusted iPhone connected.
+* [Fixed #1332](https://github.com/NativeScript/nativescript-cli/issues/1332): Application entry point file not found... when using livesync (android).
+* [Fixed #1337](https://github.com/NativeScript/nativescript-cli/issues/1337): Syntax error in a babel source crashes livesync watch.
+* [Fixed #1339](https://github.com/NativeScript/nativescript-cli/issues/1339): LiveSync watch breaks when deleting a folder and then adding a new file|folder on OS X.
+* [Fixed #1360](https://github.com/NativeScript/nativescript-cli/issues/1360): Missing iOS console logs in some cases.
+* [Fixed #1386](https://github.com/NativeScript/nativescript-cli/issues/1386): Unit tests crash on Android emulator.
+* [Fixed #1401](https://github.com/NativeScript/nativescript-cli/issues/1401): Unit testing: `tns test android` command hangs.
+* [Fixed #1403](https://github.com/NativeScript/nativescript-cli/issues/1403): `tns deploy ios --release` command prints incorrect message.
+* [Fixed #1428](https://github.com/NativeScript/nativescript-cli/issues/1428): XCode v7.2+ Fails with Cocoapods on emulator.
+* [Fixed #1437](https://github.com/NativeScript/nativescript-cli/issues/1437): `tns debug android --emulator` does not stop at the app initial breakpoint.
+* [Fixed #1455](https://github.com/NativeScript/nativescript-cli/issues/1455): CLI not supporting a project path having a spaces.
+
 1.5.2 (2015, December 12)
 ==
 ### New
