@@ -51,10 +51,4 @@ system('echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.profile')
 puts "Configuring your system for Android development... This might take some time, please, be patient."
 system "echo yes | /usr/local/opt/android-sdk/tools/android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,extra-android-m2repository --all --no-ui"
 
-puts "Installing Node.js 4"
-system('brew install homebrew/versions/node4-lts')
-
-puts "Installing NativeScript CLI..."
-system "/usr/local/bin/npm install -g nativescript"
-
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile. Restart the terminal to use them."
