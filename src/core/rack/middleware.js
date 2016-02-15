@@ -1,6 +1,7 @@
 import AsciiTree from './asciiTree';
 import UrlPattern from 'url-pattern';
 import { KinveyError } from '../errors';
+import url from 'url';
 
 /**
  * @private
@@ -40,9 +41,15 @@ export default class KinveyMiddleware extends Middleware {
   handle(request) {
     return new Promise((resolve, reject) => {
       if (request) {
+        const pathname = url.parse(request.url).pathname;
         const pattern = new UrlPattern('/:namespace/:appKey(/)(:collection)(/)(:id)(/)');
-        const matches = pattern.match(request.pathname);
-        return resolve(matches);
+        const matches = pattern.match(pathname);
+        return resolve({
+          namespace: matches.namespace,
+          appKey: matches.appKey,
+          collection: matches.collection,
+          id: matches.id
+        });
       }
 
       reject(new KinveyError('Request is null. Please provide a valid request.', request));

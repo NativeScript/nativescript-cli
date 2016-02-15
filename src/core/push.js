@@ -1,14 +1,14 @@
 import { KinveyError } from './errors';
 import { EventEmitter } from 'events';
 import NetworkRequest from './requests/networkRequest';
-import DataStore from './stores/datastore';
-import { HttpMethod, DataStoreType } from './enums';
+import SyncStore from './stores/syncStore';
+import { HttpMethod } from './enums';
 import User from './models/user';
 import Client from './client';
 import Query from './query';
 import Auth from './auth';
 import Device from './device';
-import assign from 'lodash/object/assign';
+import assign from 'lodash/assign';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollection = process.env.KINVEY_DEVICE_COLLECTION || 'kinvey_device';
@@ -176,10 +176,9 @@ const Push = {
         const client = Client.sharedInstance();
         const request = new NetworkRequest({
           method: HttpMethod.POST,
-          client: client,
+          url: client.getUrl(`/${pushNamespace}/${client.appKey}/register-device`),
           properties: options.properties,
           auth: user ? Auth.session : Auth.master,
-          pathname: `/${pushNamespace}/${client.appKey}/register-device`,
           data: {
             platform: device.platform.name,
             framework: device.isCordova() ? 'phonegap' : 'titanium',
@@ -190,7 +189,7 @@ const Push = {
         });
         return request.execute();
       }).then(result => {
-        const store = DataStore.getInstance(deviceCollection, DataStoreType.Sync);
+        const store = new SyncStore(deviceCollection);
         return store.save({
           _id: deviceId,
           registered: true
@@ -221,7 +220,7 @@ const Push = {
         'push notifications on ${platform.name}.`));
     }
 
-    const store = DataStore.getInstance(deviceCollection, DataStoreType.Sync);
+    const store = new SyncStore(deviceCollection);
     const query = new Query();
     query.equalsTo('registered', true);
     const promise = store.find(query).then(data => {

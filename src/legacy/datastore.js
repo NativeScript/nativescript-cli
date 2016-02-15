@@ -1,9 +1,9 @@
-const DataStore = require('../core/stores/datastore');
+const DataStore = require('../core/stores/cacheStore');
 const Query = require('../core/query');
 const Aggregation = require('../core/aggregation');
 const KinveyError = require('../core/errors').KinveyError;
 const log = require('../core/log');
-const map = require('lodash/collection/map');
+const map = require('lodash/map');
 const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
 

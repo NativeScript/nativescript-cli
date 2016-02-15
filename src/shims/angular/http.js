@@ -1,8 +1,8 @@
 import Middleware from '../../core/rack/middleware';
 import { HttpMethod } from '../../core/enums';
-import result from 'lodash/object/result';
-import isEmpty from 'lodash/lang/isEmpty';
-import isString from 'lodash/lang/isString';
+import result from 'lodash/result';
+import isEmpty from 'lodash/isEmpty';
+import isString from 'lodash/isString';
 
 /**
  * @private

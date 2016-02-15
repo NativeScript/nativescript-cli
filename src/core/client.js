@@ -1,7 +1,8 @@
 import { KinveyError } from './errors';
 import url from 'url';
-import clone from 'lodash/lang/clone';
-import assign from 'lodash/object/assign';
+import qs from 'qs';
+import clone from 'lodash/clone';
+import assign from 'lodash/assign';
 const sharedInstanceSymbol = Symbol();
 
 /**
@@ -81,10 +82,22 @@ export default class Client {
   /**
    * @type {string}
    */
-  get url() {
+  getUrl(pathname = '/', query = {}, options = {}) {
+    options = assign({
+      cacheBust: true
+    }, options);
+
+    query = qs.parse(query);
+
+    if (options.cacheBust) {
+      query._ = Math.random().toString(36).substr(2);
+    }
+
     return url.format({
       protocol: this.protocol,
-      host: this.host
+      host: this.host,
+      pathname: pathname,
+      query: query
     });
   }
 

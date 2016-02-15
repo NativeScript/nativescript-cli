@@ -1,10 +1,10 @@
 import Acl from '../acl';
 import Metadata from '../metadata';
 import Client from '../client';
-import defaults from 'lodash/object/defaults';
-import result from 'lodash/object/result';
-import clone from 'lodash/lang/clone';
-import assign from 'lodash/object/assign';
+import defaults from 'lodash/defaults';
+import result from 'lodash/result';
+import clone from 'lodash/clone';
+import assign from 'lodash/assign';
 const localIdPrefix = process.env.KINVEY_ID_PREFIX || 'local_';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';

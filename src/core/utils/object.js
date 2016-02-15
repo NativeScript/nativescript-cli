@@ -1,4 +1,4 @@
-import clone from 'lodash/lang/clone';
+import clone from 'lodash/clone';
 
 /**
  * @private

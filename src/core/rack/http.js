@@ -2,9 +2,9 @@ import Middleware from './middleware';
 import { HttpMethod } from '../enums';
 import { NetworkConnectionError } from '../errors';
 import http from 'request';
-import result from 'lodash/object/result';
-import isEmpty from 'lodash/lang/isEmpty';
-import isString from 'lodash/lang/isString';
+import result from 'lodash/result';
+import isEmpty from 'lodash/isEmpty';
+import isString from 'lodash/isString';
 
 /**
  * @private
@@ -20,7 +20,7 @@ export default class Http extends Middleware {
         url: request.url,
         method: request.method,
         headers: request.headers,
-        qs: request.flags || {},
+        qs: {},
         followRedirect: request.followRedirect
       };
 

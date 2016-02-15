@@ -3,8 +3,8 @@ import Auth from './auth';
 import { HttpMethod } from './enums';
 import { KinveyError } from './errors';
 import NetworkRequest from './requests/networkRequest';
-import assign from 'lodash/object/assign';
-import isString from 'lodash/lang/isString';
+import assign from 'lodash/assign';
+import isString from 'lodash/isString';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**
@@ -45,12 +45,12 @@ export default class Command {
       handler() {}
     }, options);
 
+    const client = Client.sharedInstance();
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      client: Client.sharedInstance(),
+      url: client.getUrl(`/${rpcNamespace}/${options.client.appKey}/custom/${command}`),
       properties: options.properties,
       auth: Auth.default,
-      pathname: `/${rpcNamespace}/${options.client.appKey}/custom/${command}`,
       data: args,
       timeout: options.timeout
     });

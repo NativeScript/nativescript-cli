@@ -1,7 +1,7 @@
 import { KinveyError, NotFoundError } from '../errors';
 import { generateObjectId } from '../utils/store';
-import forEach from 'lodash/collection/forEach';
-import isArray from 'lodash/lang/isArray';
+import forEach from 'lodash/forEach';
+import isArray from 'lodash/isArray';
 let indexedDB = null;
 const dbCache = {};
 

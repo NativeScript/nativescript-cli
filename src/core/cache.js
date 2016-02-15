@@ -6,11 +6,11 @@ import LocalStorage from './persistence/localstorage';
 import Memory from './persistence/memory';
 import WebSQL from './persistence/websql';
 import log from './log';
-import result from 'lodash/object/result';
-import reduce from 'lodash/collection/reduce';
-import forEach from 'lodash/collection/forEach';
-import isString from 'lodash/lang/isString';
-import isArray from 'lodash/lang/isArray';
+import result from 'lodash/result';
+import reduce from 'lodash/reduce';
+import forEach from 'lodash/forEach';
+import isString from 'lodash/isString';
+import isArray from 'lodash/isArray';
 const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
 /**

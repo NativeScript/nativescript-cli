@@ -15,8 +15,8 @@ const $ = require('gulp-load-plugins')();
 const argv = require('yargs').argv;
 const path = require('path');
 const isparta = require('isparta');
-const assign = require('lodash/object/assign');
-const clone = require('lodash/lang/clone');
+const assign = require('lodash/assign');
+const clone = require('lodash/clone');
 const platform = argv.platform || 'html5';
 const config = {
   platform: platform,

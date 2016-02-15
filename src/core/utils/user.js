@@ -2,8 +2,7 @@ import LocalRequest from '../requests/LocalRequest';
 import Client from '../client';
 import { HttpMethod } from '../enums';
 import { NotFoundError } from '../errors';
-import result from 'lodash/object/result';
-import assign from 'lodash/object/assign';
+import result from 'lodash/result';
 const activeUserSymbol = Symbol();
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
@@ -12,12 +11,8 @@ const activeUserCollection = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activ
  * @private
  */
 export default class UserUtils {
-  static getActive(options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-
-    let user = UserUtils[activeUserSymbol][options.client.appKey];
+  static getActive(client = Client.sharedInstance()) {
+    let user = UserUtils[activeUserSymbol][client.appKey];
 
     if (user) {
       return Promise.resolve(user);
@@ -25,8 +20,7 @@ export default class UserUtils {
 
     const request = new LocalRequest({
       method: HttpMethod.GET,
-      pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}`,
-      client: options.client
+      url: client.getUrl(`/${localNamespace}/${client.appKey}/${activeUserCollection}`)
     });
     const promise = request.execute().then(response => {
       const data = response.data;
@@ -36,7 +30,7 @@ export default class UserUtils {
       }
 
       user = data[0];
-      UserUtils[activeUserSymbol][options.client.appKey] = user;
+      UserUtils[activeUserSymbol][client.appKey] = user;
       return user;
     }).catch(err => {
       if (err instanceof NotFoundError) {
@@ -49,28 +43,22 @@ export default class UserUtils {
     return promise;
   }
 
-  static setActive(user, options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-
-    const promise = UserUtils.getActive(options).then(activeUser => {
+  static setActive(user, client = Client.sharedInstance()) {
+    const promise = UserUtils.getActive(client).then(activeUser => {
       if (activeUser) {
         const request = new LocalRequest({
           method: HttpMethod.DELETE,
-          pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}/${activeUser._id}`,
-          client: options.client
+          url: client.getUrl(`/${localNamespace}/${client.appKey}/${activeUserCollection}/${activeUser._id}`)
         });
         return request.execute().then(() => {
-          UserUtils[activeUserSymbol][options.client.appKey] = null;
+          UserUtils[activeUserSymbol][client.appKey] = null;
         });
       }
     }).then(() => {
       if (user) {
         const request = new LocalRequest({
           method: HttpMethod.POST,
-          pathname: `/${localNamespace}/${options.client.appKey}/${activeUserCollection}`,
-          client: options.client,
+          url: client.getUrl(`/${localNamespace}/${client.appKey}/${activeUserCollection}`),
           data: result(user, 'toJSON', user)
         });
         return request.execute();
@@ -78,7 +66,7 @@ export default class UserUtils {
     }).then(response => {
       if (response && response.isSuccess()) {
         user = response.data;
-        UserUtils[activeUserSymbol][options.client.appKey] = user;
+        UserUtils[activeUserSymbol][client.appKey] = user;
         return user;
       }
     });

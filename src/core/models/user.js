@@ -1,6 +1,5 @@
 import { ActiveUserError, KinveyError } from '../errors';
 import Model from './model';
-import Client from '../client';
 import Device from '../device';
 import NetworkRequest from '../requests/networkRequest';
 import { NotFoundError } from '../errors';
@@ -9,9 +8,9 @@ import Query from '../query';
 import Auth from '../auth';
 import UserUtils from '../utils/user';
 import MobileIdentityConnect from '../mic';
-import isObject from 'lodash/lang/isObject';
-import result from 'lodash/object/result';
-import assign from 'lodash/object/assign';
+import isObject from 'lodash/isObject';
+import result from 'lodash/result';
+import assign from 'lodash/assign';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -23,18 +22,13 @@ if (typeof window !== 'undefined') {
 }
 
 export default class User extends Model {
-  get authtoken() {
-    return this.metadata.authtoken;
-  }
-
   /**
    * The pathname for the users where requests will be sent.
    *
    * @return   {string}    Pathname
    */
-  getPathname(client) {
-    client = client || this.client;
-    return `/${usersNamespace}/${client.appKey}`;
+  get _pathname() {
+    return `/${usersNamespace}/${this.client.appKey}`;
   }
 
   /**
@@ -42,9 +36,17 @@ export default class User extends Model {
    *
    * @return   {string}    Pathname
    */
-  getRpcPathname(client) {
-    client = client || this.client;
-    return `/${rpcNamespace}/${client.appKey}`;
+  get _rpcPathname() {
+    return `/${rpcNamespace}/${this.client.appKey}`;
+  }
+
+  /**
+   * Authtoken
+   *
+   * @return {string} Authtoken
+   */
+  get authtoken() {
+    return this.metadata.authtoken;
   }
 
   /**
@@ -52,8 +54,8 @@ export default class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static getActive(options = {}) {
-    const promise = UserUtils.getActive(options).then(data => {
+  static getActive() {
+    const promise = UserUtils.getActive(this.client).then(data => {
       if (data) {
         return new User(data);
       }
@@ -69,12 +71,12 @@ export default class User extends Model {
    *
    * @return {Promise} Resolved with the active user if one exists, null otherwise.
    */
-  static setActive(user, options = {}) {
+  static setActive(user) {
     if (user && !(user instanceof User)) {
       user = new User(result(user, 'toJSON', user));
     }
 
-    const promise = UserUtils.setActive(user, options).then(data => {
+    const promise = UserUtils.setActive(user, this.client).then(data => {
       if (data) {
         return new User(data);
       }
@@ -90,8 +92,8 @@ export default class User extends Model {
    *
    * @returns {Promise} Resolved with `true` if the user is active, `false` otherwise.
    */
-  isActive(options = {}) {
-    return User.getActive(options).then(user => {
+  isActive() {
+    return User.getActive(this.client).then(user => {
       if (user) {
         return this.id === user.id;
       }
@@ -129,11 +131,7 @@ export default class User extends Model {
   }
 
   login(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
-    const promise = User.getActive(options).then(activeUser => {
+    const promise = User.getActive(this.client).then(activeUser => {
       if (activeUser) {
         throw new ActiveUserError('A user is already logged in.');
       }
@@ -149,10 +147,9 @@ export default class User extends Model {
 
       const request = new NetworkRequest({
         method: HttpMethod.POST,
-        pathname: `${this.getPathname(this.client)}/login`,
+        url: this.client.getUrl(`${this._pathname}/login`),
         data: this.toJSON(),
-        auth: Auth.app,
-        client: options.client
+        auth: Auth.app
       });
       return request.execute();
     }).then(response => {
@@ -222,8 +219,6 @@ export default class User extends Model {
     }
 
     options = assign({
-      client: Client.sharedInstance(),
-      auth: Auth.default,
       collectionName: 'SocialIdentities',
       handler() {}
     }, options);
@@ -233,10 +228,9 @@ export default class User extends Model {
       query.equalTo('identity', identity);
       const request = new NetworkRequest({
         method: HttpMethod.GET,
-        client: options.client,
+        url: this.client.getUrl(`/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`),
         properties: options.properties,
-        auth: options.auth,
-        pathname: `/${appdataNamespace}/${options.client.appKey}/${options.collectionName}`,
+        auth: Auth.default,
         query: query,
         timeout: options.timeout
       });
@@ -313,7 +307,6 @@ export default class User extends Model {
    */
   logout(options = {}) {
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       handler() {}
@@ -326,14 +319,12 @@ export default class User extends Model {
 
       const request = new NetworkRequest({
         method: HttpMethod.POST,
-        client: options.client,
+        url: this.client.getUrl(`${this._pathname}/_logout`),
         properties: options.properties,
         auth: Auth.session,
-        pathname: `${this.getPathname(options.client)}/_logout`,
         timeout: options.timeout
       });
       request.execute();
-
       return User.setActive(null, options.client);
     });
 
@@ -354,7 +345,6 @@ export default class User extends Model {
 
   signup(options = {}) {
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       handler() {}
@@ -362,10 +352,9 @@ export default class User extends Model {
 
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      client: options.client,
+      url: this.client.getUrl(this._pathname),
       properties: options.properties,
       auth: Auth.app,
-      pathname: this.getPathname(this.client),
       data: this.toJSON(),
       timeout: options.timeout
     });
@@ -383,7 +372,6 @@ export default class User extends Model {
 
   update(options = {}) {
     options = assign({
-      client: this.client,
       properties: null,
       timeout: undefined,
       handler() {}
@@ -416,10 +404,9 @@ export default class User extends Model {
 
     const request = new NetworkRequest({
       method: HttpMethod.PUT,
-      client: options.client,
+      url: this.client.getUrl(`${this._pathname}/${this.id}`),
       properties: options.properties,
       auth: Auth.session,
-      pathname: `${this.getPathname(this.client)}/${this.id}`,
       data: this.toJSON(),
       timeout: options.timeout
     });
@@ -441,10 +428,6 @@ export default class User extends Model {
   }
 
   me(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
     const promise = this.isActive(options).then(active => {
       if (!active) {
         throw new KinveyError('User is not active. Please login first.');
@@ -452,10 +435,9 @@ export default class User extends Model {
 
       const request = new NetworkRequest({
         method: HttpMethod.GET,
-        pathname: `${this.getPathname(options.client)}/_me`,
+        url: this.client.getUrl(`${this._pathname}/_me`),
         dataPolicy: DataPolicy.NetworkOnly,
-        auth: Auth.session,
-        client: options.client
+        auth: Auth.session
       });
       return request.execute();
     }).then(response => {
@@ -478,50 +460,35 @@ export default class User extends Model {
     return promise;
   }
 
-  verifyEmail(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
+  verifyEmail() {
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-email-verification-initiate`,
+      url: this.client.getUrl(`${this._rpcPathname}/${this.get('username')}/user-email-verification-initiate`),
       writePolicy: WritePolicy.Network,
-      auth: Auth.app,
-      client: options.client
+      auth: Auth.app
     });
     const promise = request.execute();
     return promise;
   }
 
-  forgotUsername(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
+  forgotUsername() {
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `${this.getRpcPathname(options.client)}/user-forgot-username`,
+      url: this.client.getUrl(`${this._rpcPathname}/user-forgot-username`),
       writePolicy: WritePolicy.Network,
       auth: Auth.app,
-      client: options.client,
       data: { email: this.get('email') }
     });
     const promise = request.execute();
     return promise;
   }
 
-  resetPassword(options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-
+  resetPassword() {
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `${this.getRpcPathname(options.client)}/${this.get('username')}/user-password-reset-initiate`,
+      url: this.client.getUrl(`${this._rpcPathname}/${this.get('username')}/user-password-reset-initiate`),
       writePolicy: WritePolicy.Network,
-      auth: Auth.app,
-      client: options.client
+      auth: Auth.app
     });
     const promise = request.execute();
     return promise;

@@ -1,12 +1,12 @@
 import { nested } from './utils/object';
 import sift from 'sift';
-import clone from 'lodash/lang/clone';
-import assign from 'lodash/object/assign';
-import isArray from 'lodash/lang/isArray';
-import isNumber from 'lodash/lang/isNumber';
-import isString from 'lodash/lang/isString';
-import isObject from 'lodash/lang/isObject';
-import isRegExp from 'lodash/lang/isRegExp';
+import clone from 'lodash/clone';
+import assign from 'lodash/assign';
+import isArray from 'lodash/isArray';
+import isNumber from 'lodash/isNumber';
+import isString from 'lodash/isString';
+import isObject from 'lodash/isObject';
+import isRegExp from 'lodash/isRegExp';
 const privateQuerySymbol = Symbol();
 
 class PrivateQuery {

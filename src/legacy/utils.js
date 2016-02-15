@@ -1,5 +1,5 @@
 const DataPolicy = require('../core/enums').DataPolicy;
-const isFunction = require('lodash/lang/isFunction');
+const isFunction = require('lodash/isFunction');
 
 // Maps options from legacy library
 function mapLegacyOptions(options = {}) {

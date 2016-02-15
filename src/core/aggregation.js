@@ -1,12 +1,12 @@
 import { KinveyError } from './errors';
 import Query from './query';
-import clone from 'lodash/lang/clone';
-import result from 'lodash/object/result';
-import assign from 'lodash/object/assign';
-import forEach from 'lodash/collection/forEach';
-import isObject from 'lodash/lang/isObject';
-import isString from 'lodash/lang/isString';
-import isFunction from 'lodash/lang/isFunction';
+import clone from 'lodash/clone';
+import result from 'lodash/result';
+import assign from 'lodash/assign';
+import forEach from 'lodash/forEach';
+import isObject from 'lodash/isObject';
+import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
 const privateAggregationSymbol = Symbol();
 
 class PrivateAggregation {

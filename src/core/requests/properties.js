@@ -1,5 +1,5 @@
-import clone from 'lodash/lang/clone';
-import isPlainObject from 'lodash/lang/isPlainObject';
+import clone from 'lodash/clone';
+import isPlainObject from 'lodash/isPlainObject';
 import { KinveyError } from '../errors';
 const privatePropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';

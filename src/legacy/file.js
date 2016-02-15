@@ -1,7 +1,7 @@
 const Files = require('../core/stores/files');
 const mapLegacyOptions = require('./utils').mapLegacyOptions;
 const wrapCallbacks = require('./utils').wrapCallbacks;
-const forEach = require('lodash/collection/forEach');
+const forEach = require('lodash/forEach');
 
 class LegacyFile {
   static find(query, options) {

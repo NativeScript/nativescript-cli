@@ -1,7 +1,7 @@
 import Acl from './acl';
 import { KinveyError } from './errors';
-import clone from 'lodash/lang/clone';
-import isPlainObject from 'lodash/lang/isPlainObject';
+import clone from 'lodash/clone';
+import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const privateMetadataSymbol = Symbol();

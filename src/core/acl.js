@@ -1,6 +1,6 @@
 import { KinveyError } from './errors';
-import isPlainObject from 'lodash/lang/isPlainObject';
-import clone from 'lodash/lang/clone';
+import isPlainObject from 'lodash/isPlainObject';
+import clone from 'lodash/clone';
 const privateAclSymbol = Symbol();
 
 /**

@@ -1,10 +1,10 @@
 import { StatusCode } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';
-import assign from 'lodash/object/assign';
-import clone from 'lodash/lang/clone';
-import forEach from 'lodash/collection/forEach';
-import isString from 'lodash/lang/isString';
-import isPlainObject from 'lodash/lang/isPlainObject';
+import assign from 'lodash/assign';
+import clone from 'lodash/clone';
+import forEach from 'lodash/forEach';
+import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
 
 /**
  * @private

@@ -13,12 +13,9 @@ export default class CacheMiddleware extends Middleware {
   }
 
   handle(request) {
-    return super.handle(request).then(matches => {
+    return super.handle(request).then(({ appKey, collection, id }) => {
       const method = request.method;
       const query = request.query;
-      const appKey = matches.appKey;
-      const collection = matches.collection;
-      const id = matches.id;
       const data = request.data;
       const cache = new Cache(appKey, this.adapters);
       let promise;

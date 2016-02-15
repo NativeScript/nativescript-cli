@@ -2,12 +2,12 @@ import Auth from '../auth';
 import { ReadPolicy as DataPolicy, HttpMethod } from '../enums';
 import { NotFoundError } from '../errors';
 import Request from '../requests/networkRequest';
-import DataStore from './datastore';
+import NetworkStore from './networkStore';
 import Query from '../query';
 import User from '../models/user';
-import assign from 'lodash/object/assign';
-import result from 'lodash/object/result';
-import isArray from 'lodash/lang/isArray';
+import assign from 'lodash/assign';
+import result from 'lodash/result';
+import isArray from 'lodash/isArray';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -17,7 +17,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * @example
  * var users = new Kinvey.Users();
  */
-export default class Users extends DataStore {
+export default class UsersStore extends NetworkStore {
   /**
    * Creates a new instance of the Users class.
    *

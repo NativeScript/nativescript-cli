@@ -1,6 +1,6 @@
 const Acl = require('../core/acl');
 const KinveyError = require('../core/errors').KinveyError;
-const isPlainObject = require('lodash/lang/isPlainObject');
+const isPlainObject = require('lodash/isPlainObject');
 const aclSymbol = Symbol();
 
 // ACL.

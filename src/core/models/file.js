@@ -3,7 +3,7 @@ import Model from './model';
 import Query from '../query';
 import { KinveyError } from '../errors';
 import { HttpMethod, ReadPolicy as DataPolicy } from '../enums';
-import assign from 'lodash/object/assign';
+import assign from 'lodash/assign';
 const filesNamespace = process.env.KINVEY_FILE_NAMESPACE || 'blob';
 
 export default class File extends Model {

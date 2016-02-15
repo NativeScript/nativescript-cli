@@ -7,8 +7,7 @@ import Popup from './utils/popup';
 import Auth from './auth';
 import path from 'path';
 import url from 'url';
-import assign from 'lodash/object/assign';
-import isString from 'lodash/lang/isString';
+import isString from 'lodash/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
@@ -29,10 +28,7 @@ export default class MobileIdentityConnect {
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
-    options = assign({
-      client: this.client
-    }, options);
-    const clientId = options.client.appKey;
+    const clientId = this.client.appKey;
     const device = new Device();
 
     const promise = Promise.resolve().then(() => {
@@ -72,9 +68,8 @@ export default class MobileIdentityConnect {
 
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      client: this.client,
+      url: this.client.getUrl(path.join(pathname, authPathname)),
       properties: options.properties,
-      pathname: path.join(pathname, authPathname),
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -152,11 +147,9 @@ export default class MobileIdentityConnect {
       });
       const request = new NetworkRequest({
         method: HttpMethod.POST,
-        client: client,
+        url: client.getUrl(url.parse(loginUrl).pathname, url.parse(loginUrl, true).query),
         properties: options.properties,
         auth: Auth.app,
-        pathname: url.parse(loginUrl).pathname,
-        flags: url.parse(loginUrl, true).query,
         data: {
           client_id: clientId,
           redirect_uri: redirectUri,
@@ -184,10 +177,9 @@ export default class MobileIdentityConnect {
   requestToken(code, clientId, redirectUri, options = {}) {
     const request = new NetworkRequest({
       method: HttpMethod.POST,
-      client: this.client,
+      url: this.client(tokenPathname),
       properties: options.properties,
       auth: Auth.app,
-      pathname: tokenPathname,
       data: {
         grant_type: 'authorization_code',
         client_id: clientId,

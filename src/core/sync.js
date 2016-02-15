@@ -1,79 +1,60 @@
-import DataStore from './stores/datastore';
+import DataStore from './stores/dataStore';
 import Query from './query';
-import { DataPolicy } from './enums';
-import reduce from 'lodash/collection/reduce';
+import { DataStoreType } from './enums';
+import reduce from 'lodash/reduce';
 const enabledSymbol = Symbol();
-const syncStoreName = process.env.KINVEY_SYNC_STORE_NAME || 'sync';
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 
-export default class Sync {
-  static isEnabled() {
+const Sync = {
+  isEnabled() {
     return Sync[enabledSymbol];
-  }
+  },
 
-  static enable() {
+  enable() {
     Sync[enabledSymbol] = true;
-  }
+  },
 
-  static disable() {
+  disable() {
     Sync[enabledSymbol] = false;
-  }
+  },
 
-  static count(options = {}) {
-    options.dataPolicy = DataPolicy.LocalOnly;
-
-    const syncStore = new DataStore(syncStoreName, options);
-    const promise = syncStore.find(null, options).then(syncModels => {
-      return reduce(syncModels, function (result, syncModel) {
-        return result + syncModel.get('size');
+  count(query, options) {
+    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
+    const promise = syncStore.find(query, options).then(syncData => {
+      return reduce(syncData, function (result, data) {
+        return result + data.size;
       }, 0);
-    }).catch(() => {
-      return 0;
     });
-
     return promise;
-  }
+  },
 
-  static push(options = {}) {
-    options.dataPolicy = DataPolicy.LocalOnly;
-
-    const syncStore = new DataStore(syncStoreName, options);
+  push(options) {
+    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
     const query = new Query();
     query.greaterThan('size', 0);
-    const promise = syncStore.find(query, options).then(syncModels => {
-      const promises = syncModels.map(syncModel => {
-        const store = new DataStore(syncModel.id, options);
+    const promise = syncStore.find(query, options).then(syncData => {
+      const promises = syncData.map(data => {
+        const store = DataStore.getInstance(data._id, DataStoreType.Sync);
         return store.push();
       });
-
       return Promise.all(promises);
     });
-
     return promise;
-  }
+  },
 
-  static sync(options = {}) {
-    options.dataPolicy = DataPolicy.LocalOnly;
-
-    const syncStore = new DataStore(syncStoreName, options);
-    const promise = syncStore.find(null, options).then(syncModels => {
-      const promises = syncModels.map(syncModel => {
-        const store = new DataStore(syncModel.id, options);
+  sync(options = {}) {
+    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
+    const promise = syncStore.find(null, options).then(syncData => {
+      const promises = syncData.map(data => {
+        const store = DataStore.getInstance(data._id, DataStoreType.Sync);
         return store.sync();
       });
-
       return Promise.all(promises);
     });
-
     return promise;
   }
-
-  static clear(query, options = {}) {
-    options.dataPolicy = DataPolicy.LocalOnly;
-    const syncStore = new DataStore(syncStoreName, options);
-    const promise = syncStore.clear(query, options);
-    return promise;
-  }
-}
+};
 
 // Set sync default state
 Sync[enabledSymbol] = process.env.KINVEY_SYNC_DEFAULT_STATE || true;
+export default Sync;

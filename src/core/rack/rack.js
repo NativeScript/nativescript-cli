@@ -1,7 +1,7 @@
 import Response from '../requests/response';
 import Middleware from './middleware';
 import { NoResponseError } from '../errors';
-import result from 'lodash/object/result';
+import result from 'lodash/result';
 
 /**
  * @private

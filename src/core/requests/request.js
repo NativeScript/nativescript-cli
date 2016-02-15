@@ -1,17 +1,14 @@
 import { HttpMethod } from '../enums';
-import Client from '../client';
 import Device from '../device';
 import Properties from './properties';
-import url from 'url';
 import { byteCount } from '../utils/string';
-import assign from 'lodash/object/assign';
-import result from 'lodash/object/result';
-import clone from 'lodash/lang/clone';
-import forEach from 'lodash/collection/forEach';
-import isString from 'lodash/lang/isString';
-import isPlainObject from 'lodash/lang/isPlainObject';
-import isFunction from 'lodash/lang/isFunction';
-import qs from 'qs';
+import assign from 'lodash/assign';
+import result from 'lodash/result';
+import clone from 'lodash/clone';
+import forEach from 'lodash/forEach';
+import isString from 'lodash/isString';
+import isPlainObject from 'lodash/isPlainObject';
+import isFunction from 'lodash/isFunction';
 
 /**
  * @private
@@ -23,22 +20,14 @@ class Request {
       headers: {
         Accept: 'application/json; charset=utf-8'
       },
-      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
-      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com',
-      pathname: '/',
-      flags: {
-        _: Math.random().toString(36).substr(2)
-      },
+      url: null,
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
       followRedirect: true
     }, options);
 
     this.method = options.method;
-    this.protocol = options.protocol;
-    this.host = options.host;
-    this.pathname = options.pathname;
-    this.flags = qs.parse(options.flags);
+    this.url = options.url;
     this.data = options.data || options.body;
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
@@ -75,14 +64,6 @@ class Request {
       default:
         throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
-  }
-
-  get url() {
-    return url.format({
-      protocol: this.protocol,
-      host: this.host,
-      pathname: this.pathname
-    });
   }
 
   get body() {
@@ -205,8 +186,6 @@ class Request {
       method: this.method,
       headers: this.headers,
       url: this.url,
-      pathname: this.pathname,
-      flags: this.flags,
       data: this.data,
       followRedirect: this.followRedirect
     };
@@ -223,18 +202,12 @@ export default class KinveyRequest extends Request {
     super(options);
 
     options = assign({
-      client: Client.sharedInstance(),
       properties: null,
       auth: null,
       query: null
     }, options);
 
-    if (!(options.client instanceof Client)) {
-      options.client = new Client(result(options.client, 'toJSON', options.client));
-    }
-
     this.properties = options.properties;
-    this.client = options.client;
     this.auth = options.auth;
     this.query = options.query;
 
@@ -289,19 +262,6 @@ export default class KinveyRequest extends Request {
 
       this.setHeader('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
     }
-  }
-
-  get client() {
-    return this._client;
-  }
-
-  set client(client) {
-    if (client) {
-      this.protocol = client.protocol;
-      this.host = client.host;
-    }
-
-    this._client = client;
   }
 
   execute() {

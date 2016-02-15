@@ -1,5 +1,5 @@
 import util from 'util';
-import isFunction from 'lodash/lang/isFunction';
+import isFunction from 'lodash/isFunction';
 
 /**
  * @private

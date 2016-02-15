@@ -1,4 +1,4 @@
-import DataStore from './datastore';
+import NetworkStore from './networkStore';
 import Client from '../client';
 import Request from '../requests/networkRequest';
 import { KinveyError, BlobNotFoundError } from '../errors';
@@ -7,8 +7,8 @@ import Auth from '../auth';
 import File from '../models/file';
 import url from 'url';
 import log from '../log';
-import assign from 'lodash/object/assign';
-import isObject from 'lodash/lang/isObject';
+import assign from 'lodash/assign';
+import isObject from 'lodash/isObject';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 
 /**
@@ -17,7 +17,7 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
  * @example
  * var files = new Kinvey.Files();
  */
-export default class Files extends DataStore {
+export default class FilesStore extends NetworkStore {
   /**
    * Creates a new instance of the Files class.
    *

@@ -8,11 +8,11 @@ import Log from './core/log';
 import Metadata from './core/metadata';
 import NetworkRequest from './core/requests/networkRequest';
 import Query from './core/query';
-import DataStore from './core/stores/datastore';
+import DataStore from './core/stores/dataStore';
 import Sync from './core/sync';
 import User from './core/models/user';
 import Users from './core/stores/users';
-import { AuthorizationGrant, ReadPolicy, SocialIdentity, DataStoreType, HttpMethod } from './core/enums';
+import { AuthorizationGrant, ReadPolicy, SocialIdentity, HttpMethod, DataStoreType } from './core/enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 export default class Kinvey {

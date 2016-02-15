@@ -1,4 +1,5 @@
 import UserUtils from './utils/user';
+import Client from './client';
 
 /**
  * @private
@@ -19,7 +20,7 @@ const Auth = {
    *
    * @returns {Promise}
    */
-  all(client) {
+  all(client = Client.sharedInstance()) {
     return Auth.session(client).catch(() => {
       return Auth.basic(client);
     });
@@ -30,7 +31,7 @@ const Auth = {
    *
    * @returns {Promise}
    */
-  app(client) {
+  app(client = Client.sharedInstance()) {
     if (!client.appKey || !client.appSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
@@ -50,7 +51,7 @@ const Auth = {
    *
    * @returns {Promise}
    */
-  basic(client) {
+  basic(client = Client.sharedInstance()) {
     return Auth.master(client).catch(() => {
       return Auth.app(client);
     });
@@ -61,7 +62,7 @@ const Auth = {
    *
    * @returns {Promise}
    */
-  default(client) {
+  default(client = Client.sharedInstance()) {
     return Auth.session().catch((err) => {
       return Auth.master(client).catch(() => {
         return Promise.reject(err);
@@ -74,7 +75,7 @@ const Auth = {
    *
    * @returns {Promise}
    */
-  master(client) {
+  master(client = Client.sharedInstance()) {
     if (!client.appKey || !client.masterSecret) {
       const error = new Error('Missing client credentials');
       return Promise.reject(error);
