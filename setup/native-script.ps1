@@ -20,9 +20,6 @@ write-host "To ensure consistent environment, this script will re-install all Na
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Google Chrome (required to debug NativeScript apps)"
 cinst googlechrome --force --yes
 
-write-host -BackgroundColor Black -ForegroundColor Yellow "Installing node.js"
-cinst nodejs.install -version 4.3.0 --force --yes
-
 write-host -BackgroundColor Black -ForegroundColor Yellow "Installing Java Development Kit"
 cinst jdk8 --force --yes
 
@@ -46,16 +43,6 @@ if (!$env:JAVA_HOME) {
 	[Environment]::SetEnvironmentVariable("JAVA_HOME", $javaHome, "User")
     $env:JAVA_HOME = $javaHome;
 }
-
-# install NativeScript CLI
-write-host -BackgroundColor Black -ForegroundColor Yellow "Installing NativeScript CLI"
-
-$oldPathUser = [Environment]::GetEnvironmentVariable("PATH", "User")
-$pathMachine = [Environment]::GetEnvironmentVariable("PATH", "Machine")
-$myPath = [Environment]::GetEnvironmentVariable("PATH")
-[Environment]::SetEnvironmentVariable("PATH", "$myPath;$oldPathUser;$pathMachine;$env:ProgramFiles\nodejs")
-
-npm install -g nativescript
 
 write-host -BackgroundColor Black -ForegroundColor Yellow "This script has modified your environment. You need to log off and log back on for the changes to take effect."
 Write-Host "Press any key to continue..."
