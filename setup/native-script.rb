@@ -1,8 +1,8 @@
 # coding: utf-8
 
 # A script to setup developer's workstation for developing with NativeScript
-# To run it against RELEASE branch (recommended) use
-# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/release/setup/native-script.rb)"
+# To run it against PRODUCTION branch (recommended) use
+# ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.rb)"
 # To run it against MASTER branch (usually only developers of NativeScript need to) use
 # ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/master/setup/native-script.rb)"
 
