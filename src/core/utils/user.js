@@ -1,4 +1,4 @@
-import LocalRequest from '../requests/LocalRequest';
+import LocalRequest from '../requests/localRequest';
 import Client from '../client';
 import { HttpMethod } from '../enums';
 import { NotFoundError } from '../errors';
