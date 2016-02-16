@@ -1,13 +1,12 @@
-import Middleware from './middleware';
-import Cache from '../cache';
-import { HttpMethod, StatusCode, CacheAdapter } from '../enums';
-const defaultAdapters = [CacheAdapter.IndexedDB, CacheAdapter.WebSQL, CacheAdapter.LocalStorage, CacheAdapter.Memory];
+import { KinveyMiddleware } from '../middleware';
+import { DB, DBAdapter } from '../persistence/db';
+import { HttpMethod, StatusCode } from '../../enums';
 
 /**
  * @private
  */
-export default class CacheMiddleware extends Middleware {
-  constructor(adapters = defaultAdapters) {
+export class CacheMiddleware extends KinveyMiddleware {
+  constructor(adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
     super('Kinvey Cache Middleware');
     this.adapters = adapters;
   }
@@ -17,28 +16,28 @@ export default class CacheMiddleware extends Middleware {
       const method = request.method;
       const query = request.query;
       const data = request.data;
-      const cache = new Cache(appKey, this.adapters);
+      const db = new DB(appKey, this.adapters);
       let promise;
 
       if (method === HttpMethod.GET) {
         if (id) {
           if (id === '_count') {
-            promise = cache.count(collection, query);
+            promise = db.count(collection, query);
           } else if (id === '_group') {
-            promise = cache.group(collection, data);
+            promise = db.group(collection, data);
           } else {
-            promise = cache.findById(collection, id);
+            promise = db.findById(collection, id);
           }
         } else {
-          promise = cache.find(collection, query);
+          promise = db.find(collection, query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
-        promise = cache.save(collection, data);
+        promise = db.save(collection, data);
       } else if (method === HttpMethod.DELETE) {
         if (id) {
-          promise = cache.removeById(collection, id);
+          promise = db.removeById(collection, id);
         } else {
-          promise = cache.remove(collection, query);
+          promise = db.remove(collection, query);
         }
       }
 

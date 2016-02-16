@@ -1,6 +1,6 @@
-import Middleware from './middleware';
-import { HttpMethod } from '../enums';
-import { NetworkConnectionError } from '../errors';
+import { KinveyMiddleware } from '../middleware';
+import { HttpMethod } from '../../enums';
+import { NetworkConnectionError } from '../../errors';
 import http from 'request';
 import result from 'lodash/result';
 import isEmpty from 'lodash/isEmpty';
@@ -9,7 +9,7 @@ import isString from 'lodash/isString';
 /**
  * @private
  */
-export default class Http extends Middleware {
+export class HttpMiddleware extends KinveyMiddleware {
   constructor() {
     super('Kinvey Http Middleware');
   }

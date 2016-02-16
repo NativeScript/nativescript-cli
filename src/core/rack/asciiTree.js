@@ -23,8 +23,8 @@ function compose(node, end) {
 /**
  * @private
  */
-export default class AsciiTree {
-  static generate(tree = {}, end) {
+export const AsciiTree = {
+  generate(tree = {}, end) {
     let result = compose(tree, end);
 
     if (tree.nodes.length > 0) {
@@ -37,4 +37,4 @@ export default class AsciiTree {
 
     return result;
   }
-}
+};

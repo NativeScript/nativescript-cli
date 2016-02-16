@@ -44,7 +44,6 @@ export default class NetworkStore {
   /**
    * The pathname for the store.
    *
-   * @param   {Client}   [client]     Client
    * @return  {string}                Pathname
    */
   get _pathname() {
@@ -78,6 +77,7 @@ export default class NetworkStore {
     options = assign({
       properties: null,
       timeout: undefined,
+      flags: null,
       handler() {}
     }, options);
 
@@ -88,7 +88,7 @@ export default class NetworkStore {
     const promise = Promise.resolve().then(() => {
       const request = new NetworkRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._pathname),
+        url: this.client.getUrl(this._pathname, options.flags),
         properties: options.properties,
         auth: Auth.default,
         query: query,

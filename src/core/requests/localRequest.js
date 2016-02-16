@@ -1,5 +1,5 @@
 import Request from './request';
-import CacheRack from '../rack/cacheRack';
+import { CacheRack } from '../rack/racks/cacheRack';
 
 /**
  * @private

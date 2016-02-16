@@ -1,11 +1,11 @@
-import Middleware from './middleware';
+import { KinveyMiddleware } from '../middleware';
 
 /**
  * @private
  */
-export default class Serialize extends Middleware {
-  constructor() {
-    super('Kinvey Serializer Middleware');
+export class SerializeMiddleware extends KinveyMiddleware {
+  constructor(name = 'Kinvey Serialize Middleware') {
+    super(name);
   }
 
   handle(request) {

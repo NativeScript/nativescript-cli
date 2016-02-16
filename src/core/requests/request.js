@@ -209,7 +209,7 @@ export default class KinveyRequest extends Request {
 
     this.properties = options.properties;
     this.auth = options.auth;
-    this.query = options.query;
+    this.query = result(options.query, 'toJSON', options.query);
 
     const headers = {};
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
@@ -284,7 +284,7 @@ export default class KinveyRequest extends Request {
 
   toJSON() {
     const json = super.toJSON();
-    json.query = result(this.query, 'toJSON', this.query);
+    json.query = this.query;
     return clone(json, true);
   }
 }

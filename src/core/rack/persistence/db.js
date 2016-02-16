@@ -1,11 +1,11 @@
-import { CacheAdapter } from './enums';
-import Query from './query';
-import Aggregation from './aggregation';
-import IndexedDB from './persistence/indexeddb';
-import LocalStorage from './persistence/localstorage';
-import Memory from './persistence/memory';
-import WebSQL from './persistence/websql';
-import log from './log';
+import Query from '../../query';
+import Aggregation from '../../aggregation';
+import { IndexedDB } from './adapters/indexeddb';
+import { LocalStorage } from './adapters/localstorage';
+import { Memory } from './adapters/memory';
+import { WebSQL } from './adapters/websql';
+import log from '../../log';
+import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
@@ -15,39 +15,53 @@ const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
 
 /**
  * @private
+ * Enum for DB Adapters.
  */
-export default class Cache {
-  constructor(dbName = 'kinvey', adapters = [CacheAdapter.Memory]) {
+const DBAdapter = {
+  IndexedDB: 'IndexedDB',
+  LocalStorage: 'LocalStorage',
+  Memory: 'Memory',
+  WebSQL: 'WebSQL'
+};
+Object.freeze(DBAdapter);
+export { DBAdapter };
+
+
+/**
+ * @private
+ */
+export class DB {
+  constructor(dbName = 'kinvey', adapters = [DBAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }
 
     forEach(adapters, adapter => {
       switch (adapter) {
-        case CacheAdapter.IndexedDB:
+        case DBAdapter.IndexedDB:
           if (IndexedDB.isSupported()) {
-            this.db = new IndexedDB(dbName);
+            this.adapter = new IndexedDB(dbName);
             return false;
           }
 
           break;
-        case CacheAdapter.LocalStorage:
+        case DBAdapter.LocalStorage:
           if (LocalStorage.isSupported()) {
-            this.db = new LocalStorage(dbName);
+            this.adapter = new LocalStorage(dbName);
             return false;
           }
 
           break;
-        case CacheAdapter.Memory:
+        case DBAdapter.Memory:
           if (Memory.isSupported()) {
-            this.db = new Memory(dbName);
+            this.adapter = new Memory(dbName);
             return false;
           }
 
           break;
-        case CacheAdapter.WebSQL:
+        case DBAdapter.WebSQL:
           if (WebSQL.isSupported()) {
-            this.db = new WebSQL(dbName);
+            this.adapter = new WebSQL(dbName);
             return false;
           }
 
@@ -57,11 +71,11 @@ export default class Cache {
       }
     });
 
-    if (!this.db) {
+    if (!this.adapter) {
       if (Memory.isSupported()) {
         log.error('Provided adapters are unsupported on this platform. ' +
           'Defaulting to StoreAdapter.Memory adapter.', adapters);
-        this.db = new Memory(dbName);
+        this.adapter = new Memory(dbName);
       } else {
         log.error('Provided adapters are unsupported on this platform.', adapters);
       }
@@ -76,8 +90,21 @@ export default class Cache {
     return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }
 
+  generateObjectId(length = 24) {
+    const chars = 'abcdef0123456789';
+    let objectId = '';
+
+    for (let i = 0, j = chars.length; i < length; i++) {
+      const pos = Math.floor(Math.random() * j);
+      objectId += chars.substring(pos, pos + 1);
+    }
+
+    objectId = `${this.objectIdPrefix}${objectId}`;
+    return objectId;
+  }
+
   find(collection, query) {
-    const promise = this.db.find(collection).then(entities => {
+    const promise = this.adapter.find(collection).then(entities => {
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
@@ -118,34 +145,34 @@ export default class Cache {
       id = String(id);
     }
 
-    const promise = this.db.findById(collection, id);
+    const promise = this.adapter.findById(collection, id);
     return promise;
   }
 
-  save(collection, entity) {
-    if (!entity) {
-      return Promise.resolve(null);
-    }
+  save(collection, entities = []) {
+    let singular = false;
 
-    if (isArray(entity)) {
-      return this.saveBulk(collection, entity);
-    }
-
-    const promise = this.db.save(collection, entity);
-    return promise;
-  }
-
-  saveBulk(collection, entities = []) {
     if (!entities) {
       return Promise.resolve(null);
     }
 
     if (!isArray(entities)) {
-      return this.save(collection, entities);
+      singular = true;
+      entities = [entities];
     }
 
-    const promise = this.db.saveBulk(collection, entities);
-    return promise;
+    entities = map(entities, entity => {
+      entity._id = entity._id || this.generateObjectId();
+      return entity;
+    });
+
+    return this.adapter.save(collection, entities).then(data => {
+      if (singular && data.length > 0) {
+        return data[0];
+      }
+
+      return data;
+    });
   }
 
   remove(collection, query) {
@@ -186,7 +213,7 @@ export default class Cache {
       });
     }
 
-    const promise = this.db.removeById(collection, id);
+    const promise = this.adapter.removeById(collection, id);
     return promise;
   }
 }

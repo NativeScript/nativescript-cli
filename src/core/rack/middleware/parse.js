@@ -1,10 +1,10 @@
-import Middleware from './middleware';
+import { KinveyMiddleware } from '../middleware';
 
 /**
  * @private
  */
-export default class Parse extends Middleware {
-  constructor(name = 'Kinvey Parser Middleware') {
+export class ParseMiddleware extends KinveyMiddleware {
+  constructor(name = 'Kinvey Parse Middleware') {
     super(name);
   }
 

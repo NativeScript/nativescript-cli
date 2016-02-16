@@ -1,5 +1,4 @@
-import { KinveyError, NotFoundError } from '../errors';
-import { generateObjectId } from '../utils/store';
+import { KinveyError, NotFoundError } from '../../../errors';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 let indexedDB = null;
@@ -24,7 +23,7 @@ if (typeof window !== 'undefined') {
 /**
  * @private
  */
-export default class IndexedDB {
+export class IndexedDB {
   constructor(name = 'kinvey') {
     this.name = name;
     this.inTransaction = false;
@@ -209,34 +208,7 @@ export default class IndexedDB {
     return promise;
   }
 
-  save(collection, entity) {
-    if (isArray(entity)) {
-      return this.saveBulk(collection, entity);
-    }
-
-    if (!entity._id) {
-      entity._id = generateObjectId();
-    }
-
-    const promise = new Promise((resolve, reject) => {
-      this.openTransaction(collection, true, store => {
-        const request = store.put(entity);
-
-        request.onsuccess = function onSuccess() {
-          resolve(entity);
-        };
-
-        request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving an entity to the ${collection} ` +
-            `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
-        };
-      }, reject);
-    });
-
-    return promise;
-  }
-
-  saveBulk(collection, entities) {
+  save(collection, entities) {
     if (!isArray(entities)) {
       return this.save(collection, entities);
     }
@@ -250,7 +222,6 @@ export default class IndexedDB {
         const request = store.transaction;
 
         forEach(entities, entity => {
-          entity._id = entity._id || generateObjectId();
           store.put(entity);
         });
 

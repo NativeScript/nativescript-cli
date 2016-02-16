@@ -1,4 +1,4 @@
-import AsciiTree from './asciiTree';
+import { AsciiTree } from './asciiTree';
 import UrlPattern from 'url-pattern';
 import { KinveyError } from '../errors';
 import url from 'url';
@@ -6,7 +6,7 @@ import url from 'url';
 /**
  * @private
  */
-class Middleware {
+export class Middleware {
   constructor(name = 'Middleware') {
     this.name = name;
   }
@@ -33,7 +33,7 @@ class Middleware {
 /**
  * @private
  */
-export default class KinveyMiddleware extends Middleware {
+export class KinveyMiddleware extends Middleware {
   constructor(name = 'Kinvey Middleware') {
     super(name);
   }
@@ -42,8 +42,8 @@ export default class KinveyMiddleware extends Middleware {
     return new Promise((resolve, reject) => {
       if (request) {
         const pathname = url.parse(request.url).pathname;
-        const pattern = new UrlPattern('/:namespace/:appKey(/)(:collection)(/)(:id)(/)');
-        const matches = pattern.match(pathname);
+        const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:id)(/)');
+        const matches = pattern.match(pathname) || {};
         return resolve({
           namespace: matches.namespace,
           appKey: matches.appKey,

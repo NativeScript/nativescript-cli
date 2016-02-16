@@ -1,12 +1,12 @@
 import Response from '../requests/response';
-import Middleware from './middleware';
+import { Middleware } from './middleware';
 import { NoResponseError } from '../errors';
 import result from 'lodash/result';
 
 /**
  * @private
  */
-class Rack extends Middleware {
+export class Rack extends Middleware {
   constructor(name = 'Rack') {
     super(name);
     this._middlewares = [];
@@ -155,7 +155,7 @@ class Rack extends Middleware {
 /**
  * @private
  */
-export default class KinveyRack extends Rack {
+export class KinveyRack extends Rack {
   execute(request) {
     request = result(request, 'toJSON', request);
     const promise = super.execute(request).then(request => {

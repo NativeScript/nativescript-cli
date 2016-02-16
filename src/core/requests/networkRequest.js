@@ -1,5 +1,5 @@
 import Request from './request';
-import NetworkRack from '../rack/networkRack';
+import { NetworkRack } from '../rack/racks/networkRack';
 
 /**
  * @private

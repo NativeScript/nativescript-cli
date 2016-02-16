@@ -1,14 +1,14 @@
-import Rack from './rack';
-import Cache from './cache';
+import { KinveyRack } from '../rack';
+import { CacheMiddleware } from '../middleware/cache';
 const sharedInstanceSymbol = Symbol();
 
 /**
  * @private
  */
-export default class CacheRack extends Rack {
+export class CacheRack extends KinveyRack {
   constructor(name = 'Kinvey Cache Rack') {
     super(name);
-    this.use(new Cache());
+    this.use(new CacheMiddleware());
   }
 
   static sharedInstance() {

@@ -9,19 +9,6 @@ Object.freeze(AuthorizationGrant);
 export { AuthorizationGrant };
 
 /**
- * @private
- * Enum for Cache Adapters.
- */
-const CacheAdapter = {
-  IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage',
-  Memory: 'Memory',
-  WebSQL: 'WebSQL'
-};
-Object.freeze(CacheAdapter);
-export { CacheAdapter };
-
-/**
  * Enum for DataStore types.
  */
 const DataStoreType = {
@@ -31,18 +18,6 @@ const DataStoreType = {
 };
 Object.freeze(DataStoreType);
 export { DataStoreType };
-
-/**
- * Enum for Read Policies.
- */
-const ReadPolicy = {
-  LocalOnly: 'LocalOnly',
-  LocalFirst: 'LocalFirst',
-  NetworkOnly: 'NetworkOnly',
-  NetworkFirst: 'NetworkFirst',
-};
-Object.freeze(ReadPolicy);
-export { ReadPolicy };
 
 /**
  * @private
@@ -57,17 +32,6 @@ const HttpMethod = {
 };
 Object.freeze(HttpMethod);
 export { HttpMethod };
-
-/**
- * @private
- * Enum for Rack types.
- */
-const RackType = {
-  Network: 'Network',
-  Cache: 'Cache'
-};
-Object.freeze(RackType);
-export { RackType };
 
 /**
  * @private
@@ -108,16 +72,3 @@ const StatusCode = {
 };
 Object.freeze(StatusCode);
 export { StatusCode };
-
-/**
- * @private
- * Enum for Write Policies.
- */
-const WritePolicy = {
-  LocalOnly: 'LocalOnly',
-  LocalFirst: 'LocalFirst',
-  NetworkOnly: 'NetworkOnly',
-  NetworkFirst: 'NetworkFirst'
-};
-Object.freeze(WritePolicy);
-export { WritePolicy };

@@ -105,7 +105,7 @@ export default class CacheStore extends NetworkStore {
           cache: response.data
         };
 
-        result.network = this.syncCount().then(count => {
+        result.network = this.pushCount().then(count => {
           if (count > 0) {
             throw new KinveyError('Please sync before you load data from the network.');
           }
@@ -136,7 +136,7 @@ export default class CacheStore extends NetworkStore {
           const removeQuery = new Query();
           removeQuery.contains(idAttribute, removedEntityIds);
 
-          const removeRequest = new LocalRequest({
+          const request = new LocalRequest({
             method: HttpMethod.DELETE,
             url: this.client.getUrl(this._pathname),
             properties: options.properties,
@@ -144,7 +144,7 @@ export default class CacheStore extends NetworkStore {
             query: removeQuery,
             timeout: options.timeout
           });
-          return removeRequest.execute().then(response => {
+          return request.execute().then(response => {
             if (response.isSuccess()) {
               return this._updateCache(data);
             }
@@ -214,7 +214,7 @@ export default class CacheStore extends NetworkStore {
           cache: response.data
         };
 
-        result.network = this.syncCount().then(count => {
+        result.network = this.pushCount().then(count => {
           if (count > 0) {
             throw new KinveyError('You must push the pending sync items first before you load data from the network.',
               'Call store.push() to push the pending sync items.');
@@ -283,7 +283,7 @@ export default class CacheStore extends NetworkStore {
           cache: response.data
         };
 
-        result.network = this.syncCount().then(count => {
+        result.network = this.pushCount().then(count => {
           if (count > 0) {
             throw new KinveyError('You must push the pending sync items first before you load data from the network.',
               'Call store.push() to push the pending sync items.');
@@ -351,7 +351,7 @@ export default class CacheStore extends NetworkStore {
           cache: response.data
         };
 
-        result.network = this.syncCount().then(count => {
+        result.network = this.pushCount().then(count => {
           if (count > 0) {
             throw new KinveyError('You must push the pending sync items first before you load data from the network.',
               'Call store.push() to push the pending sync items.');
@@ -585,7 +585,10 @@ export default class CacheStore extends NetworkStore {
       return request.execute();
     }).then(response => {
       if (response.isSuccess()) {
-        return this.push(query, options).then(() => {
+        return this._updateSync(response.data, options).then(() => {
+          const query = new Query().contains(idAttribute, []);
+          return this.push(query, options);
+        }).then(() => {
           return response.data;
         });
       }
@@ -638,8 +641,10 @@ export default class CacheStore extends NetworkStore {
       return request.execute();
     }).then(response => {
       if (response.isSuccess()) {
-        const query = new Query().contains(idAttribute, [id]);
-        return this.push(query, options).then(() => {
+        return this._updateSync(response.data, options).then(() => {
+          const query = new Query().contains(idAttribute, [id]);
+          return this.push(query, options);
+        }).then(() => {
           return response.data;
         });
       }
@@ -1023,10 +1028,9 @@ export default class CacheStore extends NetworkStore {
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
-        client: this.client,
+        url: this.client.getUrl(this._syncPathname),
         properties: options.properties,
         auth: Auth.default,
-        pathname: this._getSyncPathname(this.client),
         query: query,
         timeout: options.timeout
       });
@@ -1117,7 +1121,7 @@ export default class CacheStore extends NetworkStore {
     const promise = Promise.resolve().then(() => {
       const request = new LocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._getSyncPathname),
+        url: this.client.getUrl(this._syncPathname),
         properties: options.properties,
         auth: Auth.default,
         timeout: options.timeout

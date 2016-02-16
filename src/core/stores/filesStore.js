@@ -1,62 +1,44 @@
 import NetworkStore from './networkStore';
-import Client from '../client';
-import Request from '../requests/networkRequest';
-import { KinveyError, BlobNotFoundError } from '../errors';
-import { HttpMethod, ResponseType, DataPolicy } from '../enums';
+import NetworkRequest from '../requests/networkRequest';
+import { HttpMethod } from '../enums';
 import Auth from '../auth';
-import File from '../models/file';
-import url from 'url';
-import log from '../log';
 import assign from 'lodash/assign';
-import isObject from 'lodash/isObject';
+import map from 'lodash/map';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
- * The Files class is used to perform operations on files on the Kinvey platform.
- *
- * @example
- * var files = new Kinvey.Files();
+ * The FilesStore class is used to find, save, update, remove, count and group files.
  */
 export default class FilesStore extends NetworkStore {
   /**
-   * Creates a new instance of the Files class.
+   * The pathname for the store.
    *
-   * @param   {Client}    [client=Client.sharedInstance()]            Client
+   * @return  {string}                Pathname
    */
-  constructor(options = {}) {
-    options.model = File;
-    super('files', options);
-  }
-
-  /**
-   * The pathname for the collection where requests will be sent.
-   *
-   * @param  {Client}  Client
-   * @return {string}  Path
-   */
-  getPathname(client) {
-    client = client || this.client;
+  get _pathname() {
     return `/${filesNamespace}/${this.client.appKey}`;
   }
 
   /**
-   * Find all files. A query can be optionally provided to return a
-   * subset of all the files for your application. The number of files returned will adhere
-   * to the limits specified at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-   * A promise will be returned that will be resolved with the files or rejected with
+   * Finds all files. A query can be optionally provided to return
+   * a subset of all the files for your application or omitted to return all the files.
+   * The number of files returned will adhere to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
+   * promise will be returned that will be resolved with the files or rejected with
    * an error.
    *
-   * @param   {Query}         [query]                                       Query
-   * @param   {Object}        [options]                                     Options
-   * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
-   * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-   * @param   {Boolean}       [options.download]                            Download the files
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
-   * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
-   * @return  {Promise}                                                     Promise
+   * @param   {Query}                 [query]                                   Query used to filter result.
+   * @param   {Object}                [options]                                 Options
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Boolean}               [options.tls]                             Use Transport Layer Security
+   * @param   {Boolean}               [options.download]                        Download the files
+   * @return  {Promise}                                                         Promise
    *
    * @example
-   * var files = new Kinvey.Files();
+   * var filesStore = new Kinvey.FilesStore();
    * var query = new Kinvey.Query();
    * query.equalTo('location', 'Boston');
    * files.find(query, {
@@ -71,36 +53,30 @@ export default class FilesStore extends NetworkStore {
    */
   find(query, options = {}) {
     options = assign({
+      properties: null,
+      timeout: undefined,
       download: false,
       tls: false,
       ttl: undefined,
-      flags: {}
+      handler() {}
     }, options);
-    options.dataPolicy = DataPolicy.NetworkOnly;
 
-    if (options.tls !== false) {
-      options.flags.tls = true;
-    }
-
-    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
-    if (options.ttl) {
-      options.flags.ttl_in_seconds = options.ttl;
-    }
-
-    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
+    options.flags = {
+      tls: options.tls === true ? true : false,
+      ttl_in_seconds: options.ttl
+    };
 
     const promise = super.find(query, options).then(files => {
-      if (options.download) {
-        const promises = files.map((file) => {
-          return this.downloadByUrl(file, options);
+      if (options.download === true) {
+        const promises = map(files, file => {
+          return this.downloadByUrl(file._downloadURL, options);
         });
-
         return Promise.all(promises);
       }
 
       return files;
     });
+
     return promise;
   }
 
@@ -131,79 +107,52 @@ export default class FilesStore extends NetworkStore {
    */
   download(name, options = {}) {
     options = assign({
-      auth: this.auth,
-      client: this.client,
-      flags: {}
+      properties: null,
+      timeout: undefined,
+      stream: false,
+      tls: false,
+      ttl: undefined,
+      handler() {}
     }, options);
 
-    if (options.tls !== false) {
-      options.flags.tls = true;
-    }
+    options.flags = {
+      tls: options.tls === true ? true : false,
+      ttl_in_seconds: options.ttl
+    };
 
-    // jscs:disable requireCamelCaseOrUpperCaseIdentifiers
-
-    if (options.ttl) {
-      options.flags.ttl_in_seconds = options.ttl;
-    }
-
-    // jscs:enable requireCamelCaseOrUpperCaseIdentifiers
-
-    const request = new Request({
-      dataPolicy: DataPolicy.NetworkOnly,
-      auth: options.auth,
-      client: options.client,
-      method: HttpMethod.GET,
-      pathname: `${this.getPathname(options.client)}/${name}`,
-      flags: options.flags
-    });
-    const promise = request.execute().then(response => {
-      if (options.stream) {
-        log.info('Returning the file only because of the stream flag.');
-        return new this.model(response.data, options); // eslint-disable-line new-cap
+    const promise = super.findById(name, options).then(file => {
+      if (options.stream === true) {
+        return file;
       }
 
-      return this.downloadByUrl(response.data, options);
-
-      // return new this.model(response.data, options);
+      return this.downloadByUrl(file._downloadURL, options);
     });
 
     return promise;
   }
 
-  downloadByUrl(metadataOrUrl) {
-    let metadata = metadataOrUrl;
+  downloadByUrl(url, options = {}) {
+    options = assign({
+      timeout: undefined,
+      handler() {}
+    }, options);
 
-    if (!isObject(metadataOrUrl)) {
-      metadata = {
-        _downloadURL: metadataOrUrl
-      };
-    }
+    const promise = Promise.resolve().then(() => {
+      const request = new NetworkRequest({
+        method: HttpMethod.GET,
+        url: url,
+        timeout: options.timeout
+      });
+      request.setHeader('Accept', options.mimeType || 'application-octet-stream');
+      request.removeHeader('Content-Type');
+      request.removeHeader('X-Kinvey-Api-Version');
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        return response.data;
+      }
 
-    const sharedClient = Client.sharedInstance();
-    const client = new Client({
-      appId: sharedClient.appId,
-      appSecret: sharedClient.appSecret,
-      masterSecret: sharedClient.masterSecret,
-      encryptionKey: sharedClient.encryptionKey,
-      apiUrl: metadata._downloadURL,
-      allowHttp: true
-    });
-
-    const request = new Request({
-      method: HttpMethod.GET,
-      pathname: url.parse(metadata._downloadURL).path,
-      client: client
-    });
-    request.setHeader('Accept', metadata.mimeType || 'application-octet-stream');
-    request.removeHeader('Content-Type');
-    request.removeHeader('X-Kinvey-Api-Version');
-    request.setResponseType = ResponseType.Blob;
-
-    const promise = request.execute().then(data => {
-      metadata._data = data;
-      return metadata;
-    }).catch((err) => {
-      throw new KinveyError('The file could not be downloaded from the provided url.', err);
+      throw response.error;
     });
 
     return promise;
@@ -238,106 +187,71 @@ export default class FilesStore extends NetworkStore {
   }
 
   upload(file, metadata = {}, options = {}) {
-    metadata = metadata || {};
     metadata._filename = metadata._filename || file._filename || file.name;
     metadata.size = metadata.size || file.size || file.length;
     metadata.mimeType = metadata.mimeType || file.mimeType || file.type || 'application/octet-stream';
 
     options = assign({
-      auth: this.auth,
-      client: this.client,
+      properties: null,
+      timeout: undefined,
       public: false,
-      contentType: metadata.mimeType
+      handler() {}
     }, options);
 
     if (options.public) {
       metadata._public = true;
     }
 
-    const request = new Request({
-      dataPolicy: DataPolicy.NetworkOnly,
-      auth: options.auth,
-      client: options.client,
-      data: metadata
-    });
-
-    if (metadata._id) {
-      request.method = HttpMethod.PUT;
-      request.pathname = `${this.getPathname(options.client)}/${metadata._id}`;
-    } else {
-      request.method = HttpMethod.POST;
-      request.pathname = this.getPathname(options.client);
-    }
-
-    const promise = request.execute().then(response => {
-      const uploadUrl = response.data._uploadURL;
-      const uploadUrlParts = url.parse(uploadUrl);
-      const headers = response.data._requiredHeaders || {};
-      headers['Content-Type'] = metadata.mimeType;
-      headers['Content-Length'] = metadata.size;
-
-      // Delete fields from the response
-      delete response.data._expiresAt;
-      delete response.data._requiredHeaders;
-      delete response.data._uploadURL;
-
-      // Create a client
-      const client = new Client({
-        appId: options.client.appId,
-        appSecret: options.client.appSecret,
-        masterSecret: options.client.masterSecret,
-        encryptionKey: options.client.encryptionKey,
-        apiUrl: uploadUrl,
-        allowHttp: true
+    const promise = Promise.resolve().then(() => {
+      const request = new NetworkRequest({
+        properties: options.properties,
+        auth: Auth.default,
+        timeout: options.timeout,
+        data: metadata
       });
+      request.setHeader('X-Kinvey-Content-Type', metadata.mimeType);
 
-      // Upload the file
-      const uploadRequest = new Request({
-        dataPolicy: DataPolicy.NetworkOnly,
-        auth: Auth.none,
-        method: HttpMethod.PUT,
-        pathname: uploadUrlParts.pathname,
-        flags: uploadUrlParts.query,
-        data: file,
-        client: client
-      });
-      uploadRequest.clearHeaders();
-      uploadRequest.addHeaders(headers);
-
-      return uploadRequest.execute().then(() => {
-        response.data._data = file;
-        return new this.model(response.data, options); // eslint-disable-line new-cap
-      });
-    });
-
-    return promise;
-  }
-
-  /**
-   * Delete a file. A promise will be returned that will be resolved with a count
-   * of the number of files deleted or rejected with an error.
-   *
-   * @param   {string}       name                                         File name
-   * @param   {Object}       options                                      Options
-   * @param   {DataPolicy}   [options.dataPolicy=DataPolicy.NetworkFirst]   Data policy
-   * @param   {AuthType}     [options.authType=AuthType.Default]          Auth type
-   * @return  {Promise}                                                   Promise
-   *
-   * @example
-   * var files = new Kinvey.Files();
-   * files.delete('BostonTeaParty.png').then(function(response) {
-   *   ...
-   * }).catch(function(err) {
-   *   ...
-   * });
-   */
-  delete(name, options = {}) {
-    const promise = super.delete(name, options).catch((err) => {
-      if (options.silent && err instanceof BlobNotFoundError) {
-        return { count: 0 };
+      if (metadata[idAttribute]) {
+        request.method = HttpMethod.PUT;
+        request.url = this.client.getUrl(`${this._pathname}/${metadata._id}`);
+      } else {
+        request.method = HttpMethod.POST;
+        request.url = this.client.getUrl(this._pathname);
       }
 
-      throw err;
+      return request.execute();
+    }).then(response => {
+      if (response.isSuccess()) {
+        const uploadUrl = response.data._uploadURL;
+        const headers = response.data._requiredHeaders || {};
+        headers['Content-Type'] = metadata.mimeType;
+        headers['Content-Length'] = metadata.size;
+
+        // Delete fields from the response
+        delete response.data._expiresAt;
+        delete response.data._requiredHeaders;
+        delete response.data._uploadURL;
+
+        // Upload the file
+        const request = new NetworkRequest({
+          method: HttpMethod.PUT,
+          url: uploadUrl,
+          data: file
+        });
+        request.clearHeaders();
+        request.addHeaders(headers);
+
+        return request.execute().then(uploadResponse => {
+          if (uploadResponse.isSuccess()) {
+            response.data._data = file;
+            return response.data;
+          }
+
+          throw uploadResponse.error;
+        });
+      }
+
+      throw response.error;
     });
 
     return promise;
