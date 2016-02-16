@@ -72,7 +72,7 @@
     "through2": "2.0.0",
     "utf-8-validate": "https://github.com/telerik/utf-8-validate/tarball/v1.0.1.1",
     "vinyl-filter-since": "2.0.2",
-    "winreg": "0.0.12",
+    "winreg": "0.0.17",
     "ws": "0.7.1",
     "xcode": "https://github.com/NativeScript/node-xcode/archive/1.4.0.tar.gz",
     "xmldom": "0.1.21",
