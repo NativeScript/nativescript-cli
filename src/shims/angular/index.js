@@ -1,8 +1,8 @@
 /* global angular:false */
 import Kinvey from '../../kinvey';
-import NetworkRack from '../../core/rack/networkRack';
-import Http from '../../core/rack/http';
-import AngularHttp from './http';
+import { NetworkRack } from '../../core/rack/racks/networkRack';
+import { HttpMiddleware } from '../../core/rack/middleware/http';
+import { AngularHttpMiddleware } from './http';
 const ngKinvey = angular.module('kinvey', []);
 
 ngKinvey.provider('$kinvey', function () {
@@ -14,7 +14,7 @@ ngKinvey.provider('$kinvey', function () {
   this.$get = ['$q', '$http', function ($q, $http) {
     // Swap out the Http middleware with the Angular Http middleware
     const networkRack = NetworkRack.sharedInstance();
-    networkRack.swap(Http, new AngularHttp($http));
+    networkRack.swap(HttpMiddleware, new AngularHttpMiddleware($http));
 
     // Replace Promise with $q
     Kinvey.Promise = $q;

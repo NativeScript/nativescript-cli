@@ -1,4 +1,4 @@
-import Middleware from '../../core/rack/middleware';
+import { KinveyMiddleware } from '../../core/rack/middleware';
 import { HttpMethod } from '../../core/enums';
 import result from 'lodash/result';
 import isEmpty from 'lodash/isEmpty';
@@ -7,7 +7,7 @@ import isString from 'lodash/isString';
 /**
  * @private
  */
-export default class AngularHttp extends Middleware {
+export class AngularHttpMiddleware extends KinveyMiddleware {
   constructor($http) {
     super('Kinvey Angular Http Middleware');
     this.$http = $http;
