@@ -31,7 +31,8 @@ class TestExecutionService implements ITestExecutionService {
 		private $fs: IFileSystem,
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
-		private $errors: IErrors) {
+		private $errors: IErrors,
+		private $devicesService: Mobile.IDevicesService) {
 	}
 
 	public startTestRunner(platform: string) : IFuture<void> {
@@ -43,7 +44,7 @@ class TestExecutionService implements ITestExecutionService {
 					try {
 						let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
 						let projectDir = this.$projectData.projectDir;
-
+						this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 						let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 
 						let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
