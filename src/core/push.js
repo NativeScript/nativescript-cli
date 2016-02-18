@@ -1,12 +1,10 @@
 import { KinveyError } from './errors';
 import { EventEmitter } from 'events';
-import NetworkRequest from './requests/networkRequest';
 import SyncStore from './stores/syncStore';
 import { HttpMethod } from './enums';
 import User from './models/user';
 import Client from './client';
 import Query from './query';
-import Auth from './auth';
 import Device from './device';
 import assign from 'lodash/assign';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
@@ -174,11 +172,11 @@ const Push = {
 
       return User.getActive(options).then(user => {
         const client = Client.sharedInstance();
-        const request = new NetworkRequest({
+        return client.executeNetworkRequest({
           method: HttpMethod.POST,
-          url: client.getUrl(`/${pushNamespace}/${client.appKey}/register-device`),
+          pathname: `/${pushNamespace}/${client.appKey}/register-device`,
           properties: options.properties,
-          auth: user ? Auth.session : Auth.master,
+          auth: user ? client.sessionAuth() : client.masterAuth(),
           data: {
             platform: device.platform.name,
             framework: device.isCordova() ? 'phonegap' : 'titanium',
@@ -187,14 +185,13 @@ const Push = {
           },
           timeout: options.timeout
         });
-        return request.execute();
-      }).then(result => {
+      }).then(response => {
         const store = new SyncStore(deviceCollection);
         return store.save({
           _id: deviceId,
           registered: true
         }).then(() => {
-          return result;
+          return response.data;
         });
       });
     });
@@ -236,11 +233,10 @@ const Push = {
 
       return User.getActive(options).then(user => {
         const client = Client.sharedInstance();
-        const request = new NetworkRequest({
+        return client.executeNetworkRequest({
           method: HttpMethod.POST,
-          client: client,
           properties: options.properties,
-          auth: user ? Auth.session : Auth.master,
+          auth: user ? client.sessionAuth() : client.masterAuth(),
           pathname: `/${pushNamespace}/${client.appKey}/unregister-device`,
           data: {
             platform: platform.name,
@@ -250,10 +246,9 @@ const Push = {
           },
           timeout: options.timeout
         });
-        return request.execute();
-      }).then(result => {
+      }).then(response => {
         return store.removeById(deviceId).then(() => {
-          return result;
+          return response.data;
         });
       });
     });

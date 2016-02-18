@@ -11,7 +11,8 @@ import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
-const objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * @private
@@ -83,7 +84,7 @@ export class DB {
   }
 
   get objectIdPrefix() {
-    return objectIdPrefix;
+    return '';
   }
 
   isLocalObjectId(id) {
@@ -162,7 +163,12 @@ export class DB {
     }
 
     entities = map(entities, entity => {
-      entity._id = entity._id || this.generateObjectId();
+      if (!entity[idAttribute]) {
+        entity[idAttribute] = this.generateObjectId();
+        entity[kmdAttribute] = entity[kmdAttribute] || {};
+        entity[kmdAttribute].local = true;
+      }
+
       return entity;
     });
 
@@ -187,7 +193,7 @@ export class DB {
 
     const promise = this.find(collection, query).then(entities => {
       const promises = entities.map(entity => {
-        return this.removeById(collection, entity._id);
+        return this.removeById(collection, entity[idAttribute]);
       });
 
       return Promise.all(promises);

@@ -31,6 +31,8 @@ Error.extend = function extend(name) {
 };
 
 export const ActiveUserError = Error.extend('ActiveUserError');
+export const InsufficientCredentialsError = Error.extend('InsufficientCredentialsError');
+export const InvalidCredentialsError = Error.extend('InvalidCredentialsError');
 export const KinveyError = Error.extend('KinveyError');
 export const NetworkConnectionError = Error.extend('NetworkConnectionError');
 export const NotFoundError = Error.extend('NotFoundError');

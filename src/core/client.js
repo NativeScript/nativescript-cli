@@ -1,8 +1,16 @@
-import { KinveyError } from './errors';
+import { KinveyError, NotFoundError } from './errors';
+import { HttpMethod } from './enums';
+import LocalRequest from './requests/localRequest';
+import NetworkRequest from './requests/networkRequest';
+import DeleteFetchRequest from './requests/deltaFetchRequest';
 import url from 'url';
 import qs from 'qs';
 import clone from 'lodash/clone';
 import assign from 'lodash/assign';
+const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
+const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const sharedInstanceSymbol = Symbol();
 
 /**
@@ -80,25 +88,229 @@ export default class Client {
   }
 
   /**
-   * @type {string}
+   * Authenticate through (1) user credentials, (2) Master Secret, or (3) App
+   * Secret.
+   *
+   * @returns {Promise}
    */
-  getUrl(pathname = '/', query = {}, options = {}) {
-    options = assign({
-      cacheBust: true
-    }, options);
+  allAuth() {
+    return this.sessionAuth().catch(() => {
+      return this.basicAuth();
+    });
+  }
 
-    query = qs.parse(query);
+  /**
+   * Authenticate through App Secret.
+   *
+   * @returns {Promise}
+   */
+  appAuth() {
+    return Promise.resolve({
+      scheme: 'Basic',
+      username: this.appKey,
+      password: this.appSecret
+    });
+  }
 
-    if (options.cacheBust) {
-      query._ = Math.random().toString(36).substr(2);
+  /**
+   * Authenticate through (1) Master Secret, or (2) App Secret.
+   *
+   * @returns {Promise}
+   */
+  basicAuth() {
+    return this.masterAuth().catch(() => {
+      return this.appAuth();
+    });
+  }
+
+  /**
+   * Authenticate through (1) user credentials, or (2) Master Secret.
+   *
+   * @returns {Promise}
+   */
+  defaultAuth() {
+    return this.sessionAuth().catch((err) => {
+      return this.masterAuth().catch(() => {
+        return Promise.reject(err);
+      });
+    });
+  }
+
+  /**
+   * Authenticate through Master Secret.
+   *
+   * @returns {Promise}
+   */
+  masterAuth() {
+    if (!this.appKey || !this.masterSecret) {
+      const error = new Error('Missing client credentials');
+      return Promise.reject(error);
     }
 
-    return url.format({
-      protocol: this.protocol,
-      host: this.host,
-      pathname: pathname,
-      query: query
+    const promise = Promise.resolve({
+      scheme: 'Basic',
+      username: this.appKey,
+      password: this.masterSecret
     });
+
+    return promise;
+  }
+
+  /**
+   * Do not authenticate.
+   *
+   * @returns {Promise}
+   */
+  noAuth() {
+    return Promise.resolve(null);
+  }
+
+  /**
+   * Authenticate through user credentials.
+   *
+   * @returns {Promise}
+   */
+  sessionAuth() {
+    return this.getActiveUser().then(activeUser => {
+      if (!activeUser) {
+        throw new Error('There is not an active user.');
+      }
+
+      return {
+        scheme: 'Kinvey',
+        credentials: activeUser[kmdAttribute].authtoken
+      };
+    });
+  }
+
+  getActiveUser() {
+    const promise = Promise.resolve().then(() => {
+      return this.executeLocalRequest({
+        method: HttpMethod.GET,
+        pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}`
+      });
+    }).then(response => {
+      const data = response.data;
+
+      if (data.length === 0) {
+        return null;
+      }
+
+      return data[0];
+    }).catch(err => {
+      if (err instanceof NotFoundError) {
+        return null;
+      }
+
+      throw err;
+    });
+
+    return promise;
+  }
+
+  setActiveUser(user) {
+    const promise = this.getActiveUser().then(activeUser => {
+      if (activeUser) {
+        return this.executeLocalRequest({
+          method: HttpMethod.DELETE,
+          pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}/${activeUser[idAttribute]}`
+        }).then(() => {
+          this.session = null;
+        });
+      }
+    }).then(() => {
+      if (user) {
+        return this.executeLocalRequest({
+          method: HttpMethod.POST,
+          pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}`,
+          data: user
+        });
+      }
+    }).then(response => {
+      return response ? response.data : null;
+    });
+
+    return promise;
+  }
+
+  executeLocalRequest(options = {}) {
+    options = assign({
+      method: HttpMethod.GET,
+      pathname: '/',
+      flags: {
+        _: Math.random().toString(36).substr(2)
+      }
+    }, options);
+    options.flags = qs.parse(options.flags);
+
+    const request = new LocalRequest({
+      method: options.method,
+      url: url.format({
+        protocol: this.protocol,
+        host: this.host,
+        pathname: options.pathname,
+        query: options.flags
+      }),
+      properties: options.properties,
+      query: options.query,
+      data: options.data,
+      timeout: options.timeout
+    });
+    return request.execute();
+  }
+
+  executeNetworkRequest(options = {}) {
+    options = assign({
+      method: HttpMethod.GET,
+      pathname: '/',
+      flags: {
+        _: Math.random().toString(36).substr(2)
+      }
+    }, options);
+    options.flags = qs.parse(options.flags);
+
+    const request = new NetworkRequest({
+      method: options.method,
+      auth: options.auth,
+      url: url.format({
+        protocol: this.protocol,
+        host: this.host,
+        pathname: options.pathname,
+        query: options.flags
+      }),
+      properties: options.properties,
+      query: options.query,
+      data: options.data,
+      timeout: options.timeout
+    });
+    return request.execute();
+  }
+
+  executeDeltaFetchRequest(options = {}) {
+    options = assign({
+      method: HttpMethod.GET,
+      pathname: '/',
+      flags: {
+        _: Math.random().toString(36).substr(2)
+      }
+    }, options);
+    options.flags = qs.parse(options.flags);
+
+    const request = new DeleteFetchRequest({
+      method: options.method,
+      auth: options.auth,
+      url: url.format({
+        protocol: this.protocol,
+        host: this.host,
+        pathname: options.pathname,
+        query: options.flags
+      }),
+      properties: options.properties,
+      query: options.query,
+      data: options.data,
+      timeout: options.timeout
+    });
+    return request.execute();
   }
 
   /**

@@ -1,6 +1,4 @@
-import Response from '../requests/response';
 import { Middleware } from './middleware';
-import { NoResponseError } from '../errors';
 import result from 'lodash/result';
 
 /**
@@ -159,17 +157,7 @@ export class KinveyRack extends Rack {
   execute(request) {
     request = result(request, 'toJSON', request);
     const promise = super.execute(request).then(request => {
-      const response = request.response;
-
-      if (response) {
-        return new Response({
-          statusCode: response.statusCode,
-          headers: response.headers,
-          data: response.data
-        });
-      }
-
-      throw new NoResponseError();
+      return request.response;
     });
     return promise;
   }

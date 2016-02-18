@@ -1,7 +1,7 @@
 import NetworkStore from './networkStore';
 import NetworkRequest from '../requests/networkRequest';
 import { HttpMethod } from '../enums';
-import Auth from '../auth';
+import { KinveyError } from '../errors';
 import assign from 'lodash/assign';
 import map from 'lodash/map';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
@@ -53,12 +53,8 @@ export default class FilesStore extends NetworkStore {
    */
   find(query, options = {}) {
     options = assign({
-      properties: null,
-      timeout: undefined,
       download: false,
-      tls: false,
-      ttl: undefined,
-      handler() {}
+      tls: false
     }, options);
 
     options.flags = {
@@ -78,6 +74,10 @@ export default class FilesStore extends NetworkStore {
     });
 
     return promise;
+  }
+
+  findById(id, options) {
+    return this.download(id, options);
   }
 
   /**
@@ -107,12 +107,8 @@ export default class FilesStore extends NetworkStore {
    */
   download(name, options = {}) {
     options = assign({
-      properties: null,
-      timeout: undefined,
       stream: false,
-      tls: false,
-      ttl: undefined,
-      handler() {}
+      tls: false
     }, options);
 
     options.flags = {
@@ -132,11 +128,6 @@ export default class FilesStore extends NetworkStore {
   }
 
   downloadByUrl(url, options = {}) {
-    options = assign({
-      timeout: undefined,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
       const request = new NetworkRequest({
         method: HttpMethod.GET,
@@ -148,11 +139,7 @@ export default class FilesStore extends NetworkStore {
       request.removeHeader('X-Kinvey-Api-Version');
       return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     return promise;
@@ -203,57 +190,63 @@ export default class FilesStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      const requestOptions = {
+        headers: {
+          'X-Kinvey-Content-Type': metadata.mimeType
+        },
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         timeout: options.timeout,
         data: metadata
-      });
-      request.setHeader('X-Kinvey-Content-Type', metadata.mimeType);
+      };
 
       if (metadata[idAttribute]) {
-        request.method = HttpMethod.PUT;
-        request.url = this.client.getUrl(`${this._pathname}/${metadata._id}`);
+        requestOptions.method = HttpMethod.PUT;
+        requestOptions.pathname = `${this._pathname}/${metadata._id}`;
       } else {
-        request.method = HttpMethod.POST;
-        request.url = this.client.getUrl(this._pathname);
+        requestOptions.method = HttpMethod.POST;
+        requestOptions.pathname = this._pathname;
       }
 
-      return request.execute();
+      return this.client.executeNetworkRequest(requestOptions);
     }).then(response => {
-      if (response.isSuccess()) {
-        const uploadUrl = response.data._uploadURL;
-        const headers = response.data._requiredHeaders || {};
-        headers['Content-Type'] = metadata.mimeType;
-        headers['Content-Length'] = metadata.size;
+      const uploadUrl = response.data._uploadURL;
+      const headers = response.data._requiredHeaders || {};
+      headers['Content-Type'] = metadata.mimeType;
+      headers['Content-Length'] = metadata.size;
 
-        // Delete fields from the response
-        delete response.data._expiresAt;
-        delete response.data._requiredHeaders;
-        delete response.data._uploadURL;
+      // Delete fields from the response
+      delete response.data._expiresAt;
+      delete response.data._requiredHeaders;
+      delete response.data._uploadURL;
 
-        // Upload the file
-        const request = new NetworkRequest({
-          method: HttpMethod.PUT,
-          url: uploadUrl,
-          data: file
-        });
-        request.clearHeaders();
-        request.addHeaders(headers);
+      // Upload the file
+      const request = new NetworkRequest({
+        method: HttpMethod.PUT,
+        url: uploadUrl,
+        data: file
+      });
+      request.clearHeaders();
+      request.addHeaders(headers);
 
-        return request.execute().then(uploadResponse => {
-          if (uploadResponse.isSuccess()) {
-            response.data._data = file;
-            return response.data;
-          }
+      return request.execute().then(uploadResponse => {
+        if (uploadResponse.isSuccess()) {
+          response.data._data = file;
+          return response.data;
+        }
 
-          throw uploadResponse.error;
-        });
-      }
-
-      throw response.error;
+        throw uploadResponse.error;
+      });
     });
 
     return promise;
+  }
+
+  save() {
+    return Promise.reject(new KinveyError('Please use `upload()` to save files.'));
+  }
+
+  update() {
+    return Promise.reject(new KinveyError('Please use `upload()` to update files.'));
   }
 }

@@ -1,13 +1,9 @@
 import NetworkStore from './networkStore';
-import LocalRequest from '../requests/localRequest';
-import NetworkRequest from '../requests/networkRequest';
-import DeltaFetchRequest from '../requests/deltaFetchRequest';
 import Response from '../requests/response';
-import { HttpMethod, StatusCode, ReadPolicy } from '../enums';
-import { KinveyError, NotFoundError } from '../errors';
+import { HttpMethod, StatusCode } from '../enums';
+import { InsufficientCredentialsError, KinveyError, NotFoundError } from '../errors';
 import Query from '../query';
 import Aggregation from '../aggregation';
-import Auth from '../auth';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import clone from 'lodash/clone';
@@ -20,7 +16,7 @@ import { nested } from '../utils/object';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
-const localAttribute = process.env.KINVEY_LOCAL_ATTRIBUTE || '_kmd.local';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * The CacheStore class is used to find, save, update, remove, count and group enitities
@@ -78,11 +74,8 @@ export default class CacheStore extends NetworkStore {
     log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      useDeltaFetch: true,
-      handler() {}
+      force: false,
+      useDeltaFetch: true
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -90,73 +83,58 @@ export default class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        const result = {
-          cache: response.data
-        };
+      const result = {
+        cache: response.data
+      };
 
-        result.network = this.pushCount().then(count => {
-          if (count > 0) {
-            throw new KinveyError('Please sync before you load data from the network.');
-          }
+      result.network = this.syncCount().then(count => {
+        if (options.force === false && count > 0) {
+          throw new KinveyError('Please sync before you load data from the network.');
+        }
 
-          if (options.useDeltaFetch) {
-            const request = new DeltaFetchRequest({
-              method: HttpMethod.GET,
-              url: this.client.getUrl(this._pathname),
-              properties: options.properties,
-              auth: Auth.default,
-              query: query,
-              timeout: options.timeout
-            });
-            return request.execute().then(response => {
-              if (response.isSuccess()) {
-                return response.data;
-              }
-
-              throw response.error;
-            });
-          }
-
-          return super.find(query, options);
-        }).then(data => {
-          const removedEntityIds = Object.keys(keyBy(differenceBy(result.cache, data, entity => {
-            return entity[idAttribute];
-          }), idAttribute));
-          const removeQuery = new Query();
-          removeQuery.contains(idAttribute, removedEntityIds);
-
-          const request = new LocalRequest({
-            method: HttpMethod.DELETE,
-            url: this.client.getUrl(this._pathname),
+        if (options.useDeltaFetch) {
+          return this.client.executeDeltaFetchRequest({
+            method: HttpMethod.GET,
+            pathname: this._pathname,
             properties: options.properties,
-            auth: Auth.default,
-            query: removeQuery,
+            auth: this.client.defaultAuth(),
+            query: query,
             timeout: options.timeout
+          }).then(response => {
+            return response.data;
           });
-          return request.execute().then(response => {
-            if (response.isSuccess()) {
-              return this._updateCache(data);
-            }
+        }
 
-            throw response.error;
-          });
+        return super.find(query, options);
+      }).then(data => {
+        const removedEntityIds = Object.keys(keyBy(differenceBy(result.cache, data, entity => {
+          return entity[idAttribute];
+        }), idAttribute));
+        const removeQuery = new Query();
+        removeQuery.contains(idAttribute, removedEntityIds);
+
+        return this.client.executeLocalRequest({
+          method: HttpMethod.DELETE,
+          pathname: this._pathname,
+          properties: options.properties,
+          auth: this.client.defaultAuth(),
+          query: removeQuery,
+          timeout: options.timeout
+        }).then(() => {
+          return this._updateCache(data);
         });
+      });
 
-        return result;
-      }
-
-      throw response.error;
+      return result;
     });
 
     promise.then(response => {
@@ -187,10 +165,7 @@ export default class CacheStore extends NetworkStore {
     log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
+      force: false
     }, options);
 
     if (!(aggregation instanceof Aggregation)) {
@@ -199,34 +174,29 @@ export default class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(`${this._pathname}/_group`),
+        pathname: `${this._pathname}/_group`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: aggregation.toJSON(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        const result = {
-          cache: response.data
-        };
+      const result = {
+        cache: response.data
+      };
 
-        result.network = this.pushCount().then(count => {
-          if (count > 0) {
-            throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-              'Call store.push() to push the pending sync items.');
-          }
+      result.network = this.syncCount().then(count => {
+        if (options.force === false && count > 0) {
+          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
+            'Call store.push() to push the pending sync items.');
+        }
 
-          return super.group(aggregation, options);
-        });
+        return super.group(aggregation, options);
+      });
 
-        return result;
-      }
-
-      throw response.error;
+      return result;
     });
 
     promise.then(response => {
@@ -257,10 +227,7 @@ export default class CacheStore extends NetworkStore {
     log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
+      force: false
     }, options);
 
     if (query && !(query instanceof Query)) {
@@ -268,34 +235,29 @@ export default class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(`${this._pathname}/_count`),
+        pathname: `${this._pathname}/_count`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        const result = {
-          cache: response.data
-        };
+      const result = {
+        cache: response.data
+      };
 
-        result.network = this.pushCount().then(count => {
-          if (count > 0) {
-            throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-              'Call store.push() to push the pending sync items.');
-          }
+      result.network = this.syncCount().then(count => {
+        if (options.force === false && count > 0) {
+          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
+            'Call store.push() to push the pending sync items.');
+        }
 
-          return super.count(query, options);
-        });
+        return super.count(query, options);
+      });
 
-        return result;
-      }
-
-      throw response.error;
+      return result;
     });
 
     promise.then(response => {
@@ -329,79 +291,61 @@ export default class CacheStore extends NetworkStore {
     log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      useDeltaFetch: true,
-      handler() {}
+      force: false,
+      useDeltaFetch: true
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(`${this._pathname}/${id}`),
+        pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        const result = {
-          cache: response.data
-        };
+      const result = {
+        cache: response.data
+      };
 
-        result.network = this.pushCount().then(count => {
-          if (count > 0) {
-            throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-              'Call store.push() to push the pending sync items.');
-          }
+      result.network = this.syncCount().then(count => {
+        if (options.force === false && count > 0) {
+          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
+            'Call store.push() to push the pending sync items.');
+        }
 
-          if (options.useDeltaFetch) {
-            const request = new DeltaFetchRequest({
-              method: HttpMethod.GET,
-              url: this.client.getUrl(`${this._pathname}/${id}`),
-              properties: options.properties,
-              auth: Auth.default,
-              timeout: options.timeout
-            });
-            return request.execute().then(response => {
-              if (response.isSuccess()) {
-                return response.data;
-              }
+        if (options.useDeltaFetch) {
+          return this.client.executeDeltaFetchRequest({
+            method: HttpMethod.GET,
+            pathname: `${this._pathname}/${id}`,
+            properties: options.properties,
+            auth: this.client.defaultAuth(),
+            timeout: options.timeout
+          }).then(response => {
+            return response.data;
+          });
+        }
 
-              throw response.error;
-            });
-          }
+        return super.findById(id, options);
+      }).then(data => {
+        return this._updateCache(data);
+      }).catch(err => {
+        if (err instanceof NotFoundError) {
+          return this.client.executeLocalRequest({
+            method: HttpMethod.DELETE,
+            pathname: `${this._pathname}/${id}`,
+            properties: options.properties,
+            auth: this.client.defaultAuth(),
+            timeout: options.timeout
+          }).then(() => {
+            throw err;
+          });
+        }
 
-          return super.findById(id, options);
-        }).then(data => {
-          return this._updateCache(data);
-        }).catch(err => {
-          if (err instanceof NotFoundError) {
-            const removeRequest = new LocalRequest({
-              method: HttpMethod.DELETE,
-              url: this.client.getUrl(`${this._pathname}/${id}`),
-              properties: options.properties,
-              auth: Auth.default,
-              timeout: options.timeout
-            });
-            return removeRequest.execute().then(response => {
-              if (response.isSuccess()) {
-                throw err;
-              }
+        throw err;
+      });
 
-              throw response.error;
-            });
-          }
-
-          throw err;
-        });
-
-        return result;
-      }
-
-      throw response.error;
+      return result;
     });
 
     promise.then(response => {
@@ -432,43 +376,31 @@ export default class CacheStore extends NetworkStore {
       return Promise.resolve(null);
     }
 
-    if (entity._id) {
+    if (entity[idAttribute]) {
       log.warn('Entity argument contains an _id. Calling update instead.', entity);
       return this.update(entity, options);
     }
 
     log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.POST,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: entity,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return this._updateSync(response.data, options).then(() => {
-          const data = isArray(response.data) ? response.data : [response.data];
-          const ids = Object.keys(keyBy(data, idAttribute));
-          const query = new Query().contains(idAttribute, ids);
-          return this.push(query, options);
-        }).then(() => {
-          return response.data;
-        });
-      }
-
-      throw response.error;
+      return this._updateSync(response.data, options).then(() => {
+        const data = isArray(response.data) ? response.data : [response.data];
+        const ids = Object.keys(keyBy(data, idAttribute));
+        const query = new Query().contains(idAttribute, ids);
+        return this.push(query, options);
+      }).then(() => {
+        return response.data;
+      });
     });
 
     promise.then(response => {
@@ -499,43 +431,31 @@ export default class CacheStore extends NetworkStore {
       return Promise.resolve(null);
     }
 
-    if (!entity._id) {
+    if (!entity[idAttribute]) {
       log.warn('Entity argument does not contain an _id. Calling save instead.', entity);
       return this.save(entity, options);
     }
 
     log.debug(`Updating the entity(s) in the ${this.name} collection.`, entity);
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.PUT,
-        url: this.client.getUrl(`${this._pathname}/${entity._id}`),
+        pathname: `${this._pathname}/${entity[idAttribute]}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: entity,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return this._updateSync(response.data, options).then(() => {
-          const data = isArray(response.data) ? response.data : [response.data];
-          const ids = Object.keys(keyBy(data, idAttribute));
-          const query = new Query().contains(idAttribute, ids);
-          return this.push(query, options);
-        }).then(() => {
-          return response.data;
-        });
-      }
-
-      throw response.error;
+      return this._updateSync(response.data, options).then(() => {
+        const data = isArray(response.data) ? response.data : [response.data];
+        const ids = Object.keys(keyBy(data, idAttribute));
+        const query = new Query().contains(idAttribute, ids);
+        return this.push(query, options);
+      }).then(() => {
+        return response.data;
+      });
     });
 
     promise.then(response => {
@@ -563,37 +483,26 @@ export default class CacheStore extends NetworkStore {
   remove(query, options = {}) {
     log.debug(`Removing the entities in the ${this.name} collection.`, query);
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.DELETE,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return this._updateSync(response.data, options).then(() => {
-          const query = new Query().contains(idAttribute, []);
-          return this.push(query, options);
-        }).then(() => {
-          return response.data;
-        });
-      }
-
-      throw response.error;
+      return this._updateSync(response.data.entities, options).then(() => {
+        const query = new Query().contains(idAttribute, []);
+        return this.push(query, options);
+      }).then(() => {
+        return response.data;
+      });
     });
 
     promise.then(response => {
@@ -624,32 +533,21 @@ export default class CacheStore extends NetworkStore {
 
     log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.DELETE,
-        url: this.client.getUrl(`${this._pathname}/${id}`),
+        pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return this._updateSync(response.data, options).then(() => {
-          const query = new Query().contains(idAttribute, [id]);
-          return this.push(query, options);
-        }).then(() => {
-          return response.data;
-        });
-      }
-
-      throw response.error;
+      return this._updateSync(response.data.entities, options).then(() => {
+        const query = new Query().contains(idAttribute, [id]);
+        return this.push(query, options);
+      }).then(() => {
+        return response.data;
+      });
     });
 
     promise.then(response => {
@@ -681,236 +579,221 @@ export default class CacheStore extends NetworkStore {
    * });
    */
   push(query, options = {}) {
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._syncPathname),
+        pathname: this._syncPathname,
         properties: options.properties,
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        const save = [];
-        const remove = [];
-        const entities = response.data.entities;
-        const ids = Object.keys(entities);
-        let size = response.data.size;
+      const save = [];
+      const remove = [];
+      const entities = response.data.entities;
+      const ids = Object.keys(entities);
+      let size = response.data.size;
 
-        const promises = map(ids, id => {
-          const metadata = clone(entities[id], true);
-          const request = new LocalRequest({
-            method: HttpMethod.GET,
-            url: this.client.getUrl(`${this._pathname}/${id}`),
-            properties: metadata.properties,
-            auth: Auth.default,
-            timeout: options.timeout
-          });
-          return request.execute().then(response => {
-            if (response.isSuccess()) {
-              save.push(response.data);
-              return response.data;
-            }
+      const promises = map(ids, id => {
+        const metadata = clone(entities[id], true);
+        return this.client.executeLocalRequest({
+          method: HttpMethod.GET,
+          pathname: `${this._pathname}/${id}`,
+          properties: metadata.properties,
+          auth: this.client.defaultAuth(),
+          timeout: options.timeout
+        }).then(response => {
+          save.push(response.data);
+          return response.data;
+        }).catch(err => {
+          if (err instanceof NotFoundError) {
+            remove.push(id);
+            return null;
+          }
 
-            throw response.error;
-          }).catch(err => {
-            if (err instanceof NotFoundError) {
-              remove.push(id);
-              return null;
-            }
-
-            throw err;
-          });
+          throw err;
         });
+      });
 
-        return Promise.all(promises).then(() => {
-          const saved = map(save, entity => {
-            const metadata = clone(entities[entity[idAttribute]], true);
-            const isLocalEntity = nested(entity, localAttribute);
+      return Promise.all(promises).then(() => {
+        const saved = map(save, entity => {
+          const metadata = clone(entities[entity[idAttribute]], true);
+          const isLocalEntity = nested(entity, `${kmdAttribute}.local`);
 
-            if (isLocalEntity) {
-              const originalId = entity._id;
-              delete entity._id;
-              const request = new NetworkRequest({
-                method: HttpMethod.POST,
-                url: this.client.getUrl(this._pathname),
-                properties: metadata.properties,
-                auth: Auth.default,
-                data: entity,
-                timeout: options.timeout
-              });
+          if (isLocalEntity) {
+            const originalId = entity[idAttribute];
+            delete entity[idAttribute];
+            delete entity[kmdAttribute];
 
-              return request.execute().then(response => {
-                if (response.isSuccess()) {
-                  const request = new LocalRequest({
-                    method: HttpMethod.PUT,
-                    url: this.client.getUrl(this._pathname),
-                    properties: metadata.properties,
-                    auth: Auth.default,
-                    data: response.data,
-                    timeout: options.timeout
-                  });
-                  return request.execute();
-                }
-
-                throw response.error;
-              }).then(response => {
-                if (response.isSuccess()) {
-                  const request = new LocalRequest({
-                    method: HttpMethod.DELETE,
-                    url: this.client.getUrl(`${this._pathname}/${originalId}`),
-                    properties: metadata.properties,
-                    auth: Auth.default,
-                    timeout: options.timeout
-                  });
-                  return request.execute().then(response => {
-                    if (response.isSuccess()) {
-                      const result = response.data;
-                      if (result.count === 1) {
-                        size = size - 1;
-                        delete entities[originalId];
-                        return {
-                          _id: originalId,
-                          entity: entity
-                        };
-                      }
-
-                      return result;
-                    }
-
-                    throw response.error;
-                  });
-                }
-
-                throw response.error;
-              }).catch(err => {
-                return {
-                  _id: originalId,
-                  error: err
-                };
-              });
-            }
-
-            const request = new NetworkRequest({
-              method: HttpMethod.PUT,
-              url: this.client.getUrl(`${this._pathname}/${entity._id}`),
+            return this.client.executeNetworkRequest({
+              method: HttpMethod.POST,
+              pathname: this._pathname,
               properties: metadata.properties,
-              auth: Auth.default,
+              auth: this.client.defaultAuth(),
               data: entity,
               timeout: options.timeout
-            });
-            return request.execute().then(response => {
-              if (response.isSuccess()) {
-                size = size - 1;
-                delete entities[response.data._id];
-                return {
-                  _id: response.data._id,
-                  entity: response.data
-                };
-              }
-
-              throw response.error;
-            }).catch(err => {
-              return {
-                _id: entity._id,
-                error: err
-              };
-            });
-          });
-
-          const removed = map(remove, id => {
-            const metadata = clone(entities[id], true);
-            const request = new NetworkRequest({
-              method: HttpMethod.DELETE,
-              url: this.client.getUrl(`${this._pathname}/${id}`),
-              properties: metadata.properties,
-              auth: Auth.default,
-              timeout: options.timeout
-            });
-
-            return request.execute().then(response => {
-              if (response.isSuccess()) {
+            }).then(response => {
+              return this.client.executeLocalRequest({
+                method: HttpMethod.PUT,
+                pathname: this._pathname,
+                properties: metadata.properties,
+                data: response.data,
+                timeout: options.timeout
+              });
+            }).then(() => {
+              return this.client.executeLocalRequest({
+                method: HttpMethod.DELETE,
+                pathname: `${this._pathname}/${originalId}`,
+                properties: metadata.properties,
+                auth: this.client.defaultAuth(),
+                timeout: options.timeout
+              }).then(response => {
                 const result = response.data;
-
                 if (result.count === 1) {
                   size = size - 1;
-                  delete entities[id];
+                  delete entities[originalId];
                   return {
-                    _id: id
+                    _id: originalId,
+                    entity: entity
                   };
                 }
 
-                return result;
-              }
-
-              throw response.error;
+                return {
+                  _id: originalId,
+                  error: new KinveyError(`Expected count to be 1 but instead it was ${result.count} ` +
+                    `when trying to remove entity with _id ${originalId}.`)
+                };
+              });
             }).catch(err => {
               return {
-                _id: id,
+                _id: originalId,
                 error: err
               };
             });
-          });
+          }
 
-          return Promise.all([Promise.all(saved), Promise.all(removed)]);
-        }).then(results => {
-          const savedResults = results[0];
-          const removedResults = results[1];
-          const result = {
-            collection: this.name,
-            success: [],
-            error: []
-          };
-
-          forEach(savedResults, savedResult => {
-            if (savedResult.error) {
-              result.error.push(savedResult);
-            } else {
-              result.success.push(savedResult);
-            }
-          });
-
-          forEach(removedResults, removedResult => {
-            if (removedResult.error) {
-              result.error.push(removedResult);
-            } else {
-              result.success.push(removedResult);
-            }
-          });
-
-          return result;
-        }).then(result => {
-          response.data.size = size;
-          response.data.entities = entities;
-          const request = new LocalRequest({
+          return this.client.executeNetworkRequest({
             method: HttpMethod.PUT,
-            url: this.client.getUrl(this._syncPathname),
-            properties: options.properties,
-            data: response.data,
+            url: `${this._pathname}/${entity[idAttribute]}`,
+            properties: metadata.properties,
+            auth: this.client.defaultAuth(),
+            data: entity,
             timeout: options.timeout
-          });
-          return request.execute().then(response => {
-            if (response.isSuccess()) {
-              return result;
+          }).then(response => {
+            size = size - 1;
+            delete entities[response.data[idAttribute]];
+            return {
+              _id: response.data[idAttribute],
+              entity: response.data
+            };
+          }).catch(err => {
+            // If the credentials used to authenticate this request are
+            // not authorized to run the operation then just remove the entity
+            // from the sync table
+            if (err instanceof InsufficientCredentialsError) {
+              size = size - 1;
+              delete entities[entity[idAttribute]];
+              return {
+                _id: entity[idAttribute],
+                entity: entity
+              };
             }
 
-            throw response.error;
+            return {
+              _id: entity[idAttribute],
+              error: err
+            };
           });
         });
-      }
 
-      throw response.error;
+        const removed = map(remove, id => {
+          const metadata = clone(entities[id], true);
+          return this.client.executeNetworkRequest({
+            method: HttpMethod.DELETE,
+            pathname: `${this._pathname}/${id}`,
+            properties: metadata.properties,
+            auth: this.client.defaultAuth(),
+            timeout: options.timeout
+          }).then(response => {
+            const result = response.data;
+
+            if (result.count === 1) {
+              size = size - 1;
+              delete entities[id];
+              return {
+                _id: id
+              };
+            }
+
+            return {
+              _id: id,
+              error: new KinveyError(`Expected count to be 1 but instead it was ${result.count} ` +
+                `when trying to remove entity with _id ${id}.`)
+            };
+          }).catch(err => {
+            // If the credentials used to authenticate this request are
+            // not authorized to run the operation or the entity was
+            // not found then just remove the entity from the sync table
+            if (err instanceof NotFoundError || err instanceof InsufficientCredentialsError) {
+              size = size - 1;
+              delete entities[id];
+              return {
+                _id: id
+              };
+            }
+
+            return {
+              _id: id,
+              error: err
+            };
+          });
+        });
+
+        return Promise.all([Promise.all(saved), Promise.all(removed)]);
+      }).then(results => {
+        const savedResults = results[0];
+        const removedResults = results[1];
+        const result = {
+          collection: this.name,
+          success: [],
+          error: []
+        };
+
+        forEach(savedResults, savedResult => {
+          if (savedResult.error) {
+            result.error.push(savedResult);
+          } else {
+            result.success.push(savedResult);
+          }
+        });
+
+        forEach(removedResults, removedResult => {
+          if (removedResult.error) {
+            result.error.push(removedResult);
+          } else {
+            result.success.push(removedResult);
+          }
+        });
+
+        return result;
+      }).then(result => {
+        response.data.size = size;
+        response.data.entities = entities;
+
+        return this.client.executeLocalRequest({
+          method: HttpMethod.PUT,
+          pathname: this._syncPathname,
+          properties: options.properties,
+          data: response.data,
+          timeout: options.timeout
+        }).then(() => {
+          return result;
+        });
+      });
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return {
@@ -952,8 +835,9 @@ export default class CacheStore extends NetworkStore {
           'Call store.push() to push the pending sync items before you pull new data.');
       }
 
-      options.readPolicy = ReadPolicy.NetworkOnly;
       return this.find(query, options);
+    }).then(result => {
+      return result.network;
     });
 
     return promise;
@@ -1007,40 +891,27 @@ export default class CacheStore extends NetworkStore {
    *
    * @example
    * var store = Kinvey.Store.getInstance('books');
-   * store.pushCount().then(function(count) {
+   * store.syncCount().then(function(count) {
    *   ...
    * }).catch(function(err) {
    *   ...
    * });
    */
-  pushCount(query, options = {}) {
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
-    }, options);
-
+  syncCount(query, options = {}) {
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._syncPathname),
+        pathname: this._syncPathname,
         properties: options.properties,
-        auth: Auth.default,
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data.size || 0;
-      }
-
-      throw response.error;
+      return response.data.size || 0;
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return 0;
@@ -1064,29 +935,16 @@ export default class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   _updateCache(entities, options = {}) {
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.PUT,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
         data: entities,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     return promise;
@@ -1111,22 +969,13 @@ export default class CacheStore extends NetworkStore {
       return Promise.resolve(null);
     }
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      ttl: this.ttl,
-      handler() {}
-    }, options);
-
     const promise = Promise.resolve().then(() => {
-      const request = new LocalRequest({
+      return this.client.executeLocalRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._syncPathname),
+        pathname: this._syncPathname,
         properties: options.properties,
-        auth: Auth.default,
         timeout: options.timeout
       });
-      return request.execute();
     }).catch(err => {
       if (err instanceof NotFoundError) {
         return new Response({
@@ -1141,47 +990,37 @@ export default class CacheStore extends NetworkStore {
 
       throw err;
     }).then(response => {
-      if (response.isSuccess()) {
-        const syncData = response.data || {
-          _id: this.name,
-          entities: {},
-          size: 0
-        };
+      const syncData = response.data || {
+        _id: this.name,
+        entities: {},
+        size: 0
+      };
 
-        if (!isArray(entities)) {
-          entities = [entities];
-        }
+      if (!isArray(entities)) {
+        entities = [entities];
+      }
 
-        forEach(entities, entity => {
-          if (entity._id) {
-            if (!syncData.docs.hasOwnProperty(entity._id)) {
-              syncData.size = syncData.size + 1;
-            }
-
-            syncData.entities[entity._id] = {
-              lmt: entity._kmd ? entity._kmd.lmt : null
-            };
+      forEach(entities, entity => {
+        if (entity[idAttribute]) {
+          if (!syncData.entities.hasOwnProperty(entity[idAttribute])) {
+            syncData.size = syncData.size + 1;
           }
-        });
 
-        const request = new LocalRequest({
-          method: HttpMethod.PUT,
-          url: this.client.getUrl(this._syncPathname),
-          properties: options.properties,
-          auth: options.auth,
-          data: syncData,
-          timeout: options.timeout
-        });
-        return request.execute();
-      }
+          syncData.entities[entity[idAttribute]] = {
+            lmt: entity[kmdAttribute] ? entity[kmdAttribute].lmt : null
+          };
+        }
+      });
 
-      throw response.error;
-    }).then(response => {
-      if (response.isSuccess()) {
-        return null;
-      }
-
-      throw response.error;
+      return this.client.executeLocalRequest({
+        method: HttpMethod.PUT,
+        pathname: this._syncPathname,
+        properties: options.properties,
+        data: syncData,
+        timeout: options.timeout
+      });
+    }).then(() => {
+      return null;
     });
 
     return promise;

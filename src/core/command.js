@@ -1,9 +1,6 @@
 import Client from './client';
-import Auth from './auth';
 import { HttpMethod } from './enums';
 import { KinveyError } from './errors';
-import NetworkRequest from './requests/networkRequest';
-import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -31,6 +28,8 @@ export default class Command {
    * });
    */
   static execute(command, args, options = {}) {
+    const client = Client.sharedInstance();
+
     if (!command) {
       throw new KinveyError('A command is required.');
     }
@@ -39,28 +38,15 @@ export default class Command {
       throw new KinveyError('Command must be a string.');
     }
 
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
-    const client = Client.sharedInstance();
-    const request = new NetworkRequest({
+    return client.executeNetworkRequest({
       method: HttpMethod.POST,
-      url: client.getUrl(`/${rpcNamespace}/${options.client.appKey}/custom/${command}`),
+      pathname: `/${rpcNamespace}/${options.client.appKey}/custom/${command}`,
       properties: options.properties,
-      auth: Auth.default,
+      auth: client.defaultAuth(),
       data: args,
       timeout: options.timeout
+    }).then(response => {
+      return response.data;
     });
-    const promise = request.execute().then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
-    });
-    return promise;
   }
 }

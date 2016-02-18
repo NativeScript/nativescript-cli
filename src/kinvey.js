@@ -1,16 +1,13 @@
 import Aggregation from './core/aggregation';
-import Auth from './core/auth';
 import Client from './core/client';
 import Command from './core/command';
 import Files from './core/stores/filesStore';
 import Log from './core/log';
 import Metadata from './core/metadata';
-import NetworkRequest from './core/requests/networkRequest';
 import Query from './core/query';
 import DataStore from './core/stores/dataStore';
 import Sync from './core/sync';
-import User from './core/models/user';
-import Users from './core/stores/usersStore';
+import { User } from './core/user';
 import { AuthorizationGrant, ReadPolicy, SocialIdentity, HttpMethod, DataStoreType } from './core/enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -48,19 +45,13 @@ export default class Kinvey {
    */
   static ping() {
     const client = Client.sharedInstance();
-    const request = new NetworkRequest({
+
+    return client.executeNetworkRequest({
       method: HttpMethod.GET,
-      client: client,
-      auth: Auth.all,
+      auth: client.allAuth(),
       pathname: `${appdataNamespace}/${client.appKey}`
-    });
-
-    return request.execute().then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+    }).then(response => {
+      return response.data;
     });
   }
 }
@@ -79,4 +70,3 @@ Kinvey.ReadPolicy = ReadPolicy;
 Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.Sync = Sync;
 Kinvey.User = User;
-Kinvey.Users = Users;

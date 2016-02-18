@@ -4,7 +4,6 @@ import NetworkRequest from './requests/networkRequest';
 import Device from './device';
 import Client from './client';
 import Popup from './utils/popup';
-import Auth from './auth';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
@@ -25,6 +24,11 @@ export default class MobileIdentityConnect {
       masterSecret: sharedClient.masterSecret,
       encryptionKey: sharedClient.encryptionKey
     });
+  }
+
+  static login(redirectUri, authorizationGrant, options) {
+    const mic = new MobileIdentityConnect();
+    return mic.login(redirectUri, authorizationGrant, options);
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
@@ -66,24 +70,20 @@ export default class MobileIdentityConnect {
       pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
-    const request = new NetworkRequest({
+    return this.client.executeNetworkRequest({
       method: HttpMethod.POST,
-      url: this.client.getUrl(path.join(pathname, authPathname)),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      pathname: path.join(pathname, authPathname),
       properties: options.properties,
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code'
       }
-    });
-    request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-    return request.execute().then(response => {
-      if (response.isSuccess()) {
-        return response.data.temp_login_uri;
-      }
-
-      throw response.error;
+    }).then(response => {
+      return response.data.temp_login_uri;
     });
   }
 
@@ -137,19 +137,10 @@ export default class MobileIdentityConnect {
 
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      const client = new Client({
-        protocol: url.parse(loginUrl).protocol,
-        host: url.parse(loginUrl).host,
-        appKey: this.client.appKey,
-        appSecret: this.client.appSecret,
-        masterSecret: this.client.masterSecret,
-        encryptionKey: this.client.encryptionKey
-      });
       const request = new NetworkRequest({
         method: HttpMethod.POST,
-        url: client.getUrl(url.parse(loginUrl).pathname, url.parse(loginUrl, true).query),
+        url: loginUrl,
         properties: options.properties,
-        auth: Auth.app,
         data: {
           client_id: clientId,
           redirect_uri: redirectUri,
@@ -175,26 +166,22 @@ export default class MobileIdentityConnect {
   }
 
   requestToken(code, clientId, redirectUri, options = {}) {
-    const request = new NetworkRequest({
+    return this.client.executeNetworkRequest({
       method: HttpMethod.POST,
-      url: this.client(tokenPathname),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      pathname: tokenPathname,
       properties: options.properties,
-      auth: Auth.app,
+      auth: this.client.appAuth(),
       data: {
         grant_type: 'authorization_code',
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
       }
-    });
-    request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-    return request.execute().then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+    }).then(response => {
+      return response.data;
     });
   }
 }

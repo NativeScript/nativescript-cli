@@ -1,5 +1,5 @@
 import { StatusCode } from '../enums';
-import { KinveyError, NotFoundError } from '../errors';
+import { InsufficientCredentialsError, InvalidCredentialsError, KinveyError, NotFoundError } from '../errors';
 import assign from 'lodash/assign';
 import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
@@ -29,7 +29,7 @@ export default class Response {
       return null;
     }
 
-    const data = clone(this.data);
+    const data = clone(this.data, true);
     const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
@@ -41,6 +41,10 @@ export default class Response {
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound') {
       return new NotFoundError(message, debug);
+    } else if (name === 'InsufficientCredentials') {
+      return new InsufficientCredentialsError(message, debug);
+    } else if (name === 'InvalidCredentials') {
+      return new InvalidCredentialsError(message, debug);
     }
 
     return new KinveyError(message, debug);

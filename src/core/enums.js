@@ -34,20 +34,6 @@ Object.freeze(HttpMethod);
 export { HttpMethod };
 
 /**
- * @private
- * Enum for Response types.
- */
-const ResponseType = {
-  Blob: 'blob',
-  Document: 'document',
-  DOMString: 'domstring',
-  JSON: 'json',
-  Text: 'text'
-};
-Object.freeze(ResponseType);
-export { ResponseType };
-
-/**
  * Enum for Social Identities.
  */
 const SocialIdentity = {

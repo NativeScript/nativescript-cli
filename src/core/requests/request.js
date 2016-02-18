@@ -8,7 +8,6 @@ import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
-import isFunction from 'lodash/isFunction';
 
 /**
  * @private
@@ -17,9 +16,7 @@ class Request {
   constructor(options = {}) {
     options = assign({
       method: HttpMethod.GET,
-      headers: {
-        Accept: 'application/json; charset=utf-8'
-      },
+      headers: {},
       url: null,
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
@@ -36,7 +33,7 @@ class Request {
     const headers = options.headers && isPlainObject(options.headers) ? options.headers : {};
 
     if (!headers.Accept || !headers.accept) {
-      headers.Accept = options.headers.Accept;
+      headers.Accept = 'application/json; charset=utf-8';
     }
 
     this.addHeaders(headers);
@@ -233,6 +230,10 @@ export default class KinveyRequest extends Request {
     this.addHeaders(headers);
   }
 
+  set authHandler(authHandler) {
+    this.authHandler = authHandler;
+  }
+
   set properties(properties) {
     if (properties) {
       if (!(properties instanceof Properties)) {
@@ -266,7 +267,7 @@ export default class KinveyRequest extends Request {
 
   execute() {
     const promise = super.execute().then(() => {
-      return isFunction(this.auth) ? this.auth(this.client) : this.auth;
+      return this.auth;
     }).then(authInfo => {
       if (authInfo) {
         let credentials = authInfo.credentials;

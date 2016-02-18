@@ -1,16 +1,14 @@
 import Aggregation from '../aggregation';
-import DeltaFetchRequest from '../requests/deltaFetchRequest';
-import NetworkRequest from '../requests/networkRequest';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import Client from '../client';
 import Query from '../query';
-import Auth from '../auth';
 import assign from 'lodash/assign';
 import log from '../log';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * The NetworkStore class is used to find, save, update, remove, count and group enitities
@@ -86,21 +84,16 @@ export default class NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(this._pathname, options.flags),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -141,21 +134,16 @@ export default class NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(`${this._pathname}/_group`),
+        pathname: `${this._pathname}/_group`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: aggregation.toJSON(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -195,35 +183,16 @@ export default class NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      let request;
-
-      if (options.useDeltaFetch) {
-        request = new DeltaFetchRequest({
-          method: HttpMethod.GET,
-          url: this.client.getUrl(`${this._pathname}/_count`),
-          properties: options.properties,
-          auth: Auth.default,
-          query: query,
-          timeout: options.timeout
-        });
-      } else {
-        request = new NetworkRequest({
-          method: HttpMethod.GET,
-          url: this.client.getUrl(`${this._pathname}/_count`),
-          properties: options.properties,
-          auth: Auth.default,
-          query: query,
-          timeout: options.timeout
-        });
-      }
-
-      return request.execute();
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.GET,
+        pathname: `${this._pathname}/_count`,
+        properties: options.properties,
+        auth: this.client.defaultAuth(),
+        query: query,
+        timeout: options.timeout
+      });
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -261,14 +230,13 @@ export default class NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.GET,
-        url: this.client.getUrl(`${this._pathname}/${id}`),
+        pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
       if (response.isSuccess()) {
         return isArray(response.data) && response.data.length === 1 ? response.data[0] : response.data;
@@ -317,21 +285,16 @@ export default class NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.POST,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: entity,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -374,21 +337,16 @@ export default class NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
-        method: HttpMethod.POST,
-        url: this.client.getUrl(`${this._pathname}/${entity._id}`),
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.PUT,
+        pathname: `${this._pathname}/${entity[idAttribute]}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         data: entity,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -427,21 +385,16 @@ export default class NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.DELETE,
-        url: this.client.getUrl(this._pathname),
+        pathname: this._pathname,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {
@@ -479,20 +432,15 @@ export default class NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      return this.client.executeNetworkRequest({
         method: HttpMethod.DELETE,
-        url: this.client.getUrl(`${this._pathname}/${id}`),
+        pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: Auth.default,
+        auth: this.client.defaultAuth(),
         timeout: options.timeout
       });
-      return request.execute();
     }).then(response => {
-      if (response.isSuccess()) {
-        return response.data;
-      }
-
-      throw response.error;
+      return response.data;
     });
 
     promise.then(response => {

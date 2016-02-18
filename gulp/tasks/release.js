@@ -63,16 +63,16 @@ gulp.task('push', function (done) {
 
 gulp.task('uploadS3', function () {
   gulp.src([
-    path.join(config.paths.dist, `${config.files.output.filename}.js`),
-    path.join(config.paths.dist, `${config.files.output.filename}.min.js`),
-    path.join(config.paths.dist, `${config.files.output.filename}.min.js.gz`)
+    path.join(config.paths.dist, 'dist', `${config.files.output.filename}.js`),
+    path.join(config.paths.dist, 'dist', `${config.files.output.filename}.js.map`),
+    path.join(config.paths.dist, 'dist', `${config.files.output.filename}.min.js`)
   ])
     .pipe($.plumber())
     .pipe($.if(`${config.files.output.filename}.js`,
                 $.rename({ basename: `${config.files.output.filename}-${config.version}` })))
+    .pipe($.if(`${config.files.output.filename}.map.js`,
+                $.rename({ basename: `${config.files.output.filename}-${config.version}.map` })))
     .pipe($.if(`${config.files.output.filename}.min.js`,
-                $.rename({ basename: `${config.files.output.filename}-${config.version}.min` })))
-    .pipe($.if(`${config.files.output.filename}.min.js.gz`,
                 $.rename({ basename: `${config.files.output.filename}-${config.version}.min.js` })))
     .pipe(s3(config.s3));
 });
