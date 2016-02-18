@@ -14,6 +14,8 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
+const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
+const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
 let hello;
 
 if (typeof window !== 'undefined') {
@@ -36,6 +38,14 @@ export class User {
 
   get _id() {
     return this.data[idAttribute];
+  }
+
+  get username() {
+    return this.data[usernameAttribute];
+  }
+
+  get email() {
+    return this.data[emailAttribute];
   }
 
   get authtoken() {
