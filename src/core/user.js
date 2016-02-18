@@ -4,6 +4,7 @@ import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import MobileIdentityConnect from './mic';
 import { SocialIdentity, HttpMethod } from './enums';
 import assign from 'lodash/assign';
+import result from 'lodash/result';
 import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 const micAuthProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
@@ -20,7 +21,12 @@ if (typeof window !== 'undefined') {
 }
 
 export class User {
-  constructor() {
+  constructor(data = {}) {
+    /**
+     * @type {Object}
+     */
+    this.data = data;
+
     /**
      * @private
      * @type {Client}
@@ -28,23 +34,48 @@ export class User {
     this.client = Client.sharedInstance();
   }
 
+  get _id() {
+    return this.data[idAttribute];
+  }
+
+  get authtoken() {
+    const kmd = this.data[kmdAttribute] || {};
+    return kmd.authtoken;
+  }
+
+  set authtoken(authtoken) {
+    const kmd = this.data[kmdAttribute] || {};
+    kmd.authtoken = authtoken;
+    this.data[kmdAttribute] = kmd;
+  }
+
   static getActiveUser(client = Client.sharedInstance()) {
-    return client.getActiveUser();
+    return client.getActiveUser().then(data => {
+      let user = null;
+
+      if (data) {
+        user = new User(data);
+        user.client = client;
+      }
+
+      return user;
+    });
   }
 
   static setActiveUser(user, client = Client.sharedInstance()) {
-    return client.setActiveUser(user);
+    const data = result(user, 'data', user);
+    return client.setActiveUser(data).then(() => {
+      return User.getActiveUser();
+    });
   }
 
-  static logout(client = Client.sharedInstance(), options = {}) {
-    return client.getActiveUser().then(activeUser => {
-      if (!activeUser) {
-        return null;
+  isActiveUser() {
+    return this.client.getActiveUser().then(activeUser => {
+      if (activeUser[idAttribute] === this._id) {
+        return true;
       }
 
-      const user = new User();
-      user.client = client;
-      return user.logout(options);
+      return false;
     });
   }
 
@@ -58,10 +89,16 @@ export class User {
     usernameOrData.username = String(usernameOrData.username).trim();
     usernameOrData.password = String(usernameOrData.password).trim();
 
-    const promise = this.client.getActiveUser().then(activeUser => {
+    const promise = this.isActiveUser().then(isActiveUser => {
+      if (isActiveUser) {
+        throw new ActiveUserError('This user is already the active user.');
+      }
+
+      return this.client.getActiveUser();
+    }).then(activeUser => {
       if (activeUser) {
-        throw new ActiveUserError('An active session already exists. ' +
-          'Please call `Kinvey.User.logout()` before you login.');
+        throw new ActiveUserError('An active user already exists. ' +
+          'Please call logout the active user before you login.');
       }
 
       const { username, password, _socialIdentity } = usernameOrData;
@@ -80,7 +117,10 @@ export class User {
         timeout: options.timeout
       });
     }).then(response => {
-      return this.client.setActiveUser(response.data);
+      return this.client.setActiveUser(response.data).then(() => {
+        this.data = response.data;
+        return this;
+      });
     });
 
     return promise;
@@ -103,6 +143,8 @@ export class User {
       return this.client.setActiveUser(null);
     }).catch(() => {
       return this.client.setActiveUser(null);
+    }).then(() => {
+      return this;
     });
   }
 
@@ -199,8 +241,8 @@ export class User {
       if (options.state === true) {
         return this.client.getActiveUser().then(activeUser => {
           if (activeUser) {
-            throw new ActiveUserError('An active session already exists. ' +
-              'Please call `Kinvey.User.logout()` before you login.');
+            throw new ActiveUserError('An active user already exists. ' +
+              'Please call logout the active user before you login.');
           }
         });
       }
@@ -214,11 +256,15 @@ export class User {
         timeout: options.timeout
       });
     }).then(response => {
+      this.data = response.data;
+
       if (options.state === true) {
-        this.client.setActiveUser(response.data);
+        return this.client.setActiveUser(this.data).then(() => {
+          return this;
+        });
       }
 
-      return response.data;
+      return this;
     });
 
     return promise;
@@ -257,23 +303,27 @@ export class User {
         timeout: options.timeout
       });
     }).then(response => {
-      const user = response.data;
+      const data = response.data;
 
       forEach(tokens, token => {
         const identity = token.identity;
 
-        if (user[socialIdentityAttribute] && user[socialIdentityAttribute][identity]) {
-          user[socialIdentityAttribute][identity].access_token = token.access_token;
-          user[socialIdentityAttribute][identity].access_token_secret = token.access_token_secret;
+        if (data[socialIdentityAttribute] && data[socialIdentityAttribute][identity]) {
+          data[socialIdentityAttribute][identity].access_token = token.access_token;
+          data[socialIdentityAttribute][identity].access_token_secret = token.access_token_secret;
         }
       });
 
       return this.client.getActiveUser().then(activeUser => {
-        if (activeUser && user[idAttribute] === activeUser[idAttribute]) {
-          return this.client.setActiveUser(user);
+        this.data = data;
+
+        if (activeUser && data[idAttribute] === activeUser[idAttribute]) {
+          return this.client.setActiveUser(data).then(() => {
+            return this;
+          });
         }
 
-        return user;
+        return this;
       });
     });
 
@@ -290,22 +340,23 @@ export class User {
         timeout: options.timeout
       });
     }).then(response => {
-      const user = response.data;
-      user[kmdAttribute] = user[kmdAttribute] || {};
+      this.data = response.data;
 
-      if (!user[kmdAttribute].authtoken) {
+      if (!this.authtoken) {
         return this.client.getActiveUser().then(activeUser => {
           if (activeUser) {
-            user[kmdAttribute].authtoken = activeUser[kmdAttribute].authtoken;
+            this.authtoken = activeUser[kmdAttribute].authtoken;
           }
 
-          return user;
+          return this;
         });
       }
 
-      return user;
-    }).then(user => {
-      return this.client.setActiveUser(user);
+      return this;
+    }).then(() => {
+      return this.client.setActiveUser(this.data);
+    }).then(() => {
+      return this;
     });
 
     return promise;

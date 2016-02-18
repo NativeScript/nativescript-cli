@@ -1,7 +1,7 @@
 Missing Features
   - PhoneGap Crypto - EA
   - Automated Release Process - GA
-    - push to repo to update bower
+    - tag and push to repo to update bower
     - npm publish . --tag beta to update npm
   - Docs - EA
   - Complete Unit and Integration Tests - EA
