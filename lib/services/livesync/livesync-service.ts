@@ -53,11 +53,12 @@ class LiveSyncService implements ILiveSyncService {
 			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
 			this.ensureAndroidFrameworkVersion(platformData).wait();
 
-			let liveSyncData = {
+			let liveSyncData: ILiveSyncData = {
 				platform: platform,
 				appIdentifier:  this.$projectData.projectId,
 				projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
+				excludedProjectDirsAndFiles: ["**/*.js.map", "**/*.ts"]
 			};
 			this.$liveSyncServiceBase.sync(liveSyncData).wait();
 		}).future<void>()();
