@@ -10,21 +10,9 @@ var _client = require('./client');
 
 var _client2 = _interopRequireDefault(_client);
 
-var _auth = require('./auth');
-
-var _auth2 = _interopRequireDefault(_auth);
-
 var _enums = require('./enums');
 
 var _errors = require('./errors');
-
-var _networkRequest = require('./requests/networkRequest');
-
-var _networkRequest2 = _interopRequireDefault(_networkRequest);
-
-var _assign = require('lodash/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
 
 var _isString = require('lodash/isString');
 
@@ -70,6 +58,8 @@ var Command = function () {
     value: function execute(command, args) {
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
+      var client = _client2.default.sharedInstance();
+
       if (!command) {
         throw new _errors.KinveyError('A command is required.');
       }
@@ -78,29 +68,16 @@ var Command = function () {
         throw new _errors.KinveyError('Command must be a string.');
       }
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
-      var client = _client2.default.sharedInstance();
-      var request = new _networkRequest2.default({
+      return client.executeNetworkRequest({
         method: _enums.HttpMethod.POST,
-        url: client.getUrl('/' + rpcNamespace + '/' + options.client.appKey + '/custom/' + command),
+        pathname: '/' + rpcNamespace + '/' + options.client.appKey + '/custom/' + command,
         properties: options.properties,
-        auth: _auth2.default.default,
+        auth: client.defaultAuth(),
         data: args,
         timeout: options.timeout
+      }).then(function (response) {
+        return response.data;
       });
-      var promise = request.execute().then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
-      });
-      return promise;
     }
   }]);
 

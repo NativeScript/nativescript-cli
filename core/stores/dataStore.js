@@ -24,8 +24,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var dataStoresMap = new Map();
-
 var DataStore = function () {
   function DataStore() {
     _classCallCheck(this, DataStore);
@@ -37,29 +35,25 @@ var DataStore = function () {
     /**
      * Returns an instance of the Store class based on the type provided.
      *
-     * @param  {string}       name                      Name of the collection.
-     * @param  {StoreType}    [type=StoreType.Cache]    Type of store to return.
-     * @return {Store}                                  Store
+     * @param  {string}       name                        Name of the collection.
+     * @param  {StoreType}    [type=DataStoreType.Cache]  Type of store to return.
+     * @return {Object}                                   Store
      */
     value: function getInstance(name) {
       var type = arguments.length <= 1 || arguments[1] === undefined ? _enums.DataStoreType.Cache : arguments[1];
 
-      var store = dataStoresMap.get(name + '_' + type);
+      var store = undefined;
 
-      if (!store) {
-        switch (type) {
-          case _enums.DataStoreType.Sync:
-            store = new _syncStore2.default(name);
-            break;
-          case _enums.DataStoreType.Network:
-            store = new _networkStore2.default(name);
-            break;
-          case _enums.DataStoreType.Cache:
-          default:
-            store = new _cacheStore2.default(name);
-        }
-
-        dataStoresMap.set(name + '_' + type, store);
+      switch (type) {
+        case _enums.DataStoreType.Sync:
+          store = new _syncStore2.default(name);
+          break;
+        case _enums.DataStoreType.Network:
+          store = new _networkStore2.default(name);
+          break;
+        case _enums.DataStoreType.Cache:
+        default:
+          store = new _cacheStore2.default(name);
       }
 
       return store;

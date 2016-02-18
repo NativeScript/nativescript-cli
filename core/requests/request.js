@@ -44,10 +44,6 @@ var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-var _isFunction = require('lodash/isFunction');
-
-var _isFunction2 = _interopRequireDefault(_isFunction);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -68,9 +64,7 @@ var Request = function () {
 
     options = (0, _assign2.default)({
       method: _enums.HttpMethod.GET,
-      headers: {
-        Accept: 'application/json; charset=utf-8'
-      },
+      headers: {},
       url: null,
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
@@ -87,7 +81,7 @@ var Request = function () {
     var headers = options.headers && (0, _isPlainObject2.default)(options.headers) ? options.headers : {};
 
     if (!headers.Accept || !headers.accept) {
-      headers.Accept = options.headers.Accept;
+      headers.Accept = 'application/json; charset=utf-8';
     }
 
     this.addHeaders(headers);
@@ -315,7 +309,7 @@ var KinveyRequest = function (_Request) {
       var _this4 = this;
 
       var promise = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this).then(function () {
-        return (0, _isFunction2.default)(_this4.auth) ? _this4.auth(_this4.client) : _this4.auth;
+        return _this4.auth;
       }).then(function (authInfo) {
         if (authInfo) {
           var credentials = authInfo.credentials;
@@ -336,6 +330,11 @@ var KinveyRequest = function (_Request) {
       var json = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'toJSON', this).call(this);
       json.query = this.query;
       return (0, _clone2.default)(json, true);
+    }
+  }, {
+    key: 'authHandler',
+    set: function set(authHandler) {
+      this.authHandler = authHandler;
     }
   }, {
     key: 'properties',

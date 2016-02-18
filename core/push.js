@@ -4,10 +4,6 @@ var _errors = require('./errors');
 
 var _events = require('events');
 
-var _networkRequest = require('./requests/networkRequest');
-
-var _networkRequest2 = _interopRequireDefault(_networkRequest);
-
 var _syncStore = require('./stores/syncStore');
 
 var _syncStore2 = _interopRequireDefault(_syncStore);
@@ -25,10 +21,6 @@ var _client2 = _interopRequireDefault(_client);
 var _query = require('./query');
 
 var _query2 = _interopRequireDefault(_query);
-
-var _auth = require('./auth');
-
-var _auth2 = _interopRequireDefault(_auth);
 
 var _device = require('./device');
 
@@ -190,11 +182,11 @@ var Push = {
 
       return _user2.default.getActive(options).then(function (user) {
         var client = _client2.default.sharedInstance();
-        var request = new _networkRequest2.default({
+        return client.executeNetworkRequest({
           method: _enums.HttpMethod.POST,
-          url: client.getUrl('/' + pushNamespace + '/' + client.appKey + '/register-device'),
+          pathname: '/' + pushNamespace + '/' + client.appKey + '/register-device',
           properties: options.properties,
-          auth: user ? _auth2.default.session : _auth2.default.master,
+          auth: user ? client.sessionAuth() : client.masterAuth(),
           data: {
             platform: device.platform.name,
             framework: device.isCordova() ? 'phonegap' : 'titanium',
@@ -203,14 +195,13 @@ var Push = {
           },
           timeout: options.timeout
         });
-        return request.execute();
-      }).then(function (result) {
+      }).then(function (response) {
         var store = new _syncStore2.default(deviceCollection);
         return store.save({
           _id: deviceId,
           registered: true
         }).then(function () {
-          return result;
+          return response.data;
         });
       });
     });
@@ -251,11 +242,10 @@ var Push = {
 
       return _user2.default.getActive(options).then(function (user) {
         var client = _client2.default.sharedInstance();
-        var request = new _networkRequest2.default({
+        return client.executeNetworkRequest({
           method: _enums.HttpMethod.POST,
-          client: client,
           properties: options.properties,
-          auth: user ? _auth2.default.session : _auth2.default.master,
+          auth: user ? client.sessionAuth() : client.masterAuth(),
           pathname: '/' + pushNamespace + '/' + client.appKey + '/unregister-device',
           data: {
             platform: platform.name,
@@ -265,10 +255,9 @@ var Push = {
           },
           timeout: options.timeout
         });
-        return request.execute();
-      }).then(function (result) {
+      }).then(function (response) {
         return store.removeById(deviceId).then(function () {
-          return result;
+          return response.data;
         });
       });
     });

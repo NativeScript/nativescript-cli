@@ -9,13 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _response = require('../requests/response');
-
-var _response2 = _interopRequireDefault(_response);
-
 var _middleware = require('./middleware');
-
-var _errors = require('../errors');
 
 var _result = require('lodash/result');
 
@@ -237,17 +231,7 @@ var KinveyRack = exports.KinveyRack = function (_Rack) {
     value: function execute(request) {
       request = (0, _result2.default)(request, 'toJSON', request);
       var promise = _get(Object.getPrototypeOf(KinveyRack.prototype), 'execute', this).call(this, request).then(function (request) {
-        var response = request.response;
-
-        if (response) {
-          return new _response2.default({
-            statusCode: response.statusCode,
-            headers: response.headers,
-            data: response.data
-          });
-        }
-
-        throw new _errors.NoResponseError();
+        return request.response;
       });
       return promise;
     }

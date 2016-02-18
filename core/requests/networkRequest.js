@@ -12,7 +12,13 @@ var _request = require('./request');
 
 var _request2 = _interopRequireDefault(_request);
 
+var _response = require('./response');
+
+var _response2 = _interopRequireDefault(_response);
+
 var _networkRack = require('../rack/racks/networkRack');
+
+var _errors = require('../errors');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -42,7 +48,23 @@ var NetworkRequest = function (_Request) {
 
       var promise = _get(Object.getPrototypeOf(NetworkRequest.prototype), 'execute', this).call(this).then(function () {
         var networkRack = _networkRack.NetworkRack.sharedInstance();
-        return networkRack.execute(_this2);
+        return networkRack.execute(_this2.toJSON());
+      }).then(function (response) {
+        if (!response) {
+          throw new _errors.NoResponseError();
+        }
+
+        return new _response2.default({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
+      }).then(function (response) {
+        if (!response.isSuccess()) {
+          throw response.error;
+        }
+
+        return response;
       });
 
       return promise;

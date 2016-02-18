@@ -14,18 +14,6 @@ var _networkStore = require('./networkStore');
 
 var _networkStore2 = _interopRequireDefault(_networkStore);
 
-var _localRequest = require('../requests/localRequest');
-
-var _localRequest2 = _interopRequireDefault(_localRequest);
-
-var _networkRequest = require('../requests/networkRequest');
-
-var _networkRequest2 = _interopRequireDefault(_networkRequest);
-
-var _deltaFetchRequest = require('../requests/deltaFetchRequest');
-
-var _deltaFetchRequest2 = _interopRequireDefault(_deltaFetchRequest);
-
 var _response = require('../requests/response');
 
 var _response2 = _interopRequireDefault(_response);
@@ -41,10 +29,6 @@ var _query2 = _interopRequireDefault(_query);
 var _aggregation = require('../aggregation');
 
 var _aggregation2 = _interopRequireDefault(_aggregation);
-
-var _auth = require('../auth');
-
-var _auth2 = _interopRequireDefault(_auth);
 
 var _assign = require('lodash/assign');
 
@@ -91,7 +75,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 var syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
-var localAttribute = process.env.KINVEY_LOCAL_ATTRIBUTE || '_kmd.local';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * The CacheStore class is used to find, save, update, remove, count and group enitities
@@ -159,11 +143,8 @@ var CacheStore = function (_NetworkStore) {
       _log2.default.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        useDeltaFetch: true,
-        handler: function handler() {}
+        force: false,
+        useDeltaFetch: true
       }, options);
 
       if (query && !(query instanceof _query2.default)) {
@@ -171,79 +152,58 @@ var CacheStore = function (_NetworkStore) {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this2.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this2.client.getUrl(_this2._pathname),
+          pathname: _this2._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this2.client.defaultAuth(),
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var _ret = function () {
-            var result = {
-              cache: response.data
-            };
+        var result = {
+          cache: response.data
+        };
 
-            result.network = _this2.pushCount().then(function (count) {
-              if (count > 0) {
-                throw new _errors.KinveyError('Please sync before you load data from the network.');
-              }
+        result.network = _this2.syncCount().then(function (count) {
+          if (options.force === false && count > 0) {
+            throw new _errors.KinveyError('Please sync before you load data from the network.');
+          }
 
-              if (options.useDeltaFetch) {
-                var request = new _deltaFetchRequest2.default({
-                  method: _enums.HttpMethod.GET,
-                  url: _this2.client.getUrl(_this2._pathname),
-                  properties: options.properties,
-                  auth: _auth2.default.default,
-                  query: query,
-                  timeout: options.timeout
-                });
-                return request.execute().then(function (response) {
-                  if (response.isSuccess()) {
-                    return response.data;
-                  }
-
-                  throw response.error;
-                });
-              }
-
-              return _get(Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options);
-            }).then(function (data) {
-              var removedEntityIds = Object.keys((0, _keyBy2.default)((0, _differenceBy2.default)(result.cache, data, function (entity) {
-                return entity[idAttribute];
-              }), idAttribute));
-              var removeQuery = new _query2.default();
-              removeQuery.contains(idAttribute, removedEntityIds);
-
-              var request = new _localRequest2.default({
-                method: _enums.HttpMethod.DELETE,
-                url: _this2.client.getUrl(_this2._pathname),
-                properties: options.properties,
-                auth: _auth2.default.default,
-                query: removeQuery,
-                timeout: options.timeout
-              });
-              return request.execute().then(function (response) {
-                if (response.isSuccess()) {
-                  return _this2._updateCache(data);
-                }
-
-                throw response.error;
-              });
+          if (options.useDeltaFetch) {
+            return _this2.client.executeDeltaFetchRequest({
+              method: _enums.HttpMethod.GET,
+              pathname: _this2._pathname,
+              properties: options.properties,
+              auth: _this2.client.defaultAuth(),
+              query: query,
+              timeout: options.timeout
+            }).then(function (response) {
+              return response.data;
             });
+          }
 
-            return {
-              v: result
-            };
-          }();
+          return _get(Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options);
+        }).then(function (data) {
+          var removedEntityIds = Object.keys((0, _keyBy2.default)((0, _differenceBy2.default)(result.cache, data, function (entity) {
+            return entity[idAttribute];
+          }), idAttribute));
+          var removeQuery = new _query2.default();
+          removeQuery.contains(idAttribute, removedEntityIds);
 
-          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-        }
+          return _this2.client.executeLocalRequest({
+            method: _enums.HttpMethod.DELETE,
+            pathname: _this2._pathname,
+            properties: options.properties,
+            auth: _this2.client.defaultAuth(),
+            query: removeQuery,
+            timeout: options.timeout
+          }).then(function () {
+            return _this2._updateCache(data);
+          });
+        });
 
-        throw response.error;
+        return result;
       });
 
       promise.then(function (response) {
@@ -281,10 +241,7 @@ var CacheStore = function (_NetworkStore) {
       _log2.default.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
+        force: false
       }, options);
 
       if (!(aggregation instanceof _aggregation2.default)) {
@@ -292,33 +249,28 @@ var CacheStore = function (_NetworkStore) {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this3.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this3.client.getUrl(_this3._pathname + '/_group'),
+          pathname: _this3._pathname + '/_group',
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this3.client.defaultAuth(),
           data: aggregation.toJSON(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var result = {
-            cache: response.data
-          };
+        var result = {
+          cache: response.data
+        };
 
-          result.network = _this3.pushCount().then(function (count) {
-            if (count > 0) {
-              throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
-            }
+        result.network = _this3.syncCount().then(function (count) {
+          if (options.force === false && count > 0) {
+            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          }
 
-            return _get(Object.getPrototypeOf(CacheStore.prototype), 'group', _this3).call(_this3, aggregation, options);
-          });
+          return _get(Object.getPrototypeOf(CacheStore.prototype), 'group', _this3).call(_this3, aggregation, options);
+        });
 
-          return result;
-        }
-
-        throw response.error;
+        return result;
       });
 
       promise.then(function (response) {
@@ -356,10 +308,7 @@ var CacheStore = function (_NetworkStore) {
       _log2.default.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
+        force: false
       }, options);
 
       if (query && !(query instanceof _query2.default)) {
@@ -367,33 +316,28 @@ var CacheStore = function (_NetworkStore) {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this4.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this4.client.getUrl(_this4._pathname + '/_count'),
+          pathname: _this4._pathname + '/_count',
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this4.client.defaultAuth(),
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var result = {
-            cache: response.data
-          };
+        var result = {
+          cache: response.data
+        };
 
-          result.network = _this4.pushCount().then(function (count) {
-            if (count > 0) {
-              throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
-            }
+        result.network = _this4.syncCount().then(function (count) {
+          if (options.force === false && count > 0) {
+            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          }
 
-            return _get(Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options);
-          });
+          return _get(Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options);
+        });
 
-          return result;
-        }
-
-        throw response.error;
+        return result;
       });
 
       promise.then(function (response) {
@@ -434,78 +378,60 @@ var CacheStore = function (_NetworkStore) {
       _log2.default.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        useDeltaFetch: true,
-        handler: function handler() {}
+        force: false,
+        useDeltaFetch: true
       }, options);
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this5.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this5.client.getUrl(_this5._pathname + '/' + id),
+          pathname: _this5._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this5.client.defaultAuth(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var result = {
-            cache: response.data
-          };
+        var result = {
+          cache: response.data
+        };
 
-          result.network = _this5.pushCount().then(function (count) {
-            if (count > 0) {
-              throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
-            }
+        result.network = _this5.syncCount().then(function (count) {
+          if (options.force === false && count > 0) {
+            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          }
 
-            if (options.useDeltaFetch) {
-              var request = new _deltaFetchRequest2.default({
-                method: _enums.HttpMethod.GET,
-                url: _this5.client.getUrl(_this5._pathname + '/' + id),
-                properties: options.properties,
-                auth: _auth2.default.default,
-                timeout: options.timeout
-              });
-              return request.execute().then(function (response) {
-                if (response.isSuccess()) {
-                  return response.data;
-                }
+          if (options.useDeltaFetch) {
+            return _this5.client.executeDeltaFetchRequest({
+              method: _enums.HttpMethod.GET,
+              pathname: _this5._pathname + '/' + id,
+              properties: options.properties,
+              auth: _this5.client.defaultAuth(),
+              timeout: options.timeout
+            }).then(function (response) {
+              return response.data;
+            });
+          }
 
-                throw response.error;
-              });
-            }
+          return _get(Object.getPrototypeOf(CacheStore.prototype), 'findById', _this5).call(_this5, id, options);
+        }).then(function (data) {
+          return _this5._updateCache(data);
+        }).catch(function (err) {
+          if (err instanceof _errors.NotFoundError) {
+            return _this5.client.executeLocalRequest({
+              method: _enums.HttpMethod.DELETE,
+              pathname: _this5._pathname + '/' + id,
+              properties: options.properties,
+              auth: _this5.client.defaultAuth(),
+              timeout: options.timeout
+            }).then(function () {
+              throw err;
+            });
+          }
 
-            return _get(Object.getPrototypeOf(CacheStore.prototype), 'findById', _this5).call(_this5, id, options);
-          }).then(function (data) {
-            return _this5._updateCache(data);
-          }).catch(function (err) {
-            if (err instanceof _errors.NotFoundError) {
-              var removeRequest = new _localRequest2.default({
-                method: _enums.HttpMethod.DELETE,
-                url: _this5.client.getUrl(_this5._pathname + '/' + id),
-                properties: options.properties,
-                auth: _auth2.default.default,
-                timeout: options.timeout
-              });
-              return removeRequest.execute().then(function (response) {
-                if (response.isSuccess()) {
-                  throw err;
-                }
+          throw err;
+        });
 
-                throw response.error;
-              });
-            }
-
-            throw err;
-          });
-
-          return result;
-        }
-
-        throw response.error;
+        return result;
       });
 
       promise.then(function (response) {
@@ -543,43 +469,31 @@ var CacheStore = function (_NetworkStore) {
         return Promise.resolve(null);
       }
 
-      if (entity._id) {
+      if (entity[idAttribute]) {
         _log2.default.warn('Entity argument contains an _id. Calling update instead.', entity);
         return this.update(entity, options);
       }
 
       _log2.default.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this6.client.executeLocalRequest({
           method: _enums.HttpMethod.POST,
-          url: _this6.client.getUrl(_this6._pathname),
+          pathname: _this6._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this6.client.defaultAuth(),
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this6._updateSync(response.data, options).then(function () {
-            var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
-            var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
-            var query = new _query2.default().contains(idAttribute, ids);
-            return _this6.push(query, options);
-          }).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this6._updateSync(response.data, options).then(function () {
+          var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
+          var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
+          var query = new _query2.default().contains(idAttribute, ids);
+          return _this6.push(query, options);
+        }).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -617,43 +531,31 @@ var CacheStore = function (_NetworkStore) {
         return Promise.resolve(null);
       }
 
-      if (!entity._id) {
+      if (!entity[idAttribute]) {
         _log2.default.warn('Entity argument does not contain an _id. Calling save instead.', entity);
         return this.save(entity, options);
       }
 
       _log2.default.debug('Updating the entity(s) in the ' + this.name + ' collection.', entity);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this7.client.executeLocalRequest({
           method: _enums.HttpMethod.PUT,
-          url: _this7.client.getUrl(_this7._pathname + '/' + entity._id),
+          pathname: _this7._pathname + '/' + entity[idAttribute],
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this7.client.defaultAuth(),
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this7._updateSync(response.data, options).then(function () {
-            var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
-            var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
-            var query = new _query2.default().contains(idAttribute, ids);
-            return _this7.push(query, options);
-          }).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this7._updateSync(response.data, options).then(function () {
+          var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
+          var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
+          var query = new _query2.default().contains(idAttribute, ids);
+          return _this7.push(query, options);
+        }).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -688,37 +590,26 @@ var CacheStore = function (_NetworkStore) {
 
       _log2.default.debug('Removing the entities in the ' + this.name + ' collection.', query);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this8.client.executeLocalRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this8.client.getUrl(_this8._pathname),
+          pathname: _this8._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this8.client.defaultAuth(),
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this8._updateSync(response.data, options).then(function () {
-            var query = new _query2.default().contains(idAttribute, []);
-            return _this8.push(query, options);
-          }).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this8._updateSync(response.data.entities, options).then(function () {
+          var query = new _query2.default().contains(idAttribute, []);
+          return _this8.push(query, options);
+        }).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -756,32 +647,21 @@ var CacheStore = function (_NetworkStore) {
 
       _log2.default.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this9.client.executeLocalRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this9.client.getUrl(_this9._pathname + '/' + id),
+          pathname: _this9._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this9.client.defaultAuth(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this9._updateSync(response.data, options).then(function () {
-            var query = new _query2.default().contains(idAttribute, [id]);
-            return _this9.push(query, options);
-          }).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this9._updateSync(response.data.entities, options).then(function () {
+          var query = new _query2.default().contains(idAttribute, [id]);
+          return _this9.push(query, options);
+        }).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -820,248 +700,225 @@ var CacheStore = function (_NetworkStore) {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this10.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this10.client.getUrl(_this10._syncPathname),
+          pathname: _this10._syncPathname,
           properties: options.properties,
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var _ret2 = function () {
-            var save = [];
-            var remove = [];
-            var entities = response.data.entities;
-            var ids = Object.keys(entities);
-            var size = response.data.size;
+        var save = [];
+        var remove = [];
+        var entities = response.data.entities;
+        var ids = Object.keys(entities);
+        var size = response.data.size;
 
-            var promises = (0, _map2.default)(ids, function (id) {
-              var metadata = (0, _clone2.default)(entities[id], true);
-              var request = new _localRequest2.default({
-                method: _enums.HttpMethod.GET,
-                url: _this10.client.getUrl(_this10._pathname + '/' + id),
-                properties: metadata.properties,
-                auth: _auth2.default.default,
-                timeout: options.timeout
-              });
-              return request.execute().then(function (response) {
-                if (response.isSuccess()) {
-                  save.push(response.data);
-                  return response.data;
-                }
+        var promises = (0, _map2.default)(ids, function (id) {
+          var metadata = (0, _clone2.default)(entities[id], true);
+          return _this10.client.executeLocalRequest({
+            method: _enums.HttpMethod.GET,
+            pathname: _this10._pathname + '/' + id,
+            properties: metadata.properties,
+            auth: _this10.client.defaultAuth(),
+            timeout: options.timeout
+          }).then(function (response) {
+            save.push(response.data);
+            return response.data;
+          }).catch(function (err) {
+            if (err instanceof _errors.NotFoundError) {
+              remove.push(id);
+              return null;
+            }
 
-                throw response.error;
-              }).catch(function (err) {
-                if (err instanceof _errors.NotFoundError) {
-                  remove.push(id);
-                  return null;
-                }
+            throw err;
+          });
+        });
 
-                throw err;
-              });
-            });
+        return Promise.all(promises).then(function () {
+          var saved = (0, _map2.default)(save, function (entity) {
+            var metadata = (0, _clone2.default)(entities[entity[idAttribute]], true);
+            var isLocalEntity = (0, _object.nested)(entity, kmdAttribute + '.local');
 
-            return {
-              v: Promise.all(promises).then(function () {
-                var saved = (0, _map2.default)(save, function (entity) {
-                  var metadata = (0, _clone2.default)(entities[entity[idAttribute]], true);
-                  var isLocalEntity = (0, _object.nested)(entity, localAttribute);
+            if (isLocalEntity) {
+              var _ret = function () {
+                var originalId = entity[idAttribute];
+                delete entity[idAttribute];
+                delete entity[kmdAttribute];
 
-                  if (isLocalEntity) {
-                    var _ret3 = function () {
-                      var originalId = entity._id;
-                      delete entity._id;
-                      var request = new _networkRequest2.default({
-                        method: _enums.HttpMethod.POST,
-                        url: _this10.client.getUrl(_this10._pathname),
-                        properties: metadata.properties,
-                        auth: _auth2.default.default,
-                        data: entity,
-                        timeout: options.timeout
-                      });
-
-                      return {
-                        v: request.execute().then(function (response) {
-                          if (response.isSuccess()) {
-                            var _request = new _localRequest2.default({
-                              method: _enums.HttpMethod.PUT,
-                              url: _this10.client.getUrl(_this10._pathname),
-                              properties: metadata.properties,
-                              auth: _auth2.default.default,
-                              data: response.data,
-                              timeout: options.timeout
-                            });
-                            return _request.execute();
-                          }
-
-                          throw response.error;
-                        }).then(function (response) {
-                          if (response.isSuccess()) {
-                            var _request2 = new _localRequest2.default({
-                              method: _enums.HttpMethod.DELETE,
-                              url: _this10.client.getUrl(_this10._pathname + '/' + originalId),
-                              properties: metadata.properties,
-                              auth: _auth2.default.default,
-                              timeout: options.timeout
-                            });
-                            return _request2.execute().then(function (response) {
-                              if (response.isSuccess()) {
-                                var result = response.data;
-                                if (result.count === 1) {
-                                  size = size - 1;
-                                  delete entities[originalId];
-                                  return {
-                                    _id: originalId,
-                                    entity: entity
-                                  };
-                                }
-
-                                return result;
-                              }
-
-                              throw response.error;
-                            });
-                          }
-
-                          throw response.error;
-                        }).catch(function (err) {
-                          return {
-                            _id: originalId,
-                            error: err
-                          };
-                        })
-                      };
-                    }();
-
-                    if ((typeof _ret3 === 'undefined' ? 'undefined' : _typeof(_ret3)) === "object") return _ret3.v;
-                  }
-
-                  var request = new _networkRequest2.default({
-                    method: _enums.HttpMethod.PUT,
-                    url: _this10.client.getUrl(_this10._pathname + '/' + entity._id),
+                return {
+                  v: _this10.client.executeNetworkRequest({
+                    method: _enums.HttpMethod.POST,
+                    pathname: _this10._pathname,
                     properties: metadata.properties,
-                    auth: _auth2.default.default,
+                    auth: _this10.client.defaultAuth(),
                     data: entity,
                     timeout: options.timeout
-                  });
-                  return request.execute().then(function (response) {
-                    if (response.isSuccess()) {
-                      size = size - 1;
-                      delete entities[response.data._id];
-                      return {
-                        _id: response.data._id,
-                        entity: response.data
-                      };
-                    }
-
-                    throw response.error;
-                  }).catch(function (err) {
-                    return {
-                      _id: entity._id,
-                      error: err
-                    };
-                  });
-                });
-
-                var removed = (0, _map2.default)(remove, function (id) {
-                  var metadata = (0, _clone2.default)(entities[id], true);
-                  var request = new _networkRequest2.default({
-                    method: _enums.HttpMethod.DELETE,
-                    url: _this10.client.getUrl(_this10._pathname + '/' + id),
-                    properties: metadata.properties,
-                    auth: _auth2.default.default,
-                    timeout: options.timeout
-                  });
-
-                  return request.execute().then(function (response) {
-                    if (response.isSuccess()) {
+                  }).then(function (response) {
+                    return _this10.client.executeLocalRequest({
+                      method: _enums.HttpMethod.PUT,
+                      pathname: _this10._pathname,
+                      properties: metadata.properties,
+                      data: response.data,
+                      timeout: options.timeout
+                    });
+                  }).then(function () {
+                    return _this10.client.executeLocalRequest({
+                      method: _enums.HttpMethod.DELETE,
+                      pathname: _this10._pathname + '/' + originalId,
+                      properties: metadata.properties,
+                      auth: _this10.client.defaultAuth(),
+                      timeout: options.timeout
+                    }).then(function (response) {
                       var result = response.data;
-
                       if (result.count === 1) {
                         size = size - 1;
-                        delete entities[id];
+                        delete entities[originalId];
                         return {
-                          _id: id
+                          _id: originalId,
+                          entity: entity
                         };
                       }
 
-                      return result;
-                    }
-
-                    throw response.error;
+                      return {
+                        _id: originalId,
+                        error: new _errors.KinveyError('Expected count to be 1 but instead it was ' + result.count + ' ' + ('when trying to remove entity with _id ' + originalId + '.'))
+                      };
+                    });
                   }).catch(function (err) {
                     return {
-                      _id: id,
+                      _id: originalId,
                       error: err
                     };
-                  });
-                });
-
-                return Promise.all([Promise.all(saved), Promise.all(removed)]);
-              }).then(function (results) {
-                var savedResults = results[0];
-                var removedResults = results[1];
-                var result = {
-                  collection: _this10.name,
-                  success: [],
-                  error: []
+                  })
                 };
+              }();
 
-                (0, _forEach2.default)(savedResults, function (savedResult) {
-                  if (savedResult.error) {
-                    result.error.push(savedResult);
-                  } else {
-                    result.success.push(savedResult);
-                  }
-                });
+              if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+            }
 
-                (0, _forEach2.default)(removedResults, function (removedResult) {
-                  if (removedResult.error) {
-                    result.error.push(removedResult);
-                  } else {
-                    result.success.push(removedResult);
-                  }
-                });
+            return _this10.client.executeNetworkRequest({
+              method: _enums.HttpMethod.PUT,
+              url: _this10._pathname + '/' + entity[idAttribute],
+              properties: metadata.properties,
+              auth: _this10.client.defaultAuth(),
+              data: entity,
+              timeout: options.timeout
+            }).then(function (response) {
+              size = size - 1;
+              delete entities[response.data[idAttribute]];
+              return {
+                _id: response.data[idAttribute],
+                entity: response.data
+              };
+            }).catch(function (err) {
+              // If the credentials used to authenticate this request are
+              // not authorized to run the operation then just remove the entity
+              // from the sync table
+              if (err instanceof _errors.InsufficientCredentialsError) {
+                size = size - 1;
+                delete entities[entity[idAttribute]];
+                return {
+                  _id: entity[idAttribute],
+                  entity: entity
+                };
+              }
 
-                return result;
-              }).then(function (result) {
-                response.data.size = size;
-                response.data.entities = entities;
-                var request = new _localRequest2.default({
-                  method: _enums.HttpMethod.PUT,
-                  url: _this10.client.getUrl(_this10._syncPathname),
-                  properties: options.properties,
-                  data: response.data,
-                  timeout: options.timeout
-                });
-                return request.execute().then(function (response) {
-                  if (response.isSuccess()) {
-                    return result;
-                  }
+              return {
+                _id: entity[idAttribute],
+                error: err
+              };
+            });
+          });
 
-                  throw response.error;
-                });
-              })
-            };
-          }();
+          var removed = (0, _map2.default)(remove, function (id) {
+            var metadata = (0, _clone2.default)(entities[id], true);
+            return _this10.client.executeNetworkRequest({
+              method: _enums.HttpMethod.DELETE,
+              pathname: _this10._pathname + '/' + id,
+              properties: metadata.properties,
+              auth: _this10.client.defaultAuth(),
+              timeout: options.timeout
+            }).then(function (response) {
+              var result = response.data;
 
-          if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
-        }
+              if (result.count === 1) {
+                size = size - 1;
+                delete entities[id];
+                return {
+                  _id: id
+                };
+              }
 
-        throw response.error;
+              return {
+                _id: id,
+                error: new _errors.KinveyError('Expected count to be 1 but instead it was ' + result.count + ' ' + ('when trying to remove entity with _id ' + id + '.'))
+              };
+            }).catch(function (err) {
+              // If the credentials used to authenticate this request are
+              // not authorized to run the operation or the entity was
+              // not found then just remove the entity from the sync table
+              if (err instanceof _errors.NotFoundError || err instanceof _errors.InsufficientCredentialsError) {
+                size = size - 1;
+                delete entities[id];
+                return {
+                  _id: id
+                };
+              }
+
+              return {
+                _id: id,
+                error: err
+              };
+            });
+          });
+
+          return Promise.all([Promise.all(saved), Promise.all(removed)]);
+        }).then(function (results) {
+          var savedResults = results[0];
+          var removedResults = results[1];
+          var result = {
+            collection: _this10.name,
+            success: [],
+            error: []
+          };
+
+          (0, _forEach2.default)(savedResults, function (savedResult) {
+            if (savedResult.error) {
+              result.error.push(savedResult);
+            } else {
+              result.success.push(savedResult);
+            }
+          });
+
+          (0, _forEach2.default)(removedResults, function (removedResult) {
+            if (removedResult.error) {
+              result.error.push(removedResult);
+            } else {
+              result.success.push(removedResult);
+            }
+          });
+
+          return result;
+        }).then(function (result) {
+          response.data.size = size;
+          response.data.entities = entities;
+
+          return _this10.client.executeLocalRequest({
+            method: _enums.HttpMethod.PUT,
+            pathname: _this10._syncPathname,
+            properties: options.properties,
+            data: response.data,
+            timeout: options.timeout
+          }).then(function () {
+            return result;
+          });
+        });
       }).catch(function (err) {
         if (err instanceof _errors.NotFoundError) {
           return {
@@ -1109,8 +966,9 @@ var CacheStore = function (_NetworkStore) {
           throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
         }
 
-        options.readPolicy = _enums.ReadPolicy.NetworkOnly;
         return _this11.find(query, options);
+      }).then(function (result) {
+        return result.network;
       });
 
       return promise;
@@ -1171,7 +1029,7 @@ var CacheStore = function (_NetworkStore) {
      *
      * @example
      * var store = Kinvey.Store.getInstance('books');
-     * store.pushCount().then(function(count) {
+     * store.syncCount().then(function(count) {
      *   ...
      * }).catch(function(err) {
      *   ...
@@ -1179,39 +1037,26 @@ var CacheStore = function (_NetworkStore) {
      */
 
   }, {
-    key: 'pushCount',
-    value: function pushCount(query) {
+    key: 'syncCount',
+    value: function syncCount(query) {
       var _this13 = this;
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
 
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this13.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this13.client.getUrl(_this13._syncPathname),
+          pathname: _this13._syncPathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data.size || 0;
-        }
-
-        throw response.error;
+        return response.data.size || 0;
       }).catch(function (err) {
         if (err instanceof _errors.NotFoundError) {
           return 0;
@@ -1242,29 +1087,16 @@ var CacheStore = function (_NetworkStore) {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this14.client.executeLocalRequest({
           method: _enums.HttpMethod.PUT,
-          url: _this14.client.getUrl(_this14._pathname),
+          pathname: _this14._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           data: entities,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       return promise;
@@ -1296,22 +1128,13 @@ var CacheStore = function (_NetworkStore) {
         return Promise.resolve(null);
       }
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this15.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this15.client.getUrl(_this15._syncPathname),
+          pathname: _this15._syncPathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           timeout: options.timeout
         });
-        return request.execute();
       }).catch(function (err) {
         if (err instanceof _errors.NotFoundError) {
           return new _response2.default({
@@ -1326,53 +1149,37 @@ var CacheStore = function (_NetworkStore) {
 
         throw err;
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var _ret4 = function () {
-            var syncData = response.data || {
-              _id: _this15.name,
-              entities: {},
-              size: 0
-            };
+        var syncData = response.data || {
+          _id: _this15.name,
+          entities: {},
+          size: 0
+        };
 
-            if (!(0, _isArray2.default)(entities)) {
-              entities = [entities];
+        if (!(0, _isArray2.default)(entities)) {
+          entities = [entities];
+        }
+
+        (0, _forEach2.default)(entities, function (entity) {
+          if (entity[idAttribute]) {
+            if (!syncData.entities.hasOwnProperty(entity[idAttribute])) {
+              syncData.size = syncData.size + 1;
             }
 
-            (0, _forEach2.default)(entities, function (entity) {
-              if (entity._id) {
-                if (!syncData.docs.hasOwnProperty(entity._id)) {
-                  syncData.size = syncData.size + 1;
-                }
-
-                syncData.entities[entity._id] = {
-                  lmt: entity._kmd ? entity._kmd.lmt : null
-                };
-              }
-            });
-
-            var request = new _localRequest2.default({
-              method: _enums.HttpMethod.PUT,
-              url: _this15.client.getUrl(_this15._syncPathname),
-              properties: options.properties,
-              auth: options.auth,
-              data: syncData,
-              timeout: options.timeout
-            });
-            return {
-              v: request.execute()
+            syncData.entities[entity[idAttribute]] = {
+              lmt: entity[kmdAttribute] ? entity[kmdAttribute].lmt : null
             };
-          }();
+          }
+        });
 
-          if ((typeof _ret4 === 'undefined' ? 'undefined' : _typeof(_ret4)) === "object") return _ret4.v;
-        }
-
-        throw response.error;
-      }).then(function (response) {
-        if (response.isSuccess()) {
-          return null;
-        }
-
-        throw response.error;
+        return _this15.client.executeLocalRequest({
+          method: _enums.HttpMethod.PUT,
+          pathname: _this15._syncPathname,
+          properties: options.properties,
+          data: syncData,
+          timeout: options.timeout
+        });
+      }).then(function () {
+        return null;
       });
 
       return promise;

@@ -156,13 +156,17 @@ var Response = function () {
         return null;
       }
 
-      var data = (0, _clone2.default)(this.data);
+      var data = (0, _clone2.default)(this.data, true);
       var name = data.name || data.error;
       var message = data.message || data.description;
       var debug = data.debug;
 
       if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound') {
         return new _errors.NotFoundError(message, debug);
+      } else if (name === 'InsufficientCredentials') {
+        return new _errors.InsufficientCredentialsError(message, debug);
+      } else if (name === 'InvalidCredentials') {
+        return new _errors.InvalidCredentialsError(message, debug);
       }
 
       return new _errors.KinveyError(message, debug);

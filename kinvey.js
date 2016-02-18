@@ -10,10 +10,6 @@ var _aggregation = require('./core/aggregation');
 
 var _aggregation2 = _interopRequireDefault(_aggregation);
 
-var _auth = require('./core/auth');
-
-var _auth2 = _interopRequireDefault(_auth);
-
 var _client = require('./core/client');
 
 var _client2 = _interopRequireDefault(_client);
@@ -34,10 +30,6 @@ var _metadata = require('./core/metadata');
 
 var _metadata2 = _interopRequireDefault(_metadata);
 
-var _networkRequest = require('./core/requests/networkRequest');
-
-var _networkRequest2 = _interopRequireDefault(_networkRequest);
-
 var _query = require('./core/query');
 
 var _query2 = _interopRequireDefault(_query);
@@ -50,13 +42,7 @@ var _sync = require('./core/sync');
 
 var _sync2 = _interopRequireDefault(_sync);
 
-var _user = require('./core/models/user');
-
-var _user2 = _interopRequireDefault(_user);
-
-var _usersStore = require('./core/stores/usersStore');
-
-var _usersStore2 = _interopRequireDefault(_usersStore);
+var _user = require('./core/user');
 
 var _enums = require('./core/enums');
 
@@ -110,19 +96,13 @@ var Kinvey = function () {
     key: 'ping',
     value: function ping() {
       var client = _client2.default.sharedInstance();
-      var request = new _networkRequest2.default({
+
+      return client.executeNetworkRequest({
         method: _enums.HttpMethod.GET,
-        client: client,
-        auth: _auth2.default.all,
+        auth: client.allAuth(),
         pathname: appdataNamespace + '/' + client.appKey
-      });
-
-      return request.execute().then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+      }).then(function (response) {
+        return response.data;
       });
     }
   }]);
@@ -146,5 +126,4 @@ Kinvey.Query = _query2.default;
 Kinvey.ReadPolicy = _enums.ReadPolicy;
 Kinvey.SocialIdentity = _enums.SocialIdentity;
 Kinvey.Sync = _sync2.default;
-Kinvey.User = _user2.default;
-Kinvey.Users = _usersStore2.default;
+Kinvey.User = _user.User;

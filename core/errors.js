@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.NoResponseError = exports.NotFoundError = exports.NetworkConnectionError = exports.KinveyError = exports.ActiveUserError = undefined;
+exports.NoResponseError = exports.NotFoundError = exports.NetworkConnectionError = exports.KinveyError = exports.InvalidCredentialsError = exports.InsufficientCredentialsError = exports.ActiveUserError = undefined;
 
 var _util = require('util');
 
@@ -45,6 +45,8 @@ Error.extend = function extend(name) {
 };
 
 var ActiveUserError = exports.ActiveUserError = Error.extend('ActiveUserError');
+var InsufficientCredentialsError = exports.InsufficientCredentialsError = Error.extend('InsufficientCredentialsError');
+var InvalidCredentialsError = exports.InvalidCredentialsError = Error.extend('InvalidCredentialsError');
 var KinveyError = exports.KinveyError = Error.extend('KinveyError');
 var NetworkConnectionError = exports.NetworkConnectionError = Error.extend('NetworkConnectionError');
 var NotFoundError = exports.NotFoundError = Error.extend('NotFoundError');
