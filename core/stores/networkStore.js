@@ -10,14 +10,6 @@ var _aggregation = require('../aggregation');
 
 var _aggregation2 = _interopRequireDefault(_aggregation);
 
-var _deltaFetchRequest = require('../requests/deltaFetchRequest');
-
-var _deltaFetchRequest2 = _interopRequireDefault(_deltaFetchRequest);
-
-var _networkRequest = require('../requests/networkRequest');
-
-var _networkRequest2 = _interopRequireDefault(_networkRequest);
-
 var _enums = require('../enums');
 
 var _errors = require('../errors');
@@ -29,10 +21,6 @@ var _client2 = _interopRequireDefault(_client);
 var _query = require('../query');
 
 var _query2 = _interopRequireDefault(_query);
-
-var _auth = require('../auth');
-
-var _auth2 = _interopRequireDefault(_auth);
 
 var _assign = require('lodash/assign');
 
@@ -55,6 +43,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * The NetworkStore class is used to find, save, update, remove, count and group enitities
@@ -134,21 +123,16 @@ var NetworkStore = function () {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this.client.executeNetworkRequest({
           method: _enums.HttpMethod.GET,
-          url: _this.client.getUrl(_this._pathname, options.flags),
+          pathname: _this._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this.client.defaultAuth(),
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -195,21 +179,16 @@ var NetworkStore = function () {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this2.client.executeNetworkRequest({
           method: _enums.HttpMethod.GET,
-          url: _this2.client.getUrl(_this2._pathname + '/_group'),
+          pathname: _this2._pathname + '/_group',
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this2.client.defaultAuth(),
           data: aggregation.toJSON(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -256,35 +235,16 @@ var NetworkStore = function () {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = undefined;
-
-        if (options.useDeltaFetch) {
-          request = new _deltaFetchRequest2.default({
-            method: _enums.HttpMethod.GET,
-            url: _this3.client.getUrl(_this3._pathname + '/_count'),
-            properties: options.properties,
-            auth: _auth2.default.default,
-            query: query,
-            timeout: options.timeout
-          });
-        } else {
-          request = new _networkRequest2.default({
-            method: _enums.HttpMethod.GET,
-            url: _this3.client.getUrl(_this3._pathname + '/_count'),
-            properties: options.properties,
-            auth: _auth2.default.default,
-            query: query,
-            timeout: options.timeout
-          });
-        }
-
-        return request.execute();
+        return _this3.client.executeNetworkRequest({
+          method: _enums.HttpMethod.GET,
+          pathname: _this3._pathname + '/_count',
+          properties: options.properties,
+          auth: _this3.client.defaultAuth(),
+          query: query,
+          timeout: options.timeout
+        });
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -329,14 +289,13 @@ var NetworkStore = function () {
       }, options);
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this4.client.executeNetworkRequest({
           method: _enums.HttpMethod.GET,
-          url: _this4.client.getUrl(_this4._pathname + '/' + id),
+          pathname: _this4._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this4.client.defaultAuth(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
         if (response.isSuccess()) {
           return (0, _isArray2.default)(response.data) && response.data.length === 1 ? response.data[0] : response.data;
@@ -392,21 +351,16 @@ var NetworkStore = function () {
       }, options);
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this5.client.executeNetworkRequest({
           method: _enums.HttpMethod.POST,
-          url: _this5.client.getUrl(_this5._pathname),
+          pathname: _this5._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this5.client.defaultAuth(),
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -456,21 +410,16 @@ var NetworkStore = function () {
       }, options);
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
-          method: _enums.HttpMethod.POST,
-          url: _this6.client.getUrl(_this6._pathname + '/' + entity._id),
+        return _this6.client.executeNetworkRequest({
+          method: _enums.HttpMethod.PUT,
+          pathname: _this6._pathname + '/' + entity[idAttribute],
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this6.client.defaultAuth(),
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -516,21 +465,16 @@ var NetworkStore = function () {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this7.client.executeNetworkRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this7.client.getUrl(_this7._pathname),
+          pathname: _this7._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this7.client.defaultAuth(),
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -575,20 +519,15 @@ var NetworkStore = function () {
       }, options);
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        return _this8.client.executeNetworkRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this8.client.getUrl(_this8._pathname + '/' + id),
+          pathname: _this8._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this8.client.defaultAuth(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {

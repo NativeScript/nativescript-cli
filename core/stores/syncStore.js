@@ -6,13 +6,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+
 var _cacheStore = require('./cacheStore');
 
 var _cacheStore2 = _interopRequireDefault(_cacheStore);
-
-var _localRequest = require('../requests/localRequest');
-
-var _localRequest2 = _interopRequireDefault(_localRequest);
 
 var _aggregation = require('../aggregation');
 
@@ -25,10 +23,6 @@ var _errors = require('../errors');
 var _query = require('../query');
 
 var _query2 = _interopRequireDefault(_query);
-
-var _auth = require('../auth');
-
-var _auth2 = _interopRequireDefault(_auth);
 
 var _assign = require('lodash/assign');
 
@@ -83,33 +77,20 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this2.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this2.client.getUrl(_this2._pathname),
+          pathname: _this2._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -146,33 +127,20 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       if (!(aggregation instanceof _aggregation2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid aggregation. ' + 'It must be an instance of the Kinvey.Aggregation class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this3.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this3.client.getUrl(_this3._pathname + '/_group'),
+          pathname: _this3._pathname + '/_group',
           properties: options.properties,
-          auth: _auth2.default.default,
           data: aggregation.toJSON(),
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -209,33 +177,20 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this4.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this4.client.getUrl(_this4._pathname + '/_count'),
+          pathname: _this4._pathname + '/_count',
           properties: options.properties,
-          auth: _auth2.default.default,
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -275,28 +230,15 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this5.client.executeLocalRequest({
           method: _enums.HttpMethod.GET,
-          url: _this5.client.getUrl(_this5._pathname + '/' + id),
+          pathname: _this5._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       promise.then(function (response) {
@@ -341,31 +283,18 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this6.client.executeLocalRequest({
           method: _enums.HttpMethod.POST,
-          url: _this6.client.getUrl(_this6._pathname),
+          pathname: _this6._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this6._updateSync(response.data, options).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this6._updateSync(response.data, options).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -410,31 +339,18 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Updating the entity(s) in the ' + this.name + ' collection.', entity);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        ttl: this.ttl,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this7.client.executeLocalRequest({
           method: _enums.HttpMethod.PUT,
-          url: _this7.client.getUrl(_this7._pathname + '/' + entity._id),
+          pathname: _this7._pathname + '/' + entity._id,
           properties: options.properties,
-          auth: _auth2.default.default,
           data: entity,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this7._updateSync(response.data, options).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this7._updateSync(response.data, options).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -469,34 +385,22 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Removing the entities in the ' + this.name + ' collection.', query);
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       if (query && !(query instanceof _query2.default)) {
         return Promise.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this8.client.executeLocalRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this8.client.getUrl(_this8._pathname),
+          pathname: _this8._pathname,
           properties: options.properties,
-          auth: _auth2.default.default,
           query: query,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this8._updateSync(response.data, options).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this8._updateSync(response.data.entities, options).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
@@ -534,35 +438,55 @@ var SyncStore = function (_CacheStore) {
 
       _log2.default.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');
 
-      options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
-        var request = new _localRequest2.default({
+        return _this9.client.executeLocalRequest({
           method: _enums.HttpMethod.DELETE,
-          url: _this9.client.getUrl(_this9._pathname + '/' + id),
+          pathname: _this9._pathname + '/' + id,
           properties: options.properties,
-          auth: _auth2.default.default,
           timeout: options.timeout
         });
-        return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return _this9._updateSync(response.data, options).then(function () {
-            return response.data;
-          });
-        }
-
-        throw response.error;
+        return _this9._updateSync(response.data.entities, options).then(function () {
+          return response.data;
+        });
       });
 
       promise.then(function (response) {
         _log2.default.info('Removed the entity in the ' + _this9.name + ' collection with id = ' + id + '.', response);
       }).catch(function (err) {
         _log2.default.error('Failed to remove the entity in the ' + _this9.name + ' collection with id = ' + id + '.', err);
+      });
+
+      return promise;
+    }
+
+    /**
+     * Pull items for a collection from the network to your local cache. A promise will be
+     * returned that will be resolved with the result of the pull or rejected with an error.
+     *
+     * @param   {Query}                 [query]                                   Query to pull a subset of items.
+     * @param   {Object}                options                                   Options
+     * @param   {Properties}            [options.properties]                      Custom properties to send with
+     *                                                                            the request.
+     * @param   {Number}                [options.timeout]                         Timeout for the request.
+     * @return  {Promise}                                                         Promise
+     */
+
+  }, {
+    key: 'pull',
+    value: function pull(query) {
+      var _this10 = this;
+
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+      var promise = this.syncCount(null, options).then(function (count) {
+        if (count > 0) {
+          throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
+        }
+
+        return _get(Object.getPrototypeOf(SyncStore.prototype), 'find', _this10).call(_this10, query, options);
+      }).then(function (result) {
+        return result.network;
       });
 
       return promise;

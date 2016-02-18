@@ -55,7 +55,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var objectIdPrefix = process.env.KINVEY_OBJECT_ID_PREFIX || 'local_';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * @private
@@ -222,7 +223,12 @@ var DB = exports.DB = function () {
       }
 
       entities = (0, _map2.default)(entities, function (entity) {
-        entity._id = entity._id || _this2.generateObjectId();
+        if (!entity[idAttribute]) {
+          entity[idAttribute] = _this2.generateObjectId();
+          entity[kmdAttribute] = entity[kmdAttribute] || {};
+          entity[kmdAttribute].local = true;
+        }
+
         return entity;
       });
 
@@ -250,7 +256,7 @@ var DB = exports.DB = function () {
 
       var promise = this.find(collection, query).then(function (entities) {
         var promises = entities.map(function (entity) {
-          return _this3.removeById(collection, entity._id);
+          return _this3.removeById(collection, entity[idAttribute]);
         });
 
         return Promise.all(promises);
@@ -283,7 +289,7 @@ var DB = exports.DB = function () {
   }, {
     key: 'objectIdPrefix',
     get: function get() {
-      return objectIdPrefix;
+      return '';
     }
   }]);
 

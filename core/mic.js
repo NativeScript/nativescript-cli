@@ -26,10 +26,6 @@ var _popup = require('./utils/popup');
 
 var _popup2 = _interopRequireDefault(_popup);
 
-var _auth = require('./auth');
-
-var _auth2 = _interopRequireDefault(_auth);
-
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
@@ -116,24 +112,20 @@ var MobileIdentityConnect = function () {
         pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
       }
 
-      var request = new _networkRequest2.default({
+      return this.client.executeNetworkRequest({
         method: _enums.HttpMethod.POST,
-        url: this.client.getUrl(_path2.default.join(pathname, authPathname)),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        pathname: _path2.default.join(pathname, authPathname),
         properties: options.properties,
         data: {
           client_id: clientId,
           redirect_uri: redirectUri,
           response_type: 'code'
         }
-      });
-      request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-      return request.execute().then(function (response) {
-        if (response.isSuccess()) {
-          return response.data.temp_login_uri;
-        }
-
-        throw response.error;
+      }).then(function (response) {
+        return response.data.temp_login_uri;
       });
     }
   }, {
@@ -192,24 +184,13 @@ var MobileIdentityConnect = function () {
   }, {
     key: 'requestCodeWithUrl',
     value: function requestCodeWithUrl(loginUrl, clientId, redirectUri) {
-      var _this3 = this;
-
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       var promise = Promise.resolve().then(function () {
-        var client = new _client2.default({
-          protocol: _url2.default.parse(loginUrl).protocol,
-          host: _url2.default.parse(loginUrl).host,
-          appKey: _this3.client.appKey,
-          appSecret: _this3.client.appSecret,
-          masterSecret: _this3.client.masterSecret,
-          encryptionKey: _this3.client.encryptionKey
-        });
         var request = new _networkRequest2.default({
           method: _enums.HttpMethod.POST,
-          url: client.getUrl(_url2.default.parse(loginUrl).pathname, _url2.default.parse(loginUrl, true).query),
+          url: loginUrl,
           properties: options.properties,
-          auth: _auth2.default.app,
           data: {
             client_id: clientId,
             redirect_uri: redirectUri,
@@ -238,27 +219,29 @@ var MobileIdentityConnect = function () {
     value: function requestToken(code, clientId, redirectUri) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-      var request = new _networkRequest2.default({
+      return this.client.executeNetworkRequest({
         method: _enums.HttpMethod.POST,
-        url: this.client(tokenPathname),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        pathname: tokenPathname,
         properties: options.properties,
-        auth: _auth2.default.app,
+        auth: this.client.appAuth(),
         data: {
           grant_type: 'authorization_code',
           client_id: clientId,
           redirect_uri: redirectUri,
           code: code
         }
+      }).then(function (response) {
+        return response.data;
       });
-      request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-      return request.execute().then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
-      });
+    }
+  }], [{
+    key: 'login',
+    value: function login(redirectUri, authorizationGrant, options) {
+      var mic = new MobileIdentityConnect();
+      return mic.login(redirectUri, authorizationGrant, options);
     }
   }]);
 

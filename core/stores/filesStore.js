@@ -18,9 +18,7 @@ var _networkRequest2 = _interopRequireDefault(_networkRequest);
 
 var _enums = require('../enums');
 
-var _auth = require('../auth');
-
-var _auth2 = _interopRequireDefault(_auth);
+var _errors = require('../errors');
 
 var _assign = require('lodash/assign');
 
@@ -95,12 +93,8 @@ var FilesStore = function (_NetworkStore) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
         download: false,
-        tls: false,
-        ttl: undefined,
-        handler: function handler() {}
+        tls: false
       }, options);
 
       options.flags = {
@@ -120,6 +114,11 @@ var FilesStore = function (_NetworkStore) {
       });
 
       return promise;
+    }
+  }, {
+    key: 'findById',
+    value: function findById(id, options) {
+      return this.download(id, options);
     }
 
     /**
@@ -156,12 +155,8 @@ var FilesStore = function (_NetworkStore) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       options = (0, _assign2.default)({
-        properties: null,
-        timeout: undefined,
         stream: false,
-        tls: false,
-        ttl: undefined,
-        handler: function handler() {}
+        tls: false
       }, options);
 
       options.flags = {
@@ -184,11 +179,6 @@ var FilesStore = function (_NetworkStore) {
     value: function downloadByUrl(url) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      options = (0, _assign2.default)({
-        timeout: undefined,
-        handler: function handler() {}
-      }, options);
-
       var promise = Promise.resolve().then(function () {
         var request = new _networkRequest2.default({
           method: _enums.HttpMethod.GET,
@@ -200,11 +190,7 @@ var FilesStore = function (_NetworkStore) {
         request.removeHeader('X-Kinvey-Api-Version');
         return request.execute();
       }).then(function (response) {
-        if (response.isSuccess()) {
-          return response.data;
-        }
-
-        throw response.error;
+        return response.data;
       });
 
       return promise;
@@ -266,58 +252,66 @@ var FilesStore = function (_NetworkStore) {
       }
 
       var promise = Promise.resolve().then(function () {
-        var request = new _networkRequest2.default({
+        var requestOptions = {
+          headers: {
+            'X-Kinvey-Content-Type': metadata.mimeType
+          },
           properties: options.properties,
-          auth: _auth2.default.default,
+          auth: _this4.client.defaultAuth(),
           timeout: options.timeout,
           data: metadata
-        });
-        request.setHeader('X-Kinvey-Content-Type', metadata.mimeType);
+        };
 
         if (metadata[idAttribute]) {
-          request.method = _enums.HttpMethod.PUT;
-          request.url = _this4.client.getUrl(_this4._pathname + '/' + metadata._id);
+          requestOptions.method = _enums.HttpMethod.PUT;
+          requestOptions.pathname = _this4._pathname + '/' + metadata._id;
         } else {
-          request.method = _enums.HttpMethod.POST;
-          request.url = _this4.client.getUrl(_this4._pathname);
+          requestOptions.method = _enums.HttpMethod.POST;
+          requestOptions.pathname = _this4._pathname;
         }
 
-        return request.execute();
+        return _this4.client.executeNetworkRequest(requestOptions);
       }).then(function (response) {
-        if (response.isSuccess()) {
-          var uploadUrl = response.data._uploadURL;
-          var headers = response.data._requiredHeaders || {};
-          headers['Content-Type'] = metadata.mimeType;
-          headers['Content-Length'] = metadata.size;
+        var uploadUrl = response.data._uploadURL;
+        var headers = response.data._requiredHeaders || {};
+        headers['Content-Type'] = metadata.mimeType;
+        headers['Content-Length'] = metadata.size;
 
-          // Delete fields from the response
-          delete response.data._expiresAt;
-          delete response.data._requiredHeaders;
-          delete response.data._uploadURL;
+        // Delete fields from the response
+        delete response.data._expiresAt;
+        delete response.data._requiredHeaders;
+        delete response.data._uploadURL;
 
-          // Upload the file
-          var request = new _networkRequest2.default({
-            method: _enums.HttpMethod.PUT,
-            url: uploadUrl,
-            data: file
-          });
-          request.clearHeaders();
-          request.addHeaders(headers);
+        // Upload the file
+        var request = new _networkRequest2.default({
+          method: _enums.HttpMethod.PUT,
+          url: uploadUrl,
+          data: file
+        });
+        request.clearHeaders();
+        request.addHeaders(headers);
 
-          return request.execute().then(function (uploadResponse) {
-            if (uploadResponse.isSuccess()) {
-              response.data._data = file;
-              return response.data;
-            }
+        return request.execute().then(function (uploadResponse) {
+          if (uploadResponse.isSuccess()) {
+            response.data._data = file;
+            return response.data;
+          }
 
-            throw uploadResponse.error;
-          });
-        }
-
-        throw response.error;
+          throw uploadResponse.error;
+        });
       });
 
       return promise;
+    }
+  }, {
+    key: 'save',
+    value: function save() {
+      return Promise.reject(new _errors.KinveyError('Please use `upload()` to save files.'));
+    }
+  }, {
+    key: 'update',
+    value: function update() {
+      return Promise.reject(new _errors.KinveyError('Please use `upload()` to update files.'));
     }
   }, {
     key: '_pathname',
