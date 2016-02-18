@@ -1,7 +1,7 @@
 import Aggregation from './core/aggregation';
 import Client from './core/client';
 import Command from './core/command';
-import Files from './core/stores/filesStore';
+import FileStore from './core/stores/filesStore';
 import Log from './core/log';
 import Metadata from './core/metadata';
 import Query from './core/query';
@@ -61,7 +61,7 @@ Kinvey.AuthorizationGrant = AuthorizationGrant;
 Kinvey.Command = Command;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
-Kinvey.Files = Files;
+Kinvey.FileStore = FileStore;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Promise = Promise;
