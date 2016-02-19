@@ -22,6 +22,7 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 	* [Deploy Your Project](#deploy-your-project)
 	* [Emulate Your Project](#emulate-your-project)
 	* [Run Your Project](#run-your-project)
+* [Extending the CLI](#extending-the-cli)
 * [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
 * [How to Contribute](#how-to-contribute)
@@ -501,6 +502,17 @@ You can quickly deploy your app in the native emulators. The following command i
 tns run android --emulator
 tns run ios --emulator
 ```
+
+[Back to Top][1]
+
+Extending the CLI
+===
+
+The NativeScript CLI lets you extend its behavior and customize it to fit your needs by using [hooks](https://en.wikipedia.org/wiki/Hooking).
+
+When you run one of the extendable commands (for example, `tns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
+
+For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/production/extending-cli.md)
 
 [Back to Top][1]
 
