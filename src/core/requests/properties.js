@@ -14,7 +14,7 @@ class PrivateProperties {
   }
 
   set properties(properties) {
-    this._properties = clone(properties);
+    this._properties = clone(properties, true);
   }
 
   addProperties(properties) {
@@ -42,7 +42,7 @@ class PrivateProperties {
   }
 
   toJSON() {
-    return clone(this.properties);
+    return clone(this.properties, true);
   }
 }
 

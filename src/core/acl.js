@@ -1,24 +1,25 @@
 import { KinveyError } from './errors';
 import isPlainObject from 'lodash/isPlainObject';
 import clone from 'lodash/clone';
+const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const privateAclSymbol = Symbol();
 
 /**
  * @private
  */
 class PrivateAcl {
-  constructor(acl = {}) {
-    if (!isPlainObject(acl)) {
-      throw new KinveyError('acl argument must be an object');
+  constructor(entity = {}) {
+    if (!isPlainObject(entity)) {
+      throw new KinveyError('entity argument must be an object');
     }
 
     /**
-     * The acl properties.
+     * The kmd properties.
      *
      * @private
      * @type {Object}
      */
-    this.acl = acl;
+    this.acl = entity[aclAttribute];
   }
 
   get creator() {
@@ -158,7 +159,7 @@ class PrivateAcl {
   }
 
   toJSON() {
-    return clone(this.acl);
+    return clone(this.acl, true);
   }
 }
 

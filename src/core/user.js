@@ -1,10 +1,13 @@
 import Client from './client';
 import Query from './query';
+import Acl from './acl';
+import Metadata from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import MobileIdentityConnect from './mic';
 import { SocialIdentity, HttpMethod } from './enums';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
+import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 const micAuthProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
@@ -40,23 +43,34 @@ export class User {
     return this.data[idAttribute];
   }
 
+  get _acl() {
+    return new Acl(this.data);
+  }
+
+  get metadata() {
+    return new Metadata(this.data);
+  }
+
+  get _kmd() {
+    return this.metadata;
+  }
+
+  get authtoken() {
+    return this.metadata.authtoken;
+  }
+
+  set authtoken(authtoken) {
+    const kmd = this._kmd;
+    kmd.authtoken = authtoken;
+    this.data[kmdAttribute] = kmd.toJSON();
+  }
+
   get username() {
     return this.data[usernameAttribute];
   }
 
   get email() {
     return this.data[emailAttribute];
-  }
-
-  get authtoken() {
-    const kmd = this.data[kmdAttribute] || {};
-    return kmd.authtoken;
-  }
-
-  set authtoken(authtoken) {
-    const kmd = this.data[kmdAttribute] || {};
-    kmd.authtoken = authtoken;
-    this.data[kmdAttribute] = kmd;
   }
 
   static getActiveUser(client = Client.sharedInstance()) {
@@ -404,5 +418,9 @@ export class User {
       timeout: options.timeout
     });
     return promise;
+  }
+
+  toJSON() {
+    return clone(this.data, true);
   }
 }

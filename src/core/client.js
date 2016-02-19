@@ -328,7 +328,7 @@ export default class Client {
       encryptionKey: this.encryptionKey
     };
 
-    return clone(json);
+    return clone(json, true);
   }
 
   /**

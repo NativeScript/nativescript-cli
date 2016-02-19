@@ -117,7 +117,7 @@ class PrivateAggregation {
       query: this._query ? this._query.toJSON() : null
     };
 
-    return clone(json);
+    return clone(json, true);
   }
 }
 

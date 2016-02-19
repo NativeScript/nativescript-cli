@@ -1,9 +1,7 @@
-import Acl from './acl';
 import { KinveyError } from './errors';
 import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
-const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const privateMetadataSymbol = Symbol();
 
 /**
@@ -12,16 +10,8 @@ const privateMetadataSymbol = Symbol();
 class PrivateMetadata {
   constructor(entity = {}) {
     if (!isPlainObject(entity)) {
-      throw new Error('kmd argument must be an object');
+      throw new KinveyError('entity argument must be an object');
     }
-
-    /**
-     * The acl properties.
-     *
-     * @private
-     * @type {Object}
-     */
-    this.acl = new Acl(entity[aclAttribute]);
 
     /**
      * The kmd properties.
@@ -38,16 +28,6 @@ class PrivateMetadata {
      * @type {Object}
      */
     this.entity = entity;
-  }
-
-  set acl(acl) {
-    if (!(acl instanceof Acl)) {
-      throw new KinveyError('Acl argument must be of type Kinvey.Acl.');
-    }
-
-    this.acl = acl;
-    this.entity[aclAttribute] = acl.toJSON();
-    return this;
   }
 
   get createdAt() {
@@ -79,7 +59,7 @@ class PrivateMetadata {
   }
 
   toJSON() {
-    return clone(this.kmd);
+    return clone(this.kmd, true);
   }
 }
 
@@ -93,19 +73,6 @@ class PrivateMetadata {
 export default class Metadata {
   constructor(entity) {
     this[privateMetadataSymbol] = new PrivateMetadata(entity);
-  }
-
-  /**
-   * Sets the entity ACL.
-   *
-   * @param   {Acl}       acl       The ACL.
-   * @returns {Metadata}            The metadata.
-   *
-   * @throws  {KinveyError} `acl` must be of type `Kinvey.Acl`.
-   */
-  set acl(acl) {
-    this[privateMetadataSymbol].acl = acl;
-    return this;
   }
 
   /**
