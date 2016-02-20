@@ -8,6 +8,8 @@ import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as minimatch from "minimatch";
 import Future = require("fibers/future");
+import * as temp from "temp";
+temp.track();
 let clui = require("clui");
 
 export class PlatformService implements IPlatformService {
@@ -29,7 +31,8 @@ export class PlatformService implements IPlatformService {
 		private $projectFilesManager: IProjectFilesManager,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
-		private $xmlValidator: IXmlValidator) { }
+		private $xmlValidator: IXmlValidator,
+		private $npm: INodePackageManager) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -114,7 +117,10 @@ export class PlatformService implements IPlatformService {
 			}
 
 			let sourceFrameworkDir = isFrameworkPathDirectory && this.$options.symlink ? path.join(this.$options.frameworkPath, "framework") : frameworkDir;
-			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion).wait();
+			this.$projectDataService.initialize(this.$projectData.projectDir);
+			let customTemplateOptions = this.getPathToPlatformTemplate(this.$options.platformTemplate, platformData.frameworkPackageName).wait();
+			let pathToTemplate = customTemplateOptions && customTemplateOptions.pathToTemplate;
+			platformData.platformProjectService.createProject(path.resolve(sourceFrameworkDir), installedVersion, pathToTemplate).wait();
 
 			if(isFrameworkPathDirectory || isFrameworkPathNotSymlinkedFile) {
 				// Need to remove unneeded node_modules folder
@@ -132,10 +138,46 @@ export class PlatformService implements IPlatformService {
 				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
 			}
 
-			this.$projectDataService.initialize(this.$projectData.projectDir);
-			this.$projectDataService.setValue(platformData.frameworkPackageName, {version: installedVersion}).wait();
+			let frameworkPackageNameData: any = {version: installedVersion};
+			if(customTemplateOptions) {
+				frameworkPackageNameData.template = customTemplateOptions.selectedTemplate;
+			}
+			this.$projectDataService.setValue(platformData.frameworkPackageName, frameworkPackageNameData).wait();
 
 		}).future<void>()();
+	}
+
+	private getPathToPlatformTemplate(selectedTemplate: string, frameworkPackageName: string): IFuture<any> {
+		return (() => {
+			if(!selectedTemplate) {
+				// read data from package.json's nativescript key
+				// check the nativescript.tns-<platform>.template value
+				let nativescriptPlatformData = this.$projectDataService.getValue(frameworkPackageName).wait();
+				selectedTemplate = nativescriptPlatformData && nativescriptPlatformData.template;
+			}
+
+			if(selectedTemplate) {
+				let tempDir = temp.mkdirSync("platform-template");
+				try {
+					/*
+					 * Output of npm.install is array of arrays. For example:
+					 * [ [ 'test-android-platform-template@0.0.1',
+					 *	'C:\\Users\\<USER>~1\\AppData\\Local\\Temp\\1\\platform-template11627-15560-rm3ngx\\node_modules\\test-android-platform-template',
+					 *	undefined,
+					 *	undefined,
+					 *	'..\\..\\..\\android-platform-template' ] ]
+					 * Project successfully created.
+					 */
+					let pathToTemplate = this.$npm.install(selectedTemplate, tempDir).wait()[0][1];
+					return { selectedTemplate, pathToTemplate };
+				} catch(err) {
+					this.$logger.trace("Error while trying to install specified template: ", err);
+					this.$errors.failWithoutHelp(`Unable to install platform template ${selectedTemplate}. Make sure the specified value is valid.`);
+				}
+			}
+
+			return null;
+		}).future<any>()();
 	}
 
 	public getInstalledPlatforms(): IFuture<string[]> {
