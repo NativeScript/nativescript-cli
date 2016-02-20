@@ -69,7 +69,7 @@ interface IiOSBuildConfig extends IBuildConfig {
 interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
-	createProject(frameworkDir: string, frameworkVersion: string): IFuture<void>;
+	createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void>;
 	interpolateData(): IFuture<void>;
 	interpolateConfigurationFile(configurationFilePath?: string): IFuture<void>;
 	afterCreateProject(projectRoot: string): IFuture<void>;
