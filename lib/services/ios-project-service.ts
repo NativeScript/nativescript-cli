@@ -104,10 +104,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public createProject(frameworkDir: string, frameworkVersion: string): IFuture<void> {
+	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
-			if(this.$options.symlink) {
+			if(pathToTemplate) {
+				// Copy everything except the template from the runtime
+				this.$fs.readDirectory(frameworkDir).wait()
+					.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
+					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
+				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
+			} else if(this.$options.symlink) {
 				let xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 
 				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
@@ -118,7 +124,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				_.each(frameworkFiles, (file: string) => {
 					this.$fs.symlink(path.join(frameworkDir, file), path.join(this.platformData.projectRoot, file)).wait();
 				});
-
 			}  else {
 				shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
 			}

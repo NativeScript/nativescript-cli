@@ -137,6 +137,7 @@ function createTestInjector() {
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
+	testInjector.register("npm", {});
 
 	return testInjector;
 }
