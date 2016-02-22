@@ -49,15 +49,14 @@ var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 var sharedInstanceSymbol = Symbol();
 
 /**
- * @private
  * The Client class stores information regarding your application. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
  *
  * @example
-   * var client = new Kinvey.Client({
-   *   appKey: '<appKey>',
-   *   appSecret: '<appSecret>'
-   * });
+ * var client = new Kinvey.Client({
+ *   appKey: '<appKey>',
+ *   appSecret: '<appSecret>'
+ * });
  */
 
 var Client = function () {
@@ -321,6 +320,7 @@ var Client = function () {
 
       var request = new _localRequest2.default({
         method: options.method,
+        headers: options.headers,
         url: _url2.default.format({
           protocol: this.protocol,
           host: this.host,
@@ -350,6 +350,7 @@ var Client = function () {
 
       var request = new _networkRequest2.default({
         method: options.method,
+        headers: options.headers,
         auth: options.auth,
         url: _url2.default.format({
           protocol: this.protocol,
@@ -380,6 +381,7 @@ var Client = function () {
 
       var request = new _deltaFetchRequest2.default({
         method: options.method,
+        headers: options.headers,
         auth: options.auth,
         url: _url2.default.format({
           protocol: this.protocol,
@@ -413,7 +415,7 @@ var Client = function () {
         encryptionKey: this.encryptionKey
       };
 
-      return (0, _clone2.default)(json);
+      return (0, _clone2.default)(json, true);
     }
 
     /**

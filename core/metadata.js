@@ -6,10 +6,6 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _acl = require('./acl');
-
-var _acl2 = _interopRequireDefault(_acl);
-
 var _errors = require('./errors');
 
 var _clone = require('lodash/clone');
@@ -25,7 +21,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
-var aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 var privateMetadataSymbol = Symbol();
 
 /**
@@ -39,16 +34,8 @@ var PrivateMetadata = function () {
     _classCallCheck(this, PrivateMetadata);
 
     if (!(0, _isPlainObject2.default)(entity)) {
-      throw new Error('kmd argument must be an object');
+      throw new _errors.KinveyError('entity argument must be an object');
     }
-
-    /**
-     * The acl properties.
-     *
-     * @private
-     * @type {Object}
-     */
-    this.acl = new _acl2.default(entity[aclAttribute]);
 
     /**
      * The kmd properties.
@@ -70,18 +57,7 @@ var PrivateMetadata = function () {
   _createClass(PrivateMetadata, [{
     key: 'toJSON',
     value: function toJSON() {
-      return (0, _clone2.default)(this.kmd);
-    }
-  }, {
-    key: 'acl',
-    set: function set(acl) {
-      if (!(acl instanceof _acl2.default)) {
-        throw new _errors.KinveyError('Acl argument must be of type Kinvey.Acl.');
-      }
-
-      this.acl = acl;
-      this.entity[aclAttribute] = acl.toJSON();
-      return this;
+      return (0, _clone2.default)(this.kmd, true);
     }
   }, {
     key: 'createdAt',
@@ -120,11 +96,7 @@ var PrivateMetadata = function () {
 }();
 
 /**
- * Wrapper for accessing the `_acl` and `_kmd` properties of an entity.
- *
- * @example
- * var entity = { _acl: {}, _kmd: {}};
- * var metadata = new Kinvey.Metadat(entity);
+ * Wrapper for accessing the `_kmd` properties of an entity.
  */
 
 
@@ -136,12 +108,9 @@ var Metadata = function () {
   }
 
   /**
-   * Sets the entity ACL.
+   * Returns the date when the entity was created.
    *
-   * @param   {Acl}       acl       The ACL.
-   * @returns {Metadata}            The metadata.
-   *
-   * @throws  {KinveyError} `acl` must be of type `Kinvey.Acl`.
+   * @returns {?Date} Created at date, or `null` if not set.
    */
 
 
@@ -157,19 +126,6 @@ var Metadata = function () {
     value: function toJSON() {
       return this[privateMetadataSymbol].toJSON();
     }
-  }, {
-    key: 'acl',
-    set: function set(acl) {
-      this[privateMetadataSymbol].acl = acl;
-      return this;
-    }
-
-    /**
-     * Returns the date when the entity was created.
-     *
-     * @returns {?Date} Created at date, or `null` if not set.
-     */
-
   }, {
     key: 'createdAt',
     get: function get() {

@@ -243,6 +243,11 @@ var MobileIdentityConnect = function () {
       var mic = new MobileIdentityConnect();
       return mic.login(redirectUri, authorizationGrant, options);
     }
+  }, {
+    key: 'identity',
+    get: function get() {
+      return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+    }
   }]);
 
   return MobileIdentityConnect;

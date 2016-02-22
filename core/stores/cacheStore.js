@@ -50,10 +50,6 @@ var _log = require('../log');
 
 var _log2 = _interopRequireDefault(_log);
 
-var _differenceBy = require('lodash/differenceBy');
-
-var _differenceBy2 = _interopRequireDefault(_differenceBy);
-
 var _isArray = require('lodash/isArray');
 
 var _isArray2 = _interopRequireDefault(_isArray);
@@ -143,7 +139,6 @@ var CacheStore = function (_NetworkStore) {
       _log2.default.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
-        force: false,
         useDeltaFetch: true
       }, options);
 
@@ -166,8 +161,16 @@ var CacheStore = function (_NetworkStore) {
         };
 
         result.network = _this2.syncCount().then(function (count) {
-          if (options.force === false && count > 0) {
-            throw new _errors.KinveyError('Please sync before you load data from the network.');
+          if (count > 0) {
+            return _this2.push().then(function () {
+              return _this2.syncCount();
+            });
+          }
+
+          return count;
+        }).then(function (count) {
+          if (count > 0) {
+            throw new _errors.KinveyError('Unable to load data from the network. There are ' + count + ' entities that need ' + 'to be synced before data is loaded from the network.');
           }
 
           if (options.useDeltaFetch) {
@@ -185,9 +188,7 @@ var CacheStore = function (_NetworkStore) {
 
           return _get(Object.getPrototypeOf(CacheStore.prototype), 'find', _this2).call(_this2, query, options);
         }).then(function (data) {
-          var removedEntityIds = Object.keys((0, _keyBy2.default)((0, _differenceBy2.default)(result.cache, data, function (entity) {
-            return entity[idAttribute];
-          }), idAttribute));
+          var removedEntityIds = Object.keys((0, _keyBy2.default)(data, idAttribute));
           var removeQuery = new _query2.default();
           removeQuery.contains(idAttribute, removedEntityIds);
 
@@ -263,8 +264,16 @@ var CacheStore = function (_NetworkStore) {
         };
 
         result.network = _this3.syncCount().then(function (count) {
-          if (options.force === false && count > 0) {
-            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          if (count > 0) {
+            return _this3.push().then(function () {
+              return _this3.syncCount();
+            });
+          }
+
+          return count;
+        }).then(function (count) {
+          if (count > 0) {
+            throw new _errors.KinveyError('Unable to load data from the network. There are ' + count + ' entities that need ' + 'to be synced before data is loaded from the network.');
           }
 
           return _get(Object.getPrototypeOf(CacheStore.prototype), 'group', _this3).call(_this3, aggregation, options);
@@ -330,8 +339,16 @@ var CacheStore = function (_NetworkStore) {
         };
 
         result.network = _this4.syncCount().then(function (count) {
-          if (options.force === false && count > 0) {
-            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          if (count > 0) {
+            return _this4.push().then(function () {
+              return _this4.syncCount();
+            });
+          }
+
+          return count;
+        }).then(function (count) {
+          if (count > 0) {
+            throw new _errors.KinveyError('Unable to load data from the network. There are ' + count + ' entities that need ' + 'to be synced before data is loaded from the network.');
           }
 
           return _get(Object.getPrototypeOf(CacheStore.prototype), 'count', _this4).call(_this4, query, options);
@@ -396,8 +413,16 @@ var CacheStore = function (_NetworkStore) {
         };
 
         result.network = _this5.syncCount().then(function (count) {
-          if (options.force === false && count > 0) {
-            throw new _errors.KinveyError('You must push the pending sync items first before you load data from the network.', 'Call store.push() to push the pending sync items.');
+          if (count > 0) {
+            return _this5.push().then(function () {
+              return _this5.syncCount();
+            });
+          }
+
+          return count;
+        }).then(function (count) {
+          if (count > 0) {
+            throw new _errors.KinveyError('Unable to load data from the network. There are ' + count + ' entities that need ' + 'to be synced before data is loaded from the network.');
           }
 
           if (options.useDeltaFetch) {
@@ -804,7 +829,7 @@ var CacheStore = function (_NetworkStore) {
 
             return _this10.client.executeNetworkRequest({
               method: _enums.HttpMethod.PUT,
-              url: _this10._pathname + '/' + entity[idAttribute],
+              pathname: _this10._pathname + '/' + entity[idAttribute],
               properties: metadata.properties,
               auth: _this10.client.defaultAuth(),
               data: entity,
@@ -825,7 +850,7 @@ var CacheStore = function (_NetworkStore) {
                 delete entities[entity[idAttribute]];
                 return {
                   _id: entity[idAttribute],
-                  entity: entity
+                  error: err
                 };
               }
 
@@ -867,7 +892,8 @@ var CacheStore = function (_NetworkStore) {
                 size = size - 1;
                 delete entities[id];
                 return {
-                  _id: id
+                  _id: id,
+                  error: err
                 };
               }
 

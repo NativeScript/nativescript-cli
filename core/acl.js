@@ -20,6 +20,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 var privateAclSymbol = Symbol();
 
 /**
@@ -28,21 +29,21 @@ var privateAclSymbol = Symbol();
 
 var PrivateAcl = function () {
   function PrivateAcl() {
-    var acl = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+    var entity = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     _classCallCheck(this, PrivateAcl);
 
-    if (!(0, _isPlainObject2.default)(acl)) {
-      throw new _errors.KinveyError('acl argument must be an object');
+    if (!(0, _isPlainObject2.default)(entity)) {
+      throw new _errors.KinveyError('entity argument must be an object');
     }
 
     /**
-     * The acl properties.
+     * The kmd properties.
      *
      * @private
      * @type {Object}
      */
-    this.acl = acl;
+    this.acl = entity[aclAttribute];
   }
 
   _createClass(PrivateAcl, [{
@@ -166,7 +167,7 @@ var PrivateAcl = function () {
   }, {
     key: 'toJSON',
     value: function toJSON() {
-      return (0, _clone2.default)(this.acl);
+      return (0, _clone2.default)(this.acl, true);
     }
   }, {
     key: 'creator',

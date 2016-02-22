@@ -165,7 +165,7 @@ var PrivateAggregation = function () {
         query: this._query ? this._query.toJSON() : null
       };
 
-      return (0, _clone2.default)(json);
+      return (0, _clone2.default)(json, true);
     }
   }]);
 
