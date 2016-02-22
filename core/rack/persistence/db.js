@@ -223,12 +223,17 @@ var DB = exports.DB = function () {
       }
 
       entities = (0, _map2.default)(entities, function (entity) {
-        if (!entity[idAttribute]) {
-          entity[idAttribute] = _this2.generateObjectId();
-          entity[kmdAttribute] = entity[kmdAttribute] || {};
-          entity[kmdAttribute].local = true;
+        var _id = entity[idAttribute];
+        var kmd = entity[kmdAttribute] || {};
+
+        if (!_id) {
+          _id = _this2.generateObjectId();
+          kmd.local = true;
         }
 
+        delete kmd.lmt;
+        entity[idAttribute] = _id;
+        entity[kmdAttribute] = kmd;
         return entity;
       });
 

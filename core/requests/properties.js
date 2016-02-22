@@ -64,7 +64,7 @@ var PrivateProperties = function () {
   }, {
     key: 'toJSON',
     value: function toJSON() {
-      return (0, _clone2.default)(this.properties);
+      return (0, _clone2.default)(this.properties, true);
     }
   }, {
     key: 'properties',
@@ -72,7 +72,7 @@ var PrivateProperties = function () {
       return this._properties;
     },
     set: function set(properties) {
-      this._properties = (0, _clone2.default)(properties);
+      this._properties = (0, _clone2.default)(properties, true);
     }
   }]);
 

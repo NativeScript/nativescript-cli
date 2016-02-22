@@ -24,10 +24,6 @@ var _query = require('../query');
 
 var _query2 = _interopRequireDefault(_query);
 
-var _assign = require('lodash/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
-
 var _log = require('../log');
 
 var _log2 = _interopRequireDefault(_log);
