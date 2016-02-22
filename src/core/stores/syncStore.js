@@ -3,7 +3,6 @@ import Aggregation from '../aggregation';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import Query from '../query';
-import assign from 'lodash/assign';
 import log from '../log';
 
 export default class SyncStore extends CacheStore {

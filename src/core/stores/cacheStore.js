@@ -9,7 +9,6 @@ import forEach from 'lodash/forEach';
 import clone from 'lodash/clone';
 import map from 'lodash/map';
 import log from '../log';
-import differenceBy from 'lodash/differenceBy';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
 import { nested } from '../utils/object';
@@ -74,7 +73,6 @@ export default class CacheStore extends NetworkStore {
     log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
-      force: false,
       useDeltaFetch: true
     }, options);
 
@@ -97,8 +95,17 @@ export default class CacheStore extends NetworkStore {
       };
 
       result.network = this.syncCount().then(count => {
-        if (options.force === false && count > 0) {
-          throw new KinveyError('Please sync before you load data from the network.');
+        if (count > 0) {
+          return this.push().then(() => {
+            return this.syncCount();
+          });
+        }
+
+        return count;
+      }).then(count => {
+        if (count > 0) {
+          throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
+           `to be synced before data is loaded from the network.`);
         }
 
         if (options.useDeltaFetch) {
@@ -116,9 +123,7 @@ export default class CacheStore extends NetworkStore {
 
         return super.find(query, options);
       }).then(data => {
-        const removedEntityIds = Object.keys(keyBy(differenceBy(result.cache, data, entity => {
-          return entity[idAttribute];
-        }), idAttribute));
+        const removedEntityIds = Object.keys(keyBy(data, idAttribute));
         const removeQuery = new Query();
         removeQuery.contains(idAttribute, removedEntityIds);
 
@@ -188,9 +193,17 @@ export default class CacheStore extends NetworkStore {
       };
 
       result.network = this.syncCount().then(count => {
-        if (options.force === false && count > 0) {
-          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-            'Call store.push() to push the pending sync items.');
+        if (count > 0) {
+          return this.push().then(() => {
+            return this.syncCount();
+          });
+        }
+
+        return count;
+      }).then(count => {
+        if (count > 0) {
+          throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
+           `to be synced before data is loaded from the network.`);
         }
 
         return super.group(aggregation, options);
@@ -249,9 +262,17 @@ export default class CacheStore extends NetworkStore {
       };
 
       result.network = this.syncCount().then(count => {
-        if (options.force === false && count > 0) {
-          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-            'Call store.push() to push the pending sync items.');
+        if (count > 0) {
+          return this.push().then(() => {
+            return this.syncCount();
+          });
+        }
+
+        return count;
+      }).then(count => {
+        if (count > 0) {
+          throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
+           `to be synced before data is loaded from the network.`);
         }
 
         return super.count(query, options);
@@ -309,9 +330,17 @@ export default class CacheStore extends NetworkStore {
       };
 
       result.network = this.syncCount().then(count => {
-        if (options.force === false && count > 0) {
-          throw new KinveyError('You must push the pending sync items first before you load data from the network.',
-            'Call store.push() to push the pending sync items.');
+        if (count > 0) {
+          return this.push().then(() => {
+            return this.syncCount();
+          });
+        }
+
+        return count;
+      }).then(count => {
+        if (count > 0) {
+          throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
+           `to be synced before data is loaded from the network.`);
         }
 
         if (options.useDeltaFetch) {
@@ -678,7 +707,7 @@ export default class CacheStore extends NetworkStore {
 
           return this.client.executeNetworkRequest({
             method: HttpMethod.PUT,
-            url: `${this._pathname}/${entity[idAttribute]}`,
+            pathname: `${this._pathname}/${entity[idAttribute]}`,
             properties: metadata.properties,
             auth: this.client.defaultAuth(),
             data: entity,
@@ -699,7 +728,7 @@ export default class CacheStore extends NetworkStore {
               delete entities[entity[idAttribute]];
               return {
                 _id: entity[idAttribute],
-                entity: entity
+                error: err
               };
             }
 
@@ -742,7 +771,8 @@ export default class CacheStore extends NetworkStore {
               size = size - 1;
               delete entities[id];
               return {
-                _id: id
+                _id: id,
+                error: err
               };
             }
 

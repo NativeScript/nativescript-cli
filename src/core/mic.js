@@ -26,6 +26,10 @@ export default class MobileIdentityConnect {
     });
   }
 
+  static get identity() {
+    return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+  }
+
   static login(redirectUri, authorizationGrant, options) {
     const mic = new MobileIdentityConnect();
     return mic.login(redirectUri, authorizationGrant, options);

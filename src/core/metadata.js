@@ -64,11 +64,7 @@ class PrivateMetadata {
 }
 
 /**
- * Wrapper for accessing the `_acl` and `_kmd` properties of an entity.
- *
- * @example
- * var entity = { _acl: {}, _kmd: {}};
- * var metadata = new Kinvey.Metadat(entity);
+ * Wrapper for accessing the `_kmd` properties of an entity.
  */
 export default class Metadata {
   constructor(entity) {

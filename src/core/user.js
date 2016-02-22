@@ -10,7 +10,6 @@ import result from 'lodash/result';
 import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
-const micAuthProvider = process.env.KINVEY_MIC_AUTH_PROVIDER || 'kinveyAuth';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -25,54 +24,147 @@ if (typeof window !== 'undefined') {
   hello = require('hellojs');
 }
 
+/**
+ * The User class is used to represent a single user on the Kinvey platform.
+ * Use the user class to manage the active user lifecycle and perform user operations.
+ */
 export class User {
+  /**
+   * Create a new instance of a User.
+   *
+   * @param  {Object}   [data={}]    Data for the user.
+   * @return {User}                  User
+   *
+   * @example
+   * var user = new User();
+   */
   constructor(data = {}) {
     /**
+     * The users data.
+     *
      * @type {Object}
      */
     this.data = data;
 
     /**
      * @private
+     * The client used by this user.
+     *
      * @type {Client}
      */
     this.client = Client.sharedInstance();
   }
 
+  /**
+   * The _id for the user.
+   *
+   * @return {?string} _id
+   *
+   * @example
+   * var _id = user._id;
+   */
   get _id() {
     return this.data[idAttribute];
   }
 
+  /**
+   * The _acl for the user.
+   *
+   * @return {Acl} _acl
+   *
+   * @example
+   * var _acl = user._acl;
+   */
   get _acl() {
     return new Acl(this.data);
   }
 
+  /**
+   * The metadata for the user.
+   *
+   * @return {Metadata} metadata
+   *
+   * @example
+   * var metadata = user.metadata;
+   */
   get metadata() {
     return new Metadata(this.data);
   }
 
+  /**
+   * The _kmd for the user.
+   *
+   * @return {Metadata} _kmd
+   *
+   * @example
+   * var _kmd = user._kmd;
+   */
   get _kmd() {
     return this.metadata;
   }
 
+  /**
+   * The auth token for the user.
+   *
+   * @return {?string} Auth token
+   *
+   * @example
+   * var authtoken = user.authtoken;
+   */
   get authtoken() {
     return this.metadata.authtoken;
   }
 
+  /**
+   * Set the auth token for the user.
+   *
+   * @param  {?string} authtoken Auth token
+   *
+   * @example
+   * user.authtoken = 'authtoken';
+   */
   set authtoken(authtoken) {
     const kmd = this._kmd;
     kmd.authtoken = authtoken;
     this.data[kmdAttribute] = kmd.toJSON();
   }
 
+  /**
+   * The username for the user.
+   *
+   * @return {?string} Username
+   *
+   * @example
+   * var username = user.username;
+   */
   get username() {
     return this.data[usernameAttribute];
   }
 
+  /**
+   * The email for the user.
+   *
+   * @return {?string} Email
+   *
+   * @example
+   * var email = user.email;
+   */
   get email() {
     return this.data[emailAttribute];
   }
 
+  /**
+   * Gets the active user. You can optionally provide a client
+   * to use to lookup the active user.
+   *
+   * @param  {Client}           [client=Client.sharedInstance()]   Client to use to set the active user.
+   * @return {Promise<User>}                                       The active user on the client. The
+   *                                                               active user could be null if one does
+   *                                                               not exist.
+   *
+   * @example
+   * var _id = user._id;
+   */
   static getActiveUser(client = Client.sharedInstance()) {
     return client.getActiveUser().then(data => {
       let user = null;
@@ -86,16 +178,65 @@ export class User {
     });
   }
 
+  /**
+   * Sets the active user. You can optionally provide a client to
+   * set the active user on. Only one active user per client is
+   * allowed.
+   *
+   * @param  {?(User|Object)}      [user]                               User to set as the active user.
+   * @param  {Client}              [client=Client.sharedInstance()]     The client to use to set the active user on.
+   * @return {Promise<User>}                                            The active user on the client. The active user
+   *                                                                    could be null if one does not exist.
+   *
+   * @example
+   * var user = new User();
+   * var promise = User.setActiveUser(user);
+   * promise.then(function(activeUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   static setActiveUser(user, client = Client.sharedInstance()) {
-    const data = result(user, 'data', user);
+    const data = result(user, 'toJSON', user);
     return client.setActiveUser(data).then(() => {
       return User.getActiveUser();
     });
   }
 
+  /**
+   * Set this user as the active user.
+   *
+   * @return {Promise<User>}  The active user.
+   *
+   * @example
+   * var promise = user.setAsActiveUser();
+   * promise.then(function(activeUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  setAsActiveUser() {
+    return User.setActiveUser(this, this.client);
+  }
+
+  /**
+   * Checks if this user is the active user.
+   *
+   * @return {Promise<Boolean>} True or false if this user is the active user.
+   *
+   * @example
+   * var promise = user.isActiveUser();
+   * promise.then(function(isActiveUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   isActiveUser() {
     return this.client.getActiveUser().then(activeUser => {
-      if (activeUser[idAttribute] === this._id) {
+      if (activeUser && activeUser[idAttribute] === this._id) {
         return true;
       }
 
@@ -103,6 +244,23 @@ export class User {
     });
   }
 
+  /**
+   * Login using a username or password.
+   *
+   * @param  {string|Object}      usernameOrData    Username or an object with username
+   *                                                and password properties.
+   * @param  {string}             [password]        Users password.
+   * @param  {Object}             [options={}]      Options
+   * @return {Promise<User>}                        The logged in user.
+   *
+   * @example
+   * var promise = user.login('username', 'password');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   login(usernameOrData, password, options = {}) {
     if (!isObject(usernameOrData)) {
       usernameOrData = {
@@ -110,8 +268,16 @@ export class User {
         password: password
       };
     }
-    usernameOrData.username = String(usernameOrData.username).trim();
-    usernameOrData.password = String(usernameOrData.password).trim();
+
+    if (!usernameOrData._socialIdentity) {
+      if (usernameOrData.username) {
+        usernameOrData.username = String(usernameOrData.username).trim();
+      }
+
+      if (usernameOrData.password) {
+        usernameOrData.password = String(usernameOrData.password).trim();
+      }
+    }
 
     const promise = this.isActiveUser().then(isActiveUser => {
       if (isActiveUser) {
@@ -150,12 +316,43 @@ export class User {
     return promise;
   }
 
-  loginWithMIC(redirectUri, authorizationGrant, options) {
+  /**
+   * Login using Mobile Identity Connect.
+   *
+   * @param  {string}                 redirectUri                                                         The redirect uri used
+   *                                                                                                      for MIC logins.
+   * @param  {AuthorizationGrant}     [authorizationGrant=AuthoizationGrant.AuthorizationCodeLoginPage]   MIC authorization grant to use.
+   * @param  {Object}                 [options={}]                                                        Options
+   * @return {Promise<User>}                                                                              The logged in user.
+   *
+   * @example
+   * var promise = user.loginWithMIC('http://example.com');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  loginWithMIC(redirectUri, authorizationGrant, options = {}) {
     return MobileIdentityConnect.login(redirectUri, authorizationGrant, options).then(token => {
-      return this.connect(token.access_token, token.expires_in, micAuthProvider, options);
+      return this.connect(MobileIdentityConnect.identity, token.access_token, token.expires_in, options);
     });
   }
 
+  /**
+   * Logout the user. If the user was the active user then the active user will be set to null.
+   *
+   * @param  {Object}         [options={}]    Options
+   * @return {Promise<User>}                  The logged out user.
+   *
+   * @example
+   * var promise = user.logout();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   logout(options = {}) {
     return this.client.executeNetworkRequest({
       method: HttpMethod.POST,
@@ -164,38 +361,113 @@ export class User {
       properties: options.properties,
       timeout: options.timeout
     }).then(() => {
-      return this.client.setActiveUser(null);
+      return this.isActiveUser();
     }).catch(() => {
-      return this.client.setActiveUser(null);
+      return this.isActiveUser();
+    }).then(isActiveUser => {
+      if (isActiveUser) {
+        return this.client.setActiveUser(null);
+      }
     }).then(() => {
       return this;
     });
   }
 
-  isSocialIdentityConnectSupported() {
+  /**
+   * @private
+   * Returns true or false if identity connect is supported.
+   *
+   * @return {Boolean}  True or false if identity connect is supported.
+   *
+   * @example
+   * var isIdentityConnectSupported = user.isIdentityConnectSupported();
+   */
+  isIdentityConnectSupported() {
     return hello ? true : false;
   }
 
-  connectWithFacebook(options) {
-    return this.connectWithSocialIdentity(SocialIdentity.Facebook, options);
+  /**
+   * Connect using Facebook.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithFacebook();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithFacebook(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.Facebook, options);
   }
 
-  connectWithGoogle(options) {
-    return this.connectWithSocialIdentity(SocialIdentity.Google, options);
+  /**
+   * Connect using Google.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithGoogle();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithGoogle(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.Google, options);
   }
 
-  connectWithLinkedIn(options) {
-    return this.connectWithSocialIdentity(SocialIdentity.LinkedIn, options);
+  /**
+   * Connect using LinkedIn.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithLinkedIn();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithLinkedIn(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.LinkedIn, options);
   }
 
-  connectWithSocialIdentity(identity, options = {}) {
-    if (this.isSocialIdentityConnectSupported()) {
-      return Promise.reject(new KinveyError(`Unable to connect to social identity ${identity} on this platform.`));
+  /**
+   * Connect using an identity (Facebook, Google, LinkedIn etc.).
+   *
+   * @param  {SocialIdentity|string}         identity                                Identity used to connect the user.
+   * @param  {Object}                        [options={}]                            Options
+   * @param  {string}                        [options.collectionName='Identities']   Collection name to use to lookup credentials
+   *                                                                                 for the identity.
+   * @return {Promise<User>}                                                         The connected user.
+   *
+   * @example
+   * var promise = user.connectWithIdentity(SocialIdentity.Facebook);
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithIdentity(identity, options = {}) {
+    if (!identity) {
+      return Promise.reject(new KinveyError('An identity is required to connect the user.'));
+    }
+
+    if (this.isIdentityConnectSupported()) {
+      return Promise.reject(new KinveyError(`Unable to connect to identity ${identity} on this platform.`));
     }
 
     options = assign({
-      collectionName: 'SocialIdentities',
-      handler() {}
+      collectionName: 'Identities'
     }, options);
 
     const promise = Promise.resolve().then(() => {
@@ -216,16 +488,35 @@ export class User {
         return hello(identity).login();
       }
 
-      throw new KinveyError('Unsupported social identity');
+      throw new KinveyError('Unsupported identity.');
     }).then(() => {
       const authResponse = hello(identity).getAuthResponse();
-      return this.connect(authResponse.access_token, authResponse.expires_in, identity, options);
+      return this.connect(identity, authResponse.access_token, authResponse.expires_in, options);
     });
 
     return promise;
   }
 
-  connect(accessToken, expiresIn, identity, options = {}) {
+  /**
+   * @private
+   *
+   * Connects with the provided accessToken and identity.
+   *
+   * @param  {SocialIdentity|string}         identity      Identity used to connect the user.
+   * @param  {string}                        accessToken   Access token for the identity.
+   * @param  {number}                        [expiresIn]   Time in seconds for how long the access token is valid.
+   * @param  {Object}                        [options={}]  Options
+   * @return {Promise<User>}                               The connected user.
+   *
+   * @example
+   * var promise = user.connect(SocialIdentity.Facebook, 'facebook-access-token');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connect(identity, accessToken, expiresIn, options = {}) {
     options = assign({
       create: true
     }, options);
@@ -248,7 +539,7 @@ export class User {
     }).catch(err => {
       if (options.create && err instanceof NotFoundError) {
         return this.signup(user, options).then(() => {
-          return this.connect(accessToken, expiresIn, identity, options);
+          return this.connect(identity, accessToken, expiresIn, options);
         });
       }
     });
@@ -256,6 +547,29 @@ export class User {
     return promise;
   }
 
+  /**
+   * Sign up. If options.state is set to true then the user
+   * will be set as the active user after succesfully signing up the
+   * user.
+   *
+   * @param  {User|Object}    data                    Users data.
+   * @param  {Object}         [options={}]            Options
+   * @param  {Boolean}        [options.state=true]    If set to true, the user will be
+   *                                                  set as the active user after successfully
+   *                                                  being signed up.
+   * @return {Promise<User>}                          The signed up user.
+   *
+   * @example
+   * var promise = user.signup({
+   *   username: 'admin',
+   *   password: 'admin'
+   * });
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   signup(data, options = {}) {
     options = assign({
       state: true
@@ -275,7 +589,7 @@ export class User {
         method: HttpMethod.POST,
         pathname: `/${usersNamespace}/${this.client.appKey}`,
         auth: this.client.appAuth(),
-        data: data,
+        data: result(data, 'toJSON', data),
         properties: options.properties,
         timeout: options.timeout
       });
