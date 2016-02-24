@@ -1,8 +1,0 @@
-// Wrap dependencies in an IIFE so they are exported onto the root object only.
-(function(define, module) {
-  var window = this;
-  var setTimeout = function(fn) {
-    return window.setTimeout(fn, 0);
-  };
-  var exports = window.__KinveySocialAdapter = window;
-  var File = function() { };

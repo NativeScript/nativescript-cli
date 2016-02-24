@@ -1,820 +1,740 @@
+import Client from './client';
+import Query from './query';
+import Acl from './acl';
+import Metadata from './metadata';
+import { KinveyError, NotFoundError, ActiveUserError } from './errors';
+import MobileIdentityConnect from './mic';
+import { SocialIdentity, HttpMethod } from './enums';
+import assign from 'lodash/assign';
+import result from 'lodash/result';
+import clone from 'lodash/clone';
+import forEach from 'lodash/forEach';
+import isObject from 'lodash/isObject';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
+const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
+const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
+let hello;
+
+if (typeof window !== 'undefined') {
+  hello = require('hellojs');
+}
+
 /**
- * Copyright 2014 Kinvey, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * The User class is used to represent a single user on the Kinvey platform.
+ * Use the user class to manage the active user lifecycle and perform user operations.
  */
-
-// Users.
-// ------
-
-// REST API wrapper for user management with the Kinvey services. Note the
-// [active user](http://devcenter.kinvey.com/guides/users#ActiveUser) is not
-// exclusively managed in this namespace: `Kinvey.getActiveUser` and
-// `Kinvey.Auth.Session` operate on the active user as well.
-
-/**
- * @memberof! <global>
- * @namespace Kinvey.User
- */
-Kinvey.User = /** @lends Kinvey.User */{
+export class User {
   /**
-   * Signs up a new user.
+   * Create a new instance of a User.
    *
-   * @param {Object} [data] User data.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The new user.
+   * @param  {Object}   [data={}]    Data for the user.
+   * @return {User}                  User
+   *
+   * @example
+   * var user = new User();
    */
-  signup: function(data, options) {
-    // Debug.
-    logger.debug('Signing up a new user.', arguments);
+  constructor(data = {}) {
+    /**
+     * The users data.
+     *
+     * @type {Object}
+     */
+    this.data = data;
 
-    // Forward to `Kinvey.User.create`. Signup, however, always marks the
-    // created user as the active user.
-    options = options || {};
-    options.state = true;// Overwrite.
-    return Kinvey.User.create(data, options);
-  },
+    /**
+     * @private
+     * The client used by this user.
+     *
+     * @type {Client}
+     */
+    this.client = Client.sharedInstance();
+  }
 
   /**
-   * Signs up a new user through a provider.
+   * The _id for the user.
    *
-   * @param {string} provider  Provider.
-   * @param {Object} tokens    Tokens.
-   * @param {Object} [options] Options.
-   * @returns {Promise} The active user.
+   * @return {?string} _id
+   *
+   * @example
+   * var _id = user._id;
    */
-  signupWithProvider: function(provider, tokens, options) {
-    // Debug.
-    logger.debug('Signing up a new user with a provider.', arguments);
-
-    // Parse tokens.
-    var data = { _socialIdentity: { } };
-    data._socialIdentity[provider] = tokens;
-
-    // Forward to `Kinvey.User.signup`.
-    return Kinvey.User.signup(data, options);
-  },
+  get _id() {
+    return this.data[idAttribute];
+  }
 
   /**
-   * Logs in an existing user.
-   * NOTE If `options._provider`, this method should trigger a BL script.
+   * The _acl for the user.
    *
-   * @param {Object|string} usernameOrData Username, or user data.
-   * @param {string} [password] Password.
-   * @param {Options} [options] Options.
-   * @param {boolean} [options._provider] Login via Business Logic. May only
-   *          be used internally to provide social login for browsers.
-   * @returns {Promise} The active user.
+   * @return {Acl} _acl
+   *
+   * @example
+   * var _acl = user._acl;
    */
-  login: function(usernameOrData, password, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Logging in an existing user.', arguments);
-
-    // Cast arguments.
-    if(isObject(usernameOrData)) {
-      options = 'undefined' !== typeof options ? options : password;
-    }
-    else {
-      usernameOrData = { username: String(usernameOrData), password: String(password) };
-    }
-    options = options || {};
-
-    // Validate arguments.
-    if((null == usernameOrData.username || '' === usernameOrData.username.trim() || null == usernameOrData.password || '' === usernameOrData.password.trim()) && null == usernameOrData._socialIdentity) {
-      error = new Kinvey.Error('Username and/or password missing. Please provide both a username and password to login.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Validate preconditions.
-    if(null !== Kinvey.getActiveUser()) {
-      error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Login with the specified credentials.
-    var promise = Kinvey.Persistence.create({
-      namespace  : USERS,
-      collection : options._provider ? null : 'login',
-      data       : usernameOrData,
-      flags      : options._provider ? { provider: options._provider } : {},
-      auth       : Auth.App,
-      local      : { res: true }
-    }, options).then(function(user) {
-      // Set and return the active user.
-      Kinvey.setActiveUser(user);
-      return user;
-    });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Logged in the user.', response);
-    }, function(error) {
-      logger.error('Failed to login the user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  get _acl() {
+    return new Acl(this.data);
+  }
 
   /**
-   * Logs in an existing user through a provider.
+   * The metadata for the user.
    *
-   * @param {string} provider  Provider.
-   * @param {Object} tokens    Tokens.
-   * @param {Object} [options] Options.
-   * @returns {Promise} The active user.
+   * @return {Metadata} metadata
+   *
+   * @example
+   * var metadata = user.metadata;
    */
-  loginWithProvider: function(provider, tokens, options) {
-    // Debug.
-    logger.debug('Logging in with a provider.', arguments);
-
-    // Parse tokens.
-    var data = { _socialIdentity: { } };
-    data._socialIdentity[provider] = tokens;
-
-    // Forward to `Kinvey.User.login`.
-    return Kinvey.User.login(data, options);
-  },
+  get metadata() {
+    return new Metadata(this.data);
+  }
 
   /**
-   * Logs out the active user.
+   * The _kmd for the user.
    *
-   * @param {Options} [options] Options.
-   * @returns {Promise} The previous active user.
+   * @return {Metadata} _kmd
+   *
+   * @example
+   * var _kmd = user._kmd;
    */
-  logout: function(options) {
-    // Cast arguments.
-    options = options || {};
-
-    // If `options.silent`, resolve immediately if there is no active user.
-    var promise;
-    if (null === Kinvey.getActiveUser()) {
-      promise = Kinvey.Defer.resolve(null);
-    }
-    else {// Otherwise, attempt to logout the active user.
-      // Debug.
-      logger.debug('Logging out the active user.', arguments);
-
-      // Prepare the response.
-      promise = Kinvey.Persistence.create({
-        namespace  : USERS,
-        collection : '_logout',
-        auth       : Auth.Session
-      }, options).then(null, function() {
-        return null;
-      }).then(function() {
-        // Disconnect MIC
-        return MIC.disconnect();
-      }).then(function() {
-        var error;
-
-        // Reset the active user, and return the previous active user. Make
-        // sure to delete the authtoken.
-        var previous = Kinvey.setActiveUser(null);
-
-        // Check if previous has property _kmd. Thrown error will cause promise to be
-        // rejected
-        if (previous._kmd == null) {
-          error = new Kinvey.Error('The previous active user does not have _kmd defined' +
-                                   'as a property.');
-          throw error;
-        }
-
-        if(null !== previous) {
-          delete previous._kmd.authtoken;
-        }
-        return previous;
-      });
-
-      // Debug.
-      promise.then(function(response) {
-        logger.debug('Logged out the active user.', response);
-      }, function(error) {
-        logger.error('Failed to logout the active user.', error);
-      });
-    }
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  get _kmd() {
+    return this.metadata;
+  }
 
   /**
-   * Retrieves information on the active user.
+   * The auth token for the user.
    *
-   * @param {Options} [options] Options.
-   * @returns {Promise} The active user.
+   * @return {?string} Auth token
+   *
+   * @example
+   * var authtoken = user.authtoken;
    */
-  me: function(options) {
-    // Debug.
-    logger.debug('Retrieving information on the active user.', arguments);
+  get authtoken() {
+    return this.metadata.authtoken;
+  }
 
-    // Cast arguments.
-    options = options || {};
+  /**
+   * Set the auth token for the user.
+   *
+   * @param  {?string} authtoken Auth token
+   *
+   * @example
+   * user.authtoken = 'authtoken';
+   */
+  set authtoken(authtoken) {
+    const kmd = this._kmd;
+    kmd.authtoken = authtoken;
+    this.data[kmdAttribute] = kmd.toJSON();
+  }
 
-    // Prepare the response.
-    var promise = Kinvey.Persistence.read({
-      namespace  : USERS,
-      collection : '_me',
-      auth       : Auth.Session,
-      local      : { req: true, res: true }
-    }, options).then(function(user) {
-      // The response is a fresh copy of the active user. However, the response
-      // does not contain `_kmd.authtoken`. Therefore, extract it from the
-      // stale copy.
-      user._kmd = user._kmd || {};
-      if(null == user._kmd.authtoken) {
-        user._kmd.authtoken = Kinvey.getActiveUser()._kmd.authtoken;
+  /**
+   * The username for the user.
+   *
+   * @return {?string} Username
+   *
+   * @example
+   * var username = user.username;
+   */
+  get username() {
+    return this.data[usernameAttribute];
+  }
+
+  /**
+   * The email for the user.
+   *
+   * @return {?string} Email
+   *
+   * @example
+   * var email = user.email;
+   */
+  get email() {
+    return this.data[emailAttribute];
+  }
+
+  /**
+   * Gets the active user. You can optionally provide a client
+   * to use to lookup the active user.
+   *
+   * @param  {Client}           [client=Client.sharedInstance()]   Client to use to set the active user.
+   * @return {Promise<User>}                                       The active user on the client. The
+   *                                                               active user could be null if one does
+   *                                                               not exist.
+   *
+   * @example
+   * var _id = user._id;
+   */
+  static getActiveUser(client = Client.sharedInstance()) {
+    return client.getActiveUser().then(data => {
+      let user = null;
+
+      if (data) {
+        user = new User(data);
+        user.client = client;
       }
 
-      // Set and return the active user.
-      Kinvey.setActiveUser(user);
       return user;
     });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Retrieved information on the active user.', response);
-    }, function(error) {
-      logger.error('Failed to retrieve information on the active user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  }
 
   /**
-   * Requests e-mail verification for a user.
+   * Sets the active user. You can optionally provide a client to
+   * set the active user on. Only one active user per client is
+   * allowed.
    *
-   * @param {string} username Username.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
+   * @param  {?(User|Object)}      [user]                               User to set as the active user.
+   * @param  {Client}              [client=Client.sharedInstance()]     The client to use to set the active user on.
+   * @return {Promise<User>}                                            The active user on the client. The active user
+   *                                                                    could be null if one does not exist.
+   *
+   * @example
+   * var user = new User();
+   * var promise = User.setActiveUser(user);
+   * promise.then(function(activeUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
    */
-  verifyEmail: function(username, options) {
-    // Debug.
-    logger.debug('Requesting e-mail verification.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace  : RPC,
-      collection : username,
-      id         : 'user-email-verification-initiate',
-      auth       : Auth.App
-    }, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Requested e-mail verification.', response);
-    }, function(error) {
-      logger.error('Failed to request e-mail verification.', error);
+  static setActiveUser(user, client = Client.sharedInstance()) {
+    const data = result(user, 'toJSON', user);
+    return client.setActiveUser(data).then(() => {
+      return User.getActiveUser();
     });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  }
 
   /**
-   * Requests a username reminder for a user.
+   * Set this user as the active user.
    *
-   * @param {string} email E-mail.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
+   * @return {Promise<User>}  The active user.
+   *
+   * @example
+   * var promise = user.setAsActiveUser();
+   * promise.then(function(activeUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
    */
-  forgotUsername: function(email, options) {
-    // Debug.
-    logger.debug('Requesting a username reminder.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace : RPC,
-      id        : 'user-forgot-username',
-      data      : { email: email },
-      auth      : Auth.App
-    }, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Requested a username reminder.', response);
-    }, function(error) {
-      logger.error('Failed to request a username reminder.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  setAsActiveUser() {
+    return User.setActiveUser(this, this.client);
+  }
 
   /**
-   * Requests a password reset for a user.
+   * Checks if this user is the active user.
    *
-   * @param {string} username Username.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
-   */
-  resetPassword: function(username, options) {
-    // Debug.
-    logger.debug('Requesting a password reset.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace  : RPC,
-      collection : username,
-      id         : 'user-password-reset-initiate',
-      auth       : Auth.App
-    }, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Requested a password reset.', response);
-    }, function(error) {
-      logger.error('Failed to request a password reset.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Checks whether a username exists.
+   * @return {Promise<Boolean>} True or false if this user is the active user.
    *
-   * @param {string} username Username to check.
-   * @param {Options} [options] Options.
-   * @returns {Promise} `true` if username exists, `false` otherwise.
+   * @example
+   * var promise = user.isActiveUser();
+   * promise.then(function(isActiveUser) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
    */
-  exists: function(username, options) {
-    // Debug.
-    logger.debug('Checking whether a username exists.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace : RPC,
-      id        : 'check-username-exists',
-      data      : { username: username },
-      auth      : Auth.App
-    }, options).then(function(response) {
-      return response.usernameExists;
-    });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Checked whether the username exists.', response);
-    }, function(error) {
-      logger.error('Failed to check whether the username exists.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Creates a new user.
-   *
-   * @param {Object} [data] User data.
-   * @param {Options} [options] Options.
-   * @param {boolean} [options.state=true] Save the created user as the active
-   *          user.
-   * @returns {Promise} The new user.
-   */
-  create: function(data, options) {
-    // Debug.
-    logger.debug('Creating a new user.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // If `options.state`, validate preconditions.
-    if(false !== options.state && null !== Kinvey.getActiveUser()) {
-      var error = clientError(Kinvey.Error.ALREADY_LOGGED_IN);
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Create the new user.
-    var promise = Kinvey.Persistence.create({
-      namespace : USERS,
-      data      : data || {},
-      auth      : Auth.App
-    }, options).then(function(user) {
-      // If `options.state`, set the active user.
-      if(false !== options.state) {
-        Kinvey.setActiveUser(user);
+  isActiveUser() {
+    return this.client.getActiveUser().then(activeUser => {
+      if (activeUser && activeUser[idAttribute] === this._id) {
+        return true;
       }
-      return user;
-    });
 
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Created the new user.', response);
-    }, function(error) {
-      logger.error('Failed to create the new user.', error);
+      return false;
     });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
+  }
 
   /**
-   * Updates a user. To create a user, use `Kinvey.User.create` or
-   * `Kinvey.User.signup`.
+   * Login using a username or password.
    *
-   * @param {Object} data User data.
-   * @param {Options} [options] Options.
-   * @param {string} [options._provider] Do not strip the `access_token` for
-   *          this provider. Should only be used internally.
-   * @returns {Promise} The user.
+   * @param  {string|Object}      usernameOrData    Username or an object with username
+   *                                                and password properties.
+   * @param  {string}             [password]        Users password.
+   * @param  {Object}             [options={}]      Options
+   * @return {Promise<User>}                        The logged in user.
+   *
+   * @example
+   * var promise = user.login('username', 'password');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
    */
-  update: function(data, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Updating a user.', arguments);
-
-    // Validate arguments.
-    if(null == data._id) {
-      error = new Kinvey.Error('data argument must contain: _id');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
+  login(usernameOrData, password, options = {}) {
+    if (!isObject(usernameOrData)) {
+      usernameOrData = {
+        username: usernameOrData,
+        password: password
+      };
     }
 
-    // Cast arguments.
-    options = options || {};
+    if (!usernameOrData._socialIdentity) {
+      if (usernameOrData.username) {
+        usernameOrData.username = String(usernameOrData.username).trim();
+      }
 
-    // Delete the social identities’ access tokens, unless the identity is
-    // `options._provider`. The tokens will be re-added after updating.
-    var tokens = [];
-    if(null != data._socialIdentity) {
-      for(var identity in data._socialIdentity) {
-        if(data._socialIdentity.hasOwnProperty(identity)) {
-          if(null != data._socialIdentity[identity] && identity !== options._provider) {
-            tokens.push({
-              provider            : identity,
-              access_token        : data._socialIdentity[identity].access_token,
-              access_token_secret : data._socialIdentity[identity].access_token_secret
-            });
-            delete data._socialIdentity[identity].access_token;
-            delete data._socialIdentity[identity].access_token_secret;
+      if (usernameOrData.password) {
+        usernameOrData.password = String(usernameOrData.password).trim();
+      }
+    }
+
+    const promise = this.isActiveUser().then(isActiveUser => {
+      if (isActiveUser) {
+        throw new ActiveUserError('This user is already the active user.');
+      }
+
+      return this.client.getActiveUser();
+    }).then(activeUser => {
+      if (activeUser) {
+        throw new ActiveUserError('An active user already exists. ' +
+          'Please call logout the active user before you login.');
+      }
+
+      const { username, password, _socialIdentity } = usernameOrData;
+
+      if ((!username || username === '' || !password || password === '') && !_socialIdentity) {
+        throw new KinveyError('Username and/or password missing. ' +
+          'Please provide both a username and password to login.');
+      }
+
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.POST,
+        pathname: `/${usersNamespace}/${this.client.appKey}/login`,
+        data: usernameOrData,
+        auth: this.client.appAuth(),
+        properties: options.properties,
+        timeout: options.timeout
+      });
+    }).then(response => {
+      return this.client.setActiveUser(response.data).then(() => {
+        this.data = response.data;
+        return this;
+      });
+    });
+
+    return promise;
+  }
+
+  /**
+   * Login using Mobile Identity Connect.
+   *
+   * @param  {string}                 redirectUri                                                         The redirect uri used
+   *                                                                                                      for MIC logins.
+   * @param  {AuthorizationGrant}     [authorizationGrant=AuthoizationGrant.AuthorizationCodeLoginPage]   MIC authorization grant to use.
+   * @param  {Object}                 [options={}]                                                        Options
+   * @return {Promise<User>}                                                                              The logged in user.
+   *
+   * @example
+   * var promise = user.loginWithMIC('http://example.com');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    return MobileIdentityConnect.login(redirectUri, authorizationGrant, options).then(token => {
+      return this.connect(MobileIdentityConnect.identity, token.access_token, token.expires_in, options);
+    });
+  }
+
+  /**
+   * Logout the user. If the user was the active user then the active user will be set to null.
+   *
+   * @param  {Object}         [options={}]    Options
+   * @return {Promise<User>}                  The logged out user.
+   *
+   * @example
+   * var promise = user.logout();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  logout(options = {}) {
+    return this.client.executeNetworkRequest({
+      method: HttpMethod.POST,
+      pathname: `/${usersNamespace}/${this.client.appKey}/_logout`,
+      auth: this.client.sessionAuth(),
+      properties: options.properties,
+      timeout: options.timeout
+    }).then(() => {
+      return this.isActiveUser();
+    }).catch(() => {
+      return this.isActiveUser();
+    }).then(isActiveUser => {
+      if (isActiveUser) {
+        return this.client.setActiveUser(null);
+      }
+    }).then(() => {
+      return this;
+    });
+  }
+
+  /**
+   * @private
+   * Returns true or false if identity connect is supported.
+   *
+   * @return {Boolean}  True or false if identity connect is supported.
+   *
+   * @example
+   * var isIdentityConnectSupported = user.isIdentityConnectSupported();
+   */
+  isIdentityConnectSupported() {
+    return hello ? true : false;
+  }
+
+  /**
+   * Connect using Facebook.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithFacebook();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithFacebook(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.Facebook, options);
+  }
+
+  /**
+   * Connect using Google.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithGoogle();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithGoogle(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.Google, options);
+  }
+
+  /**
+   * Connect using LinkedIn.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   *
+   * @example
+   * var promise = user.connectWithLinkedIn();
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithLinkedIn(options = {}) {
+    return this.connectWithIdentity(SocialIdentity.LinkedIn, options);
+  }
+
+  /**
+   * Connect using an identity (Facebook, Google, LinkedIn etc.).
+   *
+   * @param  {SocialIdentity|string}         identity                                Identity used to connect the user.
+   * @param  {Object}                        [options={}]                            Options
+   * @param  {string}                        [options.collectionName='Identities']   Collection name to use to lookup credentials
+   *                                                                                 for the identity.
+   * @return {Promise<User>}                                                         The connected user.
+   *
+   * @example
+   * var promise = user.connectWithIdentity(SocialIdentity.Facebook);
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connectWithIdentity(identity, options = {}) {
+    if (!identity) {
+      return Promise.reject(new KinveyError('An identity is required to connect the user.'));
+    }
+
+    if (this.isIdentityConnectSupported()) {
+      return Promise.reject(new KinveyError(`Unable to connect to identity ${identity} on this platform.`));
+    }
+
+    options = assign({
+      collectionName: 'Identities'
+    }, options);
+
+    const promise = Promise.resolve().then(() => {
+      const query = new Query().equalTo('identity', identity);
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.GET,
+        pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`,
+        auth: this.client.defaultAuth(),
+        query: query,
+        properties: options.properties,
+        timeout: options.timeout
+      });
+    }).then(response => {
+      if (response.data.length === 1) {
+        const helloSettings = {};
+        helloSettings[identity] = response.data[0].key || response.data[0].appId || response.data[0].clientId;
+        hello.init(helloSettings);
+        return hello(identity).login();
+      }
+
+      throw new KinveyError('Unsupported identity.');
+    }).then(() => {
+      const authResponse = hello(identity).getAuthResponse();
+      return this.connect(identity, authResponse.access_token, authResponse.expires_in, options);
+    });
+
+    return promise;
+  }
+
+  /**
+   * @private
+   *
+   * Connects with the provided accessToken and identity.
+   *
+   * @param  {SocialIdentity|string}         identity      Identity used to connect the user.
+   * @param  {string}                        accessToken   Access token for the identity.
+   * @param  {number}                        [expiresIn]   Time in seconds for how long the access token is valid.
+   * @param  {Object}                        [options={}]  Options
+   * @return {Promise<User>}                               The connected user.
+   *
+   * @example
+   * var promise = user.connect(SocialIdentity.Facebook, 'facebook-access-token');
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  connect(identity, accessToken, expiresIn, options = {}) {
+    options = assign({
+      create: true
+    }, options);
+
+    const user = {};
+    user[socialIdentityAttribute] = {};
+    user[socialIdentityAttribute][identity] = {
+      access_token: accessToken,
+      expires_in: expiresIn
+    };
+
+    const promise = this.client.getActiveUser().then(activeUser => {
+      if (activeUser) {
+        activeUser[socialIdentityAttribute] = user[socialIdentityAttribute];
+        options._identity = identity;
+        return this.update(activeUser, options);
+      }
+
+      return this.login(user, null, options);
+    }).catch(err => {
+      if (options.create && err instanceof NotFoundError) {
+        return this.signup(user, options).then(() => {
+          return this.connect(identity, accessToken, expiresIn, options);
+        });
+      }
+    });
+
+    return promise;
+  }
+
+  /**
+   * Sign up. If options.state is set to true then the user
+   * will be set as the active user after succesfully signing up the
+   * user.
+   *
+   * @param  {User|Object}    data                    Users data.
+   * @param  {Object}         [options={}]            Options
+   * @param  {Boolean}        [options.state=true]    If set to true, the user will be
+   *                                                  set as the active user after successfully
+   *                                                  being signed up.
+   * @return {Promise<User>}                          The signed up user.
+   *
+   * @example
+   * var promise = user.signup({
+   *   username: 'admin',
+   *   password: 'admin'
+   * });
+   * promise.then(function(user) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
+  signup(data, options = {}) {
+    options = assign({
+      state: true
+    }, options);
+
+    const promise = Promise.resolve().then(() => {
+      if (options.state === true) {
+        return this.client.getActiveUser().then(activeUser => {
+          if (activeUser) {
+            throw new ActiveUserError('An active user already exists. ' +
+              'Please call logout the active user before you login.');
+          }
+        });
+      }
+    }).then(() => {
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.POST,
+        pathname: `/${usersNamespace}/${this.client.appKey}`,
+        auth: this.client.appAuth(),
+        data: result(data, 'toJSON', data),
+        properties: options.properties,
+        timeout: options.timeout
+      });
+    }).then(response => {
+      this.data = response.data;
+
+      if (options.state === true) {
+        return this.client.setActiveUser(this.data).then(() => {
+          return this;
+        });
+      }
+
+      return this;
+    });
+
+    return promise;
+  }
+
+  update(data, options = {}) {
+    const tokens = [];
+
+    const promise = Promise.resolve().then(() => {
+      if (!data[idAttribute]) {
+        throw new KinveyError('data argument must contain an _id');
+      }
+
+      if (data[socialIdentityAttribute]) {
+        for (const identity in data[socialIdentityAttribute]) {
+          if (data[socialIdentityAttribute].hasOwnProperty(identity)) {
+            if (data[socialIdentityAttribute][identity] && options._identity !== identity) {
+              tokens.push({
+                identity: identity,
+                access_token: data[socialIdentityAttribute][identity].access_token,
+                access_token_secret: data[socialIdentityAttribute][identity].access_token_secret
+              });
+              delete data[socialIdentityAttribute][identity].access_token;
+              delete data[socialIdentityAttribute][identity].access_token_secret;
+            }
           }
         }
       }
-    }
 
-    // Prepare the response.
-    var promise = Kinvey.Persistence.update({
-      namespace : USERS,
-      id        : data._id,
-      data      : data,
-      auth      : Auth.Default,
-      local     : { res: true }
-    }, options).then(function(user) {
-      // Re-add the social identities’ access tokens.
-      tokens.forEach(function(identity) {
-        var provider = identity.provider;
-        if(null != user._socialIdentity && null != user._socialIdentity[provider]) {
-          ['access_token', 'access_token_secret'].forEach(function(field) {
-            if(null != identity[field]) {
-              user._socialIdentity[provider][field] = identity[field];
-            }
-          });
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.PUT,
+        pathname: `/${usersNamespace}/${this.client.appKey}/${data[idAttribute]}`,
+        auth: this.client.sessionAuth(),
+        data: data,
+        properties: options.properties,
+        timeout: options.timeout
+      });
+    }).then(response => {
+      const data = response.data;
+
+      forEach(tokens, token => {
+        const identity = token.identity;
+
+        if (data[socialIdentityAttribute] && data[socialIdentityAttribute][identity]) {
+          data[socialIdentityAttribute][identity].access_token = token.access_token;
+          data[socialIdentityAttribute][identity].access_token_secret = token.access_token_secret;
         }
       });
 
-      // If we just updated the active user, refresh it.
-      var activeUser = Kinvey.getActiveUser();
+      return this.client.getActiveUser().then(activeUser => {
+        this.data = data;
 
-      if (null !== activeUser) {
-        // Check activeUser for property _id. Thrown error will reject promise.
-        if (activeUser._id == null) {
-          error = new Kinvey.Error('Active user does not have _id property defined.');
-          throw error;
+        if (activeUser && data[idAttribute] === activeUser[idAttribute]) {
+          return this.client.setActiveUser(data).then(() => {
+            return this;
+          });
         }
 
-        // Check user for property _id. Thrown error will reject promise.
-        if (user._id == null) {
-          error = new Kinvey.Error('User does not have _id property defined.');
-          throw error;
-        }
-
-        if (activeUser._id === user._id) {
-          // Debug.
-          logger.debug('Updating the active user because the updated user was the active user.');
-          Kinvey.setActiveUser(user);
-        }
-      }
-
-      return user;
+        return this;
+      });
     });
 
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Updated the user.', response);
-    }, function(error) {
-      logger.error('Failed to update the user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Retrieves all users matching the provided query.
-   *
-   * @param {Kinvey.Query} [query] The query.
-   * @param {Options} [options] Options.
-   * @param {boolean} [discover=false] Use
-   *          [User Discovery](http://devcenter.kinvey.com/guides/users#lookup).
-   * @returns {Promise} A list of users.
-   */
-  find: function(query, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Retrieving users by query.', arguments);
-
-    // Validate arguments.
-    if(null != query && !(query instanceof Kinvey.Query)) {
-      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Cast arguments.
-    options = options || {};
-
-    // If `options.discover`, use
-    // [User Discovery](http://devcenter.kinvey.com/guides/users#lookup)
-    // instead of querying the user namespace directly.
-    var promise;
-    if(options.discover) {
-      // Debug.
-      logger.debug('Using User Discovery because of the discover flag.');
-
-      // Prepare the response.
-      promise = Kinvey.Persistence.create({
-        namespace  : USERS,
-        collection : '_lookup',
-        data       : null != query ? query.toJSON().filter : null,
-        auth       : Auth.Default,
-        local      : { req: true, res: true }
-      }, options);
-    }
-    else {
-      // Prepare the response.
-      promise = Kinvey.Persistence.read({
-        namespace  : USERS,
-        query      : query,
-        auth       : Auth.Default,
-        local      : { req: true, res: true }
-      }, options);
-    }
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Retrieved the users by query.', response);
-    }, function(error) {
-      logger.error('Failed to retrieve the users by query.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Retrieves a user.
-   *
-   * @param {string} id User id.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The user.
-   */
-  get: function(id, options) {
-    // Debug.
-    logger.debug('Retrieving a user.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.read({
-      namespace : USERS,
-      id        : id,
-      auth      : Auth.Default,
-      local     : { req: true, res: true }
-    }, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Retrieved the user.', response);
-    }, function(error) {
-      logger.error('Failed to return the user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Deletes a user.
-   *
-   * @param {string} id User id.
-   * @param {Options} [options] Options.
-   * @param {boolean} [options.hard=false] Perform a hard delete.
-   * @param {boolean} [options.silent=false] Succeed if the user did not exist
-   *          prior to deleting.
-   * @returns {Promise} The response.
-   */
-  destroy: function(id, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Deleting a user.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.destroy({
-      namespace : USERS,
-      id        : id,
-      flags     : options.hard ? { hard: true } : {},
-      auth      : Auth.Default,
-      local     : { res: true }
-    }, options).then(function(response) {
-      // If we just deleted the active user, unset it here.
-      var activeUser = Kinvey.getActiveUser();
-
-      if (null !== activeUser) {
-        // Check activeUser for property _id. Thrown error will reject promise.
-        if (activeUser._id == null) {
-          error = new Kinvey.Error('Active user does not have _id property defined.');
-          throw error;
-        }
-
-        if (activeUser._id === id) {
-          // Debug.
-          logger.debug('Deleting the active user because the deleted user was the active user.');
-          Kinvey.setActiveUser(null);
-        }
-      }
-
-      return response;
-    }, function(error) {
-      // If `options.silent`, treat `USER_NOT_FOUND` as success.
-      if(options.silent && Kinvey.Error.USER_NOT_FOUND === error.name) {
-        // Debug.
-        logger.debug('The user does not exist. Returning success because of the silent flag.');
-        return null;
-      }
-      return Kinvey.Defer.reject(error);
-    });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Deleted the user.', response);
-    }, function(error) {
-      logger.error('Failed to delete the user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Restores a previously disabled user.
-   *
-   * @param {string} id User id.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
-   */
-  restore: function(id, options) {
-    // Debug.
-    logger.debug('Restoring a previously disabled user.', arguments);
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace  : USERS,
-      collection : id,
-      id         : '_restore',
-      auth       : Auth.Master
-    }, options);
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Restored the previously disabled user.', response);
-    }, function(error) {
-      logger.error('Failed to restore the previously disabled user.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Performs a count operation.
-   *
-   * @param {Kinvey.Query} [query] The query.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
-   */
-  count: function(query, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Counting the number of users.', arguments);
-
-    // Validate arguments.
-    if(null != query && !(query instanceof Kinvey.Query)) {
-      error = new Kinvey.Error('query argument must be of type: Kinvey.Query.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.read({
-      namespace : USERS,
-      id        : '_count',
-      query     : query,
-      auth      : Auth.Default,
-      local     : { req: true }
-    }, options).then(function(response) {
-      return response.count;
-    });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Counted the number of users.', response);
-    }, function(error) {
-      logger.error('Failed to count the number of users.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
-  },
-
-  /**
-   * Performs a group operation.
-   *
-   * @param {Kinvey.Aggregation} aggregation The aggregation.
-   * @param {Options} [options] Options.
-   * @returns {Promise} The response.
-   */
-  group: function(aggregation, options) {
-    var error;
-
-    // Debug.
-    logger.debug('Grouping users.', arguments);
-
-    // Validate arguments.
-    if(!(aggregation instanceof Kinvey.Group)) {
-      error = new Kinvey.Error('aggregation argument must be of type: Kinvey.Group.');
-      return wrapCallbacks(Kinvey.Defer.reject(error), options);
-    }
-
-    // Cast arguments.
-    options = options || {};
-
-    // Prepare the response.
-    var promise = Kinvey.Persistence.create({
-      namespace : USERS,
-      id        : '_group',
-      data      : aggregation.toJSON(),
-      auth      : Auth.Default,
-      local     : { req: true }
-    }, options).then(function(response) {
-      // Process the raw response.
-      return aggregation.postProcess(response);
-    });
-
-    // Debug.
-    promise.then(function(response) {
-      logger.debug('Grouped the users.', response);
-    }, function(error) {
-      logger.error('Failed to group the users.', error);
-    });
-
-    // Return the response.
-    return wrapCallbacks(promise, options);
+    return promise;
   }
-};
+
+  me(options) {
+    const promise = Promise.resolve().then(() => {
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.GET,
+        pathname: `/${usersNamespace}/${this.client.appKey}/_me`,
+        auth: this.client.sessionAuth(),
+        properties: options.properties,
+        timeout: options.timeout
+      });
+    }).then(response => {
+      this.data = response.data;
+
+      if (!this.authtoken) {
+        return this.client.getActiveUser().then(activeUser => {
+          if (activeUser) {
+            this.authtoken = activeUser[kmdAttribute].authtoken;
+          }
+
+          return this;
+        });
+      }
+
+      return this;
+    }).then(() => {
+      return this.client.setActiveUser(this.data);
+    }).then(() => {
+      return this;
+    });
+
+    return promise;
+  }
+
+  verifyEmail(username, options) {
+    const promise = this.client.executeNetworkRequest({
+      method: HttpMethod.POST,
+      pathname: `/${rpcNamespace}/${this.client.appKey}/${username}/user-email-verification-initiate`,
+      auth: this.client.appAuth(),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    return promise;
+  }
+
+  forgotUsername(email, options) {
+    const promise = this.client.executeNetworkRequest({
+      method: HttpMethod.POST,
+      pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`,
+      auth: this.client.appAuth(),
+      data: { email: email },
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    return promise;
+  }
+
+  resetPassword(username, options) {
+    const promise = this.client.executeNetworkRequest({
+      method: HttpMethod.POST,
+      pathname: `/${rpcNamespace}/${this.client.appKey}/${username}/user-password-reset-initiate`,
+      auth: this.client.appAuth(),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    return promise;
+  }
+
+  toJSON() {
+    return clone(this.data, true);
+  }
+}

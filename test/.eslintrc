@@ -1,0 +1,23 @@
+{
+  "parser": "babel-eslint",
+  "rules": {
+    "strict": 0,
+    "quotes": [2, "single"],
+    "no-unused-expressions": 0,
+    "func-names": 0
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
+  },
+  "globals": {
+    "spy": true,
+    "expect": true,
+    "chai": true,
+    "sinon": true,
+    "stub": true,
+    "spy": true,
+    "Common": true
+  }
+}

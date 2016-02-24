@@ -1,0 +1,13 @@
+{
+  "title": "Kinvey JavaScript Library",
+  "source": "./src",
+  "destination": "./docs",
+  "test": {
+    "type": "mocha",
+    "source": "./test/specs"
+  },
+  "manual": {
+    "overview": ["./manual/overview.md"]
+  },
+  "lint": true
+}

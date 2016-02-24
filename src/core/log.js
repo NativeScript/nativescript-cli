@@ -1,26 +1,13 @@
-Kinvey.Log = {
-  levels: logger.levels,
+import log from 'loglevel';
+const originalFactory = log.methodFactory;
 
-  getLevel: function() {
-    return logger.getLevel();
-  },
+log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
+  const rawMethod = originalFactory(methodName, logLevel, loggerName);
 
-  setLevel: function(level, persist) {
-    logger.setLevel(level, persist);
-  },
-
-  setDefaultLevel: function(level) {
-    logger.setDefaultLevel(level);
-  },
-
-  enableAll: function(persist) {
-    logger.enableAll(persist);
-  },
-
-  disableAll: function(persist) {
-    logger.disableAll(persist);
-  }
+  return function log(message) {
+    rawMethod(`Kinvey: ${message}`);
+  };
 };
 
-// Set the default level to Kinvey.Log.levels.ERROR
-Kinvey.Log.setDefaultLevel(Kinvey.Log.levels.ERROR);
+log.setLevel(log.levels.ERROR);
+export default log;

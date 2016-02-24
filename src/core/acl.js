@@ -1,132 +1,197 @@
-/**
- * Copyright 2014 Kinvey, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-// ACL.
-// ----
-
-// Wrapper for setting permissions on document-level (i.e. entities and users).
+import { KinveyError } from './errors';
+import isPlainObject from 'lodash/isPlainObject';
+import clone from 'lodash/clone';
+const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
+const privateAclSymbol = Symbol();
 
 /**
- * The Kinvey.Acl class.
- *
- * @memberof! <global>
- * @class Kinvey.Acl
- * @param {Object} [document] The document.
- * @throws {Kinvey.Error} `document` must be of type: `Object`.
+ * @private
  */
-Kinvey.Acl = function(document) {
-  // Validate arguments.
-  if(null != document && !isObject(document)) {
-    throw new Kinvey.Error('document argument must be of type: Object.');
+class PrivateAcl {
+  constructor(entity = {}) {
+    if (!isPlainObject(entity)) {
+      throw new KinveyError('entity argument must be an object');
+    }
+
+    /**
+     * The kmd properties.
+     *
+     * @private
+     * @type {Object}
+     */
+    this.acl = entity[aclAttribute];
   }
 
-  // Cast arguments.
-  document      = document || {};
-  document._acl = document._acl || {};
+  get creator() {
+    return this.acl.creator;
+  }
 
-  /**
-   * The ACL.
-   *
-   * @private
-   * @type {Object}
-   */
-  this._acl = document._acl;
-};
+  get readers() {
+    return this.acl.r || [];
+  }
 
-// Define the ACL methods.
-Kinvey.Acl.prototype = /** @lends Kinvey.Acl# */{
-  /**
-   * Adds a user to the list of users that are explicitly allowed to read the
-   * entity.
-   *
-   * @param {string} user The user id.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  addReader: function(user) {
-    this._acl.r = this._acl.r || [];
-    if(-1 === this._acl.r.indexOf(user)) {
-      this._acl.r.push(user);
+  get writers() {
+    return this.acl.w || [];
+  }
+
+  get readerGroups() {
+    return this.acl.groups ? this.acl.groups.r : [];
+  }
+
+  get writerGroups() {
+    return this.acl.groups ? this.acl.groups.w : [];
+  }
+
+  set globallyReadable(gr) {
+    this.acl.gr = gr || false;
+  }
+
+  set globallyWritable(gw) {
+    this.acl.gw = gw || false;
+  }
+
+  addReader(user) {
+    const r = this.acl.r || [];
+
+    if (r.indexOf(user) === -1) {
+      r.push(user);
     }
-    return this;
-  },
 
-  /**
-   * Adds a user group to the list of user groups that are explicitly allowed
-   * to read the entity.
-   *
-   * @param {string} group The group id.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  addReaderGroup: function(group) {
-    this._acl.groups   = this._acl.groups   || {};
-    this._acl.groups.r = this._acl.groups.r || [];
-    if(-1 === this._acl.groups.r.indexOf(group)) {
-      this._acl.groups.r.push(group);
-    }
+    this.acl.r = r;
     return this;
-  },
+  }
 
-  /**
-   * Adds a user group to the list of user groups that are explicitly allowed
-   * to modify the entity.
-   *
-   * @param {string} group The group id.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  addWriterGroup: function(group) {
-    this._acl.groups   = this._acl.groups   || {};
-    this._acl.groups.w = this._acl.groups.w || [];
-    if(-1 === this._acl.groups.w.indexOf(group)) {
-      this._acl.groups.w.push(group);
-    }
-    return this;
-  },
+  addReaderGroup(group) {
+    const groups = this.acl.groups || {};
+    const r = groups.r || [];
 
-  /**
-   * Adds a user to the list of users that are explicitly allowed to modify the
-   * entity.
-   *
-   * @param {string} user The user id.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  addWriter: function(user) {
-    this._acl.w = this._acl.w || [];
-    if(-1 === this._acl.w.indexOf(user)) {
-      this._acl.w.push(user);
+    if (r.indexOf(group) === -1) {
+      r.push(group);
     }
+
+    groups.r = r;
+    this.acl.groups = groups;
     return this;
-  },
+  }
+
+  addWriter(user) {
+    const w = this.acl.w || [];
+
+    if (w.indexOf(user) === -1) {
+      w.push(user);
+    }
+
+    this.acl.w = w;
+    return this;
+  }
+
+  addWriterGroup(group) {
+    const groups = this.acl.groups || {};
+    const w = groups.w || [];
+
+    if (w.indexOf(group) === -1) {
+      w.push(group);
+    }
+
+    groups.w = w;
+    this.acl.groups = groups;
+    return this;
+  }
+
+  isGloballyReadable() {
+    return this.acl.gr || false;
+  }
+
+  isGloballyWritable() {
+    return this.acl.gw || false;
+  }
+
+  removeReader(user) {
+    const r = this.acl.r || [];
+    const pos = r.indexOf(user);
+
+    if (pos !== -1) {
+      r.splice(pos, 1);
+    }
+
+    this.acl.r = r;
+    return this;
+  }
+
+  removeReaderGroup(group) {
+    const groups = this.acl.groups || {};
+    const r = groups.r || [];
+    const pos = r.indexOf(group);
+
+    if (pos !== -1) {
+      r.splice(pos, 1);
+    }
+
+    groups.r = r;
+    this.acl.groups = groups;
+    return this;
+  }
+
+  removeWriter(user) {
+    const w = this.acl.w || [];
+    const pos = w.indexOf(user);
+
+    if (pos !== -1) {
+      w.splice(pos, 1);
+    }
+
+    this.acl.w = w;
+    return this;
+  }
+
+  removeWriterGroup(group) {
+    const groups = this.acl.groups || {};
+    const w = groups.w || [];
+    const pos = w.indexOf(group);
+
+    if (pos !== -1) {
+      w.splice(pos, 1);
+    }
+
+    groups.w = w;
+    this.acl.groups = groups;
+    return this;
+  }
+
+  toJSON() {
+    return clone(this.acl, true);
+  }
+}
+
+/**
+ * Wrapper for reading and setting permissions on an entity level.
+ *
+ * @example
+ * var entity = { _acl: {} };
+ * var acl = new Kinvey.Acl(entity);
+ */
+export default class Acl {
+  constructor(acl) {
+    this[privateAclSymbol] = new PrivateAcl(acl);
+  }
 
   /**
    * Returns the user id of the user that originally created the entity.
    *
    * @returns {?string} The user id, or `null` if not set.
    */
-  getCreator: function() {
-    return this._acl.creator || null;
-  },
+  get creator() {
+    return this[privateAclSymbol].creator;
+  }
 
   /**
    * Returns the list of users that are explicitly allowed to read the entity.
    *
    * @returns {Array} The list of users.
    */
-  getReaders: function() {
-    return this._acl.r || [];
-  },
+  get readers() {
+    return this[privateAclSymbol].readers;
+  }
 
   /**
    * Returns the list of user groups that are explicitly allowed to read the
@@ -134,9 +199,9 @@ Kinvey.Acl.prototype = /** @lends Kinvey.Acl# */{
    *
    * @returns {Array} The list of user groups.
    */
-  getReaderGroups: function() {
-    return this._acl.groups ? this._acl.groups.r : [];
-  },
+  get readerGroups() {
+    return this[privateAclSymbol].readerGroups;
+  }
 
   /**
    * Returns the list of user groups that are explicitly allowed to read the
@@ -144,9 +209,9 @@ Kinvey.Acl.prototype = /** @lends Kinvey.Acl# */{
    *
    * @returns {Array} The list of user groups.
    */
-  getWriterGroups: function() {
-    return this._acl.groups ? this._acl.groups.w : [];
-  },
+  get writerGroups() {
+    return this[privateAclSymbol].writerGroups;
+  }
 
   /**
    * Returns the list of users that are explicitly allowed to modify the
@@ -154,116 +219,148 @@ Kinvey.Acl.prototype = /** @lends Kinvey.Acl# */{
    *
    * @returns {Array} The list of users.
    */
-  getWriters: function() {
-    return this._acl.w || [];
-  },
+  get writers() {
+    return this[privateAclSymbol].writers;
+  }
+
+  /**
+   * Specifies whether the entity is globally readable.
+   *
+   * @param {boolean} [gr=true] Make the entity globally readable.
+   */
+  set globallyReadable(gr) {
+    this[privateAclSymbol].globallyReadable = gr;
+  }
+
+  /**
+   * Specifies whether the entity is globally writable.
+   *
+   * @param {boolean} [gw=true] Make the entity globally writable.
+   */
+  set globallyWritable(gw) {
+    this[privateAclSymbol].globallyWritable = gw;
+  }
+
+  /**
+   * Adds a user to the list of users that are explicitly allowed to read the
+   * entity.
+   *
+   * @param   {string}  user  The user id.
+   * @returns {Acl}           The ACL.
+   */
+  addReader(user) {
+    this[privateAclSymbol].addReader(user);
+    return this;
+  }
+
+  /**
+   * Adds a user group to the list of user groups that are explicitly allowed
+   * to read the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
+  addReaderGroup(group) {
+    this[privateAclSymbol].addReaderGroup(group);
+    return this;
+  }
+
+  /**
+   * Adds a user to the list of users that are explicitly allowed to modify the
+   * entity.
+   *
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
+   */
+  addWriter(user) {
+    this[privateAclSymbol].addWriter(user);
+    return this;
+  }
+
+  /**
+   * Adds a user group to the list of user groups that are explicitly allowed
+   * to modify the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
+  addWriterGroup(group) {
+    this[privateAclSymbol].addWriterGroup(group);
+    return this;
+  }
 
   /**
    * Returns whether the entity is globally readable.
    *
    * @returns {boolean}
    */
-  isGloballyReadable: function() {
-    return this._acl.gr || false;
-  },
+  isGloballyReadable() {
+    return this[privateAclSymbol].isGloballyReadable();
+  }
 
   /**
    * Returns whether the entity is globally writable.
    *
    * @returns {boolean}
    */
-  isGloballyWritable: function() {
-    return this._acl.gw || false;
-  },
+  isGloballyWritable() {
+    return this[privateAclSymbol].isGloballyWritable();
+  }
 
   /**
    * Removes a user from the list of users that are explicitly allowed to read
    * the entity.
    *
-   * @param {string} user The user id.
-   * @returns {Kinvey.Acl} The ACL.
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
    */
-  removeReader: function(user) {
-    var pos;
-    if(this._acl.r && -1 !== (pos = this._acl.r.indexOf(user))) {
-      this._acl.r.splice(pos, 1);
-    }
+  removeReader(user) {
+    this[privateAclSymbol].removeReader(user);
     return this;
-  },
+  }
 
   /**
    * Removes a user group from the list of user groups that are explicitly
    * allowed to read the entity.
    *
-   * @param {string} group The group id.
-   * @returns {Kinvey.Acl} The ACL.
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
    */
-  removeReaderGroup: function(group) {
-    var pos;
-    if(this._acl.groups && this._acl.groups.r && -1 !== (pos = this._acl.groups.r.indexOf(group))) {
-      this._acl.groups.r.splice(pos, 1);
-    }
+  removeReaderGroup(group) {
+    this[privateAclSymbol].removeReaderGroup(group);
     return this;
-  },
-
-  /**
-   * Removes a user group from the list of user groups that are explicitly
-   * allowed to modify the entity.
-   *
-   * @param {string} group The group id.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  removeWriterGroup: function(group) {
-    var pos;
-    if(this._acl.groups && this._acl.groups.w && -1 !== (pos = this._acl.groups.w.indexOf(group))) {
-      this._acl.groups.w.splice(pos, 1);
-    }
-    return this;
-  },
+  }
 
   /**
    * Removes a user from the list of users that are explicitly allowed to
    * modify the entity.
    *
-   * @param {string} user The user id.
-   * @returns {Kinvey.Acl} The ACL.
+   * @param   {string}  user    The user id.
+   * @returns {Acl}             The ACL.
    */
-  removeWriter: function(user) {
-    var pos;
-    if(this._acl.w && -1 !== (pos = this._acl.w.indexOf(user))) {
-      this._acl.w.splice(pos, 1);
-    }
+  removeWriter(user) {
+    this[privateAclSymbol].removeWriter(user);
     return this;
-  },
-
-  /**
-   * Specifies whether the entity is globally readable.
-   *
-   * @param {boolean} [gr=true] Make the entity globally readable.
-   * @returns {Kinvey.Acl} The ACL.
-   */
-  setGloballyReadable: function(gr) {
-    this._acl.gr = gr || false;
-    return this;
-  },
-
-  /**
-   * Specifies whether the entity is globally writable.
-   *
-   * @param {boolean} [gw=true] Make the entity globally writable.
-   * @returns {Kinvey.Acl}
-   */
-  setGloballyWritable: function(gw) {
-    this._acl.gw = gw || false;
-    return this;
-  },
-
-  /**
-   * Returns JSON representation of the document ACL.
-   *
-   * @returns {Object} The document ACL.
-   */
-  toJSON: function() {
-    return this._acl;
   }
-};
+
+  /**
+   * Removes a user group from the list of user groups that are explicitly
+   * allowed to modify the entity.
+   *
+   * @param   {string}  group   The group id.
+   * @returns {Acl}             The ACL.
+   */
+  removeWriterGroup(group) {
+    this[privateAclSymbol].removeWriterGroup(group);
+    return this;
+  }
+
+  /**
+   * Returns JSON representation of the entity ACL.
+   *
+   * @returns {Object} The entity ACL.
+   */
+  toJSON() {
+    return this[privateAclSymbol].toJSON();
+  }
+}

@@ -1,18 +1,14 @@
-# Makefile for easy testing
+clean:
+	@echo "Cleaning" && rm -rf node_modules
 
-test: all
+install:
+	@echo "Installing Dependencies" && npm install
 
-all: prepare \
-	test-kcs \
-	test-mic
+release:
+	@./node_modules/.bin/gulp release
 
-prepare:
-	@./node_modules/.bin/grunt deploy
+all: clean \
+	install \
+	release
 
-test-kcs:
-	@./node_modules/.bin/mocha --reporter spec --slow 500 --timeout 2000 test/core/kcs.spec.js
-
-test-mic:
-	@./node_modules/.bin/mocha --reporter spec --slow 500 --timeout 2000 test/core/mic.spec.js
-
-.PHONY: test
+.PHONY: install release

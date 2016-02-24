@@ -1,272 +1,219 @@
-/**
- * Copyright 2014 Kinvey, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+import { KinveyError } from './errors';
+import Query from './query';
+import clone from 'lodash/clone';
+import result from 'lodash/result';
+import assign from 'lodash/assign';
+import forEach from 'lodash/forEach';
+import isObject from 'lodash/isObject';
+import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
+const privateAggregationSymbol = Symbol();
 
-// Aggregation.
-// ------------
+class PrivateAggregation {
+  constructor(options) {
+    options = assign({
+      query: null,
+      initial: {},
+      key: {},
+      reduce: function () {}.toString()
+    }, options);
 
-// The `Kinvey.Group` class provides an easy way to build aggregations, which
-// can then be passed to one of the REST API wrappers to group application
-// data. Internally, the class builds a MongoDB aggregation.
+    this.query(options.query);
+    this._initial = options.initial;
+    this._key = options.key;
+    this._reduce = options.reduce;
+  }
 
-/**
- * The `Kinvey.Group` class.
- *
- * @memberof! <global>
- * @class Kinvey.Group
- */
-Kinvey.Group = function() {
-  /**
-   * The query applied to the result set.
-   *
-   * @private
-   * @type {?Kinvey.Query}
-   */
-  this._query = null;
-
-  /**
-   * The initial structure of the document to be returned.
-   *
-   * @private
-   * @type {Object}
-   */
-  this._initial = {};
-
-  /**
-   * The fields to group by.
-   *
-   * @private
-   * @type {Object}
-   */
-  this._key = {};
-
-  /**
-   * The MapReduce function.
-   *
-   * @private
-   * @type {string}
-   */
-  this._reduce = function() { }.toString();
-};
-
-// Define the aggregation methods.
-Kinvey.Group.prototype = /** @lends Kinvey.Group# */{
-  /**
-   * Sets the field to group by.
-   *
-   * @param {string} field The field.
-   * @returns {Kinvey.Group} The aggregation.
-   */
-  by: function(field) {
+  by(field) {
     this._key[field] = true;
     return this;
-  },
+  }
 
-  /**
-   * Sets the initial structure of the document to be returned.
-   *
-   * @param {Object|string} objectOrKey The initial structure, or key to set.
-   * @param {*} value [value] The value of `key`.
-   * @throws {Kinvey.Error} `object` must be of type: `Object`.
-   * @returns {Kinvey.Group} The aggregation.
-   */
-  initial: function(objectOrKey, value) {
-    // Validate arguments.
-    if('undefined' === typeof value && !isObject(objectOrKey)) {
-      throw new Kinvey.Error('objectOrKey argument must be of type: Object.');
+  initial(objectOrKey, value) {
+    if (typeof value === 'undefined' && !isObject(objectOrKey)) {
+      throw new KinveyError('objectOrKey argument must be an Object.');
     }
 
-    // Set or append the initial structure.
-    if(isObject(objectOrKey)) {
+    if (isObject(objectOrKey)) {
       this._initial = objectOrKey;
-    }
-    else {
+    } else {
       this._initial[objectOrKey] = value;
     }
+
     return this;
-  },
+  }
 
-  /**
-   * Post processes the raw response by applying sort, limit, and skip. These
-   * modifiers are provided through the aggregation query.
-   *
-   * @param {Array} response The raw response.
-   * @throws {Kinvey.Error} `response` must be of type: `Array`.
-   * @returns {Array} The processed response.
-   */
-  postProcess: function(response) {
-    // If there is a query, process it.
-    if(null === this._query) {
-      return response;
-    }
-    return this._query._postProcess(response);
-  },
-
-  /**
-   * Sets the query to apply to the result set.
-   *
-   * @param {Kinvey.Query} query The query.
-   * @throws {Kinvey.Error} `query` must be of type: `Kinvey.Query`.
-   * @returns {Kinvey.Group} The aggregation.
-   */
-  query: function(query) {
-    // Validate arguments.
-    if(!(query instanceof Kinvey.Query)) {
-      throw new Kinvey.Error('query argument must be of type: Kinvey.Query.');
+  query(query) {
+    if (query && !(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
     }
 
     this._query = query;
     return this;
-  },
+  }
 
-  /**
-   * Sets the MapReduce function.
-   *
-   * @param {function|string} fn The function.
-   * @throws {Kinvey.Error} `fn` must be of type: `function` or `string`.
-   * @returns {Kinvey.Group} The aggregation.
-   */
-  reduce: function(fn) {
-    // Cast arguments.
-    if(isFunction(fn)) {
+  process(documents = []) {
+    const groups = {};
+    const response = [];
+    const aggregation = this.toJSON();
+    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
+
+    if (this._query) {
+      documents = this._query.process(documents);
+    }
+
+    forEach(documents, document => {
+      const group = {};
+
+      for (const name in document) {
+        if (document.hasOwnProperty(name)) {
+          group[name] = document[name];
+        }
+      }
+
+      const key = JSON.stringify(group);
+      if (!groups[key]) {
+        groups[key] = group;
+
+        for (const attr in aggregation.initial) {
+          if (aggregation.initial.hasOwnProperty(attr)) {
+            groups[key][attr] = aggregation.initial[attr];
+          }
+        }
+      }
+
+      aggregation.reduce(document, groups[key]);
+    });
+
+    for (const segment in groups) {
+      if (groups.hasOwnProperty(segment)) {
+        response.push(groups[segment]);
+      }
+    }
+
+    return response;
+  }
+
+  reduce(fn) {
+    if (isFunction(fn)) {
       fn = fn.toString();
     }
 
-    // Validate arguments.
-    if(!isString(fn)) {
-      throw new Kinvey.Error('fn argument must be of type: function or string.');
+    if (!isString(fn)) {
+      throw new KinveyError('fn argument must be of type function or string.');
     }
 
     this._reduce = fn;
     return this;
-  },
+  }
 
-  /**
-   * Returns JSON representation of the aggregation.
-   *
-   * @returns {Object} JSON object-literal.
-   */
-  toJSON: function() {
-    return {
-      key       : this._key,
-      initial   : this._initial,
-      reduce    : this._reduce,
-      condition : null !== this._query ? this._query.toJSON().filter : {}
+  toJSON() {
+    const json = {
+      key: this._key,
+      initial: this._initial,
+      reduce: this._reduce,
+      condition: this._query ? this._query.toJSON().filter : {},
+      query: this._query ? this._query.toJSON() : null
     };
+
+    return clone(json, true);
   }
-};
+}
 
-// Pre-define a number of reduce functions. All return a preseeded
-// `Kinvey.Group`.
-
-/**
- * Counts all elements in the group.
- *
- * @memberof Kinvey.Group
- * @param {string} [field] The field, or `null` to perform a global count.
- * @returns {Kinvey.Group} The aggregation.
- */
-Kinvey.Group.count = function(field) {
-  // Return the aggregation.
-  var agg = new Kinvey.Group();
-
-  // If a field was specified, count per field.
-  if(null != field) {
-    agg.by(field);
+export default class Aggregation {
+  constructor(options) {
+    this[privateAggregationSymbol] = new PrivateAggregation(options);
   }
 
-  agg.initial({ result: 0 });
-  agg.reduce(function(doc, out) {
-    out.result += 1;
-  });
-  return agg;
-};
+  by(field) {
+    this[privateAggregationSymbol].by(field);
+    return this;
+  }
 
-/**
- * Sums together the numeric values for the specified field.
- *
- * @memberof Kinvey.Group
- * @param {string} field The field.
- * @returns {Kinvey.Group} The aggregation.
- */
-Kinvey.Group.sum = function(field) {
-  // Escape arguments.
-  field = field.replace('\'', '\\\'');
+  initial(objectOrKey, value) {
+    this[privateAggregationSymbol].initial(objectOrKey, value);
+    return this;
+  }
 
-  // Return the aggregation.
-  var agg = new Kinvey.Group();
-  agg.initial({ result: 0 });
-  agg.reduce('function(doc, out) { out.result += doc["' + field + '"]; }');
-  return agg;
-};
+  process(response) {
+    return this[privateAggregationSymbol].process(response);
+  }
 
-/**
- * Finds the minimum of the numeric values for the specified field.
- *
- * @memberof Kinvey.Group
- * @param {string} field The field.
- * @returns {Kinvey.Group} The aggregation.
- */
-Kinvey.Group.min = function(field) {
-  // Escape arguments.
-  field = field.replace('\'', '\\\'');
+  query(query) {
+    this[privateAggregationSymbol].query(query);
+    return this;
+  }
 
-  // Return the aggregation.
-  var agg = new Kinvey.Group();
-  agg.initial({ result: 'Infinity' });
-  agg.reduce('function(doc, out) { out.result = Math.min(out.result, doc["' + field + '"]); }');
-  return agg;
-};
+  reduce(fn) {
+    this[privateAggregationSymbol].reduce(fn);
+    return this;
+  }
 
-/**
- * Finds the maximum of the numeric values for the specified field.
- *
- * @memberof Kinvey.Group
- * @param {string} field The field.
- * @returns {Kinvey.Group} The aggregation.
- */
-Kinvey.Group.max = function(field) {
-  // Escape arguments.
-  field = field.replace('\'', '\\\'');
+  toJSON() {
+    return this[privateAggregationSymbol].toJSON();
+  }
 
-  // Return the aggregation.
-  var agg = new Kinvey.Group();
-  agg.initial({ result: '-Infinity' });
-  agg.reduce('function(doc, out) { out.result = Math.max(out.result, doc["' + field + '"]); }');
-  return agg;
-};
+  static count(field = '') {
+    const aggregation = new Aggregation();
 
-/**
- * Finds the average of the numeric values for the specified field.
- *
- * @memberof Kinvey.Group
- * @param {string} field The field.
- * @returns {Kinvey.Group} The aggregation.
- */
-Kinvey.Group.average = function(field) {
-  // Escape arguments.
-  field = field.replace('\'', '\\\'');
+    if (field) {
+      aggregation.by(field);
+    }
 
-  // Return the aggregation.
-  var agg = new Kinvey.Group();
-  agg.initial({ count: 0, result: 0 });
-  agg.reduce(
-    'function(doc, out) {' +
-    '  out.result = (out.result * out.count + doc["' + field + '"]) / (out.count + 1);' +
-    '  out.count += 1;' +
-    '}'
-  );
-  return agg;
-};
+    aggregation.initial({ result: 0 });
+    aggregation.reduce(function (doc, out) {
+      out.result += 1;
+    });
+    return aggregation;
+  }
+
+  static sum(field = '') {
+    field = field.replace('\'', '\\\'');
+
+    const aggregation = new Aggregation();
+    aggregation.initial({ result: 0 });
+    aggregation.reduce(`function(doc, out) { ` +
+      ` out.result += doc["${field}"]; ` +
+      `}`
+    );
+    return aggregation;
+  }
+
+  static min(field = '') {
+    field = field.replace('\'', '\\\'');
+
+    const aggregation = new Aggregation();
+    aggregation.initial({ result: Infinity });
+    aggregation.reduce(`function(doc, out) { ` +
+      ` out.result = Math.min(out.result, doc["${field}"]); ` +
+      `}`
+    );
+    return aggregation;
+  }
+
+  static max(field = '') {
+    field = field.replace('\'', '\\\'');
+
+    const aggregation = new Aggregation();
+    aggregation.initial({ result: -Infinity });
+    aggregation.reduce(`function(doc, out) { ` +
+      ` out.result = Math.max(out.result, doc["${field}"]); ` +
+      `}`
+    );
+    return aggregation;
+  }
+
+  static average(field = '') {
+    field = field.replace('\'', '\\\'');
+
+    const aggregation = new Aggregation();
+    aggregation.initial({ count: 0, result: 0 });
+    aggregation.reduce(`function(doc, out) { ` +
+      ` out.result = (out.result * out.count + doc["${field}"]) / (out.count + 1);` +
+      ` out.count += 1;` +
+      `}`
+    );
+    return aggregation;
+  }
+}
