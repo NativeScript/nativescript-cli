@@ -3,6 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.Kinvey = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -52,7 +53,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
-var Kinvey = function () {
+var Kinvey = exports.Kinvey = function () {
   function Kinvey() {
     _classCallCheck(this, Kinvey);
   }
@@ -110,9 +111,6 @@ var Kinvey = function () {
   return Kinvey;
 }();
 
-exports.default = Kinvey;
-
-
 Kinvey.Aggregation = _aggregation2.default;
 Kinvey.AuthorizationGrant = _enums.AuthorizationGrant;
 Kinvey.Command = _command2.default;
@@ -123,7 +121,6 @@ Kinvey.Log = _log2.default;
 Kinvey.Metadata = _metadata2.default;
 Kinvey.Promise = Promise;
 Kinvey.Query = _query2.default;
-Kinvey.ReadPolicy = _enums.ReadPolicy;
 Kinvey.SocialIdentity = _enums.SocialIdentity;
 Kinvey.Sync = _sync2.default;
 Kinvey.User = _user.User;
