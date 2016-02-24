@@ -2,77 +2,40 @@
 
 This library is a standalone library designed for JavaScript-based platforms. The library acts as a client for the Kinvey REST API and can be used for building JavaScript-based apps.
 
-This project is currently in development.
-
-## Configuration
-See [package.json](package.json) for the project information. Actual project configuration (test apps, build details) is defined in [config.json](config.json).
-
 ## Building
-The simplest way to build the library is by running `grunt`. This will also perform [testing](#Testing).
+The simplest way to build the library is by running `gulp`. This will also perform [testing](#Testing).
+More advanced tasks are available.
 
-More advanced tasks are available. An imcomplete list:
-
-* `grunt sandbox`: build the library without performing any [testing](#Testing).
-* `grunt build`: build the library without performing a code audit or [testing](#Testing).
-* `grunt watch`: auto-build the library when you modify a file.
-* `grunt clean`: remove temporary files created by the build process.
+* `gulp sandbox`: build the library without performing any [testing](#Testing).
+* `gulp build`: build the library without performing a code audit or [testing](#Testing).
+* `gulp watch`: auto-build the library when you modify a file.
+* `gulp clean`: remove temporary files created by the build process.
 
 ### Flags
-The following flags are available when running `grunt`:
+The following flags are available when running `gulp`:
 
-* `--build=<backbone|html5|nodejs|titanium>`: tailor to a specific build. Defaults to `html5`.
-* `--env=<development|staging|production>`: tailor to specific environment. Defaults to `staging`.
-* `--with-debug`: maintaining debug statements when building the library. Defaults to stripping all debug statements.
-
-For a detailed list of tasks and flags, see the [Gruntfile](Gruntfile.js).
+* `--platform=<angular|html5|node|phonegap>`: tailor to a specific platform. Defaults to `html5`.
 
 ## Testing
-Testing is part of the [build process](#Building). You can run the tests without (re-)building the library using `grunt test`.
+Testing is part of the [build process](#Building). You can run the tests without (re-)building the library using `gulp test`.
 
 Depending on the platform, however, a test set-up may be required.
 
-### Backbone.js, HTML5
+### HTML5
 Optional, but recommended: run `grunt client-tests` to spin up instances of Firefox and Google Chrome for automated testing.
 
 ### Node.js
-The tests will be executed against the current version of Node.js available on the machine. There are npm modules, like [`n`](https://github.com/visionmedia/n), to easily switch between Node.js versions.
-
-### Titanium
-The grunt test task will wait for a test report to be submitted to it. To be able to submit a report, the following preconditions must be satisfied:
-  1. Make sure you have the `titanium` npm module installed globally (`npm install -g titanium`).
-  2. Create a new Titanium project.
-  3. Copy `lib/titanium.app.js` to either `Resources/app.js`, or `app/alloy.js` (if using Titanium Alloy).
-  4. Create the following symbolic links in the `Resources/`, or `app/lib` (if using Titanium Alloy) directories: `spec` -> `test/spec`, `vendor` -> `dist/intermediate`.
-  5. Create a `Resources/lib`, or `app/lib/lib` (if using Titanium Alloy), and add the following files:
-      - `chai.js` (copy from `node_modules/chai/chai.js`)
-      - `chai-as-promised.js` (copy from `node_modules/chai-as-promised/lib/chai-as-promised.js`)
-      - `mocha.js` (copy from `node_modules/mocha/mocha.js`)
-      - `mocha-as-promised.js` (copy from `node_modules/mocha-as-promised/mocha-as-promised.js`)
-      - `sinon.js` (copy from `node_modules/sinon/pkg/sinon-1.x.x.js`)
-      - `sinon-chai.js` (copy from `node_modules/sinon-chai/lib/sinon-chai.js`)
-  6. For **mobileweb**:
-      - Run `titanium build --platform mobileweb --project-dir <titanium-project-dir>`
-      - Start a web server and point your browser to the build.
-  7. For **android**: run `titanium build --platform android --project-dir <titanium-project-dir>`. This will spin-up an emulator, which might take a while.
-      - If you want to re-run the tests, add the `--build-only` flag to the command above, and re-upload the apk (see next step).
-      - Run: `adb install -r <titanium-project-dir>/build/android/bin/app.apk`
-      - Open the app: `adb shell am start -a android.intent.action.MAIN -n com.kinvey.titanium/.TitaniumTestActivity`
-  8. For **ios**: TBD
-  9. Be patient. A test report will be generated and send to grunt when complete.
+The tests will be executed against the current version of Node.js available on the machine. There node version managers, like [`nvm`](https://github.com/creationix/nvm), to easily switch between Node.js versions.
 
 ## Releasing
 The workflow for releasing a new version of the library is as follows:
 
-1. Make sure all your changes are committed.
-2. Optional, but recommended: run the [tests](#Testing) against staging.
+1. Commit all changes.
+2. Increment the [package](package.json) version. See [Version Management](#VersionManagement) below.
 3. Update the [Changelog](CHANGELOG.md).
-4. Increment the [package](package.json) version. See [Version Management](#VersionManagement) below.
-5. Run `grunt deploy`. This task will build and test all libraries against production.
-6. Upload the generated libraries and documentation in `dist/publish` to S3.
-7. Update the [DevCenter](https://github.com/Kinvey/devcenter).
-8. Update the [Kinvey npm module](https://github.com/Kinvey/kinvey-nodejs).
-9. Optional: update [sample apps](https://github.com/KinveyApps).
-10. Tag the version in Git.
+4. Run `gulp release --platform=<platform>` replacing `<platform>` with angular, html5, node, or phonegap. See [Flags](#Flags) above.
+5. Update the [DevCenter](https://github.com/Kinvey/devcenter).
+6. Optional: update [sample apps](https://github.com/KinveyApps).
 
 ### Version Management
 Updating the library version should follow [Semantic Version 2.0.0](http://semver.org/):
@@ -83,7 +46,7 @@ Updating the library version should follow [Semantic Version 2.0.0](http://semve
 
 ## License
 
-    Copyright 2015 Kinvey, Inc.
+    Copyright 2016 Kinvey, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
