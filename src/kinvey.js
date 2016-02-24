@@ -1,17 +1,17 @@
-import Aggregation from './core/aggregation';
-import Client from './core/client';
-import Command from './core/command';
-import FileStore from './core/stores/filesStore';
-import Log from './core/log';
-import Metadata from './core/metadata';
-import Query from './core/query';
-import DataStore from './core/stores/dataStore';
-import Sync from './core/sync';
-import { User } from './core/user';
-import { AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './core/enums';
+import Aggregation from './aggregation';
+import Client from './client';
+import Command from './command';
+import FileStore from './stores/filesStore';
+import Log from './log';
+import Metadata from './metadata';
+import Query from './query';
+import DataStore from './stores/dataStore';
+import Sync from './sync';
+import { User } from './user';
+import { AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
-export class Kinvey {
+class Kinvey {
   /**
    * Initializes the library with your app's information.
    *
@@ -69,3 +69,4 @@ Kinvey.Query = Query;
 Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.Sync = Sync;
 Kinvey.User = User;
+module.exports = Kinvey;

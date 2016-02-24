@@ -11,16 +11,6 @@ const s3 = require('gulp-s3-upload')({
 });
 const errorHandler = config.errorHandler('release');
 
-gulp.task('clone', ['clean'], function (done) {
-  $.git.clone(config.git, { args: config.paths.dist }, function (err) {
-    if (err) {
-      errorHandler(err);
-    }
-
-    done(err);
-  });
-});
-
 gulp.task('bump', function () {
   return gulp.src([
     path.join(config.paths.dist, 'bower.json'),

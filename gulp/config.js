@@ -78,14 +78,14 @@ config.env = assign(config.env, process.env, platformConfig.env);
  */
 config.paths = {
   root: path.join(__dirname, '..'),
-  src: path.join(__dirname, '..', 'src'),
-  dist: path.join(__dirname, '..', 'dist', platform),
-  tmp: path.join(__dirname, '..', 'tmp'),
-  test: path.join(__dirname, '..', 'test'),
-  coverage: path.join(__dirname, '..', 'coverage'),
+  src: path.join(__dirname, '../src'),
+  dist: path.join(__dirname, '../dist', platform),
+  tmp: path.join(__dirname, '../tmp'),
+  test: path.join(__dirname, '../test'),
+  coverage: path.join(__dirname, '../coverage'),
   legacy: {
-    src: path.join(__dirname, '..', 'src', 'legacy'),
-    dist: path.join(__dirname, '..', 'dist', 'legacy', platform)
+    src: path.join(__dirname, '../src/legacy'),
+    dist: path.join(__dirname, '../dist/legacy', platform)
   }
 };
 const paths = config.paths = assign(config.paths, platformConfig.paths);
