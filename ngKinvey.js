@@ -2,7 +2,7 @@
 import { Kinvey } from './core/kinvey';
 import { NetworkRack } from './core/rack/racks/networkRack';
 import { HttpMiddleware } from './core/rack/middleware/http';
-import { ngHttpMiddleware } from './ngHttp';
+import { ngHttpMiddleware } from './ngHttpMiddleware';
 const ngKinvey = angular.module('kinvey', []);
 
 ngKinvey.provider('$kinvey', function () {
