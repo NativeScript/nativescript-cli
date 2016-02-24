@@ -160,7 +160,7 @@ var CacheStore = function (_NetworkStore) {
           cache: response.data
         };
 
-        result.network = _this2.syncCount().then(function (count) {
+        result.networkPromise = _this2.syncCount().then(function (count) {
           if (count > 0) {
             return _this2.push().then(function () {
               return _this2.syncCount();
@@ -263,7 +263,7 @@ var CacheStore = function (_NetworkStore) {
           cache: response.data
         };
 
-        result.network = _this3.syncCount().then(function (count) {
+        result.networkPromise = _this3.syncCount().then(function (count) {
           if (count > 0) {
             return _this3.push().then(function () {
               return _this3.syncCount();
@@ -338,7 +338,7 @@ var CacheStore = function (_NetworkStore) {
           cache: response.data
         };
 
-        result.network = _this4.syncCount().then(function (count) {
+        result.networkPromise = _this4.syncCount().then(function (count) {
           if (count > 0) {
             return _this4.push().then(function () {
               return _this4.syncCount();
@@ -412,7 +412,7 @@ var CacheStore = function (_NetworkStore) {
           cache: response.data
         };
 
-        result.network = _this5.syncCount().then(function (count) {
+        result.networkPromise = _this5.syncCount().then(function (count) {
           if (count > 0) {
             return _this5.push().then(function () {
               return _this5.syncCount();

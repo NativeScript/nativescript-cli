@@ -1,20 +1,12 @@
 'use strict';
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
 var _kinvey = require('../../kinvey');
-
-var _kinvey2 = _interopRequireDefault(_kinvey);
 
 var _networkRack = require('../../core/rack/racks/networkRack');
 
 var _http = require('../../core/rack/middleware/http');
 
 var _http2 = require('./http');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* global angular:false */
 
@@ -25,7 +17,7 @@ ngKinvey.provider('$kinvey', function () {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
     // Initialize the library
-    return _kinvey2.default.init(options);
+    return _kinvey.Kinvey.init(options);
   };
 
   this.$get = ['$q', '$http', function ($q, $http) {
@@ -34,14 +26,9 @@ ngKinvey.provider('$kinvey', function () {
     networkRack.swap(_http.HttpMiddleware, new _http2.AngularHttpMiddleware($http));
 
     // Replace Promise with $q
-    _kinvey2.default.Promise = $q;
+    _kinvey.Kinvey.Promise = $q;
 
     // Return the library
-    return _kinvey2.default;
+    return _kinvey.Kinvey;
   }];
 });
-
-/**
- * @private
- */
-exports.default = ngKinvey;
