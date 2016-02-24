@@ -1,5 +1,5 @@
 /* global angular:false */
-import Kinvey from '../../kinvey';
+import { Kinvey } from '../../kinvey';
 import { NetworkRack } from '../../core/rack/racks/networkRack';
 import { HttpMiddleware } from '../../core/rack/middleware/http';
 import { AngularHttpMiddleware } from './http';
