@@ -105,5 +105,10 @@
     "wrench": "^1.5.8",
     "yargs": "^3.27.0"
   },
-  "pre-commit": []
+  "browserify": {
+    "transform": [["babelify", {
+      "presets": ["es2015", "stage-2"],
+      "ignore": "/\/node_modules\/(?!qs\/)/"
+    }]]
+  }
 }
