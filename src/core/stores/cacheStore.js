@@ -94,7 +94,7 @@ export default class CacheStore extends NetworkStore {
         cache: response.data
       };
 
-      result.network = this.syncCount().then(count => {
+      result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
           return this.push().then(() => {
             return this.syncCount();
@@ -192,7 +192,7 @@ export default class CacheStore extends NetworkStore {
         cache: response.data
       };
 
-      result.network = this.syncCount().then(count => {
+      result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
           return this.push().then(() => {
             return this.syncCount();
@@ -261,7 +261,7 @@ export default class CacheStore extends NetworkStore {
         cache: response.data
       };
 
-      result.network = this.syncCount().then(count => {
+      result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
           return this.push().then(() => {
             return this.syncCount();
@@ -329,7 +329,7 @@ export default class CacheStore extends NetworkStore {
         cache: response.data
       };
 
-      result.network = this.syncCount().then(count => {
+      result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
           return this.push().then(() => {
             return this.syncCount();
