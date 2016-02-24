@@ -66,7 +66,6 @@ Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
 Kinvey.Promise = Promise;
 Kinvey.Query = Query;
-Kinvey.ReadPolicy = ReadPolicy;
 Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.Sync = Sync;
 Kinvey.User = User;
