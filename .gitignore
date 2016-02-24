@@ -3,3 +3,4 @@
 !/dist/.jshintrc
 .DS_Store
 .env
+/docs
