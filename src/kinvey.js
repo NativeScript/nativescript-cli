@@ -8,10 +8,10 @@ import Query from './core/query';
 import DataStore from './core/stores/dataStore';
 import Sync from './core/sync';
 import { User } from './core/user';
-import { AuthorizationGrant, ReadPolicy, SocialIdentity, HttpMethod, DataStoreType } from './core/enums';
+import { AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './core/enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
-export default class Kinvey {
+export class Kinvey {
   /**
    * Initializes the library with your app's information.
    *

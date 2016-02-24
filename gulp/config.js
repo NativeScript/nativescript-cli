@@ -112,7 +112,7 @@ config.files = assign(config.files, platformConfig.files);
  */
 config.browserify = {
   debug: true, // turns on/off creating .map file
-  entries: path.join(config.paths.dist, `src/${config.files.entry.filename}.js`),
+  entries: path.join(config.paths.dist, 'src', 'index.js'),
   standalone: 'Kinvey'
 };
 config.browserify = assign(config.browserify, platformConfig.browserify);

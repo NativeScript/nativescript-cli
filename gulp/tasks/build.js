@@ -13,6 +13,11 @@ const exorcist = require('exorcist');
 const errorHandler = config.errorHandler('build');
 
 gulp.task('transpile', function() {
+  const index = gulp.src(path.join(config.paths.src, 'index.js'))
+    .pipe($.plumber())
+    .pipe($.babel())
+    .pipe(gulp.dest(path.join(config.paths.dist, 'src/')))
+    .on('error', errorHandler);
   const kinvey = gulp.src(path.join(config.paths.src, 'kinvey.js'))
     .pipe($.plumber())
     .pipe($.babel())
@@ -28,7 +33,7 @@ gulp.task('transpile', function() {
     .pipe($.babel())
     .pipe(gulp.dest(path.join(config.paths.dist, `src/shims/${config.platform}`)))
     .on('error', errorHandler);
-  return merge(kinvey, core, shims);
+  return merge(index, kinvey, core, shims);
 });
 
 gulp.task('build', ['transpile'], function () {
