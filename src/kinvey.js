@@ -11,7 +11,7 @@ import { User } from './user';
 import { AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
-class Kinvey {
+export class Kinvey {
   /**
    * Initializes the library with your app's information.
    *
@@ -69,4 +69,3 @@ Kinvey.Query = Query;
 Kinvey.SocialIdentity = SocialIdentity;
 Kinvey.Sync = Sync;
 Kinvey.User = User;
-module.exports = Kinvey;
