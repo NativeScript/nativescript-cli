@@ -1,5 +1,5 @@
-'use strict';
+import { Kinvey } from 'kinvey-sdk-core';
+import { Push } from './push';
 
-var _kinvey = require('./kinvey');
-
-module.exports = _kinvey.Kinvey;
+Kinvey.Push = Push;
+module.exports = Kinvey;
