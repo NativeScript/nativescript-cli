@@ -4,9 +4,6 @@ import result from 'lodash/result';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
 
-/**
- * @private
- */
 export class ngHttpMiddleware extends KinveyMiddleware {
   constructor($http) {
     super('Kinvey Angular Http Middleware');
