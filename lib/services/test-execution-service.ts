@@ -32,11 +32,16 @@ class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $errors: IErrors,
+		private $androidDebugService:IDebugService,
+		private $iOSDebugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService) {
 	}
 
+	public platform: string;
+
 	public startTestRunner(platform: string) : IFuture<void> {
 		return (() => {
+			this.platform = platform;
 			this.$options.justlaunch = true;
 			let blockingOperationFuture = new Future<void>();
 			process.on('message', (launcherConfig: any) => {
@@ -50,7 +55,7 @@ class TestExecutionService implements ITestExecutionService {
 						let configOptions: IKarmaConfigOptions = JSON.parse(launcherConfig);
 						this.$options.debugBrk = configOptions.debugBrk;
 						this.$options.debugTransport = configOptions.debugTransport;
-						let configJs = this.generateConfig(configOptions);
+						let configJs = this.generateConfig(this.$options.port.toString(), configOptions);
 						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
 
 						let socketIoJsUrl = `http://localhost:${this.$options.port}/socket.io/socket.io.js`;
@@ -93,12 +98,30 @@ class TestExecutionService implements ITestExecutionService {
 	public startKarmaServer(platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
-			let pathToKarma = path.join(this.$projectData.projectDir, 'node_modules/karma');
-			let KarmaServer = require(path.join(pathToKarma, 'lib/server'));
-			if (platform === 'ios' && this.$options.emulator) {
-				platform = 'ios_simulator';
+			this.platform = platform;
+
+			if(this.$options.debugBrk && this.$options.watch) {
+				this.$errors.failWithoutHelp("You cannot use --watch and --debug-brk simultaneously. Remove one of the flags and try again.");
 			}
+
+			if (!this.$platformService.preparePlatform(platform).wait()) {
+				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			}
+
+			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+			let projectDir = this.$projectData.projectDir;
+			this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
+			let projectFilesPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
+
+			let liveSyncData: ILiveSyncData = {
+				platform: platform,
+				appIdentifier: this.$projectData.projectId,
+				projectFilesPath: projectFilesPath,
+				syncWorkingDirectory: path.join(projectDir, constants.APP_FOLDER_NAME),
+				canExecuteFastSync: false, // Always restart the application when change is detected, so tests will be rerun.
+				excludedProjectDirsAndFiles: ["**/*.js.map", "**/*.ts"]
+			};
+
 			let karmaConfig: any = {
 				browsers: [platform],
 				configFile: path.join(this.$projectData.projectDir, 'karma.conf.js'),
@@ -122,8 +145,36 @@ class TestExecutionService implements ITestExecutionService {
 			if (this.$options.debugBrk) {
 				karmaConfig.browserNoActivityTimeout = 1000000000;
 			}
+
+			karmaConfig.projectDir = this.$projectData.projectDir;
 			this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
-			new KarmaServer(karmaConfig).start();
+
+			let karmaRunner = require("child_process").fork(path.join(__dirname, "karma-execution.js"));
+			karmaRunner.send({karmaConfig: karmaConfig});
+			karmaRunner.on("message", (karmaData: any) => {
+				fiberBootstrap.run(() => {
+					this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
+					let port: string;
+					if(karmaData.url) {
+						port = karmaData.url.port;
+						let socketIoJsUrl = `http://localhost:${port}/socket.io/socket.io.js`;
+						let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
+					}
+
+					if(karmaData.launcherConfig) {
+						let configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
+						let configJs = this.generateConfig(port, configOptions);
+						this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
+					}
+
+					if(this.$options.debugBrk) {
+						this.getDebugService(platform).debug().wait();
+					} else {
+						this.$liveSyncServiceBase.sync(liveSyncData).wait();
+					}
+				});
+			});
 		}).future<void>()();
 	}
 
@@ -138,8 +189,7 @@ class TestExecutionService implements ITestExecutionService {
 		}).future<void>()();
 	}
 
-	private generateConfig(options: any): string {
-		let port = this.$options.port;
+	private generateConfig(port: string, options: any): string {
 		let nics = os.networkInterfaces();
 		let ips = Object.keys(nics)
 			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4' && !binding.internal)[0])
@@ -153,6 +203,17 @@ class TestExecutionService implements ITestExecutionService {
 		};
 
 		return 'module.exports = ' + JSON.stringify(config);
+	}
+
+	private getDebugService(platform: string): IDebugService {
+		let lowerCasedPlatform = platform.toLowerCase();
+		if(platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+			return this.$iOSDebugService;
+		} else if(lowerCasedPlatform === this.$devicePlatformsConstants.Android.toLowerCase()) {
+			return this.$androidDebugService;
+		}
+
+		throw new Error(`Invalid platform ${platform}. Valid platforms are ${this.$devicePlatformsConstants.iOS} and ${this.$devicePlatformsConstants.Android}`);
 	}
 }
 $injector.register('testExecutionService', TestExecutionService);
