@@ -1,5 +1,5 @@
-import { KinveyMiddleware } from 'kinvey-core/src/rack/middleware';
-import { HttpMethod } from 'kinvey-core/src/enums';
+import { KinveyMiddleware } from 'kinvey-sdk-core/src/rack/middleware';
+import { HttpMethod } from 'kinvey-sdk-core/src/enums';
 import result from 'lodash/result';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
