@@ -393,6 +393,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public processConfigurationFilesFromAppResources(): IFuture<void> {
 		return (() => {
 			this.mergeInfoPlists().wait();
+			this.mergeProjectXcconfigFiles().wait();
 			_(this.getAllInstalledPlugins().wait())
 				.map(pluginData => this.$pluginVariablesService.interpolatePluginVariables(pluginData, this.platformData.configurationFilePath).wait())
 				.value();
@@ -565,8 +566,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				this.executePodInstall().wait();
 			}
-
-			this.regeneratePluginsXcconfigFile().wait();
 		}).future<void>()();
 	}
 
@@ -778,7 +777,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	private regeneratePluginsXcconfigFile(): IFuture<void> {
+	private mergeProjectXcconfigFiles(): IFuture<void> {
 		return (() => {
 			this.$fs.deleteFile(this.pluginsDebugXcconfigFilePath).wait();
 			this.$fs.deleteFile(this.pluginsReleaseXcconfigFilePath).wait();
@@ -791,6 +790,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsDebugXcconfigFilePath).wait();
 					this.mergeXcconfigFiles(pluginXcconfigFilePath, this.pluginsReleaseXcconfigFilePath).wait();
 				}
+			}
+
+			let appResourcesXcconfigPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, "build.xcconfig");
+			if (this.$fs.exists(appResourcesXcconfigPath).wait()) {
+				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.pluginsDebugXcconfigFilePath).wait();
+				this.mergeXcconfigFiles(appResourcesXcconfigPath, this.pluginsReleaseXcconfigFilePath).wait();
 			}
 
 			let podFolder = path.join(this.platformData.projectRoot, "Pods/Target Support Files/Pods/");
