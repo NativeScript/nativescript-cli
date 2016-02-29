@@ -58,7 +58,7 @@ class LiveSyncService implements ILiveSyncService {
 				appIdentifier:  this.$projectData.projectId,
 				projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				excludedProjectDirsAndFiles: ["**/*.js.map", "**/*.ts"]
+				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_FILE_PATTERNS
 			};
 			this.$liveSyncServiceBase.sync(liveSyncData).wait();
 		}).future<void>()();

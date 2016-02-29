@@ -65,7 +65,6 @@ interface IOptions extends ICommonOptions {
 	frameworkVersion: string;
 	copyFrom: string;
 	linkTo: string;
-	release: boolean;
 	emulator: boolean;
 	symlink: boolean;
 	forDevice: boolean;

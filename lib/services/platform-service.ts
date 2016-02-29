@@ -11,11 +11,6 @@ import Future = require("fibers/future");
 let clui = require("clui");
 
 export class PlatformService implements IPlatformService {
-	private static TNS_MODULES_FOLDER_NAME = "tns_modules";
-	private static EXCLUDE_FILES_PATTERN = [
-		"**/*.js.map",
-		"**/*.ts"
-	];
 
 	constructor(private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,
@@ -226,7 +221,7 @@ export class PlatformService implements IPlatformService {
 			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 
 			// Remove .ts and .js.map files
-			PlatformService.EXCLUDE_FILES_PATTERN.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));
+			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, {nocase: true})));
 			let copyFileFutures = sourceFiles.map(source => {
 										let destinationPath = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
 										if (this.$fs.getFsStats(source).wait().isDirectory()) {
@@ -250,7 +245,7 @@ export class PlatformService implements IPlatformService {
 			// Process node_modules folder
 			let appDir = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			try {
-				let tnsModulesDestinationPath = path.join(appDir, PlatformService.TNS_MODULES_FOLDER_NAME);
+				let tnsModulesDestinationPath = path.join(appDir, constants.TNS_MODULES_FOLDER_NAME);
 				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
 			} catch(error) {
 				this.$logger.debug(error);
