@@ -14,6 +14,7 @@ export let DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 export var LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
 export var TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
 export let TEST_RUNNER_NAME = "nativescript-unit-test-runner";
+export let LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 
 export class ReleaseType {
 	static MAJOR = "major";
