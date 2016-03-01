@@ -1,4 +1,4 @@
-import { HttpMethod, AuthorizationGrant } from './enums';
+import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import NetworkRequest from './requests/networkRequest';
 import Device from './device';
@@ -177,7 +177,7 @@ export default class MobileIdentityConnect {
       },
       pathname: tokenPathname,
       properties: options.properties,
-      auth: this.client.appAuth(),
+      authType: AuthType.App,
       data: {
         grant_type: 'authorization_code',
         client_id: clientId,

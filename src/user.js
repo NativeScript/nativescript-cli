@@ -4,7 +4,7 @@ import Acl from './acl';
 import Metadata from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import MobileIdentityConnect from './mic';
-import { SocialIdentity, HttpMethod } from './enums';
+import { AuthType, SocialIdentity, HttpMethod } from './enums';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import clone from 'lodash/clone';
@@ -313,7 +313,7 @@ export class User {
         method: HttpMethod.POST,
         pathname: `/${usersNamespace}/${this.client.appKey}/login`,
         data: usernameOrData,
-        auth: this.client.appAuth(),
+        authType: AuthType.App,
         properties: options.properties,
         timeout: options.timeout
       });
@@ -374,7 +374,7 @@ export class User {
     return this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${usersNamespace}/${this.client.appKey}/_logout`,
-      auth: this.client.sessionAuth(),
+      authType: AuthType.Session,
       properties: options.properties,
       timeout: options.timeout
     }).then(() => {
@@ -497,7 +497,7 @@ export class User {
       return this.client.executeNetworkRequest({
         method: HttpMethod.GET,
         pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         properties: options.properties,
         timeout: options.timeout
@@ -635,7 +635,7 @@ export class User {
       return this.client.executeNetworkRequest({
         method: HttpMethod.POST,
         pathname: `/${usersNamespace}/${this.client.appKey}`,
-        auth: this.client.appAuth(),
+        authType: AuthType.App,
         data: result(data, 'toJSON', data),
         properties: options.properties,
         timeout: options.timeout
@@ -688,7 +688,7 @@ export class User {
       return this.client.executeNetworkRequest({
         method: HttpMethod.PUT,
         pathname: `/${usersNamespace}/${this.client.appKey}/${data[idAttribute]}`,
-        auth: this.client.sessionAuth(),
+        authType: AuthType.Session,
         data: data,
         properties: options.properties,
         timeout: options.timeout
@@ -726,7 +726,7 @@ export class User {
       return this.client.executeNetworkRequest({
         method: HttpMethod.GET,
         pathname: `/${usersNamespace}/${this.client.appKey}/_me`,
-        auth: this.client.sessionAuth(),
+        authType: AuthType.Session,
         properties: options.properties,
         timeout: options.timeout
       });
@@ -757,7 +757,7 @@ export class User {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`,
-      auth: this.client.appAuth(),
+      authType: AuthType.App,
       properties: options.properties,
       timeout: options.timeout
     }).then(response => {
@@ -770,7 +770,7 @@ export class User {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`,
-      auth: this.client.appAuth(),
+      authType: AuthType.App,
       data: { email: this.email },
       properties: options.properties,
       timeout: options.timeout
@@ -784,7 +784,7 @@ export class User {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`,
-      auth: this.client.appAuth(),
+      authType: AuthType.App,
       properties: options.properties,
       timeout: options.timeout
     }).then(response => {

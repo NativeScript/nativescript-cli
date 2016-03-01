@@ -1,5 +1,5 @@
 import NetworkStore from './networkStore';
-import { HttpMethod } from '../enums';
+import { AuthType, HttpMethod } from '../enums';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -18,7 +18,7 @@ export class UsersStore extends NetworkStore {
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/check-username-exists`,
       properties: options.properties,
-      auth: this.client.appAuth(),
+      authType: AuthType.App,
       data: { username: username },
       timeout: options.timeout
     }).then(response => {
@@ -32,7 +32,7 @@ export class UsersStore extends NetworkStore {
         method: HttpMethod.POST,
         pathname: `${this._pathname}/id`,
         properties: options.properties,
-        auth: this.client.masterAuth(),
+        authType: AuthType.Master,
         timeout: options.timeout
       });
     }).then(response => {

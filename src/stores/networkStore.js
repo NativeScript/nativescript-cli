@@ -1,5 +1,5 @@
 import Aggregation from '../aggregation';
-import { HttpMethod } from '../enums';
+import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import Client from '../client';
 import Query from '../query';
@@ -88,7 +88,7 @@ export default class NetworkStore {
         method: HttpMethod.GET,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         timeout: options.timeout
       });
@@ -138,7 +138,7 @@ export default class NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/_group`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         data: aggregation.toJSON(),
         timeout: options.timeout
       });
@@ -187,7 +187,7 @@ export default class NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/_count`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         timeout: options.timeout
       });
@@ -234,7 +234,7 @@ export default class NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         timeout: options.timeout
       });
     }).then(response => {
@@ -285,7 +285,7 @@ export default class NetworkStore {
           method: HttpMethod.PUT,
           pathname: `${this._pathname}/${entity[idAttribute]}`,
           properties: options.properties,
-          auth: this.client.defaultAuth(),
+          authType: AuthType.Default,
           data: entity,
           timeout: options.timeout
         });
@@ -295,7 +295,7 @@ export default class NetworkStore {
         method: HttpMethod.POST,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         data: entity,
         timeout: options.timeout
       });
@@ -343,7 +343,7 @@ export default class NetworkStore {
         method: HttpMethod.DELETE,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         timeout: options.timeout
       });
@@ -390,7 +390,7 @@ export default class NetworkStore {
         method: HttpMethod.DELETE,
         pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         timeout: options.timeout
       });
     }).then(response => {

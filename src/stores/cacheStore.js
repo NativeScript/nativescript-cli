@@ -1,6 +1,6 @@
 import NetworkStore from './networkStore';
 import Response from '../requests/response';
-import { HttpMethod, StatusCode } from '../enums';
+import { AuthType, HttpMethod, StatusCode } from '../enums';
 import { InsufficientCredentialsError, KinveyError, NotFoundError } from '../errors';
 import Query from '../query';
 import Aggregation from '../aggregation';
@@ -613,7 +613,7 @@ export default class CacheStore extends NetworkStore {
               method: HttpMethod.POST,
               pathname: this._pathname,
               properties: metadata.properties,
-              auth: this.client.defaultAuth(),
+              authType: AuthType.Default,
               data: entity,
               timeout: options.timeout
             }).then(response => {
@@ -629,7 +629,7 @@ export default class CacheStore extends NetworkStore {
                 method: HttpMethod.DELETE,
                 pathname: `${this._pathname}/${originalId}`,
                 properties: metadata.properties,
-                auth: this.client.defaultAuth(),
+                authType: AuthType.Default,
                 timeout: options.timeout
               }).then(response => {
                 const result = response.data;
@@ -660,7 +660,7 @@ export default class CacheStore extends NetworkStore {
             method: HttpMethod.PUT,
             pathname: `${this._pathname}/${entity[idAttribute]}`,
             properties: metadata.properties,
-            auth: this.client.defaultAuth(),
+            authType: AuthType.Default,
             data: entity,
             timeout: options.timeout
           }).then(response => {
@@ -696,7 +696,7 @@ export default class CacheStore extends NetworkStore {
             method: HttpMethod.DELETE,
             pathname: `${this._pathname}/${id}`,
             properties: metadata.properties,
-            auth: this.client.defaultAuth(),
+            authType: AuthType.Default,
             timeout: options.timeout
           }).then(response => {
             const result = response.data;

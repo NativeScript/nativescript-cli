@@ -1,6 +1,6 @@
 import NetworkStore from './networkStore';
 import NetworkRequest from '../requests/networkRequest';
-import { HttpMethod } from '../enums';
+import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import assign from 'lodash/assign';
 import map from 'lodash/map';
@@ -195,7 +195,7 @@ export default class FilesStore extends NetworkStore {
           'X-Kinvey-Content-Type': metadata.mimeType
         },
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         timeout: options.timeout,
         data: metadata
       };

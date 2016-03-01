@@ -265,24 +265,6 @@ export default class KinveyRequest extends Request {
     }
   }
 
-  execute() {
-    const promise = super.execute().then(() => {
-      return this.auth;
-    }).then(authInfo => {
-      if (authInfo) {
-        let credentials = authInfo.credentials;
-
-        if (authInfo.username) {
-          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-        }
-
-        this.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-      }
-    });
-
-    return promise;
-  }
-
   toJSON() {
     const json = super.toJSON();
     json.query = this.query;

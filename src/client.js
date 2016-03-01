@@ -1,5 +1,5 @@
 import { KinveyError, NotFoundError } from './errors';
-import { HttpMethod } from './enums';
+import { AuthType, HttpMethod } from './enums';
 import LocalRequest from './requests/localRequest';
 import NetworkRequest from './requests/networkRequest';
 import DeleteFetchRequest from './requests/deltaFetchRequest';
@@ -12,6 +12,119 @@ const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'a
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const sharedInstanceSymbol = Symbol();
+
+const Auth = {
+  /**
+   * Authenticate through (1) user credentials, (2) Master Secret, or (3) App
+   * Secret.
+   *
+   * @returns {Promise}
+   */
+  all(client) {
+    return Auth.session(client).catch(() => {
+      return Auth.basic(client);
+    });
+  },
+
+  /**
+   * Authenticate through App Secret.
+   *
+   * @returns {Promise}
+   */
+  app(client) {
+    if (!client.appKey || !client.appSecret) {
+      const error = new Error('Missing client credentials');
+      return Promise.reject(error);
+    }
+
+    return Promise.resolve({
+      scheme: 'Basic',
+      username: client.appKey,
+      password: client.appSecret
+    });
+  },
+
+  /**
+   * Authenticate through (1) Master Secret, or (2) App Secret.
+   *
+   * @returns {Promise}
+   */
+  basic(client) {
+    return Auth.master(client).catch(() => {
+      return Auth.app(client);
+    });
+  },
+
+  /**
+   * Authenticate through Master Secret.
+   *
+   * @returns {Promise}
+   */
+  master(client) {
+    if (!client.appKey || !client.masterSecret) {
+      const error = new Error('Missing client credentials');
+      return Promise.reject(error);
+    }
+
+    const promise = Promise.resolve({
+      scheme: 'Basic',
+      username: client.appKey,
+      password: client.masterSecret
+    });
+
+    return promise;
+  },
+
+  /**
+   * Do not authenticate.
+   *
+   * @returns {Promise}
+   */
+  none() {
+    return Promise.resolve(null);
+  },
+
+  /**
+   * Authenticate through user credentials.
+   *
+   * @returns {Promise}
+   */
+  session(client) {
+    return client.getActiveUser().then(activeUser => {
+      if (!activeUser) {
+        throw new Error('There is not an active user.');
+      }
+
+      return {
+        scheme: 'Kinvey',
+        credentials: activeUser[kmdAttribute].authtoken
+      };
+    });
+  }
+};
+
+function getAuthFn(type = AuthType.None) {
+  switch (type) {
+    case AuthType.App:
+      return Auth.app;
+    case AuthType.Basic:
+      return Auth.basic;
+    case AuthType.Master:
+      return Auth.master;
+    case AuthType.None:
+      return Auth.none;
+    case AuthType.Session:
+      return Auth.session;
+    default:
+      return function(client) {
+        return Auth.session(client).catch(err => {
+          return Auth.master(client).catch(() => {
+            return Promise.reject(err);
+          });
+        });
+      };
+  }
+}
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -86,102 +199,6 @@ export default class Client {
     this.encryptionKey = options.encryptionKey;
   }
 
-  /**
-   * Authenticate through (1) user credentials, (2) Master Secret, or (3) App
-   * Secret.
-   *
-   * @returns {Promise}
-   */
-  allAuth() {
-    return this.sessionAuth().catch(() => {
-      return this.basicAuth();
-    });
-  }
-
-  /**
-   * Authenticate through App Secret.
-   *
-   * @returns {Promise}
-   */
-  appAuth() {
-    return Promise.resolve({
-      scheme: 'Basic',
-      username: this.appKey,
-      password: this.appSecret
-    });
-  }
-
-  /**
-   * Authenticate through (1) Master Secret, or (2) App Secret.
-   *
-   * @returns {Promise}
-   */
-  basicAuth() {
-    return this.masterAuth().catch(() => {
-      return this.appAuth();
-    });
-  }
-
-  /**
-   * Authenticate through (1) user credentials, or (2) Master Secret.
-   *
-   * @returns {Promise}
-   */
-  defaultAuth() {
-    return this.sessionAuth().catch((err) => {
-      return this.masterAuth().catch(() => {
-        return Promise.reject(err);
-      });
-    });
-  }
-
-  /**
-   * Authenticate through Master Secret.
-   *
-   * @returns {Promise}
-   */
-  masterAuth() {
-    if (!this.appKey || !this.masterSecret) {
-      const error = new Error('Missing client credentials');
-      return Promise.reject(error);
-    }
-
-    const promise = Promise.resolve({
-      scheme: 'Basic',
-      username: this.appKey,
-      password: this.masterSecret
-    });
-
-    return promise;
-  }
-
-  /**
-   * Do not authenticate.
-   *
-   * @returns {Promise}
-   */
-  noAuth() {
-    return Promise.resolve(null);
-  }
-
-  /**
-   * Authenticate through user credentials.
-   *
-   * @returns {Promise}
-   */
-  sessionAuth() {
-    return this.getActiveUser().then(activeUser => {
-      if (!activeUser) {
-        throw new Error('There is not an active user.');
-      }
-
-      return {
-        scheme: 'Kinvey',
-        credentials: activeUser[kmdAttribute].authtoken
-      };
-    });
-  }
-
   getActiveUser() {
     const promise = Promise.resolve().then(() => {
       return this.executeLocalRequest({
@@ -245,6 +262,7 @@ export default class Client {
     const request = new LocalRequest({
       method: options.method,
       headers: options.headers,
+      auth: getAuthFn(options.auth),
       url: url.format({
         protocol: this.protocol,
         host: this.host,
@@ -262,6 +280,7 @@ export default class Client {
   executeNetworkRequest(options = {}) {
     options = assign({
       method: HttpMethod.GET,
+      auth: AuthType.None,
       pathname: '/',
       flags: {
         _: Math.random().toString(36).substr(2)
@@ -272,7 +291,6 @@ export default class Client {
     const request = new NetworkRequest({
       method: options.method,
       headers: options.headers,
-      auth: options.auth,
       url: url.format({
         protocol: this.protocol,
         host: this.host,
@@ -300,7 +318,6 @@ export default class Client {
     const request = new DeleteFetchRequest({
       method: options.method,
       headers: options.headers,
-      auth: options.auth,
       url: url.format({
         protocol: this.protocol,
         host: this.host,
@@ -312,7 +329,25 @@ export default class Client {
       data: options.data,
       timeout: options.timeout
     });
-    return request.execute();
+
+    const promise = Promise.resolve().then(() => {
+      const authFn = getAuthFn(options.authType);
+      return authFn(this);
+    }).then(authInfo => {
+      if (authInfo) {
+        let credentials = authInfo.credentials;
+
+        if (authInfo.username) {
+          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+        }
+
+        request.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
+      }
+    }).then(() => {
+      return request.execute();
+    });
+
+    return promise;
   }
 
   /**
