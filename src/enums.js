@@ -26,7 +26,9 @@ export { AuthType };
 const DataStoreType = {
   Sync: 'Sync',
   Cache: 'Cache',
-  Network: 'Network'
+  Network: 'Network',
+  User: 'User',
+  File: 'File'
 };
 Object.freeze(DataStoreType);
 export { DataStoreType };

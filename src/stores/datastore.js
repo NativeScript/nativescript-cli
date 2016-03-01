@@ -1,6 +1,8 @@
 import NetworkStore from './networkStore';
 import CacheStore from './cacheStore';
 import SyncStore from './syncStore';
+import { UserStore } from './userstore';
+import { FileStore } from './filestore';
 import { DataStoreType } from '../enums';
 
 export default class DataStore {
@@ -20,6 +22,12 @@ export default class DataStore {
         break;
       case DataStoreType.Network:
         store = new NetworkStore(name);
+        break;
+      case DataStoreType.User:
+        store = new UserStore();
+        break;
+      case DataStoreType.File:
+        store = new FileStore();
         break;
       case DataStoreType.Cache:
       default:

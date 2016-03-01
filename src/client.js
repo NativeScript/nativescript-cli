@@ -169,9 +169,10 @@ export default class Client {
         'Unable to create a new Client without an App Key.');
     }
 
-    if (options.hostName && isString(options.hostName)) {
-      options.protocol = url.parse(options.hostName).protocol;
-      options.host = url.parse(options.hostName).host;
+    if (options.hostname && isString(options.hostname)) {
+      const hostnameParsed = url.parse(options.hostname);
+      options.protocol = hostnameParsed.protocol;
+      options.host = hostnameParsed.host;
     }
 
     /**
