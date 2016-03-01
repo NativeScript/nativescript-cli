@@ -7,6 +7,7 @@ import url from 'url';
 import qs from 'qs';
 import clone from 'lodash/clone';
 import assign from 'lodash/assign';
+import isString from 'lodash/isString';
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'local';
 const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'activeUser';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -154,7 +155,7 @@ export default class Client {
    */
   constructor(options = {}) {
     options = assign({
-      protocol: process.env.KINVEY_API_PROTOCOL || 'https',
+      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
@@ -166,6 +167,11 @@ export default class Client {
     if (!options.appSecret && !options.masterSecret) {
       throw new KinveyError('No App Secret or Master Secret was provided. ' +
         'Unable to create a new Client without an App Key.');
+    }
+
+    if (options.hostName && isString(options.hostName)) {
+      options.protocol = url.parse(options.hostName).protocol;
+      options.host = url.parse(options.hostName).host;
     }
 
     /**
@@ -302,7 +308,25 @@ export default class Client {
       data: options.data,
       timeout: options.timeout
     });
-    return request.execute();
+
+    const promise = Promise.resolve().then(() => {
+      const authFn = getAuthFn(options.authType);
+      return authFn(this);
+    }).then(authInfo => {
+      if (authInfo) {
+        let credentials = authInfo.credentials;
+
+        if (authInfo.username) {
+          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+        }
+
+        request.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
+      }
+    }).then(() => {
+      return request.execute();
+    });
+
+    return promise;
   }
 
   executeDeltaFetchRequest(options = {}) {
