@@ -5,7 +5,7 @@ Usage | Synopsis
 ------|-------
 General | `$ tns livesync android [--device <Device ID>] [--watch]`
 
-Synchronizes the latest changes in your project to Android devices. 
+Synchronizes the latest changes in your project to Android devices.
 
 ### Options
 * `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
@@ -14,7 +14,7 @@ Synchronizes the latest changes in your project to Android devices.
 ### Attributes
 * `<Device ID>` is the device index or identifier as listed by `$ tns device`
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Command Limitations
 
 * You cannot run this command on Android 4.3 devices and on some Samsung devices.
@@ -38,6 +38,6 @@ Command | Description
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
-[test android](test-android.html) | Runs the tests in your project on Android devices or native emulators. 
+[test android](test-android.html) | Runs the tests in your project on Android devices or native emulators.
 [test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.
 <% } %>

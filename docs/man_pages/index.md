@@ -36,6 +36,12 @@ Command | Description
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
 [livesync](project/testing/livesync.html) | Synchronizes the latest changes in your project to devices.
 
+## Publishing Commands
+Command | Description
+---|---
+[appstore](project/publishing/appstore.html) | Lists applications registered in iTunes Connect.
+[appstore upload](project/publishing/appstore-upload.html) | Uploads project to iTunes Connect.
+
 ## Device Commands
 Command | Description
 ---|---
