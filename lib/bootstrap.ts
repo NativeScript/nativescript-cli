@@ -52,6 +52,11 @@ $injector.requireCommand("test|ios", "./commands/test");
 $injector.requireCommand("test|init", "./commands/test-init");
 $injector.requireCommand("dev-generate-help", "./commands/generate-help");
 
+$injector.requireCommand("appstore|*list", "./commands/appstore-list");
+$injector.requireCommand("appstore|upload", "./commands/appstore-upload");
+$injector.requireCommand("publish|ios", "./commands/appstore-upload");
+$injector.require("itmsTransporterService", "./services/itmstransporter-service");
+
 $injector.require("npm", "./node-package-manager");
 $injector.require("npmInstallationManager", "./npm-installation-manager");
 $injector.require("lockfile", "./lockfile");

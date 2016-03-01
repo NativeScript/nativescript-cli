@@ -157,7 +157,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
-	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
+	public buildProject(projectRoot: string, buildConfig?: IiOSBuildConfig): IFuture<void> {
 		return (() => {
 			let basicArgs = [
 				"-configuration", this.$options.release ? "Release" : "Debug",
@@ -202,6 +202,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
+			}
+
+			if (buildConfig && buildConfig.codeSignIdentity) {
+				args.push(`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity}`);
+			}
+
+			if (buildConfig && buildConfig.mobileProvisionIdentifier) {
+				args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
 			}
 
 			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();

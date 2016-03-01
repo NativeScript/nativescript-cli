@@ -52,6 +52,20 @@ interface IBuildConfig {
 	architectures?: string[];
 }
 
+/**
+ * Describes iOS-specific build configuration properties
+ */
+interface IiOSBuildConfig extends IBuildConfig {
+	/**
+	 * Identifier of the mobile provision which will be used for the build. If not set a provision will be selected automatically if possible.
+	 */
+	mobileProvisionIdentifier?: string;
+	/**
+	 * Code sign identity used for build. If not set iPhone Developer is used as a default when building for device.
+	 */
+	codeSignIdentity?: string;
+}
+
 interface IPlatformProjectService {
 	platformData: IPlatformData;
 	validate(): IFuture<void>;
