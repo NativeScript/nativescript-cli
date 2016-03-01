@@ -8,6 +8,12 @@ const AuthorizationGrant = {
 Object.freeze(AuthorizationGrant);
 export { AuthorizationGrant };
 
+const AuthType = {
+
+};
+Object.freeze(AuthType);
+export { AuthType };
+
 /**
  * Enum for DataStore types.
  */

@@ -271,11 +271,6 @@ export default class NetworkStore {
       return Promise.resolve(null);
     }
 
-    if (entity._id) {
-      log.warn('Entity argument contains an _id. Calling update instead.', entity);
-      return this.update(entity, options);
-    }
-
     log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     options = assign({
@@ -285,6 +280,17 @@ export default class NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
+      if (entity[idAttribute]) {
+        return this.client.executeNetworkRequest({
+          method: HttpMethod.PUT,
+          pathname: `${this._pathname}/${entity[idAttribute]}`,
+          properties: options.properties,
+          auth: this.client.defaultAuth(),
+          data: entity,
+          timeout: options.timeout
+        });
+      }
+
       return this.client.executeNetworkRequest({
         method: HttpMethod.POST,
         pathname: this._pathname,
@@ -301,58 +307,6 @@ export default class NetworkStore {
       log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
       log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
-    });
-
-    return promise;
-  }
-
-  /**
-   * Updates a entity or an array of entities in a collection. A promise will be returned that
-   * will be resolved with the updated entity/entities or rejected with an error.
-   *
-   * @param   {Model|Array}           entity                                    Entity or entities to update.
-   * @param   {Object}                options                                   Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise}                                                         Promise
-   */
-  update(entity, options = {}) {
-    if (!entity) {
-      log.warn('No entity was provided to be updated.', entity);
-      return Promise.resolve(null);
-    }
-
-    if (!entity._id) {
-      log.warn('Entity argument does not contain an _id. Calling save instead.', entity);
-      return this.save(entity, options);
-    }
-
-    log.debug(`Updating the entity(s) in the ${this.name} collection.`, entity);
-
-    options = assign({
-      properties: null,
-      timeout: undefined,
-      handler() {}
-    }, options);
-
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.PUT,
-        pathname: `${this._pathname}/${entity[idAttribute]}`,
-        properties: options.properties,
-        auth: this.client.defaultAuth(),
-        data: entity,
-        timeout: options.timeout
-      });
-    }).then(response => {
-      return response.data;
-    });
-
-    promise.then(response => {
-      log.info(`Updated the entity(s) in the ${this.name} collection.`, response);
-    }).catch(err => {
-      log.error(`Failed to update the entity(s) in the ${this.name} collection.`, err);
     });
 
     return promise;

@@ -1,229 +1,142 @@
-const User = require('../core/models/user');
-const Users = require('../core/stores/users');
-const map = require('lodash/map');
-const mapLegacyOptions = require('./utils').mapLegacyOptions;
-const wrapCallbacks = require('./utils').wrapCallbacks;
+import { User as CoreUser } from '../src/user';
+import { UsersStore } from '../src/stores/usersStore';
+import { wrapCallbacks } from './utils';
+import map from 'lodash/map';
 
-class LegacyUser {
-  /**
-   * Get the active user.
-   *
-   * @param   {Object}    Options
-   * @return  {Promise}   Resolved with the active user null.
-   */
-  static getActive(options = {}) {
-    options = mapLegacyOptions(options);
-
-    const promise = User.getActive(options.client).then(user => {
-      if (user) {
-        return user.toJSON();
-      }
-
-      return null;
-    });
-
-    return wrapCallbacks(promise, options);
-  }
-
-  /**
-   * Set the active user.
-   *
-   * @param   {User}      User
-   * @param   {Object}    Options
-   * @return  {Promise}   Resolved with the active user or null.
-   */
-  static setActive(user, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const promise = User.setActive(user, options.client).then(user => {
-      if (user) {
-        return user.toJSON();
-      }
-
-      return null;
-    });
-
-    return wrapCallbacks(promise, options);
-  }
-
+export class User {
   static signup(data, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.signup(data, options).then(user => {
+    options.state = true;
+    const promise = CoreUser.signup(data, options).then(user => {
       return user.toJSON();
     });
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static signupWithProvider(provider, tokens, options = {}) {
-    const data = {
-      _socialIdentity: {}
-    };
-    data._socialIdentity[provider] = tokens;
-    return LegacyUser.signup(data, options);
+  static signupWithProvider(identity, tokens, options = {}) {
+    options.state = true;
+    const promise = CoreUser.singupWithIdentity(identity, tokens, options).then(user => {
+      return user.toJSON();
+    });
+    return wrapCallbacks(options, promise);
   }
 
   static login(usernameOrData, password, options) {
-    options = mapLegacyOptions(options);
-
-    const promise = User.login(usernameOrData, password, options).then(user => {
+    const promise = CoreUser.login(usernameOrData, password, options).then(user => {
       return user.toJSON();
     });
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static logout(options = {}) {
-    options = mapLegacyOptions(options);
+  static loginWithProvider(identity, tokens, options) {
+    const promise = CoreUser.loginWithIdentity(identity, tokens, options).then(user => {
+      return user.toJSON();
+    });
+    return wrapCallbacks(options, promise);
+  }
 
-    const promise = User.getActive(options.client).then(user => {
+  static logout(options) {
+    const promise = CoreUser.getActiveUser().then(user => {
       if (user) {
         return user.logout(options);
       }
 
       return null;
     });
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static me(options = {}) {
-    options = mapLegacyOptions(options);
-
-    const promise = User.getActive(options.client).then(user => {
+  static me(options) {
+    const promise = CoreUser.getActiveUser().then(user => {
       if (user) {
         return user.me(options);
       }
 
       return null;
     });
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static verifyEmail(username, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const user = new User({
+  static verifyEmail(username, options) {
+    const user = new CoreUser({
       username: username
     });
     const promise = user.verifyEmail(options);
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static forgotUsername(email, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const user = new User({
+  static forgotUsername(email, options) {
+    const user = new CoreUser({
       email: email
     });
     const promise = user.forgotUsername(options);
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static resetPassword(username, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const user = new User({
+  static resetPassword(username, options) {
+    const user = new CoreUser({
       username: username
     });
     const promise = user.resetPassword(options);
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static find(query, options = {}) {
-    options = mapLegacyOptions(options);
+  static create(data, options) {
+    return User.signup(data, options);
+  }
 
-    const users = new Users();
-    const promise = users.find(query, options).then(users => {
+  static update(data, options) {
+    const user = new CoreUser();
+    const promise = user.update(data, options).then(user => {
+      return user.toJSON();
+    });
+    return wrapCallbacks(options, promise);
+  }
+
+  static find(query, options) {
+    const store = new UsersStore();
+    const promise = store.find(query, options).then(users => {
       return map(users, user => {
         return user.toJSON();
       });
     });
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static group(aggregation, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.group(aggregation, options).then(users => {
-      return map(users, user => {
-        return user.toJSON();
-      });
-    });
-    return wrapCallbacks(promise, options);
-  }
-
-  static count(query, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.count(query, options);
-    return wrapCallbacks(promise, options);
-  }
-
-  static get(id, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.get(id, options).then(user => {
+  static get(id, options) {
+    const store = new UsersStore();
+    const promise = store.findById(id, options).then(user => {
       return user.toJSON();
     });
-
-    return wrapCallbacks(promise, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static create(data, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.create(data, options).then(user => {
-      return user.toJSON();
-    });
-
-    return wrapCallbacks(promise, options);
+  static exists(username, options) {
+    const store = new UsersStore();
+    const promise = store.exists(username, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static update(data, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.update(data, options).then(user => {
-      return user.toJSON();
-    });
-
-    return wrapCallbacks(promise, options);
+  static destroy(id, options) {
+    const store = new UsersStore();
+    const promise = store.removeById(id, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static destroy(id, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.delete(id, options);
-    return wrapCallbacks(promise, options);
+  static restore(id, options) {
+    const store = new UsersStore();
+    const promise = store.restore(id, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static exists(username, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.exists(username, options);
-    return wrapCallbacks(promise, options);
+  static count(query, options) {
+    const store = new UsersStore();
+    const promise = store.count(query, options);
+    return wrapCallbacks(options, promise);
   }
 
-  static restore(id, options = {}) {
-    options = mapLegacyOptions(options);
-
-    const users = new Users();
-    const promise = users.restore(id, options);
-    return wrapCallbacks(promise, options);
+  static group(aggregation, options) {
+    const store = new UsersStore();
+    const promise = store.group(aggregation, options);
+    return wrapCallbacks(options, promise);
   }
 }
-
-module.exports = LegacyUser;

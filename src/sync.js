@@ -4,6 +4,7 @@ import { DataStoreType } from './enums';
 import reduce from 'lodash/reduce';
 const enabledSymbol = Symbol();
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 const Sync = {
   isEnabled() {
@@ -34,7 +35,7 @@ const Sync = {
     query.greaterThan('size', 0);
     const promise = syncStore.find(query, options).then(syncData => {
       const promises = syncData.map(data => {
-        const store = DataStore.getInstance(data._id, DataStoreType.Sync);
+        const store = DataStore.getInstance(data[idAttribute], DataStoreType.Sync);
         return store.push();
       });
       return Promise.all(promises);
@@ -46,7 +47,7 @@ const Sync = {
     const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
     const promise = syncStore.find(null, options).then(syncData => {
       const promises = syncData.map(data => {
-        const store = DataStore.getInstance(data._id, DataStoreType.Sync);
+        const store = DataStore.getInstance(data[idAttribute], DataStoreType.Sync);
         return store.sync();
       });
       return Promise.all(promises);

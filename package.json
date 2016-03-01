@@ -1,7 +1,7 @@
 {
   "name": "kinvey-sdk-core",
   "version": "3.0.0-beta.8",
-  "description": "Kinvey JavaScript Library",
+  "description": "Kinvey JavaScript SDK Core",
   "main": "src/kinvey.js",
   "scripts": {
     "test": "./node_modules/.bin/gulp",

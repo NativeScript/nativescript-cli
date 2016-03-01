@@ -18,6 +18,7 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
+const supportedIdentities = ['facebook', 'google', 'linkedIn'];
 let hello;
 
 if (typeof window !== 'undefined') {
@@ -244,6 +245,16 @@ export class User {
     });
   }
 
+  static login(usernameOrData, password, options) {
+    const user = new User();
+    return user.login(usernameOrData, password, options);
+  }
+
+  static loginWithIdentity(identity, tokens, options) {
+    const user = new User();
+    return user.loginWithIdentity(identity, tokens, options);
+  }
+
   /**
    * Login using a username or password.
    *
@@ -316,6 +327,12 @@ export class User {
     return promise;
   }
 
+  loginWithIdentity(identity, tokens, options) {
+    const data = { _socialIdentity: {} };
+    data._socialIdentity[identity] = tokens;
+    return this.login(data, options);
+  }
+
   /**
    * Login using Mobile Identity Connect.
    *
@@ -382,8 +399,8 @@ export class User {
    * @example
    * var isIdentityConnectSupported = user.isIdentityConnectSupported();
    */
-  isIdentityConnectSupported() {
-    return hello ? true : false;
+  static isIdentitySupported(identity) {
+    return hello && supportedIdentities.indexOf(identity) !== -1 ? true : false;
   }
 
   /**
@@ -400,8 +417,8 @@ export class User {
    *   ...
    * });
    */
-  connectWithFacebook(options = {}) {
-    return this.connectWithIdentity(SocialIdentity.Facebook, options);
+  static connectWithFacebook(options = {}) {
+    return User.connectWithIdentity(SocialIdentity.Facebook, options);
   }
 
   /**
@@ -418,8 +435,8 @@ export class User {
    *   ...
    * });
    */
-  connectWithGoogle(options = {}) {
-    return this.connectWithIdentity(SocialIdentity.Google, options);
+  static connectWithGoogle(options = {}) {
+    return User.connectWithIdentity(SocialIdentity.Google, options);
   }
 
   /**
@@ -436,8 +453,13 @@ export class User {
    *   ...
    * });
    */
-  connectWithLinkedIn(options = {}) {
-    return this.connectWithIdentity(SocialIdentity.LinkedIn, options);
+  static connectWithLinkedIn(options = {}) {
+    return User.connectWithIdentity(SocialIdentity.LinkedIn, options);
+  }
+
+  static connectWithIdentity(identity, options) {
+    const user = new User();
+    return user.connectWithIdentity(identity, options);
   }
 
   /**
@@ -462,8 +484,8 @@ export class User {
       return Promise.reject(new KinveyError('An identity is required to connect the user.'));
     }
 
-    if (this.isIdentityConnectSupported()) {
-      return Promise.reject(new KinveyError(`Unable to connect to identity ${identity} on this platform.`));
+    if (User.isIdentitySupported(identity)) {
+      return Promise.reject(new KinveyError(`Identity ${identity} is not supported on this platform.`));
     }
 
     options = assign({
@@ -521,30 +543,55 @@ export class User {
       create: true
     }, options);
 
-    const user = {};
-    user[socialIdentityAttribute] = {};
-    user[socialIdentityAttribute][identity] = {
+    const data = clone(this.data, true);
+    data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
+    data[socialIdentityAttribute][identity] = {
       access_token: accessToken,
       expires_in: expiresIn
     };
 
     const promise = this.client.getActiveUser().then(activeUser => {
       if (activeUser) {
-        activeUser[socialIdentityAttribute] = user[socialIdentityAttribute];
+        activeUser[socialIdentityAttribute] = data[socialIdentityAttribute];
         options._identity = identity;
         return this.update(activeUser, options);
       }
 
-      return this.login(user, null, options);
+      return this.login(data, null, options);
     }).catch(err => {
       if (options.create && err instanceof NotFoundError) {
-        return this.signup(user, options).then(() => {
+        return this.signup(data, options).then(() => {
           return this.connect(identity, accessToken, expiresIn, options);
         });
       }
     });
 
     return promise;
+  }
+
+  disconnect(identity, options = {}) {
+    const data = clone(this.data, true);
+    data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
+    data[socialIdentityAttribute][identity] = null;
+
+    const promise = Promise.resolve().then(() => {
+      if (!this._id) {
+        return this;
+      }
+
+      return this.update(data, options);
+    });
+    return promise;
+  }
+
+  static signup(data, options) {
+    const user = new User();
+    return user.signup(data, options);
+  }
+
+  static signupWithIdentity(identity, tokens, options) {
+    const user = new User();
+    return user.signupWithIdentity(identity, tokens, options);
   }
 
   /**
@@ -606,6 +653,12 @@ export class User {
     });
 
     return promise;
+  }
+
+  signupWithIdentity(identity, tokens, options) {
+    const data = { _socialIdentity: {} };
+    data._socialIdentity[identity] = tokens;
+    return this.signup(data, options);
   }
 
   update(data, options = {}) {
@@ -700,36 +753,42 @@ export class User {
     return promise;
   }
 
-  verifyEmail(username, options) {
+  verifyEmail(options) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
-      pathname: `/${rpcNamespace}/${this.client.appKey}/${username}/user-email-verification-initiate`,
+      pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`,
       auth: this.client.appAuth(),
       properties: options.properties,
       timeout: options.timeout
+    }).then(response => {
+      return response.data;
     });
     return promise;
   }
 
-  forgotUsername(email, options) {
+  forgotUsername(options) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`,
       auth: this.client.appAuth(),
-      data: { email: email },
+      data: { email: this.email },
       properties: options.properties,
       timeout: options.timeout
+    }).then(response => {
+      return response.data;
     });
     return promise;
   }
 
-  resetPassword(username, options) {
+  resetPassword(options) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
-      pathname: `/${rpcNamespace}/${this.client.appKey}/${username}/user-password-reset-initiate`,
+      pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`,
       auth: this.client.appAuth(),
       properties: options.properties,
       timeout: options.timeout
+    }).then(response => {
+      return response.data;
     });
     return promise;
   }

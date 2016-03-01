@@ -1,111 +1,65 @@
-const DataStore = require('../core/stores/cacheStore');
-const Query = require('../core/query');
-const Aggregation = require('../core/aggregation');
-const KinveyError = require('../core/errors').KinveyError;
-const log = require('../core/log');
-const map = require('lodash/map');
-const mapLegacyOptions = require('./utils').mapLegacyOptions;
-const wrapCallbacks = require('./utils').wrapCallbacks;
+import { DataStore as CoreDataStore } from '../src/stores/datastore';
+import { DataStoreType } from '../src/enums';
+import { wrapCallbacks } from './utils';
 
-class LegacyDataStore {
-  static find(name, query, options) {
-    options = mapLegacyOptions(options);
+function getDataStoreInstance(collection, options = {}) {
+  let store = CoreDataStore.getInstance(collection);
 
-    if (query && !(query instanceof Query)) {
-      const error = new KinveyError('query argument must be of type: Kinvey.Query');
-      return wrapCallbacks(Promise.reject(error), options);
-    }
+  if (options.offline && !options.fallback) {
+    store = CoreDataStore.getInstance(collection, DataStoreType.Sync);
+  } else {
+    store = CoreDataStore.getInstance(collection, DataStoreType.Network);
+  }
 
-    const store = new DataStore(name, options);
-    const promise = store.find(query, options).then(models => {
-      return map(models, model => {
-        return model.toJSON();
-      });
-    });
+  return store;
+}
+
+export class DataStore {
+  static find(collection, query, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.find(query, options);
     return wrapCallbacks(promise, options);
   }
 
-  static group(name, aggregation, options) {
-    options = mapLegacyOptions(options);
-
-    if (!(aggregation instanceof Aggregation)) {
-      const error = new KinveyError('aggregation argument must be of type: Kinvey.Group');
-      return wrapCallbacks(Promise.reject(error), options);
-    }
-
-    const store = new DataStore(name, options);
-    const promise = store.group(aggregation, options);
+  static get(collection, id, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.findById(id, options);
     return wrapCallbacks(promise, options);
   }
 
-  static count(name, query, options) {
-    options = mapLegacyOptions(options);
+  static save(collection, entity, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.save(entity, options);
+    return wrapCallbacks(promise, options);
+  }
 
-    const store = new DataStore(name, options);
+  static update(collection, entity, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.save(entity, options);
+    return wrapCallbacks(promise, options);
+  }
+
+  static clean(collection, query, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.remove(query, options);
+    return wrapCallbacks(promise, options);
+  }
+
+  static destroy(collection, id, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.removeById(id, options);
+    return wrapCallbacks(promise, options);
+  }
+
+  static count(collection, query, options = {}) {
+    const store = getDataStoreInstance(collection, options);
     const promise = store.count(query, options);
     return wrapCallbacks(promise, options);
   }
 
-  static get(name, id, options) {
-    options = mapLegacyOptions(options);
-
-    const store = new DataStore(name, options);
-    const promise = store.get(id, options).then(model => {
-      return model.toJSON();
-    });
-    return wrapCallbacks(promise, options);
-  }
-
-  static save(name, document, options) {
-    options = mapLegacyOptions(options);
-
-    if (document._id) {
-      log.warn('The document has an _id, updating instead.', arguments);
-      return this.update(name, document, options);
-    }
-
-    const store = new DataStore(name, options);
-    const promise = store.create(document, options).then(model => {
-      return model.toJSON();
-    });
-    return wrapCallbacks(promise, options);
-  }
-
-  static update(name, document, options) {
-    options = mapLegacyOptions(options);
-
-    if (!document._id) {
-      const error = new KinveyError('document argument must contain: _id');
-      return wrapCallbacks(Promise.reject(error), options);
-    }
-
-    const store = new DataStore(name, options);
-    const promise = store.update(document, options).then(model => {
-      return model.toJSON();
-    });
-    return wrapCallbacks(promise, options);
-  }
-
-  static clean(name, query, options) {
-    options = mapLegacyOptions(options);
-
-    if (query && !(query instanceof Query)) {
-      const error = new KinveyError('query argument must be of type: Kinvey.Query');
-      return wrapCallbacks(Promise.reject(error), options);
-    }
-
-    const store = new DataStore(name, options);
-    const promise = store.clear(query, options);
-    return wrapCallbacks(promise, options);
-  }
-
-  static destroy(name, id, options) {
-    options = mapLegacyOptions(options);
-
-    const store = new DataStore(name, options);
-    const promise = store.delete(id, options);
+  static group(collection, aggregation, options = {}) {
+    const store = getDataStoreInstance(collection, options);
+    const promise = store.group(aggregation, options);
     return wrapCallbacks(promise, options);
   }
 }
-
-module.exports = LegacyDataStore;

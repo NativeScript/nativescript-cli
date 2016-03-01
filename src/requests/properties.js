@@ -1,10 +1,10 @@
 import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 import { KinveyError } from '../errors';
-const privatePropertiesSymbol = Symbol();
+const privateRequestPropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
 
-class PrivateProperties {
+class PrivateRequestProperties {
   constructor(properties = {}) {
     this.properties = properties;
   }
@@ -47,16 +47,16 @@ class PrivateProperties {
 }
 
 /**
- * Properties class
+ * Request Properties class
  */
-export default class Properties {
+export class RequestProperties {
   /**
    * This is the constructor.
    *
    * @param  {Object} properties Request properties
    */
   constructor(properties) {
-    this[privatePropertiesSymbol] = new PrivateProperties(properties);
+    this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
   }
 
   /**
@@ -151,7 +151,7 @@ export default class Properties {
       throw new KinveyError('properties argument must be an object');
     }
 
-    const privateProperties = this[privatePropertiesSymbol];
+    const privateProperties = this[privateRequestPropertiesSymbol];
     privateProperties.addProperties(properties);
     return this;
   }
@@ -162,7 +162,7 @@ export default class Properties {
    * @return {RequestProperties} The request properties instance.
    */
   clear() {
-    const privateProperties = this[privatePropertiesSymbol];
+    const privateProperties = this[privateRequestPropertiesSymbol];
     privateProperties.clear();
     return this;
   }
@@ -174,7 +174,7 @@ export default class Properties {
    * @return {RequestProperties} The request properties instance.
    */
   clearProperty(key) {
-    const privateProperties = this[privatePropertiesSymbol];
+    const privateProperties = this[privateRequestPropertiesSymbol];
     privateProperties.clearProperty(key);
     return this;
   }
@@ -194,7 +194,7 @@ export default class Properties {
    * @return {Object} Request properties JSON.
    */
   toJSON() {
-    const privateProperties = this[privatePropertiesSymbol];
+    const privateProperties = this[privateRequestPropertiesSymbol];
     return privateProperties.toJSON();
   }
 }

@@ -1,9 +1,0 @@
-{
-  "app": {
-    "key": "kid_-kGcCYykhe",
-    "secret": "e2dd9e52710c437e9b727995fcb5ba33",
-    "version": "3.8.9",
-    "name": "JavaScript Library Tests",
-    "environment": "Development"
-  }
-}

@@ -163,16 +163,16 @@ export class DB {
     }
 
     entities = map(entities, entity => {
-      let _id = entity[idAttribute];
+      let id = entity[idAttribute];
       const kmd = entity[kmdAttribute] || {};
 
-      if (!_id) {
-        _id = this.generateObjectId();
+      if (!id) {
+        id = this.generateObjectId();
         kmd.local = true;
       }
 
       delete kmd.lmt;
-      entity[idAttribute] = _id;
+      entity[idAttribute] = id;
       entity[kmdAttribute] = kmd;
       return entity;
     });
