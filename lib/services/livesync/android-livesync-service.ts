@@ -35,7 +35,18 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 
 	public beforeLiveSyncAction(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
 		return (() => {
-			let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier);
+			let deviceRootPath = this.getDeviceRootPath(deviceAppData.appIdentifier),
+				deviceRootDir = path.dirname(deviceRootPath),
+				deviceRootBasename = path.basename(deviceRootPath),
+				listResult = this.device.adb.executeShellCommand(["ls", "-l", deviceRootDir]).wait(),
+				regex = new RegExp(`^-.*${deviceRootBasename}$`, "m"),
+				matchingFile = (listResult || "").match(regex);
+
+			// Check if there is already a file with deviceRootBasename. If so, delete it as it breaks LiveSyncing.
+			if(matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')){
+				this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]).wait();
+			}
+
 			this.device.adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync")]).wait();
