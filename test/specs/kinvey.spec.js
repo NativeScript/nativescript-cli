@@ -1,5 +1,5 @@
 import Kinvey from '../../src/kinvey';
-import Client from '../../src/core/client';
+import Client from '../../src/client';
 import config from 'config';
 import chai from 'chai';
 chai.use(require('chai-as-promised'));

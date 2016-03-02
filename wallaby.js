@@ -6,9 +6,9 @@ module.exports = function(wallaby) {
       'config/*.json',
       'package.json',
       'src/**/*.js',
-      'test/helper.js'
+      'test/setup.js',
+      'test/helpers.js'
     ],
-
     tests: [
       'test/specs/**/*.js'
     ],

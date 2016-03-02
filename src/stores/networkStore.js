@@ -14,7 +14,7 @@ const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
  * The NetworkStore class is used to find, save, update, remove, count and group enitities
  * in a collection on the network.
  */
-export default class NetworkStore {
+export class NetworkStore {
   /**
    * Creates a new instance of the NetworkStore class.
    *

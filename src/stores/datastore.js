@@ -1,15 +1,28 @@
-import NetworkStore from './networkStore';
-import CacheStore from './cacheStore';
-import SyncStore from './syncStore';
+import { NetworkStore } from './networkstore';
+import { CacheStore } from './cachestore';
+import { SyncStore } from './syncstore';
 import { UserStore } from './userstore';
 import { FileStore } from './filestore';
-import { DataStoreType } from '../enums';
 
-export default class DataStore {
+/**
+ * Enum for DataStore types.
+ */
+const DataStoreType = {
+  Sync: 'Sync',
+  Cache: 'Cache',
+  Network: 'Network',
+  User: 'User',
+  File: 'File'
+};
+Object.freeze(DataStoreType);
+export { DataStoreType };
+
+
+export class DataStore {
   /**
    * Returns an instance of the Store class based on the type provided.
    *
-   * @param  {string}       name                        Name of the collection.
+   * @param  {string}       [name]                      Name of the collection.
    * @param  {StoreType}    [type=DataStoreType.Cache]  Type of store to return.
    * @return {Object}                                   Store
    */
@@ -37,3 +50,11 @@ export default class DataStore {
     return store;
   }
 }
+
+export {
+  CacheStore,
+  FileStore,
+  NetworkStore,
+  SyncStore,
+  UserStore
+};

@@ -1,4 +1,4 @@
-import CacheStore from './cacheStore';
+import { CacheStore } from './cacheStore';
 import Aggregation from '../aggregation';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
@@ -6,7 +6,7 @@ import Query from '../query';
 import log from '../log';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
-export default class SyncStore extends CacheStore {
+export class SyncStore extends CacheStore {
 
   /**
    * Finds all entities in a collection. A query can be optionally provided to return

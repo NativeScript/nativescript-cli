@@ -1,15 +1,25 @@
-import { NotFoundError } from '../../../errors';
+import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';
-import merge from 'lodash/merge';
 import values from 'lodash/values';
+import find from 'lodash/find';
+import isString from 'lodash/isString';
+import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * @private
  */
 export class Memory {
-  constructor(name = 'kinvey') {
+  constructor(name) {
+    if (!name) {
+      throw new KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
+    }
+
+    if (!isString(name)) {
+      throw new KinveyError('The name of the collection must be a string to use the memory persistence adapter', name);
+    }
+
     this.name = name;
     this.cache = new MemoryCache();
   }
@@ -18,11 +28,15 @@ export class Memory {
     return Promise.resolve().then(() => {
       const data = this.cache.get(`${this.name}${collection}`);
 
-      try {
-        return JSON.parse(data);
-      } catch (err) {
-        return data;
+      if (data) {
+        try {
+          return JSON.parse(data);
+        } catch (err) {
+          return data;
+        }
       }
+
+      return data;
     }).then(entities => {
       if (!entities) {
         return [];
@@ -48,23 +62,26 @@ export class Memory {
   }
 
   save(collection, entities) {
+    let singular = false;
+
+    if (!isArray(entities)) {
+      entities = [entities];
+      singular = true;
+    }
+
     return this.find(collection).then(existingEntities => {
-      const existingEntitiesById = keyBy(existingEntities, idAttribute);
-      const entitiesById = keyBy(entities, idAttribute);
+      existingEntities = keyBy(existingEntities, idAttribute);
+      entities = keyBy(entities, idAttribute);
 
-      for (const id in existingEntitiesById) {
-        if (existingEntitiesById.hasOwnProperty(id)) {
-          const existingEntity = existingEntitiesById[id];
-          const entity = entitiesById[id];
-
-          if (entity) {
-            entitiesById[id] = merge(existingEntity, entity);
-          }
+      for (const id in entities) {
+        if (entities.hasOwnProperty(id)) {
+          existingEntities[id] = entities[id];
         }
       }
 
-      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
-      return entities;
+      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(existingEntities)));
+      entities = values(entities);
+      return singular ? entities[0] : entities;
     });
   }
 

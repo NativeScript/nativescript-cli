@@ -1,9 +1,9 @@
-import NetworkStore from './networkStore';
+import { NetworkStore } from './networkStore';
 import { AuthType, HttpMethod } from '../enums';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
-export class UsersStore extends NetworkStore {
+export class UserStore extends NetworkStore {
   /**
    * The pathname for the store.
    *

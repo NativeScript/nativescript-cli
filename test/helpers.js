@@ -1,24 +1,45 @@
-const User = require('../src/core/models/user');
-const uid = require('uid');
-const result = require('lodash/object/result');
-const isString = require('lodash/lang/isString');
-const isEmpty = require('lodash/lang/isEmpty');
+import { User } from '../src/user';
+import uid from 'uid';
+import result from 'lodash/result';
+import isString from 'lodash/isString';
+import isEmpty from 'lodash/isEmpty';
+import nock from 'nock';
+import url from 'url';
 
 export function randomString(size, prefix = '') {
   return `${prefix}${uid(size)}`;
 }
 
-export function loginUser() {
-  return User.login('admin', 'admin');
-}
+const UserHelper = {
+  login() {
+    const user = new User();
+    const hostname = url.format({
+      protocol: user.client.protocol,
+      host: user.client.host
+    });
+    const server = nock(hostname).post(`${user._pathname}/login`).query(true);
+    server.reply(200, {
+      _id: randomString(),
+      username: randomString(),
+      password: randomString(),
+      _kmd: {
+        authtoken: randomString()
+      }
+    }, {
+      'Content-Type': 'application/json'
+    });
+    return User.login('admin', 'admin');
+  },
 
-export function logoutUser() {
-  return User.getActive().then(user => {
-    if (user) {
-      return user.logout();
-    }
-  });
-}
+  logout() {
+    return User.getActiveUser().then(user => {
+      if (user) {
+        return user.logout();
+      }
+    });
+  }
+};
+export { UserHelper };
 
 export function createNockQuery(query, flags = {}) {
   if (query) {

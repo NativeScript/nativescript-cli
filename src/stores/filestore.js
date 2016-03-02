@@ -1,4 +1,4 @@
-import NetworkStore from './networkStore';
+import { NetworkStore } from './networkStore';
 import NetworkRequest from '../requests/networkRequest';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
@@ -10,7 +10,7 @@ const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 /**
  * The FilesStore class is used to find, save, update, remove, count and group files.
  */
-export default class FilesStore extends NetworkStore {
+export class FileStore extends NetworkStore {
   /**
    * The pathname for the store.
    *

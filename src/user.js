@@ -154,6 +154,10 @@ export class User {
     return this.data[emailAttribute];
   }
 
+  get _pathname() {
+    return `/${usersNamespace}/${this.client.appKey}`;
+  }
+
   /**
    * Gets the active user. You can optionally provide a client
    * to use to lookup the active user.
@@ -311,7 +315,7 @@ export class User {
 
       return this.client.executeNetworkRequest({
         method: HttpMethod.POST,
-        pathname: `/${usersNamespace}/${this.client.appKey}/login`,
+        pathname: `${this._pathname}/login`,
         data: usernameOrData,
         authType: AuthType.App,
         properties: options.properties,

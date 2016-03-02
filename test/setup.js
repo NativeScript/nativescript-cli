@@ -1,7 +1,8 @@
-import Kinvey from '../src/kinvey';
-const Log = require('../src/core/log');
-const sinon = require('sinon');
-const chai = require('chai');
+import { Kinvey } from '../src/kinvey';
+import { UserHelper } from './helpers';
+import Log from '../src/log';
+import sinon from 'sinon';
+import chai from 'chai';
 chai.use(require('sinon-chai'));
 chai.use(require('chai-as-promised'));
 
@@ -15,23 +16,31 @@ global.expect = chai.expect;
 
 before(function () {
   this.client = Kinvey.init({
-    appKey: 'kid_-kGcCYykhe',
-    appSecret: 'e2dd9e52710c437e9b727995fcb5ba33'
+    appKey: 'testAppKey',
+    appSecret: 'testAppSecret'
   });
 });
 
-beforeEach(function () {
-  this.sandbox = global.sinon.sandbox.create();
-  global.stub = this.sandbox.stub.bind(this.sandbox);
-  global.spy = this.sandbox.spy.bind(this.sandbox);
-});
-
-afterEach(function () {
-  delete global.stub;
-  delete global.spy;
-  this.sandbox.restore();
-});
-
-after(function () {
+after(function() {
   delete this.client;
 });
+
+before(function() {
+  return UserHelper.login();
+});
+
+after(function() {
+  return UserHelper.logout();
+});
+
+// beforeEach(function () {
+//   this.sandbox = global.sinon.sandbox.create();
+//   global.stub = this.sandbox.stub.bind(this.sandbox);
+//   global.spy = this.sandbox.spy.bind(this.sandbox);
+// });
+
+// afterEach(function () {
+//   delete global.stub;
+//   delete global.spy;
+//   this.sandbox.restore();
+// });
