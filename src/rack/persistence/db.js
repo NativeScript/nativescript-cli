@@ -4,6 +4,7 @@ import { IndexedDB } from './adapters/indexeddb';
 import { LocalStorage } from './adapters/localstorage';
 import { Memory } from './adapters/memory';
 import { WebSQL } from './adapters/websql';
+import { KinveyError } from '../../errors';
 import log from '../../log';
 import map from 'lodash/map';
 import result from 'lodash/result';
@@ -27,12 +28,20 @@ const DBAdapter = {
 Object.freeze(DBAdapter);
 export { DBAdapter };
 
+// Export Adapters
+export {
+  IndexedDB,
+  LocalStorage,
+  Memory,
+  WebSQL
+};
+
 
 /**
  * @private
  */
 export class DB {
-  constructor(dbName = 'kinvey', adapters = [DBAdapter.Memory]) {
+  constructor(name, adapters = [DBAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }
@@ -41,28 +50,28 @@ export class DB {
       switch (adapter) {
         case DBAdapter.IndexedDB:
           if (IndexedDB.isSupported()) {
-            this.adapter = new IndexedDB(dbName);
+            this.adapter = new IndexedDB(name);
             return false;
           }
 
           break;
         case DBAdapter.LocalStorage:
           if (LocalStorage.isSupported()) {
-            this.adapter = new LocalStorage(dbName);
+            this.adapter = new LocalStorage(name);
             return false;
           }
 
           break;
         case DBAdapter.Memory:
           if (Memory.isSupported()) {
-            this.adapter = new Memory(dbName);
+            this.adapter = new Memory(name);
             return false;
           }
 
           break;
         case DBAdapter.WebSQL:
           if (WebSQL.isSupported()) {
-            this.adapter = new WebSQL(dbName);
+            this.adapter = new WebSQL(name);
             return false;
           }
 
@@ -76,7 +85,7 @@ export class DB {
       if (Memory.isSupported()) {
         log.error('Provided adapters are unsupported on this platform. ' +
           'Defaulting to StoreAdapter.Memory adapter.', adapters);
-        this.adapter = new Memory(dbName);
+        this.adapter = new Memory(name);
       } else {
         log.error('Provided adapters are unsupported on this platform.', adapters);
       }
@@ -85,10 +94,6 @@ export class DB {
 
   get objectIdPrefix() {
     return '';
-  }
-
-  isLocalObjectId(id) {
-    return id.indexOf(this.objectIdPrefix) === 0 ? true : false;
   }
 
   generateObjectId(length = 24) {
@@ -106,6 +111,12 @@ export class DB {
 
   find(collection, query) {
     const promise = this.adapter.find(collection).then(entities => {
+      if (!entities) {
+        return [];
+      }
+
+      return entities;
+    }).then(entities => {
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
@@ -134,7 +145,11 @@ export class DB {
         aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
       }
 
-      return aggregation.process(entities);
+      if (entities.length > 0 && aggregation) {
+        return aggregation.process(entities);
+      }
+
+      return null;
     });
 
     return promise;
@@ -142,8 +157,7 @@ export class DB {
 
   findById(collection, id) {
     if (!isString(id)) {
-      log.warn(`${id} is not a string. Casting to a string value.`, id);
-      id = String(id);
+      return Promise.reject(new KinveyError('id must be a string', id));
     }
 
     const promise = this.adapter.findById(collection, id);
@@ -177,12 +191,12 @@ export class DB {
       return entity;
     });
 
-    return this.adapter.save(collection, entities).then(data => {
-      if (singular && data.length > 0) {
-        return data[0];
+    return this.adapter.save(collection, entities).then(entities => {
+      if (singular && entities.length > 0) {
+        return entities[0];
       }
 
-      return data;
+      return entities;
     });
   }
 
@@ -205,7 +219,7 @@ export class DB {
     }).then(responses => {
       return reduce(responses, (result, response) => {
         result.count += response.count;
-        result.entities.concat(response.entities);
+        result.entities = result.entities.concat(response.entities);
         return result;
       }, {
         count: 0,
@@ -222,6 +236,10 @@ export class DB {
         count: 0,
         entities: []
       });
+    }
+
+    if (!isString(id)) {
+      return Promise.reject(new KinveyError('id must be a string', id));
     }
 
     const promise = this.adapter.removeById(collection, id);

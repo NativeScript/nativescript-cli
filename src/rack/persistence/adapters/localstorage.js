@@ -3,11 +3,7 @@ import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';
 import values from 'lodash/values';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-let localStorage = undefined;
-
-if (typeof window !== 'undefined') {
-  localStorage = window.localStorage;
-}
+const localStorage = global.localStorage;
 
 /**
  * @private
@@ -92,13 +88,17 @@ export class LocalStorage {
   }
 
   static isSupported() {
-    const item = 'testLocalStorageSupport';
-    try {
-      localStorage.setItem(item, item);
-      localStorage.removeItem(item);
-      return true;
-    } catch (e) {
-      return false;
+    if (localStorage) {
+      const item = 'testLocalStorageSupport';
+      try {
+        localStorage.setItem(item, item);
+        localStorage.removeItem(item);
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
+
+    return false;
   }
 }

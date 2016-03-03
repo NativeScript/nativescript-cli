@@ -26,17 +26,17 @@ export class Memory {
 
   find(collection) {
     return Promise.resolve().then(() => {
-      const data = this.cache.get(`${this.name}${collection}`);
+      const entities = this.cache.get(`${this.name}${collection}`);
 
-      if (data) {
+      if (entities) {
         try {
-          return JSON.parse(data);
+          return JSON.parse(entities);
         } catch (err) {
-          return data;
+          return entities;
         }
       }
 
-      return data;
+      return entities;
     }).then(entities => {
       if (!entities) {
         return [];
@@ -69,6 +69,10 @@ export class Memory {
       singular = true;
     }
 
+    if (entities.length === 0) {
+      return Promise.resolve(entities);
+    }
+
     return this.find(collection).then(existingEntities => {
       existingEntities = keyBy(existingEntities, idAttribute);
       entities = keyBy(entities, idAttribute);
@@ -87,16 +91,16 @@ export class Memory {
 
   removeById(collection, id) {
     return this.find(collection).then(entities => {
-      const entitiesById = keyBy(entities, idAttribute);
-      const entity = entitiesById[id];
+      entities = keyBy(entities, idAttribute);
+      const entity = entities[id];
 
       if (!entity) {
         throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
           `collection on the ${this.name} memory database.`);
       }
 
-      delete entitiesById[id];
-      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+      delete entities[id];
+      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(entities)));
 
       return {
         count: 1,

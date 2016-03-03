@@ -1,7 +1,7 @@
 import { KinveyError, NotFoundError } from '../../../errors';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
-let indexedDB = null;
+import isString from 'lodash/isString';
 const dbCache = {};
 
 const TransactionMode = {
@@ -13,18 +13,27 @@ Object.freeze(TransactionMode);
 if (typeof window !== 'undefined') {
   require('indexeddbshim');
   global.shimIndexedDB.__useShim();
-  indexedDB = global.indexedDB ||
-              global.mozIndexedDB ||
-              global.webkitIndexedDB ||
-              global.msIndexedDB ||
-              global.shimIndexedDB;
 }
+
+const indexedDB = global.indexedDB ||
+                  global.mozIndexedDB ||
+                  global.webkitIndexedDB ||
+                  global.msIndexedDB ||
+                  global.shimIndexedDB;
 
 /**
  * @private
  */
 export class IndexedDB {
-  constructor(name = 'kinvey') {
+  constructor(name) {
+    if (!name) {
+      throw new KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
+    }
+
+    if (!isString(name)) {
+      throw new KinveyError('The name of the collection must be a string to use the memory persistence adapter', name);
+    }
+
     this.name = name;
     this.inTransaction = false;
     this.queue = [];
@@ -34,7 +43,7 @@ export class IndexedDB {
     let db = dbCache[this.name];
 
     if (db) {
-      if (db.objectStoreNames.contains(collection)) {
+      if (db.objectStoreNames.indexOf(collection) !== -1) {
         try {
           const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
           const txn = db.transaction([collection], mode);
@@ -209,8 +218,11 @@ export class IndexedDB {
   }
 
   save(collection, entities) {
+    let singular = false;
+
     if (!isArray(entities)) {
-      return this.save(collection, entities);
+      entities = [entities];
+      singular = true;
     }
 
     if (entities.length === 0) {
@@ -226,7 +238,7 @@ export class IndexedDB {
         });
 
         request.oncomplete = function onComplete() {
-          resolve(entities);
+          resolve(singular ? entities[0] : entities);
         };
 
         request.onerror = (e) => {
@@ -264,28 +276,6 @@ export class IndexedDB {
             `Received the error code ${e.target.errorCode}.`));
         };
       }, reject);
-    });
-
-    return promise;
-  }
-
-  destroy() {
-    const promise = new Promise((resolve, reject) => {
-      if (this.db) {
-        this.db.close();
-        this.db = null;
-      }
-
-      const request = indexedDB.deleteDatabase(this.name);
-
-      request.onsuccess = function onSuccess() {
-        resolve(null);
-      };
-
-      request.onerror = (e) => {
-        reject(new KinveyError(`An error occurred while destroying the ${this.name} ` +
-          `indexedDB database. Received the error code ${e.target.errorCode}.`));
-      };
     });
 
     return promise;

@@ -50,6 +50,7 @@
     "eslint": "^1.8.0",
     "eslint-config-airbnb": "^3.0.2",
     "exorcist": "^0.4.0",
+    "fake-indexeddb": "^1.0.3",
     "glob": "^6.0.0",
     "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",
@@ -106,9 +107,17 @@
     "yargs": "^3.27.0"
   },
   "browserify": {
-    "transform": [["babelify", {
-      "presets": ["es2015", "stage-2"],
-      "ignore": "/\/node_modules\/(?!qs\/)/"
-    }]]
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015",
+            "stage-2"
+          ],
+          "ignore": "//node_modules/(?!qs/)/"
+        }
+      ]
+    ]
   }
 }
