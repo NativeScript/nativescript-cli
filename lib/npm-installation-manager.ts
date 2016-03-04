@@ -42,19 +42,26 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return path.join(this.getCacheRootPath(), packageName, version, "package");
 	}
 
-	public addToCache(packageName: string, version: string): IFuture<void> {
+	public addToCache(packageName: string, version: string): IFuture<any> {
 		return (() => {
 			let cachedPackagePath = this.getCachedPackagePath(packageName, version);
+			let cachedPackageData: any;
 			if(!this.$fs.exists(cachedPackagePath).wait() || !this.$fs.exists(path.join(cachedPackagePath, "framework")).wait()) {
-				this.addToCacheCore(packageName, version).wait();
+				cachedPackageData = this.addToCacheCore(packageName, version).wait();
 			}
 
-			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
+			// In case the version is tag (for example `next`), we need the real version number from the cache.
+			// In these cases the cachePackageData is populated when data is added to the cache.
+			// Also whenever the version is tag, we always get inside the above `if` and the cachedPackageData is populated.
+			let realVersion = (cachedPackageData && cachedPackageData.version) || version;
+			if(!this.isShasumOfPackageCorrect(packageName, realVersion).wait()) {
 				// In some cases the package is not fully downloaded and there are missing directories
 				// Try removing the old package and add the real one to cache again
-				this.addCleanCopyToCache(packageName, version).wait();
+				cachedPackageData = this.addCleanCopyToCache(packageName, version).wait();
 			}
-		}).future<void>()();
+
+			return cachedPackageData;
+		}).future<any>()();
 	}
 
 	public cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void> {
@@ -125,26 +132,29 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		}).future<string>()();
 	}
 
-	public addCleanCopyToCache(packageName: string, version: string): IFuture<void> {
+	private addCleanCopyToCache(packageName: string, version: string): IFuture<any> {
 		return (() => {
 			let packagePath = path.join(this.getCacheRootPath(), packageName, version);
 			this.$logger.trace(`Deleting: ${packagePath}.`);
 			this.$fs.deleteDirectory(packagePath).wait();
-			this.addToCacheCore(packageName, version).wait();
-			if(!this.isShasumOfPackageCorrect(packageName, version).wait()) {
-				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${version} to npm cache. Try cleaning your cache and execute the command again.`);
+			let cachedPackageData = this.addToCacheCore(packageName, version).wait();
+			if(!this.isShasumOfPackageCorrect(packageName, cachedPackageData.version).wait()) {
+				this.$errors.failWithoutHelp(`Unable to add package ${packageName} with version ${cachedPackageData.version} to npm cache. Try cleaning your cache and execute the command again.`);
 			}
-		}).future<void>()();
+
+			return cachedPackageData;
+		}).future<any>()();
 	}
 
-	private addToCacheCore(packageName: string, version: string): IFuture<void> {
+	private addToCacheCore(packageName: string, version: string): IFuture<any> {
 		return (() => {
-			this.$npm.cache(packageName, version).wait();
-			let packagePath = path.join(this.getCacheRootPath(), packageName, version, "package");
+			let cachedPackageData = this.$npm.cache(packageName, version).wait();
+			let packagePath = path.join(this.getCacheRootPath(), packageName, cachedPackageData.version, "package");
 			if(!this.isPackageUnpacked(packagePath, packageName).wait()) {
-				this.cacheUnpack(packageName, version).wait();
+				this.cacheUnpack(packageName, cachedPackageData.version).wait();
 			}
-		}).future<void>()();
+			return cachedPackageData;
+		}).future<any>()();
 	}
 
 	private isShasumOfPackageCorrect(packageName: string, version: string): IFuture<boolean> {
@@ -185,9 +195,9 @@ export class NpmInstallationManager implements INpmInstallationManager {
 				return path.join(pathToNodeModules, folders[0]);
 			} else {
 				version = version || this.getLatestCompatibleVersion(packageName).wait();
-				let packagePath = this.getCachedPackagePath(packageName, version);
-				this.addToCache(packageName, version).wait();
-				return packagePath;
+				let cachedData = this.addToCache(packageName, version).wait();
+				let packageVersion = (cachedData && cachedData.version) || version;
+				return this.getCachedPackagePath(packageName, packageVersion);
 			}
 		}).future<string>()();
 	}
