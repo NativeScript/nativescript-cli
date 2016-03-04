@@ -50,65 +50,110 @@ function mockNpm(testInjector: IInjector, versions: string[], latestVersion: str
 	});
 }
 
+interface ITestData {
+	/**
+	 * All versions of the package, including the ones from another tags.
+	 */
+	versions: string[];
+
+	/**
+	 * The version under latest tag.
+	 */
+	packageLatestVersion: string;
+
+	/**
+	 * Version of nativescript-cli, based on which the version of the package that will be installed is detected.
+	 */
+	cliVersion: string;
+
+	/**
+	 * Expected result
+	 */
+	expectedResult: string;
+}
+
 describe("Npm installation manager tests", () => {
-	it("returns correct latest compatible version when only one exists", () => {
-		let testInjector = createTestInjector();
+	let testData: IDictionary<ITestData> = {
+		"when there's only one available version and it matches CLI's version":	{
+			versions: ["1.4.0"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.4.0",
+			expectedResult: "1.4.0"
+		},
 
-		let versions = ["1.4.0"];
-		let latestVersion = "1.4.0";
+		"when there's only one available version and it is higher than match CLI's version":	{
+			versions: ["1.4.0"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.2.0",
+			expectedResult: "1.4.0"
+		},
 
-		mockNpm(testInjector, versions, latestVersion);
+		"when there's only one available version and it is lower than CLI's version":	{
+			versions: ["1.4.0"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.6.0",
+			expectedResult: "1.4.0"
+		},
 
-		// Mock staticConfig.version
-		let staticConfig = testInjector.resolve("staticConfig");
-		staticConfig.version = "1.4.0";
+		"when there are multiple package versions and the latest one matches ~<cli-version>":{
+			versions: ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"],
+			packageLatestVersion: "1.3.3",
+			cliVersion: "1.3.0",
+			expectedResult: "1.3.3"
+		},
 
-		// Mock npmInstallationManager.getLatestVersion
-		let npmInstallationManager = testInjector.resolve("npmInstallationManager");
-		npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(latestVersion);
+		"when there are multiple package versions and the latest one matches ~<cli-version> when there are newer matching versions but they are not under latest tag":{
+			versions: ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"],
+			packageLatestVersion: "1.3.2",
+			cliVersion: "1.3.0",
+			expectedResult: "1.3.2"
+		},
 
-		let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
-		let expectedLatestCompatibleVersion = "1.4.0";
-		assert.equal(actualLatestCompatibleVersion, expectedLatestCompatibleVersion);
-	});
+		"when there are multiple package versions and the latest one is lower than ~<cli-version>": {
+			versions: ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.5.0",
+			expectedResult: "1.4.0"
+		},
 
-	it("returns correct latest compatible version", () => {
-		let testInjector = createTestInjector();
+		"when there are multiple package versions and there's beta version matching CLI's semver": {
+			versions: ["1.2.0", "1.3.0", "1.3.1", "1.4.0", "1.5.0-2016-02-25-182"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.5.0",
+			expectedResult: "1.4.0"
+		},
 
-		let versions = ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"];
-		let latestVersion = "1.3.3";
+		"when there are multiple package versions and package's latest version is greater than CLI's version": {
+			versions: ["1.2.0", "1.3.0", "1.3.1", "1.4.0", "1.5.0-2016-02-25-182", "1.5.0", "1.6.0"],
+			packageLatestVersion: "1.6.0",
+			cliVersion: "1.5.0",
+			expectedResult: "1.5.0"
+		},
 
-		mockNpm(testInjector, versions, latestVersion);
+		"when there are multiple versions latest one does not match CLI's semver and other versions are not matching either": {
+			versions: ["1.0.0", "1.0.1", "1.2.0", "1.3.1", "1.4.0", "1.5.0-2016-02-25-182", "1.5.0"],
+			packageLatestVersion: "1.0.0",
+			cliVersion: "1.1.0",
+			expectedResult: "1.0.0"
+		}
+	};
 
-		// Mock staticConfig.version
-		let staticConfig = testInjector.resolve("staticConfig");
-		staticConfig.version = "1.3.0";
+	_.each(testData, (currentTestData: ITestData, testName: string) => {
+		it(`returns correct latest compatible version, ${testName}`, () => {
+			let testInjector = createTestInjector();
 
-		// Mock npmInstallationManager.getLatestVersion
-		let npmInstallationManager = testInjector.resolve("npmInstallationManager");
-		npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(latestVersion);
+			mockNpm(testInjector, currentTestData.versions, currentTestData.packageLatestVersion);
 
-		let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
-		let expectedLatestCompatibleVersion = "1.3.3";
-		assert.equal(actualLatestCompatibleVersion, expectedLatestCompatibleVersion);
-	});
+			// Mock staticConfig.version
+			let staticConfig = testInjector.resolve("staticConfig");
+			staticConfig.version = currentTestData.cliVersion;
 
-	it("returns correct latest compatible version", () => {
-		let testInjector = createTestInjector();
+			// Mock npmInstallationManager.getLatestVersion
+			let npmInstallationManager = testInjector.resolve("npmInstallationManager");
+			npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(currentTestData.packageLatestVersion);
 
-		let versions = ["1.2.0", "1.3.0", "1.3.1", "1.3.2", "1.3.3", "1.4.0"];
-		let latestVersion = _.last(versions);
-		mockNpm(testInjector, versions, latestVersion);
-
-		// Mock staticConfig.version
-		let staticConfig = testInjector.resolve("staticConfig");
-		staticConfig.version = "1.5.0";
-
-		// Mock npmInstallationManager.getLatestVersion
-		let npmInstallationManager = testInjector.resolve("npmInstallationManager");
-		npmInstallationManager.getLatestVersion = (packageName: string) => Future.fromResult(latestVersion);
-
-		let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
-		assert.equal(actualLatestCompatibleVersion, latestVersion);
+			let actualLatestCompatibleVersion = npmInstallationManager.getLatestCompatibleVersion("").wait();
+			assert.equal(actualLatestCompatibleVersion, currentTestData.expectedResult);
+		});
 	});
 });

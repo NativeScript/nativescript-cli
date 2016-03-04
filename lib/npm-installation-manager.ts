@@ -65,6 +65,9 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public getLatestVersion(packageName: string): IFuture<string> {
 		return (() => {
 			let data = this.$npm.view(packageName, "dist-tags").wait();
+			// data is something like :
+			// { '1.0.1': { 'dist-tags': { latest: '1.0.1', next: '1.0.2-2016-02-25-181', next1: '1.0.2' } }
+			// There's only one key and it's always the @latest tag.
 			let latestVersion = _.first(_.keys(data));
 			this.$logger.trace("Using version %s. ", latestVersion);
 
@@ -74,22 +77,31 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 	public getLatestCompatibleVersion(packageName: string): IFuture<string> {
 		return (() => {
+			let cliVersionRange = `~${this.$staticConfig.version}`;
 			let latestVersion = this.getLatestVersion(packageName).wait();
-			let data = this.$npm.view(packageName, "versions").wait();
-			let versions: string[] = data[latestVersion].versions;
+			if(semver.satisfies(latestVersion, cliVersionRange)) {
+				return latestVersion;
+			}
 
-			let versionData = this.getVersionData(this.$staticConfig.version);
-
- 			let compatibleVersions = _(versions)
-				.map(ver => this.getVersionData(ver))
-				.filter(verData => versionData.major === verData.major && versionData.minor === verData.minor)
-				.sortBy(verData => verData.patch)
-				.value();
-
-			let result = _.last(compatibleVersions) || this.getVersionData(latestVersion);
-
-			let latestCompatibleVersion = `${result.major}.${result.minor}.${result.patch}`;
-			return latestCompatibleVersion;
+			let data: any = this.$npm.view(packageName, "versions").wait();
+			/* data is something like:
+				{
+					"1.1.0":{
+						"versions":[
+							"1.0.0",
+							"1.0.1-2016-02-25-181",
+							"1.0.1",
+							"1.0.2-2016-02-25-182",
+							"1.0.2",
+							"1.1.0-2016-02-25-183",
+							"1.1.0",
+							"1.2.0-2016-02-25-184"
+						]
+					}
+				}
+			*/
+			let versions: string[] = data && data[latestVersion] && data[latestVersion].versions;
+			return semver.maxSatisfying(versions, cliVersionRange) || latestVersion;
 		}).future<string>()();
 	}
 
@@ -203,11 +215,6 @@ export class NpmInstallationManager implements INpmInstallationManager {
 		return ((): boolean => {
 			return this.$fs.exists(directory).wait() &&	this.$fs.enumerateFilesInDirectorySync(directory).length > 0;
 		}).future<boolean>()();
-	}
-
-	private getVersionData(version: string): IVersionData {
-		let [ major, minor, patch ] = version.split(".");
-		return { major, minor, patch };
 	}
 }
 $injector.register("npmInstallationManager", NpmInstallationManager);

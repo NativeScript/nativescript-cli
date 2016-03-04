@@ -1,6 +1,14 @@
 NativeScript CLI Changelog
 ================
 
+1.6.2 (2016, March 2)
+==
+
+### Fixed
+* [Fixed #1313](https://github.com/NativeScript/nativescript-cli/issues/1313): `tns livesync <platform> --watch` is not working for changed platform specific files.
+* [Fixed #1513](https://github.com/NativeScript/nativescript-cli/issues/1513): `tns test <platform>` does not work in case the application is not installed on the device.
+* [Fixed #1555](https://github.com/NativeScript/nativescript-cli/issues/1555): CLI installs beta versions of runtimes in case they are published in npm.
+
 1.6.1 (2016, February 19)
 ==
 
@@ -68,7 +76,6 @@ The existing `AndroidManifest.xml` will be renamed and default manifest will be 
 * [Fixed #956](https://github.com/NativeScript/nativescript-cli/issues/956): Better error reporting for deploy on device.
 * [Fixed #1210](https://github.com/NativeScript/nativescript-cli/issues/1210): LiveSync does not handle correctly removed files on iOS simulator.
 * [Fixes #1308](https://github.com/NativeScript/nativescript-cli/issues/1308): Livesync ends up with an endless loop for projects that have before-prepare hook that changes some project file.
-* [Fixed #1313](https://github.com/NativeScript/nativescript-cli/issues/1313): `tns livesync ios --watch --emulator` command does not process platform specific files.
 
 1.5.1 (2015, December 03)
 ==
