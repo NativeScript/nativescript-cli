@@ -135,6 +135,27 @@ describe("Npm installation manager tests", () => {
 			packageLatestVersion: "1.0.0",
 			cliVersion: "1.1.0",
 			expectedResult: "1.0.0"
+		},
+
+		"when CLI's version is beta (has dash) latest matching beta version is returned": {
+			versions: ["1.0.0", "1.0.1", "1.4.0", "1.5.0-2016-02-25-182", "1.5.0-2016-02-26-202"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.5.0-182",
+			expectedResult: "1.5.0-2016-02-26-202"
+		},
+
+		"when CLI's version is beta (has dash) latest matching official version is returned when beta versions do not match": {
+			versions: ["1.0.0", "1.0.1", "1.4.0", "1.5.0-2016-02-25-182", "1.5.0-2016-02-26-202"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.6.0-2016-03-01-182",
+			expectedResult: "1.4.0"
+		},
+
+		"when CLI's version is beta (has dash) latest matching official version is returned when beta versions do not match (when the prerelease of CLI is higher than prerelease version of runtime)": {
+			versions: ["1.0.0", "1.0.1", "1.4.0", "1.6.0-2016-02-25-182", "1.6.0-2016-02-26-202"],
+			packageLatestVersion: "1.4.0",
+			cliVersion: "1.6.0-2016-10-01-182",
+			expectedResult: "1.4.0"
 		}
 	};
 
