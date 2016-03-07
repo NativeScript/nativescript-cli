@@ -26,6 +26,7 @@
     "indexeddbshim": "^2.2.1",
     "lodash": "^4.3.0",
     "loglevel": "^1.3.1",
+    "prfun": "^2.1.3",
     "qs": "^6.0.1",
     "request": "^2.67.0",
     "sift": "^3.0.0",
