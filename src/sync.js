@@ -1,5 +1,6 @@
-import DataStore from './stores/dataStore';
-import Query from './query';
+import Promise from 'babybird';
+import { DataStore } from './stores/datastore';
+import { Query } from './query';
 import { DataStoreType } from './enums';
 import reduce from 'lodash/reduce';
 const enabledSymbol = Symbol();

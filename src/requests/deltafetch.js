@@ -1,10 +1,8 @@
-import Request from './request';
-import Response from './response';
+import Promise from 'babybird';
+import { KinveyRequest, LocalRequest, NetworkRequest, Response } from './request';
 import { HttpMethod, StatusCode } from '../enums';
 import { NotFoundError } from '../errors';
-import Query from '../query';
-import LocalRequest from './localRequest';
-import NetworkRequest from './networkRequest';
+import { Query } from '../query';
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
 import result from 'lodash/result';
@@ -17,7 +15,7 @@ const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
 /**
  * @private
  */
-export default class DeltaFetchRequest extends Request {
+export class DeltaFetchRequest extends KinveyRequest {
   execute() {
     const promise = super.execute().then(() => {
       if (this.method !== HttpMethod.GET) {
@@ -95,12 +93,14 @@ export default class DeltaFetchRequest extends Request {
             timeout: this.timeout
           });
 
+          /* eslint-disable no-loop-func */
           const promise = networkRequest.execute().catch(() => {
             return new Response({
               statusCode: StatusCode.ServerError
             });
           });
           promises.push(promise);
+          /* eslint-enable no-loop-func */
 
           i += maxIdsPerRequest;
         }

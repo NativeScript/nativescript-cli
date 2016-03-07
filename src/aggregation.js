@@ -1,5 +1,5 @@
 import { KinveyError } from './errors';
-import Query from './query';
+import { Query } from './query';
 import clone from 'lodash/clone';
 import result from 'lodash/result';
 import assign from 'lodash/assign';
@@ -52,7 +52,7 @@ class PrivateAggregation {
     return this;
   }
 
-  process(documents = []) {
+  process(entities = []) {
     const groups = {};
     const response = [];
     const aggregation = this.toJSON();
@@ -60,15 +60,15 @@ class PrivateAggregation {
     aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
 
     if (this._query) {
-      documents = this._query.process(documents);
+      entities = this._query.process(entities);
     }
 
-    forEach(documents, document => {
+    forEach(entities, entity => {
       const group = {};
 
-      for (const name in document) {
-        if (document.hasOwnProperty(name)) {
-          group[name] = document[name];
+      for (const name in entity) {
+        if (entity.hasOwnProperty(name)) {
+          group[name] = entity[name];
         }
       }
 
@@ -83,7 +83,7 @@ class PrivateAggregation {
         }
       }
 
-      aggregation.reduce(document, groups[key]);
+      aggregation.reduce(entity, groups[key]);
     });
 
     for (const segment in groups) {
@@ -121,7 +121,7 @@ class PrivateAggregation {
   }
 }
 
-export default class Aggregation {
+export class Aggregation {
   constructor(options) {
     this[privateAggregationSymbol] = new PrivateAggregation(options);
   }

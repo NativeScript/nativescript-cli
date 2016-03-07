@@ -1,6 +1,11 @@
+import Promise from 'babybird';
+import { DeltaFetchRequest } from './deltafetch';
+import { LocalRequest } from './local';
+import { NetworkRequest } from './network';
+import { Response } from './response';
 import { HttpMethod } from '../enums';
-import Device from '../device';
-import Properties from './properties';
+import { Device } from '../device';
+import { RequestProperties } from './properties';
 import { byteCount } from '../utils/string';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -9,10 +14,18 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 
+export {
+  DeltaFetchRequest,
+  LocalRequest,
+  NetworkRequest,
+  Response,
+  RequestProperties
+};
+
 /**
  * @private
  */
-class Request {
+export class Request {
   constructor(options = {}) {
     options = assign({
       method: HttpMethod.GET,
@@ -194,7 +207,7 @@ class Request {
 /**
  * @private
  */
-export default class KinveyRequest extends Request {
+export class KinveyRequest extends Request {
   constructor(options = {}) {
     super(options);
 
@@ -236,8 +249,8 @@ export default class KinveyRequest extends Request {
 
   set properties(properties) {
     if (properties) {
-      if (!(properties instanceof Properties)) {
-        properties = new Properties(result(properties, 'toJSON', properties));
+      if (!(properties instanceof RequestProperties)) {
+        properties = new RequestProperties(result(properties, 'toJSON', properties));
       }
 
       const appVersion = properties.appVersion;

@@ -1,4 +1,4 @@
-import Client from './client';
+import { Client } from './client';
 import { HttpMethod } from './enums';
 import { KinveyError } from './errors';
 import isString from 'lodash/isString';
@@ -7,7 +7,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * Executes a custom command.
  */
-export default class Command {
+export class Command {
   /**
    * Execute a custom command. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.

@@ -66,7 +66,7 @@ class PrivateMetadata {
 /**
  * Wrapper for accessing the `_kmd` properties of an entity.
  */
-export default class Metadata {
+export class Metadata {
   constructor(entity) {
     this[privateMetadataSymbol] = new PrivateMetadata(entity);
   }

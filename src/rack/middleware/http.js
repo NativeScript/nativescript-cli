@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { KinveyMiddleware } from '../middleware';
 import { HttpMethod } from '../../enums';
 import { NetworkConnectionError } from '../../errors';

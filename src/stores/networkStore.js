@@ -1,8 +1,9 @@
-import Aggregation from '../aggregation';
+import Promise from 'babybird';
+import { Aggregation } from '../aggregation';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
-import Client from '../client';
-import Query from '../query';
+import { Client } from '../client';
+import { Query } from '../query';
 import assign from 'lodash/assign';
 import log from '../log';
 import isArray from 'lodash/isArray';

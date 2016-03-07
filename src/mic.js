@@ -1,9 +1,10 @@
+import Promise from 'babybird';
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
-import NetworkRequest from './requests/networkRequest';
-import Device from './device';
-import Client from './client';
-import Popup from './utils/popup';
+import { NetworkRequest } from './requests/request';
+import { Device } from './device';
+import { Client } from './client';
+import { Popup } from './utils/popup';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
@@ -13,7 +14,7 @@ const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 /**
  * @private
  */
-export default class MobileIdentityConnect {
+export class MobileIdentityConnect {
   constructor() {
     const sharedClient = Client.sharedInstance();
     this.client = new Client({

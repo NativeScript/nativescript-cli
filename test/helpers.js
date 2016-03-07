@@ -41,37 +41,6 @@ const UserHelper = {
 };
 export { UserHelper };
 
-export function createNockQuery(query, flags = {}) {
-  if (query) {
-    query = result(query, 'toJSON', query);
-    flags.query = query.filter;
-
-    if (!isEmpty(query.fields)) {
-      flags.fields = query.fields.join(',');
-    }
-
-    if (query.limit) {
-      flags.limit = query.limit;
-    }
-
-    if (query.skip > 0) {
-      flags.skip = query.skip;
-    }
-
-    if (!isEmpty(query.sort)) {
-      flags.sort = query.sort;
-    }
-  }
-
-  for (const key in flags) {
-    if (flags.hasOwnProperty(key)) {
-      flags[key] = isString(flags[key]) ? flags[key] : JSON.stringify(flags[key]);
-    }
-  }
-
-  return flags;
-}
-
 // Tests whether both deferreds and callbacks are supported on success.
 export function success(promiseFn) {
   return function () {

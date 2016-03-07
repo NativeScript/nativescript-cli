@@ -1,4 +1,5 @@
-import { NetworkStore } from './networkStore';
+import Promise from 'babybird';
+import { NetworkStore } from './datastore';
 import { AuthType, HttpMethod } from '../enums';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';

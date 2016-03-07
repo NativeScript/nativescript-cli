@@ -1,9 +1,10 @@
+import Promise from 'babybird';
 import { CacheStore } from './cacheStore';
-import Aggregation from '../aggregation';
+import { Aggregation } from '../aggregation';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
-import Query from '../query';
-import log from '../log';
+import { Query } from '../query';
+import { Log } from '../log';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 export class SyncStore extends CacheStore {
@@ -26,7 +27,7 @@ export class SyncStore extends CacheStore {
    * @return  {Promise}                                                         Promise
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
+    Log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
@@ -45,9 +46,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entities in the ${this.name} collection.`, response);
+      Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -69,7 +70,7 @@ export class SyncStore extends CacheStore {
    * @return  {Promise}                                                         Promise
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
+    Log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     if (!(aggregation instanceof Aggregation)) {
       return Promise.reject(new KinveyError('Invalid aggregation. ' +
@@ -89,9 +90,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Grouped the entities in the ${this.name} collection.`, response);
+      Log.info(`Grouped the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to group the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to group the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -113,7 +114,7 @@ export class SyncStore extends CacheStore {
    * @return  {Promise}                                                         Promise
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
+    Log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
@@ -132,9 +133,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Counted the number of entities in the ${this.name} collection.`, response);
+      Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -155,11 +156,11 @@ export class SyncStore extends CacheStore {
    */
   findById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to retrieve an entity.', id);
+      Log.warn('No id was provided to retrieve an entity.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     const promise = Promise.resolve().then(() => {
       return this.client.executeLocalRequest({
@@ -173,9 +174,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -196,11 +197,11 @@ export class SyncStore extends CacheStore {
    */
   save(entity, options = {}) {
     if (!entity) {
-      log.warn('No entity was provided to be saved.', entity);
+      Log.warn('No entity was provided to be saved.', entity);
       return Promise.resolve(null);
     }
 
-    log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
+    Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     const promise = Promise.resolve().then(() => {
       if (entity[idAttribute]) {
@@ -227,9 +228,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
+      Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
+      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -249,7 +250,7 @@ export class SyncStore extends CacheStore {
    * @return  {Promise}                                                         Promise
    */
   remove(query, options = {}) {
-    log.debug(`Removing the entities in the ${this.name} collection.`, query);
+    Log.debug(`Removing the entities in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
@@ -270,9 +271,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entities in the ${this.name} collection.`, response);
+      Log.info(`Removed the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -291,11 +292,11 @@ export class SyncStore extends CacheStore {
    */
   removeById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to be removed.', id);
+      Log.warn('No id was provided to be removed.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     const promise = Promise.resolve().then(() => {
       return this.client.executeLocalRequest({
@@ -311,9 +312,9 @@ export class SyncStore extends CacheStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;

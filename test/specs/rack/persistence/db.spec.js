@@ -1,6 +1,6 @@
-import { DB, DBAdapter, Memory } from '../../../../src/rack/persistence/db';
-import { KinveyError, NotFoundError } from '../../../../src/errors';
-import { randomString } from '../../../helpers';
+import { DB, DBAdapter, Memory } from 'kinvey-sdk-core/rack/persistence/db';
+import { KinveyError, NotFoundError } from 'kinvey-sdk-core/errors';
+import { randomString } from 'test/helpers';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import chai from 'chai';

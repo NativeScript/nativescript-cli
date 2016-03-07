@@ -1,5 +1,8 @@
-import { Middleware } from './middleware';
+import Promise from 'babybird';
+import { Middleware, CacheMiddleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
 import result from 'lodash/result';
+const sharedCacheRackInstanceSymbol = Symbol();
+const sharedNetworkRackInstanceSymbol = Symbol();
 
 /**
  * @private
@@ -160,5 +163,49 @@ export class KinveyRack extends Rack {
       return request.response;
     });
     return promise;
+  }
+}
+
+/**
+ * @private
+ */
+export class CacheRack extends KinveyRack {
+  constructor(name = 'Kinvey Cache Rack') {
+    super(name);
+    this.use(new CacheMiddleware());
+  }
+
+  static sharedInstance() {
+    let instance = CacheRack[sharedCacheRackInstanceSymbol];
+
+    if (!instance) {
+      instance = new CacheRack();
+      CacheRack[sharedCacheRackInstanceSymbol] = instance;
+    }
+
+    return instance;
+  }
+}
+
+/**
+ * @private
+ */
+export class NetworkRack extends KinveyRack {
+  constructor(name = 'Kinvey Network Rack') {
+    super(name);
+    this.use(new SerializeMiddleware());
+    this.use(new HttpMiddleware());
+    this.use(new ParseMiddleware());
+  }
+
+  static sharedInstance() {
+    let instance = NetworkRack[sharedNetworkRackInstanceSymbol];
+
+    if (!instance) {
+      instance = new NetworkRack();
+      NetworkRack[sharedNetworkRackInstanceSymbol] = instance;
+    }
+
+    return instance;
   }
 }

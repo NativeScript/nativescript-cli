@@ -1,12 +1,20 @@
-require('../../setup');
-import { NetworkStore } from '../../../src/stores/datastore';
-import { KinveyError } from '../../../src/errors';
+import { UserHelper } from 'tests/helpers';
+import { NetworkStore } from 'kinvey-sdk-core/stores/datastore';
+import { KinveyError } from 'kinvey-sdk-core/errors';
 import nock from 'nock';
 import url from 'url';
 import chai from 'chai';
 const expect = chai.expect;
 
 describe('NetworkStore', function() {
+  before(function() {
+    return UserHelper.login();
+  });
+
+  after(function() {
+    return UserHelper.logout();
+  });
+
   before(function() {
     this.store = new NetworkStore('kinvey');
   });

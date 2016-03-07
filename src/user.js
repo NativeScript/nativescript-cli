@@ -1,9 +1,10 @@
-import Client from './client';
-import Query from './query';
-import Acl from './acl';
-import Metadata from './metadata';
+import Promise from 'babybird';
+import { Client } from './client';
+import { Query } from './query';
+import { Acl } from './acl';
+import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
-import MobileIdentityConnect from './mic';
+import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -337,6 +338,7 @@ export class User {
     return this.login(data, options);
   }
 
+  /* eslint-disable max-len */
   /**
    * Login using Mobile Identity Connect.
    *
@@ -354,6 +356,7 @@ export class User {
    *   ...
    * });
    */
+  /* eslint-enable max-len */
   loginWithMIC(redirectUri, authorizationGrant, options = {}) {
     return MobileIdentityConnect.login(redirectUri, authorizationGrant, options).then(token => {
       return this.connect(MobileIdentityConnect.identity, token.access_token, token.expires_in, options);
@@ -466,6 +469,7 @@ export class User {
     return user.connectWithIdentity(identity, options);
   }
 
+  /* eslint-disable max-len */
   /**
    * Connect using an identity (Facebook, Google, LinkedIn etc.).
    *
@@ -483,6 +487,7 @@ export class User {
    *   ...
    * });
    */
+  /* eslint-enable max-len */
   connectWithIdentity(identity, options = {}) {
     if (!identity) {
       return Promise.reject(new KinveyError('An identity is required to connect the user.'));

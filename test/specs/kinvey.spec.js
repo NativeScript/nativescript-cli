@@ -1,10 +1,9 @@
-import Kinvey from '../../src/kinvey';
-import Client from '../../src/client';
-import config from 'config';
+import Kinvey from 'kinvey-sdk-core/kinvey';
+import Client from 'kinvey-sdk-core/client';
+import { randomString } from 'test/helpers';
 import chai from 'chai';
 chai.use(require('chai-as-promised'));
 const expect = chai.expect;
-const appConfig = config.get('app');
 
 describe('Kinvey', function () {
   describe('init()', function () {
@@ -14,8 +13,8 @@ describe('Kinvey', function () {
 
     it('should return a client', function() {
       expect(Kinvey.init({
-        appKey: appConfig.key,
-        appSecret: appConfig.secret
+        appKey: randomString(),
+        appSecret: randomString()
       })).to.be.an.instanceof(Client);
     });
   });
@@ -23,8 +22,8 @@ describe('Kinvey', function () {
   describe('ping()', function() {
     before(function() {
       Kinvey.init({
-        appKey: appConfig.key,
-        appSecret: appConfig.secret
+        appKey: randomString(),
+        appSecret: randomString()
       });
     });
 
@@ -32,13 +31,13 @@ describe('Kinvey', function () {
       expect(Kinvey).itself.to.respondTo('ping');
     });
 
-    it('should return a response when there is no active user', function() {
-      return expect(Kinvey.ping()).to.eventually.deep.equal({
-        version: appConfig.version,
-        kinvey: `hello ${appConfig.name}`,
-        appName: appConfig.name,
-        environmentName: appConfig.environment
-      });
-    });
+    // it('should return a response when there is no active user', function() {
+    //   return expect(Kinvey.ping()).to.eventually.deep.equal({
+    //     version: appConfig.version,
+    //     kinvey: `hello ${appConfig.name}`,
+    //     appName: appConfig.name,
+    //     environmentName: appConfig.environment
+    //   });
+    // });
   });
 });

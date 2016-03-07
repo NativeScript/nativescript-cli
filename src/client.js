@@ -1,8 +1,7 @@
+import Promise from 'babybird';
 import { KinveyError, NotFoundError } from './errors';
 import { AuthType, HttpMethod } from './enums';
-import LocalRequest from './requests/localRequest';
-import NetworkRequest from './requests/networkRequest';
-import DeleteFetchRequest from './requests/deltaFetchRequest';
+import { LocalRequest, NetworkRequest, DeltaFetchRequest } from './requests/request';
 import url from 'url';
 import qs from 'qs';
 import clone from 'lodash/clone';
@@ -137,7 +136,7 @@ function getAuthFn(type = AuthType.None) {
  *   appSecret: '<appSecret>'
  * });
  */
-export default class Client {
+export class Client {
   /**
    * Creates a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.
@@ -340,7 +339,7 @@ export default class Client {
     }, options);
     options.flags = qs.parse(options.flags);
 
-    const request = new DeleteFetchRequest({
+    const request = new DeltaFetchRequest({
       method: options.method,
       headers: options.headers,
       url: url.format({

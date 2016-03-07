@@ -9,7 +9,7 @@ import isPlainObject from 'lodash/isPlainObject';
 /**
  * @private
  */
-export default class Response {
+export class Response {
   constructor(options = {}) {
     options = assign({
       statusCode: StatusCode.Ok,

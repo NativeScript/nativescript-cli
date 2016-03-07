@@ -1,7 +1,7 @@
-import log from 'loglevel';
-const originalFactory = log.methodFactory;
+import Log from 'loglevel';
+const originalFactory = Log.methodFactory;
 
-log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
+Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   const rawMethod = originalFactory(methodName, logLevel, loggerName);
 
   return function log(message) {
@@ -9,5 +9,5 @@ log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   };
 };
 
-log.setLevel(log.levels.ERROR);
-export default log;
+Log.setLevel(Log.levels.ERROR);
+export { Log };

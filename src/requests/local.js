@@ -1,16 +1,15 @@
-import Request from './request';
-import Response from './response';
-import { NetworkRack } from '../rack/racks/networkRack';
+import { KinveyRequest, Response } from './request';
+import { CacheRack } from '../rack/racks/cacheRack';
 import { NoResponseError } from '../errors';
 
 /**
  * @private
  */
-export default class NetworkRequest extends Request {
+export class LocalRequest extends KinveyRequest {
   execute() {
     const promise = super.execute().then(() => {
-      const networkRack = NetworkRack.sharedInstance();
-      return networkRack.execute(this.toJSON());
+      const rack = CacheRack.sharedInstance();
+      return rack.execute(this.toJSON());
     }).then(response => {
       if (!response) {
         throw new NoResponseError();
@@ -33,7 +32,7 @@ export default class NetworkRequest extends Request {
   }
 
   cancel() {
-    const networkRack = NetworkRack.sharedInstance();
-    networkRack.cancel();
+    const rack = CacheRack.sharedInstance();
+    rack.cancel();
   }
 }

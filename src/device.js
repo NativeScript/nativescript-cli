@@ -3,7 +3,7 @@ import packageJSON from '../package.json';
 /**
  * @private
  */
-export default class Device {
+export class Device {
   get os() {
     let name = 'mobileweb';
     let version;

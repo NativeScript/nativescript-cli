@@ -1,5 +1,6 @@
-import { NetworkStore } from './networkStore';
-import NetworkRequest from '../requests/networkRequest';
+import Promise from 'babybird';
+import { NetworkStore } from './datastore';
+import { NetworkRequest } from '../requests/request';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import assign from 'lodash/assign';

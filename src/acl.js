@@ -170,7 +170,7 @@ class PrivateAcl {
  * var entity = { _acl: {} };
  * var acl = new Kinvey.Acl(entity);
  */
-export default class Acl {
+export class Acl {
   constructor(acl) {
     this[privateAclSymbol] = new PrivateAcl(acl);
   }
