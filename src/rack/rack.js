@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { Middleware, CacheMiddleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
 import result from 'lodash/result';
 const sharedCacheRackInstanceSymbol = Symbol();

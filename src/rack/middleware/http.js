@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../../utils/promise';
 import { KinveyMiddleware } from '../middleware';
 import { HttpMethod } from '../../enums';
 import { NetworkConnectionError } from '../../errors';

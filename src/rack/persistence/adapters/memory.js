@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../../../utils/promise';
 import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';

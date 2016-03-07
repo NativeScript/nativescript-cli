@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from './utils/promise';
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/request';

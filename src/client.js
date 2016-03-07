@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from './utils/promise';
 import { KinveyError, NotFoundError } from './errors';
 import { AuthType, HttpMethod } from './enums';
 import { LocalRequest, NetworkRequest, DeltaFetchRequest } from './requests/request';

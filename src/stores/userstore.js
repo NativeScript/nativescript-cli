@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { NetworkStore } from './datastore';
 import { AuthType, HttpMethod } from '../enums';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';

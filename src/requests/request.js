@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { DeltaFetchRequest } from './deltafetch';
 import { LocalRequest } from './local';
 import { NetworkRequest } from './network';

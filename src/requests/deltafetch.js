@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { KinveyRequest, LocalRequest, NetworkRequest, Response } from './request';
 import { HttpMethod, StatusCode } from '../enums';
 import { NotFoundError } from '../errors';

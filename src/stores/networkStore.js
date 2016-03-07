@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { Aggregation } from '../aggregation';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';

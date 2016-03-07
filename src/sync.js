@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from './utils/promise';
 import { DataStore } from './stores/datastore';
 import { Query } from './query';
 import { DataStoreType } from './enums';

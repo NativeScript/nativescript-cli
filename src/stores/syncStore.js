@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from '../utils/promise';
 import { CacheStore } from './cacheStore';
 import { Aggregation } from '../aggregation';
 import { HttpMethod } from '../enums';

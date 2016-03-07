@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from './utils/promise';
 import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';
