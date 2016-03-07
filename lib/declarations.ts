@@ -58,6 +58,7 @@ interface ILiveSyncService {
 }
 
 interface IOptions extends ICommonOptions {
+	ipa: string;
 	frameworkPath: string;
 	frameworkName: string;
 	framework: string;
@@ -86,6 +87,58 @@ interface IOptions extends ICommonOptions {
 
 interface IInitService {
 	initialize(): IFuture<void>;
+}
+
+/**
+ * Describes standard username/password type credentials.
+ */
+interface ICredentials {
+	username: string;
+	password: string;
+}
+
+/**
+ * Describes properties needed for uploading a package to iTunes Connect
+ */
+interface IITMSData extends ICredentials {
+	/**
+	 * The identifier of the mobile provision used for building. Note that this will override the same option set through .xcconfig files.
+	 * @type {string}
+	 */
+	mobileProvisionIdentifier?: string;
+	/**
+	 * The Code Sign Identity used for building. Note that this will override the same option set through .xcconfig files.
+	 * @type {string}
+	 */
+	codeSignIdentity?: string;
+	/**
+	 * Path to a .ipa file which will be uploaded. If set that .ipa will be used and no build will be issued.
+	 * @type {string}
+	 */
+	ipaFilePath?: string;
+	/**
+	 * Specifies whether the logging level of the itmstransporter command-line tool should be set to verbose.
+	 * @type {string}
+	 */
+	verboseLogging?: boolean;
+}
+
+/**
+ * Used for communicating with Xcode's iTMS Transporter tool.
+ */
+interface IITMSTransporterService {
+	/**
+	 * Uploads an .ipa package to iTunes Connect.
+	 * @param  {IITMSData}     data Data needed to upload the package
+	 * @return {IFuture<void>}
+	 */
+	upload(data: IITMSData): IFuture<void>;
+	/**
+	 * Queries Apple's content delivery API to get the user's registered iOS applications.
+	 * @param  {ICredentials}                               credentials Credentials for authentication with iTunes Connect.
+	 * @return {IFuture<IItunesConnectApplication[]>}          The user's iOS applications.
+	 */
+	getiOSApplications(credentials: ICredentials): IFuture<IiTunesConnectApplication[]>;
 }
 
 /**

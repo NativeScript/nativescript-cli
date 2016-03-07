@@ -94,7 +94,7 @@ export class InitService implements IInitService {
 				return defaultAppId;
 			}
 
-			return this.$prompter.getString("Id:", () => defaultAppId).wait();
+			return this.$prompter.getString("Id:", { defaultAction: () => defaultAppId }).wait();
 		}).future<string>()();
 	}
 

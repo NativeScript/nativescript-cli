@@ -12,6 +12,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 		$staticConfig: IStaticConfig,
 		$hostInfo: IHostInfo) {
 		super({
+			ipa: { type: OptionType.String },
 			frameworkPath: { type: OptionType.String },
 			frameworkName: { type: OptionType.String },
 			framework: { type: OptionType.String },

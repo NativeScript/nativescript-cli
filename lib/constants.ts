@@ -25,3 +25,20 @@ export class ReleaseType {
 	static PREPATCH = "prepatch";
 	static PRERELEASE = "prerelease";
 }
+
+export class ITMSConstants {
+	static ApplicationMetadataFile = "metadata.xml";
+	static VerboseLoggingLevels = {
+		Informational: "informational",
+		Verbose: "detailed"
+	};
+	static iTMSExecutableName = "iTMSTransporter";
+	static iTMSDirectoryName = "itms";
+}
+
+class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationType {
+	public iOS = "iOS App";
+	public Mac = "Mac OS X App";
+}
+
+export let ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
