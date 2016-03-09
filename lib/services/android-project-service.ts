@@ -92,7 +92,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}).future<void>()();
 	}
 
-	public createProject(frameworkDir: string, frameworkVersion: string): IFuture<void> {
+	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
 			if(semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
@@ -111,7 +111,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
-			this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+			if(pathToTemplate) {
+				let mainPath = path.join(this.platformData.projectRoot, "src", "main");
+				this.$fs.createDirectory(mainPath).wait();
+				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
+			} else {
+				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+			}
 			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties", "-f");
 
 			if (this.useGradleWrapper(frameworkDir)) {

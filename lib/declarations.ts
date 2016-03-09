@@ -83,6 +83,7 @@ interface IOptions extends ICommonOptions {
 	port: Number;
 	copyTo: string;
 	baseConfig: string;
+	platformTemplate: string;
 }
 
 interface IInitService {
