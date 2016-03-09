@@ -1,5 +1,5 @@
 import { KinveyRequest, Response } from './request';
-import { NetworkRack } from '../rack/racks/networkRack';
+import { NetworkRack } from '../rack/rack';
 import { NoResponseError } from '../errors';
 
 /**

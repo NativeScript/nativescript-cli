@@ -1,6 +1,5 @@
-require('../../setup');
-import { DataStore, CacheStore, FileStore, NetworkStore, SyncStore, UserStore } from '../../../src/stores/datastore';
-import { DataStoreType } from '../../../src/enums';
+import { DataStore, CacheStore, FileStore, NetworkStore, SyncStore, UserStore } from 'kinvey-sdk-core/stores/datastore';
+import { DataStoreType } from 'kinvey-sdk-core/enums';
 import chai from 'chai';
 const expect = chai.expect;
 

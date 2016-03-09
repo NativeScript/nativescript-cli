@@ -1,10 +1,5 @@
 import { User } from '../src/user';
 import uid from 'uid';
-import result from 'lodash/result';
-import isString from 'lodash/isString';
-import isEmpty from 'lodash/isEmpty';
-import nock from 'nock';
-import url from 'url';
 
 export function randomString(size, prefix = '') {
   return `${prefix}${uid(size)}`;
@@ -12,23 +7,24 @@ export function randomString(size, prefix = '') {
 
 const UserHelper = {
   login() {
-    const user = new User();
-    const hostname = url.format({
-      protocol: user.client.protocol,
-      host: user.client.host
-    });
-    const server = nock(hostname).post(`${user._pathname}/login`).query(true);
-    server.reply(200, {
-      _id: randomString(),
-      username: randomString(),
-      password: randomString(),
-      _kmd: {
-        authtoken: randomString()
-      }
-    }, {
-      'Content-Type': 'application/json'
-    });
-    return User.login('admin', 'admin');
+    // const user = new User();
+    // const hostname = url.format({
+    //   protocol: user.client.protocol,
+    //   host: user.client.host
+    // });
+    // const server = nock(hostname).post(`${user._pathname}/login`).query(true);
+    // server.reply(200, {
+    //   _id: randomString(),
+    //   username: randomString(),
+    //   password: randomString(),
+    //   _kmd: {
+    //     authtoken: randomString()
+    //   }
+    // }, {
+    //   'Content-Type': 'application/json'
+    // });
+    return Promise.resolve();
+    // return User.login('admin', 'admin');
   },
 
   logout() {

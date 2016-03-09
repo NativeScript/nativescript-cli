@@ -1,8 +1,9 @@
-import Kinvey from 'kinvey-sdk-core/kinvey';
-import Client from 'kinvey-sdk-core/client';
-import { randomString } from 'test/helpers';
+import Kinvey from './kinvey';
+import Client from './client';
+import { randomString } from './utils/string';
 import chai from 'chai';
-chai.use(require('chai-as-promised'));
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('Kinvey', function () {

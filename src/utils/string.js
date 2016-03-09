@@ -13,3 +13,7 @@ export function byteCount(str) {
 
   return count;
 }
+
+export function randomString(size, prefix = '') {
+  return `${prefix}${uid(size)}`;
+}

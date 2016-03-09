@@ -11,5 +11,10 @@
     "max-len": [2, 120, 2],
     "space-before-function-paren": 0,
     "no-loop-func": 1
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "mocha": true
   }
 }

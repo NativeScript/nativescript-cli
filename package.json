@@ -107,19 +107,5 @@
     "wallabify": "0.0.12",
     "wrench": "^1.5.8",
     "yargs": "^3.27.0"
-  },
-  "browserify": {
-    "transform": [
-      [
-        "babelify",
-        {
-          "presets": [
-            "es2015",
-            "stage-2"
-          ],
-          "ignore": "//node_modules/(?!qs/)/"
-        }
-      ]
-    ]
   }
 }
