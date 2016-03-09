@@ -36,10 +36,10 @@ interface IPluginVariablesService {
 	savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void>;
 	/**
 	 * Removes plugin variables from project package.json file.
-	 * @param  {IPluginData}		pluginData for the plugin.
+	 * @param  {string}		pluginName Name of the plugin.
 	 * @return {IFuture<void>}
 	 */
-	removePluginVariablesFromProjectFile(pluginData: IPluginData): IFuture<void>;
+	removePluginVariablesFromProjectFile(pluginName: string): IFuture<void>;
 	/**
 	 * Replaces all plugin variables with their corresponding values.
 	 * @param {IPluginData}		pluginData for the plugin.
@@ -59,10 +59,10 @@ interface IPluginVariablesService {
 	interpolate(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void>;
 	/**
 	 * Returns the
-	 * @param {IPluginData}		pluginData for the plugin.
+	 * @param {string}		pluginName for the plugin.
 	 * @return {IFuture<string>}		returns the changed plugin configuration file content.
 	 */
-	getPluginVariablePropertyName(pluginData: IPluginData): string;
+	getPluginVariablePropertyName(pluginName: string): string;
 
 }
 
