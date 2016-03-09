@@ -9,7 +9,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private static ANDROID_TARGET_PREFIX = "android";
 	private static SUPPORTED_TARGETS = ["android-17", "android-18", "android-19", "android-21", "android-22", "android-23"];
 	private static MIN_REQUIRED_COMPILE_TARGET = 22;
-	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=22";
+	private static REQUIRED_BUILD_TOOLS_RANGE_PREFIX = ">=23";
 	private static VERSION_REGEX = /((\d+\.){2}\d+)/;
 	private static MIN_JAVA_VERSION = "1.7.0";
 
@@ -278,7 +278,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 					selectedVersion = _.find(subDirs, dir => dir.indexOf(version) !== -1);
 				}
 			}
-
+			this.$logger.trace("Selected version is: ", selectedVersion);
 			return selectedVersion;
 		}).future<string>()();
 	}
