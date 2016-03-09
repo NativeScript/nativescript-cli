@@ -156,28 +156,63 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 		}).future<boolean>()();
 	}
 
-	public validateJavacVersion(installedJavaVersion: string, options?: {showWarningsAsErrors: boolean}): IFuture<boolean> {
+	public validateJava(javacVersion: string, options?: {showWarningsAsErrors: boolean}): IFuture<boolean> {
 		return ((): boolean => {
-			let hasProblemWithJavaVersion = false;
 			if(options) {
 				this.showWarningsAsErrors = options.showWarningsAsErrors;
 			}
-			let additionalMessage = "You will not be able to build your projects for Android." + EOL
+
+			let helpfulMessage = "You will not be able to build your projects for Android." + EOL
 				+ "To be able to build for Android, verify that you have installed The Java Development Kit (JDK) and configured it according to system requirements as" + EOL +
 				" described in https://github.com/NativeScript/nativescript-cli#system-requirements.";
-			let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
-			if(matchingVersion && matchingVersion[1]) {
-				if(semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
-					hasProblemWithJavaVersion = true;
-					this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
-				}
-			} else {
-				hasProblemWithJavaVersion = true;
-				this.printMessage("Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.", additionalMessage);
+
+			let hasProblemWithJavaHome = this.validateJavaHome(helpfulMessage).wait();
+			let hasProblemWithJavaVersion: boolean;
+			if(!hasProblemWithJavaHome) {
+				hasProblemWithJavaVersion = this.validateJavacVersion(javacVersion, helpfulMessage);
 			}
 
-			return hasProblemWithJavaVersion;
+			return hasProblemWithJavaHome || hasProblemWithJavaVersion;
 		}).future<boolean>()();
+	}
+
+	private validateJavaHome(helpfulMessage: string): IFuture<boolean> {
+		return ((): boolean => {
+			let hasProblemWithJavaHome = false;
+			let javaHome = process.env.JAVA_HOME;
+
+			if(javaHome) {
+				// validate jarsigner as it does not exist in JRE, but is mandatory for JDK and Android Runtime
+				let jarSigner = path.join(javaHome, "bin", "jarsigner");
+				let childProcessResult = this.$childProcess.spawnFromEvent(jarSigner, [], "close", {}, { throwError: false }).wait();
+				this.$logger.trace(`Result of calling jarsigner from path: ${jarSigner}:`, childProcessResult);
+				if(childProcessResult.stderr || childProcessResult.exitCode !== 0) {
+					hasProblemWithJavaHome = true;
+					this.printMessage("JAVA_HOME environment variable points to incorrect path. Make sure it points to the installation directory of JDK.", helpfulMessage);
+				}
+			} else {
+				hasProblemWithJavaHome = true;
+				this.printMessage("JAVA_HOME environment variable is not set.", helpfulMessage);
+			}
+
+			return hasProblemWithJavaHome;
+		}).future<boolean>()();
+	}
+
+	private validateJavacVersion(installedJavaVersion: string, helpfulMessage: string): boolean {
+		let hasProblemWithJavaVersion = false;
+		let matchingVersion = (installedJavaVersion || "").match(AndroidToolsInfo.VERSION_REGEX);
+		if(matchingVersion && matchingVersion[1]) {
+			if(semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
+				hasProblemWithJavaVersion = true;
+				this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, helpfulMessage);
+			}
+		} else {
+			hasProblemWithJavaVersion = true;
+			this.printMessage("Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.", helpfulMessage);
+		}
+
+		return hasProblemWithJavaVersion;
 	}
 
 	public getPathToAdbFromAndroidHome(): IFuture<string> {
