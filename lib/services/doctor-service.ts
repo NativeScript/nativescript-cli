@@ -88,8 +88,7 @@ class DoctorService implements IDoctorService {
 		}
 
 		let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();
-		let javaVersionIssue = this.$androidToolsInfo.validateJava(sysInfo.javacVersion).wait();
-
+		let javaVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion).wait();
 		let doctorResult = result || androidToolsIssues || javaVersionIssue;
 
 		if(!configOptions || configOptions.trackResult) {
