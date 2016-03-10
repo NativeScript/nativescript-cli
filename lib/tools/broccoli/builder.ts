@@ -5,10 +5,9 @@ import * as constants from "../../../lib/constants";
 import * as path from "path";
 import Future = require("fibers/future");
 import * as destCopyLib from "./node-modules-dest-copy";
+import * as fiberBootstrap from "../../common/fiber-bootstrap";
 
-let gulp = require("gulp");
-let vinylFilterSince = require("vinyl-filter-since");
-let through = require("through2");
+let glob = require("glob");
 
 export class Builder implements IBroccoliBuilder {
 	constructor(
@@ -28,30 +27,50 @@ export class Builder implements IBroccoliBuilder {
 			let nodeModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME);
 			let nodeModules: any = {};
 
-			if(lastModifiedTime) {
-				let pipeline = gulp.src(path.join(projectDir, "node_modules/**"))
-				.pipe(vinylFilterSince(lastModifiedTime))
-				.pipe(through.obj( (chunk: any, enc: any, cb: Function) => {
-					if(chunk.path === nodeModulesPath) {
-						isNodeModulesModified = true;
-					}
+			if (lastModifiedTime) {
+				let future = new Future();
 
-					if(!isNodeModulesModified) {
-						let rootModuleName = chunk.path.split(nodeModulesPath)[1].split(path.sep)[1];
-						let rootModuleFullPath = path.join(nodeModulesPath, rootModuleName);
-						nodeModules[rootModuleFullPath] = rootModuleFullPath;
-					}
+				let match = new glob.Glob("node_modules/**", {
+					cwd: projectDir,
+					follow: true,
+					stat: true
+				}, (er: Error, files: string[]) => {
+					fiberBootstrap.run(() => {
+						if (er) {
+							if (!future.isResolved()) {
+								future.throw(er);
+							}
+							match.abort();
+							return;
+						}
+						for (let i = 0, l = files.length; i < l; i++) {
+							let file = files[i],
+								resolvedPath = path.join(projectDir, file),
+								relativePath = path.relative(projectDir, resolvedPath);
+							let stat = match.statCache[resolvedPath] || match.statCache[relativePath];
+							if (!stat) {
+								match.statCache[resolvedPath] = stat = this.$fs.getFsStats(resolvedPath).wait();
+							}
 
-					cb(null);
-				}))
-				.pipe(gulp.dest(absoluteOutputPath));
-
-				let future = new Future<void>();
-
-				pipeline.on('end', (err: Error, data: any) => {
-					if(err) {
-						future.throw(err);
-					} else {
+							if (stat.mtime <= lastModifiedTime) {
+								continue;
+							}
+							if (file === constants.NODE_MODULES_FOLDER_NAME) {
+								isNodeModulesModified = true;
+								match.abort();
+								if (!future.isResolved()) {
+									future.return();
+								}
+								return;
+							}
+							let rootModuleName = path.normalize(file).split(path.sep)[1];
+							let rootModuleFullPath = path.join(nodeModulesPath, rootModuleName);
+							nodeModules[rootModuleFullPath] = rootModuleFullPath;
+						}
+					});
+				});
+				match.on("end", () => {
+					if (!future.isResolved()) {
 						future.return();
 					}
 				});
