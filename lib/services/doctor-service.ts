@@ -8,7 +8,8 @@ let clui = require("clui");
 class DoctorService implements IDoctorService {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
 
-	constructor(private $androidToolsInfo: IAndroidToolsInfo,
+	constructor(private $analyticsService: IAnalyticsService,
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $progressIndicator: IProgressIndicator,
@@ -18,7 +19,7 @@ class DoctorService implements IDoctorService {
 		private $npm: INodePackageManager,
 		private $fs: IFileSystem) {	}
 
-	public printWarnings(): boolean {
+	public printWarnings(configOptions?: { trackResult: boolean }): boolean {
 		let result = false;
 		let sysInfo = this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
 
@@ -87,8 +88,14 @@ class DoctorService implements IDoctorService {
 		}
 
 		let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();
-		let javaVersionIssue = this.$androidToolsInfo.validateJava(sysInfo.javacVersion).wait();
-		return result || androidToolsIssues || javaVersionIssue;
+		let javaVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion).wait();
+		let doctorResult = result || androidToolsIssues || javaVersionIssue;
+
+		if(!configOptions || configOptions.trackResult) {
+			this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct").wait();
+		}
+
+		return doctorResult;
 	}
 
 	private printPackageManagerTip() {

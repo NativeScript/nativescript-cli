@@ -9,7 +9,6 @@ import * as fiber from "fibers";
 import Future = require("fibers/future");
 import * as shelljs from "shelljs";
 shelljs.config.silent = true;
-shelljs.config.fatal = true;
 import {installUncaughtExceptionListener} from "./common/errors";
 installUncaughtExceptionListener(process.exit);
 
