@@ -13,8 +13,8 @@ export class PluginVariablesService implements IPluginVariablesService {
 		private $prompter: IPrompter,
 		private $fs: IFileSystem) { }
 
-	public getPluginVariablePropertyName(pluginData: IPluginData): string {
-		return `${pluginData.name}-${PluginVariablesService.PLUGIN_VARIABLES_KEY}`;
+	public getPluginVariablePropertyName(pluginName: string): string {
+		return `${pluginName}-${PluginVariablesService.PLUGIN_VARIABLES_KEY}`;
 	}
 
 	public savePluginVariablesInProjectFile(pluginData: IPluginData): IFuture<void> {
@@ -29,14 +29,14 @@ export class PluginVariablesService implements IPluginVariablesService {
 
 			if(!_.isEmpty(values)) {
 				this.$projectDataService.initialize(this.$projectData.projectDir);
-				this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData), values).wait();
+				this.$projectDataService.setValue(this.getPluginVariablePropertyName(pluginData.name), values).wait();
 			}
 		}).future<void>()();
 	}
 
-	public removePluginVariablesFromProjectFile(pluginData: IPluginData): IFuture<void> {
+	public removePluginVariablesFromProjectFile(pluginName: string): IFuture<void> {
 		this.$projectDataService.initialize(this.$projectData.projectDir);
-		return this.$projectDataService.removeProperty(this.getPluginVariablePropertyName(pluginData));
+		return this.$projectDataService.removeProperty(this.getPluginVariablePropertyName(pluginName));
 	}
 
 	public interpolatePluginVariables(pluginData: IPluginData, pluginConfigurationFilePath: string): IFuture<void> {
@@ -115,7 +115,7 @@ export class PluginVariablesService implements IPluginVariablesService {
 			variableData.name = pluginVariableName;
 
 			this.$projectDataService.initialize(this.$projectData.projectDir);
-			let pluginVariableValues = this.$projectDataService.getValue(this.getPluginVariablePropertyName(pluginData)).wait();
+			let pluginVariableValues = this.$projectDataService.getValue(this.getPluginVariablePropertyName(pluginData.name)).wait();
 			variableData.value = pluginVariableValues ? pluginVariableValues[pluginVariableName] : undefined;
 
 			return variableData;

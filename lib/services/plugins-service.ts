@@ -47,7 +47,7 @@ export class PluginsService implements IPluginsService {
 				} catch(err) {
 					// Revert package.json
 					this.$projectDataService.initialize(this.$projectData.projectDir);
-					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData)).wait();
+					this.$projectDataService.removeProperty(this.$pluginVariablesService.getPluginVariablePropertyName(pluginData.name)).wait();
 					this.$projectDataService.removeDependency(pluginData.name).wait();
 
 					throw err;
@@ -68,12 +68,10 @@ export class PluginsService implements IPluginsService {
 					let pluginData = this.convertToPluginData(this.getNodeModuleData(pluginName).wait());
 
 					platformData.platformProjectService.removePluginNativeCode(pluginData).wait();
-
-					if(pluginData.pluginVariables) {
-						this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginData).wait();
-					}
 				}).future<void>()();
 			};
+
+			this.$pluginVariablesService.removePluginVariablesFromProjectFile(pluginName.toLowerCase()).wait();
 			this.executeForAllInstalledPlatforms(removePluginNativeCodeAction).wait();
 
 			this.executeNpmCommand(PluginsService.UNINSTALL_COMMAND_NAME, pluginName).wait();
@@ -224,6 +222,10 @@ export class PluginsService implements IPluginsService {
 				result = this.$npm.install(npmCommandArguments, this.$projectData.projectDir, PluginsService.NPM_CONFIG).wait();
 			} else if(npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
 				result = this.$npm.uninstall(npmCommandArguments, PluginsService.NPM_CONFIG, this.$projectData.projectDir).wait();
+				if(!result || !result.length) {
+					// indicates something's wrong with the data in package.json, for example version of the plugin that we are trying to remove is invalid.
+					return npmCommandArguments.toLowerCase();
+				}
 			}
 
 			return this.parseNpmCommandResult(result);
