@@ -4,7 +4,7 @@
   "description": "Kinvey JavaScript SDK Core",
   "main": "src/kinvey.js",
   "scripts": {
-    "test": "./node_modules/.bin/gulp",
+    "test": "./node_modules/karma/bin/karma start",
     "build": "./node_modules/.bin/gulp build",
     "lint": "./node_modules/.bin/gulp lint",
     "eslint-pre-commit": "./scripts/eslint-pre-commit.sh",
@@ -20,17 +20,21 @@
     "url": "https://github.com/Kinvey/js-library-dev/issues"
   },
   "dependencies": {
+    "append-query": "^1.1.0",
     "babybird": "0.0.1",
     "fast-memory-cache": "^2.0.4",
     "hellojs": "^1.10.1",
     "indexeddbshim": "^2.2.1",
+    "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.3.0",
     "loglevel": "^1.3.1",
     "prfun": "^2.1.3",
     "qs": "^6.0.1",
     "request": "^2.67.0",
     "sift": "^3.0.0",
-    "url-pattern": "^1.0.0"
+    "uid": "0.0.2",
+    "url-pattern": "^1.0.0",
+    "whatwg-fetch": "^0.11.0"
   },
   "devDependencies": {
     "babel-core": "^6.4.5",
@@ -82,12 +86,13 @@
     "gulp-wrapper": "^1.0.0",
     "isparta": "^4.0.0",
     "json-loader": "^0.5.3",
-    "karma": "^0.13.17",
+    "karma": "^0.13.22",
     "karma-browserify": "^4.4.2",
     "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^0.2.2",
-    "karma-mocha": "^0.2.1",
-    "karma-mocha-reporter": "^1.1.5",
+    "karma-cli": "^0.1.2",
+    "karma-mocha": "^0.2.2",
+    "karma-mocha-reporter": "^1.3.0",
     "karma-phantomjs-launcher": "^0.2.2",
     "karma-sauce-launcher": "^0.3.0",
     "merge-stream": "^1.0.0",
@@ -105,6 +110,7 @@
     "vinyl-source-stream": "^1.1.0",
     "vinyl-transform": "^1.0.0",
     "wallabify": "0.0.12",
+    "watchify": "^3.7.0",
     "wrench": "^1.5.8",
     "yargs": "^3.27.0"
   }

@@ -1,5 +1,5 @@
 import Promise from '../utils/promise';
-import { NetworkStore } from './datastore';
+import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';

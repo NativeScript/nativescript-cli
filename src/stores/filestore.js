@@ -1,6 +1,6 @@
 import Promise from '../utils/promise';
-import { NetworkStore } from './datastore';
-import { NetworkRequest } from '../requests/request';
+import { NetworkStore } from './networkstore';
+import { NetworkRequest } from '../requests/network';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import assign from 'lodash/assign';

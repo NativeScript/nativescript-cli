@@ -8,7 +8,7 @@ import { Query } from './query';
 import { DataStore } from './stores/datastore';
 import { Sync } from './sync';
 import { User } from './user';
-import { AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
+import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 export class Kinvey {
@@ -45,10 +45,9 @@ export class Kinvey {
    */
   static ping() {
     const client = Client.sharedInstance();
-
     return client.executeNetworkRequest({
       method: HttpMethod.GET,
-      auth: client.allAuth(),
+      authType: AuthType.All,
       pathname: `${appdataNamespace}/${client.appKey}`
     }).then(response => {
       return response.data;

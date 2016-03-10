@@ -59,4 +59,4 @@ const Sync = {
 
 // Set sync default state
 Sync[enabledSymbol] = process.env.KINVEY_SYNC_DEFAULT_STATE || true;
-export default Sync;
+export { Sync };

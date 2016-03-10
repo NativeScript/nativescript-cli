@@ -1,8 +1,8 @@
-import { NetworkStore } from './networkstore';
-import { CacheStore } from './cachestore';
 import { SyncStore } from './syncstore';
+import { NetworkStore } from './networkstore';
 import { UserStore } from './userstore';
 import { FileStore } from './filestore';
+import { CacheStore } from './cachestore';
 
 /**
  * Enum for DataStore types.
@@ -50,11 +50,3 @@ export class DataStore {
     return store;
   }
 }
-
-export {
-  CacheStore,
-  FileStore,
-  NetworkStore,
-  SyncStore,
-  UserStore
-};

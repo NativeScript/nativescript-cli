@@ -572,7 +572,7 @@ class PrivateQuery {
   }
 }
 
-export default class Query {
+export class Query {
   constructor(options) {
     this[privateQuerySymbol] = new PrivateQuery(options);
   }

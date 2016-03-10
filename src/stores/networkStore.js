@@ -4,8 +4,8 @@ import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import { Client } from '../client';
 import { Query } from '../query';
+import { Log } from '../Log';
 import assign from 'lodash/assign';
-import log from '../log';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -71,7 +71,7 @@ export class NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
+    Log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
       properties: null,
@@ -98,9 +98,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entities in the ${this.name} collection.`, response);
+      Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -120,7 +120,7 @@ export class NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
+    Log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
       properties: null,
@@ -148,9 +148,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Grouped the entities in the ${this.name} collection.`, response);
+      Log.info(`Grouped the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to group the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to group the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -170,7 +170,7 @@ export class NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
+    Log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     options = assign({
       properties: null,
@@ -197,9 +197,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Counted the number of entities in the ${this.name} collection.`, response);
+      Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -218,11 +218,11 @@ export class NetworkStore {
    */
   findById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to retrieve an entity.', id);
+      Log.warn('No id was provided to retrieve an entity.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       properties: null,
@@ -247,9 +247,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -268,11 +268,11 @@ export class NetworkStore {
    */
   save(entity, options = {}) {
     if (!entity) {
-      log.warn('No entity was provided to be saved.', entity);
+      Log.warn('No entity was provided to be saved.', entity);
       return Promise.resolve(null);
     }
 
-    log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
+    Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     options = assign({
       properties: null,
@@ -305,9 +305,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
+      Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
+      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -327,7 +327,7 @@ export class NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   remove(query, options = {}) {
-    log.debug(`Removing the entities in the ${this.name} collection.`, query);
+    Log.debug(`Removing the entities in the ${this.name} collection.`, query);
 
     options = assign({
       properties: null,
@@ -353,9 +353,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entities in the ${this.name} collection.`, response);
+      Log.info(`Removed the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -374,11 +374,11 @@ export class NetworkStore {
    */
   removeById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to be removed.', id);
+      Log.warn('No id was provided to be removed.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       properties: null,
@@ -399,9 +399,9 @@ export class NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;

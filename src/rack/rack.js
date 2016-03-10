@@ -1,5 +1,9 @@
 import Promise from '../utils/promise';
-import { Middleware, CacheMiddleware, HttpMiddleware, ParseMiddleware, SerializeMiddleware } from './middleware';
+import { Middleware, KinveyMiddleware } from './middleware';
+import { CacheMiddleware } from './middleware/cache';
+import { HttpMiddleware } from './middleware/http';
+import { ParseMiddleware } from './middleware/parse';
+import { SerializeMiddleware } from './middleware/serialize';
 import result from 'lodash/result';
 const sharedCacheRackInstanceSymbol = Symbol();
 const sharedNetworkRackInstanceSymbol = Symbol();
@@ -7,7 +11,7 @@ const sharedNetworkRackInstanceSymbol = Symbol();
 /**
  * @private
  */
-export class Rack extends Middleware {
+export class Rack extends KinveyMiddleware {
   constructor(name = 'Rack') {
     super(name);
     this._middlewares = [];
@@ -30,7 +34,7 @@ export class Rack extends Middleware {
 
   use(middleware) {
     if (middleware) {
-      if (middleware instanceof Middleware) {
+      if (middleware instanceof KinveyMiddleware) {
         this._middlewares.push(middleware);
         return;
       }

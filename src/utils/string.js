@@ -1,3 +1,5 @@
+import uid from 'uid';
+
 /**
  * @private
  */

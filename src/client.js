@@ -1,7 +1,9 @@
 import Promise from './utils/promise';
 import { KinveyError, NotFoundError } from './errors';
 import { AuthType, HttpMethod } from './enums';
-import { LocalRequest, NetworkRequest, DeltaFetchRequest } from './requests/request';
+import { LocalRequest } from './requests/local';
+import { NetworkRequest } from './requests/network';
+import { DeltaFetchRequest } from './requests/deltafetch';
 import url from 'url';
 import qs from 'qs';
 import clone from 'lodash/clone';
@@ -105,6 +107,8 @@ const Auth = {
 
 function getAuthFn(type = AuthType.None) {
   switch (type) {
+    case AuthType.All:
+      return Auth.all;
     case AuthType.App:
       return Auth.app;
     case AuthType.Basic:
@@ -286,7 +290,7 @@ export class Client {
   executeNetworkRequest(options = {}) {
     options = assign({
       method: HttpMethod.GET,
-      auth: AuthType.None,
+      authType: AuthType.None,
       pathname: '/',
       flags: {
         _: Math.random().toString(36).substr(2)

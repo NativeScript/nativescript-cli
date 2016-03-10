@@ -16,11 +16,11 @@ if (typeof window !== 'undefined') {
   global.shimIndexedDB.__useShim();
 }
 
-const indexedDB = global.indexedDB ||
+const indexedDB = global.shimIndexedDB ||
+                  global.indexedDB ||
                   global.mozIndexedDB ||
                   global.webkitIndexedDB ||
-                  global.msIndexedDB ||
-                  global.shimIndexedDB;
+                  global.msIndexedDB;
 
 /**
  * @private
@@ -44,7 +44,7 @@ export class IndexedDB {
     let db = dbCache[this.name];
 
     if (db) {
-      if (db.objectStoreNames.indexOf(collection) !== -1) {
+      if (db.objectStoreNames.contians(collection)) {
         try {
           const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
           const txn = db.transaction([collection], mode);

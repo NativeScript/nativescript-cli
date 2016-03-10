@@ -1,5 +1,5 @@
 import Promise from '../utils/promise';
-import { CacheStore } from './cacheStore';
+import { CacheStore } from './cachestore';
 import { Aggregation } from '../aggregation';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';

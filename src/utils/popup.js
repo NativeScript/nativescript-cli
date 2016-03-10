@@ -1,5 +1,5 @@
 /* global Titanium:false */
-import Device from '../device';
+import { Device } from '../device';
 import { EventEmitter } from 'events';
 import bind from 'lodash/bind';
 const privatePopupSymbol = Symbol();

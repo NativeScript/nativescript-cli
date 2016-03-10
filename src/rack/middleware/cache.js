@@ -6,7 +6,7 @@ import { HttpMethod, StatusCode } from '../../enums';
  * @private
  */
 export class CacheMiddleware extends KinveyMiddleware {
-  constructor(adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
+  constructor(adapters = [DBAdapter.Memory]) {
     super('Kinvey Cache Middleware');
     this.adapters = adapters;
   }

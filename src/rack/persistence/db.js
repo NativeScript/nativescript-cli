@@ -29,20 +29,11 @@ const DBAdapter = {
 Object.freeze(DBAdapter);
 export { DBAdapter };
 
-// Export Adapters
-export {
-  IndexedDB,
-  LocalStorage,
-  Memory,
-  WebSQL
-};
-
-
 /**
  * @private
  */
 export class DB {
-  constructor(name, adapters = [DBAdapter.Memory]) {
+  constructor(name, adapters = DBAdapter.Memory) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }

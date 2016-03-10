@@ -1,6 +1,6 @@
 import Promise from '../utils/promise';
-import { NetworkStore } from './datastore';
-import { Response } from '../requests/request';
+import { NetworkStore } from './networkstore';
+import { Response } from '../requests/response';
 import { AuthType, HttpMethod, StatusCode } from '../enums';
 import { InsufficientCredentialsError, KinveyError, NotFoundError } from '../errors';
 import { Query } from '../query';
@@ -22,7 +22,7 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
  * The CacheStore class is used to find, save, update, remove, count and group enitities
  * in a collection on the network using a cache on the device.
  */
-export class CacheStore extends NetworkStore {
+class CacheStore extends NetworkStore {
   /**
    * Creates a new instance of the CacheStore class.
    *
@@ -1008,3 +1008,5 @@ export class CacheStore extends NetworkStore {
     return promise;
   }
 }
+
+export { CacheStore };

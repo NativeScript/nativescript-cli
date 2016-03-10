@@ -7,6 +7,7 @@ import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const caches = [];
 
 /**
  * @private
@@ -22,7 +23,12 @@ export class Memory {
     }
 
     this.name = name;
-    this.cache = new MemoryCache();
+    this.cache = caches[name];
+
+    if (!this.cache) {
+      this.cache = new MemoryCache();
+      caches[name] = this.cache;
+    }
   }
 
   find(collection) {

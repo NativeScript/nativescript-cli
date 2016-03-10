@@ -1,4 +1,5 @@
-import { KinveyRequest, Response } from './request';
+import { KinveyRequest } from './request';
+import { Response } from './response';
 import { CacheRack } from '../rack/rack';
 import { NoResponseError } from '../errors';
 
@@ -6,10 +7,14 @@ import { NoResponseError } from '../errors';
  * @private
  */
 export class LocalRequest extends KinveyRequest {
+  constructor(options) {
+    super(options);
+    this.rack = CacheRack.sharedInstance();
+  }
+
   execute() {
     const promise = super.execute().then(() => {
-      const rack = CacheRack.sharedInstance();
-      return rack.execute(this.toJSON());
+      return this.rack.execute(this.toJSON());
     }).then(response => {
       if (!response) {
         throw new NoResponseError();
@@ -32,7 +37,6 @@ export class LocalRequest extends KinveyRequest {
   }
 
   cancel() {
-    const rack = CacheRack.sharedInstance();
-    rack.cancel();
+    this.rack.cancel();
   }
 }

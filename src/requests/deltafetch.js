@@ -1,5 +1,8 @@
 import Promise from '../utils/promise';
-import { KinveyRequest, LocalRequest, NetworkRequest, Response } from './request';
+import { KinveyRequest } from './request';
+import { LocalRequest } from './local';
+import { NetworkRequest } from './network';
+import { Response } from './response';
 import { HttpMethod, StatusCode } from '../enums';
 import { NotFoundError } from '../errors';
 import { Query } from '../query';

@@ -1,4 +1,5 @@
-import { KinveyRequest, Response } from './request';
+import { KinveyRequest } from './request';
+import { Response } from './response';
 import { NetworkRack } from '../rack/rack';
 import { NoResponseError } from '../errors';
 
@@ -6,10 +7,14 @@ import { NoResponseError } from '../errors';
  * @private
  */
 export class NetworkRequest extends KinveyRequest {
+  constructor(options) {
+    super(options);
+    this.rack = NetworkRack.sharedInstance();
+  }
+
   execute() {
     const promise = super.execute().then(() => {
-      const networkRack = NetworkRack.sharedInstance();
-      return networkRack.execute(this.toJSON());
+      return this.rack.execute(this.toJSON());
     }).then(response => {
       if (!response) {
         throw new NoResponseError();
@@ -32,7 +37,6 @@ export class NetworkRequest extends KinveyRequest {
   }
 
   cancel() {
-    const networkRack = NetworkRack.sharedInstance();
-    networkRack.cancel();
+    return this.rack.cancel();
   }
 }

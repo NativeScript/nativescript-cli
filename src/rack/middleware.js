@@ -1,19 +1,8 @@
 import Promise from 'babybird';
 import { AsciiTree } from './asciiTree';
-import UrlPattern from 'url-pattern';
 import { KinveyError } from '../errors';
-import { CacheMiddleware } from './middleware/cache';
-import { HttpMiddleware } from './middleware/http';
-import { ParseMiddleware } from './middleware/parse';
-import { SerializeMiddleware } from './middleware/serialize';
+import UrlPattern from 'url-pattern';
 import url from 'url';
-
-export {
-  CacheMiddleware,
-  HttpMiddleware,
-  ParseMiddleware,
-  SerializeMiddleware
-};
 
 /**
  * @private

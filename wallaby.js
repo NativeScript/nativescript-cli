@@ -22,7 +22,7 @@ module.exports = function(wallaby) {
       { pattern: 'node_modules/babel-polyfill/dist/polyfill.js', instrument: false },
       { pattern: 'package.json', load: false },
       { pattern: 'src/**/*.js', load: false },
-      { pattern: 'test/helpers.js', load: false },
+      { pattern: 'test/setup.js', load: false },
       { pattern: 'src/**/*.spec.js', ignore: true }
     ],
     tests: [
@@ -37,7 +37,7 @@ module.exports = function(wallaby) {
       runner: require('phantomjs2-ext').path,
       params: { runner: '--web-security=false' }
     },
-    setup: function() {
+    setup: function(wallaby) {
       window.__moduleBundler.loadTests();
     }
   };

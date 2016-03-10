@@ -1,6 +1,8 @@
-import Kinvey from './kinvey';
-import Client from './client';
+import { Kinvey } from './kinvey';
+import { Client } from './client';
+import { UserHelper } from './utils/spec';
 import { randomString } from './utils/string';
+import fetchMock from 'fetch-mock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
@@ -21,24 +23,54 @@ describe('Kinvey', function () {
   });
 
   describe('ping()', function() {
-    before(function() {
-      Kinvey.init({
-        appKey: randomString(),
-        appSecret: randomString()
-      });
+    after(function() {
+      return UserHelper.logout();
     });
 
     it('should respond', function() {
       expect(Kinvey).itself.to.respondTo('ping');
     });
 
-    // it('should return a response when there is no active user', function() {
-    //   return expect(Kinvey.ping()).to.eventually.deep.equal({
-    //     version: appConfig.version,
-    //     kinvey: `hello ${appConfig.name}`,
-    //     appName: appConfig.name,
-    //     environmentName: appConfig.environment
-    //   });
-    // });
+    it('should return a response when there is no active user', function() {
+      const reply = {
+        version: 1,
+        kinvey: 'hello tests',
+        appName: 'tests',
+        environmentName: 'development'
+      };
+      fetchMock.mock('^https://baas.kinvey.com', 'GET', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: reply
+      });
+
+      return Kinvey.ping().then(response => {
+        expect(response).to.deep.equal(reply);
+        fetchMock.restore();
+      });
+    });
+
+    it('should return a response when there is an active user', function() {
+      const reply = {
+        version: 1,
+        kinvey: 'hello tests',
+        appName: 'tests',
+        environmentName: 'development'
+      };
+      fetchMock.mock('^https://baas.kinvey.com', 'GET', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: reply
+      });
+
+      return UserHelper.login().then(() => {
+        return Kinvey.ping();
+      }).then(response => {
+        expect(response).to.deep.equal(reply);
+        fetchMock.restore();
+      });
+    });
   });
 });

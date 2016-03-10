@@ -1,26 +1,17 @@
 import Promise from '../utils/promise';
-import { DeltaFetchRequest } from './deltafetch';
-import { LocalRequest } from './local';
-import { NetworkRequest } from './network';
-import { Response } from './response';
 import { HttpMethod } from '../enums';
 import { Device } from '../device';
 import { RequestProperties } from './properties';
 import { byteCount } from '../utils/string';
+import qs from 'qs';
+import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
-
-export {
-  DeltaFetchRequest,
-  LocalRequest,
-  NetworkRequest,
-  Response,
-  RequestProperties
-};
+import isEmpty from 'lodash/isEmpty';
 
 /**
  * @private
@@ -74,6 +65,14 @@ export class Request {
       default:
         throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
+  }
+
+  get url() {
+    return this._url;
+  }
+
+  set url(url) {
+    this._url = url;
   }
 
   get body() {
@@ -276,6 +275,43 @@ export class KinveyRequest extends Request {
 
       this.setHeader('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
     }
+  }
+
+  get url() {
+    const url = super.url;
+    const queryString = {};
+
+    if (this.query) {
+      queryString.query = this.query.filter;
+
+      if (!isEmpty(this.query.fields)) {
+        queryString.fields = this.query.fields.join(',');
+      }
+
+      if (this.query.limit) {
+        queryString.limit = this.query.limit;
+      }
+
+      if (this.query.skip > 0) {
+        queryString.skip = this.query.skip;
+      }
+
+      if (!isEmpty(this.query.sort)) {
+        queryString.sort = this.query.sort;
+      }
+    }
+
+    for (const key in queryString) {
+      if (queryString.hasOwnProperty(key)) {
+        queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+      }
+    }
+
+    return appendQuery(url, qs.stringify(queryString));
+  }
+
+  set url(url) {
+    super.url = url;
   }
 
   toJSON() {
