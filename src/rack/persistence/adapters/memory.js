@@ -1,4 +1,5 @@
 import Promise from '../../../utils/promise';
+import Queue from 'promise-queue';
 import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';
@@ -8,6 +9,9 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const caches = [];
+
+Queue.configure(Promise);
+const queue = new Queue(1, Infinity);
 
 /**
  * @private
@@ -32,24 +36,26 @@ export class Memory {
   }
 
   find(collection) {
-    return Promise.resolve().then(() => {
-      const entities = this.cache.get(`${this.name}${collection}`);
+    return queue.add(() => {
+      return Promise.resolve().then(() => {
+        const entities = this.cache.get(`${this.name}${collection}`);
 
-      if (entities) {
-        try {
-          return JSON.parse(entities);
-        } catch (err) {
-          return entities;
+        if (entities) {
+          try {
+            return JSON.parse(entities);
+          } catch (err) {
+            return entities;
+          }
         }
-      }
 
-      return entities;
-    }).then(entities => {
-      if (!entities) {
-        return [];
-      }
+        return entities;
+      }).then(entities => {
+        if (!entities) {
+          return [];
+        }
 
-      return entities;
+        return entities;
+      });
     });
   }
 

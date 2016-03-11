@@ -1,5 +1,9 @@
-import { DataStore, CacheStore, FileStore, NetworkStore, SyncStore, UserStore } from 'kinvey-sdk-core/stores/datastore';
-import { DataStoreType } from 'kinvey-sdk-core/enums';
+import { DataStore, DataStoreType } from './datastore';
+import { CacheStore } from './cachestore';
+import { FileStore } from './filestore';
+import { NetworkStore } from './networkstore';
+import { SyncStore } from './syncstore';
+import { UserStore } from './userstore';
 import chai from 'chai';
 const expect = chai.expect;
 

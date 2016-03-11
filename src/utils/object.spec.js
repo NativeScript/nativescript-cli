@@ -1,4 +1,4 @@
-import { nested, isDefined } from 'kinvey-sdk-core/utils/object';
+import { nested, isDefined } from './object';
 import chai from 'chai';
 const expect = chai.expect;
 

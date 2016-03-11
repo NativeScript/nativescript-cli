@@ -3,6 +3,7 @@ import { KinveyError, NotFoundError } from '../../../errors';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
+import isFunction from 'lodash/isFunction';
 const dbCache = {};
 
 const TransactionMode = {
@@ -44,7 +45,8 @@ export class IndexedDB {
     let db = dbCache[this.name];
 
     if (db) {
-      if (db.objectStoreNames.contians(collection)) {
+      const containsCollection = isFunction(db.objectStoreNames.contains) ? db.objectStoreNames.contains(collection) : db.objectStoreNames.indexOf(collection) !== -1;
+      if (containsCollection) {
         try {
           const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
           const txn = db.transaction([collection], mode);

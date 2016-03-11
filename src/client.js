@@ -336,6 +336,7 @@ export class Client {
   executeDeltaFetchRequest(options = {}) {
     options = assign({
       method: HttpMethod.GET,
+      authType: AuthType.None,
       pathname: '/',
       flags: {
         _: Math.random().toString(36).substr(2)

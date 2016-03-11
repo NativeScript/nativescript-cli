@@ -1,8 +1,13 @@
-import { DB, DBAdapter, Memory } from 'kinvey-sdk-core/rack/persistence/db';
-import { KinveyError, NotFoundError } from 'kinvey-sdk-core/errors';
-import { randomString } from 'test/helpers';
+import { DB, DBAdapter } from './db';
+import { Memory } from './adapters/memory';
+import { IndexedDB } from './adapters/indexeddb';
+import { WebSQL } from './adapters/websql';
+import { LocalStorage } from './adapters/localstorage';
+import { KinveyError, NotFoundError } from '../../errors';
+import { randomString } from '../../utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
+import forEach from 'lodash/forEach';
 import chai from 'chai';
 const expect = chai.expect;
 const databaseName = 'testDatabase';
@@ -37,8 +42,46 @@ describe('DB', function() {
   });
 
   it('should allow to specify an array of adapters', function() {
-    const db = new DB(databaseName, [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]);
-    expect(db.adapter).to.be.instanceof(Memory);
+    const adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory];
+    const db = new DB(databaseName, adapters);
+    let adapterInstance = Memory;
+
+    forEach(adapters, adapter => {
+      switch (adapter) {
+        case DBAdapter.IndexedDB:
+          if (IndexedDB.isSupported()) {
+            adapterInstance = IndexedDB;
+            return false;
+          }
+
+          break;
+        case DBAdapter.LocalStorage:
+          if (LocalStorage.isSupported()) {
+            adapterInstance = LocalStorage;
+            return false;
+          }
+
+          break;
+        case DBAdapter.Memory:
+          if (Memory.isSupported()) {
+            adapterInstance = Memory;
+            return false;
+          }
+
+          break;
+        case DBAdapter.WebSQL:
+          if (WebSQL.isSupported()) {
+            adapterInstance = WebSQL;
+            return false;
+          }
+
+          break;
+        default:
+          console.log(`The ${adapter} adapter is is not recognized.`);
+      }
+    });
+
+    expect(db.adapter).to.be.instanceof(adapterInstance);
   });
 
   describe('find()', function() {

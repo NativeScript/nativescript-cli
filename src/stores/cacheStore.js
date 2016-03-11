@@ -10,7 +10,7 @@ import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import clone from 'lodash/clone';
 import map from 'lodash/map';
-import log from '../log';
+import { Log } from '../log';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -71,7 +71,7 @@ class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   find(query, options = {}) {
-    log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
+    Log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
 
     options = assign({
       useDeltaFetch: true
@@ -86,7 +86,6 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.GET,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
         query: query,
         timeout: options.timeout
       });
@@ -114,7 +113,7 @@ class CacheStore extends NetworkStore {
             method: HttpMethod.GET,
             pathname: this._pathname,
             properties: options.properties,
-            auth: this.client.defaultAuth(),
+            authType: AuthType.Default,
             query: query,
             timeout: options.timeout
           }).then(response => {
@@ -124,29 +123,16 @@ class CacheStore extends NetworkStore {
 
         return super.find(query, options);
       }).then(data => {
-        const removedEntityIds = Object.keys(keyBy(data, idAttribute));
-        const removeQuery = new Query();
-        removeQuery.contains(idAttribute, removedEntityIds);
-
-        return this.client.executeLocalRequest({
-          method: HttpMethod.DELETE,
-          pathname: this._pathname,
-          properties: options.properties,
-          auth: this.client.defaultAuth(),
-          query: removeQuery,
-          timeout: options.timeout
-        }).then(() => {
-          return this._updateCache(data);
-        });
+        return this._updateCache(data);
       });
 
       return result;
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entities in the ${this.name} collection.`, response);
+      Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -168,7 +154,7 @@ class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   group(aggregation, options = {}) {
-    log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
+    Log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
 
     options = assign({
       force: false
@@ -184,7 +170,7 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/_group`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         data: aggregation.toJSON(),
         timeout: options.timeout
       });
@@ -214,9 +200,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Grouped the entities in the ${this.name} collection.`, response);
+      Log.info(`Grouped the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to group the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to group the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -238,7 +224,7 @@ class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   count(query, options = {}) {
-    log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
+    Log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
 
     options = assign({
       force: false
@@ -253,7 +239,7 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/_count`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         timeout: options.timeout
       });
@@ -283,9 +269,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Counted the number of entities in the ${this.name} collection.`, response);
+      Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -306,11 +292,11 @@ class CacheStore extends NetworkStore {
    */
   findById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to retrieve an entity.', id);
+      Log.warn('No id was provided to retrieve an entity.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       force: false,
@@ -322,7 +308,7 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.GET,
         pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         timeout: options.timeout
       });
     }).then(response => {
@@ -349,7 +335,7 @@ class CacheStore extends NetworkStore {
             method: HttpMethod.GET,
             pathname: `${this._pathname}/${id}`,
             properties: options.properties,
-            auth: this.client.defaultAuth(),
+            authType: AuthType.Default,
             timeout: options.timeout
           }).then(response => {
             return response.data;
@@ -365,7 +351,7 @@ class CacheStore extends NetworkStore {
             method: HttpMethod.DELETE,
             pathname: `${this._pathname}/${id}`,
             properties: options.properties,
-            auth: this.client.defaultAuth(),
+            authType: AuthType.Default,
             timeout: options.timeout
           }).then(() => {
             throw err;
@@ -379,9 +365,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -402,11 +388,11 @@ class CacheStore extends NetworkStore {
    */
   save(entity, options = {}) {
     if (!entity) {
-      log.warn('No entity was provided to be saved.', entity);
+      Log.warn('No entity was provided to be saved.', entity);
       return Promise.resolve(null);
     }
 
-    log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
+    Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     const promise = Promise.resolve().then(() => {
       if (entity[idAttribute]) {
@@ -414,7 +400,7 @@ class CacheStore extends NetworkStore {
           method: HttpMethod.PUT,
           pathname: `${this._pathname}/${entity[idAttribute]}`,
           properties: options.properties,
-          auth: this.client.defaultAuth(),
+          authType: AuthType.Default,
           data: entity,
           timeout: options.timeout
         });
@@ -424,7 +410,7 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.POST,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         data: entity,
         timeout: options.timeout
       });
@@ -440,9 +426,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
+      Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
+      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -462,7 +448,7 @@ class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   remove(query, options = {}) {
-    log.debug(`Removing the entities in the ${this.name} collection.`, query);
+    Log.debug(`Removing the entities in the ${this.name} collection.`, query);
 
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
@@ -473,7 +459,7 @@ class CacheStore extends NetworkStore {
         method: HttpMethod.DELETE,
         pathname: this._pathname,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         query: query,
         timeout: options.timeout
       });
@@ -487,9 +473,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entities in the ${this.name} collection.`, response);
+      Log.info(`Removed the entities in the ${this.name} collection.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
+      Log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
     });
 
     return promise;
@@ -508,18 +494,18 @@ class CacheStore extends NetworkStore {
    */
   removeById(id, options = {}) {
     if (!id) {
-      log.warn('No id was provided to be removed.', id);
+      Log.warn('No id was provided to be removed.', id);
       return Promise.resolve(null);
     }
 
-    log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
+    Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     const promise = Promise.resolve().then(() => {
       return this.client.executeLocalRequest({
         method: HttpMethod.DELETE,
         pathname: `${this._pathname}/${id}`,
         properties: options.properties,
-        auth: this.client.defaultAuth(),
+        authType: AuthType.Default,
         timeout: options.timeout
       });
     }).then(response => {
@@ -532,9 +518,9 @@ class CacheStore extends NetworkStore {
     });
 
     promise.then(response => {
-      log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
+      Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
     }).catch(err => {
-      log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
+      Log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
     });
 
     return promise;
@@ -585,7 +571,7 @@ class CacheStore extends NetworkStore {
           method: HttpMethod.GET,
           pathname: `${this._pathname}/${id}`,
           properties: metadata.properties,
-          auth: this.client.defaultAuth(),
+          authType: AuthType.Default,
           timeout: options.timeout
         }).then(response => {
           save.push(response.data);

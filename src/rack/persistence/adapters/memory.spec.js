@@ -1,6 +1,6 @@
-import { IndexedDB } from 'kinvey-sdk-core/rack/persistence/adapters/indexeddb';
-import { KinveyError, NotFoundError } from 'kinvey-sdk-core/errors';
-import { randomString } from 'test/helpers';
+import { Memory } from './memory';
+import { KinveyError, NotFoundError } from '../../../errors';
+import { randomString } from '../../../utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import chai from 'chai';
@@ -8,9 +8,9 @@ const expect = chai.expect;
 const databaseName = 'testDatabase';
 const collectionName = 'testCollection';
 
-describe('IndexedDB', function() {
+describe('Memory', function() {
   before(function() {
-    this.db = new IndexedDB(databaseName);
+    this.db = new Memory(databaseName);
   });
 
   after(function() {
@@ -19,22 +19,22 @@ describe('IndexedDB', function() {
 
   it('should throw an error if no name is provided', function() {
     expect(function() {
-      const db = new IndexedDB();
-      return db;
+      const memory = new Memory();
+      return memory;
     }).to.throw(KinveyError);
   });
 
   it('should throw an error if name is not a string', function() {
     expect(function() {
-      const db = new IndexedDB({});
-      return db;
+      const memory = new Memory({});
+      return memory;
     }).to.throw(KinveyError);
   });
 
   it('should set name with constructor', function() {
     const name = 'foo';
-    const db = new IndexedDB(name);
-    expect(db.name).to.equal(name);
+    const memory = new Memory(name);
+    expect(memory.name).to.equal(name);
   });
 
   describe('find()', function() {
@@ -69,7 +69,7 @@ describe('IndexedDB', function() {
     });
 
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('find');
+      expect(Memory).to.respondTo('find');
     });
 
     it('should return an empty array if a collection does not contain eny entities', function() {
@@ -94,8 +94,6 @@ describe('IndexedDB', function() {
         attribute: randomString()
       }).then(entity => {
         this.entity = entity;
-      }).catch(error => {
-        console.log(error);
       });
     });
 
@@ -121,7 +119,7 @@ describe('IndexedDB', function() {
     });
 
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('findById');
+      expect(Memory).to.respondTo('findById');
     });
 
     it('should throw a NotFoundError for an entity that does not exist', function() {
@@ -138,8 +136,6 @@ describe('IndexedDB', function() {
         attribute: randomString()
       };
       return this.db.save(collectionName, entity).then(savedEntity => {
-        return this.db.findById(collectionName, savedEntity._id);
-      }).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
         return this.db.removeById(collectionName, savedEntity._id);
       });
@@ -148,7 +144,7 @@ describe('IndexedDB', function() {
 
   describe('save()', function() {
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('save');
+      expect(Memory).to.respondTo('save');
     });
 
     it('should save one entity', function() {
@@ -158,15 +154,12 @@ describe('IndexedDB', function() {
       };
       return this.db.save(collectionName, entity).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
-        return this.db.findById(collectionName, savedEntity._id);
-      }).then(savedEntity => {
-        expect(savedEntity).to.deep.equal(entity);
         return this.db.removeById(collectionName, savedEntity._id);
       });
     });
 
     it('should save an array of entities', function() {
-      let entities = [
+      const entities = [
         {
           _id: randomString(),
           attribute: randomString()
@@ -177,25 +170,13 @@ describe('IndexedDB', function() {
         }
       ];
       return this.db.save(collectionName, entities).then(savedEntities => {
-        expect(savedEntities).to.deep.equal(entities);
-        return this.db.find(collectionName);
-      }).then(savedEntities => {
         expect(savedEntities).to.be.an('array');
         expect(savedEntities.length).to.equal(2);
-
-        entities = keyBy(entities, '_id');
-        savedEntities = keyBy(savedEntities, '_id');
-
-        for (const id in savedEntities) {
-          if (savedEntities.hasOwnProperty(id)) {
-            expect(savedEntities[id]).to.deep.equal(entities[id]);
-          }
-        }
-
-        const promises = map(Object.keys(savedEntities), id => {
+        expect(savedEntities).to.deep.equal(entities);
+        const savedEntityIds = Object.keys(keyBy(savedEntities, '_id'));
+        const promises = map(savedEntityIds, id => {
           return this.db.removeById(collectionName, id);
         });
-
         return Promise.all(promises);
       });
     });
@@ -203,11 +184,11 @@ describe('IndexedDB', function() {
 
   describe('isSupported()', function() {
     it('should be a static function', function() {
-      expect(IndexedDB).itself.to.respondTo('isSupported');
+      expect(Memory).itself.to.respondTo('isSupported');
     });
 
     it('should return true', function() {
-      expect(IndexedDB.isSupported()).to.be.true;
+      expect(Memory.isSupported()).to.be.true;
     });
   });
 });

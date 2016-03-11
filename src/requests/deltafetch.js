@@ -29,7 +29,6 @@ export class DeltaFetchRequest extends KinveyRequest {
         method: HttpMethod.GET,
         url: this.url,
         headers: this.headers,
-        auth: this.auth,
         query: this.query,
         timeout: this.timeout
       });

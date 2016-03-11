@@ -1,12 +1,12 @@
 import Promise from '../../utils/promise';
-import Query from '../../query';
-import Aggregation from '../../aggregation';
+import { Query } from '../../query';
+import { Aggregation } from '../../aggregation';
 import { IndexedDB } from './adapters/indexeddb';
 import { LocalStorage } from './adapters/localstorage';
 import { Memory } from './adapters/memory';
 import { WebSQL } from './adapters/websql';
 import { KinveyError } from '../../errors';
-import log from '../../log';
+import { Log } from '../../log';
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
@@ -69,17 +69,17 @@ export class DB {
 
           break;
         default:
-          log.warn(`The ${adapter} adapter is is not recognized.`);
+          Log.warn(`The ${adapter} adapter is is not recognized.`);
       }
     });
 
     if (!this.adapter) {
       if (Memory.isSupported()) {
-        log.error('Provided adapters are unsupported on this platform. ' +
+        Log.error('Provided adapters are unsupported on this platform. ' +
           'Defaulting to StoreAdapter.Memory adapter.', adapters);
         this.adapter = new Memory(name);
       } else {
-        log.error('Provided adapters are unsupported on this platform.', adapters);
+        Log.error('Provided adapters are unsupported on this platform.', adapters);
       }
     }
   }
