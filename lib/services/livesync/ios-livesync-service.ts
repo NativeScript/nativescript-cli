@@ -14,7 +14,8 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
-		private $injector: IInjector) {
+		private $injector: IInjector,
+		private $logger: ILogger) {
 			super(_device);
 		}
 
@@ -45,7 +46,12 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 	private sendPageReloadMessage(socket: net.Socket): void {
 		try {
 			this.sendPageReloadMessageCore(socket);
-		} finally {
+			socket.once("data", (data: NodeBuffer|string) => {
+				this.$logger.trace(`Socket sent data: ${data.toString()}`);
+				socket.destroy();
+			});
+		} catch(err) {
+			this.$logger.trace("Error while sending page reload:", err);
 			socket.destroy();
 		}
 	}
