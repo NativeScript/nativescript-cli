@@ -1,6 +1,24 @@
 NativeScript CLI Changelog
 ================
 
+1.7.0 (2016, March 16)
+==
+
+### Breaking
+* Minimum required Android Build-tools version is set to 23.0.0 due to some changes in Android SDK. CLI will not allow building your application for Android in case you do not have at least this version installed.
+* Minimum required Windows version is now Windows 7 SP1.
+
+### New
+* [Implemented #1172](https://github.com/NativeScript/nativescript-cli/issues/1172): Add `tns publish ios` command.
+* [Implemented #1514](https://github.com/NativeScript/nativescript-cli/issues/1514): Use custom native project templates.
+* [Implemented #1563](https://github.com/NativeScript/nativescript-cli/issues/1563): Install runtime by npm tagname.
+
+### Fixed
+* [Fixed #1081](https://github.com/NativeScript/nativescript-cli/issues/1081): CLI LiveSync command conflicts with Android Studio.
+* [Fixed #1416](https://github.com/NativeScript/nativescript-cli/issues/1416): Livesync does not work when `/data/local/tmp/<app-identifier>` file exists on Android device.
+* [Fixed #1541](https://github.com/NativeScript/nativescript-cli/issues/1541): Plugin remove fails if plugin version is not available in npm.
+* [Fixed #1576](https://github.com/NativeScript/nativescript-cli/issues/1576): `tns run android` just starts emulator but does not deploy app on it when no devices are attached.
+
 1.6.2 (2016, March 2)
 ==
 
