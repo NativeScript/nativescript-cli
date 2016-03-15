@@ -6,6 +6,7 @@ NativeScript CLI Changelog
 
 ### Breaking
 * Minimum required Android Build-tools version is set to 23.0.0 due to some changes in Android SDK. CLI will not allow building your application for Android in case you do not have at least this version installed.
+* Minimum required Windows version is now Windows 7 SP1.
 
 ### New
 * [Implemented #1172](https://github.com/NativeScript/nativescript-cli/issues/1172): Add `tns publish ios` command.
