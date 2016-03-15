@@ -157,7 +157,7 @@ class TestExecutionService implements ITestExecutionService {
 	private generateConfig(port: string, options: any): string {
 		let nics = os.networkInterfaces();
 		let ips = Object.keys(nics)
-			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4' && !binding.internal)[0])
+			.map(nicName => nics[nicName].filter((binding: any) => binding.family === 'IPv4')[0])
 			.filter(binding => binding)
 			.map(binding => binding.address);
 
