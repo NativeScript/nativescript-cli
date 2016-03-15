@@ -69,13 +69,13 @@ You can install and run the NativeScript CLI on Windows or OS X.
 
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
 
-* Windows Vista or later
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* Windows 7 SP1 or later
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 * (Optional) [Chocolatey][Chocolatey]
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
-* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
-* [Android Support Repository][Android Support Repository]
+* [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
+* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
 * (Optional) [Genymotion][Genymotion]
 
 If you have installed Chocolatey, you can complete these steps to set up JDK, and Android SDK.
@@ -114,11 +114,11 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 	```
 1. Select all packages for the Android 22 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
 1. Select Android SDK Build-tools 22.0.0 or later stable version, click **Install** and wait for the installation to complete.
-1. Select Extras/Android Support Repository, click **Install** and wait for the installation to complete.
+1. Select Extras/Local Maven repository for Support Libraries, click **Install** and wait for the installation to complete.
 
 > NOTE: You can install required Android Tools with the following command:
 ```Shell
-android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## OS X
@@ -126,7 +126,7 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
 
 * OS X Mavericks
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
@@ -134,8 +134,8 @@ android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,s
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Android SDK 22][Android SDK 22] or a later stable official release
-	* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
-	* [Android Support Repository][Android Support Repository]
+	* [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
+	* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
 	* (Optional) [Genymotion][Genymotion]
 
 If not present, create the following environment variables.
@@ -157,7 +157,7 @@ For example: ANDROID_HOME=/usr/local/Cellar/android-sdk/24/
 You can install the required Android tools with the following command:
 
 ```Shell
-echo yes | android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## Linux
@@ -165,7 +165,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 > On Linux systems, you can develop, build, and deploy NativeScript projects that target Android.
 
 * Ubuntu 14.04 LTS
-* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.2.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
+* The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
 
 	> **TIP:** You can follow the instructions provided [here](https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) to install Node.js on your system.
 
@@ -182,8 +182,8 @@ echo yes | android update sdk --filter tools,platform-tools,android-22,build-too
 		```
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
-* [Android SDK Build-tools 22.0.0][Android SDK Build-tools 22.0.0] or a later stable official release
-* [Android Support Repository][Android Support Repository]
+* [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
+* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
 * (Optional) [Genymotion][Genymotion]
 
 If not present, create the following environment variables.
@@ -205,7 +205,7 @@ For example: ANDROID_HOME=/home/user/android-sdk
 You can install required Android Tools with the following command.
 
 ```Shell
-echo yes | android update sdk --filter tools,platform-tools,android-22,build-tools-22.0.1,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 [Back to Top][1]
@@ -580,5 +580,5 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Genymotion]: https://www.genymotion.com/#!/
 [CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
 [Android SDK Build-tools 22.0.0]: http://developer.android.com/sdk/index.html
-[Android Support Repository]: http://developer.android.com/sdk/index.html
-![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel) 
+[Local Maven repository for Support Libraries]: http://developer.android.com/sdk/index.html
+![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel)
