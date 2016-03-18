@@ -3,10 +3,17 @@
 import {EOL} from "os";
 import * as semver from "semver";
 import * as path from "path";
+import * as helpers from "../common/helpers";
 let clui = require("clui");
 
 class DoctorService implements IDoctorService {
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
+	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
+	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
+	private static WindowsSetupScriptExecutable = "powershell.exe";
+	private static WindowsSetupScriptArguments = ["start-process", "-FilePath", "PowerShell.exe", "-NoNewWindow", "-Wait", "-ArgumentList", '"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString(\'https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1\'))"'];
+	private static WindowsSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-win";
+	private static LinuxSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-linux";
 
 	constructor(private $analyticsService: IAnalyticsService,
 		private $androidToolsInfo: IAndroidToolsInfo,
@@ -17,6 +24,8 @@ class DoctorService implements IDoctorService {
 		private $childProcess: IChildProcess,
 		private $config: IConfiguration,
 		private $npm: INodePackageManager,
+		private $opener: IOpener,
+		private $prompter: IPrompter,
 		private $fs: IFileSystem) {	}
 
 	public printWarnings(configOptions?: { trackResult: boolean }): boolean {
@@ -95,7 +104,36 @@ class DoctorService implements IDoctorService {
 			this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct").wait();
 		}
 
+		if(doctorResult) {
+			this.$logger.info("There seem to be issues with your configuration.");
+			if (this.$hostInfo.isDarwin) {
+				this.promptForHelp(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []).wait();
+			} else if (this.$hostInfo.isWindows) {
+				this.promptForHelp(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments).wait();
+			} else {
+				this.promptForDocs(DoctorService.LinuxSetupDocsLink).wait();
+			}
+		}
+
 		return doctorResult;
+	}
+
+	private promptForDocs(link: string): IFuture<void> {
+		return (() => {
+			if (this.$prompter.confirm("Do you want to visit the official documentation?", () => helpers.isInteractive()).wait()) {
+				this.$opener.open(link);
+			}
+		}).future<void>()();
+	}
+
+	private promptForHelp(link: string, commandName: string, commandArguments: string[]): IFuture<void> {
+		return (() => {
+			this.promptForDocs(link).wait();
+
+			if (this.$prompter.confirm("Do you want to run the setup script?", () => helpers.isInteractive()).wait()) {
+				this.$childProcess.spawnFromEvent(commandName, commandArguments, "close", { stdio: "inherit" }).wait();
+			}
+		}).future<void>()();
 	}
 
 	private printPackageManagerTip() {
