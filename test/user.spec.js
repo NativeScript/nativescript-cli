@@ -1,0 +1,348 @@
+import { User } from '../src/user';
+import { Acl } from '../src/acl';
+import { Metadata } from '../src/metadata';
+import { ActiveUserError, KinveyError } from '../src/errors';
+import { randomString } from '../src/utils/string';
+import fetchMock from 'fetch-mock';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
+const expect = chai.expect;
+
+describe('User', function () {
+  it('should create a new user', function() {
+    const user = new User();
+    expect(user).to.be.instanceof(User);
+  });
+
+  it('should create a new user with data', function() {
+    const data = { name: 'foo' };
+    const user = new User(data);
+    expect(user.data).to.deep.equal(data);
+  });
+
+  describe('_id', function() {
+    before(function() {
+      this._id = randomString();
+      this.user = new User({
+        _id: this._id
+      });
+    });
+
+    after(function() {
+      delete this._id;
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('_id', this._id);
+    });
+  });
+
+  describe('_acl', function() {
+    before(function() {
+      this.user = new User();
+    });
+
+    after(function() {
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('_acl');
+      expect(this.user._acl).to.be.instanceof(Acl);
+    });
+  });
+
+  describe('metadata', function() {
+    before(function() {
+      this.user = new User();
+    });
+
+    after(function() {
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('metadata');
+      expect(this.user).to.have.property('_kmd');
+      expect(this.user.metadata).to.be.instanceof(Metadata);
+      expect(this.user._kmd).to.be.instanceof(Metadata);
+    });
+  });
+
+  describe('authtoken', function() {
+    before(function() {
+      this.authtoken = randomString();
+      this.user = new User({
+        _kmd: {
+          authtoken: this.authtoken
+        }
+      });
+    });
+
+    after(function() {
+      delete this.authtoken;
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('authtoken', this.authtoken);
+    });
+  });
+
+  describe('username', function() {
+    before(function() {
+      this.username = randomString();
+      this.user = new User({
+        username: this.username
+      });
+    });
+
+    after(function() {
+      delete this.username;
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('username', this.username);
+    });
+  });
+
+  describe('email', function() {
+    before(function() {
+      this.email = randomString();
+      this.user = new User({
+        email: this.email
+      });
+    });
+
+    after(function() {
+      delete this.email;
+      delete this.user;
+    });
+
+    it('should be a property', function() {
+      expect(this.user).to.have.property('email', this.email);
+    });
+  });
+
+  describe('getActiveUser', function() {
+    after(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('getActiveUser');
+    });
+
+    it('should return null when there is not an active user', function() {
+      return expect(User.getActiveUser()).to.eventually.equal(null);
+    });
+
+    it('should return the active user', function() {
+      const user = new User();
+      return User.setActiveUser(user).then(() => {
+        return User.getActiveUser();
+      }).then(activeUser => {
+        expect(activeUser).to.deep.equal(user);
+      });
+    });
+  });
+
+  describe('setActiveUser', function() {
+    after(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('setActiveUser');
+    });
+
+    it('should set the active user', function() {
+      const user = new User();
+      return User.setActiveUser(user).then(() => {
+        return User.getActiveUser();
+      }).then(activeUser => {
+        expect(activeUser).to.deep.equal(user);
+      });
+    });
+
+    it('should remove the active user when set to null', function() {
+      const user = new User();
+      return User.setActiveUser(user).then(() => {
+        return User.getActiveUser();
+      }).then(activeUser => {
+        expect(activeUser).to.deep.equal(user);
+        return User.setActiveUser(null);
+      }).then(() => {
+        return User.getActiveUser();
+      }).then(activeUser => {
+        expect(activeUser).to.equal(null);
+      });
+    });
+  });
+
+  describe('setAsActiveUser', function() {
+    after(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a method', function() {
+      expect(User).to.respondTo('setAsActiveUser');
+    });
+
+    it('should set a user as the active user', function() {
+      const user = new User();
+      return user.setAsActiveUser().then(() => {
+        return User.getActiveUser();
+      }).then(activeUser => {
+        expect(activeUser).to.deep.equal(user);
+      });
+    });
+  });
+
+  describe('isActiveUser', function() {
+    after(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a method', function() {
+      expect(User).to.respondTo('isActiveUser');
+    });
+
+    it('should return false if the user is not the active user', function() {
+      const user = new User();
+      return user.isActiveUser().then(isActive => {
+        expect(isActive).to.equal(false);
+      });
+    });
+
+    it('should return true if the user is the active user', function() {
+      const user = new User();
+      return user.setAsActiveUser().then(() => {
+        return user.isActiveUser();
+      }).then(isActive => {
+        expect(isActive).to.equal(true);
+      });
+    });
+  });
+
+  describe('login()', function() {
+    afterEach(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('login');
+    });
+
+    it('should be a method', function() {
+      expect(User).to.respondTo('login');
+    });
+
+    it('should forward to the login instance method', function() {
+      const stub = this.sandbox.stub(User.prototype, 'login', function() {
+        return Promise.resolve();
+      });
+      return User.login({
+        username: randomString(),
+        password: randomString()
+      }).then(() => {
+        expect(stub).to.have.been.callCount(1);
+      });
+    });
+
+    it('should throw an error if the user is already active', function() {
+      const user = new User();
+      const promise = user.setAsActiveUser().then(() => {
+        return user.login({
+          username: randomString(),
+          password: randomString()
+        });
+      });
+      return expect(promise).to.be.rejectedWith(ActiveUserError);
+    });
+
+    it('should throw an error if an active user already exists', function() {
+      const user = new User();
+      const promise = user.setAsActiveUser().then(() => {
+        return User.login({
+          username: randomString(),
+          password: randomString()
+        });
+      });
+      return expect(promise).to.be.rejectedWith(ActiveUserError);
+    });
+
+    it('should throw an error if a username is not provided', function() {
+      const promise = User.login({
+        password: randomString()
+      });
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should throw an error if the username is an empty string', function() {
+      const promise = User.login({
+        username: ' ',
+        password: randomString()
+      });
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should throw an error if a password is not provided', function() {
+      const promise = User.login({
+        password: randomString()
+      });
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should throw an error if the password is an empty string', function() {
+      const promise = User.login({
+        username: randomString(),
+        password: ' '
+      });
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should login a user', function() {
+      const username = randomString();
+      const reply = {
+        _id: randomString(),
+        _kmd: {
+          lmt: new Date().toISOString(),
+          ect: new Date().toISOString(),
+          authtoken: randomString()
+        },
+        username: username,
+        _acl: {
+          creator: randomString()
+        }
+      };
+      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: reply
+      });
+
+      return User.login({
+        username: username,
+        password: randomString()
+      }).then(user => {
+        expect(user.data).to.deep.equal(reply);
+        expect(user._id).to.equal(reply._id);
+        expect(user.authtoken).to.equal(reply._kmd.authtoken);
+        expect(user.username).to.equal(reply.username);
+        return user.isActiveUser();
+      }).then(isActive => {
+        expect(isActive).to.be.true;
+        return null;
+      }).then(() => {
+        fetchMock.restore();
+      });
+    });
+  });
+});
