@@ -193,15 +193,20 @@ class TestExecutionService implements ITestExecutionService {
 				options: {
 					debugTransport: this.$options.debugTransport,
 					debugBrk: this.$options.debugBrk,
+					watch: !!this.$options.watch
 				}
 			},
 		};
+
 		if (this.$config.DEBUG || this.$logger.getLevel() === 'TRACE') {
 			karmaConfig.logLevel = 'DEBUG';
 		}
+
 		if (!this.$options.watch) {
+			// Setting singleRun to true will automatically start the tests when new browser (device in our case) is registered in karma.
 			karmaConfig.singleRun = true;
 		}
+
 		if (this.$options.debugBrk) {
 			karmaConfig.browserNoActivityTimeout = 1000000000;
 		}
