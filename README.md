@@ -59,7 +59,7 @@ With the NativeScript CLI, you can target the following mobile platforms.
 System Requirements
 ===
 
-You can install and run the NativeScript CLI on Windows or OS X.
+You can install and run the NativeScript CLI on Windows, OS X or Linux.
 
 * [Windows](#windows)
 * [OS X](#os-x)
@@ -68,6 +68,21 @@ You can install and run the NativeScript CLI on Windows or OS X.
 ## Windows
 
 > On Windows systems, you can develop, build, and deploy NativeScript projects that target Android.
+
+### Setup Script
+To quickly set up your system for the latest NativeScript CLI, paste the following PowerShell script in the **Command Prompt** and hit `Enter`:
+```cmd
+@powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
+```
+
+Alternatively, your can paste the following PowerShell setup script in a **Windows PowerShell console** and hit `Enter`:
+```PowerShell
+start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
+```
+> Both scripts require that you have **.NET 4.0 or later** installed on your system. You can download .NET 4.6.1 from this [link](http://go.microsoft.com/fwlink/?LinkId=671729).
+
+
+### Manual Setup
 
 * Windows 7 SP1 or later
 * The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
@@ -124,6 +139,14 @@ android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,s
 ## OS X
 
 > On OS X systems, you can develop, build, and deploy NativeScript projects that target iOS and Android.
+
+### Setup Script
+To quickly set up your system for the latest NativeScript CLI, paste the following Ruby script in the **Terminal** and hit `Enter`:
+```Shell
+sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.rb)"
+```
+
+### Manual Setup
 
 * OS X Mavericks
 * The latest Node.js [0.10.x](https://nodejs.org/dist/latest-v0.10.x/), [0.12.x](https://nodejs.org/dist/latest-v0.12.x/), [4.x](https://nodejs.org/dist/latest-v4.x/) or [5.x](https://nodejs.org/dist/latest-v5.x/) stable official release
@@ -325,7 +348,7 @@ MyApp/
 ```
 
 * The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content to the platform-specific folders for each target platform.
-* The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.<br/>In the `platforms` directory, you can safely modify configuration files such as `AndroidManifest.xml` and `Info.plist`.
+* The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI copies relevant content from the `app` directory to the platform-specific subdirectory for each target platform.
 
 [Back to Top][1]
 
@@ -398,9 +421,13 @@ You can develop shared functionality or design in common files. To indicate that
 
 ### Development in `platforms`
 
-In `platforms`, you can safely modify files which are part of the native project structure and do not have a corresponding source located in the `app` directory in the root. For example, `AndroidManifest.xml` and `Info.plist`.
+> **IMPORTANT:** Avoid editing files located in the `platforms` subdirectory because the NativeScript CLI overrides such files during the `prepare <Platform>` using the contents of the `app` directory.
 
-**Do not modify files and resources that have a corresponding file in the `app` directory in the root**, such as application scripts, icons, and splash screens. The NativeScript CLI overrides such files during the `prepare <Platform>` operation with the content from `app`.
+### Modifying Configuration Files
+
+The NativeScript CLI respects any platform configuration files placed inside `app/App_Resources`. Those files are respectively `app/App_Resources/AndroidManifest.xml` for Android and `app/App_Resources/Info.plist` for iOS.
+
+Additionaly, you can modify `app/App_Resources/build.xcconfig` and `app/App_Resources/app.gradle` for adding/removing additional build properties for iOS and Android, respectively.
 
 [Back to Top][1]
 
@@ -417,8 +444,6 @@ tns prepare ios
 
 Keep in mind that `prepare` overrides changes made to the platform-specific subdirectory in `platforms`. For more information, see [Development in platforms](#development-in-platforms).
 
-> **IMPORTANT:** Always run `prepare <Platform>` before running `build <Platform>`, `deploy <Platform>`, or `emulate <Platform>`. This ensures that the NativeScript CLI will build an application package with your latest code and resources.
-
 [Back to Top][1]
 
 ## Build Your Project
@@ -434,7 +459,9 @@ The NativeScript CLI calls the SDK for the selected target platform and uses it 
 
 When you build for Android, the NativeScript CLI saves the application package as an `APK` in `platforms` &#8594; `android` &#8594; `bin`.
 
-When you build for iOS, if the `--device` flag is not set, the NativeScript CLI builds your project for the native emulator and saves the application package as an `APP` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `emulator`. If the `--device` flag is set, the NativeScript CLI builds your project for device and saves the application package as an `IPA` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `device`.
+When you build for iOS, the NativeScript CLI will either build for a device, if there's a device attached, or for the native emulator if there are no devices attached. To trigger a native emulator build when a device is attached, set the `--emulator` flag.
+
+The native emulator build is saved as an `APP` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `emulator`. The device build is saved as an `IPA` in `platforms` &#8594; `ios` &#8594; `build` &#8594; `device`.
 
 > **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
