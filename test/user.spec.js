@@ -2,6 +2,8 @@ import { User } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
+import { AuthorizationGrant, SocialIdentity } from '../src/enums';
+import { MobileIdentityConnect } from '../src/mic';
 import { randomString } from '../src/utils/string';
 import fetchMock from 'fetch-mock';
 import chai from 'chai';
@@ -12,6 +14,10 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('User', function () {
+  afterEach(function() {
+    fetchMock.restore();
+  });
+
   it('should create a new user', function() {
     const user = new User();
     expect(user).to.be.instanceof(User);
@@ -251,7 +257,7 @@ describe('User', function () {
         username: randomString(),
         password: randomString()
       }).then(() => {
-        expect(stub).to.have.been.callCount(1);
+        expect(stub).to.have.been.called.once;
       });
     });
 
@@ -332,17 +338,210 @@ describe('User', function () {
         username: username,
         password: randomString()
       }).then(user => {
-        expect(user.data).to.deep.equal(reply);
         expect(user._id).to.equal(reply._id);
         expect(user.authtoken).to.equal(reply._kmd.authtoken);
         expect(user.username).to.equal(reply.username);
         return user.isActiveUser();
       }).then(isActive => {
         expect(isActive).to.be.true;
-        return null;
-      }).then(() => {
-        fetchMock.restore();
       });
+    });
+  });
+
+  describe('loginWithMIC', function() {
+    afterEach(function() {
+      return User.setActiveUser(null);
+    });
+
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('loginWithMIC');
+    });
+
+    it('should be a method', function() {
+      expect(User).to.respondTo('loginWithMIC');
+    });
+
+    it('should forward to the loginWithMIC instance method', function() {
+      const stub = this.sandbox.stub(User.prototype, 'loginWithMIC', function() {
+        return Promise.resolve();
+      });
+      return User.loginWithMIC(randomString(), AuthorizationGrant.AuthorizationCodeLoginPage).then(() => {
+        expect(stub).to.have.been.called.once;
+      });
+    });
+
+    it('should call login on the MobileIdentityConnect module and then connect on the user', function() {
+      const stub = this.sandbox.stub(MobileIdentityConnect, 'login', function() {
+        return Promise.resolve({});
+      });
+      const connectStub = this.sandbox.stub(User.prototype, 'connect', function() {
+        return Promise.resolve();
+      });
+      return User.loginWithMIC(randomString(), AuthorizationGrant.AuthorizationCodeLoginPage).then(() => {
+        expect(stub).to.have.been.called.once;
+        expect(connectStub).to.have.been.called.once;
+      });
+    });
+  });
+
+  describe('logout', function() {
+    it('should be a method', function() {
+      expect(User).to.respondTo('logout');
+    });
+
+    it('should logout a user when the user is not the active user', function() {
+      const user = new User();
+      return expect(user.logout()).to.be.fulfilled;
+    });
+
+    it('should logout a user when the user is the active user', function() {
+      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: {}
+      });
+
+      const user = new User();
+      const promise = user.setAsActiveUser().then(() => {
+        return user.logout();
+      });
+      return expect(promise).to.be.fulfilled;
+    });
+
+    it('should logout a user when the REST API rejects the logout request', function() {
+      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: { message: 'ServerError' }
+      });
+
+      const user = new User();
+      const promise = user.setAsActiveUser().then(() => {
+        return user.logout();
+      });
+      return expect(promise).to.be.fulfilled;
+    });
+  });
+
+  describe('isIdentitySupported', function() {
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('isIdentitySupported');
+    });
+
+    it('should return true', function() {
+      expect(User.isIdentitySupported('facebook')).to.be.true;
+    });
+
+    it('should return false', function() {
+      expect(User.isIdentitySupported('foo')).to.be.false;
+    });
+  });
+
+  describe('connectWithFacebook', function() {
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('connectWithFacebook');
+    });
+
+    it('should call User.connectWithIdentity', function() {
+      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
+        return Promise.resolve();
+      });
+      return User.connectWithFacebook().then(() => {
+        expect(stub).to.have.been.called.once;
+      });
+    });
+  });
+
+  describe('connectWithGoogle', function() {
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('connectWithGoogle');
+    });
+
+    it('should call User.connectWithIdentity', function() {
+      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
+        return Promise.resolve();
+      });
+      return User.connectWithGoogle().then(() => {
+        expect(stub).to.have.been.called.once;
+      });
+    });
+  });
+
+  describe('connectWithLinkedIn', function() {
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('connectWithLinkedIn');
+    });
+
+    it('should call User.connectWithIdentity', function() {
+      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
+        return Promise.resolve();
+      });
+      return User.connectWithLinkedIn().then(() => {
+        expect(stub).to.have.been.called.once;
+      });
+    });
+  });
+
+  describe('connectWithIdentity', function() {
+    it('should be a static method', function() {
+      expect(User).itself.to.respondTo('connectWithIdentity');
+    });
+
+    it('should be a method', function() {
+      expect(User).to.respondTo('connectWithIdentity');
+    });
+
+    it('should forward to the connectWithIdentity instance method', function() {
+      const stub = this.sandbox.stub(User.prototype, 'connectWithIdentity', function() {
+        return Promise.resolve();
+      });
+      return User.connectWithIdentity(randomString()).then(() => {
+        expect(stub).to.have.been.called.once;
+      });
+    });
+
+    it('should throw an error if an identity is not provided', function() {
+      const promise = User.connectWithIdentity();
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should throw an error if an identity is not supported', function() {
+      const promise = User.connectWithIdentity(randomString());
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should throw an error if an identity is not configured in the cloud', function() {
+      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: []
+      });
+
+      const promise = User.connectWithIdentity(SocialIdentity.Facebook);
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should connect a user when the identity is configured in the cloud', function() {
+      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: [{
+          key: randomString(),
+          appId: randomString(),
+          clientId: randomString()
+        }]
+      });
+
+      const promise = User.connectWithIdentity(SocialIdentity.Facebook);
+      return expect(promise).to.be.rejectedWith(KinveyError);
     });
   });
 });

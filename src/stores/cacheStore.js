@@ -123,7 +123,7 @@ class CacheStore extends NetworkStore {
 
         return super.find(query, options);
       }).then(data => {
-        return this._updateCache(data);
+        return this._cache(data);
       });
 
       return result;
@@ -344,7 +344,7 @@ class CacheStore extends NetworkStore {
 
         return super.findById(id, options);
       }).then(data => {
-        return this._updateCache(data);
+        return this._cache(data);
       }).catch(err => {
         if (err instanceof NotFoundError) {
           return this.client.executeLocalRequest({
@@ -415,7 +415,7 @@ class CacheStore extends NetworkStore {
         timeout: options.timeout
       });
     }).then(response => {
-      return this._updateSync(response.data, options).then(() => {
+      return this._sync(response.data, options).then(() => {
         const data = isArray(response.data) ? response.data : [response.data];
         const ids = Object.keys(keyBy(data, idAttribute));
         const query = new Query().contains(idAttribute, ids);
@@ -464,7 +464,7 @@ class CacheStore extends NetworkStore {
         timeout: options.timeout
       });
     }).then(response => {
-      return this._updateSync(response.data.entities, options).then(() => {
+      return this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, []);
         return this.push(query, options);
       }).then(() => {
@@ -509,7 +509,7 @@ class CacheStore extends NetworkStore {
         timeout: options.timeout
       });
     }).then(response => {
-      return this._updateSync(response.data.entities, options).then(() => {
+      return this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, [id]);
         return this.push(query, options);
       }).then(() => {
@@ -566,7 +566,7 @@ class CacheStore extends NetworkStore {
       let size = response.data.size;
 
       const promises = map(ids, id => {
-        const metadata = clone(entities[id], true);
+        const metadata = entities[id];
         return this.client.executeLocalRequest({
           method: HttpMethod.GET,
           pathname: `${this._pathname}/${id}`,
@@ -588,7 +588,7 @@ class CacheStore extends NetworkStore {
 
       return Promise.all(promises).then(() => {
         const saved = map(save, entity => {
-          const metadata = clone(entities[entity[idAttribute]], true);
+          const metadata = entities[entity[idAttribute]];
           const isLocalEntity = nested(entity, `${kmdAttribute}.local`);
 
           if (isLocalEntity) {
@@ -678,7 +678,7 @@ class CacheStore extends NetworkStore {
         });
 
         const removed = map(remove, id => {
-          const metadata = clone(entities[id], true);
+          const metadata = entities[id];
           return this.client.executeNetworkRequest({
             method: HttpMethod.DELETE,
             pathname: `${this._pathname}/${id}`,
@@ -902,7 +902,7 @@ class CacheStore extends NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  _updateCache(entities, options = {}) {
+  _cache(entities, options = {}) {
     const promise = Promise.resolve().then(() => {
       return this.client.executeLocalRequest({
         method: HttpMethod.PUT,
@@ -928,7 +928,7 @@ class CacheStore extends NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  _updateSync(entities, options = {}) {
+  _sync(entities, options = {}) {
     if (!this.name) {
       return Promise.reject(new KinveyError('Unable to add entities to the sync table for a store with no name.'));
     }

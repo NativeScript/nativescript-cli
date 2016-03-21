@@ -14,7 +14,7 @@ class PrivateRequestProperties {
   }
 
   set properties(properties) {
-    this._properties = clone(properties, true);
+    this._properties = properties;
   }
 
   addProperties(properties) {
@@ -42,7 +42,7 @@ class PrivateRequestProperties {
   }
 
   toJSON() {
-    return clone(this.properties, true);
+    return this.properties;
   }
 }
 

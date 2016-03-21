@@ -568,7 +568,7 @@ class PrivateQuery {
       limit: this._limit
     };
 
-    return clone(json, true);
+    return json;
   }
 }
 

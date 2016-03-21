@@ -162,7 +162,6 @@ export class Rack extends KinveyMiddleware {
  */
 export class KinveyRack extends Rack {
   execute(request) {
-    request = result(request, 'toJSON', request);
     const promise = super.execute(request).then(request => {
       return request.response;
     });

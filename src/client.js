@@ -6,7 +6,6 @@ import { NetworkRequest } from './requests/network';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import url from 'url';
 import qs from 'qs';
-import clone from 'lodash/clone';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'kinvey_local';
@@ -209,6 +208,13 @@ export class Client {
     this.encryptionKey = options.encryptionKey;
   }
 
+  get baseUrl() {
+    return url.format({
+      protocol: this.protocol,
+      host: this.host
+    });
+  }
+
   getActiveUser() {
     const promise = Promise.resolve().then(() => {
       return this.executeLocalRequest({
@@ -394,7 +400,7 @@ export class Client {
       encryptionKey: this.encryptionKey
     };
 
-    return clone(json, true);
+    return json;
   }
 
   /**

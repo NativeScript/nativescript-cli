@@ -9,7 +9,9 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'src/**/*.spec.js'
+      'test/helper.js',
+      'test/setup.js',
+      'test/**/*.spec.js'
     ],
 
     // list of files to exclude
@@ -19,7 +21,9 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'src/**/*.spec.js': 'browserify'
+      'test/helper.js': 'browserify',
+      'test/setup.js': 'browserify',
+      'test/**/*.spec.js': 'browserify'
     },
 
     browserify: {

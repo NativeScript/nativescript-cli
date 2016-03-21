@@ -159,7 +159,7 @@ class PrivateAcl {
   }
 
   toJSON() {
-    return clone(this.acl, true);
+    return this.acl;
   }
 }
 

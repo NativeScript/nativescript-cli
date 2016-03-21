@@ -29,7 +29,7 @@ export class Response {
       return null;
     }
 
-    const data = clone(this.data, true) || {};
+    const data = this.data || {};
     const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;

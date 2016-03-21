@@ -1,11 +1,7 @@
-import clone from 'lodash/clone';
-
 /**
  * @private
  */
 export function nested(obj, dotProperty, value) {
-  obj = clone(obj, true);
-
   if (!dotProperty) {
     obj = value ? value : obj;
     return obj;

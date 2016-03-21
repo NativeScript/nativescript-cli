@@ -8,7 +8,6 @@ import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
-import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -338,6 +337,11 @@ export class User {
     return this.login(data, options);
   }
 
+  static loginWithMIC(redirectUri, authorizationGrant, options) {
+    const user = new User();
+    return user.loginWithMIC(redirectUri, authorizationGrant, options);
+  }
+
   /* eslint-disable max-len */
   /**
    * Login using Mobile Identity Connect.
@@ -378,12 +382,18 @@ export class User {
    * });
    */
   logout(options = {}) {
-    return this.client.executeNetworkRequest({
-      method: HttpMethod.POST,
-      pathname: `/${usersNamespace}/${this.client.appKey}/_logout`,
-      authType: AuthType.Session,
-      properties: options.properties,
-      timeout: options.timeout
+    return this.isActiveUser().then(isActive => {
+      if (!isActive) {
+        return null;
+      }
+
+      return this.client.executeNetworkRequest({
+        method: HttpMethod.POST,
+        pathname: `/${usersNamespace}/${this.client.appKey}/_logout`,
+        authType: AuthType.Session,
+        properties: options.properties,
+        timeout: options.timeout
+      });
     }).then(() => {
       return this.isActiveUser();
     }).catch(() => {
@@ -404,10 +414,10 @@ export class User {
    * @return {Boolean}  True or false if identity connect is supported.
    *
    * @example
-   * var isIdentityConnectSupported = user.isIdentityConnectSupported();
+   * var isIdentitySupported = user.isIdentitySupported('identity');
    */
   static isIdentitySupported(identity) {
-    return hello && supportedIdentities.indexOf(identity) !== -1 ? true : false;
+    return hello && supportedIdentities.indexOf(identity) !== -1;
   }
 
   /**
@@ -493,7 +503,7 @@ export class User {
       return Promise.reject(new KinveyError('An identity is required to connect the user.'));
     }
 
-    if (User.isIdentitySupported(identity)) {
+    if (!User.isIdentitySupported(identity)) {
       return Promise.reject(new KinveyError(`Identity ${identity} is not supported on this platform.`));
     }
 
@@ -552,7 +562,7 @@ export class User {
       create: true
     }, options);
 
-    const data = clone(this.data, true);
+    const data = this.data;
     data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
     data[socialIdentityAttribute][identity] = {
       access_token: accessToken,
@@ -579,7 +589,7 @@ export class User {
   }
 
   disconnect(identity, options = {}) {
-    const data = clone(this.data, true);
+    const data = this.data;
     data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
     data[socialIdentityAttribute][identity] = null;
 
@@ -803,6 +813,6 @@ export class User {
   }
 
   toJSON() {
-    return clone(this.data, true);
+    return this.data;
   }
 }

@@ -2,6 +2,9 @@ import Promise from '../utils/promise';
 import { HttpMethod } from '../enums';
 import { Device } from '../device';
 import { RequestProperties } from './properties';
+import { NoResponseError } from '../errors';
+import { KinveyRack } from '../rack/rack';
+import { Response } from './response';
 import { byteCount } from '../utils/string';
 import qs from 'qs';
 import appendQuery from 'append-query';
@@ -199,7 +202,7 @@ export class Request {
       followRedirect: this.followRedirect
     };
 
-    return clone(json, true);
+    return json;
   }
 }
 
@@ -216,6 +219,7 @@ export class KinveyRequest extends Request {
       query: null
     }, options);
 
+    this.rack = new KinveyRack();
     this.properties = options.properties;
     this.auth = options.auth;
     this.query = result(options.query, 'toJSON', options.query);
@@ -314,9 +318,41 @@ export class KinveyRequest extends Request {
     super.url = url;
   }
 
+  execute() {
+    const promise = super.execute().then(() => {
+      return this.rack.execute(this);
+    }).then(response => {
+      if (!response) {
+        throw new NoResponseError();
+      }
+
+      if (!(response instanceof Response)) {
+        return new Response({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
+      }
+
+      return response;
+    }).then(response => {
+      if (!response.isSuccess()) {
+        throw response.error;
+      }
+
+      return response;
+    });
+
+    return promise;
+  }
+
+  cancel() {
+    this.rack.cancel();
+  }
+
   toJSON() {
     const json = super.toJSON();
     json.query = this.query;
-    return clone(json, true);
+    return json;
   }
 }
