@@ -146,6 +146,8 @@ export class ProjectService implements IProjectService {
 				this.$fs.symlink(appSourcePath, appDestinationPath).wait();
 			} else {
 				shelljs.cp('-R', path.join(appSourcePath, "*"), appDestinationPath);
+				// Copy hidden files.
+				shelljs.cp('-R', path.join(appSourcePath, ".*"), appDestinationPath);
 			}
 
 			this.createBasicProjectStructure(projectDir,  projectId).wait();

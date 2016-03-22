@@ -210,6 +210,32 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectTemplatesService.prepareTemplate("tsc").wait()).wait();
 		});
 
+		it("creates valid project from angular template", () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectAngular");
+			let projectName = "myapp";
+			let options = projectIntegrationTest.testInjector.resolve("options");
+
+			options.path = tempFolder;
+			projectIntegrationTest.createProject(projectName, "angular").wait();
+
+			let projectTemplatesService: IProjectTemplatesService = projectIntegrationTest.testInjector.resolve("projectTemplatesService");
+			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectTemplatesService.prepareTemplate("angular").wait()).wait();
+		});
+
+		it("creates valid project from ng template", () => {
+			let projectIntegrationTest = new ProjectIntegrationTest();
+			let tempFolder = temp.mkdirSync("projectNg");
+			let projectName = "myapp";
+			let options = projectIntegrationTest.testInjector.resolve("options");
+
+			options.path = tempFolder;
+			projectIntegrationTest.createProject(projectName, "ng").wait();
+
+			let projectTemplatesService: IProjectTemplatesService = projectIntegrationTest.testInjector.resolve("projectTemplatesService");
+			projectIntegrationTest.assertProject(tempFolder, projectName, "org.nativescript.myapp", projectTemplatesService.prepareTemplate("ng").wait()).wait();
+		});
+
 		it("creates valid project from local directory template", () => {
 			let projectIntegrationTest = new ProjectIntegrationTest();
 			let tempFolder = temp.mkdirSync("projectLocalDir");
