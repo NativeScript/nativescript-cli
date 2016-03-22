@@ -327,10 +327,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.ensureDirectoryExists(resourcesDestinationDirectoryPath).wait();
 				shell.cp("-Rf", path.join(pluginPlatformsFolderPath, "*"), resourcesDestinationDirectoryPath);
 
-				let pluginConfigurationFilePath = path.join(resourcesDestinationDirectoryPath, this.platformData.configurationFileName);
-				if (this.$fs.exists(pluginConfigurationFilePath).wait()) {
-					this.$pluginVariablesService.interpolate(pluginData, pluginConfigurationFilePath).wait();
-				}
+				let files = this.$fs.enumerateFilesInDirectorySync(resourcesDestinationDirectoryPath, file => this.$fs.getFsStats(file).wait().isDirectory() || path.extname(file) === ".xml");
+				_.each(files, file => {
+					this.$logger.trace(`Interpolate data for plugin file: ${file}`);
+					this.$pluginVariablesService.interpolate(pluginData, file).wait();
+				});
 			}
 
 			// Copy include.gradle file
