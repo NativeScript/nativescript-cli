@@ -128,11 +128,11 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			}
 
 			if(!toolsInfoData.supportRepositoryVersion) {
-				let invalidSupportLibAdditionalMsg = 'Run `$ android`  to manage the Android Support Repository.';
+				let invalidSupportLibAdditionalMsg = 'Run `$ android`  to manage the Local Maven repository for Support Libraries.';
 				if(!isAndroidHomeValid) {
 					invalidSupportLibAdditionalMsg += ' In case you already have it installed, make sure `ANDROID_HOME` environment variable is set correctly.';
 				}
-				this.printMessage(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Android Support Repository installed on your system.`, invalidSupportLibAdditionalMsg);
+				this.printMessage(`You need to have Android SDK ${AndroidToolsInfo.MIN_REQUIRED_COMPILE_TARGET} or later and the latest Local Maven repository for Support Libraries installed on your system.`, invalidSupportLibAdditionalMsg);
 				detectedErrors = true;
 			}
 
