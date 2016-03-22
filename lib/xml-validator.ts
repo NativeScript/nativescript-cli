@@ -2,6 +2,7 @@
 "use strict";
 
 import { EOL } from "os";
+import * as constants from "./constants";
 
 export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem,
@@ -11,7 +12,7 @@ export class XmlValidator implements IXmlValidator {
 		return (() => {
 			let xmlHasErrors = false;
 			sourceFiles
-				.filter(file => _.endsWith(file, ".xml"))
+				.filter(file => _.endsWith(file, constants.XML_FILE_EXTENSION))
 				.forEach(file => {
 					let errorOutput = this.getXmlFileErrors(file).wait();
 					let hasErrors = !!errorOutput;

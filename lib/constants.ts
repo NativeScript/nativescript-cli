@@ -15,6 +15,7 @@ export var LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
 export var TESTING_FRAMEWORKS = ['jasmine', 'mocha', 'qunit'];
 export let TEST_RUNNER_NAME = "nativescript-unit-test-runner";
 export let LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
+export let XML_FILE_EXTENSION = ".xml";
 
 export class ReleaseType {
 	static MAJOR = "major";
