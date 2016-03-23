@@ -58,32 +58,33 @@ interface ILiveSyncService {
 }
 
 interface IOptions extends ICommonOptions {
-	ipa: string;
-	frameworkPath: string;
-	frameworkName: string;
-	framework: string;
-	frameworkVersion: string;
-	copyFrom: string;
-	linkTo: string;
-	emulator: boolean;
-	symlink: boolean;
-	forDevice: boolean;
+	baseConfig: string;
 	client: boolean;
-	production: boolean;
-	keyStorePath: string;
-	keyStorePassword: string;
+	compileSdk: number;
+	copyFrom: string;
+	copyTo: string;
+	debugTransport: boolean;
+	emulator: boolean;
+	forDevice: boolean;
+	framework: string;
+	frameworkName: string;
+	frameworkPath: string;
+	frameworkVersion: string;
+	ignoreScripts: boolean;
+	ipa: string;
 	keyStoreAlias: string;
 	keyStoreAliasPassword: string;
-	sdk: string;
-	debugTransport: boolean;
-	ignoreScripts: boolean;
-	tnsModulesVersion: string;
-	staticBindings: boolean;
-	compileSdk: number;
-	port: Number;
-	copyTo: string;
-	baseConfig: string;
+	keyStorePassword: string;
+	keyStorePath: string;
+	linkTo: string;
+	ng: boolean;
 	platformTemplate: string;
+	port: Number;
+	production: boolean;
+	sdk: string;
+	staticBindings: boolean;
+	symlink: boolean;
+	tnsModulesVersion: string;
 }
 
 interface IInitService {

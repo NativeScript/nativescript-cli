@@ -10,7 +10,9 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	private static RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 		"default": "tns-template-hello-world",
 		"tsc": "tns-template-hello-world-ts",
-		"typescript": "tns-template-hello-world-ts"
+		"typescript": "tns-template-hello-world-ts",
+		"ng": "tns-template-hello-world-ng",
+		"angular": "tns-template-hello-world-ng"
 	};
 
 	public constructor(private $errors: IErrors,

@@ -1,6 +1,8 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
+import * as constants from "../constants";
+
 export class ProjectCommandParameter implements ICommandParameter {
 	constructor(private $errors: IErrors,
 		private $logger: ILogger,
@@ -27,13 +29,19 @@ export class CreateProjectCommand implements ICommand {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectNameValidator: IProjectNameValidator,
-		private $options: ICommonOptions) { }
+		private $options: IOptions) { }
 
 	public enableHooks = false;
 
 	execute(args: string[]): IFuture<void> {
 		return (() => {
-			this.$projectService.createProject(args[0], this.$options.template).wait();
+			if (this.$options.ng && this.$options.template) {
+				this.$errors.fail("You cannot use --ng and --template simultaneously.");
+			}
+
+			let selectedTemplate = this.$options.ng ? constants.ANGULAR_NAME : this.$options.template;
+
+			this.$projectService.createProject(args[0], selectedTemplate).wait();
 		}).future<void>()();
 	}
 
