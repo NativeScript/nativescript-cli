@@ -1,7 +1,7 @@
 /// <reference path=".d.ts" />
 "use strict";
 
-import * as yok from "../lib/common/yok";
+import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
 import * as constants from "../lib/constants";
@@ -9,7 +9,7 @@ import {assert} from "chai";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
-let dummyArgsString = "dummyArgsString";
+let dummyArgs = ["dummyArgsString"];
 
 class ProjectServiceMock implements IProjectService {
 	createProject(projectName: string, selectedTemplate?: string): IFuture<void> {
@@ -27,7 +27,7 @@ class ProjectNameValidatorMock implements IProjectNameValidator {
 }
 
 function createTestInjector() {
-	let testInjector = new yok.Yok();
+	let testInjector = new Yok();
 
 	testInjector.register("injector", testInjector);
 	testInjector.register("staticConfig", {});
@@ -44,70 +44,58 @@ function createTestInjector() {
 	return testInjector;
 }
 
-describe('Project Service Tests', () => {
+describe("Project commands tests", () => {
 	let testInjector: IInjector;
+	let options: IOptions;
+	let createProjectCommand: ICommand;
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		isProjectCreated = false;
+		selectedTemplateName = undefined;
+		options = testInjector.resolve("$options");
+		createProjectCommand = testInjector.resolve("$createCommand");
 	});
 
-	describe("project commands tests", () => {
-		describe("#CreateProjectCommand", () => {
-			it("should not fail when using only --ng.", () => {
-				let options: IOptions = testInjector.resolve("$options");
-				options.ng = true;
+	describe("#CreateProjectCommand", () => {
+		it("should not fail when using only --ng.", () => {
+			options.ng = true;
 
-				let createProjectCommand: ICommand = testInjector.resolve("$createCommand");
+			createProjectCommand.execute(dummyArgs).wait();
 
-				createProjectCommand.execute([dummyArgsString]).wait();
+			assert.isTrue(isProjectCreated);
+		});
 
-				assert.isTrue(isProjectCreated);
-			});
+		it("should not fail when using only --template.", () => {
+			options.template = "ng";
 
-			it("should not fail when using only --template.", () => {
-				let options: IOptions = testInjector.resolve("$options");
-				options.template = "ng";
+			createProjectCommand.execute(dummyArgs).wait();
 
-				let createProjectCommand: ICommand = testInjector.resolve("$createCommand");
+			assert.isTrue(isProjectCreated);
+		});
 
-				createProjectCommand.execute([dummyArgsString]).wait();
+		it("should set the template name correctly when used --ng.", () => {
+			options.ng = true;
 
-				assert.isTrue(isProjectCreated);
-			});
+			createProjectCommand.execute(dummyArgs).wait();
 
-			it("should set the template name correctly when used --ng.", () => {
-				let options: IOptions = testInjector.resolve("$options");
-				options.ng = true;
+			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
+		});
 
-				let createProjectCommand: ICommand = testInjector.resolve("$createCommand");
+		it("should not set the template name when --ng is not used.", () => {
+			options.ng = false;
 
-				createProjectCommand.execute([dummyArgsString]).wait();
+			createProjectCommand.execute(dummyArgs).wait();
 
-				assert.deepEqual(options.template, constants.ANGULAR_NAME);
-			});
+			assert.isUndefined(selectedTemplateName);
+		});
 
-			it("should not set the template name when --ng is not used.", () => {
-				let options: IOptions = testInjector.resolve("$options");
-				options.ng = false;
+		it("should fail when --ng and --template are used simultaneously.", () => {
+			options.ng = true;
+			options.template = "ng";
 
-				let createProjectCommand: ICommand = testInjector.resolve("$createCommand");
-
-				createProjectCommand.execute([dummyArgsString]).wait();
-
-				assert.isUndefined(options.template);
-			});
-
-			it("should fail when --ng and --template are used simultaneously.", () => {
-				let options: IOptions = testInjector.resolve("$options");
-				options.ng = true;
-				options.template = "ng";
-
-				let createProjectCommand: ICommand = testInjector.resolve("$createCommand");
-
-				assert.throws(() => {
-					createProjectCommand.execute([dummyArgsString]).wait();
-				});
+			assert.throws(() => {
+				createProjectCommand.execute(dummyArgs).wait();
 			});
 		});
 	});

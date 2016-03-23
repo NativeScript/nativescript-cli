@@ -39,11 +39,9 @@ export class CreateProjectCommand implements ICommand {
 				this.$errors.fail("You cannot use --ng and --template simultaneously.");
 			}
 
-			if (this.$options.ng) {
-				this.$options.template = constants.ANGULAR_NAME;
-			}
+			let selectedTemplate = this.$options.ng ? constants.ANGULAR_NAME : this.$options.template;
 
-			this.$projectService.createProject(args[0], this.$options.template).wait();
+			this.$projectService.createProject(args[0], selectedTemplate).wait();
 		}).future<void>()();
 	}
 
