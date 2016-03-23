@@ -159,7 +159,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error and if the targetSdk value should be validated as well.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateInfo(options?: {showWarningsAsErrors: boolean, validateTargetSdk: boolean}): IFuture<boolean>;
+	validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): IFuture<boolean>;
 
 	/**
 	 * Validates the information about required JAVA version.
@@ -167,7 +167,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {boolean} True if there are detected issues, false otherwise.
 	 */
-	validateJavacVersion(installedJavaVersion: string, options?: {showWarningsAsErrors: boolean}): IFuture<boolean>;
+	validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean>;
 
 	/**
 	 * Returns the path to `android` executable. It should be `$ANDROID_HOME/tools/android`.
@@ -175,7 +175,7 @@ interface IAndroidToolsInfo {
 	 * @param {any} options Defines if the warning messages should treated as error.
 	 * @return {string} Path to the `android` executable.
 	 */
-	getPathToAndroidExecutable(options?: {showWarningsAsErrors: boolean}): IFuture<string>;
+	getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string>;
 
 	/**
 	 * Gets the path to `adb` executable from ANDROID_HOME. It should be `$ANDROID_HOME/platform-tools/adb` in case it exists.
@@ -255,4 +255,17 @@ interface IXmlValidator {
 	 * @return {IFuture<string>} The errors detected (as a single string) or null in case there are no errors.
 	 */
 	getXmlFileErrors(sourceFile: string): IFuture<string>;
+}
+
+/**
+ * Describes methods for project name.
+ */
+interface IProjectNameService {
+	/**
+	 * Ensures the passed project name is valid. If the project name is not valid prompts for actions.
+	 * @param {string} project name to be checked.
+	 * @param {IOptions} current command options.
+	 * @return {IFuture<strng>} returns the selected name of the project.
+	 */
+	ensureValidName(projectName: string, validateOptions?: {force: boolean}): IFuture<string>;
 }
