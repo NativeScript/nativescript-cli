@@ -154,7 +154,7 @@ class AndroidDebugService implements IDebugService {
 
 	private attachDebugger(deviceId: string, packageName: string): IFuture<void> {
 		return (() => {
-			let startDebuggerCommand = ["am", "broadcast", "-a", '\"${packageName}-debug\"', "--ez", "enable", "true"];
+			let startDebuggerCommand = ["am", "broadcast", "-a", `\"${packageName}-debug\"`, "--ez", "enable", "true"];
 			this.device.adb.executeShellCommand(startDebuggerCommand).wait();
 
 			if (this.$options.client) {
