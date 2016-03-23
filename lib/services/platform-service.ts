@@ -132,11 +132,7 @@ export class PlatformService implements IPlatformService {
 			platformData.platformProjectService.interpolateData().wait();
 			platformData.platformProjectService.afterCreateProject(platformData.projectRoot).wait();
 
-			if(this.$options.baseConfig) {
-				let newConfigFile = path.resolve(this.$options.baseConfig);
-				this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
-				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
-			}
+			this.applyBaseConfigOption(platformData).wait();
 
 			let frameworkPackageNameData: any = {version: installedVersion};
 			if(customTemplateOptions) {
@@ -305,6 +301,8 @@ export class PlatformService implements IPlatformService {
 
 			// Replace placeholders in configuration files
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
+
+			this.applyBaseConfigOption(platformData).wait();
 
 			this.$logger.out("Project successfully prepared");
 			return true;
@@ -683,6 +681,16 @@ export class PlatformService implements IPlatformService {
 
 	private mapFrameworkFiles(npmCacheDirectoryPath: string, files: string[]): string[] {
 		return _.map(files, file => file.substr(npmCacheDirectoryPath.length + constants.PROJECT_FRAMEWORK_FOLDER_NAME.length + 1));
+	}
+
+	private applyBaseConfigOption(platformData: IPlatformData): IFuture<void> {
+		return (() => {
+			if(this.$options.baseConfig) {
+				let newConfigFile = path.resolve(this.$options.baseConfig);
+				this.$logger.trace(`Replacing '${platformData.configurationFilePath}' with '${newConfigFile}'.`);
+				this.$fs.copyFile(newConfigFile, platformData.configurationFilePath).wait();
+			}
+		}).future<void>()();
 	}
 }
 $injector.register("platformService", PlatformService);
