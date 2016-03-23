@@ -10,7 +10,6 @@ import qs from 'qs';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
-import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';

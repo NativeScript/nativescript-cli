@@ -288,7 +288,8 @@ export class Client {
       properties: options.properties,
       query: options.query,
       data: options.data,
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this
     });
     return request.execute();
   }
@@ -316,7 +317,8 @@ export class Client {
       properties: options.properties,
       query: options.query,
       data: options.data,
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this
     });
 
     const promise = Promise.resolve().then(() => {
@@ -362,7 +364,8 @@ export class Client {
       properties: options.properties,
       query: options.query,
       data: options.data,
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this
     });
 
     const promise = Promise.resolve().then(() => {

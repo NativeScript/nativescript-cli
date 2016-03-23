@@ -6,9 +6,9 @@ import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
+import { DataStore, DataStoreType } from './stores/datastore';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
-import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
@@ -363,7 +363,7 @@ export class User {
   /* eslint-enable max-len */
   loginWithMIC(redirectUri, authorizationGrant, options = {}) {
     return MobileIdentityConnect.login(redirectUri, authorizationGrant, options).then(token => {
-      return this.connect(MobileIdentityConnect.identity, token.access_token, token.expires_in, options);
+      return this.connect(MobileIdentityConnect.identity, token, options);
     });
   }
 
@@ -532,7 +532,7 @@ export class User {
       throw new KinveyError('Unsupported identity.');
     }).then(() => {
       const authResponse = hello(identity).getAuthResponse();
-      return this.connect(identity, authResponse.access_token, authResponse.expires_in, options);
+      return this.connect(identity, authResponse, options);
     });
 
     return promise;
@@ -550,24 +550,22 @@ export class User {
    * @return {Promise<User>}                               The connected user.
    *
    * @example
-   * var promise = user.connect(SocialIdentity.Facebook, 'facebook-access-token');
+   * var token = {
+   *   access_token: 'access_token',
+   *   refresh_token: 'refresh_token',
+   *   expires_in: 3600
+   * };
+   * var promise = user.connect(SocialIdentity.Facebook, token);
    * promise.then(function(user) {
    *   ...
    * }).catch(function(error) {
    *   ...
    * });
    */
-  connect(identity, accessToken, expiresIn, options = {}) {
-    options = assign({
-      create: true
-    }, options);
-
+  connect(identity, token, options = {}) {
     const data = this.data;
     data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
-    data[socialIdentityAttribute][identity] = {
-      access_token: accessToken,
-      expires_in: expiresIn
-    };
+    data[socialIdentityAttribute][identity] = token;
 
     const promise = this.client.getActiveUser().then(activeUser => {
       if (activeUser) {
@@ -578,11 +576,13 @@ export class User {
 
       return this.login(data, null, options);
     }).catch(err => {
-      if (options.create && err instanceof NotFoundError) {
+      if (err instanceof NotFoundError) {
         return this.signup(data, options).then(() => {
-          return this.connect(identity, accessToken, expiresIn, options);
+          return this.connect(identity, token, options);
         });
       }
+
+      throw err;
     });
 
     return promise;
@@ -680,64 +680,18 @@ export class User {
     return this.signup(data, options);
   }
 
-  update(data, options = {}) {
-    const tokens = [];
-
-    const promise = Promise.resolve().then(() => {
-      if (!data[idAttribute]) {
-        throw new KinveyError('data argument must contain an _id');
+  update(data, options) {
+    const userStore = DataStore.getInstance(null, DataStoreType.User);
+    return userStore.save(data, options).then(data => {
+      this.data = data;
+      return this.isActiveUser();
+    }).then(isActive => {
+      if (isActive) {
+        return this.setAsActiveUser();
       }
 
-      if (data[socialIdentityAttribute]) {
-        for (const identity in data[socialIdentityAttribute]) {
-          if (data[socialIdentityAttribute].hasOwnProperty(identity)) {
-            if (data[socialIdentityAttribute][identity] && options._identity !== identity) {
-              tokens.push({
-                identity: identity,
-                access_token: data[socialIdentityAttribute][identity].access_token,
-                access_token_secret: data[socialIdentityAttribute][identity].access_token_secret
-              });
-              delete data[socialIdentityAttribute][identity].access_token;
-              delete data[socialIdentityAttribute][identity].access_token_secret;
-            }
-          }
-        }
-      }
-
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.PUT,
-        pathname: `/${usersNamespace}/${this.client.appKey}/${data[idAttribute]}`,
-        authType: AuthType.Session,
-        data: data,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).then(response => {
-      const data = response.data;
-
-      forEach(tokens, token => {
-        const identity = token.identity;
-
-        if (data[socialIdentityAttribute] && data[socialIdentityAttribute][identity]) {
-          data[socialIdentityAttribute][identity].access_token = token.access_token;
-          data[socialIdentityAttribute][identity].access_token_secret = token.access_token_secret;
-        }
-      });
-
-      return this.client.getActiveUser().then(activeUser => {
-        this.data = data;
-
-        if (activeUser && data[idAttribute] === activeUser[idAttribute]) {
-          return this.client.setActiveUser(data).then(() => {
-            return this;
-          });
-        }
-
-        return this;
-      });
+      return this;
     });
-
-    return promise;
   }
 
   me(options) {

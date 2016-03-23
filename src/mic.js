@@ -10,6 +10,8 @@ import url from 'url';
 import isString from 'lodash/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'kinvey_local';
+const identityCollectionName = process.env.KINVEY_IDENTITY_COLLECTION_NAME || 'kinvey_identity';
 
 /**
  * @private
@@ -184,6 +186,41 @@ export class MobileIdentityConnect {
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
+      }
+    }).then(response => {
+      return response.data;
+    });
+  }
+
+  static refresh(token, options) {
+    const mic = new MobileIdentityConnect();
+    return mic.refresh(options);
+  }
+
+  refresh(token, options) {
+    return this.client.executeLocalRequest({
+      method: HttpMethod.GET,
+      pathname: `/${localNamespace}/${this.client.appKey}/${identityCollectionName}/${MobileIdentityConnect.identity}`,
+    }).then(response => {
+      const clientId = this.client.appKey;
+      return this.refreshToken(clientId, response.data.token, options);
+    });
+  }
+
+  refreshToken(clientId, token, options = {}) {
+    return this.client.executeNetworkRequest({
+      method: HttpMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      pathname: tokenPathname,
+      properties: options.properties,
+      authType: AuthType.App,
+      data: {
+        grant_type: 'refresh_token',
+        client_id: clientId,
+        redirect_uri: token.redirect_uri,
+        refresh_token: token.refresh_token
       }
     }).then(response => {
       return response.data;

@@ -30,7 +30,8 @@ export class DeltaFetchRequest extends KinveyRequest {
         url: this.url,
         headers: this.headers,
         query: this.query,
-        timeout: this.timeout
+        timeout: this.timeout,
+        client: this.client
       });
       return localRequest.execute();
     }).catch(err => {
@@ -52,7 +53,8 @@ export class DeltaFetchRequest extends KinveyRequest {
         headers: this.headers,
         auth: this.auth,
         query: query,
-        timeout: this.timeout
+        timeout: this.timeout,
+        client: this.client
       });
 
       return networkRequest.execute().then(networkResponse => {
@@ -92,7 +94,8 @@ export class DeltaFetchRequest extends KinveyRequest {
             headers: this.headers,
             auth: this.auth,
             query: query,
-            timeout: this.timeout
+            timeout: this.timeout,
+            client: this.client
           });
 
           /* eslint-disable no-loop-func */
