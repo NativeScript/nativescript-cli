@@ -169,6 +169,10 @@ export class FileSystemStub implements IFileSystem {
 	renameIfExists(oldPath: string, newPath: string): IFuture<boolean> {
 		return undefined;
 	}
+
+	rm(options: string, ...files: string[]): void {
+		// Mock
+	}
 }
 
 export class ErrorsStub implements IErrors {
