@@ -3,14 +3,17 @@ import { NetworkStore } from './networkstore';
 import { Response } from '../requests/response';
 import { AuthType, HttpMethod, StatusCode } from '../enums';
 import { InsufficientCredentialsError, KinveyError, NotFoundError } from '../errors';
+import { LocalRequest } from '../requests/local';
+import { NetworkRequest } from '../requests/network';
+import { DeltaFetchRequest } from '../requests/deltafetch';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
+import { Log } from '../log';
 import { nested } from '../utils/object';
+import url from 'url';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
-import clone from 'lodash/clone';
 import map from 'lodash/map';
-import { Log } from '../log';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -82,13 +85,19 @@ class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.GET,
-        pathname: this._pathname,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._pathname
+        }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       const result = {
         cache: response.data
@@ -109,14 +118,19 @@ class CacheStore extends NetworkStore {
         }
 
         if (options.useDeltaFetch) {
-          return this.client.executeDeltaFetchRequest({
+          const request = new DeltaFetchRequest({
             method: HttpMethod.GET,
-            pathname: this._pathname,
-            properties: options.properties,
             authType: AuthType.Default,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: this._pathname
+            }),
+            properties: options.properties,
             query: query,
             timeout: options.timeout
-          }).then(response => {
+          });
+          return request.execute().then(response => {
             return response.data;
           });
         }
@@ -166,14 +180,19 @@ class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.GET,
-        pathname: `${this._pathname}/_group`,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this._pathname}/_group`
+        }),
         properties: options.properties,
-        authType: AuthType.Default,
         data: aggregation.toJSON(),
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       const result = {
         cache: response.data
@@ -235,14 +254,19 @@ class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.GET,
-        pathname: `${this._pathname}/_count`,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this._pathname}/_count`
+        }),
         properties: options.properties,
-        authType: AuthType.Default,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       const result = {
         cache: response.data
@@ -304,13 +328,18 @@ class CacheStore extends NetworkStore {
     }, options);
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.GET,
-        pathname: `${this._pathname}/${id}`,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this._pathname}/${id}`
+        }),
         properties: options.properties,
-        authType: AuthType.Default,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       const result = {
         cache: response.data
@@ -331,13 +360,19 @@ class CacheStore extends NetworkStore {
         }
 
         if (options.useDeltaFetch) {
-          return this.client.executeDeltaFetchRequest({
+          const request = new DeltaFetchRequest({
             method: HttpMethod.GET,
-            pathname: `${this._pathname}/${id}`,
-            properties: options.properties,
             authType: AuthType.Default,
-            timeout: options.timeout
-          }).then(response => {
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this._pathname}/${id}`
+            }),
+            properties: options.properties,
+            timeout: options.timeout,
+            client: this.client
+          });
+          return request.execute().then(response => {
             return response.data;
           });
         }
@@ -345,20 +380,26 @@ class CacheStore extends NetworkStore {
         return super.findById(id, options);
       }).then(data => {
         return this._cache(data);
-      }).catch(err => {
-        if (err instanceof NotFoundError) {
-          return this.client.executeLocalRequest({
+      }).catch(error => {
+        if (error instanceof NotFoundError) {
+          const request = new LocalRequest({
             method: HttpMethod.DELETE,
-            pathname: `${this._pathname}/${id}`,
-            properties: options.properties,
             authType: AuthType.Default,
-            timeout: options.timeout
-          }).then(() => {
-            throw err;
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this._pathname}/${id}`
+            }),
+            properties: options.properties,
+            timeout: options.timeout,
+            client: this.client
+          });
+          return request.execute().then(() => {
+            throw error;
           });
         }
 
-        throw err;
+        throw error;
       });
 
       return result;
@@ -366,8 +407,8 @@ class CacheStore extends NetworkStore {
 
     promise.then(response => {
       Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
+    }).catch(error => {
+      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, error);
     });
 
     return promise;
@@ -395,25 +436,29 @@ class CacheStore extends NetworkStore {
     Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     const promise = Promise.resolve().then(() => {
+      const request = new LocalRequest({
+        method: HttpMethod.POST,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._pathname
+        }),
+        properties: options.properties,
+        data: entity,
+        timeout: options.timeout,
+        client: this.client
+      });
+
       if (entity[idAttribute]) {
-        return this.client.executeLocalRequest({
-          method: HttpMethod.PUT,
-          pathname: `${this._pathname}/${entity[idAttribute]}`,
-          properties: options.properties,
-          authType: AuthType.Default,
-          data: entity,
-          timeout: options.timeout
+        request.method = HttpMethod.PUT;
+        request.url = url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this._pathname}/${entity[idAttribute]}`
         });
       }
 
-      return this.client.executeLocalRequest({
-        method: HttpMethod.POST,
-        pathname: this._pathname,
-        properties: options.properties,
-        authType: AuthType.Default,
-        data: entity,
-        timeout: options.timeout
-      });
+      return request.execute();
     }).then(response => {
       return this._sync(response.data, options).then(() => {
         const data = isArray(response.data) ? response.data : [response.data];
@@ -455,14 +500,19 @@ class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.DELETE,
-        pathname: this._pathname,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._pathname
+        }),
         properties: options.properties,
-        authType: AuthType.Default,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       return this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, []);
@@ -501,13 +551,19 @@ class CacheStore extends NetworkStore {
     Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.DELETE,
-        pathname: `${this._pathname}/${id}`,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `${this._pathname}/${id}`
+        }),
         properties: options.properties,
         authType: AuthType.Default,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       return this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, [id]);
@@ -551,13 +607,19 @@ class CacheStore extends NetworkStore {
     }
 
     const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.GET,
-        pathname: this._syncPathname,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._syncPathname
+        }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(response => {
       const save = [];
       const remove = [];
@@ -567,13 +629,18 @@ class CacheStore extends NetworkStore {
 
       const promises = map(ids, id => {
         const metadata = entities[id];
-        return this.client.executeLocalRequest({
+        const request = new LocalRequest({
           method: HttpMethod.GET,
-          pathname: `${this._pathname}/${id}`,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `${this._pathname}/${id}`
+          }),
           properties: metadata.properties,
-          authType: AuthType.Default,
-          timeout: options.timeout
-        }).then(response => {
+          timeout: options.timeout,
+          client: this.client
+        });
+        return request.execute().then(response => {
           save.push(response.data);
           return response.data;
         }).catch(err => {
@@ -596,29 +663,48 @@ class CacheStore extends NetworkStore {
             delete entity[idAttribute];
             delete entity[kmdAttribute];
 
-            return this.client.executeNetworkRequest({
+            const request = new NetworkRequest({
               method: HttpMethod.POST,
-              pathname: this._pathname,
-              properties: metadata.properties,
               authType: AuthType.Default,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: this._pathname
+              }),
+              properties: metadata.properties,
               data: entity,
-              timeout: options.timeout
-            }).then(response => {
-              return this.client.executeLocalRequest({
+              timeout: options.timeout,
+              client: this.client
+            });
+
+            return request.execute().then(response => {
+              const request = new LocalRequest({
                 method: HttpMethod.PUT,
-                pathname: this._pathname,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: this._pathname
+                }),
                 properties: metadata.properties,
                 data: response.data,
-                timeout: options.timeout
+                timeout: options.timeout,
+                client: this.client
               });
+              return request.execute();
             }).then(() => {
-              return this.client.executeLocalRequest({
+              const request = new LocalRequest({
                 method: HttpMethod.DELETE,
-                pathname: `${this._pathname}/${originalId}`,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `${this._pathname}/${originalId}`
+                }),
                 properties: metadata.properties,
-                authType: AuthType.Default,
-                timeout: options.timeout
-              }).then(response => {
+                timeout: options.timeout,
+                client: this.client
+              });
+
+              return request.execute().then(response => {
                 const result = response.data;
                 if (result.count === 1) {
                   size = size - 1;
@@ -643,14 +729,21 @@ class CacheStore extends NetworkStore {
             });
           }
 
-          return this.client.executeNetworkRequest({
+          const request = new NetworkRequest({
             method: HttpMethod.PUT,
-            pathname: `${this._pathname}/${entity[idAttribute]}`,
-            properties: metadata.properties,
             authType: AuthType.Default,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this._pathname}/${entity[idAttribute]}`
+            }),
+            properties: metadata.properties,
             data: entity,
-            timeout: options.timeout
-          }).then(response => {
+            timeout: options.timeout,
+            client: this.client
+          });
+
+          return request.execute().then(response => {
             size = size - 1;
             delete entities[response.data[idAttribute]];
             return {
@@ -679,13 +772,20 @@ class CacheStore extends NetworkStore {
 
         const removed = map(remove, id => {
           const metadata = entities[id];
-          return this.client.executeNetworkRequest({
+          const request = new NetworkRequest({
             method: HttpMethod.DELETE,
-            pathname: `${this._pathname}/${id}`,
-            properties: metadata.properties,
             authType: AuthType.Default,
-            timeout: options.timeout
-          }).then(response => {
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this._pathname}/${id}`
+            }),
+            properties: metadata.properties,
+            timeout: options.timeout,
+            client: this.client
+          });
+
+          return request.execute().then(response => {
             const result = response.data;
 
             if (result.count === 1) {
@@ -752,13 +852,19 @@ class CacheStore extends NetworkStore {
         response.data.size = size;
         response.data.entities = entities;
 
-        return this.client.executeLocalRequest({
+        const request = new LocalRequest({
           method: HttpMethod.PUT,
-          pathname: this._syncPathname,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this._syncPathname
+          }),
           properties: options.properties,
           data: response.data,
-          timeout: options.timeout
-        }).then(() => {
+          timeout: options.timeout,
+          client: this.client
+        });
+        return request.execute().then(() => {
           return result;
         });
       });
@@ -870,15 +976,20 @@ class CacheStore extends NetworkStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: this._syncPathname,
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._syncPathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data.size || 0;
     }).catch(err => {
       if (err instanceof NotFoundError) {
@@ -903,15 +1014,19 @@ class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   _cache(entities, options = {}) {
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.PUT,
-        pathname: this._pathname,
-        properties: options.properties,
-        data: entities,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.PUT,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -937,15 +1052,20 @@ class CacheStore extends NetworkStore {
       return Promise.resolve(null);
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: this._syncPathname,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).catch(err => {
-      if (err instanceof NotFoundError) {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._syncPathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().catch(error => {
+      if (error instanceof NotFoundError) {
         return new Response({
           statusCode: StatusCode.Ok,
           data: {
@@ -956,7 +1076,7 @@ class CacheStore extends NetworkStore {
         });
       }
 
-      throw err;
+      throw error;
     }).then(response => {
       const syncData = response.data || {
         _id: this.name,
@@ -980,13 +1100,19 @@ class CacheStore extends NetworkStore {
         }
       });
 
-      return this.client.executeLocalRequest({
+      const request = new LocalRequest({
         method: HttpMethod.PUT,
-        pathname: this._syncPathname,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._syncPathname
+        }),
         properties: options.properties,
         data: syncData,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
+      return request.execute();
     }).then(() => {
       return null;
     });

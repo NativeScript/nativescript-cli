@@ -1,6 +1,5 @@
 import { KinveyError } from './errors';
 import isPlainObject from 'lodash/isPlainObject';
-import clone from 'lodash/clone';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 const privateAclSymbol = Symbol();
 

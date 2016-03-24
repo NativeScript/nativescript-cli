@@ -1,6 +1,5 @@
 import { nested } from './utils/object';
 import sift from 'sift';
-import clone from 'lodash/clone';
 import assign from 'lodash/assign';
 import isArray from 'lodash/isArray';
 import isNumber from 'lodash/isNumber';

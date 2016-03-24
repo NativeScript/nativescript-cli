@@ -1,6 +1,5 @@
 import { KinveyError } from './errors';
 import { Query } from './query';
-import clone from 'lodash/clone';
 import result from 'lodash/result';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';

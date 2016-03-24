@@ -1,5 +1,4 @@
 import { KinveyError } from '../errors';
-import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const privateRequestPropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
