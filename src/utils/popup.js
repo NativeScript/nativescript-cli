@@ -72,7 +72,6 @@ class PrivatePopup extends EventEmitter {
         this.tiWebView.addEventListener('load', this.eventListeners.loadHandler);
         this.tiWebView.addEventListener('error', this.eventListeners.loadHandler);
         this.popup.addEventListener('close', this.eventListeners.closeHandler);
-
         this.popup.open();
       } else {
         this.popup = global.open(this.url, '_blank', 'toolbar=no,location=no');

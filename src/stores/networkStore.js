@@ -3,8 +3,11 @@ import { Aggregation } from '../aggregation';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import { Client } from '../client';
+import { NetworkRequest } from '../requests/network';
 import { Query } from '../query';
 import { Log } from '../Log';
+import qs from 'qs';
+import url from 'url';
 import assign from 'lodash/assign';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
@@ -76,24 +79,29 @@ export class NetworkStore {
     options = assign({
       properties: null,
       timeout: undefined,
-      flags: null,
       handler() {}
     }, options);
+    options.flags = qs.parse(options.flags);
 
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.GET,
-        pathname: this._pathname,
-        properties: options.properties,
-        authType: AuthType.Default,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -134,16 +142,20 @@ export class NetworkStore {
         'It must be an instance of the Kinvey.Aggregation class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.GET,
-        pathname: `${this._pathname}/_group`,
-        properties: options.properties,
-        authType: AuthType.Default,
-        data: aggregation.toJSON(),
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/_group`
+      }),
+      properties: options.properties,
+      data: aggregation.toJSON(),
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -183,16 +195,20 @@ export class NetworkStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.GET,
-        pathname: `${this._pathname}/_count`,
-        properties: options.properties,
-        authType: AuthType.Default,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/_count`
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -230,20 +246,20 @@ export class NetworkStore {
       handler() {}
     }, options);
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.GET,
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
         pathname: `${this._pathname}/${id}`,
-        properties: options.properties,
-        authType: AuthType.Default,
-        timeout: options.timeout
-      });
-    }).then(response => {
-      if (response.isSuccess()) {
-        return isArray(response.data) && response.data.length === 1 ? response.data[0] : response.data;
-      }
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
 
-      throw response.error;
+    const promise = request.execute().then(response => {
+      return response.data;
     });
 
     promise.then(response => {
@@ -280,27 +296,30 @@ export class NetworkStore {
       handler() {}
     }, options);
 
-    const promise = Promise.resolve().then(() => {
-      if (entity[idAttribute]) {
-        return this.client.executeNetworkRequest({
-          method: HttpMethod.PUT,
-          pathname: `${this._pathname}/${entity[idAttribute]}`,
-          properties: options.properties,
-          authType: AuthType.Default,
-          data: entity,
-          timeout: options.timeout
-        });
-      }
+    const request = new NetworkRequest({
+      method: HttpMethod.POST,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      data: entity,
+      timeout: options.timeout,
+      client: this.client
+    });
 
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.POST,
-        pathname: this._pathname,
-        properties: options.properties,
-        authType: AuthType.Default,
-        data: entity,
-        timeout: options.timeout
+    if (entity[idAttribute]) {
+      request.method = HttpMethod.PUT;
+      request.url = url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${entity[idAttribute]}`
       });
-    }).then(response => {
+    }
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -339,16 +358,20 @@ export class NetworkStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.DELETE,
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
         pathname: this._pathname,
-        properties: options.properties,
-        authType: AuthType.Default,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -386,15 +409,19 @@ export class NetworkStore {
       handler() {}
     }, options);
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.DELETE,
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
         pathname: `${this._pathname}/${id}`,
-        properties: options.properties,
-        authType: AuthType.Default,
-        timeout: options.timeout
-      });
-    }).then(response => {
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 

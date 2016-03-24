@@ -34,15 +34,19 @@ export class DeltaFetchRequest extends KinveyRequest {
         client: this.client
       });
       return localRequest.execute();
-    }).catch(err => {
-      if (err instanceof NotFoundError) {
+    }).then(response => {
+      if (!response.isSuccess()) {
+        throw response.error;
+      }
+    }).catch(error => {
+      if (error instanceof NotFoundError) {
         return new Response({
           statusCode: StatusCode.Ok,
           data: []
         });
       }
 
-      throw err;
+      throw error;
     }).then(cacheResponse => {
       const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
       const query = new Query(result(this.query, 'toJSON', this.query));
@@ -98,15 +102,8 @@ export class DeltaFetchRequest extends KinveyRequest {
             client: this.client
           });
 
-          /* eslint-disable no-loop-func */
-          const promise = networkRequest.execute().catch(() => {
-            return new Response({
-              statusCode: StatusCode.ServerError
-            });
-          });
+          const promise = networkRequest.execute();
           promises.push(promise);
-          /* eslint-enable no-loop-func */
-
           i += maxIdsPerRequest;
         }
 

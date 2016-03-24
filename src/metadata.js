@@ -1,5 +1,4 @@
 import { KinveyError } from './errors';
-import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const privateMetadataSymbol = Symbol();
@@ -19,7 +18,7 @@ class PrivateMetadata {
      * @private
      * @type {Object}
      */
-    this.kmd = entity[kmdAttribute];
+    this.kmd = entity[kmdAttribute] || {};
 
     /**
      * The entity.

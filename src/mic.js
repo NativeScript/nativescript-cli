@@ -10,32 +10,24 @@ import url from 'url';
 import isString from 'lodash/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
-const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'kinvey_local';
-const identityCollectionName = process.env.KINVEY_IDENTITY_COLLECTION_NAME || 'kinvey_identity';
 
 /**
  * @private
  */
 export class MobileIdentityConnect {
-  constructor() {
-    const sharedClient = Client.sharedInstance();
+  constructor(client = Client.sharedInstance()) {
     this.client = new Client({
-      protocol: 'https:',
-      host: 'auth.kinvey.com',
-      appKey: sharedClient.appKey,
-      appSecret: sharedClient.appSecret,
-      masterSecret: sharedClient.masterSecret,
-      encryptionKey: sharedClient.encryptionKey
+      protocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
+      host: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
+      appKey: client.appKey,
+      appSecret: client.appSecret,
+      masterSecret: client.masterSecret,
+      encryptionKey: client.encryptionKey
     });
   }
 
   static get identity() {
     return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
-  }
-
-  static login(redirectUri, authorizationGrant, options) {
-    const mic = new MobileIdentityConnect();
-    return mic.login(redirectUri, authorizationGrant, options);
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
@@ -77,19 +69,24 @@ export class MobileIdentityConnect {
       pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
-    return this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      pathname: path.join(pathname, authPathname),
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: path.join(pathname, authPathname)
+      }),
       properties: options.properties,
       data: {
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code'
       }
-    }).then(response => {
+    });
+    return request.execute().then(response => {
       return response.data.temp_login_uri;
     });
   }
@@ -109,7 +106,7 @@ export class MobileIdentityConnect {
       }
 
       const popup = new Popup(url.format({
-        protocol: this.client.protocl,
+        protocol: this.client.protocol,
         host: this.client.host,
         pathname: path.join(pathname, authPathname),
         query: {
@@ -146,6 +143,9 @@ export class MobileIdentityConnect {
     const promise = Promise.resolve().then(() => {
       const request = new NetworkRequest({
         method: HttpMethod.POST,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         url: loginUrl,
         properties: options.properties,
         data: {
@@ -157,7 +157,6 @@ export class MobileIdentityConnect {
         },
         followRedirect: false
       });
-      request.setHeader('Content-Type', 'application/x-www-form-urlencoded');
       return request.execute();
     }).then(response => {
       const location = response.getHeader('location');
@@ -173,57 +172,64 @@ export class MobileIdentityConnect {
   }
 
   requestToken(code, clientId, redirectUri, options = {}) {
-    return this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      pathname: tokenPathname,
-      properties: options.properties,
       authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: tokenPathname
+      }),
+      properties: options.properties,
       data: {
         grant_type: 'authorization_code',
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
       }
-    }).then(response => {
+    });
+    request.automaticallyRefreshAuthToken = false;
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
-  }
-
-  static refresh(token, options) {
-    const mic = new MobileIdentityConnect();
-    return mic.refresh(options);
+    return promise;
   }
 
   refresh(token, options) {
-    return this.client.executeLocalRequest({
-      method: HttpMethod.GET,
-      pathname: `/${localNamespace}/${this.client.appKey}/${identityCollectionName}/${MobileIdentityConnect.identity}`,
-    }).then(response => {
-      const clientId = this.client.appKey;
-      return this.refreshToken(clientId, response.data.token, options);
-    });
+    const clientId = this.client.appKey;
+    return this.refreshToken(clientId, token, options);
   }
 
   refreshToken(clientId, token, options = {}) {
-    return this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      pathname: tokenPathname,
-      properties: options.properties,
       authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: tokenPathname
+      }),
+      properties: options.properties,
       data: {
         grant_type: 'refresh_token',
         client_id: clientId,
         redirect_uri: token.redirect_uri,
         refresh_token: token.refresh_token
       }
-    }).then(response => {
+    });
+    request.automaticallyRefreshAuthToken = false;
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
+
+    return promise;
   }
 }

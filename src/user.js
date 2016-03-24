@@ -7,6 +7,8 @@ import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
 import { DataStore, DataStoreType } from './stores/datastore';
+import { NetworkRequest } from './requests/network';
+import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isObject from 'lodash/isObject';
@@ -92,6 +94,10 @@ export class User {
     return new Metadata(this.data);
   }
 
+  set metadata(metadata) {
+    this.data[kmdAttribute] = result(metadata, 'toJSON', metadata);
+  }
+
   /**
    * The _kmd for the user.
    *
@@ -102,6 +108,14 @@ export class User {
    */
   get _kmd() {
     return this.metadata;
+  }
+
+  set _kmd(kmd) {
+    this.metadata = kmd;
+  }
+
+  get _socialIdentity() {
+    return this.data[socialIdentityAttribute];
   }
 
   /**
@@ -125,9 +139,9 @@ export class User {
    * user.authtoken = 'authtoken';
    */
   set authtoken(authtoken) {
-    const kmd = this._kmd;
-    kmd.authtoken = authtoken;
-    this.data[kmdAttribute] = kmd.toJSON();
+    const metadata = this.metadata;
+    metadata.authtoken = authtoken;
+    this.metadata = metadata;
   }
 
   /**
@@ -171,16 +185,15 @@ export class User {
    * var _id = user._id;
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    return client.getActiveUser().then(data => {
-      let user = null;
+    const data = client.getActiveUserData();
+    let user = null;
 
-      if (data) {
-        user = new User(data);
-        user.client = client;
-      }
+    if (data) {
+      user = new User(data);
+      user.client = client;
+    }
 
-      return user;
-    });
+    return user;
   }
 
   /**
@@ -204,9 +217,8 @@ export class User {
    */
   static setActiveUser(user, client = Client.sharedInstance()) {
     const data = result(user, 'toJSON', user);
-    return client.setActiveUser(data).then(() => {
-      return User.getActiveUser();
-    });
+    client.setActiveUserData(data);
+    return User.getActiveUser(client);
   }
 
   /**
@@ -239,14 +251,14 @@ export class User {
    *   ...
    * });
    */
-  isActiveUser() {
-    return this.client.getActiveUser().then(activeUser => {
-      if (activeUser && activeUser[idAttribute] === this._id) {
-        return true;
-      }
+  isActive() {
+    const activeUser = User.getActiveUser(this.client);
 
-      return false;
-    });
+    if (activeUser && activeUser._id === this._id) {
+      return true;
+    }
+
+    return false;
   }
 
   static login(usernameOrData, password, options) {
@@ -294,46 +306,48 @@ export class User {
       }
     }
 
-    const promise = this.isActiveUser().then(isActiveUser => {
-      if (isActiveUser) {
-        throw new ActiveUserError('This user is already the active user.');
-      }
+    const isActiveUser = this.isActive();
+    if (isActiveUser) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+    }
 
-      return this.client.getActiveUser();
-    }).then(activeUser => {
-      if (activeUser) {
-        throw new ActiveUserError('An active user already exists. ' +
-          'Please call logout the active user before you login.');
-      }
+    const activeUser = User.getActiveUser(this.client);
+    if (activeUser) {
+      return Promise.reject(new ActiveUserError('An active user already exists. ' +
+        'Please logout the active user before you login.'));
+    }
 
-      const { username, password, _socialIdentity } = usernameOrData;
+    if ((!usernameOrData.username || usernameOrData.username === ''
+      || !usernameOrData.password || usernameOrData.password === '')
+      && !usernameOrData[socialIdentityAttribute]) {
+      return Promise.reject(new KinveyError('Username and/or password missing. ' +
+        'Please provide both a username and password to login.'));
+    }
 
-      if ((!username || username === '' || !password || password === '') && !_socialIdentity) {
-        throw new KinveyError('Username and/or password missing. ' +
-          'Please provide both a username and password to login.');
-      }
+    const request = new NetworkRequest({
+      method: HttpMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/login`
+      }),
+      data: usernameOrData,
+      properties: options.properties,
+      timeout: options.timeout
+    });
 
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.POST,
-        pathname: `${this._pathname}/login`,
-        data: usernameOrData,
-        authType: AuthType.App,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).then(response => {
-      return this.client.setActiveUser(response.data).then(() => {
-        this.data = response.data;
-        return this;
-      });
+    const promise = request.execute().then(response => {
+      this.data = response.data;
+      return this.setAsActiveUser();
     });
 
     return promise;
   }
 
-  loginWithIdentity(identity, tokens, options) {
+  loginWithIdentity(identity, token, options) {
     const data = { _socialIdentity: {} };
-    data._socialIdentity[identity] = tokens;
+    data._socialIdentity[identity] = token;
     return this.login(data, options);
   }
 
@@ -362,7 +376,10 @@ export class User {
    */
   /* eslint-enable max-len */
   loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    return MobileIdentityConnect.login(redirectUri, authorizationGrant, options).then(token => {
+    const mic = new MobileIdentityConnect(this.client);
+    return mic.login(redirectUri, authorizationGrant, options).then(token => {
+      options.redirectUri = redirectUri;
+      options.client = result(mic.client, 'toJSON', mic.client);
       return this.connect(MobileIdentityConnect.identity, token, options);
     });
   }
@@ -382,29 +399,37 @@ export class User {
    * });
    */
   logout(options = {}) {
-    return this.isActiveUser().then(isActive => {
-      if (!isActive) {
-        return null;
-      }
+    const isActive = this.isActive();
 
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.POST,
-        pathname: `/${usersNamespace}/${this.client.appKey}/_logout`,
-        authType: AuthType.Session,
-        properties: options.properties,
-        timeout: options.timeout
-      });
+    if (!isActive) {
+      return null;
+    }
+
+    const request = new NetworkRequest({
+      method: HttpMethod.POST,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${usersNamespace}/${this.client.appKey}/_logout`
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().catch(() => {
+      return null;
     }).then(() => {
-      return this.isActiveUser();
-    }).catch(() => {
-      return this.isActiveUser();
-    }).then(isActiveUser => {
-      if (isActiveUser) {
-        return this.client.setActiveUser(null);
+      const isActive = this.isActive();
+
+      if (isActive) {
+        return User.setActiveUser(null, this.client);
       }
     }).then(() => {
       return this;
     });
+
+    return promise;
   }
 
   /**
@@ -499,28 +524,34 @@ export class User {
    */
   /* eslint-enable max-len */
   connectWithIdentity(identity, options = {}) {
-    if (!identity) {
-      return Promise.reject(new KinveyError('An identity is required to connect the user.'));
-    }
-
-    if (!User.isIdentitySupported(identity)) {
-      return Promise.reject(new KinveyError(`Identity ${identity} is not supported on this platform.`));
-    }
-
     options = assign({
       collectionName: 'Identities'
     }, options);
 
-    const promise = Promise.resolve().then(() => {
+
+    const promise = Promise.resolve().then0(() => {
+      if (!identity) {
+        throw new KinveyError('An identity is required to connect the user.');
+      }
+
+      if (!User.isIdentitySupported(identity)) {
+        throw new KinveyError(`Identity ${identity} is not supported on this platform.`);
+      }
+
       const query = new Query().equalTo('identity', identity);
-      return this.client.executeNetworkRequest({
+      const request = new NetworkRequest({
         method: HttpMethod.GET,
-        pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`,
         authType: AuthType.Default,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.hose,
+          pathanme: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`
+        }),
         query: query,
         properties: options.properties,
         timeout: options.timeout
       });
+      return request.execute();
     }).then(response => {
       if (response.data.length === 1) {
         const helloSettings = {};
@@ -564,25 +595,36 @@ export class User {
    */
   connect(identity, token, options = {}) {
     const data = this.data;
-    data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
-    data[socialIdentityAttribute][identity] = token;
+    const socialIdentity = data[socialIdentityAttribute] || {};
+    socialIdentity[identity] = token;
+    data[socialIdentityAttribute] = socialIdentity;
+    this.data = data;
 
-    const promise = this.client.getActiveUser().then(activeUser => {
-      if (activeUser) {
-        activeUser[socialIdentityAttribute] = data[socialIdentityAttribute];
+    const promise = Promise.resolve().then(() => {
+      const isActive = this.isActive();
+
+      if (isActive) {
         options._identity = identity;
-        return this.update(activeUser, options);
+        return this.update(data, options);
       }
 
       return this.login(data, null, options);
     }).catch(err => {
       if (err instanceof NotFoundError) {
-        return this.signup(data, options).then(() => {
+        return this.signup(data, options).then0(() => {
           return this.connect(identity, token, options);
         });
       }
 
       throw err;
+    }).then(() => {
+      this.client.setActiveSocialIdentity({
+        identity: identity,
+        token: this._socialIdentity[identity],
+        redirectUri: options.redirectUri,
+        client: options.client
+      });
+      return this;
     });
 
     return promise;
@@ -590,16 +632,27 @@ export class User {
 
   disconnect(identity, options = {}) {
     const data = this.data;
-    data[socialIdentityAttribute] = data[socialIdentityAttribute] || {};
-    data[socialIdentityAttribute][identity] = null;
+    const socialIdentity = data[socialIdentityAttribute] || {};
+    delete socialIdentity[identity];
+    data[socialIdentityAttribute] = socialIdentity;
+    this.data = data;
 
-    const promise = Promise.resolve().then(() => {
+    const promise = Promise.resolve().then0(() => {
       if (!this._id) {
         return this;
       }
 
       return this.update(data, options);
+    }).then(() => {
+      const activeSocialIdentity = this.client.getActiveSocialIdentity();
+
+      if (activeSocialIdentity.identity === identity) {
+        this.client.setActiveSocialIdentity(null);
+      }
+
+      return this;
     });
+
     return promise;
   }
 
@@ -641,31 +694,33 @@ export class User {
       state: true
     }, options);
 
-    const promise = Promise.resolve().then(() => {
+    const promise = Promise.resolve().then0(() => {
       if (options.state === true) {
-        return this.client.getActiveUser().then(activeUser => {
-          if (activeUser) {
-            throw new ActiveUserError('An active user already exists. ' +
-              'Please call logout the active user before you login.');
-          }
-        });
+        const activeUser = User.getActiveUser(this.client);
+        if (activeUser) {
+          throw new ActiveUserError('An active user already exists. ' +
+            'Please logout the active user before you login.');
+        }
       }
-    }).then(() => {
-      return this.client.executeNetworkRequest({
+    }).then0(() => {
+      const request = new NetworkRequest({
         method: HttpMethod.POST,
-        pathname: `/${usersNamespace}/${this.client.appKey}`,
         authType: AuthType.App,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: `/${usersNamespace}/${this.client.appKey}`
+        }),
         data: result(data, 'toJSON', data),
         properties: options.properties,
         timeout: options.timeout
       });
+      return request.execute();
     }).then(response => {
       this.data = response.data;
 
       if (options.state === true) {
-        return this.client.setActiveUser(this.data).then(() => {
-          return this;
-        });
+        return this.setAsActiveUser();
       }
 
       return this;
@@ -684,9 +739,8 @@ export class User {
     const userStore = DataStore.getInstance(null, DataStoreType.User);
     return userStore.save(data, options).then(data => {
       this.data = data;
-      return this.isActiveUser();
-    }).then(isActive => {
-      if (isActive) {
+
+      if (this.isActive()) {
         return this.setAsActiveUser();
       }
 
@@ -694,39 +748,37 @@ export class User {
     });
   }
 
-  me(options) {
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeNetworkRequest({
-        method: HttpMethod.GET,
-        pathname: `/${usersNamespace}/${this.client.appKey}/_me`,
-        authType: AuthType.Session,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).then(response => {
+  me(options = {}) {
+    const request = new NetworkRequest({
+      method: HttpMethod.GET,
+      authType: AuthType.Session,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${usersNamespace}/${this.client.appKey}/_me`
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+
+    const promise = request.execute().then(response => {
       this.data = response.data;
 
       if (!this.authtoken) {
-        return this.client.getActiveUser().then(activeUser => {
-          if (activeUser) {
-            this.authtoken = activeUser[kmdAttribute].authtoken;
-          }
+        const activeUser = User.getActiveUser(this.client);
 
-          return this;
-        });
+        if (activeUser) {
+          this.authtoken = activeUser.authtoken;
+        }
       }
 
-      return this;
-    }).then(() => {
-      return this.client.setActiveUser(this.data);
-    }).then(() => {
-      return this;
+      return this.setAsActiveUser();
     });
 
     return promise;
   }
 
-  verifyEmail(options) {
+  verifyEmail(options = {}) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`,
@@ -739,7 +791,7 @@ export class User {
     return promise;
   }
 
-  forgotUsername(options) {
+  forgotUsername(options = {}) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`,
@@ -753,7 +805,7 @@ export class User {
     return promise;
   }
 
-  resetPassword(options) {
+  resetPassword(options = {}) {
     const promise = this.client.executeNetworkRequest({
       method: HttpMethod.POST,
       pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`,
@@ -764,6 +816,27 @@ export class User {
       return response.data;
     });
     return promise;
+  }
+
+  refreshAuthToken(options = {}) {
+    const socialIdentity = this.data[socialIdentityAttribute];
+    const identity = socialIdentity.activeIdentity;
+    const token = socialIdentity[identity];
+    let promise;
+
+    switch (identity) {
+      case MobileIdentityConnect.identity:
+        const mic = new MobileIdentityConnect(this.client);
+        promise = mic.refresh(token, options);
+        break;
+      default:
+        promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
+          `the ${identity} identity is not supported.`));
+    }
+
+    return promise.then(token => {
+      return this.connect(identity, token, options);
+    });
   }
 
   toJSON() {

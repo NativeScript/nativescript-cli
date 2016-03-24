@@ -15,7 +15,7 @@ export class HttpMiddleware extends KinveyMiddleware {
         method: request.method,
         headers: request.headers,
         body: request.data,
-        redirect: request.redirect === true ? 0 : request.redirect,
+        redirect: request.followRedirect === false ? 0 : request.followRedirect,
         timeout: request.timeout
       }).then(fetchResponse => {
         return fetchResponse.text().then(data => {

@@ -1,133 +1,13 @@
-import Promise from './utils/promise';
-import { KinveyError, NotFoundError } from './errors';
-import { AuthType, HttpMethod } from './enums';
-import { LocalRequest } from './requests/local';
-import { NetworkRequest } from './requests/network';
-import { DeltaFetchRequest } from './requests/deltafetch';
+import { KinveyError } from './errors';
+import { AuthType } from './enums';
+import localStorage from 'local-storage';
 import url from 'url';
-import qs from 'qs';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
-const localNamespace = process.env.KINVEY_LOCAL_NAMESPACE || 'kinvey_local';
-const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION || 'kinvey_activeUser';
-const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
+const activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME
+                                                || 'kinvey_activeSocialIdentityToken';
 const sharedInstanceSymbol = Symbol();
-
-const Auth = {
-  /**
-   * Authenticate through (1) user credentials, (2) Master Secret, or (3) App
-   * Secret.
-   *
-   * @returns {Promise}
-   */
-  all(client) {
-    return Auth.session(client).catch(() => {
-      return Auth.basic(client);
-    });
-  },
-
-  /**
-   * Authenticate through App Secret.
-   *
-   * @returns {Promise}
-   */
-  app(client) {
-    if (!client.appKey || !client.appSecret) {
-      const error = new Error('Missing client credentials');
-      return Promise.reject(error);
-    }
-
-    return Promise.resolve({
-      scheme: 'Basic',
-      username: client.appKey,
-      password: client.appSecret
-    });
-  },
-
-  /**
-   * Authenticate through (1) Master Secret, or (2) App Secret.
-   *
-   * @returns {Promise}
-   */
-  basic(client) {
-    return Auth.master(client).catch(() => {
-      return Auth.app(client);
-    });
-  },
-
-  /**
-   * Authenticate through Master Secret.
-   *
-   * @returns {Promise}
-   */
-  master(client) {
-    if (!client.appKey || !client.masterSecret) {
-      const error = new Error('Missing client credentials');
-      return Promise.reject(error);
-    }
-
-    const promise = Promise.resolve({
-      scheme: 'Basic',
-      username: client.appKey,
-      password: client.masterSecret
-    });
-
-    return promise;
-  },
-
-  /**
-   * Do not authenticate.
-   *
-   * @returns {Promise}
-   */
-  none() {
-    return Promise.resolve(null);
-  },
-
-  /**
-   * Authenticate through user credentials.
-   *
-   * @returns {Promise}
-   */
-  session(client) {
-    return client.getActiveUser().then(activeUser => {
-      if (!activeUser) {
-        throw new Error('There is not an active user.');
-      }
-
-      return {
-        scheme: 'Kinvey',
-        credentials: activeUser[kmdAttribute].authtoken
-      };
-    });
-  }
-};
-
-function getAuthFn(type = AuthType.None) {
-  switch (type) {
-    case AuthType.All:
-      return Auth.all;
-    case AuthType.App:
-      return Auth.app;
-    case AuthType.Basic:
-      return Auth.basic;
-    case AuthType.Master:
-      return Auth.master;
-    case AuthType.None:
-      return Auth.none;
-    case AuthType.Session:
-      return Auth.session;
-    default:
-      return function(client) {
-        return Auth.session(client).catch(err => {
-          return Auth.master(client).catch(() => {
-            return Promise.reject(err);
-          });
-        });
-      };
-  }
-}
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -215,177 +95,36 @@ export class Client {
     });
   }
 
-  getActiveUser() {
-    const promise = Promise.resolve().then(() => {
-      return this.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}`
-      });
-    }).then(response => {
-      const data = response.data;
-
-      if (data.length === 0) {
-        return null;
-      }
-
-      return data[0];
-    }).catch(err => {
-      if (err instanceof NotFoundError) {
-        return null;
-      }
-
-      throw err;
-    });
-
-    return promise;
+  getActiveUserData() {
+    return localStorage.get(`${this.appKey}${activeUserCollectionName}`);
   }
 
-  setActiveUser(user) {
-    const promise = this.getActiveUser().then(activeUser => {
-      if (activeUser) {
-        return this.executeLocalRequest({
-          method: HttpMethod.DELETE,
-          pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}/${activeUser[idAttribute]}`
-        }).then(() => {
-          this.session = null;
-        });
+  setActiveUserData(data) {
+    if (data) {
+      try {
+        return localStorage.set(`${this.appKey}${activeUserCollectionName}`, data);
+      } catch (error) {
+        return false;
       }
-    }).then(() => {
-      if (user) {
-        return this.executeLocalRequest({
-          method: HttpMethod.POST,
-          pathname: `/${localNamespace}/${this.appKey}/${activeUserCollectionName}`,
-          data: user
-        });
-      }
-    }).then(response => {
-      return response ? response.data : null;
-    });
+    }
 
-    return promise;
+    return localStorage.remove(`${this.appKey}${activeUserCollectionName}`);
   }
 
-  executeLocalRequest(options = {}) {
-    options = assign({
-      method: HttpMethod.GET,
-      pathname: '/',
-      flags: {
-        _: Math.random().toString(36).substr(2)
-      }
-    }, options);
-    options.flags = qs.parse(options.flags);
-
-    const request = new LocalRequest({
-      method: options.method,
-      headers: options.headers,
-      auth: getAuthFn(options.auth),
-      url: url.format({
-        protocol: this.protocol,
-        host: this.host,
-        pathname: options.pathname,
-        query: options.flags
-      }),
-      properties: options.properties,
-      query: options.query,
-      data: options.data,
-      timeout: options.timeout,
-      client: this
-    });
-    return request.execute();
+  getActiveSocialIdentity() {
+    return localStorage.get(`${this.appKey}${activeSocialIdentityTokenCollectionName}`);
   }
 
-  executeNetworkRequest(options = {}) {
-    options = assign({
-      method: HttpMethod.GET,
-      authType: AuthType.None,
-      pathname: '/',
-      flags: {
-        _: Math.random().toString(36).substr(2)
+  setActiveSocialIdentity(socialIdentity) {
+    if (socialIdentity) {
+      try {
+        return localStorage.set(`${this.appKey}${activeSocialIdentityTokenCollectionName}`, socialIdentity);
+      } catch (error) {
+        return false;
       }
-    }, options);
-    options.flags = qs.parse(options.flags);
+    }
 
-    const request = new NetworkRequest({
-      method: options.method,
-      headers: options.headers,
-      url: url.format({
-        protocol: this.protocol,
-        host: this.host,
-        pathname: options.pathname,
-        query: options.flags
-      }),
-      properties: options.properties,
-      query: options.query,
-      data: options.data,
-      timeout: options.timeout,
-      client: this
-    });
-
-    const promise = Promise.resolve().then(() => {
-      const authFn = getAuthFn(options.authType);
-      return authFn(this);
-    }).then(authInfo => {
-      if (authInfo) {
-        let credentials = authInfo.credentials;
-
-        if (authInfo.username) {
-          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-        }
-
-        request.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-      }
-    }).then(() => {
-      return request.execute();
-    });
-
-    return promise;
-  }
-
-  executeDeltaFetchRequest(options = {}) {
-    options = assign({
-      method: HttpMethod.GET,
-      authType: AuthType.None,
-      pathname: '/',
-      flags: {
-        _: Math.random().toString(36).substr(2)
-      }
-    }, options);
-    options.flags = qs.parse(options.flags);
-
-    const request = new DeltaFetchRequest({
-      method: options.method,
-      headers: options.headers,
-      url: url.format({
-        protocol: this.protocol,
-        host: this.host,
-        pathname: options.pathname,
-        query: options.flags
-      }),
-      properties: options.properties,
-      query: options.query,
-      data: options.data,
-      timeout: options.timeout,
-      client: this
-    });
-
-    const promise = Promise.resolve().then(() => {
-      const authFn = getAuthFn(options.authType);
-      return authFn(this);
-    }).then(authInfo => {
-      if (authInfo) {
-        let credentials = authInfo.credentials;
-
-        if (authInfo.username) {
-          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-        }
-
-        request.setHeader('Authorization', `${authInfo.scheme} ${credentials}`);
-      }
-    }).then(() => {
-      return request.execute();
-    });
-
-    return promise;
+    return localStorage.remove(`${this.appKey}${activeSocialIdentityTokenCollectionName}`);
   }
 
   /**

@@ -1,7 +1,6 @@
 import { StatusCode } from '../enums';
 import { InsufficientCredentialsError, InvalidCredentialsError, KinveyError, NotFoundError } from '../errors';
 import assign from 'lodash/assign';
-import clone from 'lodash/clone';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
@@ -91,6 +90,10 @@ export class Response {
     this.headers = headers;
   }
 
+  addHeader(header = {}) {
+    return this.setHeader(header.name, header.value);
+  }
+
   addHeaders(headers) {
     if (!isPlainObject(headers)) {
       throw new Error('Headers argument must be an object.');
@@ -121,7 +124,7 @@ export class Response {
   }
 
   isSuccess() {
-    return this.statusCode >= 200 && this.statusCode < 300;
+    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === 302;
   }
 
   toJSON() {

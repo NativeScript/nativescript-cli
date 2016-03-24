@@ -1,10 +1,9 @@
 import Promise from '../utils/promise';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
-import { HttpMiddleware } from './middleware/http';
+import { HttpMiddleware } from './middleware/http2';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
-import result from 'lodash/result';
 const sharedCacheRackInstanceSymbol = Symbol();
 const sharedNetworkRackInstanceSymbol = Symbol();
 

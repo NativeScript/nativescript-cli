@@ -1,10 +1,11 @@
 import Promise from '../utils/promise';
-import { HttpMethod } from '../enums';
+import { HttpMethod, AuthType } from '../enums';
 import { Device } from '../device';
 import { RequestProperties } from './properties';
 import { NoResponseError } from '../errors';
 import { KinveyRack } from '../rack/rack';
 import { Response } from './response';
+import { Client } from '../client';
 import { byteCount } from '../utils/string';
 import qs from 'qs';
 import appendQuery from 'append-query';
@@ -14,6 +15,97 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+
+const Auth = {
+  /**
+   * Authenticate through (1) user credentials, (2) Master Secret, or (3) App
+   * Secret.
+   *
+   * @returns {Object}
+   */
+  all(client) {
+    try {
+      return Auth.session(client);
+    } catch (error) {
+      return Auth.basic(client);
+    }
+  },
+
+  /**
+   * Authenticate through App Secret.
+   *
+   * @returns {Object}
+   */
+  app(client) {
+    if (!client.appKey || !client.appSecret) {
+      throw new Error('Missing client credentials');
+    }
+
+    return {
+      scheme: 'Basic',
+      username: client.appKey,
+      password: client.appSecret
+    };
+  },
+
+  /**
+   * Authenticate through (1) Master Secret, or (2) App Secret.
+   *
+   * @returns {Object}
+   */
+  basic(client) {
+    try {
+      return Auth.master(client);
+    } catch (error) {
+      return Auth.app(client);
+    }
+  },
+
+  /**
+   * Authenticate through Master Secret.
+   *
+   * @returns {Object}
+   */
+  master(client) {
+    if (!client.appKey || !client.masterSecret) {
+      throw new Error('Missing client credentials');
+    }
+
+    return {
+      scheme: 'Basic',
+      username: client.appKey,
+      password: client.masterSecret
+    };
+  },
+
+  /**
+   * Do not authenticate.
+   *
+   * @returns {Null}
+   */
+  none() {
+    return null;
+  },
+
+  /**
+   * Authenticate through user credentials.
+   *
+   * @returns {Object}
+   */
+  session(client) {
+    const activeUserData = client.getActiveUserData();
+
+    if (!activeUserData) {
+      throw new Error('There is not an active user.');
+    }
+
+    return {
+      scheme: 'Kinvey',
+      credentials: activeUserData[kmdAttribute].authtoken
+    };
+  }
+};
 
 /**
  * @private
@@ -23,7 +115,7 @@ export class Request {
     options = assign({
       method: HttpMethod.GET,
       headers: {},
-      url: null,
+      url: '',
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
       followRedirect: true
@@ -70,7 +162,9 @@ export class Request {
   }
 
   get url() {
-    return this._url;
+    return appendQuery(this._url, qs.stringify({
+      _: Math.random().toString(36).substr(2)
+    }));
   }
 
   set url(url) {
@@ -143,6 +237,10 @@ export class Request {
     this.headers = headers;
   }
 
+  addHeader(header = {}) {
+    return this.setHeader(header.name, header.value);
+  }
+
   addHeaders(headers) {
     if (!isPlainObject(headers)) {
       throw new Error('Headers argument must be an object.');
@@ -213,15 +311,17 @@ export class KinveyRequest extends Request {
     super(options);
 
     options = assign({
+      authType: AuthType.None,
       properties: null,
-      auth: null,
-      query: null
+      query: null,
+      client: Client.sharedInstance()
     }, options);
 
     this.rack = new KinveyRack();
+    this.authType = options.authType;
     this.properties = options.properties;
-    this.auth = options.auth;
     this.query = result(options.query, 'toJSON', options.query);
+    this.client = options.client;
 
     const headers = {};
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
@@ -243,10 +343,6 @@ export class KinveyRequest extends Request {
     }
 
     this.addHeaders(headers);
-  }
-
-  set authHandler(authHandler) {
-    this.authHandler = authHandler;
   }
 
   set properties(properties) {
@@ -310,6 +406,10 @@ export class KinveyRequest extends Request {
       }
     }
 
+    if (isEmpty(queryString)) {
+      return url;
+    }
+
     return appendQuery(url, qs.stringify(queryString));
   }
 
@@ -317,7 +417,63 @@ export class KinveyRequest extends Request {
     super.url = url;
   }
 
+  get authorizationHeader() {
+    let authInfo;
+
+    switch (this.authType) {
+      case AuthType.All:
+        authInfo = Auth.all(this.client);
+        break;
+      case AuthType.App:
+        authInfo = Auth.app(this.client);
+        break;
+      case AuthType.Basic:
+        authInfo = Auth.basic(this.client);
+        break;
+      case AuthType.Master:
+        authInfo = Auth.master(this.client);
+        break;
+      case AuthType.None:
+        authInfo = Auth.none(this.client);
+        break;
+      case AuthType.Session:
+        authInfo = Auth.session(this.client);
+        break;
+      default:
+        try {
+          authInfo = Auth.session(this.client);
+        } catch (error) {
+          try {
+            authInfo = Auth.master(this.client);
+          } catch (error2) {
+            throw error;
+          }
+        }
+    }
+
+    if (authInfo) {
+      let credentials = authInfo.credentials;
+
+      if (authInfo.username) {
+        credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+      }
+
+      return {
+        name: 'Authorization',
+        value: `${authInfo.scheme} ${credentials}`
+      };
+    }
+
+    return null;
+  }
+
   execute() {
+    const authorizationHeader = this.authorizationHeader;
+
+    if (authorizationHeader) {
+      this.addHeader(authorizationHeader);
+    }
+
     const promise = super.execute().then(() => {
       return this.rack.execute(this);
     }).then(response => {
@@ -340,6 +496,8 @@ export class KinveyRequest extends Request {
       }
 
       return response;
+    }).catch(error => {
+      throw error;
     });
 
     return promise;
