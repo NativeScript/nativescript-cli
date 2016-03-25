@@ -1,3 +1,4 @@
+/* global Titanium:false */
 import packageJSON from '../package.json';
 
 /**
@@ -24,7 +25,7 @@ export class Device {
   }
 
   get platform() {
-    let name;
+    let name = 'unknown';
     let version;
 
     if (this.isCordova()) {
@@ -101,7 +102,7 @@ export class Device {
   }
 
   isTitanium() {
-    return typeof global.Titanium !== 'undefined';
+    return typeof global.Titanium !== 'undefined' || typeof Titanium !== undefined;
   }
 
   toJSON() {
