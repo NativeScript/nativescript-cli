@@ -65,5 +65,11 @@
     "sinon": "^1.12.2",
     "sinon-chai": "^2.8.0",
     "uid": "0.0.2"
+  },
+  "browserify": {
+    "transform": [["babelify", {
+      "presets": ["es2015", "stage-2"],
+      "ignore": "/\/node_modules\/(?!qs\/)/"
+    }]]
   }
 }
