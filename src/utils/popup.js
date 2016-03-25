@@ -2,12 +2,11 @@
 import { Device } from '../device';
 import { EventEmitter } from 'events';
 import bind from 'lodash/bind';
-const privatePopupSymbol = Symbol();
 
 /**
  * @private
  */
-class PrivatePopup extends EventEmitter {
+export class Popup extends EventEmitter {
   constructor(url = '/') {
     super();
     this.url = url;
@@ -138,74 +137,5 @@ class PrivatePopup extends EventEmitter {
     }
 
     this.emit('close');
-  }
-}
-
-/**
- * @private
- */
-export class Popup {
-  constructor(url) {
-    this[privatePopupSymbol] = new PrivatePopup(url);
-  }
-
-  get url() {
-    return this[privatePopupSymbol].url;
-  }
-
-  set url(url) {
-    this[privatePopupSymbol].url = url;
-  }
-
-  listenerCount(type) {
-    return this[privatePopupSymbol].listenerCount(type);
-  }
-
-  listeners(event) {
-    return this[privatePopupSymbol].listeners(event);
-  }
-
-  getMaxListeners() {
-    return this[privatePopupSymbol].getMaxListeners();
-  }
-
-  setMaxListeners(n) {
-    return this[privatePopupSymbol].setMaxListeners(n);
-  }
-
-  addListener(event, listener) {
-    return this[privatePopupSymbol].addListener(event, listener);
-  }
-
-  on(event, listener) {
-    return this[privatePopupSymbol].on(event, listener);
-  }
-
-  once(event, listener) {
-    return this[privatePopupSymbol].once(event, listener);
-  }
-
-  emit(event, ...args) {
-    return this[privatePopupSymbol].emit(event, args);
-  }
-
-  removeAllListeners(event) {
-    return this[privatePopupSymbol].removeAllListeners(event);
-  }
-
-  removeListener(event, listener) {
-    return this[privatePopupSymbol].removeListener(event, listener);
-  }
-
-  open() {
-    return this[privatePopupSymbol].open().then(() => {
-      return this;
-    });
-  }
-
-  close() {
-    return this[privatePopupSymbol].close().then(() => {
-      return this;
-    });
   }
 }

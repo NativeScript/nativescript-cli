@@ -1,9 +1,11 @@
 import { KinveyError } from '../errors';
 import isPlainObject from 'lodash/isPlainObject';
-const privateRequestPropertiesSymbol = Symbol();
 const appVersionKey = 'appVersion';
 
-class PrivateRequestProperties {
+/**
+ * Request Properties class
+ */
+export class RequestProperties {
   constructor(properties = {}) {
     this.properties = properties;
   }
@@ -14,57 +16,6 @@ class PrivateRequestProperties {
 
   set properties(properties) {
     this._properties = properties;
-  }
-
-  addProperties(properties) {
-    Object.keys(properties).forEach((key) => {
-      const value = properties[key];
-
-      if (value) {
-        this.properties[key] = value;
-      } else {
-        delete this.properties[key];
-      }
-    });
-  }
-
-  clear() {
-    this.properties = {};
-  }
-
-  clearProperty(key) {
-    const properties = this.properties;
-
-    if (key && properties.hasOwnProperty(key)) {
-      delete properties[key];
-    }
-  }
-
-  toJSON() {
-    return this.properties;
-  }
-}
-
-/**
- * Request Properties class
- */
-export class RequestProperties {
-  /**
-   * This is the constructor.
-   *
-   * @param  {Object} properties Request properties
-   */
-  constructor(properties) {
-    this[privateRequestPropertiesSymbol] = new PrivateRequestProperties(properties);
-  }
-
-  /**
-   * Set the request properties.
-   *
-   * @param {Object} properties Request properties
-   */
-  set properties(properties) {
-    this.clear().addProperties(properties);
   }
 
   /**
@@ -137,45 +88,32 @@ export class RequestProperties {
     return this;
   }
 
-  /**
-   * Adds the properties to the exisiting request properties
-   * replacing any that already existed.
-   *
-   * @param {Object} properties Custom request properties
-   * @throws {KinveyError} If properties argument is not an object.
-   * @return {RequestProperties} The request properties instance.
-   */
-  addProperties(properties = {}) {
+  addProperties(properties) {
     if (!isPlainObject(properties)) {
       throw new KinveyError('properties argument must be an object');
     }
 
-    const privateProperties = this[privateRequestPropertiesSymbol];
-    privateProperties.addProperties(properties);
-    return this;
+    Object.keys(properties).forEach((key) => {
+      const value = properties[key];
+
+      if (value) {
+        this.properties[key] = value;
+      } else {
+        delete this.properties[key];
+      }
+    });
   }
 
-  /**
-   * Clears all the request properties.
-   *
-   * @return {RequestProperties} The request properties instance.
-   */
   clear() {
-    const privateProperties = this[privateRequestPropertiesSymbol];
-    privateProperties.clear();
-    return this;
+    this.properties = {};
   }
 
-  /**
-   * Clears the request property.
-   *
-   * @param  {String} key Request property key
-   * @return {RequestProperties} The request properties instance.
-   */
   clearProperty(key) {
-    const privateProperties = this[privateRequestPropertiesSymbol];
-    privateProperties.clearProperty(key);
-    return this;
+    const properties = this.properties;
+
+    if (key && properties.hasOwnProperty(key)) {
+      delete properties[key];
+    }
   }
 
   /**
@@ -187,13 +125,7 @@ export class RequestProperties {
     return this.clearProperty(appVersionKey);
   }
 
-  /**
-   * Returns a JSON representation of the request properties.
-   *
-   * @return {Object} Request properties JSON.
-   */
   toJSON() {
-    const privateProperties = this[privateRequestPropertiesSymbol];
-    return privateProperties.toJSON();
+    return this.properties;
   }
 }

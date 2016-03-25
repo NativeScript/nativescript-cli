@@ -6,9 +6,8 @@ import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
-const privateAggregationSymbol = Symbol();
 
-class PrivateAggregation {
+export class Aggregation {
   constructor(options) {
     options = assign({
       query: null,
@@ -117,40 +116,6 @@ class PrivateAggregation {
     };
 
     return json;
-  }
-}
-
-export class Aggregation {
-  constructor(options) {
-    this[privateAggregationSymbol] = new PrivateAggregation(options);
-  }
-
-  by(field) {
-    this[privateAggregationSymbol].by(field);
-    return this;
-  }
-
-  initial(objectOrKey, value) {
-    this[privateAggregationSymbol].initial(objectOrKey, value);
-    return this;
-  }
-
-  process(response) {
-    return this[privateAggregationSymbol].process(response);
-  }
-
-  query(query) {
-    this[privateAggregationSymbol].query(query);
-    return this;
-  }
-
-  reduce(fn) {
-    this[privateAggregationSymbol].reduce(fn);
-    return this;
-  }
-
-  toJSON() {
-    return this[privateAggregationSymbol].toJSON();
   }
 
   static count(field = '') {

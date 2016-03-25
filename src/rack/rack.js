@@ -4,8 +4,8 @@ import { CacheMiddleware } from './middleware/cache';
 import { HttpMiddleware } from './middleware/http2';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
-const sharedCacheRackInstanceSymbol = Symbol();
-const sharedNetworkRackInstanceSymbol = Symbol();
+let sharedCacheRackInstance;
+let sharedNetworkRackInstance;
 
 /**
  * @private
@@ -178,11 +178,11 @@ export class CacheRack extends KinveyRack {
   }
 
   static sharedInstance() {
-    let instance = CacheRack[sharedCacheRackInstanceSymbol];
+    let instance = sharedCacheRackInstance;
 
     if (!instance) {
       instance = new CacheRack();
-      CacheRack[sharedCacheRackInstanceSymbol] = instance;
+      sharedCacheRackInstance = instance;
     }
 
     return instance;
@@ -201,11 +201,11 @@ export class NetworkRack extends KinveyRack {
   }
 
   static sharedInstance() {
-    let instance = NetworkRack[sharedNetworkRackInstanceSymbol];
+    let instance = sharedNetworkRackInstance;
 
     if (!instance) {
       instance = new NetworkRack();
-      NetworkRack[sharedNetworkRackInstanceSymbol] = instance;
+      sharedNetworkRackInstance = instance;
     }
 
     return instance;

@@ -1,5 +1,4 @@
 import { KinveyError } from './errors';
-import { AuthType } from './enums';
 import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -7,7 +6,7 @@ import isString from 'lodash/isString';
 const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
 const activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME
                                                 || 'kinvey_activeSocialIdentityToken';
-const sharedInstanceSymbol = Symbol();
+let sharedInstance;
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -170,7 +169,7 @@ export class Client {
    */
   static init(options) {
     const client = new Client(options);
-    Client[sharedInstanceSymbol] = client;
+    sharedInstance = client;
     return client;
   }
 
@@ -182,7 +181,7 @@ export class Client {
    * @return {Client} The shared instance.
    */
   static sharedInstance() {
-    const client = Client[sharedInstanceSymbol];
+    const client = sharedInstance;
 
     if (!client) {
       throw new KinveyError('You have not initialized the library. ' +
