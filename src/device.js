@@ -13,7 +13,7 @@ export class Device {
       name = global.device.platform;
       version = global.device.version;
     } else if (this.isTitanium()) {
-      const platform = global.Titanium.Platform;
+      const platform = Titanium.Platform;
       name = platform.getName() === 'iPhone OS' ? 'ios' : platform.getName();
       version = platform.getVersion();
     }
@@ -51,7 +51,7 @@ export class Device {
       version = global.process.version;
     } else if (this.isTitanium()) {
       name = 'titanium';
-      version = global.Titanium.getVersion();
+      version = Titanium.getVersion();
     }
 
     return {
@@ -102,7 +102,7 @@ export class Device {
   }
 
   isTitanium() {
-    return typeof global.Titanium !== 'undefined' || typeof Titanium !== undefined;
+    return typeof Titanium !== undefined;
   }
 
   toJSON() {
