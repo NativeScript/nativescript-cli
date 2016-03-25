@@ -3,6 +3,7 @@ import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
+import findIndex from 'lodash/findIndex';
 let sharedCacheRackInstance;
 let sharedNetworkRackInstance;
 
@@ -41,7 +42,7 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, (existingMiddleware => existingMiddleware instanceof middlewareClass));
 
         if (index > -1) {
           middlewares.splice(index, 0, middleware);
@@ -59,7 +60,7 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, (existingMiddleware => existingMiddleware instanceof middlewareClass));
 
         if (index > -1) {
           middlewares.splice(index + 1, 0, middleware);
@@ -77,7 +78,7 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, (existingMiddleware => existingMiddleware instanceof middlewareClass));
 
         if (index > -1) {
           middlewares.splice(index, 1, middleware);
@@ -93,7 +94,7 @@ export class Rack extends KinveyMiddleware {
 
   remove(middlewareClass) {
     const middlewares = this.middlewares;
-    const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+    const index = findIndex(middlewares, (existingMiddleware => existingMiddleware instanceof middlewareClass));
 
     if (index > -1) {
       middlewares.splice(index, 1);
