@@ -1,10 +1,12 @@
 import Promise from '../utils/promise';
 import { CacheStore } from './cachestore';
+import { LocalRequest } from '../requests/local';
 import { Aggregation } from '../aggregation';
 import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import { Query } from '../query';
 import { Log } from '../log';
+import url from 'url';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 export class SyncStore extends CacheStore {
@@ -33,15 +35,20 @@ export class SyncStore extends CacheStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: this._pathname,
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -77,15 +84,20 @@ export class SyncStore extends CacheStore {
         'It must be an instance of the Kinvey.Aggregation class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: `${this._pathname}/_group`,
-        properties: options.properties,
-        data: aggregation.toJSON(),
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/_group`
+      }),
+      properties: options.properties,
+      data: aggregation.toJSON(),
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -120,15 +132,20 @@ export class SyncStore extends CacheStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: `${this._pathname}/_count`,
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/_count`
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -162,14 +179,19 @@ export class SyncStore extends CacheStore {
 
     Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.GET,
-        pathname: `${this._pathname}/${id}`,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${id}`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
 
@@ -203,25 +225,28 @@ export class SyncStore extends CacheStore {
 
     Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
-    const promise = Promise.resolve().then(() => {
-      if (entity[idAttribute]) {
-        return this.client.executeLocalRequest({
-          method: HttpMethod.PUT,
-          pathname: `${this._pathname}/${entity[idAttribute]}`,
-          properties: options.properties,
-          data: entity,
-          timeout: options.timeout
-        });
-      }
+    const request = new LocalRequest({
+      method: HttpMethod.POST,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      data: entity,
+      timeout: options.timeout,
+      client: this.client
+    });
 
-      return this.client.executeLocalRequest({
-        method: HttpMethod.POST,
-        pathname: this._pathname,
-        properties: options.properties,
-        data: entity,
-        timeout: options.timeout
+    if (entity[idAttribute]) {
+      request.url = url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${entity[idAttribute]}`
       });
-    }).then(response => {
+    }
+
+    const promise = request.execute().then(response => {
       return this._updateSync(response.data, options).then(() => {
         return response.data;
       });
@@ -256,15 +281,20 @@ export class SyncStore extends CacheStore {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.DELETE,
-        pathname: this._pathname,
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return this._updateSync(response.data.entities, options).then(() => {
         return response.data;
       });
@@ -298,14 +328,19 @@ export class SyncStore extends CacheStore {
 
     Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
-    const promise = Promise.resolve().then(() => {
-      return this.client.executeLocalRequest({
-        method: HttpMethod.DELETE,
-        pathname: `${this._pathname}/${id}`,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-    }).then(response => {
+    const request = new LocalRequest({
+      method: HttpMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${id}`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return this._updateSync(response.data.entities, options).then(() => {
         return response.data;
       });

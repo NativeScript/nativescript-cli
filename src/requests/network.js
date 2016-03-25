@@ -26,6 +26,7 @@ export class NetworkRequest extends KinveyRequest {
 
         // Refresh MIC Auth Token
         if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
+          // Refresh the token
           const token = activeSocialIdentity.token;
           const request = new NetworkRequest({
             method: HttpMethod.POST,
@@ -51,6 +52,7 @@ export class NetworkRequest extends KinveyRequest {
           return request.execute().then(response => {
             return response.data;
           }).then(token => {
+            // Login the user with the new token
             const activeUserData = this.client.getActiveUserData();
             const socialIdentity = activeUserData[socialIdentityAttribute];
             socialIdentity[activeSocialIdentity.identity] = token;
@@ -72,6 +74,7 @@ export class NetworkRequest extends KinveyRequest {
             request.automaticallyRefreshAuthToken = false;
             return request.execute();
           }).then(response => {
+            // Store the new data
             this.client.setActiveUserData(response.data);
             this.client.setActiveSocialIdentity({
               identity: activeSocialIdentity.identity,
@@ -79,6 +82,7 @@ export class NetworkRequest extends KinveyRequest {
               token: response.data[socialIdentityAttribute][activeSocialIdentity.identity]
             });
 
+            // Execute the original request
             return this.execute();
           }).catch(() => {
             throw error;

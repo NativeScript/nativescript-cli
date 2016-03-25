@@ -779,42 +779,66 @@ export class User {
   }
 
   verifyEmail(options = {}) {
-    const promise = this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`,
       authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-email-verification-initiate`
+      }),
       properties: options.properties,
-      timeout: options.timeout
-    }).then(response => {
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
+
     return promise;
   }
 
   forgotUsername(options = {}) {
-    const promise = this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`,
       authType: AuthType.App,
-      data: { email: this.email },
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${rpcNamespace}/${this.client.appKey}/user-forgot-username`
+      }),
       properties: options.properties,
-      timeout: options.timeout
-    }).then(response => {
+      data: { email: this.email },
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
+
     return promise;
   }
 
   resetPassword(options = {}) {
-    const promise = this.client.executeNetworkRequest({
+    const request = new NetworkRequest({
       method: HttpMethod.POST,
-      pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`,
       authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`
+      }),
       properties: options.properties,
-      timeout: options.timeout
-    }).then(response => {
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
+
     return promise;
   }
 

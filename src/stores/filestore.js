@@ -3,6 +3,7 @@ import { NetworkStore } from './networkstore';
 import { NetworkRequest } from '../requests/network';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
+import url from 'url';
 import assign from 'lodash/assign';
 import map from 'lodash/map';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
@@ -190,27 +191,33 @@ export class FileStore extends NetworkStore {
       metadata._public = true;
     }
 
-    const promise = Promise.resolve().then(() => {
-      const requestOptions = {
-        headers: {
-          'X-Kinvey-Content-Type': metadata.mimeType
-        },
-        properties: options.properties,
-        authType: AuthType.Default,
-        timeout: options.timeout,
-        data: metadata
-      };
+    const request = new NetworkRequest({
+      method: HttpMethod.POST,
+      headers: {
+        'X-Kinvey-Content-Type': metadata.mimeType
+      },
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      data: metadata,
+      client: this.client
+    });
 
-      if (metadata[idAttribute]) {
-        requestOptions.method = HttpMethod.PUT;
-        requestOptions.pathname = `${this._pathname}/${metadata._id}`;
-      } else {
-        requestOptions.method = HttpMethod.POST;
-        requestOptions.pathname = this._pathname;
-      }
+    if (metadata[idAttribute]) {
+      request.method = HttpMethod.PUT;
+      request.url = url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${metadata._id}`
+      });
+    }
 
-      return this.client.executeNetworkRequest(requestOptions);
-    }).then(response => {
+    const promise = request.execute().then(response => {
       const uploadUrl = response.data._uploadURL;
       const headers = response.data._requiredHeaders || {};
       headers['Content-Type'] = metadata.mimeType;
