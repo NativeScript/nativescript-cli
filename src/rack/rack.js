@@ -12,12 +12,8 @@ let sharedNetworkRackInstance;
 export class Rack extends KinveyMiddleware {
   constructor(name = 'Rack') {
     super(name);
-    this._middlewares = [];
+    this.middlewares = [];
     this.canceled = false;
-  }
-
-  get middlewares() {
-    return this._middlewares.slice();
   }
 
   getMiddleware(index = -1) {
@@ -33,7 +29,7 @@ export class Rack extends KinveyMiddleware {
   use(middleware) {
     if (middleware) {
       if (middleware instanceof KinveyMiddleware) {
-        this._middlewares.push(middleware);
+        this.middlewares.push(middleware);
         return;
       }
 
@@ -49,7 +45,7 @@ export class Rack extends KinveyMiddleware {
 
         if (index > -1) {
           middlewares.splice(index, 0, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -67,7 +63,7 @@ export class Rack extends KinveyMiddleware {
 
         if (index > -1) {
           middlewares.splice(index + 1, 0, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -85,7 +81,7 @@ export class Rack extends KinveyMiddleware {
 
         if (index > -1) {
           middlewares.splice(index, 1, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -101,13 +97,13 @@ export class Rack extends KinveyMiddleware {
 
     if (index > -1) {
       middlewares.splice(index, 1);
-      this._middlewares = middlewares;
+      this.middlewares = middlewares;
       this.remove(middlewareClass);
     }
   }
 
   reset() {
-    this._middlewares = [];
+    this.middlewares = [];
   }
 
   execute(request) {

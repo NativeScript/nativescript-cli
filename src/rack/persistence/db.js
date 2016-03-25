@@ -33,7 +33,7 @@ export { DBAdapter };
  * @private
  */
 export class DB {
-  constructor(name, adapters = DBAdapter.Memory) {
+  constructor(name, adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }
