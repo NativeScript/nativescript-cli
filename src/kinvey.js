@@ -9,6 +9,8 @@ import { DataStore } from './stores/datastore';
 import { Sync } from './sync';
 import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
+import { NetworkRequest } from './requests/network';
+import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 class Kinvey {
@@ -43,15 +45,22 @@ class Kinvey {
    *
    * @returns {Promise} The response.
    */
-  static ping() {
-    const client = Client.sharedInstance();
-    return client.executeNetworkRequest({
+  static ping(client = Client.sharedInstance()) {
+    const request = new NetworkRequest({
       method: HttpMethod.GET,
       authType: AuthType.All,
-      pathname: `${appdataNamespace}/${client.appKey}`
-    }).then(response => {
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `${appdataNamespace}/${client.appKey}`
+      })
+    });
+
+    const promise = request.execute().then(response => {
       return response.data;
     });
+
+    return promise;
   }
 }
 
