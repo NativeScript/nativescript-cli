@@ -11,13 +11,13 @@ export class HttpMiddleware extends KinveyMiddleware {
 
   handle(request) {
     return super.handle(request).then(() => {
-      const promise = new Promise((resolve, reject) => {
+      const promise = new Promise((resolve) => {
         request.response = {
-          statusCode: response.statusCode,
+          statusCode: 500,
           headers: {},
           data: null
         };
-        return response(request);
+        return resolve(request);
         // http({
         //   url: request.url,
         //   method: request.method,
@@ -41,7 +41,7 @@ export class HttpMiddleware extends KinveyMiddleware {
         //   };
 
         //   return resolve(request);
-        });
+        // });
       });
       return promise;
     });
