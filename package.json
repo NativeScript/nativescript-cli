@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kinvey/js-library-dev.git"
+    "url": "https://github.com/Kinvey/javascript-sdk-core.git"
   },
   "author": "Kinvey, Inc.",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Kinvey/js-library-dev/issues"
+    "url": "https://github.com/Kinvey/javascript-sdk-core/issues"
   },
   "dependencies": {
     "append-query": "^1.1.0",

@@ -1,14 +1,14 @@
-# Kinvey JavaScript Library
+# Kinvey JavaScript Core SDK
 
-This library is a standalone library designed for JavaScript-based platforms. The library acts as a client for the Kinvey REST API and can be used for building JavaScript-based apps.
+This sdk is a standalone sdk designed for JavaScript-based platforms. The sdk acts as a client for the Kinvey REST API and can be used for building JavaScript-based apps.
 
 ## Building
-The simplest way to build the library is by running `gulp`. This will also perform [testing](#Testing).
+The simplest way to build the sdk is by running `gulp`. This will also perform [testing](#Testing).
 More advanced tasks are available.
 
-* `gulp sandbox`: build the library without performing any [testing](#Testing).
-* `gulp build`: build the library without performing a code audit or [testing](#Testing).
-* `gulp watch`: auto-build the library when you modify a file.
+* `gulp sandbox`: build the sdk without performing any [testing](#Testing).
+* `gulp build`: build the sdk without performing a code audit or [testing](#Testing).
+* `gulp watch`: auto-build the sdk when you modify a file.
 * `gulp clean`: remove temporary files created by the build process.
 
 ### Flags
@@ -17,7 +17,7 @@ The following flags are available when running `gulp`:
 * `--platform=<angular|html5|node|phonegap>`: tailor to a specific platform. Defaults to `html5`.
 
 ## Testing
-Testing is part of the [build process](#Building). You can run the tests without (re-)building the library using `gulp test`.
+Testing is part of the [build process](#Building). You can run the tests without (re-)building the sdk using `gulp test`.
 
 Depending on the platform, however, a test set-up may be required.
 
@@ -28,7 +28,7 @@ Optional, but recommended: run `grunt client-tests` to spin up instances of Fire
 The tests will be executed against the current version of Node.js available on the machine. There node version managers, like [`nvm`](https://github.com/creationix/nvm), to easily switch between Node.js versions.
 
 ## Releasing
-The workflow for releasing a new version of the library is as follows:
+The workflow for releasing a new version of the sdk is as follows:
 
 1. Commit all changes.
 2. Increment the [package](package.json) version. See [Version Management](#VersionManagement) below.
@@ -38,7 +38,7 @@ The workflow for releasing a new version of the library is as follows:
 6. Optional: update [sample apps](https://github.com/KinveyApps).
 
 ### Version Management
-Updating the library version should follow [Semantic Version 2.0.0](http://semver.org/):
+Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):
 
 * Major (x.0.0): when making incompatible API changes.
 * Minor (3.x.0): when adding functionality in a backwards-compatible manner.
