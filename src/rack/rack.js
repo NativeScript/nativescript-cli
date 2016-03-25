@@ -1,7 +1,6 @@
 import Promise from '../utils/promise';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
-import { HttpMiddleware } from './middleware/http2';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
 let sharedCacheRackInstance;
@@ -196,7 +195,6 @@ export class NetworkRack extends KinveyRack {
   constructor(name = 'Kinvey Network Rack') {
     super(name);
     this.use(new SerializeMiddleware());
-    this.use(new HttpMiddleware());
     this.use(new ParseMiddleware());
   }
 
