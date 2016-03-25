@@ -41,8 +41,8 @@ The workflow for releasing a new version of the library is as follows:
 Updating the library version should follow [Semantic Version 2.0.0](http://semver.org/):
 
 * Major (x.0.0): when making incompatible API changes.
-* Minor (1.x.0): when adding functionality in a backwards-compatible manner.
-* Patch (1.0.x): when making backwards-compatible bug fixes or enhancements.
+* Minor (3.x.0): when adding functionality in a backwards-compatible manner.
+* Patch (3.0.x): when making backwards-compatible bug fixes or enhancements.
 
 ## License
 
