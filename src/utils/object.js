@@ -34,7 +34,7 @@ export function use(nsInterface) {
   return function(adapter = {}) {
     forEach(nsInterface, methodName => {
       if (isFunction(adapter[methodName])) {
-        this[methodName] = () => {
+        this.prototype[methodName] = function() {
           return adapter[methodName].apply(this, arguments);
         };
       }
