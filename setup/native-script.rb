@@ -82,19 +82,42 @@ if !(`brew --version`.include? "git revision")
 end
 
 install("Java SE Development Kit", "Installing the Java SE Development Kit... This might take some time, please, be patient. (You will be prompted for your password)", 'brew cask install java', false, false)
-execute('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.profile', "Unable to set JAVA_HOME")
-
 install("Android SDK", "Installing Android SDK", 'brew install android-sdk')
-execute('echo "export ANDROID_HOME=/usr/local/opt/android-sdk" >> ~/.profile', "Unable to set ANDROID_HOME")
+
+unless ENV["ANDROID_HOME"]
+  require 'pathname'
+  # if android-sdk was installed through brew, there should be a symlink in /usr/local/opt/android-sdk pointing to the actual sdk
+  android_home = "/usr/local/opt/android-sdk"
+  unless Pathname.new(android_home).exist?
+    require 'mkmf'
+    # if there's no such symlink then try to find the `android-sdk` directory through the `android` executable
+    android_executable_environment_path = find_executable('android')
+    if android_executable_environment_path
+      android_home_joined_path = File.join(android_executable_environment_path, "..", "..")
+      android_home = Pathname.new(android_home_joined_path).realpath
+    end
+  end
+
+  ENV["ANDROID_HOME"] = android_home
+  execute('echo "export ANDROID_HOME=%s" >> ~/.profile' % ENV["ANDROID_HOME"], "Unable to set ANDROID_HOME")
+end
+
+unless ENV["JAVA_HOME"]
+  execute('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.profile', "Unable to set JAVA_HOME")
+end
 
 # the -p flag is set in order to ensure zero status code even if the directory exists
 execute("mkdir -p ~/.cocoapods", "There was a problem in creating ~/.cocoapods directory")
 install("CocoaPods", "Installing CocoaPods... This might take some time, please, be patient.", 'gem install cocoapods -V', true)
 
 puts "Configuring your system for Android development... This might take some time, please, be patient."
-# Note that multiple license acceptances may be required, hence the multiple y answers
+# Note that multiple license acceptances may be required, hence the multiple commands
 # the android tool will introduce a --accept-license option in subsequent releases
-execute("(for i in {1..5}; do echo y; sleep 4; done) | /usr/local/opt/android-sdk/tools/android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,extra-android-m2repository --all --no-ui",
-	"There seem to be some problems with the Android configuration")
+android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
+execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.2 --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", "There seem to be some problems with the Android configuration")
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile. Restart the terminal to use them."
