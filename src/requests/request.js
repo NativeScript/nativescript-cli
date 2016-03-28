@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { HttpMethod, AuthType } from '../enums';
 import { Device } from '../device';
 import { RequestProperties } from './properties';

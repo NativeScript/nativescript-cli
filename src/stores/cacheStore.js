@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { NetworkStore } from './networkstore';
 import { Response } from '../requests/response';
 import { AuthType, HttpMethod, StatusCode } from '../enums';

@@ -1,4 +1,3 @@
-import Promise from './utils/promise';
 import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { Command } from './command';

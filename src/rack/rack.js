@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
 import { ParseMiddleware } from './middleware/parse';

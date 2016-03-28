@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { CacheStore } from './cachestore';
 import { LocalRequest } from '../requests/local';
 import { Aggregation } from '../aggregation';

@@ -1,4 +1,3 @@
-import Promise from './utils/promise';
 import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';
@@ -842,26 +841,26 @@ export class User {
     return promise;
   }
 
-  refreshAuthToken(options = {}) {
-    const socialIdentity = this.data[socialIdentityAttribute];
-    const identity = socialIdentity.activeIdentity;
-    const token = socialIdentity[identity];
-    let promise;
+  // refreshAuthToken(options = {}) {
+  //   const socialIdentity = this.data[socialIdentityAttribute];
+  //   const identity = socialIdentity.activeIdentity;
+  //   const token = socialIdentity[identity];
+  //   let promise;
 
-    switch (identity) {
-      case MobileIdentityConnect.identity:
-        const mic = new MobileIdentityConnect(this.client);
-        promise = mic.refresh(token, options);
-        break;
-      default:
-        promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
-          `the ${identity} identity is not supported.`));
-    }
+  //   switch (identity) {
+  //     case MobileIdentityConnect.identity:
+  //       const mic = new MobileIdentityConnect(this.client);
+  //       promise = mic.refresh(token, options);
+  //       break;
+  //     default:
+  //       promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
+  //         `the ${identity} identity is not supported.`));
+  //   }
 
-    return promise.then(token => {
-      return this.connect(identity, token, options);
-    });
-  }
+  //   return promise.then(token => {
+  //     return this.connect(identity, token, options);
+  //   });
+  // }
 
   toJSON() {
     return this.data;

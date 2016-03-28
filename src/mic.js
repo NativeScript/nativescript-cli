@@ -1,4 +1,3 @@
-import Promise from './utils/promise';
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
@@ -199,37 +198,37 @@ export class MobileIdentityConnect {
     return promise;
   }
 
-  refresh(token, options) {
-    const clientId = this.client.appKey;
-    return this.refreshToken(clientId, token, options);
-  }
+  // refresh(token, options) {
+  //   const clientId = this.client.appKey;
+  //   return this.refreshToken(clientId, token, options);
+  // }
 
-  refreshToken(clientId, token, options = {}) {
-    const request = new NetworkRequest({
-      method: HttpMethod.POST,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: tokenPathname
-      }),
-      properties: options.properties,
-      data: {
-        grant_type: 'refresh_token',
-        client_id: clientId,
-        redirect_uri: token.redirect_uri,
-        refresh_token: token.refresh_token
-      }
-    });
-    request.automaticallyRefreshAuthToken = false;
+  // refreshToken(clientId, token, options = {}) {
+  //   const request = new NetworkRequest({
+  //     method: HttpMethod.POST,
+  //     headers: {
+  //       'Content-Type': 'application/x-www-form-urlencoded'
+  //     },
+  //     authType: AuthType.App,
+  //     url: url.format({
+  //       protocol: this.client.protocol,
+  //       host: this.client.host,
+  //       pathname: tokenPathname
+  //     }),
+  //     properties: options.properties,
+  //     data: {
+  //       grant_type: 'refresh_token',
+  //       client_id: clientId,
+  //       redirect_uri: token.redirect_uri,
+  //       refresh_token: token.refresh_token
+  //     }
+  //   });
+  //   request.automaticallyRefreshAuthToken = false;
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+  //   const promise = request.execute().then(response => {
+  //     return response.data;
+  //   });
 
-    return promise;
-  }
+  //   return promise;
+  // }
 }

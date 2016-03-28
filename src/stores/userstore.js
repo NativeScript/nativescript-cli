@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { KinveyError } from '../errors';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';

@@ -1,4 +1,3 @@
-import Promise from '../../../utils/promise';
 import { KinveyError, NotFoundError } from '../../../errors';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';

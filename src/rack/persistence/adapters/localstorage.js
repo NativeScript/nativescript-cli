@@ -1,4 +1,3 @@
-import Promise from '../../../utils/promise';
 import { NotFoundError } from '../../../errors';
 import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';

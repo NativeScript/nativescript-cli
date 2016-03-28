@@ -1,4 +1,3 @@
-import Promise from '../utils/promise';
 import { KinveyRequest } from './request';
 import { LocalRequest } from './local';
 import { NetworkRequest } from './network';
