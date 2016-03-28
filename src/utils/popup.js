@@ -31,4 +31,4 @@ export class Popup extends EventEmitter {
   }
 }
 
-Popup.prototype.use = use(['open', 'close', 'loadHandler', 'clickHandler', 'closeHandler']);
+Popup.use = use(['open', 'close', 'loadHandler', 'clickHandler', 'closeHandler']);

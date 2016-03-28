@@ -9,4 +9,4 @@ export class Device {
   }
 }
 
-Device.prototype.use = use(['toJSON']);
+Device.use = use(['toJSON']);
