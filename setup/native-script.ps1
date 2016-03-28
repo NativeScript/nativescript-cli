@@ -4,7 +4,7 @@
 # To run it inside a COMMAND PROMPT against the production branch (only one supported with self-elevation) use
 # @powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
 # To run it inside a WINDOWS POWERSHELL console against the production branch (only one supported with self-elevation) use
-# iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))
+# start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
 
 # Check if latest .NET framework installed is at least 4
 $dotNetVersions = Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -recurse | Get-ItemProperty -name Version,Release -EA 0 | Where { $_.PSChildName -match '^(?!S)\p{L}'} | Select Version
@@ -12,8 +12,8 @@ $latestDotNetVersion = $dotNetVersions.GetEnumerator() | Sort-Object Version | S
 $latestDotNetMajorNumber = $latestDotNetVersion.Version.Split(".")[0]
 if ($latestDotNetMajorNumber -lt 4) {
 	Write-Host -ForegroundColor Red "To run this script, you need .NET 4.0 or later installed"
-	if ((Read-Host "Do you want to open Microsoft Download Center (y/n)") -eq 'y') {
-		Start-Process -FilePath "https://www.microsoft.com/en-us/download/search.aspx?q=.net%20framework&p=0&r=10&t=&s=Relevancy~Descending"
+	if ((Read-Host "Do you want to open .NET Framework 4.6.1 download page (y/n)") -eq 'y') {
+		Start-Process -FilePath "http://go.microsoft.com/fwlink/?LinkId=671729"
 	}
 
 	exit 1
