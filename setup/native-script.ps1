@@ -71,16 +71,21 @@ Install "Google Chrome" "Installing Google Chrome (required to debug NativeScrip
 Install "Java Development Kit" "Installing Java Development Kit" "cinst jdk8 --force --yes"
 
 Install "Android SDK" "Installing Android SDK" "cinst android-sdk --force --yes"
-
-# setup android sdk
-echo yes | cmd /c "$env:localappdata\Android\android-sdk\tools\android" update sdk --filter "tools,platform-tools,android-23" --all --no-ui
-echo yes | cmd /c "$env:localappdata\Android\android-sdk\tools\android" update sdk --filter "build-tools-23.0.1,extra-android-m2repository" --all --no-ui
-
 # setup environment
 
 if (!$env:ANDROID_HOME) {
-	[Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:localappdata\Android\android-sdk", "User")
-	$env:ANDROID_HOME = "$env:localappdata\Android\android-sdk";
+	# in case the user has `android` in the PATH, use it as base for setting ANDROID_HOME
+	$androidExecutableEnvironmentPath = Get-Command android -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Definition
+	if ($androidExecutableEnvironmentPath -ne $null) {
+		$androidHomeJoinedPath = [io.path]::combine($androidExecutableEnvironmentPath, "..", "..")
+		$androidHome = Resolve-Path $androidHomeJoinedPath | Select-Object -ExpandProperty Path
+	}
+	else {
+		$androidHome = "$env:localappdata\Android\android-sdk"
+	}
+
+	$env:ANDROID_HOME = $androidHome;
+	[Environment]::SetEnvironmentVariable("ANDROID_HOME", "$env:ANDROID_HOME", "User")
 }
 
 if (!$env:JAVA_HOME) {
@@ -89,6 +94,17 @@ if (!$env:JAVA_HOME) {
 	[Environment]::SetEnvironmentVariable("JAVA_HOME", $javaHome, "User")
 	$env:JAVA_HOME = $javaHome;
 }
+
+# setup android sdk
+# following commands are separated in case of having to answer to license agreements
+# the android tool will introduce a --accept-license option in subsequent releases
+$androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "android")
+echo y | cmd /c "$androidExecutable" update sdk --filter "tools" --all --no-ui
+echo y | cmd /c "$androidExecutable" update sdk --filter "platform-tools" --all --no-ui
+echo y | cmd /c "$androidExecutable" update sdk --filter "android-23" --all --no-ui
+echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-23.0.2" --all --no-ui
+echo y | cmd /c "$androidExecutable" update sdk --filter "extra-android-m2repository" --all --no-ui
+
 
 Write-Host -ForegroundColor Green "This script has modified your environment. You need to log off and log back on for the changes to take effect."
 Pause
