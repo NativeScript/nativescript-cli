@@ -31,13 +31,12 @@ export class MobileIdentityConnect {
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
-    const device = new Device();
 
     const promise = Promise.resolve().then(() => {
-      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage && !device.isNode()) {
+      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
         // Step 1: Request a code
         return this.requestCodeWithPopup(clientId, redirectUri, options);
-      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI && device.isNode()) {
+      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
         // Step 1a: Request a temp login url
         return this.requestTempLoginUrl(clientId, redirectUri, options).then(url => {
           // Step 1b: Request a code
