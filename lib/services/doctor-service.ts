@@ -26,96 +26,118 @@ class DoctorService implements IDoctorService {
 		private $npm: INodePackageManager,
 		private $opener: IOpener,
 		private $prompter: IPrompter,
-		private $fs: IFileSystem) {	}
+		private $fs: IFileSystem,
+		private $versionsService: IVersionsService) { }
 
-	public printWarnings(configOptions?: { trackResult: boolean }): boolean {
-		let result = false;
-		let sysInfo = this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
+	public printWarnings(configOptions?: { trackResult: boolean }): IFuture<boolean> {
+		return (() => {
+			let result = false;
+			let sysInfo = this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
 
-		if (!sysInfo.adbVer) {
-			this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
-			this.$logger.out("For Android-related operations, the NativeScript CLI will use a built-in version of adb." + EOL
-			+ "To avoid possible issues with the native Android emulator, Genymotion or connected" + EOL
-			+ "Android devices, verify that you have installed the latest Android SDK and" + EOL
-			+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL);
+			if (!sysInfo.adbVer) {
+				this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
+				this.$logger.out("For Android-related operations, the NativeScript CLI will use a built-in version of adb." + EOL
+					+ "To avoid possible issues with the native Android emulator, Genymotion or connected" + EOL
+					+ "Android devices, verify that you have installed the latest Android SDK and" + EOL
+					+ "its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL);
 
-			this.printPackageManagerTip();
-			result = true;
-		}
-
-		if (!sysInfo.androidInstalled) {
-			this.$logger.warn("WARNING: The Android SDK is not installed or is not configured properly.");
-			this.$logger.out("You will not be able to build your projects for Android and run them in the native emulator." + EOL
-				+ "To be able to build for Android and run apps in the native emulator, verify that you have" + EOL
-				+ "installed the latest Android SDK and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
-			);
-
-			this.printPackageManagerTip();
-			result = true;
-		}
-
-		if (this.$hostInfo.isDarwin) {
-			if(!sysInfo.xcodeVer) {
-				this.$logger.warn("WARNING: Xcode is not installed or is not configured properly.");
-				this.$logger.out("You will not be able to build your projects for iOS or run them in the iOS Simulator." + EOL
-				+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + EOL);
+				this.printPackageManagerTip();
 				result = true;
 			}
 
-			if(!sysInfo.cocoapodVer) {
-				this.$logger.warn("WARNING: CocoaPods is not installed or is not configured properly.");
-				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ "To be able to build such projects, verify that you have installed CocoaPods.");
+			if (!sysInfo.androidInstalled) {
+				this.$logger.warn("WARNING: The Android SDK is not installed or is not configured properly.");
+				this.$logger.out("You will not be able to build your projects for Android and run them in the native emulator." + EOL
+					+ "To be able to build for Android and run apps in the native emulator, verify that you have" + EOL
+					+ "installed the latest Android SDK and its dependencies as described in http://developer.android.com/sdk/index.html#Requirements" + EOL
+				);
+
+				this.printPackageManagerTip();
 				result = true;
 			}
 
-			if (sysInfo.xcodeVer && sysInfo.cocoapodVer) {
-				let problemWithCocoaPods = this.verifyCocoaPods();
-				if (problemWithCocoaPods) {
-					this.$logger.warn("WARNING: There was a problem with CocoaPods");
-					this.$logger.out("Verify that CocoaPods are configured properly.");
+			if (this.$hostInfo.isDarwin) {
+				if (!sysInfo.xcodeVer) {
+					this.$logger.warn("WARNING: Xcode is not installed or is not configured properly.");
+					this.$logger.out("You will not be able to build your projects for iOS or run them in the iOS Simulator." + EOL
+						+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + EOL);
 					result = true;
+				}
+
+				if (!sysInfo.cocoapodVer) {
+					this.$logger.warn("WARNING: CocoaPods is not installed or is not configured properly.");
+					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
+						+ "To be able to build such projects, verify that you have installed CocoaPods.");
+					result = true;
+				}
+
+				if (sysInfo.xcodeVer && sysInfo.cocoapodVer) {
+					let problemWithCocoaPods = this.verifyCocoaPods();
+					if (problemWithCocoaPods) {
+						this.$logger.warn("WARNING: There was a problem with CocoaPods");
+						this.$logger.out("Verify that CocoaPods are configured properly.");
+						result = true;
+					}
+				}
+
+				if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) === null) {
+					this.$logger.warn(`WARNING: Your current CocoaPods version is not a valid semver string.`);
+					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
+						+ `To be able to build such projects, verify that you have installed a CocoaPods version which is a valid semver string and is at least ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
+					result = true;
+				}
+
+				if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) && semver.lt(sysInfo.cocoapodVer, DoctorService.MIN_SUPPORTED_POD_VERSION)) {
+					this.$logger.warn(`WARNING: Your current CocoaPods version is earlier than ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
+					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
+						+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
+					result = true;
+				}
+			} else {
+				this.$logger.out("NOTE: You can develop for iOS only on Mac OS X systems.");
+				this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
+			}
+
+			let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();
+			let javaVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion).wait();
+			let doctorResult = result || androidToolsIssues || javaVersionIssue;
+
+			if (!configOptions || configOptions.trackResult) {
+				this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct").wait();
+			}
+
+			if (doctorResult) {
+				this.$logger.info("There seem to be issues with your configuration.");
+				if (this.$hostInfo.isDarwin) {
+					this.promptForHelp(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []).wait();
+				} else if (this.$hostInfo.isWindows) {
+					this.promptForHelp(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments).wait();
+				} else {
+					this.promptForDocs(DoctorService.LinuxSetupDocsLink).wait();
 				}
 			}
 
-			if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) === null) {
-				this.$logger.warn(`WARNING: CocoaPods version is not a valid semver version.`);
-				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
-				result = true;
+			let versionsInformation: IVersionInformation[] = [];
+			try {
+				versionsInformation = this.$versionsService.getComponentsForUpdate().wait();
+				this.printVersionsInformation(versionsInformation);
+			} catch (err) {
+				this.$logger.error("Cannot get the latest versions information from npm. Please try again later.");
 			}
 
-			if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) && semver.lt(sysInfo.cocoapodVer, DoctorService.MIN_SUPPORTED_POD_VERSION)) {
-				this.$logger.warn(`WARNING: CocoaPods version is lower than ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
-				this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-					+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
-				result = true;
-			}
+			return doctorResult;
+		}).future<boolean>()();
+	}
+
+	private printVersionsInformation(versionsInformation: IVersionInformation[]) {
+		if (versionsInformation && versionsInformation.length) {
+			let table: any = this.$versionsService.createTableWithVersionsInformation(versionsInformation);
+
+			this.$logger.warn("Updates available");
+			this.$logger.out(table.toString() + EOL);
 		} else {
-			this.$logger.out("NOTE: You can develop for iOS only on Mac OS X systems.");
-			this.$logger.out("To be able to work with iOS devices and projects, you need Mac OS X Mavericks or later." + EOL);
+			this.$logger.out("Your components are up-to-date." + EOL);
 		}
-
-		let androidToolsIssues = this.$androidToolsInfo.validateInfo().wait();
-		let javaVersionIssue = this.$androidToolsInfo.validateJavacVersion(sysInfo.javacVersion).wait();
-		let doctorResult = result || androidToolsIssues || javaVersionIssue;
-
-		if(!configOptions || configOptions.trackResult) {
-			this.$analyticsService.track("DoctorEnvironmentSetup", doctorResult ? "incorrect" : "correct").wait();
-		}
-
-		if(doctorResult) {
-			this.$logger.info("There seem to be issues with your configuration.");
-			if (this.$hostInfo.isDarwin) {
-				this.promptForHelp(DoctorService.DarwinSetupDocsLink, DoctorService.DarwinSetupScriptLocation, []).wait();
-			} else if (this.$hostInfo.isWindows) {
-				this.promptForHelp(DoctorService.WindowsSetupDocsLink, DoctorService.WindowsSetupScriptExecutable, DoctorService.WindowsSetupScriptArguments).wait();
-			} else {
-				this.promptForDocs(DoctorService.LinuxSetupDocsLink).wait();
-			}
-		}
-
-		return doctorResult;
 	}
 
 	private promptForDocs(link: string): IFuture<void> {
@@ -165,17 +187,17 @@ class DoctorService implements IDoctorService {
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
 			spinner.start();
 			let future = this.$childProcess.spawnFromEvent(
-				this.$config.USE_POD_SANDBOX ? "sandbox-pod": "pod",
+				this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod",
 				["install"],
 				"exit",
-				{stdio: "inherit", cwd: iosDir},
+				{ stdio: "inherit", cwd: iosDir },
 				{ throwError: true }
-				);
+			);
 
 			this.$progressIndicator.showProgressIndicator(future, 5000).wait();
 
 			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
-		} catch(err) {
+		} catch (err) {
 			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;
 		} finally {
