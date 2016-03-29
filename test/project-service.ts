@@ -6,6 +6,7 @@ import * as stubs from "./stubs";
 import * as constants from "./../lib/constants";
 import {ChildProcess} from "../lib/common/child-process";
 import * as ProjectServiceLib from "../lib/services/project-service";
+import {ProjectNameService} from "../lib/services/project-name-service";
 import * as ProjectDataServiceLib from "../lib/services/project-data-service";
 import * as ProjectDataLib from "../lib/project-data";
 import * as ProjectHelperLib from "../lib/common/project-helper";
@@ -21,10 +22,15 @@ import {assert} from "chai";
 import {Options} from "../lib/options";
 import {HostInfo} from "../lib/common/host-info";
 import {ProjectTemplatesService} from "../lib/services/project-templates-service";
+import Future = require("fibers/future");
 
 let mockProjectNameValidator = {
-	validate: () => { return true; }
+	validate: () => true
 };
+
+let dummyString: string = "dummyString";
+let hasPromptedForString = false;
+let originalIsInteractive = helpers.isInteractive;
 
 temp.track();
 
@@ -121,6 +127,7 @@ class ProjectIntegrationTest {
 		this.testInjector.register("errors", stubs.ErrorsStub);
 		this.testInjector.register('logger', stubs.LoggerStub);
 		this.testInjector.register("projectService", ProjectServiceLib.ProjectService);
+		this.testInjector.register("projectNameService", ProjectNameService);
 		this.testInjector.register("projectHelper", ProjectHelperLib.ProjectHelper);
 		this.testInjector.register("projectTemplatesService", ProjectTemplatesService);
 		this.testInjector.register("projectNameValidator", mockProjectNameValidator);
@@ -136,6 +143,15 @@ class ProjectIntegrationTest {
 
 		this.testInjector.register("options", Options);
 		this.testInjector.register("hostInfo", HostInfo);
+		this.testInjector.register("prompter", {
+			confirm: (message: string): IFuture<boolean> => Future.fromResult(true),
+			getString: (message: string): IFuture<string> => {
+				return (() => {
+					hasPromptedForString = true;
+					return dummyString;
+				}).future<string>()();
+			}
+		});
 	}
 }
 
@@ -299,6 +315,115 @@ describe("Project Service Tests", () => {
 			projectIntegrationTest.createProject(projectName).wait();
 			projectIntegrationTest.assertProject(tempFolder, projectName, options.appid).wait();
 		});
+
+		describe("project name validation tests", () => {
+			let validProjectName = "valid";
+			let invalidProjectName = "1invalid";
+			let projectIntegrationTest: ProjectIntegrationTest;
+			let tempFolder: string;
+			let options: IOptions;
+			let prompter: IPrompter;
+
+			beforeEach(() => {
+				hasPromptedForString = false;
+				helpers.isInteractive = () => true;
+				projectIntegrationTest = new ProjectIntegrationTest();
+				tempFolder = temp.mkdirSync("project");
+				options = projectIntegrationTest.testInjector.resolve("options");
+				prompter = projectIntegrationTest.testInjector.resolve("prompter");
+			});
+
+			afterEach(() => {
+				helpers.isInteractive = originalIsInteractive;
+			});
+
+			it("creates project when is interactive and incorrect name is specified and the --force option is set", () => {
+				let projectName = invalidProjectName;
+
+				options.force = true;
+				options.path = tempFolder;
+				options.copyFrom = projectIntegrationTest.getNpmPackagePath("tns-template-hello-world").wait();
+
+				projectIntegrationTest.createProject(projectName).wait();
+				projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`).wait();
+			});
+
+			it("creates project when is interactive and incorrect name is specified and the user confirms to use the incorrect name", () => {
+				let projectName = invalidProjectName;
+				prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(true);
+
+				options.path = tempFolder;
+				options.copyFrom = projectIntegrationTest.getNpmPackagePath("tns-template-hello-world").wait();
+
+				projectIntegrationTest.createProject(projectName).wait();
+				projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`).wait();
+			});
+
+			it("prompts for new name when is interactive and incorrect name is specified and the user does not confirm to use the incorrect name", () => {
+				let projectName = invalidProjectName;
+
+				prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(false);
+
+				options.path = tempFolder;
+
+				projectIntegrationTest.createProject(projectName).wait();
+				assert.isTrue(hasPromptedForString);
+			});
+
+			it("creates project when is interactive and incorrect name is specified and the user does not confirm to use the incorrect name and enters incorrect name again several times and then enters correct name", () => {
+				let projectName = invalidProjectName;
+
+				prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(false);
+
+				let incorrectInputsLimit = 5;
+				let incorrectInputsCount = 0;
+
+				prompter.getString = (message: string): IFuture<string> => {
+					return (() => {
+						if (incorrectInputsCount < incorrectInputsLimit) {
+							incorrectInputsCount++;
+						}
+						else {
+							hasPromptedForString = true;
+
+							return validProjectName;
+						}
+
+						return projectName;
+					}).future<string>()();
+				};
+
+				options.path = tempFolder;
+
+				projectIntegrationTest.createProject(projectName).wait();
+				assert.isTrue(hasPromptedForString);
+			});
+
+			it("does not create project when is not interactive and incorrect name is specified", () => {
+				let projectName = invalidProjectName;
+				helpers.isInteractive = () => false;
+
+				options.force = false;
+				options.path = tempFolder;
+
+				assert.throws(() => {
+					projectIntegrationTest.createProject(projectName).wait();
+				});
+			});
+
+			it("creates project when is not interactive and incorrect name is specified and the --force option is set", () => {
+				let projectName = invalidProjectName;
+				helpers.isInteractive = () => false;
+
+				options.force = true;
+				options.path = tempFolder;
+
+				projectIntegrationTest.createProject(projectName).wait();
+				options.copyFrom = projectIntegrationTest.getNpmPackagePath("tns-template-hello-world").wait();
+				projectIntegrationTest.assertProject(tempFolder, projectName, `org.nativescript.${projectName}`).wait();
+			});
+		});
+
 	});
 });
 

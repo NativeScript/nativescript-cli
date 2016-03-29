@@ -14,7 +14,7 @@ export class ProjectService implements IProjectService {
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
 		private $projectHelper: IProjectHelper,
-		private $projectNameValidator: IProjectNameValidator,
+		private $projectNameService: IProjectNameService,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $options: IOptions) { }
 
@@ -23,7 +23,8 @@ export class ProjectService implements IProjectService {
 			if (!projectName) {
 				this.$errors.fail("You must specify <App name> when creating a new project.");
 			}
-			this.$projectNameValidator.validate(projectName);
+
+			projectName = this.$projectNameService.ensureValidName(projectName, {force: this.$options.force}).wait();
 
 			let projectId = this.$options.appid || this.$projectHelper.generateDefaultAppId(projectName, constants.DEFAULT_APP_IDENTIFIER_PREFIX);
 
