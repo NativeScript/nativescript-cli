@@ -1,18 +1,18 @@
-import { KinveyError } from 'kinvey-sdk-core/src/errors';
+import { KinveyError } from 'kinvey-javascript-sdk-core/src/errors';
 import { EventEmitter } from 'events';
-import DataStore from 'kinvey-sdk-core/src/stores/dataStore';
-import { HttpMethod, DataStoreType } from 'kinvey-sdk-core/src/enums';
-import User from 'kinvey-sdk-core/src/user';
-import Client from 'kinvey-sdk-core/src/client';
-import Query from 'kinvey-sdk-core/src/query';
-import Device from 'kinvey-sdk-core/src/device';
+import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/src/stores/dataStore';
+import { HttpMethod } from 'kinvey-javascript-sdk-core/src/enums';
+import { User } from 'kinvey-javascript-sdk-core/src/user';
+import { Client } from 'kinvey-javascript-sdk-core/src/client';
+import { Query } from 'kinvey-javascript-sdk-core/src/query';
+import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollectionName = process.env.KINVEY_DEVICE_COLLECTION_NAME || 'kinvey_device';
 const emitter = new EventEmitter();
 
-const Push = {
+export const Push = {
   listeners() {
     return emitter.listeners(notificationEvent);
   },
@@ -34,11 +34,9 @@ const Push = {
   },
 
   init(options = {}) {
-    const device = new Device();
-
-    if (device.platform.name !== 'android' || device.platform.name !== 'ios') {
-      return Promise.reject(new KinveyError('Kinvey currently does not support ' +
-        `push notifications on ${device.platform.name}.`));
+    if (!isiOS() || !isAndroid()) {
+      return Promise.reject(new KinveyError('Kinvey currently only supports ' +
+        'push notifications on iOS and Android platforms.'));
     }
 
     options = assign({
@@ -86,9 +84,8 @@ const Push = {
           throw new KinveyError('Device is already registered. To force registration ' +
             'please set options.force to true.');
         }
-
-        return User.getActiveUser();
-      }).then(user => {
+      }).then(() => {
+        const user = User.getActiveUser();
         const client = Client.sharedInstance();
         return client.executeNetworkRequest({
           method: HttpMethod.POST,
@@ -96,8 +93,8 @@ const Push = {
           properties: options.properties,
           auth: user ? client.sessionAuth() : client.masterAuth(),
           data: {
-            platform: device.platform.name,
-            framework: device.isCordova() ? 'phonegap' : 'titanium',
+            platform: global.device.platform,
+            framework: 'phonegap',
             deviceId: deviceId,
             userId: user ? null : options.userId
           },
@@ -110,12 +107,9 @@ const Push = {
   },
 
   unregister(options = {}) {
-    const device = new Device();
-    const platform = device.platform;
-
-    if (platform.name !== 'android' || platform.name !== 'ios') {
-      return Promise.reject(new KinveyError(`Kinvey currently does not support ' +
-        'push notifications on ${platform.name}.`));
+    if (!isiOS() || !isAndroid()) {
+      return Promise.reject(new KinveyError('Kinvey currently only supports ' +
+        'push notifications on iOS and Android platforms.'));
     }
 
     const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
@@ -132,21 +126,20 @@ const Push = {
         throw new KinveyError('This device has not been registered.');
       }
 
-      return User.getActiveUser().then(user => {
-        const client = Client.sharedInstance();
-        return client.executeNetworkRequest({
-          method: HttpMethod.POST,
-          properties: options.properties,
-          auth: user ? client.sessionAuth() : client.masterAuth(),
-          pathname: `/${pushNamespace}/${client.appKey}/unregister-device`,
-          data: {
-            platform: platform.name,
-            framework: device.isCordova() ? 'phonegap' : 'titanium',
-            deviceId: deviceId,
-            userId: user ? null : options.userId
-          },
-          timeout: options.timeout
-        });
+      const user = User.getActiveUser();
+      const client = Client.sharedInstance();
+      return client.executeNetworkRequest({
+        method: HttpMethod.POST,
+        properties: options.properties,
+        auth: user ? client.sessionAuth() : client.masterAuth(),
+        pathname: `/${pushNamespace}/${client.appKey}/unregister-device`,
+        data: {
+          platform: global.device.platform,
+          framework: 'phonegap',
+          deviceId: deviceId,
+          userId: user ? null : options.userId
+        },
+        timeout: options.timeout
       }).then(response => store.removeById(deviceId).then(() => response.data));
     });
 
