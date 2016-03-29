@@ -1,5 +1,5 @@
 {
-  "name": "kinvey-sdk-core",
+  "name": "kinvey-javascript-sdk-core",
   "version": "3.0.0-beta.12",
   "description": "Kinvey JavaScript SDK Core",
   "main": "src/kinvey.js",
