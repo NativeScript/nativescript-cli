@@ -1,7 +1,6 @@
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
-import { Device } from './device';
 import { Client } from './client';
 import { Popup } from './utils/popup';
 import path from 'path';
@@ -116,8 +115,11 @@ export class MobileIdentityConnect {
       return popup.open();
     }).then((popup) => {
       return new Promise((resolve, reject) => {
+        let redirected = false;
+
         function loadHandler(loadedUrl) {
           if (loadedUrl.indexOf(redirectUri) === 0) {
+            redirected = true;
             popup.removeAllListeners();
             popup.close();
             resolve(url.parse(loadedUrl, true).query.code);
@@ -126,11 +128,14 @@ export class MobileIdentityConnect {
 
         function closeHandler() {
           popup.removeAllListeners();
-          reject(new Error('Login has been cancelled.'));
+
+          if (!redirected) {
+            reject(new Error('Login has been cancelled.'));
+          }
         }
 
-        popup.on('load', loadHandler);
-        popup.on('close', closeHandler);
+        popup.on('loaded', loadHandler);
+        popup.on('closed', closeHandler);
       });
     });
 

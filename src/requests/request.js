@@ -1,5 +1,5 @@
 import { HttpMethod, AuthType } from '../enums';
-import { Device } from '../device';
+import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
 import { NoResponseError } from '../errors';
 import { KinveyRack } from '../rack/rack';
