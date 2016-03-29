@@ -1,4 +1,4 @@
-import { use } from './utils/object';
+import { use } from './object';
 
 /**
  * @private
