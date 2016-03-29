@@ -114,8 +114,8 @@ puts "Configuring your system for Android development... This might take some ti
 # Note that multiple license acceptances may be required, hence the multiple commands
 # the android tool will introduce a --accept-license option in subsequent releases
 android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
-execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", "There seem to be some problems with the Android configuration")
 execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", "There seem to be some problems with the Android configuration")
 execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", "There seem to be some problems with the Android configuration")
 execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.2 --all --no-ui", "There seem to be some problems with the Android configuration")
 execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", "There seem to be some problems with the Android configuration")
