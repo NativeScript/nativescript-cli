@@ -35,8 +35,6 @@ export class LocalRequest extends KinveyRequest {
       }
 
       return response;
-    }).catch(error => {
-      throw error;
     });
 
     return promise;

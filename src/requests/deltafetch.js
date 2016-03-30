@@ -33,10 +33,6 @@ export class DeltaFetchRequest extends KinveyRequest {
         client: this.client
       });
       return localRequest.execute();
-    }).then(response => {
-      if (!response.isSuccess()) {
-        throw response.error;
-      }
     }).catch(error => {
       if (error instanceof NotFoundError) {
         return new Response({
