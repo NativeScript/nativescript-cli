@@ -15,6 +15,7 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
+import differenceBy from 'lodash/differenceBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
@@ -97,9 +98,9 @@ class CacheStore extends NetworkStore {
         client: this.client
       });
       return request.execute();
-    }).then(response => {
+    }).then(cacheResponse => {
       const result = {
-        cache: response.data
+        cache: cacheResponse.data
       };
 
       result.networkPromise = this.syncCount().then(count => {
@@ -136,8 +137,9 @@ class CacheStore extends NetworkStore {
         }
 
         return super.find(query, options);
-      }).then(data => {
-        const removeEntityIds = Object.keys(keyBy(data, idAttribute));
+      }).then(networkEntities => {
+        const removedEntities = differenceBy(networkEntities, cacheResponse.data, idAttribute);
+        const removeEntityIds = Object.keys(keyBy(removedEntities, idAttribute));
         const removeQuery = new Query();
         removeQuery.contains(idAttribute, removeEntityIds);
 
@@ -154,7 +156,7 @@ class CacheStore extends NetworkStore {
           client: this.client
         });
         return request.execute().then(() => {
-          return this._cache(data);
+          return this._cache(networkEntities);
         });
       });
 
