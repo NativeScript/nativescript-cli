@@ -1021,6 +1021,7 @@ class CacheStore extends NetworkStore {
         pathname: this._pathname
       }),
       properties: options.properties,
+      data: entities,
       timeout: options.timeout,
       client: this.client
     });
