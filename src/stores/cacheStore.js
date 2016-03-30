@@ -138,7 +138,7 @@ class CacheStore extends NetworkStore {
 
         return super.find(query, options);
       }).then(networkEntities => {
-        const removedEntities = differenceBy(networkEntities, cacheResponse.data, idAttribute);
+        const removedEntities = differenceBy(cacheResponse.data, networkEntities, idAttribute);
         const removeEntityIds = Object.keys(keyBy(removedEntities, idAttribute));
         const removeQuery = new Query();
         removeQuery.contains(idAttribute, removeEntityIds);
