@@ -246,7 +246,7 @@ export class SyncStore extends CacheStore {
     }
 
     const promise = request.execute().then(response => {
-      return this._updateSync(response.data, options).then(() => {
+      return this._sync(response.data, options).then(() => {
         return response.data;
       });
     });
@@ -294,7 +294,7 @@ export class SyncStore extends CacheStore {
     });
 
     const promise = request.execute().then(response => {
-      return this._updateSync(response.data.entities, options).then(() => {
+      return this._sync(response.data.entities, options).then(() => {
         return response.data;
       });
     });
@@ -340,7 +340,7 @@ export class SyncStore extends CacheStore {
     });
 
     const promise = request.execute().then(response => {
-      return this._updateSync(response.data.entities, options).then(() => {
+      return this._sync(response.data.entities, options).then(() => {
         return response.data;
       });
     });
