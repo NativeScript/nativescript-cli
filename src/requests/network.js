@@ -1,7 +1,8 @@
 import { KinveyRequest } from './request';
 import { NetworkRack } from '../rack/rack';
-import { InvalidCredentialsError } from '../errors';
+import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { HttpMethod, AuthType } from '../enums';
+import { Response } from './response';
 import url from 'url';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
@@ -19,7 +20,29 @@ export class NetworkRequest extends KinveyRequest {
   }
 
   execute() {
-    const promise = super.execute().catch(error => {
+    const promise = super.execute().then(() => {
+      return this.rack.execute(this);
+    }).then(response => {
+      if (!response) {
+        throw new NoResponseError();
+      }
+
+      if (!(response instanceof Response)) {
+        return new Response({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
+      }
+
+      return response;
+    }).then(response => {
+      if (!response.isSuccess()) {
+        throw response.error;
+      }
+
+      return response;
+    }).catch(error => {
       if (error instanceof InvalidCredentialsError && this.automaticallyRefreshAuthToken) {
         this.automaticallyRefreshAuthToken = false;
         const activeSocialIdentity = this.client.getActiveSocialIdentity();
@@ -99,6 +122,13 @@ export class NetworkRequest extends KinveyRequest {
       throw error;
     });
 
+    return promise;
+  }
+
+  cancel() {
+    const promise = super.cancel().then(() => {
+      return this.rack.cancel();
+    });
     return promise;
   }
 }

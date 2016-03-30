@@ -473,37 +473,13 @@ export class KinveyRequest extends Request {
       this.addHeader(authorizationHeader);
     }
 
-    const promise = super.execute().then(() => {
-      return this.rack.execute(this);
-    }).then(response => {
-      if (!response) {
-        throw new NoResponseError();
-      }
-
-      if (!(response instanceof Response)) {
-        return new Response({
-          statusCode: response.statusCode,
-          headers: response.headers,
-          data: response.data
-        });
-      }
-
-      return response;
-    }).then(response => {
-      if (!response.isSuccess()) {
-        throw response.error;
-      }
-
-      return response;
-    }).catch(error => {
-      throw error;
-    });
-
+    const promise = super.execute();
     return promise;
   }
 
   cancel() {
-    this.rack.cancel();
+    const promise = super.cancel();
+    return promise;
   }
 
   toJSON() {
