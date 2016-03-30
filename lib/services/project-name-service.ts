@@ -15,16 +15,25 @@ export class ProjectNameService implements IProjectNameService {
 			}
 
 			if (!this.$projectNameValidator.validate(projectName)) {
-				return this.promptForNewName(projectName, validateOptions).wait();
+				return this.promptForNewName("The project name is invalid.", projectName, validateOptions).wait();
 			}
 
+			let userCanInteract = isInteractive();
+
 			if (!this.checkIfNameStartsWithLetter(projectName)) {
-				if (!isInteractive()) {
+				if (!userCanInteract) {
 					this.$errors.fail("The project name does not start with letter and will fail to build for Android. If You want to create project with this name add --force to the create command.");
-					return;
 				}
 
-				return this.promptForNewName(projectName, validateOptions).wait();
+				return this.promptForNewName("The project name does not start with letter and will fail to build for Android.", projectName, validateOptions).wait();
+			}
+
+			if (projectName.toUpperCase() === "APP") {
+				if (!userCanInteract) {
+					this.$errors.fail("You cannot build applications named 'app' in Xcode. Consider creating a project with different name. If You want to create project with this name add --force to the create command.");
+				}
+
+				return this.promptForNewName("You cannot build applications named 'app' in Xcode. Consider creating a project with different name.", projectName, validateOptions).wait();
 			}
 
 			return projectName;
@@ -36,9 +45,9 @@ export class ProjectNameService implements IProjectNameService {
 		return startsWithLetterExpression.test(projectName);
 	}
 
-	private promptForNewName(projectName: string, validateOptions?: { force: boolean }): IFuture<string> {
+	private promptForNewName(warningMessage: string, projectName: string, validateOptions?: { force: boolean }): IFuture<string> {
 		return (() => {
-			if (this.promptForForceNameConfirm().wait()) {
+			if (this.promptForForceNameConfirm(warningMessage).wait()) {
 				return projectName;
 			}
 
@@ -47,9 +56,9 @@ export class ProjectNameService implements IProjectNameService {
 		}).future<string>()();
 	}
 
-	private promptForForceNameConfirm(): IFuture<boolean> {
+	private promptForForceNameConfirm(warningMessage: string): IFuture<boolean> {
 		return (() => {
-			this.$logger.warn("The project name does not start with letter and will fail to build for Android.");
+			this.$logger.warn(warningMessage);
 
 			return this.$prompter.confirm("Do you want to create the project with this name?").wait();
 		}).future<boolean>()();

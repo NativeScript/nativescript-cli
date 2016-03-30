@@ -4,6 +4,7 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
+import { StringParameterBuilder } from "../lib/common/command-params";
 import * as constants from "../lib/constants";
 import {assert} from "chai";
 
@@ -40,6 +41,7 @@ function createTestInjector() {
 		template: undefined
 	});
 	testInjector.register("createCommand", CreateProjectCommand);
+	testInjector.register("stringParameterBuilder", StringParameterBuilder);
 
 	return testInjector;
 }

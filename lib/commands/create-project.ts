@@ -3,33 +3,11 @@
 
 import * as constants from "../constants";
 
-export class ProjectCommandParameter implements ICommandParameter {
-	constructor(private $errors: IErrors,
-		private $logger: ILogger,
-		private $projectNameValidator: IProjectNameValidator) { }
-
-	mandatory = true;
-	validate(value: string): IFuture<boolean> {
-		return (() => {
-			if(!value) {
-				this.$errors.fail("You must specify <App name> when creating a new project.");
-			}
-
-			if (value.toUpperCase() === "APP") {
-				this.$logger.warn("You cannot build applications named 'app' in Xcode. Consider creating a project with different name.");
-			}
-
-			return this.$projectNameValidator.validate(value);
-		}).future<boolean>()();
-	}
-}
-
 export class CreateProjectCommand implements ICommand {
 	constructor(private $projectService: IProjectService,
 		private $errors: IErrors,
-		private $logger: ILogger,
-		private $projectNameValidator: IProjectNameValidator,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $stringParameterBuilder: IStringParameterBuilder) { }
 
 	public enableHooks = false;
 
@@ -45,6 +23,7 @@ export class CreateProjectCommand implements ICommand {
 		}).future<void>()();
 	}
 
-	allowedParameters = [new ProjectCommandParameter(this.$errors, this.$logger, this.$projectNameValidator) ];
+	public allowedParameters: ICommandParameter[] = [this.$stringParameterBuilder.createMandatoryParameter("Project name cannot be empty.")];
 }
+
 $injector.registerCommand("create", CreateProjectCommand);
