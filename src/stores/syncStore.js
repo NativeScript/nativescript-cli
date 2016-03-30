@@ -374,7 +374,7 @@ export class SyncStore extends CacheStore {
 
       return super.find(query, options);
     }).then(result => {
-      return result.network;
+      return result.networkPromise;
     });
 
     return promise;
