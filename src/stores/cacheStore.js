@@ -127,7 +127,8 @@ class CacheStore extends NetworkStore {
             }),
             properties: options.properties,
             query: query,
-            timeout: options.timeout
+            timeout: options.timeout,
+            client: this.client
           });
           return request.execute().then(response => {
             return response.data;
@@ -136,7 +137,25 @@ class CacheStore extends NetworkStore {
 
         return super.find(query, options);
       }).then(data => {
-        return this._cache(data);
+        const removeEntityIds = Object.keys(keyBy(data, idAttribute));
+        const removeQuery = new Query();
+        removeQuery.contains(idAttribute, removeEntityIds);
+
+        const request = new LocalRequest({
+          method: HttpMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this._pathname
+          }),
+          properties: options.properties,
+          query: removeQuery,
+          timeout: options.timeout,
+          client: this.client
+        });
+        return request.execute().then(() => {
+          return this._cache(data);
+        });
       });
 
       return result;
