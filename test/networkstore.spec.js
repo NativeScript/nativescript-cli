@@ -1,7 +1,7 @@
-import { UserHelper } from '../utils/spec';
-import { NetworkStore } from './networkstore';
-import { KinveyError } from '../errors';
-import fetchMock from 'fetch-mock';
+import { UserHelper } from './helper';
+import { NetworkStore } from '../src/stores/networkstore';
+import { KinveyError } from '../src/errors';
+import nock from 'nock';
 import chai from 'chai';
 const expect = chai.expect;
 
@@ -42,17 +42,16 @@ describe('NetworkStore', function() {
 
     it('should return an empty array when the collection does not contain any entities', function() {
       const reply = [];
-      fetchMock.mock('^https://baas.kinvey.com', 'GET', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: reply
-      });
+      nock(this.client.baseUrl)
+        .get(this.store._pathname)
+        .query(true)
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
 
       return this.store.find().then(entities => {
         expect(entities).to.be.an('array');
         expect(entities).to.have.length(0);
-        fetchMock.restore();
       });
     });
 

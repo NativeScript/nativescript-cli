@@ -1,4 +1,4 @@
-import { nested, isDefined } from './object';
+import { nested, isDefined } from '../src/utils/object';
 import chai from 'chai';
 const expect = chai.expect;
 

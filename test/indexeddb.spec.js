@@ -1,6 +1,6 @@
-import { IndexedDB } from './indexeddb';
-import { KinveyError, NotFoundError } from '../../../errors';
-import { randomString } from '../../../utils/string';
+import { IndexedDB } from '../src/rack/persistence/adapters/indexeddb';
+import { KinveyError, NotFoundError } from '../src/errors';
+import { randomString } from '../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import chai from 'chai';
