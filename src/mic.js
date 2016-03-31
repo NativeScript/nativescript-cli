@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';

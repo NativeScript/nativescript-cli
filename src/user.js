@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';

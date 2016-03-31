@@ -1,8 +1,10 @@
+import Promise from 'babybird';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
 import findIndex from 'lodash/findIndex';
+import reduce from 'lodash/reduce';
 let sharedCacheRackInstance;
 let sharedNetworkRackInstance;
 
@@ -111,28 +113,11 @@ export class Rack extends KinveyMiddleware {
       return Promise.reject(new Error('Request is null. Please provide a valid request.'));
     }
 
-    if (this.middlewares.length > 0) {
-      return this._execute(0, this.middlewares, request);
-    }
-
-    return Promise.resolve();
-  }
-
-  _execute(index, middlewares, request) {
-    if (index < -1 || index >= middlewares.length) {
-      throw new Error(`Index ${index} is out of bounds.`);
-    }
-
-    const middleware = middlewares[index];
-    return middleware.handle(request).then(response => {
-      index = index + 1;
-
-      if (index < middlewares.length) {
-        return this._execute(index, middlewares, response);
-      }
-
-      return response;
-    });
+    return reduce(this.middlewares, (promise, middleware) => {
+      return promise.then(request => {
+        return middleware.handle(request);
+      });
+    }, Promise.resolve(request));
   }
 
   cancel() {

@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { NotFoundError } from '../../../errors';
 import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';

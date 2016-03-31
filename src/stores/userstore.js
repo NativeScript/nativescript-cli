@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { KinveyError } from '../errors';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';

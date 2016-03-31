@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { DataStore } from './stores/datastore';
 import { Query } from './query';
 import { DataStoreType } from './enums';

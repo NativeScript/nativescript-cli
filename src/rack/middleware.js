@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { AsciiTree } from './asciiTree';
 
 /**
@@ -41,7 +42,7 @@ export class KinveyMiddleware extends Middleware {
         return reject(new Error('Request is null. Please provide a valid request.', request));
       }
 
-      return resolve();
+      return resolve(request);
     });
   }
 }

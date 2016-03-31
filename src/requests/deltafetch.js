@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { KinveyRequest } from './request';
 import { LocalRequest } from './local';
 import { NetworkRequest } from './network';

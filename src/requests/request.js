@@ -1,9 +1,8 @@
+import Promise from 'babybird';
 import { HttpMethod, AuthType } from '../enums';
 import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
-import { NoResponseError } from '../errors';
 import { KinveyRack } from '../rack/rack';
-import { Response } from './response';
 import { Client } from '../client';
 import { byteCount } from '../utils/string';
 import qs from 'qs';
@@ -281,9 +280,9 @@ export class Request {
     this.executing = Promise.resolve().then(response => {
       this.executing = false;
       return response;
-    }).catch(err => {
+    }).catch(error => {
       this.executing = false;
-      throw err;
+      throw error;
     });
 
     return this.executing;

@@ -1,5 +1,6 @@
 import { KinveyBenchmark } from './benchmark';
 import { DataStore, DataStoreType } from '../src/stores/datastore';
+import books10kJSON from './json/books10k.json';
 import LegacyKinvey from 'kinvey';
 import nock from 'nock';
 
@@ -12,7 +13,7 @@ export class NetworkStoreBenchmark extends KinveyBenchmark {
         nock(this.client.baseUrl)
           .get(store._pathname)
           .query(true)
-          .reply(200, [], {
+          .reply(200, books10kJSON, {
             'content-type': 'application/json'
           });
 
@@ -32,7 +33,7 @@ export class NetworkStoreBenchmark extends KinveyBenchmark {
             return true;
           })
           .query(true)
-          .reply(200, [], {
+          .reply(200, books10kJSON, {
             'content-type': 'application/json'
           });
 

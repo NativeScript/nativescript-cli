@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { NetworkStore } from './networkstore';
 import { NetworkRequest } from '../requests/network';
 import { AuthType, HttpMethod } from '../enums';

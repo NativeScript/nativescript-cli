@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { Command } from './command';

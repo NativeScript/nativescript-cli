@@ -1,3 +1,4 @@
+import Promise from 'babybird';
 import { KinveyError, NotFoundError } from '../../../errors';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
