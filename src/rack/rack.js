@@ -111,7 +111,11 @@ export class Rack extends KinveyMiddleware {
       return Promise.reject(new Error('Request is null. Please provide a valid request.'));
     }
 
-    return this._execute(0, this.middlewares, request);
+    if (this.middlewares.length > 0) {
+      return this._execute(0, this.middlewares, request);
+    }
+
+    return Promise.resolve();
   }
 
   _execute(index, middlewares, request) {

@@ -105,8 +105,8 @@ export class NetworkStore {
 
     promise.then(response => {
       Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
+    }).catch(error => {
+      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, error);
     });
 
     return promise;

@@ -1,8 +1,4 @@
-import Promise from 'babybird';
 import { AsciiTree } from './asciiTree';
-import { KinveyError } from '../errors';
-import UrlPattern from 'url-pattern';
-import url from 'url';
 
 /**
  * @private
@@ -41,19 +37,11 @@ export class KinveyMiddleware extends Middleware {
 
   handle(request) {
     return new Promise((resolve, reject) => {
-      if (request) {
-        const pathname = url.parse(request.url).pathname;
-        const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:id)(/)');
-        const matches = pattern.match(pathname) || {};
-        return resolve({
-          namespace: matches.namespace,
-          appKey: matches.appKey,
-          collection: matches.collection,
-          id: matches.id
-        });
+      if (!request) {
+        return reject(new Error('Request is null. Please provide a valid request.', request));
       }
 
-      reject(new KinveyError('Request is null. Please provide a valid request.', request));
+      return resolve();
     });
   }
 }
