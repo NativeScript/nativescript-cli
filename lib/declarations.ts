@@ -7,6 +7,7 @@ interface INodePackageManager {
 	cacheUnpack(packageName: string, version: string, unpackTarget?: string): IFuture<void>;
 	view(packageName: string, propertyName: string): IFuture<any>;
 	executeNpmCommand(npmCommandName: string, currentWorkingDirectory: string): IFuture<any>;
+	search(filter: string[], silent: boolean): IFuture<any>;
 }
 
 interface INpmInstallationManager {
@@ -58,6 +59,7 @@ interface ILiveSyncService {
 }
 
 interface IOptions extends ICommonOptions {
+	all: boolean;
 	baseConfig: string;
 	client: boolean;
 	compileSdk: number;
@@ -267,5 +269,5 @@ interface IProjectNameService {
 	 * @param {IOptions} current command options.
 	 * @return {IFuture<strng>} returns the selected name of the project.
 	 */
-	ensureValidName(projectName: string, validateOptions?: {force: boolean}): IFuture<string>;
+	ensureValidName(projectName: string, validateOptions?: { force: boolean }): IFuture<string>;
 }

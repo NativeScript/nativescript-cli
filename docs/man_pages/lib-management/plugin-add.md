@@ -1,11 +1,11 @@
-plugin add 
+plugin add
 ==========
 
 Usage | Synopsis
 ------|-------
 General | `$ tns plugin add <Plugin>`
 
-<% if(isConsole) { %>Installs the specified plugin and any packages that it depends on.<% } %>  
+<% if(isConsole) { %>Installs the specified plugin and any packages that it depends on.<% } %>
 <% if(isHtml) { %>Installs the specified plugin and its dependencies in the local `node_modules` folder, adds it to the `dependencies` section in `package.json`, and prepares the plugin for all installed platforms. If you have not configured any platforms for the project, the NativeScript CLI will prepare the plugin when you add a platform. For more information about working with plugins, see [NativeScript Plugins](https://github.com/NativeScript/nativescript-cli/blob/master/PLUGINS.md).<% } %>
 
 ### Attributes
@@ -28,4 +28,6 @@ Command | Description
 ----------|----------
 [plugin](plugin.html) | Lets you manage the plugins for your project.
 [plugin remove](plugin-remove.html) | Uninstalls the specified plugin and its dependencies.
+[plugin find](plugin-find.html) | Finds NativeScript plugins in npm.
+[plugin search](plugin-search.html) | Finds NativeScript plugins in npm.
 <% } %>

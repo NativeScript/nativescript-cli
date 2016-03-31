@@ -11,19 +11,31 @@ export class PluginsService implements IPluginsService {
 	private static NPM_CONFIG = {
 		save: true
 	};
+	private get $projectData(): IProjectData {
+		return this.$injector.resolve("projectData");
+	}
+	private get $platformsData(): IPlatformsData {
+		return this.$injector.resolve("platformsData");
+	}
+	private get $pluginVariablesService(): IPluginVariablesService {
+		return this.$injector.resolve("pluginVariablesService");
+	}
+	private get $projectDataService(): IProjectDataService {
+		return this.$injector.resolve("projectDataService");
+	}
+	private get $projectFilesManager(): IProjectFilesManager {
+		return this.$injector.resolve("projectFilesManager");
+	}
+	private get $broccoliBuilder(): IBroccoliBuilder {
+		return this.$injector.resolve("broccoliBuilder");
+	}
 
-	constructor(private $broccoliBuilder: IBroccoliBuilder,
-		private $platformsData: IPlatformsData,
-		private $npm: INodePackageManager,
+	constructor(private $npm: INodePackageManager,
 		private $fs: IFileSystem,
-		private $projectData: IProjectData,
-		private $projectDataService: IProjectDataService,
 		private $childProcess: IChildProcess,
 		private $options: IOptions,
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $pluginVariablesService: IPluginVariablesService,
-		private $projectFilesManager: IProjectFilesManager,
 		private $injector: IInjector) { }
 
 	public add(plugin: string): IFuture<void> {
@@ -93,6 +105,11 @@ export class PluginsService implements IPluginsService {
 		}).future<void>()();
 	}
 
+	public getAvailable(filter: string[]): IFuture<IDictionary<any>> {
+		let silent: boolean = true;
+		return this.$npm.search(filter, silent);
+	}
+
 	public prepare(dependencyData: IDependencyData, platform: string): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
@@ -150,9 +167,9 @@ export class PluginsService implements IPluginsService {
 	public getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult> {
 		return (() => {
 			let packageJson = this.$fs.readJson(this.getPackageJsonFilePath()).wait();
-			let dependencies: IBasePluginData[] = this.mapDependenciesToBaseIPluginData(packageJson.dependencies);
+			let dependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.dependencies);
 
-			let devDependencies: IBasePluginData[] = this.mapDependenciesToBaseIPluginData(packageJson.devDependencies);
+			let devDependencies: IBasePluginData[] = this.getBasicPluginInformation(packageJson.devDependencies);
 
 			return {
 				dependencies,
@@ -161,17 +178,11 @@ export class PluginsService implements IPluginsService {
 		}).future<IPackageJsonDepedenciesResult>()();
 	}
 
-	private mapDependenciesToBaseIPluginData(dependencies: any): IBasePluginData[] {
-		let result: IBasePluginData[] = [];
-
-		_.forEach(_.keys(dependencies), (key: string) => {
-			result.push({
-				name: key,
-				version: dependencies[key]
-			});
-		});
-
-		return result;
+	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
+		return _.map(dependencies, (version: string, key: string) => ({
+			name: key,
+			version: version
+		}));
 	}
 
 	private get nodeModulesPath(): string {
