@@ -6,6 +6,7 @@ import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isRegExp from 'lodash/isRegExp';
+import forEach from 'lodash/forEach';
 
 export class Query {
   constructor(options) {
@@ -459,12 +460,11 @@ export class Query {
     // Join operators operate on the top-level of `filter`. Since the `toJSON`
     // magic requires `filter` to be passed by reference, we cannot simply re-
     // assign `filter`. Instead, empty it without losing the reference.
-    for (const member in this._filter) {
-      if (this._filter.hasOwnProperty(member)) {
-        currentQuery[member] = this._filter[member];
-        delete this._filter[member];
-      }
-    }
+    const members = Object.keys(this._filter);
+    forEach(members, member => {
+      currentQuery[member] = this._filter[member];
+      delete this._filter[member];
+    });
 
     // `currentQuery` is the left-hand side query. Join with `queries`.
     this._filter[operator] = [currentQuery].concat(queries);
@@ -495,11 +495,12 @@ export class Query {
       // Remove fields
       if (json.fields && json.fields.length > 0) {
         data = data.map((item) => {
-          for (const key in item) {
-            if (item.hasOwnProperty(key) && json.fields.indexOf(key) === -1) {
+          const keys = Object.keys(item);
+          forEach(keys, key => {
+            if (json.fields.indexOf(key) === -1) {
               delete item[key];
             }
-          }
+          });
 
           return item;
         });
@@ -507,31 +508,30 @@ export class Query {
 
       // Sorting.
       data = data.sort((a, b) => {
-        for (const field in json.sort) {
-          if (json.sort.hasOwnProperty(field)) {
-            // Find field in objects.
-            const aField = nested(a, field);
-            const bField = nested(b, field);
+        const fields = Object.keys(json.sort);
+        forEach(fields, field => {
+          // Find field in objects.
+          const aField = nested(a, field);
+          const bField = nested(b, field);
 
-            // Elements which do not contain the field should always be sorted
-            // lower.
-            if (aField && !bField) {
-              return -1;
-            }
-
-            if (bField && !aField) {
-              return 1;
-            }
-
-            // Sort on the current field. The modifier adjusts the sorting order
-            // (ascending (-1), or descending(1)). If the fields are equal,
-            // continue sorting based on the next field (if any).
-            if (aField !== bField) {
-              const modifier = json.sort[field]; // 1 or -1.
-              return (aField < bField ? -1 : 1) * modifier;
-            }
+          // Elements which do not contain the field should always be sorted
+          // lower.
+          if (aField && !bField) {
+            return -1;
           }
-        }
+
+          if (bField && !aField) {
+            return 1;
+          }
+
+          // Sort on the current field. The modifier adjusts the sorting order
+          // (ascending (-1), or descending(1)). If the fields are equal,
+          // continue sorting based on the next field (if any).
+          if (aField !== bField) {
+            const modifier = json.sort[field]; // 1 or -1.
+            return (aField < bField ? -1 : 1) * modifier;
+          }
+        });
 
         return 0;
       });

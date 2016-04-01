@@ -63,32 +63,29 @@ export class Aggregation {
 
     forEach(entities, entity => {
       const group = {};
+      const entityNames = Object.keys(entity);
 
-      for (const name in entity) {
-        if (entity.hasOwnProperty(name)) {
-          group[name] = entity[name];
-        }
-      }
+      forEach(entityNames, name => {
+        group[name] = entity[name];
+      });
 
       const key = JSON.stringify(group);
       if (!groups[key]) {
         groups[key] = group;
+        const attributes = Object.keys(aggregation.initial);
 
-        for (const attr in aggregation.initial) {
-          if (aggregation.initial.hasOwnProperty(attr)) {
-            groups[key][attr] = aggregation.initial[attr];
-          }
-        }
+        forEach(attributes, attr => {
+          groups[key][attr] = aggregation.initial[attr];
+        });
       }
 
       aggregation.reduce(entity, groups[key]);
     });
 
-    for (const segment in groups) {
-      if (groups.hasOwnProperty(segment)) {
-        response.push(groups[segment]);
-      }
-    }
+    const segments = Object.keys(groups);
+    forEach(segments, segment => {
+      response.push(groups[segment]);
+    });
 
     return response;
   }

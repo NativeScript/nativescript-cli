@@ -10,6 +10,7 @@ import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
 import result from 'lodash/result';
 import values from 'lodash/values';
+import forEach from 'lodash/forEach';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
@@ -60,24 +61,23 @@ export class DeltaFetchRequest extends KinveyRequest {
       return networkRequest.execute().then(networkResponse => {
         const networkDocuments = keyBy(networkResponse.data, idAttribute);
         const deltaSet = networkDocuments;
+        const cacheDocumentIds = Object.keys(cacheDocuments);
 
-        for (const id in cacheDocuments) {
-          if (cacheDocuments.hasOwnProperty(id)) {
-            const cacheDocument = cacheDocuments[id];
-            const networkDocument = networkDocuments[id];
+        forEach(cacheDocumentIds, id => {
+          const cacheDocument = cacheDocuments[id];
+          const networkDocument = networkDocuments[id];
 
-            if (networkDocument) {
-              if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute]
-                  && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
-                delete deltaSet[id];
-              } else {
-                delete cacheDocuments[id];
-              }
+          if (networkDocument) {
+            if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute]
+                && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
+              delete deltaSet[id];
             } else {
               delete cacheDocuments[id];
             }
+          } else {
+            delete cacheDocuments[id];
           }
-        }
+        });
 
         const deltaSetIds = Object.keys(deltaSet);
         const promises = [];

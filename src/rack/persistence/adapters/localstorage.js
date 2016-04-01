@@ -3,6 +3,7 @@ import { NotFoundError } from '../../../errors';
 import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';
 import values from 'lodash/values';
+import forEach from 'lodash/forEach';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const localStorage = global.localStorage;
 
@@ -51,17 +52,16 @@ export class LocalStorage {
     return this.find(collection).then(existingEntities => {
       const existingEntitiesById = keyBy(existingEntities, idAttribute);
       const entitiesById = keyBy(entities, idAttribute);
+      const existingEntityIds = Object.keys(existingEntitiesById);
 
-      for (const id in existingEntitiesById) {
-        if (existingEntitiesById.hasOwnProperty(id)) {
-          const existingEntity = existingEntitiesById[id];
-          const entity = entitiesById[id];
+      forEach(existingEntityIds, id => {
+        const existingEntity = existingEntitiesById[id];
+        const entity = entitiesById[id];
 
-          if (entity) {
-            entitiesById[id] = merge(existingEntity, entity);
-          }
+        if (entity) {
+          entitiesById[id] = merge(existingEntity, entity);
         }
-      }
+      });
 
       localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
       return entities;

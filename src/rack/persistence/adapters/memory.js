@@ -3,6 +3,7 @@ import Queue from 'promise-queue';
 import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';
+import forEach from 'lodash/forEach';
 import values from 'lodash/values';
 import find from 'lodash/find';
 import isString from 'lodash/isString';
@@ -89,12 +90,11 @@ export class Memory {
     return this.find(collection).then(existingEntities => {
       existingEntities = keyBy(existingEntities, idAttribute);
       entities = keyBy(entities, idAttribute);
+      const entityIds = Object.keys(entities);
 
-      for (const id in entities) {
-        if (entities.hasOwnProperty(id)) {
-          existingEntities[id] = entities[id];
-        }
-      }
+      forEach(entityIds, id => {
+        existingEntities[id] = entities[id];
+      });
 
       this.cache.set(`${this.name}${collection}`, JSON.stringify(values(existingEntities)));
       entities = values(entities);

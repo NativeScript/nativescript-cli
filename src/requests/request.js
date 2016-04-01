@@ -398,11 +398,10 @@ export class KinveyRequest extends Request {
       }
     }
 
-    for (const key in queryString) {
-      if (queryString.hasOwnProperty(key)) {
-        queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
-      }
-    }
+    const keys = Object.keys(queryString);
+    forEach(keys, key => {
+      queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+    });
 
     if (isEmpty(queryString)) {
       return url;
