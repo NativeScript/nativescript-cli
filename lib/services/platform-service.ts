@@ -55,7 +55,7 @@ export class PlatformService implements IPlatformService {
 			let platformPath = path.join(this.$projectData.platformsDir, platform);
 
 			if (this.$fs.exists(platformPath).wait()) {
-				this.$errors.fail("Platform %s already added", platform);
+				this.$errors.failWithoutHelp("Platform %s already added", platform);
 			}
 
 			let platformData = this.$platformsData.getPlatformData(platform);
