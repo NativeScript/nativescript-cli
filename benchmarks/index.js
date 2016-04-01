@@ -3,6 +3,9 @@ require('babel-register')({
   ignore: /node_modules\/(?!qs)/
 });
 const NetworkStoreBenchmark = require('./networkstore').NetworkStoreBenchmark;
-
 const networkStoreBenchmark = new NetworkStoreBenchmark();
 networkStoreBenchmark.execute();
+
+// const DefaultParamsBenchmark = require('./defaultparams').DefaultParamsBenchmark;
+// const defaultParamsBenchmark = new DefaultParamsBenchmark();
+// defaultParamsBenchmark.execute();

@@ -436,9 +436,9 @@ export class Query {
     // the `filter` for joining. The eventual return function will be the
     // current query.
     queries = queries.map(function (query) {
-      if (!(query instanceof PrivateQuery)) {
+      if (!(query instanceof Query)) {
         if (isObject(query)) {
-          query = new PrivateQuery(query);
+          query = new Query(query);
         } else {
           throw new Error('query argument must be of type: Kinvey.Query[] or Object[].');
         }
@@ -451,7 +451,7 @@ export class Query {
     // This query is the right-hand side of the join expression, and will be
     // returned to allow for a fluent interface.
     if (queries.length === 0) {
-      _this = new PrivateQuery();
+      _this = new Query();
       queries = [_this.toJSON().filter];
       _this.parent = this; // Required for operator precedence and `toJSON`.
     }
