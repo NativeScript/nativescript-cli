@@ -7,11 +7,11 @@ import { PopupAdapter } from './popup';
 import { Device } from 'kinvey-javascript-sdk-core/src/utils/device';
 import { DeviceAdapter } from './device';
 
-class KinveyProvider {
-  constructor($http) {
+export class KinveyProvider {
+  constructor() {
     // Use Http middleware after the Serialize middleware
     const networkRack = NetworkRack.sharedInstance();
-    networkRack.usAfter(SerializeMiddleware, new HttpMiddleware($http));
+    networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
 
     // Use Device Adapter
     Device.use(new DeviceAdapter());
@@ -28,6 +28,3 @@ class KinveyProvider {
     return Kinvey;
   }
 }
-
-KinveyProvider.$inject = ['$http'];
-export { KinveyProvider };
