@@ -26,7 +26,8 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 	}
 
 	protected restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, deviceAppData.appIdentifier.split(".")[2]);
+		let projectData: IProjectData = this.$injector.resolve("projectData");
+		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
 	}
 
 	protected reloadPage(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
