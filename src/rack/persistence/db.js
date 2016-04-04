@@ -1,4 +1,4 @@
-import Promise from '../../utils/promise';
+import Promise from 'babybird';
 import { Query } from '../../query';
 import { Aggregation } from '../../aggregation';
 import { IndexedDB } from './adapters/indexeddb';
@@ -33,7 +33,7 @@ export { DBAdapter };
  * @private
  */
 export class DB {
-  constructor(name, adapters = DBAdapter.Memory) {
+  constructor(name, adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
     if (!isArray(adapters)) {
       adapters = [adapters];
     }

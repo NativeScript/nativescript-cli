@@ -1,18 +1,23 @@
 import { KinveyMiddleware } from '../middleware';
 import { DB, DBAdapter } from '../persistence/db';
 import { HttpMethod, StatusCode } from '../../enums';
+import UrlPattern from 'url-pattern';
+import url from 'url';
 
 /**
  * @private
  */
 export class CacheMiddleware extends KinveyMiddleware {
-  constructor(adapters = [DBAdapter.Memory]) {
+  constructor(adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
     super('Kinvey Cache Middleware');
     this.adapters = adapters;
   }
 
   handle(request) {
-    return super.handle(request).then(({ appKey, collection, id }) => {
+    return super.handle(request).then(() => {
+      const pathname = url.parse(request.url).pathname;
+      const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:id)(/)');
+      const { appKey, collection, id } = pattern.match(pathname) || {};
       const method = request.method;
       const query = request.query;
       const data = request.data;

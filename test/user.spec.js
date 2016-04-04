@@ -5,19 +5,17 @@ import { ActiveUserError, KinveyError } from '../src/errors';
 import { AuthorizationGrant, SocialIdentity } from '../src/enums';
 import { MobileIdentityConnect } from '../src/mic';
 import { randomString } from '../src/utils/string';
-import fetchMock from 'fetch-mock';
+import { UserHelper } from './helper';
+import nock from 'nock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('User', function () {
-  afterEach(function() {
-    fetchMock.restore();
-  });
-
   it('should create a new user', function() {
     const user = new User();
     expect(user).to.be.instanceof(User);
@@ -145,16 +143,15 @@ describe('User', function () {
     });
 
     it('should return null when there is not an active user', function() {
-      return expect(User.getActiveUser()).to.eventually.equal(null);
+      const user = User.getActiveUser();
+      expect(user).to.be.null;
     });
 
     it('should return the active user', function() {
       const user = new User();
-      return User.setActiveUser(user).then(() => {
-        return User.getActiveUser();
-      }).then(activeUser => {
-        expect(activeUser).to.deep.equal(user);
-      });
+      user.setAsActiveUser();
+      const activeUser = User.getActiveUser();
+      expect(activeUser).to.deep.equal(user);
     });
   });
 
@@ -169,25 +166,20 @@ describe('User', function () {
 
     it('should set the active user', function() {
       const user = new User();
-      return User.setActiveUser(user).then(() => {
-        return User.getActiveUser();
-      }).then(activeUser => {
-        expect(activeUser).to.deep.equal(user);
-      });
+      User.setActiveUser(user);
+      const activeUser = User.getActiveUser();
+      expect(activeUser).to.deep.equal(user);
     });
 
     it('should remove the active user when set to null', function() {
       const user = new User();
-      return User.setActiveUser(user).then(() => {
-        return User.getActiveUser();
-      }).then(activeUser => {
-        expect(activeUser).to.deep.equal(user);
-        return User.setActiveUser(null);
-      }).then(() => {
-        return User.getActiveUser();
-      }).then(activeUser => {
-        expect(activeUser).to.equal(null);
-      });
+      User.setActiveUser(user);
+      let activeUser = User.getActiveUser();
+      expect(activeUser).to.deep.equal(user);
+
+      User.setActiveUser(null);
+      activeUser = User.getActiveUser();
+      expect(activeUser).to.be.null;
     });
   });
 
@@ -202,37 +194,32 @@ describe('User', function () {
 
     it('should set a user as the active user', function() {
       const user = new User();
-      return user.setAsActiveUser().then(() => {
-        return User.getActiveUser();
-      }).then(activeUser => {
-        expect(activeUser).to.deep.equal(user);
-      });
+      user.setAsActiveUser();
+      const activeUser = User.getActiveUser();
+      expect(activeUser).to.deep.equal(user);
     });
   });
 
-  describe('isActiveUser', function() {
+  describe('isActive', function() {
     after(function() {
       return User.setActiveUser(null);
     });
 
     it('should be a method', function() {
-      expect(User).to.respondTo('isActiveUser');
+      expect(User).to.respondTo('isActive');
     });
 
     it('should return false if the user is not the active user', function() {
       const user = new User();
-      return user.isActiveUser().then(isActive => {
-        expect(isActive).to.equal(false);
-      });
+      const isActive = user.isActive();
+      expect(isActive).to.to.be.false;
     });
 
     it('should return true if the user is the active user', function() {
       const user = new User();
-      return user.setAsActiveUser().then(() => {
-        return user.isActiveUser();
-      }).then(isActive => {
-        expect(isActive).to.equal(true);
-      });
+      user.setAsActiveUser();
+      const isActive = user.isActive();
+      expect(isActive).to.be.true;
     });
   });
 
@@ -263,22 +250,20 @@ describe('User', function () {
 
     it('should throw an error if the user is already active', function() {
       const user = new User();
-      const promise = user.setAsActiveUser().then(() => {
-        return user.login({
-          username: randomString(),
-          password: randomString()
-        });
+      user.setAsActiveUser();
+      const promise = user.login({
+        username: randomString(),
+        password: randomString()
       });
       return expect(promise).to.be.rejectedWith(ActiveUserError);
     });
 
     it('should throw an error if an active user already exists', function() {
       const user = new User();
-      const promise = user.setAsActiveUser().then(() => {
-        return User.login({
-          username: randomString(),
-          password: randomString()
-        });
+      user.setAsActiveUser();
+      const promise = User.login({
+        username: randomString(),
+        password: randomString()
       });
       return expect(promise).to.be.rejectedWith(ActiveUserError);
     });
@@ -314,6 +299,7 @@ describe('User', function () {
     });
 
     it('should login a user', function() {
+      const user = new User();
       const username = randomString();
       const reply = {
         _id: randomString(),
@@ -327,23 +313,21 @@ describe('User', function () {
           creator: randomString()
         }
       };
-      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: reply
-      });
+      nock(this.client.baseUrl)
+        .post(`${user._pathname}/login`)
+        .query(true)
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
 
-      return User.login({
+      return user.login({
         username: username,
         password: randomString()
       }).then(user => {
         expect(user._id).to.equal(reply._id);
         expect(user.authtoken).to.equal(reply._kmd.authtoken);
         expect(user.username).to.equal(reply.username);
-        return user.isActiveUser();
-      }).then(isActive => {
-        expect(isActive).to.be.true;
+        expect(user.isActive()).to.be.true;
       });
     });
   });
@@ -371,7 +355,7 @@ describe('User', function () {
     });
 
     it('should call login on the MobileIdentityConnect module and then connect on the user', function() {
-      const stub = this.sandbox.stub(MobileIdentityConnect, 'login', function() {
+      const stub = this.sandbox.stub(MobileIdentityConnect.prototype, 'login', function() {
         return Promise.resolve({});
       });
       const connectStub = this.sandbox.stub(User.prototype, 'connect', function() {
@@ -385,44 +369,46 @@ describe('User', function () {
   });
 
   describe('logout', function() {
+    beforeEach(function() {
+      this.user = UserHelper.login();
+    });
+
+    afterEach(function() {
+      UserHelper.logout();
+      delete this.user;
+    });
+
     it('should be a method', function() {
       expect(User).to.respondTo('logout');
     });
 
     it('should logout a user when the user is not the active user', function() {
-      const user = new User();
-      return expect(user.logout()).to.be.fulfilled;
+      User.setActiveUser(null);
+      const promise = this.user.logout();
+      return expect(promise).to.be.fulfilled;
     });
 
     it('should logout a user when the user is the active user', function() {
-      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: {}
-      });
+      nock(this.client.baseUrl)
+        .post(`${this.user._pathname}/_logout`)
+        .query(true)
+        .reply(200, null, {
+          'content-type': 'application/json'
+        });
 
-      const user = new User();
-      const promise = user.setAsActiveUser().then(() => {
-        return user.logout();
-      });
+      const promise = this.user.logout();
       return expect(promise).to.be.fulfilled;
     });
 
     it('should logout a user when the REST API rejects the logout request', function() {
-      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: { message: 'ServerError' }
-      });
+      nock(this.client.baseUrl)
+        .post(`${this.user._pathname}/_logout`)
+        .query(true)
+        .reply(500, null, {
+          'content-type': 'application/json'
+        });
 
-      const user = new User();
-      const promise = user.setAsActiveUser().then(() => {
-        return user.logout();
-      });
+      const promise = this.user.logout();
       return expect(promise).to.be.fulfilled;
     });
   });
@@ -515,33 +501,31 @@ describe('User', function () {
     });
 
     it('should throw an error if an identity is not configured in the cloud', function() {
-      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: []
-      });
+      nock(this.client.baseUrl)
+        .get(`/${appdataNamespace}/${this.client.appKey}/identities`)
+        .query(true)
+        .reply(200, [], {
+          'content-type': 'application/json'
+        });
 
       const promise = User.connectWithIdentity(SocialIdentity.Facebook);
       return expect(promise).to.be.rejectedWith(KinveyError);
     });
 
-    it('should connect a user when the identity is configured in the cloud', function() {
-      fetchMock.mock(`^${this.client.baseUrl}`, 'POST', {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: [{
-          key: randomString(),
-          appId: randomString(),
-          clientId: randomString()
-        }]
-      });
+    // it('should connect a user when the identity is configured in the cloud', function() {
+    //   nock(this.client.baseUrl)
+    //     .get(`/${appdataNamespace}/${this.client.appKey}/identities`)
+    //     .query(true)
+    //     .reply(200, [{
+    //       key: randomString(),
+    //       appId: randomString(),
+    //       clientId: randomString()
+    //     }], {
+    //       'content-type': 'application/json'
+    //     });
 
-      const promise = User.connectWithIdentity(SocialIdentity.Facebook);
-      return expect(promise).to.be.rejectedWith(KinveyError);
-    });
+    //   const promise = User.connectWithIdentity(SocialIdentity.Facebook);
+    //   return expect(promise).to.be.rejectedWith(KinveyError);
+    // });
   });
 });

@@ -1,8 +1,7 @@
-import Promise from './utils/promise';
+import Promise from 'babybird';
 import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
-import { Device } from './device';
 import { Client } from './client';
 import { Popup } from './utils/popup';
 import path from 'path';
@@ -32,13 +31,12 @@ export class MobileIdentityConnect {
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
-    const device = new Device();
 
     const promise = Promise.resolve().then(() => {
-      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage && !device.isNode()) {
+      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
         // Step 1: Request a code
         return this.requestCodeWithPopup(clientId, redirectUri, options);
-      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI && device.isNode()) {
+      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
         // Step 1a: Request a temp login url
         return this.requestTempLoginUrl(clientId, redirectUri, options).then(url => {
           // Step 1b: Request a code
@@ -118,8 +116,11 @@ export class MobileIdentityConnect {
       return popup.open();
     }).then((popup) => {
       return new Promise((resolve, reject) => {
+        let redirected = false;
+
         function loadHandler(loadedUrl) {
           if (loadedUrl.indexOf(redirectUri) === 0) {
+            redirected = true;
             popup.removeAllListeners();
             popup.close();
             resolve(url.parse(loadedUrl, true).query.code);
@@ -128,11 +129,14 @@ export class MobileIdentityConnect {
 
         function closeHandler() {
           popup.removeAllListeners();
-          reject(new Error('Login has been cancelled.'));
+
+          if (!redirected) {
+            reject(new Error('Login has been cancelled.'));
+          }
         }
 
-        popup.on('load', loadHandler);
-        popup.on('close', closeHandler);
+        popup.on('loaded', loadHandler);
+        popup.on('closed', closeHandler);
       });
     });
 
@@ -199,37 +203,37 @@ export class MobileIdentityConnect {
     return promise;
   }
 
-  refresh(token, options) {
-    const clientId = this.client.appKey;
-    return this.refreshToken(clientId, token, options);
-  }
+  // refresh(token, options) {
+  //   const clientId = this.client.appKey;
+  //   return this.refreshToken(clientId, token, options);
+  // }
 
-  refreshToken(clientId, token, options = {}) {
-    const request = new NetworkRequest({
-      method: HttpMethod.POST,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: tokenPathname
-      }),
-      properties: options.properties,
-      data: {
-        grant_type: 'refresh_token',
-        client_id: clientId,
-        redirect_uri: token.redirect_uri,
-        refresh_token: token.refresh_token
-      }
-    });
-    request.automaticallyRefreshAuthToken = false;
+  // refreshToken(clientId, token, options = {}) {
+  //   const request = new NetworkRequest({
+  //     method: HttpMethod.POST,
+  //     headers: {
+  //       'Content-Type': 'application/x-www-form-urlencoded'
+  //     },
+  //     authType: AuthType.App,
+  //     url: url.format({
+  //       protocol: this.client.protocol,
+  //       host: this.client.host,
+  //       pathname: tokenPathname
+  //     }),
+  //     properties: options.properties,
+  //     data: {
+  //       grant_type: 'refresh_token',
+  //       client_id: clientId,
+  //       redirect_uri: token.redirect_uri,
+  //       refresh_token: token.refresh_token
+  //     }
+  //   });
+  //   request.automaticallyRefreshAuthToken = false;
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+  //   const promise = request.execute().then(response => {
+  //     return response.data;
+  //   });
 
-    return promise;
-  }
+  //   return promise;
+  // }
 }

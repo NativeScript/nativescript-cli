@@ -1,10 +1,8 @@
-import Promise from '../utils/promise';
+import Promise from 'babybird';
 import { HttpMethod, AuthType } from '../enums';
-import { Device } from '../device';
+import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
-import { NoResponseError } from '../errors';
 import { KinveyRack } from '../rack/rack';
-import { Response } from './response';
 import { Client } from '../client';
 import { byteCount } from '../utils/string';
 import qs from 'qs';
@@ -282,9 +280,9 @@ export class Request {
     this.executing = Promise.resolve().then(response => {
       this.executing = false;
       return response;
-    }).catch(err => {
+    }).catch(error => {
       this.executing = false;
-      throw err;
+      throw error;
     });
 
     return this.executing;
@@ -400,11 +398,10 @@ export class KinveyRequest extends Request {
       }
     }
 
-    for (const key in queryString) {
-      if (queryString.hasOwnProperty(key)) {
-        queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
-      }
-    }
+    const keys = Object.keys(queryString);
+    forEach(keys, key => {
+      queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+    });
 
     if (isEmpty(queryString)) {
       return url;
@@ -474,37 +471,13 @@ export class KinveyRequest extends Request {
       this.addHeader(authorizationHeader);
     }
 
-    const promise = super.execute().then(() => {
-      return this.rack.execute(this);
-    }).then(response => {
-      if (!response) {
-        throw new NoResponseError();
-      }
-
-      if (!(response instanceof Response)) {
-        return new Response({
-          statusCode: response.statusCode,
-          headers: response.headers,
-          data: response.data
-        });
-      }
-
-      return response;
-    }).then(response => {
-      if (!response.isSuccess()) {
-        throw response.error;
-      }
-
-      return response;
-    }).catch(error => {
-      throw error;
-    });
-
+    const promise = super.execute();
     return promise;
   }
 
   cancel() {
-    this.rack.cancel();
+    const promise = super.cancel();
+    return promise;
   }
 
   toJSON() {

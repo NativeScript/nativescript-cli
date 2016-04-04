@@ -1,10 +1,10 @@
-import { DB, DBAdapter } from './db';
-import { Memory } from './adapters/memory';
-import { IndexedDB } from './adapters/indexeddb';
-import { WebSQL } from './adapters/websql';
-import { LocalStorage } from './adapters/localstorage';
-import { KinveyError, NotFoundError } from '../../errors';
-import { randomString } from '../../utils/string';
+import { DB, DBAdapter } from '../src/rack/persistence/db';
+import { Memory } from '../src/rack/persistence/adapters/memory';
+import { IndexedDB } from '../src/rack/persistence/adapters/indexeddb';
+import { WebSQL } from '../src/rack/persistence/adapters/websql';
+import { LocalStorage } from '../src/rack/persistence/adapters/localstorage';
+import { KinveyError, NotFoundError } from '../src/errors';
+import { randomString } from '../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import forEach from 'lodash/forEach';

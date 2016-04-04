@@ -1,4 +1,4 @@
-import Promise from './utils/promise';
+import Promise from 'babybird';
 import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';
@@ -402,7 +402,7 @@ export class User {
     const isActive = this.isActive();
 
     if (!isActive) {
-      return null;
+      return Promise.resolve();
     }
 
     const request = new NetworkRequest({
@@ -421,7 +421,6 @@ export class User {
       return null;
     }).then(() => {
       const isActive = this.isActive();
-
       if (isActive) {
         return User.setActiveUser(null, this.client);
       }
@@ -525,11 +524,11 @@ export class User {
   /* eslint-enable max-len */
   connectWithIdentity(identity, options = {}) {
     options = assign({
-      collectionName: 'Identities'
+      collectionName: 'identities'
     }, options);
 
 
-    const promise = Promise.resolve().then0(() => {
+    const promise = Promise.resolve().then(() => {
       if (!identity) {
         throw new KinveyError('An identity is required to connect the user.');
       }
@@ -541,11 +540,11 @@ export class User {
       const query = new Query().equalTo('identity', identity);
       const request = new NetworkRequest({
         method: HttpMethod.GET,
-        authType: AuthType.Default,
+        authType: AuthType.None,
         url: url.format({
           protocol: this.client.protocol,
-          host: this.client.hose,
-          pathanme: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`
+          host: this.client.host,
+          pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`
         }),
         query: query,
         properties: options.properties,
@@ -611,7 +610,7 @@ export class User {
       return this.login(data, null, options);
     }).catch(err => {
       if (err instanceof NotFoundError) {
-        return this.signup(data, options).then0(() => {
+        return this.signup(data, options).then(() => {
           return this.connect(identity, token, options);
         });
       }
@@ -637,7 +636,7 @@ export class User {
     data[socialIdentityAttribute] = socialIdentity;
     this.data = data;
 
-    const promise = Promise.resolve().then0(() => {
+    const promise = Promise.resolve().then(() => {
       if (!this._id) {
         return this;
       }
@@ -694,7 +693,7 @@ export class User {
       state: true
     }, options);
 
-    const promise = Promise.resolve().then0(() => {
+    const promise = Promise.resolve().then(() => {
       if (options.state === true) {
         const activeUser = User.getActiveUser(this.client);
         if (activeUser) {
@@ -702,7 +701,7 @@ export class User {
             'Please logout the active user before you login.');
         }
       }
-    }).then0(() => {
+    }).then(() => {
       const request = new NetworkRequest({
         method: HttpMethod.POST,
         authType: AuthType.App,
@@ -842,26 +841,26 @@ export class User {
     return promise;
   }
 
-  refreshAuthToken(options = {}) {
-    const socialIdentity = this.data[socialIdentityAttribute];
-    const identity = socialIdentity.activeIdentity;
-    const token = socialIdentity[identity];
-    let promise;
+  // refreshAuthToken(options = {}) {
+  //   const socialIdentity = this.data[socialIdentityAttribute];
+  //   const identity = socialIdentity.activeIdentity;
+  //   const token = socialIdentity[identity];
+  //   let promise;
 
-    switch (identity) {
-      case MobileIdentityConnect.identity:
-        const mic = new MobileIdentityConnect(this.client);
-        promise = mic.refresh(token, options);
-        break;
-      default:
-        promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
-          `the ${identity} identity is not supported.`));
-    }
+  //   switch (identity) {
+  //     case MobileIdentityConnect.identity:
+  //       const mic = new MobileIdentityConnect(this.client);
+  //       promise = mic.refresh(token, options);
+  //       break;
+  //     default:
+  //       promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
+  //         `the ${identity} identity is not supported.`));
+  //   }
 
-    return promise.then(token => {
-      return this.connect(identity, token, options);
-    });
-  }
+  //   return promise.then(token => {
+  //     return this.connect(identity, token, options);
+  //   });
+  // }
 
   toJSON() {
     return this.data;

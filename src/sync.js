@@ -1,23 +1,23 @@
-import Promise from './utils/promise';
+import Promise from 'babybird';
 import { DataStore } from './stores/datastore';
 import { Query } from './query';
 import { DataStoreType } from './enums';
 import reduce from 'lodash/reduce';
-const enabledSymbol = Symbol();
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+let enabled = process.env.KINVEY_SYNC_DEFAULT_STATE || true;
 
 const Sync = {
   isEnabled() {
-    return Sync[enabledSymbol];
+    return enabled;
   },
 
   enable() {
-    Sync[enabledSymbol] = true;
+    enabled = true;
   },
 
   disable() {
-    Sync[enabledSymbol] = false;
+    enabled = false;
   },
 
   count(query, options) {
@@ -57,6 +57,4 @@ const Sync = {
   }
 };
 
-// Set sync default state
-Sync[enabledSymbol] = process.env.KINVEY_SYNC_DEFAULT_STATE || true;
 export { Sync };

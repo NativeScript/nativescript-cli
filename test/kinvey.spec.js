@@ -1,12 +1,13 @@
-import { Kinvey } from './kinvey';
-import { Client } from './client';
-import { UserHelper } from './utils/spec';
-import { randomString } from './utils/string';
-import fetchMock from 'fetch-mock';
+import { Kinvey } from '../src/kinvey';
+import { Client } from '../src/client';
+import { UserHelper } from './helper';
+import { randomString } from '../src/utils/string';
+import nock from 'nock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('Kinvey', function () {
   describe('init()', function () {
@@ -38,16 +39,15 @@ describe('Kinvey', function () {
         appName: 'tests',
         environmentName: 'development'
       };
-      fetchMock.mock('^https://baas.kinvey.com', 'GET', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: reply
-      });
+      nock(this.client.baseUrl)
+        .get(`/${appdataNamespace}/${this.client.appKey}`)
+        .query(true)
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
 
       return Kinvey.ping().then(response => {
         expect(response).to.deep.equal(reply);
-        fetchMock.restore();
       });
     });
 
@@ -58,18 +58,16 @@ describe('Kinvey', function () {
         appName: 'tests',
         environmentName: 'development'
       };
-      fetchMock.mock('^https://baas.kinvey.com', 'GET', {
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: reply
-      });
+      nock(this.client.baseUrl)
+        .get(`/${appdataNamespace}/${this.client.appKey}`)
+        .query(true)
+        .reply(200, reply, {
+          'content-type': 'application/json'
+        });
 
-      return UserHelper.login().then(() => {
-        return Kinvey.ping();
-      }).then(response => {
+      UserHelper.login();
+      return Kinvey.ping().then(response => {
         expect(response).to.deep.equal(reply);
-        fetchMock.restore();
       });
     });
   });

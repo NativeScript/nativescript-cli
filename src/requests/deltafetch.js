@@ -1,4 +1,4 @@
-import Promise from '../utils/promise';
+import Promise from 'babybird';
 import { KinveyRequest } from './request';
 import { LocalRequest } from './local';
 import { NetworkRequest } from './network';
@@ -10,6 +10,7 @@ import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
 import result from 'lodash/result';
 import values from 'lodash/values';
+import forEach from 'lodash/forEach';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
@@ -34,10 +35,6 @@ export class DeltaFetchRequest extends KinveyRequest {
         client: this.client
       });
       return localRequest.execute();
-    }).then(response => {
-      if (!response.isSuccess()) {
-        throw response.error;
-      }
     }).catch(error => {
       if (error instanceof NotFoundError) {
         return new Response({
@@ -48,25 +45,26 @@ export class DeltaFetchRequest extends KinveyRequest {
 
       throw error;
     }).then(cacheResponse => {
-      const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
-      const query = new Query(result(this.query, 'toJSON', this.query));
-      query.fields([idAttribute, kmdAttribute]);
-      const networkRequest = new NetworkRequest({
-        method: HttpMethod.GET,
-        url: this.url,
-        headers: this.headers,
-        auth: this.auth,
-        query: query,
-        timeout: this.timeout,
-        client: this.client
-      });
+      if (cacheResponse.data.length > 0) {
+        const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
+        const query = new Query(result(this.query, 'toJSON', this.query));
+        query.fields([idAttribute, kmdAttribute]);
+        const networkRequest = new NetworkRequest({
+          method: HttpMethod.GET,
+          url: this.url,
+          headers: this.headers,
+          auth: this.auth,
+          query: query,
+          timeout: this.timeout,
+          client: this.client
+        });
 
-      return networkRequest.execute().then(networkResponse => {
-        const networkDocuments = keyBy(networkResponse.data, idAttribute);
-        const deltaSet = networkDocuments;
+        return networkRequest.execute().then(networkResponse => {
+          const networkDocuments = keyBy(networkResponse.data, idAttribute);
+          const deltaSet = networkDocuments;
+          const cacheDocumentIds = Object.keys(cacheDocuments);
 
-        for (const id in cacheDocuments) {
-          if (cacheDocuments.hasOwnProperty(id)) {
+          forEach(cacheDocumentIds, id => {
             const cacheDocument = cacheDocuments[id];
             const networkDocument = networkDocuments[id];
 
@@ -80,58 +78,69 @@ export class DeltaFetchRequest extends KinveyRequest {
             } else {
               delete cacheDocuments[id];
             }
+          });
+
+          const deltaSetIds = Object.keys(deltaSet);
+          const promises = [];
+          let i = 0;
+
+          while (i < deltaSetIds.length) {
+            const query = new Query(result(this.query, 'toJSON', this.query));
+            const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
+                                             maxIdsPerRequest : deltaSetIds.length);
+            query.contains(idAttribute, ids);
+            const networkRequest = new NetworkRequest({
+              method: HttpMethod.GET,
+              url: this.url,
+              headers: this.headers,
+              auth: this.auth,
+              query: query,
+              timeout: this.timeout,
+              client: this.client
+            });
+
+            const promise = networkRequest.execute();
+            promises.push(promise);
+            i += maxIdsPerRequest;
           }
-        }
 
-        const deltaSetIds = Object.keys(deltaSet);
-        const promises = [];
-        let i = 0;
+          return Promise.all(promises).then(responses => {
+            const initialResponse = new Response({
+              statusCode: StatusCode.Ok,
+              data: []
+            });
+            return reduce(responses, (result, response) => {
+              if (response.isSuccess()) {
+                result.addHeaders(response.headers);
+                result.data = result.data.concat(response.data);
+              }
 
-        while (i < deltaSetIds.length) {
-          const query = new Query();
-          const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
-                                           maxIdsPerRequest : deltaSetIds.length);
-          query.contains(idAttribute, ids);
-          const networkRequest = new NetworkRequest({
-            method: HttpMethod.GET,
-            url: this.url,
-            headers: this.headers,
-            auth: this.auth,
-            query: query,
-            timeout: this.timeout,
-            client: this.client
-          });
+              return result;
+            }, initialResponse);
+          }).then(response => {
+            response.data = response.data.concat(values(cacheDocuments));
 
-          const promise = networkRequest.execute();
-          promises.push(promise);
-          i += maxIdsPerRequest;
-        }
-
-        return Promise.all(promises).then(responses => {
-          const initialResponse = new Response({
-            statusCode: StatusCode.Ok,
-            data: []
-          });
-          return reduce(responses, (result, response) => {
-            if (response.isSuccess()) {
-              result.addHeaders(response.headers);
-              result.data = result.data.concat(response.data);
+            if (this.query) {
+              const query = new Query(result(this.query, 'toJSON', this.query));
+              query.skip(0).limit(0);
+              response.data = query._process(response.data);
             }
 
-            return result;
-          }, initialResponse);
-        }).then(response => {
-          response.data = response.data.concat(values(cacheDocuments));
-
-          if (this.query) {
-            const query = new Query(result(this.query, 'toJSON', this.query));
-            query.skip(0).limit(0);
-            response.data = query._process(response.data);
-          }
-
-          return response;
+            return response;
+          });
         });
+      }
+
+      const networkRequest = new NetworkRequest({
+        method: HttpMethod.GET,
+        url: this.url,
+        headers: this.headers,
+        auth: this.auth,
+        query: this.query,
+        timeout: this.timeout,
+        client: this.client
       });
+      return networkRequest.execute();
     });
 
     return promise;

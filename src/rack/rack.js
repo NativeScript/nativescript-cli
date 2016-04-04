@@ -1,11 +1,12 @@
-import Promise from '../utils/promise';
+import Promise from 'babybird';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
-import { HttpMiddleware } from './middleware/http2';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
-const sharedCacheRackInstanceSymbol = Symbol();
-const sharedNetworkRackInstanceSymbol = Symbol();
+import findIndex from 'lodash/findIndex';
+import reduce from 'lodash/reduce';
+let sharedCacheRackInstance;
+let sharedNetworkRackInstance;
 
 /**
  * @private
@@ -13,12 +14,8 @@ const sharedNetworkRackInstanceSymbol = Symbol();
 export class Rack extends KinveyMiddleware {
   constructor(name = 'Rack') {
     super(name);
-    this._middlewares = [];
+    this.middlewares = [];
     this.canceled = false;
-  }
-
-  get middlewares() {
-    return this._middlewares.slice();
   }
 
   getMiddleware(index = -1) {
@@ -34,7 +31,7 @@ export class Rack extends KinveyMiddleware {
   use(middleware) {
     if (middleware) {
       if (middleware instanceof KinveyMiddleware) {
-        this._middlewares.push(middleware);
+        this.middlewares.push(middleware);
         return;
       }
 
@@ -46,11 +43,11 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, existingMiddleware => existingMiddleware instanceof middlewareClass);
 
         if (index > -1) {
           middlewares.splice(index, 0, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -64,11 +61,11 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, existingMiddleware => existingMiddleware instanceof middlewareClass);
 
         if (index > -1) {
           middlewares.splice(index + 1, 0, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -82,11 +79,11 @@ export class Rack extends KinveyMiddleware {
     if (middleware) {
       if (middleware instanceof Middleware) {
         const middlewares = this.middlewares;
-        const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+        const index = findIndex(middlewares, existingMiddleware => existingMiddleware instanceof middlewareClass);
 
         if (index > -1) {
           middlewares.splice(index, 1, middleware);
-          this._middlewares = middlewares;
+          this.middlewares = middlewares;
         }
 
         return;
@@ -98,17 +95,17 @@ export class Rack extends KinveyMiddleware {
 
   remove(middlewareClass) {
     const middlewares = this.middlewares;
-    const index = middlewares.findIndex(existingMiddleware => existingMiddleware instanceof middlewareClass);
+    const index = findIndex(middlewares, existingMiddleware => existingMiddleware instanceof middlewareClass);
 
     if (index > -1) {
       middlewares.splice(index, 1);
-      this._middlewares = middlewares;
+      this.middlewares = middlewares;
       this.remove(middlewareClass);
     }
   }
 
   reset() {
-    this._middlewares = [];
+    this.middlewares = [];
   }
 
   execute(request) {
@@ -116,24 +113,11 @@ export class Rack extends KinveyMiddleware {
       return Promise.reject(new Error('Request is null. Please provide a valid request.'));
     }
 
-    return this._execute(0, this.middlewares, request);
-  }
-
-  _execute(index, middlewares, request) {
-    if (index < -1 || index >= middlewares.length) {
-      throw new Error(`Index ${index} is out of bounds.`);
-    }
-
-    const middleware = middlewares[index];
-    return middleware.handle(request).then(response => {
-      index = index + 1;
-
-      if (index < middlewares.length) {
-        return this._execute(index, middlewares, response);
-      }
-
-      return response;
-    });
+    return reduce(this.middlewares, (promise, middleware) => {
+      return promise.then(request => {
+        return middleware.handle(request);
+      });
+    }, Promise.resolve(request));
   }
 
   cancel() {
@@ -178,11 +162,11 @@ export class CacheRack extends KinveyRack {
   }
 
   static sharedInstance() {
-    let instance = CacheRack[sharedCacheRackInstanceSymbol];
+    let instance = sharedCacheRackInstance;
 
     if (!instance) {
       instance = new CacheRack();
-      CacheRack[sharedCacheRackInstanceSymbol] = instance;
+      sharedCacheRackInstance = instance;
     }
 
     return instance;
@@ -196,16 +180,15 @@ export class NetworkRack extends KinveyRack {
   constructor(name = 'Kinvey Network Rack') {
     super(name);
     this.use(new SerializeMiddleware());
-    this.use(new HttpMiddleware());
     this.use(new ParseMiddleware());
   }
 
   static sharedInstance() {
-    let instance = NetworkRack[sharedNetworkRackInstanceSymbol];
+    let instance = sharedNetworkRackInstance;
 
     if (!instance) {
       instance = new NetworkRack();
-      NetworkRack[sharedNetworkRackInstanceSymbol] = instance;
+      sharedNetworkRackInstance = instance;
     }
 
     return instance;

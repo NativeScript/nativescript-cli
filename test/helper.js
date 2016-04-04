@@ -1,32 +1,19 @@
 import { User } from '../src/user';
 import { randomString } from '../src/utils/string';
-import fetchMock from 'fetch-mock';
 
 const UserHelper = {
   login() {
-    fetchMock.mock('^https://baas.kinvey.com', 'POST', {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: {
-        _id: randomString(),
-        username: randomString(),
-        password: randomString(),
-        _kmd: {
-          authtoken: randomString()
-        }
+    const user = new User({
+      _id: randomString(),
+      _kmd: {
+        authtoken: randomString()
       }
     });
-
-    return User.login('admin', 'admin');
+    return user.setAsActiveUser();
   },
 
   logout() {
-    return User.getActiveUser().then(user => {
-      if (user) {
-        return user.logout();
-      }
-    });
+    return User.setActiveUser(null);
   }
 };
 export { UserHelper };

@@ -6,9 +6,8 @@ import forEach from 'lodash/forEach';
 import isObject from 'lodash/isObject';
 import isString from 'lodash/isString';
 import isFunction from 'lodash/isFunction';
-const privateAggregationSymbol = Symbol();
 
-class PrivateAggregation {
+export class Aggregation {
   constructor(options) {
     options = assign({
       query: null,
@@ -64,32 +63,29 @@ class PrivateAggregation {
 
     forEach(entities, entity => {
       const group = {};
+      const entityNames = Object.keys(entity);
 
-      for (const name in entity) {
-        if (entity.hasOwnProperty(name)) {
-          group[name] = entity[name];
-        }
-      }
+      forEach(entityNames, name => {
+        group[name] = entity[name];
+      });
 
       const key = JSON.stringify(group);
       if (!groups[key]) {
         groups[key] = group;
+        const attributes = Object.keys(aggregation.initial);
 
-        for (const attr in aggregation.initial) {
-          if (aggregation.initial.hasOwnProperty(attr)) {
-            groups[key][attr] = aggregation.initial[attr];
-          }
-        }
+        forEach(attributes, attr => {
+          groups[key][attr] = aggregation.initial[attr];
+        });
       }
 
       aggregation.reduce(entity, groups[key]);
     });
 
-    for (const segment in groups) {
-      if (groups.hasOwnProperty(segment)) {
-        response.push(groups[segment]);
-      }
-    }
+    const segments = Object.keys(groups);
+    forEach(segments, segment => {
+      response.push(groups[segment]);
+    });
 
     return response;
   }
@@ -117,40 +113,6 @@ class PrivateAggregation {
     };
 
     return json;
-  }
-}
-
-export class Aggregation {
-  constructor(options) {
-    this[privateAggregationSymbol] = new PrivateAggregation(options);
-  }
-
-  by(field) {
-    this[privateAggregationSymbol].by(field);
-    return this;
-  }
-
-  initial(objectOrKey, value) {
-    this[privateAggregationSymbol].initial(objectOrKey, value);
-    return this;
-  }
-
-  process(response) {
-    return this[privateAggregationSymbol].process(response);
-  }
-
-  query(query) {
-    this[privateAggregationSymbol].query(query);
-    return this;
-  }
-
-  reduce(fn) {
-    this[privateAggregationSymbol].reduce(fn);
-    return this;
-  }
-
-  toJSON() {
-    return this[privateAggregationSymbol].toJSON();
   }
 
   static count(field = '') {

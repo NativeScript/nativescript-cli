@@ -1,4 +1,4 @@
-import Promise from '../utils/promise';
+import Promise from 'babybird';
 import { Aggregation } from '../aggregation';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
@@ -9,7 +9,6 @@ import { Log } from '../Log';
 import qs from 'qs';
 import url from 'url';
 import assign from 'lodash/assign';
-import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -107,8 +106,8 @@ export class NetworkStore {
 
     promise.then(response => {
       Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
+    }).catch(error => {
+      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, error);
     });
 
     return promise;

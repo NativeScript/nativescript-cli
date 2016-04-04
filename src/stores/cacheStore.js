@@ -1,4 +1,4 @@
-import Promise from '../utils/promise';
+import Promise from 'babybird';
 import { NetworkStore } from './networkstore';
 import { Response } from '../requests/response';
 import { AuthType, HttpMethod, StatusCode } from '../enums';
@@ -16,6 +16,7 @@ import forEach from 'lodash/forEach';
 import map from 'lodash/map';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
+import differenceBy from 'lodash/differenceBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
@@ -98,9 +99,9 @@ class CacheStore extends NetworkStore {
         client: this.client
       });
       return request.execute();
-    }).then(response => {
+    }).then(cacheResponse => {
       const result = {
-        cache: response.data
+        cache: cacheResponse.data
       };
 
       result.networkPromise = this.syncCount().then(count => {
@@ -128,7 +129,8 @@ class CacheStore extends NetworkStore {
             }),
             properties: options.properties,
             query: query,
-            timeout: options.timeout
+            timeout: options.timeout,
+            client: this.client
           });
           return request.execute().then(response => {
             return response.data;
@@ -136,8 +138,27 @@ class CacheStore extends NetworkStore {
         }
 
         return super.find(query, options);
-      }).then(data => {
-        return this._cache(data);
+      }).then(networkEntities => {
+        const removedEntities = differenceBy(cacheResponse.data, networkEntities, idAttribute);
+        const removeEntityIds = Object.keys(keyBy(removedEntities, idAttribute));
+        const removeQuery = new Query();
+        removeQuery.contains(idAttribute, removeEntityIds);
+
+        const request = new LocalRequest({
+          method: HttpMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this._pathname
+          }),
+          properties: options.properties,
+          query: removeQuery,
+          timeout: options.timeout,
+          client: this.client
+        });
+        return request.execute().then(() => {
+          return this._cache(networkEntities);
+        });
       });
 
       return result;
@@ -1022,6 +1043,7 @@ class CacheStore extends NetworkStore {
         pathname: this._pathname
       }),
       properties: options.properties,
+      data: entities,
       timeout: options.timeout,
       client: this.client
     });

@@ -6,9 +6,9 @@ import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isRegExp from 'lodash/isRegExp';
-const privateQuerySymbol = Symbol();
+import forEach from 'lodash/forEach';
 
-class PrivateQuery {
+export class Query {
   constructor(options) {
     options = assign({
       fields: [],
@@ -437,9 +437,9 @@ class PrivateQuery {
     // the `filter` for joining. The eventual return function will be the
     // current query.
     queries = queries.map(function (query) {
-      if (!(query instanceof PrivateQuery)) {
+      if (!(query instanceof Query)) {
         if (isObject(query)) {
-          query = new PrivateQuery(query);
+          query = new Query(query);
         } else {
           throw new Error('query argument must be of type: Kinvey.Query[] or Object[].');
         }
@@ -452,7 +452,7 @@ class PrivateQuery {
     // This query is the right-hand side of the join expression, and will be
     // returned to allow for a fluent interface.
     if (queries.length === 0) {
-      _this = new PrivateQuery();
+      _this = new Query();
       queries = [_this.toJSON().filter];
       _this.parent = this; // Required for operator precedence and `toJSON`.
     }
@@ -460,12 +460,11 @@ class PrivateQuery {
     // Join operators operate on the top-level of `filter`. Since the `toJSON`
     // magic requires `filter` to be passed by reference, we cannot simply re-
     // assign `filter`. Instead, empty it without losing the reference.
-    for (const member in this._filter) {
-      if (this._filter.hasOwnProperty(member)) {
-        currentQuery[member] = this._filter[member];
-        delete this._filter[member];
-      }
-    }
+    const members = Object.keys(this._filter);
+    forEach(members, member => {
+      currentQuery[member] = this._filter[member];
+      delete this._filter[member];
+    });
 
     // `currentQuery` is the left-hand side query. Join with `queries`.
     this._filter[operator] = [currentQuery].concat(queries);
@@ -496,11 +495,12 @@ class PrivateQuery {
       // Remove fields
       if (json.fields && json.fields.length > 0) {
         data = data.map((item) => {
-          for (const key in item) {
-            if (item.hasOwnProperty(key) && json.fields.indexOf(key) === -1) {
+          const keys = Object.keys(item);
+          forEach(keys, key => {
+            if (json.fields.indexOf(key) === -1) {
               delete item[key];
             }
-          }
+          });
 
           return item;
         });
@@ -508,31 +508,30 @@ class PrivateQuery {
 
       // Sorting.
       data = data.sort((a, b) => {
-        for (const field in json.sort) {
-          if (json.sort.hasOwnProperty(field)) {
-            // Find field in objects.
-            const aField = nested(a, field);
-            const bField = nested(b, field);
+        const fields = Object.keys(json.sort);
+        forEach(fields, field => {
+          // Find field in objects.
+          const aField = nested(a, field);
+          const bField = nested(b, field);
 
-            // Elements which do not contain the field should always be sorted
-            // lower.
-            if (aField && !bField) {
-              return -1;
-            }
-
-            if (bField && !aField) {
-              return 1;
-            }
-
-            // Sort on the current field. The modifier adjusts the sorting order
-            // (ascending (-1), or descending(1)). If the fields are equal,
-            // continue sorting based on the next field (if any).
-            if (aField !== bField) {
-              const modifier = json.sort[field]; // 1 or -1.
-              return (aField < bField ? -1 : 1) * modifier;
-            }
+          // Elements which do not contain the field should always be sorted
+          // lower.
+          if (aField && !bField) {
+            return -1;
           }
-        }
+
+          if (bField && !aField) {
+            return 1;
+          }
+
+          // Sort on the current field. The modifier adjusts the sorting order
+          // (ascending (-1), or descending(1)). If the fields are equal,
+          // continue sorting based on the next field (if any).
+          if (aField !== bField) {
+            const modifier = json.sort[field]; // 1 or -1.
+            return (aField < bField ? -1 : 1) * modifier;
+          }
+        });
 
         return 0;
       });
@@ -568,188 +567,5 @@ class PrivateQuery {
     };
 
     return json;
-  }
-}
-
-export class Query {
-  constructor(options) {
-    this[privateQuerySymbol] = new PrivateQuery(options);
-  }
-
-  /**
-   * Adds an equal to filter to the query. Requires `field` to equal `value`.
-   * Any existing filters on `field` will be discarded.
-   * http://docs.mongodb.org/manual/reference/operators/#comparison
-   *
-   * @param   {String}        field     Field.
-   * @param   {*}             value     Value.
-   * @returns {Query}                   The query.
-   */
-  equalTo(field, value) {
-    this[privateQuerySymbol].equalTo(field, value);
-    return this;
-  }
-
-  /**
-   * Adds a contains filter to the query. Requires `field` to contain at least
-   * one of the members of `list`.
-   * http://docs.mongodb.org/manual/reference/operator/in/
-   *
-   * @param   {String}        field     Field.
-   * @param   {Array}         values    List of values.
-   * @throws  {Error}                   `values` must be of type: `Array`.
-   * @returns {Query}                   The query.
-   */
-  contains(field, values) {
-    this[privateQuerySymbol].contains(field, values);
-    return this;
-  }
-
-  /**
-   * Adds a contains all filter to the query. Requires `field` to contain all
-   * members of `list`.
-   * http://docs.mongodb.org/manual/reference/operator/all/
-   *
-   * @param   {String}  field     Field.
-   * @param   {Array}   values    List of values.
-   * @throws  {Error}             `values` must be of type: `Array`.
-   * @returns {Query}             The query.
-   */
-  containsAll(field, values) {
-    this[privateQuerySymbol].containsAll(field, values);
-    return this;
-  }
-
-  /**
-   * Adds a greater than filter to the query. Requires `field` to be greater
-   * than `value`.
-   * http://docs.mongodb.org/manual/reference/operator/gt/
-   *
-   * @param   {String}          field     Field.
-   * @param   {Number|String}   value     Value.
-   * @throws  {Error}                     `value` must be of type: `number` or `string`.
-   * @returns {Query}                     The query.
-   */
-  greaterThan(field, value) {
-    this[privateQuerySymbol].greaterThan(field, value);
-    return this;
-  }
-
-  greaterThanOrEqualTo(field, value) {
-    this[privateQuerySymbol].greaterThanOrEqualToe(field, value);
-    return this;
-  }
-
-  lessThan(field, value) {
-    this[privateQuerySymbol].lessThan(field, value);
-    return this;
-  }
-
-  lessThanOrEqualTo(field, value) {
-    this[privateQuerySymbol].lessThanOrEqualTo(field, value);
-    return this;
-  }
-
-  notEqualTo(field, value) {
-    this[privateQuerySymbol].notEqualTo(field, value);
-    return this;
-  }
-
-  notContainedIn(field, values) {
-    this[privateQuerySymbol].notContainedIn(field, values);
-    return this;
-  }
-
-  and() {
-    this[privateQuerySymbol].and.apply(this[privateQuerySymbol], arguments);
-    return this;
-  }
-
-  nor() {
-    this[privateQuerySymbol].nor.apply(this[privateQuerySymbol], arguments);
-    return this;
-  }
-
-  or() {
-    this[privateQuerySymbol].or.apply(this[privateQuerySymbol], arguments);
-    return this;
-  }
-
-  exists(field, flag) {
-    this[privateQuerySymbol].exists(field, flag);
-    return this;
-  }
-
-  mod(field, divisor, remainder) {
-    this[privateQuerySymbol].mod(field, divisor, remainder);
-    return this;
-  }
-
-  matches(field, regExp, options) {
-    this[privateQuerySymbol].matches(field, regExp, options);
-    return this;
-  }
-
-  near(field, coord, maxDistance) {
-    this[privateQuerySymbol].near(field, coord, maxDistance);
-    return this;
-  }
-
-  withinBox(field, bottomLeftCoord, upperRightCoord) {
-    this[privateQuerySymbol].withinBox(field, bottomLeftCoord, upperRightCoord);
-    return this;
-  }
-
-  withinPolygon(field, coords) {
-    this[privateQuerySymbol].withinPolygon(field, coords);
-    return this;
-  }
-
-  size(field, size) {
-    this[privateQuerySymbol].size(field, size);
-    return this;
-  }
-
-  fields(fields) {
-    this[privateQuerySymbol].fields(fields);
-    return this;
-  }
-
-  limit(limit) {
-    this[privateQuerySymbol].limit(limit);
-    return this;
-  }
-
-  skip(skip) {
-    this[privateQuerySymbol].skip(skip);
-    return this;
-  }
-
-  ascending(field) {
-    this[privateQuerySymbol].ascending(field);
-    return this;
-  }
-
-  descending(field) {
-    this[privateQuerySymbol].descending(field);
-    return this;
-  }
-
-  sort(sort) {
-    this[privateQuerySymbol].sort(sort);
-    return this;
-  }
-
-  _process(data) {
-    return this[privateQuerySymbol]._process(data);
-  }
-
-  /**
-   * Returns JSON representation of the query.
-   *
-   * @returns {Object} JSON object-literal.
-   */
-  toJSON() {
-    return this[privateQuerySymbol].toJSON();
   }
 }
