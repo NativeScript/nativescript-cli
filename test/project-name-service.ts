@@ -33,7 +33,7 @@ describe("Project Name Service Tests", () => {
 	let testInjector: IInjector;
 	let projectNameService: IProjectNameService;
 	let validProjectName = "valid";
-	let invalidProjectName = "1invalid";
+	let invalidProjectNames = ["1invalid", "app"];
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
@@ -46,33 +46,35 @@ describe("Project Name Service Tests", () => {
 		assert.deepEqual(actualProjectName, validProjectName);
 	});
 
-	it("returns correct name when invalid name is entered several times and then valid name is entered", () => {
-		let prompter = testInjector.resolve("prompter");
-		prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(false);
+	_.each(invalidProjectNames, invalidProjectName => {
+		it(`returns correct name when "${invalidProjectName}" is entered several times and then valid name is entered`, () => {
+			let prompter = testInjector.resolve("prompter");
+			prompter.confirm = (message: string): IFuture<boolean> => Future.fromResult(false);
 
-		let incorrectInputsLimit = 5;
-		let incorrectInputsCount = 0;
+			let incorrectInputsLimit = 5;
+			let incorrectInputsCount = 0;
 
-		prompter.getString = (message: string): IFuture<string> => {
-			return (() => {
-				if (incorrectInputsCount < incorrectInputsLimit) {
-					incorrectInputsCount++;
+			prompter.getString = (message: string): IFuture<string> => {
+				return (() => {
+					if (incorrectInputsCount < incorrectInputsLimit) {
+						incorrectInputsCount++;
 
-					return invalidProjectName;
-				} else {
-					return validProjectName;
-				}
-			}).future<string>()();
-		};
+						return invalidProjectName;
+					} else {
+						return validProjectName;
+					}
+				}).future<string>()();
+			};
 
-		let actualProjectName = projectNameService.ensureValidName(invalidProjectName).wait();
+			let actualProjectName = projectNameService.ensureValidName(invalidProjectName).wait();
 
-		assert.deepEqual(actualProjectName, validProjectName);
-	});
+			assert.deepEqual(actualProjectName, validProjectName);
+		});
 
-	it("returns the invalid name when invalid name is entered and --force flag is present", () => {
-		let actualProjectName = projectNameService.ensureValidName(validProjectName, { force: true }).wait();
+		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, () => {
+			let actualProjectName = projectNameService.ensureValidName(validProjectName, { force: true }).wait();
 
-		assert.deepEqual(actualProjectName, validProjectName);
+			assert.deepEqual(actualProjectName, validProjectName);
+		});
 	});
 });
