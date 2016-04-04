@@ -417,16 +417,14 @@ export class User {
       timeout: options.timeout
     });
 
-    const promise = request.execute().catch(() => {
-      return null;
-    }).then(() => {
+    const promise = request.execute().catch(() => null).then(() => {
       const isActive = this.isActive();
       if (isActive) {
         return User.setActiveUser(null, this.client);
       }
-    }).then(() => {
-      return this;
-    });
+
+      return null;
+    }).then(() => this);
 
     return promise;
   }
@@ -610,9 +608,7 @@ export class User {
       return this.login(data, null, options);
     }).catch(err => {
       if (err instanceof NotFoundError) {
-        return this.signup(data, options).then(() => {
-          return this.connect(identity, token, options);
-        });
+        return this.signup(data, options).then(() => this.connect(identity, token, options));
       }
 
       throw err;
@@ -791,10 +787,7 @@ export class User {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 
@@ -813,10 +806,7 @@ export class User {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 
@@ -834,10 +824,7 @@ export class User {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 

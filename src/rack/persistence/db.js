@@ -71,6 +71,8 @@ export class DB {
         default:
           Log.warn(`The ${adapter} adapter is is not recognized.`);
       }
+
+      return true;
     });
 
     if (!this.adapter) {
@@ -124,10 +126,7 @@ export class DB {
   }
 
   count(collection, query) {
-    const promise = this.find(collection, query).then(entities => {
-      return entities.length;
-    });
-
+    const promise = this.find(collection, query).then(entities => entities.length);
     return promise;
   }
 
@@ -203,13 +202,10 @@ export class DB {
     }
 
     const promise = this.find(collection, query).then(entities => {
-      const promises = entities.map(entity => {
-        return this.removeById(collection, entity[idAttribute]);
-      });
-
+      const promises = entities.map(entity => this.removeById(collection, entity[idAttribute]));
       return Promise.all(promises);
     }).then(responses => {
-      return reduce(responses, (result, response) => {
+      const result = reduce(responses, (result, response) => {
         result.count += response.count;
         result.entities = result.entities.concat(response.entities);
         return result;
@@ -217,6 +213,7 @@ export class DB {
         count: 0,
         entities: []
       });
+      return result;
     });
 
     return promise;

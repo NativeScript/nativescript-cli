@@ -48,9 +48,7 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
@@ -97,9 +95,7 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Grouped the entities in the ${this.name} collection.`, response);
@@ -145,9 +141,7 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
@@ -191,9 +185,7 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
@@ -246,11 +238,7 @@ export class SyncStore extends CacheStore {
       });
     }
 
-    const promise = request.execute().then(response => {
-      return this._sync(response.data, options).then(() => {
-        return response.data;
-      });
-    });
+    const promise = request.execute().then(response => this._sync(response.data, options).then(() => response.data));
 
     promise.then(response => {
       Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
@@ -294,11 +282,8 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return this._sync(response.data.entities, options).then(() => {
-        return response.data;
-      });
-    });
+    const promise = request.execute()
+      .then(response => this._sync(response.data.entities, options).then(() => response.data));
 
     promise.then(response => {
       Log.info(`Removed the entities in the ${this.name} collection.`, response);
@@ -340,11 +325,8 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return this._sync(response.data.entities, options).then(() => {
-        return response.data;
-      });
-    });
+    const promise = request.execute()
+      .then(response => this._sync(response.data.entities, options).then(() => response.data));
 
     promise.then(response => {
       Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
@@ -374,10 +356,7 @@ export class SyncStore extends CacheStore {
       }
 
       return super.find(query, options);
-    }).then(result => {
-      return result.networkPromise;
-    });
-
+    }).then(result => result.networkPromise);
     return promise;
   }
 }

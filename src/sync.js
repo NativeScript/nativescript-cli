@@ -22,11 +22,8 @@ const Sync = {
 
   count(query, options) {
     const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
-    const promise = syncStore.find(query, options).then(syncData => {
-      return reduce(syncData, function (result, data) {
-        return result + data.size;
-      }, 0);
-    });
+    const promise = syncStore.find(query, options)
+      .then(syncData => reduce(syncData, (result, data) => result + data.size, 0));
     return promise;
   },
 

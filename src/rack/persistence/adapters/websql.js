@@ -43,7 +43,7 @@ export class WebSQL {
       db[writeTxn ? 'transaction' : 'readTransaction'](tx => {
         if (write && !isMaster) {
           tx.executeSql(`CREATE TABLE IF NOT EXISTS ${escapedCollection} ` +
-            `(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)`);
+            '(key BLOB PRIMARY KEY NOT NULL, value BLOB NOT NULL)');
         }
 
         let pending = query.length;
@@ -86,16 +86,16 @@ export class WebSQL {
             `the ${this.name} webSQL database.`));
         }
 
-        const query = `SELECT name AS value from #{collection} WHERE type = ? AND name = ?`;
+        const query = 'SELECT name AS value from #{collection} WHERE type = ? AND name = ?';
         const parameters = ['table', collection];
 
-        this.openTransaction(masterCollectionName, query, parameters).then(response => {
+        return this.openTransaction(masterCollectionName, query, parameters).then(response => {
           if (response.result.length === 0) {
             return reject(new NotFoundError(`The ${collection} collection was not found on ` +
               `the ${this.name} webSQL database.`));
           }
 
-          reject(new KinveyError(`Unable to open a transaction for the ${collection} ` +
+          return reject(new KinveyError(`Unable to open a transaction for the ${collection} ` +
             `collection on the ${this.name} webSQL database.`));
         }).catch(err => {
           reject(new KinveyError(`Unable to open a transaction for the ${collection} ` +
@@ -109,9 +109,7 @@ export class WebSQL {
 
   find(collection) {
     const sql = 'SELECT value FROM #{collection}';
-    const promise = this.openTransaction(collection, sql, []).then(response => {
-      return response.result;
-    }).catch(error => {
+    const promise = this.openTransaction(collection, sql, []).then(response => response.result).catch(error => {
       if (error instanceof NotFoundError) {
         return [];
       }
@@ -147,9 +145,7 @@ export class WebSQL {
       return entity;
     });
 
-    const promise = this.openTransaction(collection, queries, null, true).then(() => {
-      return entities;
-    });
+    const promise = this.openTransaction(collection, queries, null, true).then(() => entities);
     return promise;
   }
 
@@ -160,7 +156,7 @@ export class WebSQL {
     ], null, true).then(response => {
       const entities = response[0].result;
       let count = response[1].rowCount;
-      count = count ? count : entities.length;
+      count = count !== undefined ? count : entities.length;
 
       if (count === 0) {
         throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
@@ -177,6 +173,6 @@ export class WebSQL {
   }
 
   static isSupported() {
-    return webSQL ? true : false;
+    return webSQL !== undefined;
   }
 }

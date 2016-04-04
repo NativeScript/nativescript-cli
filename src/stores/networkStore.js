@@ -100,9 +100,7 @@ export class NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
@@ -154,9 +152,7 @@ export class NetworkStore {
       timeout: options.timeout
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Grouped the entities in the ${this.name} collection.`, response);
@@ -207,9 +203,7 @@ export class NetworkStore {
       timeout: options.timeout
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
@@ -257,9 +251,7 @@ export class NetworkStore {
       timeout: options.timeout
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
@@ -318,9 +310,7 @@ export class NetworkStore {
       });
     }
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
@@ -370,9 +360,7 @@ export class NetworkStore {
       timeout: options.timeout
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Removed the entities in the ${this.name} collection.`, response);
@@ -420,9 +408,7 @@ export class NetworkStore {
       timeout: options.timeout
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
 
     promise.then(response => {
       Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);

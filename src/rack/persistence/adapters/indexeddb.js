@@ -118,7 +118,7 @@ export class IndexedDB {
       // to empty the queue upon success and failure. Set the `force` flag so
       // all but the current transaction remain queued.
       const wrap = done => {
-        return arg => {
+        const callbackFn = arg => {
           done(arg);
 
           // Switch flag
@@ -135,20 +135,23 @@ export class IndexedDB {
             });
           }
         };
+        return callbackFn;
       };
 
-      this.openTransaction(collection, write, wrap(success), wrap(error), true);
+      return this.openTransaction(collection, write, wrap(success), wrap(error), true);
     };
 
     request.onblocked = () => {
       error(new KinveyError(`The ${this.name} indexedDB database version can't be upgraded ` +
-        `because the database is already open.`));
+        'because the database is already open.'));
     };
 
     request.onerror = e => {
       error(new KinveyError(`Unable to open the ${this.name} indexedDB database. ` +
         `Received the error code ${e.target.errorCode}.`));
     };
+
+    return null;
   }
 
   find(collection) {
@@ -157,11 +160,11 @@ export class IndexedDB {
         return reject(new KinveyError('A collection was not provided.'));
       }
 
-      this.openTransaction(collection, false, store => {
+      return this.openTransaction(collection, false, store => {
         const request = store.openCursor();
         const response = [];
 
-        request.onsuccess = function onSuccess(e) {
+        request.onsuccess = e => {
           const cursor = e.target.result;
 
           if (cursor) {
@@ -169,10 +172,10 @@ export class IndexedDB {
             return cursor.continue();
           }
 
-          resolve(response);
+          return resolve(response);
         };
 
-        request.onerror = (e) => {
+        request.onerror = e => {
           reject(new KinveyError(`An error occurred while fetching data from the ${collection} ` +
             `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
         };
@@ -181,7 +184,7 @@ export class IndexedDB {
           return resolve([]);
         }
 
-        reject(error);
+        return reject(error);
       });
     });
 
@@ -193,14 +196,14 @@ export class IndexedDB {
       this.openTransaction(collection, false, store => {
         const request = store.get(id);
 
-        request.onsuccess = (e) => {
+        request.onsuccess = e => {
           const entity = e.target.result;
 
           if (entity) {
             return resolve(entity);
           }
 
-          reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
+          return reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
             `collection on the ${this.name} indexedDB database.`));
         };
 
@@ -215,7 +218,7 @@ export class IndexedDB {
             `collection on the ${this.name} indexedDB database.`));
         }
 
-        reject(error);
+        return reject(error);
       });
     });
 
@@ -269,13 +272,13 @@ export class IndexedDB {
               + `collection on the ${this.name} indexedDB database.`));
           }
 
-          resolve({
+          return resolve({
             count: 1,
             entities: [doc.result]
           });
         };
 
-        request.onerror = (e) => {
+        request.onerror = e => {
           reject(new KinveyError(`An error occurred while deleting an entity with id = ${id} ` +
             `in the ${collection} collection on the ${this.name} indexedDB database. ` +
             `Received the error code ${e.target.errorCode}.`));
@@ -287,6 +290,6 @@ export class IndexedDB {
   }
 
   static isSupported() {
-    return indexedDB ? true : false;
+    return indexedDB !== undefined;
   }
 }

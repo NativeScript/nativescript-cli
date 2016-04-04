@@ -35,9 +35,7 @@ export class LocalStorage {
 
   findById(collection, id) {
     return this.find(collection).then(entities => {
-      const entity = find(entities, entity => {
-        return entity[idAttribute] === id;
-      });
+      const entity = find(entities, entity => entity[idAttribute] === id);
 
       if (!entity) {
         throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +

@@ -34,23 +34,23 @@ export class RequestProperties {
    * @param  {Any} version App version.
    * @return {RequestProperties} The request properties instance.
    */
-  set appVersion(version) {
-    version = Array.prototype.slice.call(arguments, 1);
-    const major = version[0];
+  set appVersion(...args) {
+    const version = Array.prototype.slice.call(args, 1);
+    const major = args[0];
     const minor = version[1];
     const patch = version[2];
     let appVersion = '';
 
     if (major) {
-      appVersion = (major + '').trim();
+      appVersion = `${major}`.trim();
     }
 
     if (minor) {
-      appVersion = ('.' + minor).trim();
+      appVersion = `.${minor}`.trim();
     }
 
     if (patch) {
-      appVersion = ('.' + patch).trim();
+      appVersion = `.${patch}`.trim();
     }
 
     this.setProperty(appVersionKey, appVersion);

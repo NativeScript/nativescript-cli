@@ -166,24 +166,24 @@ export class Query {
     return this.addFilter(field, '$nin', values);
   }
 
-  and() {
-    return this.join('$and', Array.prototype.slice.call(arguments));
+  and(...args) {
+    return this.join('$and', Array.prototype.slice.call(args));
   }
 
-  nor() {
+  nor(...args) {
     if (this.parent && this.parent.filter.$and) {
-      return this.parent.nor.apply(this.parent, arguments);
+      return this.parent.nor.apply(this.parent, args);
     }
 
-    return this.join('$nor', Array.prototype.slice.call(arguments));
+    return this.join('$nor', Array.prototype.slice.call(args));
   }
 
-  or() {
+  or(...args) {
     if (this.parent) {
-      return this.parent.or.apply(this.parent, arguments);
+      return this.parent.or.apply(this.parent, args);
     }
 
-    return this.join('$or', Array.prototype.slice.call(arguments));
+    return this.join('$or', Array.prototype.slice.call(args));
   }
 
   exists(field, flag) {
@@ -295,7 +295,7 @@ export class Query {
       throw new Error('coords argument must be of type: [[number, number]]');
     }
 
-    coords = coords.map(function (coord) {
+    coords = coords.map(coord => {
       if (!coord[0] || !coord[1]) {
         throw new Error('coords argument must be of type: [number, number]');
       }
@@ -436,7 +436,7 @@ export class Query {
     // Cast, validate, and parse arguments. If `queries` are supplied, obtain
     // the `filter` for joining. The eventual return function will be the
     // current query.
-    queries = queries.map(function (query) {
+    queries = queries.map(query => {
       if (!(query instanceof Query)) {
         if (isObject(query)) {
           query = new Query(query);
@@ -531,6 +531,8 @@ export class Query {
             const modifier = json.sort[field]; // 1 or -1.
             return (aField < bField ? -1 : 1) * modifier;
           }
+
+          return 0;
         });
 
         return 0;

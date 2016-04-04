@@ -68,10 +68,7 @@ export class UserStore extends NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data.usernameExists;
-    });
-
+    const promise = request.execute().then(response => response.data.usernameExists);
     return promise;
   }
 
@@ -89,10 +86,7 @@ export class UserStore extends NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 }

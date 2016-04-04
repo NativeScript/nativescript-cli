@@ -6,7 +6,7 @@ import isFunction from 'lodash/isFunction';
  */
 export function nested(obj, dotProperty, value) {
   if (!dotProperty) {
-    obj = value ? value : obj;
+    obj = value !== undefined ? value : obj;
     return obj;
   }
 
@@ -17,7 +17,7 @@ export function nested(obj, dotProperty, value) {
     current = parts.shift();
   }
 
-  return value ? value : obj;
+  return value !== undefined ? value : obj;
 }
 
 /**
@@ -34,8 +34,8 @@ export function use(nsInterface) {
   return function(adapter = {}) {
     forEach(nsInterface, methodName => {
       if (isFunction(adapter[methodName])) {
-        this.prototype[methodName] = function() {
-          return adapter[methodName].apply(this, arguments);
+        this.prototype[methodName] = function(...args) {
+          return adapter[methodName].apply(this, args);
         };
       }
     });

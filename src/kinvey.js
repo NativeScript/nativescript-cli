@@ -56,10 +56,7 @@ class Kinvey {
       })
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 }

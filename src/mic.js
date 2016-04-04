@@ -38,18 +38,13 @@ export class MobileIdentityConnect {
         return this.requestCodeWithPopup(clientId, redirectUri, options);
       } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
         // Step 1a: Request a temp login url
-        return this.requestTempLoginUrl(clientId, redirectUri, options).then(url => {
-          // Step 1b: Request a code
-          return this.requestCodeWithUrl(url, clientId, redirectUri, options);
-        });
+        return this.requestTempLoginUrl(clientId, redirectUri, options)
+          .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
       }
 
       throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
-        `Please use a supported authorization grant.`);
-    }).then(code => {
-      // Step 3: Request a token
-      return this.requestToken(code, clientId, redirectUri, options);
-    });
+        'Please use a supported authorization grant.');
+    }).then(code => this.requestToken(code, clientId, redirectUri, options)); // Step 3: Request a token
 
     return promise;
   }
@@ -84,9 +79,7 @@ export class MobileIdentityConnect {
         response_type: 'code'
       }
     });
-    return request.execute().then(response => {
-      return response.data.temp_login_uri;
-    });
+    return request.execute().then(response => response.data.temp_login_uri);
   }
 
   requestCodeWithPopup(clientId, redirectUri, options = {}) {
@@ -115,7 +108,7 @@ export class MobileIdentityConnect {
       }));
       return popup.open();
     }).then((popup) => {
-      return new Promise((resolve, reject) => {
+      const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
         function loadHandler(loadedUrl) {
@@ -138,6 +131,7 @@ export class MobileIdentityConnect {
         popup.on('loaded', loadHandler);
         popup.on('closed', closeHandler);
       });
+      return promise;
     });
 
     return promise;
@@ -197,9 +191,7 @@ export class MobileIdentityConnect {
     });
     request.automaticallyRefreshAuthToken = false;
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 

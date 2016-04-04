@@ -60,15 +60,13 @@ export class FileStore extends NetworkStore {
     }, options);
 
     options.flags = {
-      tls: options.tls === true ? true : false,
+      tls: options.tls === true,
       ttl_in_seconds: options.ttl
     };
 
     const promise = super.find(query, options).then(files => {
       if (options.download === true) {
-        const promises = map(files, file => {
-          return this.downloadByUrl(file._downloadURL, options);
-        });
+        const promises = map(files, file => this.downloadByUrl(file._downloadURL, options));
         return Promise.all(promises);
       }
 
@@ -114,7 +112,7 @@ export class FileStore extends NetworkStore {
     }, options);
 
     options.flags = {
-      tls: options.tls === true ? true : false,
+      tls: options.tls === true,
       ttl_in_seconds: options.ttl
     };
 
@@ -140,9 +138,7 @@ export class FileStore extends NetworkStore {
       request.removeHeader('Content-Type');
       request.removeHeader('X-Kinvey-Api-Version');
       return request.execute();
-    }).then(response => {
-      return response.data;
-    });
+    }).then(response => response.data);
 
     return promise;
   }

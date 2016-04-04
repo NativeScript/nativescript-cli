@@ -45,8 +45,6 @@ export class Command {
       auth: client.defaultAuth(),
       data: args,
       timeout: options.timeout
-    }).then(response => {
-      return response.data;
-    });
+    }).then(response => response.data);
   }
 }

@@ -123,8 +123,9 @@ export class Aggregation {
     }
 
     aggregation.initial({ result: 0 });
-    aggregation.reduce(function (doc, out) {
+    aggregation.reduce((doc, out) => {
       out.result += 1;
+      return out;
     });
     return aggregation;
   }
@@ -134,9 +135,9 @@ export class Aggregation {
 
     const aggregation = new Aggregation();
     aggregation.initial({ result: 0 });
-    aggregation.reduce(`function(doc, out) { ` +
+    aggregation.reduce('function(doc, out) { ' +
       ` out.result += doc["${field}"]; ` +
-      `}`
+      '}'
     );
     return aggregation;
   }
@@ -146,9 +147,9 @@ export class Aggregation {
 
     const aggregation = new Aggregation();
     aggregation.initial({ result: Infinity });
-    aggregation.reduce(`function(doc, out) { ` +
+    aggregation.reduce('function(doc, out) { ' +
       ` out.result = Math.min(out.result, doc["${field}"]); ` +
-      `}`
+      '}'
     );
     return aggregation;
   }
@@ -158,9 +159,9 @@ export class Aggregation {
 
     const aggregation = new Aggregation();
     aggregation.initial({ result: -Infinity });
-    aggregation.reduce(`function(doc, out) { ` +
+    aggregation.reduce('function(doc, out) { ' +
       ` out.result = Math.max(out.result, doc["${field}"]); ` +
-      `}`
+      '}'
     );
     return aggregation;
   }
@@ -170,10 +171,10 @@ export class Aggregation {
 
     const aggregation = new Aggregation();
     aggregation.initial({ count: 0, result: 0 });
-    aggregation.reduce(`function(doc, out) { ` +
+    aggregation.reduce('function(doc, out) { ' +
       ` out.result = (out.result * out.count + doc["${field}"]) / (out.count + 1);` +
-      ` out.count += 1;` +
-      `}`
+      ' out.count += 1;' +
+      '}'
     );
     return aggregation;
   }

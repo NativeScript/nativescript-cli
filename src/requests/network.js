@@ -20,9 +20,7 @@ export class NetworkRequest extends KinveyRequest {
   }
 
   execute() {
-    const promise = super.execute().then(() => {
-      return this.rack.execute(this);
-    }).then(response => {
+    const promise = super.execute().then(() => this.rack.execute(this)).then(response => {
       if (!response) {
         throw new NoResponseError();
       }
@@ -72,9 +70,7 @@ export class NetworkRequest extends KinveyRequest {
           });
           request.automaticallyRefreshAuthToken = false;
 
-          return request.execute().then(response => {
-            return response.data;
-          }).then(token => {
+          return request.execute().then(response => response.data).then(token => {
             // Login the user with the new token
             const activeUserData = this.client.getActiveUserData();
             const socialIdentity = activeUserData[socialIdentityAttribute];
@@ -126,9 +122,7 @@ export class NetworkRequest extends KinveyRequest {
   }
 
   cancel() {
-    const promise = super.cancel().then(() => {
-      return this.rack.cancel();
-    });
+    const promise = super.cancel().then(() => this.rack.cancel());
     return promise;
   }
 }

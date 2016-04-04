@@ -269,7 +269,7 @@ export class Request {
   }
 
   isExecuting() {
-    return this.executing ? true : false;
+    return this.executing === true;
   }
 
   execute() {

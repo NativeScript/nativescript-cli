@@ -106,16 +106,14 @@ class CacheStore extends NetworkStore {
 
       result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
-          return this.push().then(() => {
-            return this.syncCount();
-          });
+          return this.push().then(() => this.syncCount());
         }
 
         return count;
       }).then(count => {
         if (count > 0) {
           throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
-           `to be synced before data is loaded from the network.`);
+           'to be synced before data is loaded from the network.');
         }
 
         if (options.useDeltaFetch) {
@@ -132,9 +130,7 @@ class CacheStore extends NetworkStore {
             timeout: options.timeout,
             client: this.client
           });
-          return request.execute().then(response => {
-            return response.data;
-          });
+          return request.execute().then(response => response.data);
         }
 
         return super.find(query, options);
@@ -156,9 +152,7 @@ class CacheStore extends NetworkStore {
           timeout: options.timeout,
           client: this.client
         });
-        return request.execute().then(() => {
-          return this._cache(networkEntities);
-        });
+        return request.execute().then(() => this._cache(networkEntities));
       });
 
       return result;
@@ -221,16 +215,14 @@ class CacheStore extends NetworkStore {
 
       result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
-          return this.push().then(() => {
-            return this.syncCount();
-          });
+          return this.push().then(() => this.syncCount());
         }
 
         return count;
       }).then(count => {
         if (count > 0) {
           throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
-           `to be synced before data is loaded from the network.`);
+           'to be synced before data is loaded from the network.');
         }
 
         return super.group(aggregation, options);
@@ -295,16 +287,14 @@ class CacheStore extends NetworkStore {
 
       result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
-          return this.push().then(() => {
-            return this.syncCount();
-          });
+          return this.push().then(() => this.syncCount());
         }
 
         return count;
       }).then(count => {
         if (count > 0) {
           throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
-           `to be synced before data is loaded from the network.`);
+           'to be synced before data is loaded from the network.');
         }
 
         return super.count(query, options);
@@ -368,16 +358,14 @@ class CacheStore extends NetworkStore {
 
       result.networkPromise = this.syncCount().then(count => {
         if (count > 0) {
-          return this.push().then(() => {
-            return this.syncCount();
-          });
+          return this.push().then(() => this.syncCount());
         }
 
         return count;
       }).then(count => {
         if (count > 0) {
           throw new KinveyError(`Unable to load data from the network. There are ${count} entities that need ` +
-           `to be synced before data is loaded from the network.`);
+           'to be synced before data is loaded from the network.');
         }
 
         if (options.useDeltaFetch) {
@@ -393,15 +381,11 @@ class CacheStore extends NetworkStore {
             timeout: options.timeout,
             client: this.client
           });
-          return request.execute().then(response => {
-            return response.data;
-          });
+          return request.execute().then(response => response.data);
         }
 
         return super.findById(id, options);
-      }).then(data => {
-        return this._cache(data);
-      }).catch(error => {
+      }).then(data => this._cache(data)).catch(error => {
         if (error instanceof NotFoundError) {
           const request = new LocalRequest({
             method: HttpMethod.DELETE,
@@ -481,14 +465,13 @@ class CacheStore extends NetworkStore {
 
       return request.execute();
     }).then(response => {
-      return this._sync(response.data, options).then(() => {
+      const promise = this._sync(response.data, options).then(() => {
         const data = isArray(response.data) ? response.data : [response.data];
         const ids = Object.keys(keyBy(data, idAttribute));
         const query = new Query().contains(idAttribute, ids);
         return this.push(query, options);
-      }).then(() => {
-        return response.data;
-      });
+      }).then(() => response.data);
+      return promise;
     });
 
     promise.then(response => {
@@ -535,12 +518,11 @@ class CacheStore extends NetworkStore {
       });
       return request.execute();
     }).then(response => {
-      return this._sync(response.data.entities, options).then(() => {
+      const promise = this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, []);
         return this.push(query, options);
-      }).then(() => {
-        return response.data;
-      });
+      }).then(() => response.data);
+      return promise;
     });
 
     promise.then(response => {
@@ -586,12 +568,11 @@ class CacheStore extends NetworkStore {
       });
       return request.execute();
     }).then(response => {
-      return this._sync(response.data.entities, options).then(() => {
+      const promise = this._sync(response.data.entities, options).then(() => {
         const query = new Query().contains(idAttribute, [id]);
         return this.push(query, options);
-      }).then(() => {
-        return response.data;
-      });
+      }).then(() => response.data);
+      return promise;
     });
 
     promise.then(response => {
@@ -742,11 +723,9 @@ class CacheStore extends NetworkStore {
                     `when trying to remove entity with _id ${originalId}.`)
                 };
               });
-            }).catch(err => {
-              return {
-                _id: originalId,
-                error: err
-              };
+            }).catch(error => {
+              const result = { _id: originalId, error: error };
+              return result;
             });
           }
 
@@ -885,9 +864,7 @@ class CacheStore extends NetworkStore {
           timeout: options.timeout,
           client: this.client
         });
-        return request.execute().then(() => {
-          return result;
-        });
+        return request.execute().then(() => result);
       });
     }).catch(err => {
       if (err instanceof NotFoundError) {
@@ -931,10 +908,7 @@ class CacheStore extends NetworkStore {
       }
 
       return this.find(query, options);
-    }).then(result => {
-      return result.network;
-    });
-
+    }).then(result => result.network);
     return promise;
   }
 
@@ -960,14 +934,15 @@ class CacheStore extends NetworkStore {
    */
   sync(query, options = {}) {
     const promise = this.push(null, options).then(pushResponse => {
-      return this.pull(query, options).then(pullResponse => {
-        return {
+      const promise = this.pull(query, options).then(pullResponse => {
+        const result = {
           push: pushResponse,
           pull: pullResponse
         };
+        return result;
       });
+      return promise;
     });
-
     return promise;
   }
 
@@ -1010,9 +985,7 @@ class CacheStore extends NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data.size || 0;
-    }).catch(err => {
+    const promise = request.execute().then(response => response.data.size || 0).catch(err => {
       if (err instanceof NotFoundError) {
         return 0;
       }
@@ -1048,10 +1021,7 @@ class CacheStore extends NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => {
-      return response.data;
-    });
-
+    const promise = request.execute().then(response => response.data);
     return promise;
   }
 
@@ -1135,9 +1105,7 @@ class CacheStore extends NetworkStore {
         client: this.client
       });
       return request.execute();
-    }).then(() => {
-      return null;
-    });
+    }).then(() => null);
 
     return promise;
   }

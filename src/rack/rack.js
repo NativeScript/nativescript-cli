@@ -113,11 +113,9 @@ export class Rack extends KinveyMiddleware {
       return Promise.reject(new Error('Request is null. Please provide a valid request.'));
     }
 
-    return reduce(this.middlewares, (promise, middleware) => {
-      return promise.then(request => {
-        return middleware.handle(request);
-      });
-    }, Promise.resolve(request));
+    return reduce(this.middlewares,
+                  (promise, middleware) => promise.then(request => middleware.handle(request)),
+                  Promise.resolve(request));
   }
 
   cancel() {
@@ -145,9 +143,7 @@ export class Rack extends KinveyMiddleware {
  */
 export class KinveyRack extends Rack {
   execute(request) {
-    const promise = super.execute(request).then(request => {
-      return request.response;
-    });
+    const promise = super.execute(request).then(request => request.response);
     return promise;
   }
 }

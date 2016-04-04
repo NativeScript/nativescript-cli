@@ -38,7 +38,7 @@ export class Memory {
 
   find(collection) {
     return queue.add(() => {
-      return Promise.resolve().then(() => {
+      const promise = Promise.resolve().then(() => {
         const entities = this.cache.get(`${this.name}${collection}`);
 
         if (entities) {
@@ -57,14 +57,13 @@ export class Memory {
 
         return entities;
       });
+      return promise;
     });
   }
 
   findById(collection, id) {
     return this.find(collection).then(entities => {
-      const entity = find(entities, entity => {
-        return entity[idAttribute] === id;
-      });
+      const entity = find(entities, entity => entity[idAttribute] === id);
 
       if (!entity) {
         throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +

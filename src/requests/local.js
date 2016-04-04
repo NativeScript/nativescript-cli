@@ -13,9 +13,7 @@ export class LocalRequest extends KinveyRequest {
   }
 
   execute() {
-    const promise = super.execute().then(() => {
-      return this.rack.execute(this);
-    }).then(response => {
+    const promise = super.execute().then(() => this.rack.execute(this)).then(response => {
       if (!response) {
         throw new NoResponseError();
       }
@@ -41,9 +39,7 @@ export class LocalRequest extends KinveyRequest {
   }
 
   cancel() {
-    const promise = super.cancel().then(() => {
-      return this.rack.cancel();
-    });
+    const promise = super.cancel().then(() => this.rack.cancel());
     return promise;
   }
 }
