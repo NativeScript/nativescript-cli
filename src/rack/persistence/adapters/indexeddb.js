@@ -45,7 +45,9 @@ export class IndexedDB {
     let db = dbCache[this.name];
 
     if (db) {
-      const containsCollection = isFunction(db.objectStoreNames.contains) ? db.objectStoreNames.contains(collection) : db.objectStoreNames.indexOf(collection) !== -1;
+      const containsCollection = isFunction(db.objectStoreNames.contains) ?
+        db.objectStoreNames.contains(collection) : db.objectStoreNames.indexOf(collection) !== -1;
+
       if (containsCollection) {
         try {
           const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;

@@ -45,89 +45,102 @@ export class DeltaFetchRequest extends KinveyRequest {
 
       throw error;
     }).then(cacheResponse => {
-      const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
-      const query = new Query(result(this.query, 'toJSON', this.query));
-      query.fields([idAttribute, kmdAttribute]);
+      if (cacheResponse.data.length > 0) {
+        const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
+        const query = new Query(result(this.query, 'toJSON', this.query));
+        query.fields([idAttribute, kmdAttribute]);
+        const networkRequest = new NetworkRequest({
+          method: HttpMethod.GET,
+          url: this.url,
+          headers: this.headers,
+          auth: this.auth,
+          query: query,
+          timeout: this.timeout,
+          client: this.client
+        });
+
+        return networkRequest.execute().then(networkResponse => {
+          const networkDocuments = keyBy(networkResponse.data, idAttribute);
+          const deltaSet = networkDocuments;
+          const cacheDocumentIds = Object.keys(cacheDocuments);
+
+          forEach(cacheDocumentIds, id => {
+            const cacheDocument = cacheDocuments[id];
+            const networkDocument = networkDocuments[id];
+
+            if (networkDocument) {
+              if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute]
+                  && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
+                delete deltaSet[id];
+              } else {
+                delete cacheDocuments[id];
+              }
+            } else {
+              delete cacheDocuments[id];
+            }
+          });
+
+          const deltaSetIds = Object.keys(deltaSet);
+          const promises = [];
+          let i = 0;
+
+          while (i < deltaSetIds.length) {
+            const query = new Query(result(this.query, 'toJSON', this.query));
+            const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
+                                             maxIdsPerRequest : deltaSetIds.length);
+            query.contains(idAttribute, ids);
+            const networkRequest = new NetworkRequest({
+              method: HttpMethod.GET,
+              url: this.url,
+              headers: this.headers,
+              auth: this.auth,
+              query: query,
+              timeout: this.timeout,
+              client: this.client
+            });
+
+            const promise = networkRequest.execute();
+            promises.push(promise);
+            i += maxIdsPerRequest;
+          }
+
+          return Promise.all(promises).then(responses => {
+            const initialResponse = new Response({
+              statusCode: StatusCode.Ok,
+              data: []
+            });
+            return reduce(responses, (result, response) => {
+              if (response.isSuccess()) {
+                result.addHeaders(response.headers);
+                result.data = result.data.concat(response.data);
+              }
+
+              return result;
+            }, initialResponse);
+          }).then(response => {
+            response.data = response.data.concat(values(cacheDocuments));
+
+            if (this.query) {
+              const query = new Query(result(this.query, 'toJSON', this.query));
+              query.skip(0).limit(0);
+              response.data = query._process(response.data);
+            }
+
+            return response;
+          });
+        });
+      }
+
       const networkRequest = new NetworkRequest({
         method: HttpMethod.GET,
         url: this.url,
         headers: this.headers,
         auth: this.auth,
-        query: query,
+        query: this.query,
         timeout: this.timeout,
         client: this.client
       });
-
-      return networkRequest.execute().then(networkResponse => {
-        const networkDocuments = keyBy(networkResponse.data, idAttribute);
-        const deltaSet = networkDocuments;
-        const cacheDocumentIds = Object.keys(cacheDocuments);
-
-        forEach(cacheDocumentIds, id => {
-          const cacheDocument = cacheDocuments[id];
-          const networkDocument = networkDocuments[id];
-
-          if (networkDocument) {
-            if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute]
-                && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
-              delete deltaSet[id];
-            } else {
-              delete cacheDocuments[id];
-            }
-          } else {
-            delete cacheDocuments[id];
-          }
-        });
-
-        const deltaSetIds = Object.keys(deltaSet);
-        const promises = [];
-        let i = 0;
-
-        while (i < deltaSetIds.length) {
-          const query = new Query();
-          const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
-                                           maxIdsPerRequest : deltaSetIds.length);
-          query.contains(idAttribute, ids);
-          const networkRequest = new NetworkRequest({
-            method: HttpMethod.GET,
-            url: this.url,
-            headers: this.headers,
-            auth: this.auth,
-            query: query,
-            timeout: this.timeout,
-            client: this.client
-          });
-
-          const promise = networkRequest.execute();
-          promises.push(promise);
-          i += maxIdsPerRequest;
-        }
-
-        return Promise.all(promises).then(responses => {
-          const initialResponse = new Response({
-            statusCode: StatusCode.Ok,
-            data: []
-          });
-          return reduce(responses, (result, response) => {
-            if (response.isSuccess()) {
-              result.addHeaders(response.headers);
-              result.data = result.data.concat(response.data);
-            }
-
-            return result;
-          }, initialResponse);
-        }).then(response => {
-          response.data = response.data.concat(values(cacheDocuments));
-
-          if (this.query) {
-            const query = new Query(result(this.query, 'toJSON', this.query));
-            query.skip(0).limit(0);
-            response.data = query._process(response.data);
-          }
-
-          return response;
-        });
-      });
+      return networkRequest.execute();
     });
 
     return promise;
