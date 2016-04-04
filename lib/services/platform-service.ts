@@ -299,10 +299,10 @@ export class PlatformService implements IPlatformService {
 			// Process configurations files from App_Resources
 			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
 
+			this.applyBaseConfigOption(platformData).wait();
+
 			// Replace placeholders in configuration files
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
-
-			this.applyBaseConfigOption(platformData).wait();
 
 			this.$logger.out("Project successfully prepared");
 			return true;

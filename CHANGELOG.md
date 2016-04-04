@@ -1,6 +1,18 @@
 NativeScript CLI Changelog
 ================
 
+1.7.1 (2016, March 30)
+==
+
+### New
+* [Implemented #1634](https://github.com/NativeScript/nativescript-cli/issues/1634): Replace plugin variables in all .xml files of android's plugin code.
+
+### Fixed
+* [Fixed #1610](https://github.com/NativeScript/nativescript-cli/issues/1610): `tns plugin add <plugin>` has issues with postinstall scripts.
+* [Fixed #1610](https://github.com/NativeScript/nativescript-cli/issues/1612): Unable to execute unit tests on iOS Simulator in some cases.
+* [Fixed #1619](https://github.com/NativeScript/nativescript-cli/issues/1619): Wrong error message on installation (or `tns doctor` command).
+* [Fixed #1625](https://github.com/NativeScript/nativescript-cli/issues/1625): Double navigation when showing unit test results.
+
 1.7.0 (2016, March 16)
 ==
 
