@@ -23,7 +23,7 @@ var _network = require('../requests/network');
 
 var _query = require('../query');
 
-var _Log = require('../Log');
+var _log = require('../log');
 
 var _qs = require('qs');
 
@@ -112,7 +112,7 @@ var NetworkStore = exports.NetworkStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      _Log.Log.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
+      _log.Log.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
         properties: null,
@@ -144,9 +144,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Retrieved the entities in the ' + _this.name + ' collection.', response);
+        _log.Log.info('Retrieved the entities in the ' + _this.name + ' collection.', response);
       }).catch(function (error) {
-        _Log.Log.error('Failed to retrieve the entities in the ' + _this.name + ' collection.', error);
+        _log.Log.error('Failed to retrieve the entities in the ' + _this.name + ' collection.', error);
       });
 
       return promise;
@@ -173,7 +173,7 @@ var NetworkStore = exports.NetworkStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      _Log.Log.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
+      _log.Log.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
 
       options = (0, _assign2.default)({
         properties: null,
@@ -204,9 +204,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Grouped the entities in the ' + _this2.name + ' collection.', response);
+        _log.Log.info('Grouped the entities in the ' + _this2.name + ' collection.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to group the entities in the ' + _this2.name + ' collection.', err);
+        _log.Log.error('Failed to group the entities in the ' + _this2.name + ' collection.', err);
       });
 
       return promise;
@@ -233,7 +233,7 @@ var NetworkStore = exports.NetworkStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      _Log.Log.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
+      _log.Log.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
         properties: null,
@@ -264,9 +264,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Counted the number of entities in the ' + _this3.name + ' collection.', response);
+        _log.Log.info('Counted the number of entities in the ' + _this3.name + ' collection.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to count the number of entities in the ' + _this3.name + ' collection.', err);
+        _log.Log.error('Failed to count the number of entities in the ' + _this3.name + ' collection.', err);
       });
 
       return promise;
@@ -292,11 +292,11 @@ var NetworkStore = exports.NetworkStore = function () {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       if (!id) {
-        _Log.Log.warn('No id was provided to retrieve an entity.', id);
+        _log.Log.warn('No id was provided to retrieve an entity.', id);
         return _babybird2.default.resolve(null);
       }
 
-      _Log.Log.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
+      _log.Log.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
 
       options = (0, _assign2.default)({
         properties: null,
@@ -321,9 +321,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Retrieved the entity in the ' + _this4.name + ' collection with id = ' + id + '.', response);
+        _log.Log.info('Retrieved the entity in the ' + _this4.name + ' collection with id = ' + id + '.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to retrieve the entity in the ' + _this4.name + ' collection with id = ' + id + '.', err);
+        _log.Log.error('Failed to retrieve the entity in the ' + _this4.name + ' collection with id = ' + id + '.', err);
       });
 
       return promise;
@@ -349,11 +349,11 @@ var NetworkStore = exports.NetworkStore = function () {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       if (!entity) {
-        _Log.Log.warn('No entity was provided to be saved.', entity);
+        _log.Log.warn('No entity was provided to be saved.', entity);
         return _babybird2.default.resolve(null);
       }
 
-      _Log.Log.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
+      _log.Log.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
 
       options = (0, _assign2.default)({
         properties: null,
@@ -389,9 +389,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Saved the entity(s) to the ' + _this5.name + ' collection.', response);
+        _log.Log.info('Saved the entity(s) to the ' + _this5.name + ' collection.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to save the entity(s) to the ' + _this5.name + ' collection.', err);
+        _log.Log.error('Failed to save the entity(s) to the ' + _this5.name + ' collection.', err);
       });
 
       return promise;
@@ -418,7 +418,7 @@ var NetworkStore = exports.NetworkStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      _Log.Log.debug('Removing the entities in the ' + this.name + ' collection.', query);
+      _log.Log.debug('Removing the entities in the ' + this.name + ' collection.', query);
 
       options = (0, _assign2.default)({
         properties: null,
@@ -448,9 +448,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Removed the entities in the ' + _this6.name + ' collection.', response);
+        _log.Log.info('Removed the entities in the ' + _this6.name + ' collection.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to remove the entities in the ' + _this6.name + ' collection.', err);
+        _log.Log.error('Failed to remove the entities in the ' + _this6.name + ' collection.', err);
       });
 
       return promise;
@@ -476,11 +476,11 @@ var NetworkStore = exports.NetworkStore = function () {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       if (!id) {
-        _Log.Log.warn('No id was provided to be removed.', id);
+        _log.Log.warn('No id was provided to be removed.', id);
         return _babybird2.default.resolve(null);
       }
 
-      _Log.Log.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');
+      _log.Log.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');
 
       options = (0, _assign2.default)({
         properties: null,
@@ -505,9 +505,9 @@ var NetworkStore = exports.NetworkStore = function () {
       });
 
       promise.then(function (response) {
-        _Log.Log.info('Removed the entity in the ' + _this7.name + ' collection with id = ' + id + '.', response);
+        _log.Log.info('Removed the entity in the ' + _this7.name + ' collection with id = ' + id + '.', response);
       }).catch(function (err) {
-        _Log.Log.error('Failed to remove the entity in the ' + _this7.name + ' collection with id = ' + id + '.', err);
+        _log.Log.error('Failed to remove the entity in the ' + _this7.name + ' collection with id = ' + id + '.', err);
       });
 
       return promise;

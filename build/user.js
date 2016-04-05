@@ -272,7 +272,7 @@ var User = exports.User = function () {
       var mic = new _mic.MobileIdentityConnect(this.client);
       return mic.login(redirectUri, authorizationGrant, options).then(function (token) {
         options.redirectUri = redirectUri;
-        options.client = (0, _result2.default)(mic.client, 'toJSON', mic.client);
+        options.micClient = (0, _result2.default)(mic.client, 'toJSON', mic.client);
         return _this2.connect(_mic.MobileIdentityConnect.identity, token, options);
       });
     }
@@ -475,7 +475,7 @@ var User = exports.User = function () {
           identity: identity,
           token: _this5._socialIdentity[identity],
           redirectUri: options.redirectUri,
-          client: options.client
+          client: options.micClient
         });
         return _this5;
       });
