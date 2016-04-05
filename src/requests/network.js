@@ -98,7 +98,8 @@ export class NetworkRequest extends KinveyRequest {
             this.client.setActiveSocialIdentity({
               identity: activeSocialIdentity.identity,
               redirectUri: activeSocialIdentity.redirectUri,
-              token: response.data[socialIdentityAttribute][activeSocialIdentity.identity]
+              token: response.data[socialIdentityAttribute][activeSocialIdentity.identity],
+              client: activeSocialIdentity.client
             });
 
             // Execute the original request

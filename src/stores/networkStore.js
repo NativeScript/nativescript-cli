@@ -5,7 +5,7 @@ import { KinveyError } from '../errors';
 import { Client } from '../client';
 import { NetworkRequest } from '../requests/network';
 import { Query } from '../query';
-import { Log } from '../Log';
+import { Log } from '../log';
 import qs from 'qs';
 import url from 'url';
 import assign from 'lodash/assign';

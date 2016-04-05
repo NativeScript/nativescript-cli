@@ -379,7 +379,7 @@ export class User {
     const mic = new MobileIdentityConnect(this.client);
     return mic.login(redirectUri, authorizationGrant, options).then(token => {
       options.redirectUri = redirectUri;
-      options.client = result(mic.client, 'toJSON', mic.client);
+      options.micClient = result(mic.client, 'toJSON', mic.client);
       return this.connect(MobileIdentityConnect.identity, token, options);
     });
   }
@@ -525,7 +525,6 @@ export class User {
       collectionName: 'identities'
     }, options);
 
-
     const promise = Promise.resolve().then(() => {
       if (!identity) {
         throw new KinveyError('An identity is required to connect the user.');
@@ -617,7 +616,7 @@ export class User {
         identity: identity,
         token: this._socialIdentity[identity],
         redirectUri: options.redirectUri,
-        client: options.client
+        client: options.micClient
       });
       return this;
     });
