@@ -29,7 +29,7 @@ export class NodePackageManager implements INodePackageManager {
 		} else {
 			let future = new Future<void>();
 			npm.load(config, (err: Error) => {
-				if(err) {
+				if (err) {
 					future.throw(err);
 				} else {
 					future.return();
@@ -40,7 +40,7 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public install(packageName: string, pathToSave: string, config?: any): IFuture<any> {
-		if(this.$options.ignoreScripts) {
+		if (this.$options.ignoreScripts) {
 			config = config || {};
 			config["ignore-scripts"] = true;
 		}
@@ -49,7 +49,12 @@ export class NodePackageManager implements INodePackageManager {
 	}
 
 	public uninstall(packageName: string, config?: any, path?: string): IFuture<any> {
-		return this.loadAndExecute("uninstall", [[packageName]], { config, path});
+		return this.loadAndExecute("uninstall", [[packageName]], { config, path });
+	}
+
+	public search(filter: string[], silent: boolean): IFuture<any> {
+		let args = (<any[]>([filter] || [])).concat(silent);
+		return this.loadAndExecute("search", args);
 	}
 
 	public cache(packageName: string, version: string, config?: any): IFuture<IDependencyData> {
@@ -86,7 +91,7 @@ export class NodePackageManager implements INodePackageManager {
 				npm.prefix = oldNpmPath;
 			}
 
-			if(err) {
+			if (err) {
 				future.throw(err);
 			} else {
 				future.return(data);

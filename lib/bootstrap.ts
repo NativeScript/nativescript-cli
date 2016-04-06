@@ -76,6 +76,9 @@ $injector.require("broccoliPluginWrapper", "./tools/broccoli/broccoli-plugin-wra
 
 $injector.require("pluginVariablesService", "./services/plugin-variables-service");
 $injector.require("pluginsService", "./services/plugins-service");
+$injector.requireCommand("plugin|*list", "./commands/plugin/list-plugins");
+$injector.requireCommand("plugin|find", "./commands/plugin/find-plugins");
+$injector.requireCommand("plugin|search", "./commands/plugin/find-plugins");
 $injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
 

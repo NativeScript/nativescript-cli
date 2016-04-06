@@ -32,7 +32,7 @@
     "bufferutil": "https://github.com/telerik/bufferutil/tarball/v1.0.1.1",
     "byline": "4.2.1",
     "chalk": "1.1.0",
-    "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.1",
+    "cli-table": "https://github.com/telerik/cli-table/tarball/v0.3.1.2",
     "clui": "0.3.1",
     "colors": "1.1.2",
     "esprima": "2.7.0",

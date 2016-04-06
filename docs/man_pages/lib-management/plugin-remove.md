@@ -1,4 +1,4 @@
-plugin remove 
+plugin remove
 ==========
 
 Usage | Synopsis
@@ -12,11 +12,13 @@ General | `$ tns plugin remove <Plugin>`
 
 * `<Plugin>` is the name of the plugin as listed in its `package.json` file.
 
-<% if(isHtml) { %> 
+<% if(isHtml) { %>
 ### Related Commands
 
 Command | Description
 ----------|----------
 [plugin](plugin.html) | Lets you manage the plugins for your project.
 [plugin add](plugin-add.html) | Installs the specified plugin and its dependencies.
+[plugin find](plugin-find.html) | Finds NativeScript plugins in npm.
+[plugin search](plugin-search.html) | Finds NativeScript plugins in npm.
 <% } %>

@@ -1,10 +1,22 @@
 interface IPluginsService {
 	add(plugin: string): IFuture<void>; // adds plugin by name, github url, local path and et.
 	remove(pluginName: string): IFuture<void>; // removes plugin only by name
+	getAvailable(filter: string[]): IFuture<IDictionary<any>>; // gets all available plugins
 	prepare(pluginData: IDependencyData, platform: string): IFuture<void>;
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
+	getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult>
+}
+
+interface IPackageJsonDepedenciesResult {
+	dependencies: IBasePluginData[],
+	devDependencies?: IBasePluginData[]
+}
+
+interface IBasePluginData {
+	name: string;
+	version: string;
 }
 
 interface IPluginData extends INodeModuleData {
@@ -14,9 +26,7 @@ interface IPluginData extends INodeModuleData {
 	pluginPlatformsFolderPath(platform: string): string;
 }
 
-interface INodeModuleData {
-	name: string;
-	version: string;
+interface INodeModuleData extends IBasePluginData {
 	fullPath: string;
 	isPlugin: boolean;
 	moduleInfo: any;
