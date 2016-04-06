@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/src/rack/middleware';
+import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware';
 import parseHeaders from 'parse-headers';
 
 export class HttpMiddleware extends KinveyMiddleware {

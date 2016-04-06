@@ -20,7 +20,7 @@ export class PopupAdapter {
         return reject(new Error('The popup was blocked.'));
       }
 
-      return resolve();
+      return resolve(this);
     });
     return promise;
   }
