@@ -27,9 +27,17 @@ var _client = require('../client');
 
 var _string = require('../utils/string');
 
+var _urlPattern = require('url-pattern');
+
+var _urlPattern2 = _interopRequireDefault(_urlPattern);
+
 var _qs = require('qs');
 
 var _qs2 = _interopRequireDefault(_qs);
+
+var _url = require('url');
+
+var _url2 = _interopRequireDefault(_url);
 
 var _appendQuery = require('append-query');
 
@@ -352,8 +360,8 @@ var Request = exports.Request = function () {
         _: Math.random().toString(36).substr(2)
       }));
     },
-    set: function set(url) {
-      this._url = url;
+    set: function set(urlString) {
+      this._url = urlString;
     }
   }, {
     key: 'body',
@@ -493,7 +501,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
   }, {
     key: 'url',
     get: function get() {
-      var url = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'url', this);
+      var urlString = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'url', this);
       var queryString = {};
 
       if (this.query) {
@@ -522,13 +530,26 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       });
 
       if ((0, _isEmpty2.default)(queryString)) {
-        return url;
+        return urlString;
       }
 
-      return (0, _appendQuery2.default)(url, _qs2.default.stringify(queryString));
+      return (0, _appendQuery2.default)(urlString, _qs2.default.stringify(queryString));
     },
-    set: function set(url) {
-      _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', url, this);
+    set: function set(urlString) {
+      _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
+
+      var pathname = _url2.default.parse(urlString).pathname;
+      var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
+
+      var _ref = pattern.match(pathname) || {};
+
+      var appKey = _ref.appKey;
+      var collectionName = _ref.collectionName;
+      var entityId = _ref.entityId;
+
+      this.appKey = appKey;
+      this.collectionName = collectionName;
+      this.entityId = entityId;
     }
   }, {
     key: 'authorizationHeader',
@@ -585,4 +606,3 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
 
   return KinveyRequest;
 }(Request);
-//# sourceMappingURL=request.js.map

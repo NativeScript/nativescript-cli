@@ -179,4 +179,3 @@ var Response = exports.Response = function () {
 
   return Response;
 }();
-//# sourceMappingURL=response.js.map

@@ -527,4 +527,3 @@ var NetworkStore = exports.NetworkStore = function () {
 
   return NetworkStore;
 }();
-//# sourceMappingURL=networkStore.js.map

@@ -65,4 +65,3 @@ function use(nsInterface) {
     });
   };
 }
-//# sourceMappingURL=object.js.map

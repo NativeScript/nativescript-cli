@@ -152,4 +152,3 @@ var LocalStorage = exports.LocalStorage = function () {
 
   return LocalStorage;
 }();
-//# sourceMappingURL=localstorage.js.map

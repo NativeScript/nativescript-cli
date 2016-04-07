@@ -51,4 +51,3 @@ var KinveyError = exports.KinveyError = Error.extend('KinveyError');
 var NetworkConnectionError = exports.NetworkConnectionError = Error.extend('NetworkConnectionError');
 var NotFoundError = exports.NotFoundError = Error.extend('NotFoundError');
 var NoResponseError = exports.NoResponseError = Error.extend('NoResponseError');
-//# sourceMappingURL=errors.js.map

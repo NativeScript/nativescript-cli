@@ -237,4 +237,3 @@ var Client = exports.Client = function () {
 
   return Client;
 }();
-//# sourceMappingURL=client.js.map

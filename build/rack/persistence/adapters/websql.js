@@ -216,10 +216,9 @@ var WebSQL = exports.WebSQL = function () {
   }], [{
     key: 'isSupported',
     value: function isSupported() {
-      return webSQL !== undefined;
+      return !!webSQL;
     }
   }]);
 
   return WebSQL;
 }();
-//# sourceMappingURL=websql.js.map

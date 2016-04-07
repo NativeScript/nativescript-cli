@@ -327,10 +327,9 @@ var IndexedDB = exports.IndexedDB = function () {
   }], [{
     key: 'isSupported',
     value: function isSupported() {
-      return indexedDB !== undefined;
+      return !!indexedDB;
     }
   }]);
 
   return IndexedDB;
 }();
-//# sourceMappingURL=indexeddb.js.map

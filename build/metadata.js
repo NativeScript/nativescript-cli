@@ -95,4 +95,3 @@ var Metadata = exports.Metadata = function () {
 
   return Metadata;
 }();
-//# sourceMappingURL=metadata.js.map

@@ -10,7 +10,6 @@ import url from 'url';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 export class SyncStore extends CacheStore {
-
   /**
    * Finds all entities in a collection. A query can be optionally provided to return
    * a subset of all entities in a collection or omitted to return all entities in

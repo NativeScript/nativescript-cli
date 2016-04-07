@@ -290,6 +290,6 @@ export class IndexedDB {
   }
 
   static isSupported() {
-    return indexedDB !== undefined;
+    return !!indexedDB;
   }
 }

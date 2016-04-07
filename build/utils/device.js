@@ -31,4 +31,3 @@ var Device = exports.Device = function () {
 }();
 
 Device.use = (0, _object.use)(['toJSON']);
-//# sourceMappingURL=device.js.map

@@ -1036,4 +1036,3 @@ var User = exports.User = function () {
 
   return User;
 }();
-//# sourceMappingURL=user.js.map

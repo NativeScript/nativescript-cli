@@ -149,4 +149,3 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
 
   return UserStore;
 }(_networkstore.NetworkStore);
-//# sourceMappingURL=userstore.js.map

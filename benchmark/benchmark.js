@@ -26,12 +26,23 @@ export class KinveyBenchmark {
 
     // Create a new benchmark suite
     this.suite = new Benchmark.Suite;
+
+    // Turn on/off simulated responses
+    this.simulateResponse = true;
+  }
+
+  createSimulatedResponses() {
+    return;
   }
 
   execute() {
     const promise = LegacyKinvey.init({
       appKey: randomString(),
-      appSecret: randomString()
+      appSecret: randomString(),
+      sync: {
+        enabled: true,
+        online: false
+      }
     }).then(user => {
       if (!user) {
         const user = {
@@ -53,6 +64,12 @@ export class KinveyBenchmark {
         }
       });
       return user.setAsActiveUser();
+    }).then(() => {
+      if (this.simulateResponse) {
+        this.createSimulatedResponses();
+      }
+
+      return null;
     });
     return promise;
   }

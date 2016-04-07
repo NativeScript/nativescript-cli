@@ -41,20 +41,21 @@ class CacheStore extends NetworkStore {
      * @type {Number}
      */
     this.ttl = undefined;
+
+    // Enable sync
+    this.enableSync();
   }
 
-  /**
-   * The sync pathname for the store.
-   *
-   * @param   {Client}   [client]     Client
-   * @return  {string}                Sync pathname
-   */
-  get _syncPathname() {
-    if (!this.name) {
-      throw new Error('Unable to get a sync pathname for a collection with no name.');
-    }
+  disableSync() {
+    this._syncEnabled = false;
+  }
 
-    return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}/${this.name}`;
+  enableSync() {
+    this._syncEnabled = true;
+  }
+
+  isSyncEnabled() {
+    return !!this._syncEnabled;
   }
 
   /**
@@ -745,9 +746,9 @@ class CacheStore extends NetworkStore {
 
           return request.execute().then(response => {
             size = size - 1;
-            delete entities[response.data[idAttribute]];
+            delete entities[entity[idAttribute]];
             return {
-              _id: response.data[idAttribute],
+              _id: entity[idAttribute],
               entity: response.data
             };
           }).catch(err => {

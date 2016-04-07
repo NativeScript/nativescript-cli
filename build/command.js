@@ -82,4 +82,3 @@ var Command = exports.Command = function () {
 
   return Command;
 }();
-//# sourceMappingURL=command.js.map

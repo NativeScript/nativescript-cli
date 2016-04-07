@@ -121,4 +121,3 @@ Kinvey.SocialIdentity = _enums.SocialIdentity;
 Kinvey.Sync = _sync.Sync;
 Kinvey.User = _user.User;
 exports.Kinvey = Kinvey;
-//# sourceMappingURL=kinvey.js.map

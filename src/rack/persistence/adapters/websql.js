@@ -173,6 +173,6 @@ export class WebSQL {
   }
 
   static isSupported() {
-    return webSQL !== undefined;
+    return !!webSQL;
   }
 }

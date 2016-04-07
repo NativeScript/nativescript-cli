@@ -683,4 +683,3 @@ var Query = function () {
 }();
 
 exports.Query = Query;
-//# sourceMappingURL=query.js.map

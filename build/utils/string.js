@@ -33,4 +33,3 @@ function randomString(size) {
 
   return '' + prefix + (0, _uid2.default)(size);
 }
-//# sourceMappingURL=string.js.map

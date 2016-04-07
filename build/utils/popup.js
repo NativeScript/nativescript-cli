@@ -66,4 +66,3 @@ var Popup = exports.Popup = function (_EventEmitter) {
 }(_events.EventEmitter);
 
 Popup.use = (0, _object.use)(['open', 'close', 'loadHandler', 'clickHandler', 'closeHandler']);
-//# sourceMappingURL=popup.js.map

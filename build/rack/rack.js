@@ -307,4 +307,3 @@ var NetworkRack = exports.NetworkRack = function (_KinveyRack2) {
 
   return NetworkRack;
 }(KinveyRack);
-//# sourceMappingURL=rack.js.map

@@ -73,4 +73,3 @@ var Sync = {
 };
 
 exports.Sync = Sync;
-//# sourceMappingURL=sync.js.map

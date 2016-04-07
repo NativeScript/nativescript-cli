@@ -296,4 +296,3 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
 
   return MobileIdentityConnect;
 }();
-//# sourceMappingURL=mic.js.map

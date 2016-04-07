@@ -477,4 +477,3 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   return SyncStore;
 }(_cachestore.CacheStore);
-//# sourceMappingURL=syncStore.js.map

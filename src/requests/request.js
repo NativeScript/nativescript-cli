@@ -5,7 +5,9 @@ import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import { Client } from '../client';
 import { byteCount } from '../utils/string';
+import UrlPattern from 'url-pattern';
 import qs from 'qs';
+import url from 'url';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -165,8 +167,8 @@ export class Request {
     }));
   }
 
-  set url(url) {
-    this._url = url;
+  set url(urlString) {
+    this._url = urlString;
   }
 
   get body() {
@@ -375,7 +377,7 @@ export class KinveyRequest extends Request {
   }
 
   get url() {
-    const url = super.url;
+    const urlString = super.url;
     const queryString = {};
 
     if (this.query) {
@@ -404,14 +406,21 @@ export class KinveyRequest extends Request {
     });
 
     if (isEmpty(queryString)) {
-      return url;
+      return urlString;
     }
 
-    return appendQuery(url, qs.stringify(queryString));
+    return appendQuery(urlString, qs.stringify(queryString));
   }
 
-  set url(url) {
-    super.url = url;
+  set url(urlString) {
+    super.url = urlString;
+
+    const pathname = url.parse(urlString).pathname;
+    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
+    const { appKey, collectionName, entityId } = pattern.match(pathname) || {};
+    this.appKey = appKey;
+    this.collectionName = collectionName;
+    this.entityId = entityId;
   }
 
   get authorizationHeader() {

@@ -178,4 +178,3 @@ var RequestProperties = exports.RequestProperties = function () {
 
   return RequestProperties;
 }();
-//# sourceMappingURL=properties.js.map

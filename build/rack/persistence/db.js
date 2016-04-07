@@ -235,7 +235,6 @@ var DB = exports.DB = function () {
           kmd.local = true;
         }
 
-        delete kmd.lmt;
         entity[idAttribute] = id;
         entity[kmdAttribute] = kmd;
         return entity;
@@ -308,4 +307,3 @@ var DB = exports.DB = function () {
 
   return DB;
 }();
-//# sourceMappingURL=db.js.map
