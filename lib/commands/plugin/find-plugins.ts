@@ -28,7 +28,6 @@ export class FindPluginsCommand implements ICommand {
 			this.$progressIndicator.showProgressIndicator(pluginsFuture, 500).wait();
 			let plugins: IDictionary<any> = pluginsFuture.get();
 
-			this.$logger.out("Available NativeScript plugins");
 			this.showPlugins(plugins).wait();
 		}).future<void>()();
 	}
@@ -43,6 +42,11 @@ export class FindPluginsCommand implements ICommand {
 		return (() => {
 			let allPluginsNames: string[] = _.keys(plugins).sort();
 
+			if (!allPluginsNames || !allPluginsNames.length) {
+				this.$logger.warn("No plugins found.");
+				return;
+			}
+
 			let count: number = this.$options.count || FindPluginsCommand.COUNT_OF_PLUGINS_TO_DISPLAY;
 
 			if (!isInteractive() || this.$options.all) {
@@ -53,6 +57,8 @@ export class FindPluginsCommand implements ICommand {
 
 			let pluginsToDisplay: string[] = allPluginsNames.splice(0, count);
 			let shouldDisplayMorePlugins: boolean = true;
+
+			this.$logger.out("Available NativeScript plugins:");
 
 			do {
 				data = this.createTableCells(plugins, pluginsToDisplay);
