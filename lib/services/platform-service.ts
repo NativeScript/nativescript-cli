@@ -280,11 +280,16 @@ export class PlatformService implements IPlatformService {
 
 			platformData.platformProjectService.prepareProject().wait();
 
-			// Process node_modules folder
 			let appDir = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME);
 			try {
 				let tnsModulesDestinationPath = path.join(appDir, constants.TNS_MODULES_FOLDER_NAME);
-				this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
+				if (!this.$options.bundle) {
+					// Process node_modules folder
+					this.$broccoliBuilder.prepareNodeModules(tnsModulesDestinationPath, platform, lastModifiedTime).wait();
+				} else {
+					// Clean target node_modules folder. Not needed when bundling.
+					this.$broccoliBuilder.cleanNodeModules(tnsModulesDestinationPath, platform);
+				}
 			} catch(error) {
 				this.$logger.debug(error);
 				shell.rm("-rf", appDir);

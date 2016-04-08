@@ -2,7 +2,9 @@
 "use strict";
 
 import * as constants from "../../../lib/constants";
+import * as fs from "fs";
 import * as path from "path";
+import * as shelljs from "shelljs";
 import Future = require("fibers/future");
 import * as destCopyLib from "./node-modules-dest-copy";
 import * as fiberBootstrap from "../../common/fiber-bootstrap";
@@ -112,6 +114,10 @@ export class Builder implements IBroccoliBuilder {
 
 	public prepareNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime?: Date): IFuture<void> {
 		return (() => {
+			if (!fs.existsSync(absoluteOutputPath)) {
+				// Force copying if the destination doesn't exist.
+				lastModifiedTime = null;
+			}
 			let nodeModules = this.getChangedNodeModules(absoluteOutputPath, platform, lastModifiedTime).wait();
 			let destCopy = this.$injector.resolve(destCopyLib.DestCopy, {
 				inputPath: this.$projectData.projectDir,
@@ -125,5 +131,9 @@ export class Builder implements IBroccoliBuilder {
 
 		}).future<void>()();
 	}
+
+	public cleanNodeModules(absoluteOutputPath: string, platform: string): void {
+		shelljs.rm("-rf", absoluteOutputPath);
+    }
 }
 $injector.register("broccoliBuilder", Builder);

@@ -232,6 +232,28 @@ describe("Npm support tests", () => {
 		let scopedDependencyPath = path.join(tnsModulesFolderPath, "@reactivex", "rxjs");
 		assert.isTrue(fs.exists(scopedDependencyPath).wait());
 	});
+
+	it("Ensures that tns_modules absent when bundling", () => {
+		let fs = testInjector.resolve("fs");
+		let options = testInjector.resolve("options");
+		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
+
+		try {
+			options.bundle = false;
+			preparePlatform(testInjector).wait();
+			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules created first");
+
+			options.bundle = true;
+			preparePlatform(testInjector).wait();
+			assert.isFalse(fs.exists(tnsModulesFolderPath).wait(), "tns_modules deleted when bundling");
+
+			options.bundle = false;
+			preparePlatform(testInjector).wait();
+			assert.isTrue(fs.exists(tnsModulesFolderPath).wait(), "tns_modules recreated");
+		} finally {
+			options.bundle = false;
+		}
+	});
 });
 
 describe("Flatten npm modules tests", () => {
