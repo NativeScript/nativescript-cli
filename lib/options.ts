@@ -37,6 +37,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			baseConfig: { type: OptionType.String },
 			platformTemplate: { type: OptionType.String },
 			ng: {type: OptionType.Boolean },
+			bundle: {type: OptionType.Boolean },
 			all: {type: OptionType.Boolean }
 		},
 		path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
