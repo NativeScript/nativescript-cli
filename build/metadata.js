@@ -51,6 +51,11 @@ var Metadata = exports.Metadata = function () {
   }
 
   _createClass(Metadata, [{
+    key: 'isLocal',
+    value: function isLocal() {
+      return !!this.kmd.local;
+    }
+  }, {
     key: 'toJSON',
     value: function toJSON() {
       return this.kmd;

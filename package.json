@@ -71,6 +71,7 @@
     "karma-safari-launcher": "^0.1.1",
     "karma-sauce-launcher": "^0.3.0",
     "kinvey": "^1.6.8",
+    "longjohn": "^0.2.11",
     "microtime": "^2.0.0",
     "mocha": "^2.4.5",
     "mockery": "^1.4.1",

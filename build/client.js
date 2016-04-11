@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
+var _sync = require('./sync');
+
 var _localStorage = require('local-storage');
 
 var _localStorage2 = _interopRequireDefault(_localStorage);
@@ -114,6 +116,11 @@ var Client = exports.Client = function () {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {SyncManager}
+     */
+    this.syncManager = new _sync.SyncManager();
   }
 
   _createClass(Client, [{

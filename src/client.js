@@ -1,4 +1,5 @@
 import { KinveyError } from './errors';
+import { SyncManager } from './sync';
 import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -85,6 +86,11 @@ export class Client {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {SyncManager}
+     */
+    this.syncManager = new SyncManager();
   }
 
   get baseUrl() {

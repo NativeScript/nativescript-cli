@@ -241,8 +241,8 @@ export class SyncStore extends CacheStore {
 
     promise.then(response => {
       Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
+    }).catch(error => {
+      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, error);
     });
 
     return promise;

@@ -1,38 +1,86 @@
 import Promise from 'babybird';
 import { DataStore, DataStoreType } from './stores/datastore';
-import { InsufficientCredentialsError, NotFoundError } from '../errors';
+import { InsufficientCredentialsError, NotFoundError, KinveyError } from './errors';
 import { Metadata } from './metadata';
 import map from 'lodash/map';
+import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
+import isArray from 'lodash/isArray';
+const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
-export class Sync {
-  get _pathname() {
-    return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}`;
+export class SyncManager {
+  get syncStore() {
+    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
+    syncStore.disableSync();
+    return syncStore;
+  }
+
+  count(query, options = {}) {
+    const promise = this.syncStore.find(query, options).then(syncEntities => {
+      const size = reduce(syncEntities, (sum, entity) => sum + entity.size, 0);
+      return size;
+    });
+    return promise;
+  }
+
+  notify(name, entities, options = {}) {
+    if (!name) {
+      return Promise.reject(new KinveyError('Unable to add entities to the sync table for a store with no name.'));
+    }
+
+    if (!entities) {
+      return Promise.resolve(null);
+    }
+
+    const promise = this.syncStore.findById(name, options).catch(error => {
+      if (error instanceof NotFoundError) {
+        return {
+          _id: name,
+          entities: {},
+          size: 0
+        };
+      }
+
+      throw error;
+    }).then(syncEntity => {
+      if (!isArray(entities)) {
+        entities = [entities];
+      }
+
+      forEach(entities, entity => {
+        const id = entity[idAttribute];
+
+        if (id) {
+          if (!syncEntity.entities.hasOwnProperty(id)) {
+            syncEntity.size = syncEntity.size + 1;
+          }
+
+          syncEntity.entities[id] = {};
+        }
+      });
+
+      return this.syncStore.save(syncEntity);
+    }).then(() => null);
+
+    return promise;
   }
 
   execute(query, options = {}) {
-    // TODO: handle this.client === undefined
-    // TODO: handle sync disabled
-
-    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
-    syncStore.disableSync();
-
-    const promise = syncStore.find(query, options).then(entities => {
-      const promises = map(entities, syncEntity => {
+    const promise = this.syncStore.find(query, options).then(syncEntities => {
+      const promises = map(syncEntities, syncEntity => {
         const collectionName = syncEntity._id;
-        const collectionNetworkStore = DataStore.getInstance(collectionName, DataStoreType.Network);
-        const collectionSyncStore = DataStore.getInstance(collectionName, DataStoreType.Sync);
-        collectionSyncStore.disableSync();
         const entities = syncEntity.entities;
         let syncSize = syncEntity.size;
         const ids = Object.keys(entities);
         const syncResult = { collection: collectionName, success: [], error: [] };
-        const batchSize = 1000;
+        const batchSize = 100;
         let i = 0;
+
+        const collectionNetworkStore = DataStore.getInstance(collectionName, DataStoreType.Network);
+        const collectionSyncStore = DataStore.getInstance(collectionName, DataStoreType.Sync);
+        collectionSyncStore.disableSync();
 
         const batchSync = () => {
           const batchIds = ids.slice(i, i + batchSize);
@@ -133,7 +181,7 @@ export class Sync {
             const savedResults = results[0];
             const removedResults = results[1];
             const result = {
-              collection: name,
+              collection: collectionName,
               success: [],
               error: []
             };
@@ -168,7 +216,7 @@ export class Sync {
           }).then(result => {
             syncEntity.size = syncSize;
             syncEntity.entities = entities;
-            return syncStore.save(syncEntity, options).then(() => result);
+            return this.syncStore.save(syncEntity, options).then(() => result);
           });
 
           return promise;

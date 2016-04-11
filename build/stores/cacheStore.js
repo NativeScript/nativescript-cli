@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.CacheStore = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
@@ -17,15 +15,11 @@ var _babybird2 = _interopRequireDefault(_babybird);
 
 var _networkstore = require('./networkstore');
 
-var _response = require('../requests/response');
-
 var _enums = require('../enums');
 
 var _errors = require('../errors');
 
 var _local = require('../requests/local');
-
-var _network = require('../requests/network');
 
 var _deltafetch = require('../requests/deltafetch');
 
@@ -35,8 +29,6 @@ var _aggregation = require('../aggregation');
 
 var _log = require('../log');
 
-var _object = require('../utils/object');
-
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -45,13 +37,9 @@ var _assign = require('lodash/assign');
 
 var _assign2 = _interopRequireDefault(_assign);
 
-var _forEach = require('lodash/forEach');
+var _result = require('lodash/result');
 
-var _forEach2 = _interopRequireDefault(_forEach);
-
-var _map = require('lodash/map');
-
-var _map2 = _interopRequireDefault(_map);
+var _result2 = _interopRequireDefault(_result);
 
 var _isArray = require('lodash/isArray');
 
@@ -74,9 +62,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-var syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'sync';
-var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * The CacheStore class is used to find, save, update, remove, count and group enitities
@@ -104,20 +89,27 @@ var CacheStore = function (_NetworkStore) {
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheStore).call(this, name));
 
     _this.ttl = undefined;
+
+    // Enable sync
+    _this.enableSync();
     return _this;
   }
 
-  /**
-   * The sync pathname for the store.
-   *
-   * @param   {Client}   [client]     Client
-   * @return  {string}                Sync pathname
-   */
-
-
   _createClass(CacheStore, [{
-    key: 'find',
-
+    key: 'disableSync',
+    value: function disableSync() {
+      this._syncEnabled = false;
+    }
+  }, {
+    key: 'enableSync',
+    value: function enableSync() {
+      this._syncEnabled = true;
+    }
+  }, {
+    key: 'isSyncEnabled',
+    value: function isSyncEnabled() {
+      return !!this._syncEnabled;
+    }
 
     /**
      * Finds all entities in a collection. A query can be optionally provided to return
@@ -136,6 +128,9 @@ var CacheStore = function (_NetworkStore) {
      *                                                                            from the cache.
      * @return  {Promise}                                                         Promise
      */
+
+  }, {
+    key: 'find',
     value: function find(query) {
       var _this2 = this;
 
@@ -732,291 +727,18 @@ var CacheStore = function (_NetworkStore) {
   }, {
     key: 'push',
     value: function push(query) {
-      var _this9 = this;
-
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      if (!this.isSyncEnabled()) {
+        return _babybird2.default.reject(new _errors.KinveyError('Sync is disabled.'));
       }
 
-      var promise = _babybird2.default.resolve().then(function () {
-        var request = new _local.LocalRequest({
-          method: _enums.HttpMethod.GET,
-          url: _url2.default.format({
-            protocol: _this9.client.protocol,
-            host: _this9.client.host,
-            pathname: _this9._syncPathname
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout,
-          client: _this9.client
-        });
-        return request.execute();
-      }).then(function (response) {
-        var save = [];
-        var remove = [];
-        var entities = response.data.entities;
-        var ids = Object.keys(entities);
-        var size = response.data.size;
+      if (!(query instanceof _query.Query)) {
+        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+      }
 
-        var promises = (0, _map2.default)(ids, function (id) {
-          var metadata = entities[id];
-          var request = new _local.LocalRequest({
-            method: _enums.HttpMethod.GET,
-            url: _url2.default.format({
-              protocol: _this9.client.protocol,
-              host: _this9.client.host,
-              pathname: _this9._pathname + '/' + id
-            }),
-            properties: metadata.properties,
-            timeout: options.timeout,
-            client: _this9.client
-          });
-          return request.execute().then(function (response) {
-            save.push(response.data);
-            return response.data;
-          }).catch(function (err) {
-            if (err instanceof _errors.NotFoundError) {
-              remove.push(id);
-              return null;
-            }
-
-            throw err;
-          });
-        });
-
-        return _babybird2.default.all(promises).then(function () {
-          var saved = (0, _map2.default)(save, function (entity) {
-            var metadata = entities[entity[idAttribute]];
-            var isLocalEntity = (0, _object.nested)(entity, kmdAttribute + '.local');
-
-            if (isLocalEntity) {
-              var _ret = function () {
-                var originalId = entity[idAttribute];
-                delete entity[idAttribute];
-                delete entity[kmdAttribute];
-
-                var request = new _network.NetworkRequest({
-                  method: _enums.HttpMethod.POST,
-                  authType: _enums.AuthType.Default,
-                  url: _url2.default.format({
-                    protocol: _this9.client.protocol,
-                    host: _this9.client.host,
-                    pathname: _this9._pathname
-                  }),
-                  properties: metadata.properties,
-                  data: entity,
-                  timeout: options.timeout,
-                  client: _this9.client
-                });
-
-                return {
-                  v: request.execute().then(function (response) {
-                    var request = new _local.LocalRequest({
-                      method: _enums.HttpMethod.PUT,
-                      url: _url2.default.format({
-                        protocol: _this9.client.protocol,
-                        host: _this9.client.host,
-                        pathname: _this9._pathname
-                      }),
-                      properties: metadata.properties,
-                      data: response.data,
-                      timeout: options.timeout,
-                      client: _this9.client
-                    });
-                    return request.execute();
-                  }).then(function () {
-                    var request = new _local.LocalRequest({
-                      method: _enums.HttpMethod.DELETE,
-                      url: _url2.default.format({
-                        protocol: _this9.client.protocol,
-                        host: _this9.client.host,
-                        pathname: _this9._pathname + '/' + originalId
-                      }),
-                      properties: metadata.properties,
-                      timeout: options.timeout,
-                      client: _this9.client
-                    });
-
-                    return request.execute().then(function (response) {
-                      var result = response.data;
-                      if (result.count === 1) {
-                        size = size - 1;
-                        delete entities[originalId];
-                        return {
-                          _id: originalId,
-                          entity: entity
-                        };
-                      }
-
-                      return {
-                        _id: originalId,
-                        error: new _errors.KinveyError('Expected count to be 1 but instead it was ' + result.count + ' ' + ('when trying to remove entity with _id ' + originalId + '.'))
-                      };
-                    });
-                  }).catch(function (error) {
-                    var result = { _id: originalId, error: error };
-                    return result;
-                  })
-                };
-              }();
-
-              if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-            }
-
-            var request = new _network.NetworkRequest({
-              method: _enums.HttpMethod.PUT,
-              authType: _enums.AuthType.Default,
-              url: _url2.default.format({
-                protocol: _this9.client.protocol,
-                host: _this9.client.host,
-                pathname: _this9._pathname + '/' + entity[idAttribute]
-              }),
-              properties: metadata.properties,
-              data: entity,
-              timeout: options.timeout,
-              client: _this9.client
-            });
-
-            return request.execute().then(function (response) {
-              size = size - 1;
-              delete entities[response.data[idAttribute]];
-              return {
-                _id: response.data[idAttribute],
-                entity: response.data
-              };
-            }).catch(function (err) {
-              // If the credentials used to authenticate this request are
-              // not authorized to run the operation then just remove the entity
-              // from the sync table
-              if (err instanceof _errors.InsufficientCredentialsError) {
-                size = size - 1;
-                delete entities[entity[idAttribute]];
-                return {
-                  _id: entity[idAttribute],
-                  error: err
-                };
-              }
-
-              return {
-                _id: entity[idAttribute],
-                error: err
-              };
-            });
-          });
-
-          var removed = (0, _map2.default)(remove, function (id) {
-            var metadata = entities[id];
-            var request = new _network.NetworkRequest({
-              method: _enums.HttpMethod.DELETE,
-              authType: _enums.AuthType.Default,
-              url: _url2.default.format({
-                protocol: _this9.client.protocol,
-                host: _this9.client.host,
-                pathname: _this9._pathname + '/' + id
-              }),
-              properties: metadata.properties,
-              timeout: options.timeout,
-              client: _this9.client
-            });
-
-            return request.execute().then(function (response) {
-              var result = response.data;
-
-              if (result.count === 1) {
-                size = size - 1;
-                delete entities[id];
-                return {
-                  _id: id
-                };
-              }
-
-              return {
-                _id: id,
-                error: new _errors.KinveyError('Expected count to be 1 but instead it was ' + result.count + ' ' + ('when trying to remove entity with _id ' + id + '.'))
-              };
-            }).catch(function (err) {
-              // If the credentials used to authenticate this request are
-              // not authorized to run the operation or the entity was
-              // not found then just remove the entity from the sync table
-              if (err instanceof _errors.NotFoundError || err instanceof _errors.InsufficientCredentialsError) {
-                size = size - 1;
-                delete entities[id];
-                return {
-                  _id: id,
-                  error: err
-                };
-              }
-
-              return {
-                _id: id,
-                error: err
-              };
-            });
-          });
-
-          return _babybird2.default.all([_babybird2.default.all(saved), _babybird2.default.all(removed)]);
-        }).then(function (results) {
-          var savedResults = results[0];
-          var removedResults = results[1];
-          var result = {
-            collection: _this9.name,
-            success: [],
-            error: []
-          };
-
-          (0, _forEach2.default)(savedResults, function (savedResult) {
-            if (savedResult.error) {
-              result.error.push(savedResult);
-            } else {
-              result.success.push(savedResult);
-            }
-          });
-
-          (0, _forEach2.default)(removedResults, function (removedResult) {
-            if (removedResult.error) {
-              result.error.push(removedResult);
-            } else {
-              result.success.push(removedResult);
-            }
-          });
-
-          return result;
-        }).then(function (result) {
-          response.data.size = size;
-          response.data.entities = entities;
-
-          var request = new _local.LocalRequest({
-            method: _enums.HttpMethod.PUT,
-            url: _url2.default.format({
-              protocol: _this9.client.protocol,
-              host: _this9.client.host,
-              pathname: _this9._syncPathname
-            }),
-            properties: options.properties,
-            data: response.data,
-            timeout: options.timeout,
-            client: _this9.client
-          });
-          return request.execute().then(function () {
-            return result;
-          });
-        });
-      }).catch(function (err) {
-        if (err instanceof _errors.NotFoundError) {
-          return {
-            collection: _this9.name,
-            success: [],
-            error: []
-          };
-        }
-
-        throw err;
-      });
-
-      return promise;
+      query.contains(idAttribute, [this.name]);
+      return this.client.syncManager.execute(query, options);
     }
 
     /**
@@ -1042,7 +764,7 @@ var CacheStore = function (_NetworkStore) {
   }, {
     key: 'pull',
     value: function pull(query) {
-      var _this10 = this;
+      var _this9 = this;
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -1051,7 +773,7 @@ var CacheStore = function (_NetworkStore) {
           throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
         }
 
-        return _this10.find(query, options);
+        return _this9.find(query, options);
       }).then(function (result) {
         return result.network;
       });
@@ -1082,12 +804,12 @@ var CacheStore = function (_NetworkStore) {
   }, {
     key: 'sync',
     value: function sync(query) {
-      var _this11 = this;
+      var _this10 = this;
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       var promise = this.push(null, options).then(function (pushResponse) {
-        var promise = _this11.pull(query, options).then(function (pullResponse) {
+        var promise = _this10.pull(query, options).then(function (pullResponse) {
           var result = {
             push: pushResponse,
             pull: pullResponse
@@ -1126,34 +848,12 @@ var CacheStore = function (_NetworkStore) {
     value: function syncCount(query) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      if (!(query instanceof _query.Query)) {
+        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._syncPathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return response.data.size || 0;
-      }).catch(function (err) {
-        if (err instanceof _errors.NotFoundError) {
-          return 0;
-        }
-
-        throw err;
-      });
-
-      return promise;
+      query.contains(idAttribute, [this.name]);
+      return this.client.syncManager.count(query, options);
     }
 
     /**
@@ -1206,93 +906,13 @@ var CacheStore = function (_NetworkStore) {
   }, {
     key: '_sync',
     value: function _sync(entities) {
-      var _this12 = this;
-
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      if (!this.name) {
-        return _babybird2.default.reject(new _errors.KinveyError('Unable to add entities to the sync table for a store with no name.'));
-      }
-
-      if (!entities) {
+      if (!this.isSyncEnabled()) {
         return _babybird2.default.resolve(null);
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._syncPathname
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().catch(function (error) {
-        if (error instanceof _errors.NotFoundError) {
-          return new _response.Response({
-            statusCode: _enums.StatusCode.Ok,
-            data: {
-              _id: _this12.name,
-              entities: {},
-              size: 0
-            }
-          });
-        }
-
-        throw error;
-      }).then(function (response) {
-        var syncData = response.data || {
-          _id: _this12.name,
-          entities: {},
-          size: 0
-        };
-
-        if (!(0, _isArray2.default)(entities)) {
-          entities = [entities];
-        }
-
-        (0, _forEach2.default)(entities, function (entity) {
-          if (entity[idAttribute]) {
-            if (!syncData.entities.hasOwnProperty(entity[idAttribute])) {
-              syncData.size = syncData.size + 1;
-            }
-
-            syncData.entities[entity[idAttribute]] = {
-              lmt: entity[kmdAttribute] ? entity[kmdAttribute].lmt : null
-            };
-          }
-        });
-
-        var request = new _local.LocalRequest({
-          method: _enums.HttpMethod.PUT,
-          url: _url2.default.format({
-            protocol: _this12.client.protocol,
-            host: _this12.client.host,
-            pathname: _this12._syncPathname
-          }),
-          properties: options.properties,
-          data: syncData,
-          timeout: options.timeout,
-          client: _this12.client
-        });
-        return request.execute();
-      }).then(function () {
-        return null;
-      });
-
-      return promise;
-    }
-  }, {
-    key: '_syncPathname',
-    get: function get() {
-      if (!this.name) {
-        throw new Error('Unable to get a sync pathname for a collection with no name.');
-      }
-
-      return '/' + appdataNamespace + '/' + this.client.appKey + '/' + syncCollectionName + '/' + this.name;
+      return this.client.syncManager.notify(this.name, entities, options);
     }
   }]);
 
