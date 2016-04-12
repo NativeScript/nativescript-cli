@@ -1,7 +1,7 @@
 ///<reference path="../../.d.ts"/>
 "use strict";
 
-import {AndroidDebugBridge} from "../../common/mobile/android/android-debug-bridge";
+import {DeviceAndroidDebugBridge} from "../../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
 import Future = require("fibers/future");
 import * as helpers from "../../common/helpers";
@@ -102,7 +102,7 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 	private _deviceHashService: Mobile.IAndroidDeviceHashService;
 	private get deviceHashService(): Mobile.IAndroidDeviceHashService {
 		if (!this._deviceHashService) {
-			let adb = this.$injector.resolve(AndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
 			this._deviceHashService = this.$injector.resolve(AndroidDeviceHashService, { adb: adb, appIdentifier: this.$projectData.projectId });
 		}
 

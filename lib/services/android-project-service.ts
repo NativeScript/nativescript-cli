@@ -6,7 +6,7 @@ import Future = require("fibers/future");
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import * as androidDebugBridgePath from "../common/mobile/android/android-debug-bridge";
+import {DeviceAndroidDebugBridge} from "../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
 import {EOL} from "os";
 import { createGUID } from "../common/helpers";
@@ -393,7 +393,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public deploy(deviceIdentifier: string): IFuture<void> {
 		return (() => {
-			let adb = this.$injector.resolve(androidDebugBridgePath.AndroidDebugBridge, { identifier: deviceIdentifier });
+			let adb = this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: deviceIdentifier });
 			let deviceRootPath = `/data/local/tmp/${this.$projectData.projectId}`;
 			adb.executeShellCommand(["rm", "-rf", this.$mobileHelper.buildDevicePath(deviceRootPath, "fullsync"),
 				this.$mobileHelper.buildDevicePath(deviceRootPath, "sync"),
