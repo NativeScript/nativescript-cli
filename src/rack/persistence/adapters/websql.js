@@ -156,7 +156,7 @@ export class WebSQL {
     ], null, true).then(response => {
       const entities = response[0].result;
       let count = response[1].rowCount;
-      count = count !== undefined ? count : entities.length;
+      count = !!count ? count : entities.length;
 
       if (count === 0) {
         throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
