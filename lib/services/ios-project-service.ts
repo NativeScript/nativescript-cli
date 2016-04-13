@@ -30,6 +30,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
+		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $options: IOptions,
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
@@ -200,10 +201,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 			} else {
+				let currentSimulator = this.$iOSSimResolver.iOSSim.getRunningSimulator();
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
-					"-arch", "i386",
-					"VALID_ARCHS=\"i386\"",
+					"-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`,
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
