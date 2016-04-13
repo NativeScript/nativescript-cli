@@ -46,7 +46,7 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 
 	public get SYS_REQUIREMENTS_LINK(): string {
 		let linkToSysRequirements: string;
-		switch(process.platform) {
+		switch (process.platform) {
 			case "linux":
 				linkToSysRequirements = "http://docs.nativescript.org/setup/ns-cli-setup/ns-setup-linux.html#system-requirements";
 				break;
@@ -77,13 +77,13 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 		return path.join(__dirname, "..", "package.json");
 	}
 
-	public get PATH_TO_BOOTSTRAP() : string {
+	public get PATH_TO_BOOTSTRAP(): string {
 		return path.join(__dirname, "bootstrap");
 	}
 
 	public getAdbFilePath(): IFuture<string> {
 		return (() => {
-			if(!this._adbFilePath) {
+			if (!this._adbFilePath) {
 				let androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve("androidToolsInfo");
 				this._adbFilePath = androidToolsInfo.getPathToAdbFromAndroidHome().wait() || super.getAdbFilePath().wait();
 			}

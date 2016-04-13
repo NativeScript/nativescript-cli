@@ -45,6 +45,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("config", ConfigLib.Configuration);
 	testInjector.register("errors", ErrorsLib.Errors);
 	testInjector.register("fs", FileSystemLib.FileSystem);
+	testInjector.register("adb", {});
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
 	testInjector.register("injector", testInjector);
 	testInjector.register("iOSEmulatorServices", {});
