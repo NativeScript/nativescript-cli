@@ -33,7 +33,7 @@ var _isArray = require('lodash/isArray');
 
 var _isArray2 = _interopRequireDefault(_isArray);
 
-var _mapSeries = require('async/lib/mapSeries');
+var _mapSeries = require('async/mapSeries');
 
 var _mapSeries2 = _interopRequireDefault(_mapSeries);
 

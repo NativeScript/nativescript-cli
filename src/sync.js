@@ -6,7 +6,7 @@ import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
-import mapSeries from 'async/lib/mapSeries';
+import mapSeries from 'async/mapSeries';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
