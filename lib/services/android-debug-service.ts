@@ -203,7 +203,7 @@ class AndroidDebugService implements IDebugService {
 			this.device.applicationManager.startApplication(packageName).wait();
 
 			let waitText: string = `0 /data/local/tmp/${packageName}-debugbreak`;
-			let maxWait = 6;
+			let maxWait = 12;
 			let debugerStarted: boolean = false;
 			while (maxWait > 0 && !debugerStarted) {
 				let forwardsResult = this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugbreak`]).wait();
