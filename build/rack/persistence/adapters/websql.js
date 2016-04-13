@@ -199,7 +199,7 @@ var WebSQL = exports.WebSQL = function () {
       var promise = this.openTransaction(collection, [['SELECT value FROM #{collection} WHERE key = ?', [id]], ['DELETE FROM #{collection} WHERE key = ?', [id]]], null, true).then(function (response) {
         var entities = response[0].result;
         var count = response[1].rowCount;
-        count = count !== undefined ? count : entities.length;
+        count = !!count ? count : entities.length;
 
         if (count === 0) {
           throw new _errors.NotFoundError('An entity with _id = ' + id + ' was not found in the ' + collection + ' ' + ('collection on the ' + _this3.name + ' webSQL database.'));

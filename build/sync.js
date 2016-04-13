@@ -33,6 +33,10 @@ var _isArray = require('lodash/isArray');
 
 var _isArray2 = _interopRequireDefault(_isArray);
 
+var _mapSeries = require('async/lib/mapSeries');
+
+var _mapSeries2 = _interopRequireDefault(_mapSeries);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -116,166 +120,178 @@ var SyncManager = exports.SyncManager = function () {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       var promise = this.syncStore.find(query, options).then(function (syncEntities) {
-        var promises = (0, _map2.default)(syncEntities, function (syncEntity) {
-          var collectionName = syncEntity._id;
-          var entities = syncEntity.entities;
-          var syncSize = syncEntity.size;
-          var ids = Object.keys(entities);
-          var syncResult = { collection: collectionName, success: [], error: [] };
-          var batchSize = 100;
-          var i = 0;
+        var promise = new _babybird2.default(function (resolve, reject) {
+          (0, _mapSeries2.default)(syncEntities, function (syncEntity, callback) {
+            var collectionName = syncEntity._id;
+            var entities = syncEntity.entities;
+            var syncSize = syncEntity.size;
+            var ids = Object.keys(entities);
+            var syncResult = { collection: collectionName, success: [], error: [] };
+            var batchSize = 100;
+            var i = 0;
 
-          var collectionNetworkStore = _datastore.DataStore.getInstance(collectionName, _datastore.DataStoreType.Network);
-          var collectionSyncStore = _datastore.DataStore.getInstance(collectionName, _datastore.DataStoreType.Sync);
-          collectionSyncStore.disableSync();
+            var collectionNetworkStore = _datastore.DataStore.getInstance(collectionName, _datastore.DataStoreType.Network);
+            var collectionSyncStore = _datastore.DataStore.getInstance(collectionName, _datastore.DataStoreType.Sync);
+            collectionSyncStore.disableSync();
 
-          var batchSync = function batchSync() {
-            var batchIds = ids.slice(i, i + batchSize);
-            i += batchSize;
+            var batchSync = function batchSync() {
+              var batchIds = ids.slice(i, i + batchSize);
+              i += batchSize;
 
-            var save = [];
-            var remove = [];
-            var promises = (0, _map2.default)(batchIds, function (id) {
-              var promise = collectionSyncStore.findById(id).then(function (entity) {
-                save.push(entity);
-                return entity;
-              }).catch(function (error) {
-                if (error instanceof _errors.NotFoundError) {
-                  remove.push(id);
-                  return null;
-                }
-
-                throw error;
-              });
-              return promise;
-            });
-
-            var promise = _babybird2.default.all(promises).then(function () {
-              var saved = (0, _map2.default)(save, function (entity) {
-                var metadata = new _metadata.Metadata(entity);
-                var originalId = entity[idAttribute];
-                delete entity[kmdAttribute];
-
-                if (metadata.isLocal()) {
-                  delete entity[idAttribute];
-                }
-
-                return collectionNetworkStore.save(entity, options).then(function (entity) {
-                  return collectionSyncStore.save(entity, options);
-                }).then(function (entity) {
-                  if (metadata.isLocal()) {
-                    return collectionSyncStore.removeById(originalId, options).then(function () {
-                      return entity;
-                    });
-                  }
-
+              var save = [];
+              var remove = [];
+              var promises = (0, _map2.default)(batchIds, function (id) {
+                var promise = collectionSyncStore.findById(id).then(function (entity) {
+                  save.push(entity);
                   return entity;
-                }).then(function (entity) {
-                  syncSize = syncSize - 1;
-                  delete entities[originalId];
-                  return {
-                    _id: originalId,
-                    entity: entity
-                  };
                 }).catch(function (error) {
-                  // If the credentials used to authenticate this request are
-                  // not authorized to run the operation then just remove the entity
-                  // from the sync table
-                  if (error instanceof _errors.InsufficientCredentialsError) {
-                    syncSize = syncSize - 1;
-                    delete entities[originalId];
-                    return {
-                      _id: originalId,
-                      error: error
-                    };
+                  if (error instanceof _errors.NotFoundError) {
+                    remove.push(id);
+                    return null;
                   }
 
-                  return {
-                    _id: originalId,
-                    error: error
-                  };
-                });
-              });
-
-              var removed = (0, _map2.default)(remove, function (id) {
-                var promise = collectionNetworkStore.removeById(id, options).then(function () {
-                  syncSize = syncSize - 1;
-                  delete entities[id];
-                  return {
-                    _id: id
-                  };
-                }).catch(function (error) {
-                  // If the credentials used to authenticate this request are
-                  // not authorized to run the operation or the entity was
-                  // not found then just remove the entity from the sync table
-                  if (error instanceof _errors.NotFoundError || error instanceof _errors.InsufficientCredentialsError) {
-                    syncSize = syncSize - 1;
-                    delete entities[id];
-                    return {
-                      _id: id,
-                      error: error
-                    };
-                  }
-
-                  return {
-                    _id: id,
-                    error: error
-                  };
+                  throw error;
                 });
                 return promise;
               });
 
-              return _babybird2.default.all([_babybird2.default.all(saved), _babybird2.default.all(removed)]);
-            }).then(function (results) {
-              var savedResults = results[0];
-              var removedResults = results[1];
-              var result = {
-                collection: collectionName,
-                success: [],
-                error: []
-              };
+              var promise = _babybird2.default.all(promises).then(function () {
+                var saved = (0, _map2.default)(save, function (entity) {
+                  var metadata = new _metadata.Metadata(entity);
+                  var originalId = entity[idAttribute];
+                  delete entity[kmdAttribute];
 
-              (0, _forEach2.default)(savedResults, function (savedResult) {
-                if (savedResult.error) {
-                  result.error.push(savedResult);
-                } else {
-                  result.success.push(savedResult);
-                }
-              });
+                  if (metadata.isLocal()) {
+                    delete entity[idAttribute];
+                  }
 
-              (0, _forEach2.default)(removedResults, function (removedResult) {
-                if (removedResult.error) {
-                  result.error.push(removedResult);
-                } else {
-                  result.success.push(removedResult);
-                }
-              });
+                  return collectionNetworkStore.save(entity, options).then(function (entity) {
+                    return collectionSyncStore.save(entity, options);
+                  }).then(function (entity) {
+                    if (metadata.isLocal()) {
+                      return collectionSyncStore.removeById(originalId, options).then(function () {
+                        return entity;
+                      });
+                    }
 
-              return result;
-            }).then(function (result) {
-              syncResult.success = syncResult.success.concat(result.success);
-              syncResult.error = syncResult.error.concat(result.error);
-              return syncResult;
-            }).then(function (result) {
-              if (i < ids.length) {
-                return batchSync();
-              }
+                    return entity;
+                  }).then(function (entity) {
+                    syncSize = syncSize - 1;
+                    delete entities[originalId];
+                    return {
+                      _id: originalId,
+                      entity: entity
+                    };
+                  }).catch(function (error) {
+                    // If the credentials used to authenticate this request are
+                    // not authorized to run the operation then just remove the entity
+                    // from the sync table
+                    if (error instanceof _errors.InsufficientCredentialsError) {
+                      syncSize = syncSize - 1;
+                      delete entities[originalId];
+                      return {
+                        _id: originalId,
+                        error: error
+                      };
+                    }
 
-              return result;
-            }).then(function (result) {
-              syncEntity.size = syncSize;
-              syncEntity.entities = entities;
-              return _this2.syncStore.save(syncEntity, options).then(function () {
+                    return {
+                      _id: originalId,
+                      error: error
+                    };
+                  });
+                });
+
+                var removed = (0, _map2.default)(remove, function (id) {
+                  var promise = collectionNetworkStore.removeById(id, options).then(function () {
+                    syncSize = syncSize - 1;
+                    delete entities[id];
+                    return {
+                      _id: id
+                    };
+                  }).catch(function (error) {
+                    // If the credentials used to authenticate this request are
+                    // not authorized to run the operation or the entity was
+                    // not found then just remove the entity from the sync table
+                    if (error instanceof _errors.NotFoundError || error instanceof _errors.InsufficientCredentialsError) {
+                      syncSize = syncSize - 1;
+                      delete entities[id];
+                      return {
+                        _id: id,
+                        error: error
+                      };
+                    }
+
+                    return {
+                      _id: id,
+                      error: error
+                    };
+                  });
+                  return promise;
+                });
+
+                return _babybird2.default.all([_babybird2.default.all(saved), _babybird2.default.all(removed)]);
+              }).then(function (results) {
+                var savedResults = results[0];
+                var removedResults = results[1];
+                var result = {
+                  collection: collectionName,
+                  success: [],
+                  error: []
+                };
+
+                (0, _forEach2.default)(savedResults, function (savedResult) {
+                  if (savedResult.error) {
+                    result.error.push(savedResult);
+                  } else {
+                    result.success.push(savedResult);
+                  }
+                });
+
+                (0, _forEach2.default)(removedResults, function (removedResult) {
+                  if (removedResult.error) {
+                    result.error.push(removedResult);
+                  } else {
+                    result.success.push(removedResult);
+                  }
+                });
+
                 return result;
+              }).then(function (result) {
+                syncResult.success = syncResult.success.concat(result.success);
+                syncResult.error = syncResult.error.concat(result.error);
+                return syncResult;
+              }).then(function (result) {
+                if (i < ids.length) {
+                  return batchSync();
+                }
+
+                return result;
+              }).then(function (result) {
+                syncEntity.size = syncSize;
+                syncEntity.entities = entities;
+                return _this2.syncStore.save(syncEntity, options).then(function () {
+                  return result;
+                });
               });
+
+              return promise;
+            };
+
+            batchSync().then(function (result) {
+              callback(null, result);
+            }).catch(function (error) {
+              callback(error);
             });
+          }, function (error, results) {
+            if (error) {
+              return reject(error);
+            }
 
-            return promise;
-          };
-
-          return batchSync();
+            return results.length === 1 ? resolve(results[0]) : resolve(results);
+          });
         });
-        return _babybird2.default.all(promises);
+        return promise;
       });
       return promise;
     }
