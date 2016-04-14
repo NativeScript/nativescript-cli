@@ -17,7 +17,7 @@ export class HttpMiddleware extends KinveyMiddleware {
         // Append request headers
         for (const name in request.headers) {
           if (request.headers.hasOwnProperty(name)) {
-            request.setRequestHeader(name, request.headers[name]);
+            xhr.setRequestHeader(name, request.headers[name]);
           }
         }
 
@@ -46,6 +46,9 @@ export class HttpMiddleware extends KinveyMiddleware {
           // Error
           return reject(request);
         };
+
+        // Send xhr
+        xhr.send(request.data);
       });
       return promise;
     });
