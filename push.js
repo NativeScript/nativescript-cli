@@ -3,10 +3,12 @@ import { EventEmitter } from 'events';
 import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/dataStore';
 import { HttpMethod } from 'kinvey-javascript-sdk-core/build/enums';
 import { User } from 'kinvey-javascript-sdk-core/build/user';
+import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
 import { Client } from 'kinvey-javascript-sdk-core/build/client';
 import { Query } from 'kinvey-javascript-sdk-core/build/query';
 import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
+import url from 'url';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollectionName = process.env.KINVEY_DEVICE_COLLECTION_NAME || 'kinvey_device';
@@ -79,17 +81,21 @@ export const Push = {
       }
 
       const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
+      store.disableSync();
       return store.findById(deviceId).then(entity => {
-        if (options.force !== true && entity.registered) {
-          throw new KinveyError('Device is already registered. To force registration ' +
-            'please set options.force to true.');
+        if (options.force !== true) {
+          return entity;
         }
-      }).then(() => {
+
         const user = User.getActiveUser();
         const client = Client.sharedInstance();
-        return client.executeNetworkRequest({
+        const request = new NetworkRequest({
           method: HttpMethod.POST,
-          pathname: `/${pushNamespace}/${client.appKey}/register-device`,
+          url: url.format({
+            protocol: client.protocol,
+            host: client.host,
+            pathname: `/${pushNamespace}/${client.appKey}/register-device`
+          }),
           properties: options.properties,
           auth: user ? client.sessionAuth() : client.masterAuth(),
           data: {
@@ -100,7 +106,8 @@ export const Push = {
           },
           timeout: options.timeout
         });
-      }).then(response => store.save({ _id: deviceId, registered: true }).then(() => response.data));
+        return request.execute().then(() => store.save({ _id: deviceId, registered: true }));
+      });
     });
 
     return promise;
@@ -113,6 +120,7 @@ export const Push = {
     }
 
     const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
+    store.disableSync();
     const query = new Query();
     query.equalsTo('registered', true);
     const promise = store.find(query).then(data => {
@@ -128,11 +136,15 @@ export const Push = {
 
       const user = User.getActiveUser();
       const client = Client.sharedInstance();
-      return client.executeNetworkRequest({
+      const request = new NetworkRequest({
         method: HttpMethod.POST,
+        url: url.format({
+          protocol: client.protocol,
+          host: client.host,
+          pathname: `/${pushNamespace}/${client.appKey}/unregister-device`
+        }),
         properties: options.properties,
         auth: user ? client.sessionAuth() : client.masterAuth(),
-        pathname: `/${pushNamespace}/${client.appKey}/unregister-device`,
         data: {
           platform: global.device.platform,
           framework: 'phonegap',
@@ -140,7 +152,8 @@ export const Push = {
           userId: user ? null : options.userId
         },
         timeout: options.timeout
-      }).then(response => store.removeById(deviceId).then(() => response.data));
+      });
+      return request.execute().then(response => store.removeById(deviceId).then(() => response.data));
     });
 
     return promise;
