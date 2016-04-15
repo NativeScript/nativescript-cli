@@ -4,7 +4,7 @@ import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/store
 import { HttpMethod, AuthType } from 'kinvey-javascript-sdk-core/build/enums';
 import { User } from 'kinvey-javascript-sdk-core/build/user';
 import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
-import { Client } from 'kinvey-javascript-sdk-core/build/client';
+import { sharedClientInstance } from 'kinvey-javascript-sdk-core/build/client';
 import { Query } from 'kinvey-javascript-sdk-core/build/query';
 import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
@@ -92,13 +92,12 @@ export class Push {
         }
 
         const user = User.getActiveUser();
-        const client = Client.sharedInstance();
         const request = new NetworkRequest({
           method: HttpMethod.POST,
           url: url.format({
-            protocol: client.protocol,
-            host: client.host,
-            pathname: `/${pushNamespace}/${client.appKey}/register-device`
+            protocol: sharedClientInstance.protocol,
+            host: sharedClientInstance.host,
+            pathname: `/${pushNamespace}/${sharedClientInstance.appKey}/register-device`
           }),
           properties: options.properties,
           authType: user ? AuthType.Session : AuthType.Master,
@@ -139,13 +138,12 @@ export class Push {
       }
 
       const user = User.getActiveUser();
-      const client = Client.sharedInstance();
       const request = new NetworkRequest({
         method: HttpMethod.POST,
         url: url.format({
-          protocol: client.protocol,
-          host: client.host,
-          pathname: `/${pushNamespace}/${client.appKey}/unregister-device`
+          protocol: sharedClientInstance.protocol,
+          host: sharedClientInstance.host,
+          pathname: `/${pushNamespace}/${sharedClientInstance.appKey}/unregister-device`
         }),
         properties: options.properties,
         authType: user ? AuthType.Session : AuthType.Master,
