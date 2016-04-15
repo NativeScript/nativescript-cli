@@ -1,10 +1,10 @@
 import { KinveyError } from 'kinvey-javascript-sdk-core/build/errors';
 import { EventEmitter } from 'events';
-import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/dataStore';
-import { HttpMethod } from 'kinvey-javascript-sdk-core/build/enums';
+import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/datastore';
+import { HttpMethod, AuthType } from 'kinvey-javascript-sdk-core/build/enums';
 import { User } from 'kinvey-javascript-sdk-core/build/user';
 import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
-import { Client } from 'kinvey-javascript-sdk-core/build/client';
+import { sharedInstance as clientSharedInstance } from 'kinvey-javascript-sdk-core/build/client';
 import { Query } from 'kinvey-javascript-sdk-core/build/query';
 import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
@@ -14,32 +14,32 @@ const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification
 const deviceCollectionName = process.env.KINVEY_DEVICE_COLLECTION_NAME || 'kinvey_device';
 const emitter = new EventEmitter();
 
-export const Push = {
-  listeners() {
+export class Push {
+  static listeners() {
     return emitter.listeners(notificationEvent);
-  },
+  }
 
-  onNotification(listener) {
+  static onNotification(listener) {
     return emitter.on(notificationEvent, listener);
-  },
+  }
 
-  onceNotification(listener) {
+  static onceNotification(listener) {
     return emitter.once(notificationEvent, listener);
-  },
+  }
 
-  removeListener(listener) {
+  static removeListener(listener) {
     return emitter.removeListener(notificationEvent, listener);
-  },
+  }
 
-  removeAllListeners() {
+  static removeAllListeners() {
     return emitter.removeAllListeners(notificationEvent);
-  },
+  }
 
-  isSupported() {
+  static isSupported() {
     return isiOS() || isAndroid();
-  },
+  }
 
-  init(options = {}) {
+  static init(options = {}) {
     if (!Push.isSupported()) {
       return Promise.reject(new KinveyError('Kinvey currently only supports ' +
         'push notifications on iOS and Android platforms.'));
@@ -92,16 +92,15 @@ export const Push = {
         }
 
         const user = User.getActiveUser();
-        const client = Client.sharedInstance();
         const request = new NetworkRequest({
           method: HttpMethod.POST,
           url: url.format({
-            protocol: client.protocol,
-            host: client.host,
-            pathname: `/${pushNamespace}/${client.appKey}/register-device`
+            protocol: clientSharedInstance.protocol,
+            host: clientSharedInstance.host,
+            pathname: `/${pushNamespace}/${clientSharedInstance.appKey}/register-device`
           }),
           properties: options.properties,
-          auth: user ? client.sessionAuth() : client.masterAuth(),
+          authType: user ? AuthType.Session : AuthType.Master,
           data: {
             platform: global.device.platform,
             framework: 'phonegap',
@@ -115,9 +114,9 @@ export const Push = {
     });
 
     return promise;
-  },
+  }
 
-  unregister(options = {}) {
+  static unregister(options = {}) {
     if (!Push.isSupported()) {
       return Promise.reject(new KinveyError('Kinvey currently only supports ' +
         'push notifications on iOS and Android platforms.'));
@@ -139,16 +138,15 @@ export const Push = {
       }
 
       const user = User.getActiveUser();
-      const client = Client.sharedInstance();
       const request = new NetworkRequest({
         method: HttpMethod.POST,
         url: url.format({
-          protocol: client.protocol,
-          host: client.host,
-          pathname: `/${pushNamespace}/${client.appKey}/unregister-device`
+          protocol: clientSharedInstance.protocol,
+          host: clientSharedInstance.host,
+          pathname: `/${pushNamespace}/${clientSharedInstance.appKey}/unregister-device`
         }),
         properties: options.properties,
-        auth: user ? client.sessionAuth() : client.masterAuth(),
+        authType: user ? AuthType.Session : AuthType.Master,
         data: {
           platform: global.device.platform,
           framework: 'phonegap',
@@ -162,4 +160,4 @@ export const Push = {
 
     return promise;
   }
-};
+}
