@@ -47,7 +47,6 @@ interface IPlatformProjectServiceBase {
 }
 
 interface IBuildConfig {
-	runSbGenerator?: boolean;
 	buildForDevice?: boolean;
 	architectures?: string[];
 }

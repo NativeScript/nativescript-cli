@@ -16,6 +16,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
+	private static MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS = "4.2.1";
+	private static REQUIRED_DEV_DEPENDENCIES = [
+		{ name: "babel-traverse", version: "^6.4.5"},
+		{ name: "babel-types", version: "^6.4.5"},
+		{ name: "babylon", version: "^6.4.5"},
+		{ name: "filewalker", version: "^0.1.2"},
+		{ name: "lazy", version: "^1.0.11"}
+	];
+
+	private get sysInfoData(): ISysInfoData {
+		return this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
+	}
 
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
 
@@ -36,7 +48,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $deviceAppDataFactory: Mobile.IDeviceAppDataFactory,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectTemplatesService: IProjectTemplatesService,
-		private $xmlValidator: IXmlValidator) {
+		private $xmlValidator: IXmlValidator,
+		private $npm: INodePackageManager) {
 			super($fs, $projectData, $projectDataService);
 			this._androidProjectPropertiesManagers = Object.create(null);
 	}
@@ -88,7 +101,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// this call will fail in case `android` is not set correctly.
 			this.$androidToolsInfo.getPathToAndroidExecutable({showWarningsAsErrors: true}).wait();
-			this.$androidToolsInfo.validateJavacVersion(this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait().javacVersion, {showWarningsAsErrors: true}).wait();
+			this.$androidToolsInfo.validateJavacVersion(this.sysInfoData.javacVersion, {showWarningsAsErrors: true}).wait();
 		}).future<void>()();
 	}
 
@@ -126,8 +139,26 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
+			if(this.canUseStaticBindingGenerator()) {
+				let npmConfig = {
+					"save": true,
+					"save-dev": true,
+					"save-exact": true,
+					"silent": true
+				};
 
+				_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) =>
+					this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait()
+				);
+			} else {
+				this.$logger.printMarkdown(` As you are using Node.js \`${this.sysInfoData.nodeVer}\` Static Binding Generator will be turned off.` +
+					`Upgrade your Node.js to ${AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS} or later, so you can use this feature.`);
+			}
 		}).future<any>()();
+	}
+
+	private canUseStaticBindingGenerator(): boolean {
+		return semver.gte(this.sysInfoData.nodeVer, AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS);
 	}
 
 	private useGradleWrapper(frameworkDir: string): boolean {
@@ -231,8 +262,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
 				}
 
-				if (buildConfig && buildConfig.runSbGenerator) {
-					buildOptions.push("-PrunSBGenerator");
+				if(!this.canUseStaticBindingGenerator()) {
+					buildOptions.push("-PdontRunSbg");
 				}
 
 				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";

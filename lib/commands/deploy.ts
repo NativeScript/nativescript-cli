@@ -9,8 +9,7 @@ export class DeployOnDeviceCommand implements ICommand {
 				private $mobileHelper: Mobile.IMobileHelper) { }
 
 	execute(args: string[]): IFuture<void> {
-		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
-		return this.$platformService.deployOnDevice(args[0], config);
+		return this.$platformService.deployOnDevice(args[0]);
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {
