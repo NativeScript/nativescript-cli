@@ -20,6 +20,11 @@ export class KinveyProvider {
     Popup.use(new PopupAdapter());
   }
 
+  init(options) {
+    // Initialize Kinvey
+    return Kinvey.init(options);
+  }
+
   $get() {
     return Kinvey;
   }
