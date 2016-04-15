@@ -2,10 +2,12 @@
 "use strict";
 
 import * as constants from "../../constants";
+import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
 
 class LiveSyncService implements ILiveSyncService {
+	public forceExecuteFullSync = false;
 	private _isInitialized = false;
 
 	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
@@ -15,7 +17,8 @@ class LiveSyncService implements ILiveSyncService {
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
-		private $prompter: IPrompter) { }
+		private $prompter: IPrompter,
+		private $injector: IInjector) { }
 
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
@@ -50,15 +53,22 @@ class LiveSyncService implements ILiveSyncService {
 
 			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
-			let platformData = this.$platformsData.getPlatformData(platformLowerCase);
-			this.ensureAndroidFrameworkVersion(platformData).wait();
+			this.liveSyncCore(platform).wait();
+		}).future<void>()();
+	}
 
+	@helpers.hook('livesync')
+	private liveSyncCore(platform: string): IFuture<void> {
+		return (() => {
+			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+			this.ensureAndroidFrameworkVersion(platformData).wait();
 			let liveSyncData: ILiveSyncData = {
 				platform: platform,
-				appIdentifier:  this.$projectData.projectId,
+				appIdentifier: this.$projectData.projectId,
 				projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_FILE_PATTERNS
+				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_FILE_PATTERNS,
+				forceExecuteFullSync: this.forceExecuteFullSync
 			};
 			this.$liveSyncServiceBase.sync(liveSyncData).wait();
 		}).future<void>()();
