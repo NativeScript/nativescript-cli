@@ -1,4 +1,5 @@
 import Promise from 'babybird';
+import { KinveyError } from './errors';
 import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { Command } from './command';
@@ -14,6 +15,15 @@ import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 class Kinvey {
+  static get client() {
+    if (!this._client) {
+      throw new KinveyError('You have not initialized the library. ' +
+        'Please call Kinvey.init() to initialize the library.');
+    }
+
+    return this._client;
+  }
+
   /**
    * Initializes the library with your app's information.
    *
@@ -36,8 +46,17 @@ class Kinvey {
    * });
    */
   static init(options) {
-    const client = Client.init(options);
-    return client;
+    if (!options.appKey && !options.appId) {
+      throw new KinveyError('No App Key was provided. ' +
+        'Unable to create a new Client without an App Key.');
+    }
+
+    if (!options.appSecret && !options.masterSecret) {
+      throw new KinveyError('No App Secret or Master Secret was provided. ' +
+        'Unable to create a new Client without an App Key.');
+    }
+
+    this._client = Client.init(options);
   }
 
   /**

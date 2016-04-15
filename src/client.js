@@ -41,16 +41,6 @@ export class Client {
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
-    if (!options.appKey && !options.appId) {
-      throw new KinveyError('No App Key was provided. ' +
-        'Unable to create a new Client without an App Key.');
-    }
-
-    if (!options.appSecret && !options.masterSecret) {
-      throw new KinveyError('No App Secret or Master Secret was provided. ' +
-        'Unable to create a new Client without an App Key.');
-    }
-
     if (options.hostname && isString(options.hostname)) {
       const hostnameParsed = url.parse(options.hostname);
       options.protocol = hostnameParsed.protocol;
