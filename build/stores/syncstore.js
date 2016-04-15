@@ -312,6 +312,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       });
 
       if (entity[idAttribute]) {
+        request.method = _enums.HttpMethod.PUT;
         request.url = _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,

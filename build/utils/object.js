@@ -40,7 +40,7 @@ function nested(obj, dotProperty, value) {
  * @private
  */
 function isDefined(obj) {
-  return !!obj;
+  return obj !== undefined && obj !== null;
 }
 
 /**

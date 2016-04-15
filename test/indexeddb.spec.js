@@ -135,12 +135,12 @@ describe('IndexedDB', function() {
         _id: randomString(),
         attribute: randomString()
       };
-      return this.db.save(collectionName, entity).then(savedEntity => {
-        return this.db.findById(collectionName, savedEntity._id);
-      }).then(savedEntity => {
-        expect(savedEntity).to.deep.equal(entity);
-        return this.db.removeById(collectionName, savedEntity._id);
-      });
+      return this.db.save(collectionName, entity)
+        .then(savedEntity => this.db.findById(collectionName, savedEntity._id))
+        .then(savedEntity => {
+          expect(savedEntity).to.deep.equal(entity);
+          return this.db.removeById(collectionName, savedEntity._id);
+        });
     });
   });
 
@@ -190,10 +190,7 @@ describe('IndexedDB', function() {
           }
         }
 
-        const promises = map(Object.keys(savedEntities), id => {
-          return this.db.removeById(collectionName, id);
-        });
-
+        const promises = map(Object.keys(savedEntities), id => this.db.removeById(collectionName, id));
         return Promise.all(promises);
       });
     });
