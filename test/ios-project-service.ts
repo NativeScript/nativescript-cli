@@ -154,10 +154,12 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = ["use_frameworks!",
+			let expectedProjectPodfileContent = ["use_frameworks!\n",
+				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
-				" # End Podfile \n"]
+				" # End Podfile \n",
+				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 		});
@@ -221,10 +223,12 @@ describe("Cocoapods support", () => {
 			assert.isTrue(fs.exists(projectPodfilePath).wait());
 
 			let actualProjectPodfileContent = fs.readText(projectPodfilePath).wait();
-			let expectedProjectPodfileContent = ["use_frameworks!",
+			let expectedProjectPodfileContent = ["use_frameworks!\n",
+				`target "${projectName}" do`,
 				`# Begin Podfile - ${pluginPodfilePath} `,
 				` ${pluginPodfileContent} `,
-				" # End Podfile \n"]
+				" # End Podfile \n",
+				"end"]
 				.join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
 
