@@ -139,6 +139,7 @@ export class Push {
       }
 
       const user = User.getActiveUser();
+      const client = Client.sharedInstance();
       const request = new NetworkRequest({
         method: HttpMethod.POST,
         url: url.format({
