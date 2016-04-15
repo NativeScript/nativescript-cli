@@ -1,28 +1,44 @@
 import Promise from 'babybird';
-import { DataStore, DataStoreType } from './stores/datastore';
+import { HttpMethod } from './enums';
 import { InsufficientCredentialsError, NotFoundError, KinveyError } from './errors';
 import { Metadata } from './metadata';
+import { LocalRequest } from './requests/local';
+import { NetworkRequest } from './requests/network';
+import url from 'url';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
 import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 import mapSeries from 'async/mapSeries';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 export class SyncManager {
-  get syncStore() {
-    const syncStore = DataStore.getInstance(syncCollectionName, DataStoreType.Sync);
-    syncStore.disableSync();
-    return syncStore;
+  get _pathname() {
+    return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}`;
   }
 
   count(query, options = {}) {
-    const promise = this.syncStore.find(query, options).then(syncEntities => {
-      const size = reduce(syncEntities, (sum, entity) => sum + entity.size, 0);
-      return size;
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
     });
+
+    const promise = request.execute().then(response => response.data)
+      .then(syncEntities => {
+        const size = reduce(syncEntities, (sum, entity) => sum + entity.size, 0);
+        return size;
+      });
     return promise;
   }
 
@@ -35,7 +51,19 @@ export class SyncManager {
       return Promise.resolve(null);
     }
 
-    const promise = this.syncStore.findById(name, options).catch(error => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this._pathname}/${name}`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+
+    const promise = request.execute().catch(error => {
       if (error instanceof NotFoundError) {
         return {
           _id: name,
@@ -45,7 +73,7 @@ export class SyncManager {
       }
 
       throw error;
-    }).then(syncEntity => {
+    }).then(response => response.data).then(syncEntity => {
       if (!isArray(entities)) {
         entities = [entities];
       }
@@ -62,14 +90,37 @@ export class SyncManager {
         }
       });
 
-      return this.syncStore.save(syncEntity);
+      const request = new LocalRequest({
+        method: HttpMethod.PUT,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this._pathname
+        }),
+        properties: options.properties,
+        timeout: options.timeout,
+        data: syncEntity,
+        client: this.client
+      });
+      return request.execute();
     }).then(() => null);
 
     return promise;
   }
 
   execute(query, options = {}) {
-    const promise = this.syncStore.find(query, options).then(syncEntities => {
+    const request = new LocalRequest({
+      method: HttpMethod.GET,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+    const promise = request.execute().then(response => response.data).then(syncEntities => {
       const promise = new Promise((resolve, reject) => {
         mapSeries(syncEntities, (syncEntity, callback) => {
           const collectionName = syncEntity._id;
@@ -80,10 +131,6 @@ export class SyncManager {
           const batchSize = 100;
           let i = 0;
 
-          const collectionNetworkStore = DataStore.getInstance(collectionName, DataStoreType.Network);
-          const collectionSyncStore = DataStore.getInstance(collectionName, DataStoreType.Sync);
-          collectionSyncStore.disableSync();
-
           const batchSync = () => {
             const batchIds = ids.slice(i, i + batchSize);
             i += batchSize;
@@ -91,7 +138,18 @@ export class SyncManager {
             const save = [];
             const remove = [];
             const promises = map(batchIds, id => {
-              const promise = collectionSyncStore.findById(id).then(entity => {
+              const request = new LocalRequest({
+                method: HttpMethod.GET,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}/${id}`
+                }),
+                properties: options.properties,
+                timeout: options.timeout,
+                client: this.client
+              });
+              const promise = request.execute().then(response => response.data).then(entity => {
                 save.push(entity);
                 return entity;
               }).catch(error => {
@@ -111,15 +169,59 @@ export class SyncManager {
                 const originalId = entity[idAttribute];
                 delete entity[kmdAttribute];
 
+                const request = new NetworkRequest({
+                  method: HttpMethod.PUT,
+                  url: url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}/${originalId}`
+                  }),
+                  properties: options.properties,
+                  timeout: options.timeout,
+                  data: entity,
+                  client: this.client
+                });
+
                 if (metadata.isLocal()) {
                   delete entity[idAttribute];
+                  request.method = HttpMethod.POST;
+                  request.url = url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}`
+                  });
+                  request.data = entity;
                 }
 
-                return collectionNetworkStore.save(entity, options)
-                  .then(entity => collectionSyncStore.save(entity, options))
+                return request.execute().then(request => request.data)
                   .then(entity => {
+                    const request = new LocalRequest({
+                      method: HttpMethod.PUT,
+                      url: url.format({
+                        protocol: this.client.protocol,
+                        host: this.client.host,
+                        pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}/${entity[idAttribute]}`
+                      }),
+                      properties: options.properties,
+                      timeout: options.timeout,
+                      data: entity,
+                      client: this.client
+                    });
+                    return request.execute().then(response => response.data);
+                  }).then(entity => {
                     if (metadata.isLocal()) {
-                      return collectionSyncStore.removeById(originalId, options).then(() => entity);
+                      const request = new LocalRequest({
+                        method: HttpMethod.DELETE,
+                        url: url.format({
+                          protocol: this.client.protocol,
+                          host: this.client.host,
+                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}/${originalId}`
+                        }),
+                        properties: options.properties,
+                        timeout: options.timeout,
+                        client: this.client
+                      });
+                      return request.execute().then(() => entity);
                     }
 
                     return entity;
@@ -151,7 +253,19 @@ export class SyncManager {
               });
 
               const removed = map(remove, id => {
-                const promise = collectionNetworkStore.removeById(id, options).then(() => {
+                const request = new NetworkRequest({
+                  method: HttpMethod.DELETE,
+                  url: url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `/${appdataNamespace}/${this.client.appKey}/${collectionName}/${id}`
+                  }),
+                  properties: options.properties,
+                  timeout: options.timeout,
+                  client: this.client
+                });
+
+                const promise = request.execute().then(() => {
                   syncSize = syncSize - 1;
                   delete entities[id];
                   return {
@@ -218,7 +332,20 @@ export class SyncManager {
             }).then(result => {
               syncEntity.size = syncSize;
               syncEntity.entities = entities;
-              return this.syncStore.save(syncEntity, options).then(() => result);
+
+              const request = new LocalRequest({
+                method: HttpMethod.PUT,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `${this._pathname}/${syncEntity[idAttribute]}`
+                }),
+                properties: options.properties,
+                timeout: options.timeout,
+                data: syncEntity,
+                client: this.client
+              });
+              return request.execute().then(() => result);
             });
 
             return promise;

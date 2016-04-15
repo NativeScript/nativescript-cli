@@ -230,6 +230,7 @@ export class SyncStore extends CacheStore {
     });
 
     if (entity[idAttribute]) {
+      request.method = HttpMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
