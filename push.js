@@ -35,8 +35,12 @@ export const Push = {
     return emitter.removeAllListeners(notificationEvent);
   },
 
+  isSupported() {
+    return isiOS() || isAndroid();
+  },
+
   init(options = {}) {
-    if (!isiOS() && !isAndroid()) {
+    if (!Push.isSupported()) {
       return Promise.reject(new KinveyError('Kinvey currently only supports ' +
         'push notifications on iOS and Android platforms.'));
     }
@@ -114,7 +118,7 @@ export const Push = {
   },
 
   unregister(options = {}) {
-    if (!isiOS() && !isAndroid()) {
+    if (!Push.isSupported()) {
       return Promise.reject(new KinveyError('Kinvey currently only supports ' +
         'push notifications on iOS and Android platforms.'));
     }
