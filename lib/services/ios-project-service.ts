@@ -688,16 +688,31 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-
 			if(this.$fs.exists(pluginPodFilePath).wait()) {
-				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
-				let contentToWrite = `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent)}${os.EOL}end`;
-				this.$fs.writeFile(this.projectPodFilePath, contentToWrite).wait();
+				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait(),
+					pluginPodFilePreparedContent = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent),
+					projectPodFileContent = this.$fs.exists(this.projectPodFilePath).wait() ? this.$fs.readText(this.projectPodFilePath).wait() : "";
 
-				let project = this.createPbxProj();
-				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
-				this.savePbxProj(project).wait();
+				if (!~projectPodFileContent.indexOf(pluginPodFilePreparedContent)) {
+					let podFileHeader = `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}`,
+						podFileFooter = `${os.EOL}end`;
+
+					if (_.startsWith(projectPodFileContent, podFileHeader)) {
+						projectPodFileContent = projectPodFileContent.substr(podFileHeader.length);
+					}
+
+					if (_.endsWith(projectPodFileContent, podFileFooter)) {
+						projectPodFileContent = projectPodFileContent.substr(0, projectPodFileContent.length - podFileFooter.length);
+					}
+
+					let contentToWrite = `${podFileHeader}${projectPodFileContent}${pluginPodFilePreparedContent}${podFileFooter}`;
+					this.$fs.writeFile(this.projectPodFilePath, contentToWrite).wait();
+
+					let project = this.createPbxProj();
+					project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+					this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
+					this.savePbxProj(project).wait();
+				}
 			}
 
 			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
