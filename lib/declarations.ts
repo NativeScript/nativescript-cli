@@ -85,7 +85,6 @@ interface IOptions extends ICommonOptions {
 	port: Number;
 	production: boolean;
 	sdk: string;
-	staticBindings: boolean;
 	symlink: boolean;
 	tnsModulesVersion: string;
 }

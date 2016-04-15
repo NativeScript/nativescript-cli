@@ -34,8 +34,7 @@ export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	public execute(args: string[]): IFuture<void> {
-		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
-		return this.executeCore([this.$platformsData.availablePlatforms.Android], config);
+		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
 	}
 
 	public canExecute(args: string[]): IFuture<boolean> {

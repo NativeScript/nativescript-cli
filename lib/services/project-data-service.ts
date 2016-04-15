@@ -60,13 +60,11 @@ export class ProjectDataService implements IProjectDataService {
 		return (() => {
 			assert.ok(this.projectFilePath, "Initialize method of projectDataService is not called.");
 
-			if(!this.projectData) {
-				if(!this.$fs.exists(this.projectFilePath).wait()) {
-					this.$fs.writeFile(this.projectFilePath, null).wait();
-				}
-
-				this.projectData = this.$fs.readJson(this.projectFilePath).wait() || Object.create(null);
+			if(!this.$fs.exists(this.projectFilePath).wait()) {
+				this.$fs.writeFile(this.projectFilePath, null).wait();
 			}
+
+			this.projectData = this.$fs.readJson(this.projectFilePath).wait() || Object.create(null);
 		}).future<void>()();
 	}
 }

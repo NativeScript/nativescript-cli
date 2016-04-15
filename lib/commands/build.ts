@@ -40,8 +40,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements  ICommand {
 	}
 
 	public execute(args: string[]): IFuture<void> {
-		let config = this.$options.staticBindings ? { runSbGenerator: true } : undefined;
-		return this.executeCore([this.$platformsData.availablePlatforms.Android], config);
+		return this.executeCore([this.$platformsData.availablePlatforms.Android]);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
