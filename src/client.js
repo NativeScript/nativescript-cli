@@ -91,6 +91,7 @@ export class Client {
      * @type {SyncManager}
      */
     this.syncManager = new SyncManager();
+    this.syncManager.client = this;
   }
 
   get baseUrl() {
