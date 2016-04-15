@@ -8,7 +8,7 @@ import { Device } from 'kinvey-javascript-sdk-core/build/utils/device';
 import { DeviceAdapter } from './device';
 
 export class KinveyProvider {
-  constructor() {
+  init(options = {}) {
     // Use Http middleware after the Serialize middleware
     const networkRack = NetworkRack.sharedInstance();
     networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
@@ -18,9 +18,8 @@ export class KinveyProvider {
 
     // Use Popup Adapter
     Popup.use(new PopupAdapter());
-  }
 
-  init(options = {}) {
+    // Initialize Kinvey
     return Kinvey.init(options);
   }
 
