@@ -1,4 +1,4 @@
-import packageJSON from '../package.json';
+import packageJSON from 'json-loader!../package.json';
 
 /**
  * @private
