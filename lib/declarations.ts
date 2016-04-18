@@ -56,6 +56,7 @@ interface IOpener {
 
 interface ILiveSyncService {
 	liveSync(platform: string): IFuture<void>;
+	forceExecuteFullSync: boolean;
 }
 
 interface IOptions extends ICommonOptions {
