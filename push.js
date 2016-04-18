@@ -6,6 +6,7 @@ import { User } from 'kinvey-javascript-sdk-core/build/user';
 import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
 import { Client } from 'kinvey-javascript-sdk-core/build/client';
 import { Query } from 'kinvey-javascript-sdk-core/build/query';
+import { NotFoundError } from 'kinvey-javascript-sdk-core/build/errors';
 import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
 import url from 'url';
@@ -86,8 +87,14 @@ export class Push {
 
       const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
       store.disableSync();
-      return store.findById(deviceId).then(entity => {
-        if (options.force !== true) {
+      return store.findById(deviceId).catch(error => {
+        if (error instanceof NotFoundError) {
+          return undefined;
+        }
+
+        throw error;
+      }).then(entity => {
+        if (entity && options.force !== true) {
           return entity;
         }
 
