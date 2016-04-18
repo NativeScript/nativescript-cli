@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Client = exports.sharedClientInstance = undefined;
+exports.Client = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -33,7 +33,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
 var activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME || 'kinvey_activeSocialIdentityToken';
-var sharedClientInstance = exports.sharedClientInstance = null;
+var _sharedInstance = null;
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -210,7 +210,7 @@ var Client = exports.Client = function () {
     key: 'init',
     value: function init(options) {
       var client = new Client(options);
-      exports.sharedClientInstance = sharedClientInstance = client;
+      _sharedInstance = client;
       return client;
     }
 
@@ -225,11 +225,11 @@ var Client = exports.Client = function () {
   }, {
     key: 'sharedInstance',
     value: function sharedInstance() {
-      if (!sharedClientInstance) {
+      if (!_sharedInstance) {
         throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
       }
 
-      return sharedClientInstance;
+      return _sharedInstance;
     }
   }]);
 

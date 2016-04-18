@@ -54,7 +54,7 @@ function use(nsInterface) {
 
     (0, _forEach2.default)(nsInterface, function (methodName) {
       if ((0, _isFunction2.default)(adapter[methodName])) {
-        _this[methodName] = function () {
+        _this.prototype[methodName] = function () {
           for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
             args[_key] = arguments[_key];
           }
