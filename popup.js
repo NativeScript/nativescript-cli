@@ -1,7 +1,14 @@
+import { EventEmitter } from 'events';
+
 /**
  * @private
  */
-export class PopupAdapter {
+export class Popup extends EventEmitter {
+  constructor(url = '/') {
+    super();
+    this.url = url;
+  }
+
   open() {
     const promise = new Promise((resolve, reject) => {
       this.popup = global.open(this.url, '_blank', 'toolbar=no,location=no');

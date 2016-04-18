@@ -3,7 +3,7 @@ import packageJSON from 'json-loader!../package.json';
 /**
  * @private
  */
-export class DeviceAdapter {
+export class Device {
   toJSON() {
     const userAgent = global.navigator.userAgent.toLowerCase();
     const rChrome = /(chrome)\/([\w]+)/;
