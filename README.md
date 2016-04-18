@@ -153,6 +153,7 @@ sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/native
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
+	* [xcodeproj ruby gem][13]
 	* (Optional) [CocoaPods 0.38.2][CocoaPods 0.38.2]
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
@@ -601,6 +602,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [10]: http://developer.telerik.com/featured/nativescript-android/
 [11]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
 [12]: https://developer.apple.com/xcode/downloads/
+[13]: https://rubygems.org/gems/xcodeproj/versions/0.28.2
 [Chocolatey]: https://chocolatey.org/
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Android SDK 22]: http://developer.android.com/sdk/index.html

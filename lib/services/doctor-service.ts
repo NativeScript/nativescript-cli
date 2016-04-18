@@ -20,6 +20,7 @@ class DoctorService implements IDoctorService {
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $progressIndicator: IProgressIndicator,
+		private $staticConfig: IStaticConfig,
 		private $sysInfo: ISysInfo,
 		private $childProcess: IChildProcess,
 		private $config: IConfiguration,
@@ -32,7 +33,7 @@ class DoctorService implements IDoctorService {
 	public printWarnings(configOptions?: { trackResult: boolean }): IFuture<boolean> {
 		return (() => {
 			let result = false;
-			let sysInfo = this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
+			let sysInfo = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait();
 
 			if (!sysInfo.adbVer) {
 				this.$logger.warn("WARNING: adb from the Android SDK is not installed or is not configured properly.");
@@ -61,6 +62,13 @@ class DoctorService implements IDoctorService {
 					this.$logger.warn("WARNING: Xcode is not installed or is not configured properly.");
 					this.$logger.out("You will not be able to build your projects for iOS or run them in the iOS Simulator." + EOL
 						+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed Xcode." + EOL);
+					result = true;
+				}
+
+				if (!sysInfo.xcodeprojGemLocation) {
+					this.$logger.warn("WARNING: xcodeproj gem is not installed or is not configured properly.");
+					this.$logger.out("You will not be able to build your projects for iOS." + EOL
+						+ "To be able to build for iOS and run apps in the native emulator, verify that you have installed xcodeproj." + EOL);
 					result = true;
 				}
 
