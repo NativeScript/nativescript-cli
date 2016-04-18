@@ -67,7 +67,7 @@ export class Push {
       const push = global.PushNotification.init(options);
 
       push.on('registration', data => {
-        resolve(data);
+        resolve(data.registrationId);
       });
 
       push.on('notification', data => {
