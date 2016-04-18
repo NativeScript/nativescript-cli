@@ -4,7 +4,7 @@ import { isBrowser } from './utils';
 /**
  * @private
  */
-export class DeviceAdapter {
+export class Device {
   toJSON() {
     if (isBrowser()) {
       const userAgent = global.navigator.userAgent.toLowerCase();

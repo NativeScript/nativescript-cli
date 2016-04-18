@@ -1,10 +1,11 @@
+import { EventEmitter } from 'events';
 import { isBrowser } from './utils';
 import bind from 'lodash/bind';
 
 /**
  * @private
  */
-export class PopupAdapter {
+export class Popup extends EventEmitter {
   open() {
     this.eventListeners = {
       loadHandler: bind(this.loadHandler, this),
