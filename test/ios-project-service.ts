@@ -58,6 +58,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 		projectFilePath: path.join(projectPath, "package.json")
 	});
 	testInjector.register("projectHelper", {});
+	testInjector.register("xcodeSelectService", {});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", {});
 	testInjector.register("prompter", {});
