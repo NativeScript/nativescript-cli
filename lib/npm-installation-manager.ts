@@ -6,12 +6,6 @@ import * as semver from "semver";
 import * as npm from "npm";
 import * as constants from "./constants";
 
-interface IVersionData {
-	major: string;
-	minor: string;
-	patch: string;
-}
-
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
 	private versionsCache: IDictionary<string[]>;

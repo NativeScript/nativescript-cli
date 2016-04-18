@@ -5,7 +5,7 @@ import * as temp from "temp";
 import {EOL} from "os";
 import {ITMSConstants} from "../constants";
 import {ItunesConnectApplicationTypes} from "../constants";
-import {quoteString} from "../common/helpers";
+import {quoteString, versionCompare} from "../common/helpers";
 
 export class ITMSTransporterService implements IITMSTransporterService {
 	private _itmsTransporterPath: string = null;
@@ -22,7 +22,6 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $staticConfig: IStaticConfig,
-		private $sysInfo: ISysInfo,
 		private $xcodeSelectService: IXcodeSelectService) { }
 
 	// This property was introduced due to the fact that the $platformService dependency
@@ -166,17 +165,15 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		return ((): string => {
 			if (!this._itmsTransporterPath) {
 				let xcodePath = this.$xcodeSelectService.getContentsDirectoryPath().wait(),
-					sysInfo = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait(),
-					xcodeVersionMatch = sysInfo.xcodeVer.match(/Xcode (.*)/),
+					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait(),
 					result = path.join(xcodePath, "Applications", "Application Loader.app", "Contents");
 
-				if (xcodeVersionMatch && xcodeVersionMatch[1]) {
-					let [major, minor] = xcodeVersionMatch[1].split(".");
-					// iTMS Transporter's path has been modified in Xcode 6.3
-					// https://github.com/nomad/shenzhen/issues/243
-					if (+major <= 6 && +minor < 3) {
+				xcodeVersion.patch = xcodeVersion.patch || "0";
+				// iTMS Transporter's path has been modified in Xcode 6.3
+				// https://github.com/nomad/shenzhen/issues/243
+				if (xcodeVersion.major && xcodeVersion.minor &&
+					versionCompare(xcodeVersion, "6.3.0") < 0) {
 						result = path.join(result, "MacOS");
-					}
 				}
 
 				this._itmsTransporterPath = path.join(result, ITMSConstants.iTMSDirectoryName, "bin", ITMSConstants.iTMSExecutableName);
