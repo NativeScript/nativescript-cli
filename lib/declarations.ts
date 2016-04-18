@@ -93,6 +93,10 @@ interface IInitService {
 	initialize(): IFuture<void>;
 }
 
+interface IInfoService {
+	printComponentsInfo(): IFuture<void>;
+}
+
 /**
  * Describes standard username/password type credentials.
  */
@@ -260,6 +264,48 @@ interface IXmlValidator {
 }
 
 /**
+ * Describes methods for working with versions.
+ */
+interface IVersionsService {
+	/**
+	 * Gets version information about nativescript-cli.
+	 * @return {IFuture<IVersionInformation>} The version information.
+	 */
+	getNativescriptCliVersion(): IFuture<IVersionInformation>;
+
+	/**
+	 * Gets version information about tns-core-modules.
+	 * @return {IFuture<IVersionInformation>} The version information.
+	 */
+	getTnsCoreModulesVersion(): IFuture<IVersionInformation>;
+
+	/**
+	 * Gets versions information about nativescript runtimes.
+	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 */
+	getRuntimesVersions(): IFuture<IVersionInformation[]>;
+
+	/**
+	 * Gets versions information about the nativescript components with new.
+	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 */
+	getComponentsForUpdate(): IFuture<IVersionInformation[]>;
+
+	/**
+	 * Gets versions information about all nativescript components.
+	 * @return {IFuture<IVersionInformation[]>} The version information.
+	 */
+	getAllComponentsVersions(): IFuture<IVersionInformation[]>;
+
+	/**
+	 * Creates table with versions information.
+	 * @param {IVersionInformation[]} The versions information to push in the table.
+	 * @return {any} The created table.
+	 */
+	createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any;
+}
+
+/**
  * Describes methods for project name.
  */
 interface IProjectNameService {
@@ -271,3 +317,4 @@ interface IProjectNameService {
 	 */
 	ensureValidName(projectName: string, validateOptions?: { force: boolean }): IFuture<string>;
 }
+
