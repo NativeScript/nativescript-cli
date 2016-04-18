@@ -108,6 +108,7 @@ end
 
 # the -p flag is set in order to ensure zero status code even if the directory exists
 execute("mkdir -p ~/.cocoapods", "There was a problem in creating ~/.cocoapods directory")
+install("xcodeproj", "Installing xcodeproj... This might take some time, please, be patient.", 'gem install xcodeproj -V', true)
 install("CocoaPods", "Installing CocoaPods... This might take some time, please, be patient.", 'gem install cocoapods -V', true)
 
 puts "Configuring your system for Android development... This might take some time, please, be patient."
