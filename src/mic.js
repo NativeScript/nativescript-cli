@@ -3,7 +3,7 @@ import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import { Client } from './client';
-import { Popup } from './utils/popup';
+import { Popup } from 'popup';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';

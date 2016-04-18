@@ -1,6 +1,6 @@
 import Promise from 'babybird';
 import { HttpMethod, AuthType } from '../enums';
-import { Device } from '../utils/device';
+import { Device } from 'device';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import { Client } from '../client';
