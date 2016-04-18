@@ -14,6 +14,7 @@ Command | Description
 [usage-reporting](general/usage-reporting.html) | Configures anonymous usage reporting for the NativeScript CLI.
 [error-reporting](general/error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [doctor](general/doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+[info](general/info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
 
 ## Project Development Commands
 Command | Description

@@ -1,11 +1,11 @@
-doctor
+info
 ==========
 
 Usage | Synopsis
 ------|-------
-General | `$ tns doctor`
+General | `$ tns info`
 
-Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
+Displays version information about the NativeScript CLI, core modules, and runtimes.
 
 <% if(isHtml) { %>
 ### Related Commands
@@ -16,5 +16,5 @@ Command | Description
 [error-reporting](error-reporting.html) | Configures anonymous error reporting for the NativeScript CLI.
 [autocomplete](autocomplete.html) | Prints your current command-line completion settings. If disabled, prompts you to enable it.
 [help](help.html) | Lists the available commands or shows information about the selected command.
-[info](info.html) | Displays version information about the NativeScript CLI, core modules, and runtimes.
+[doctor](doctor.html) | Checks your system for configuration problems which might prevent the NativeScript CLI from working properly.
 <% } %>
