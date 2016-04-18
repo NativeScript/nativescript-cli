@@ -39,7 +39,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $pluginVariablesService: IPluginVariablesService) {
+		private $pluginVariablesService: IPluginVariablesService,
+		private $xcodeSelectService: IXcodeSelectService) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -204,10 +205,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let currentSimulator = this.$iOSSimResolver.iOSSim.getRunningSimulator();
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
-					"-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`,
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
+
+				let additionalArgs: string[] = [],
+					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
+
+				// passing -destination apparently only works with Xcode 7.2+
+				if (xcodeVersion.major && xcodeVersion.minor &&
+					(+xcodeVersion.major < 7 ||
+						(+xcodeVersion.major === 7 && +xcodeVersion.minor < 2))) {
+					additionalArgs = ["-arch", "i386", "VALID_ARCHS=\"i386\""];
+				} else {
+					additionalArgs = ["-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`];
+				}
+
+				args = args.concat(additionalArgs);
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
