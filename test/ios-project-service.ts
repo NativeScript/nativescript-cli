@@ -76,6 +76,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
 	testInjector.register("iTunesValidator", {});
+	testInjector.register("sysInfo", {});
 	testInjector.register("pluginVariablesService", PluginVariablesService);
 	testInjector.register("pluginVariablesHelper", PluginVariablesHelper);
 	return testInjector;
