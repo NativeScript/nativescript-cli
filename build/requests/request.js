@@ -17,7 +17,7 @@ var _babybird2 = _interopRequireDefault(_babybird);
 
 var _enums = require('../enums');
 
-var _device = require('../utils/device');
+var _device = require('device');
 
 var _properties = require('./properties');
 
