@@ -7,7 +7,7 @@ import isString from 'lodash/isString';
 const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
 const activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME
                                                 || 'kinvey_activeSocialIdentityToken';
-let sharedInstance = null;
+global.Kinvey = global.Kinvey || {};
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -166,7 +166,7 @@ export class Client {
    */
   static init(options) {
     const client = new Client(options);
-    sharedInstance = client;
+    global.Kinvey.sharedClientInstance = client;
     return client;
   }
 
@@ -178,11 +178,11 @@ export class Client {
    * @return {Client} The shared instance.
    */
   static sharedInstance() {
-    if (!sharedInstance) {
+    if (!global.Kinvey.sharedClientInstance) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return sharedInstance;
+    return global.Kinvey.sharedClientInstance;
   }
 }
