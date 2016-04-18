@@ -39,7 +39,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $pluginVariablesService: IPluginVariablesService) {
+		private $pluginVariablesService: IPluginVariablesService,
+		private $staticConfig: IStaticConfig,
+		private $sysInfo: ISysInfo,
+		private $xcodeSelectService: IXcodeSelectService) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -145,7 +148,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot).wait();
 
-			let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
+			let pbxprojFilePath = this.pbxProjPath;
 			this.replaceFileContent(pbxprojFilePath).wait();
 		}).future<void>()();
 	}
@@ -204,10 +207,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let currentSimulator = this.$iOSSimResolver.iOSSim.getRunningSimulator();
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
-					"-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`,
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
+
+				let additionalArgs: string[] = [],
+					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
+
+				xcodeVersion.patch = xcodeVersion.patch || "0";
+				// passing -destination apparently only works with Xcode 7.2+
+				if (xcodeVersion.major && xcodeVersion.minor &&
+					helpers.versionCompare(xcodeVersion, "7.2.0") < 0) {
+					additionalArgs = ["-arch", "i386", 'VALID_ARCHS="i386"'];
+				} else {
+					additionalArgs = ["-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`];
+				}
+
+				args = args.concat(additionalArgs);
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
@@ -341,7 +357,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
 				if(isUpdateConfirmed) {
 					// Copy old file to options["profile-dir"]
-					let sourceDir = path.join(this.platformData.projectRoot, `${this.$projectData.projectName}.xcodeproj`);
+					let sourceDir = this.xcodeprojPath;
 					let destinationDir = path.join(this.$options.profileDir, "xcodeproj");
 					this.$fs.deleteDirectory(destinationDir).wait();
 					shell.cp("-R", path.join(sourceDir, "*"), destinationDir);
@@ -353,7 +369,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					shell.cp("-R", path.join(cachedPackagePath, "*"), sourceDir);
 					this.$logger.info(`Copied from ${cachedPackagePath} at ${this.platformData.projectRoot}.`);
 
-					let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "project.pbxproj");
+					let pbxprojFilePath = this.pbxProjPath;
 					this.replaceFileContent(pbxprojFilePath).wait();
 				}
 
@@ -498,6 +514,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return (<IPluginsService>this.$injector.resolve("pluginsService")).getAllInstalledPlugins();
 	}
 
+	private get xcodeprojPath(): string {
+		return path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME);
+	}
+
+	private get cocoaPodsXcodeprojPath(): string {
+		return path.join(this.platformData.projectRoot, "Pods", "Pods" + IOSProjectService.XCODE_PROJECT_EXT_NAME);
+	}
+
 	private get projectPodFilePath(): string {
 		return path.join(this.platformData.projectRoot, "Podfile");
 	}
@@ -525,7 +549,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private get pbxProjPath(): string {
-		return path.join(this.platformData.projectRoot, this.$projectData.projectName + ".xcodeproj", "project.pbxproj");
+		return path.join(this.xcodeprojPath, "project.pbxproj");
 	}
 
 	private createPbxProj(): any {
@@ -571,8 +595,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.$logger.warn(`Podfile contains more than one post_install sections. You need to open ${this.projectPodFilePath} file and manually resolve this issue.`);
 				}
 
-				let pbxprojFilePath = path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcuserdata");
-				if(!this.$fs.exists(pbxprojFilePath).wait()) {
+				let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
+				if(!this.$fs.exists(xcuserDataPath).wait()) {
 					this.$logger.info("Creating project scheme...");
 					let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
 					this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot }).wait();
@@ -650,6 +674,24 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 			}
 
+			let cocoapodsVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
+				xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
+
+			xcodeVersion.patch = xcodeVersion.patch || "0";
+			let shouldUseXcproj = semver.lt(cocoapodsVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0");
+
+			// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
+			// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
+			// as a result of this all .pbxprojects touched by CocoaPods get converted to XML plist format
+			if (shouldUseXcproj) {
+				// if that's the case we can use xcproj gem to convert them back to ASCII plist format
+				try {
+					this.$childProcess.exec("xcproj --version").wait();
+				} catch(e) {
+					this.$errors.failWithoutHelp(`You are using CocoaPods version ${cocoapodsVer} which does not support Xcode ${xcodeVersion.major}.${xcodeVersion.minor} yet. In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH.`);
+				}
+			}
+
 			this.$logger.info("Installing pods...");
 			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
 			let childProcess = this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] }).wait();
@@ -667,6 +709,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if(errors.trim()) {
 					this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
 				}
+			}
+
+			if (shouldUseXcproj) {
+				this.$childProcess.exec(`xcproj --project ${this.xcodeprojPath} touch`).wait();
+				this.$childProcess.exec(`xcproj --project ${this.cocoaPodsXcodeprojPath} touch`).wait();
 			}
 
 			return childProcess;
