@@ -538,7 +538,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     set: function set(urlString) {
       _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
 
-      var pathname = _url2.default.parse(urlString).pathname;
+      var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
 
       var _ref = pattern.match(pathname) || {};

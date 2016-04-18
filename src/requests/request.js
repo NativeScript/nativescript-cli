@@ -415,7 +415,7 @@ export class KinveyRequest extends Request {
   set url(urlString) {
     super.url = urlString;
 
-    const pathname = url.parse(urlString).pathname;
+    const pathname = global.escape(url.parse(urlString).pathname);
     const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
     const { appKey, collectionName, entityId } = pattern.match(pathname) || {};
     this.appKey = appKey;

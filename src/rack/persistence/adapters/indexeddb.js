@@ -29,11 +29,12 @@ const indexedDB = global.shimIndexedDB ||
 export class IndexedDB {
   constructor(name) {
     if (!name) {
-      throw new KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
+      throw new KinveyError('A name for the collection is required to use the indexeddb persistence adapter.', name);
     }
 
     if (!isString(name)) {
-      throw new KinveyError('The name of the collection must be a string to use the memory persistence adapter', name);
+      throw new KinveyError(
+        'The name of the collection must be a string to use the indexeddb persistence adapter', name);
     }
 
     this.name = name;
