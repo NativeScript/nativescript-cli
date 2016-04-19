@@ -1,4 +1,4 @@
-import { KinveyError } from 'kinvey-javascript-sdk-core/build/errors';
+import { KinveyError, NotFoundError } from 'kinvey-javascript-sdk-core/build/errors';
 import { EventEmitter } from 'events';
 import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/datastore';
 import { HttpMethod, AuthType } from 'kinvey-javascript-sdk-core/build/enums';
@@ -6,7 +6,6 @@ import { User } from 'kinvey-javascript-sdk-core/build/user';
 import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
 import { Client } from 'kinvey-javascript-sdk-core/build/client';
 import { Query } from 'kinvey-javascript-sdk-core/build/query';
-import { NotFoundError } from 'kinvey-javascript-sdk-core/build/errors';
 import { isiOS, isAndroid } from './utils';
 import assign from 'lodash/assign';
 import url from 'url';
