@@ -637,7 +637,7 @@ class CacheStore extends NetworkStore {
       }
 
       return this.find(query, options);
-    }).then(result => result.network);
+    }).then(result => result.networkPromise);
     return promise;
   }
 
