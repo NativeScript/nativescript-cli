@@ -677,6 +677,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let cocoapodsVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
 				xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
 
+			if(!semver.valid(cocoapodsVer)) {
+				// Cocoapods betas have names like 1.0.0.beta.8
+				// These 1.0.0 betas are not valid semver versions, but they are working fine with XCode 7.3
+				// So get only the major.minor.patch version and consider them as 1.0.0
+				cocoapodsVer = _.take(cocoapodsVer.split("."), 3).join(".");
+			}
+
 			xcodeVersion.patch = xcodeVersion.patch || "0";
 			let shouldUseXcproj = semver.lt(cocoapodsVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0");
 
