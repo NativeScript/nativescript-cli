@@ -1,4 +1,7 @@
 ## Changelog
+### 3.0.0-beta.16 (2016-04-19)
+* Bugfix: Fixed missing url when opening popup for MIC login.
+
 ### 3.0.0-beta.15 (2016-04-19)
 * Bugfix (MLIBZ-1029) Fixed NetworkStore sends remove calls as a GET
 * Bugfix (MLIBZ-1030) Fixed pull response is undefined
