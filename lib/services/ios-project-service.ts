@@ -204,26 +204,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 			} else {
-				let currentSimulator = this.$iOSSimResolver.iOSSim.getRunningSimulator();
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
+					"-arch", "i386",
+					'VALID_ARCHS="i386"',
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
-
-				let additionalArgs: string[] = [],
-					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
-
-				xcodeVersion.patch = xcodeVersion.patch || "0";
-				// passing -destination apparently only works with Xcode 7.2+
-				if (xcodeVersion.major && xcodeVersion.minor &&
-					helpers.versionCompare(xcodeVersion, "7.2.0") < 0) {
-					additionalArgs = ["-arch", "i386", 'VALID_ARCHS="i386"'];
-				} else {
-					additionalArgs = ["-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`];
-				}
-
-				args = args.concat(additionalArgs);
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
@@ -676,6 +663,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			let cocoapodsVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
 				xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
+
+			if(!semver.valid(cocoapodsVer)) {
+				// Cocoapods betas have names like 1.0.0.beta.8
+				// These 1.0.0 betas are not valid semver versions, but they are working fine with XCode 7.3
+				// So get only the major.minor.patch version and consider them as 1.0.0
+				cocoapodsVer = _.take(cocoapodsVer.split("."), 3).join(".");
+			}
 
 			xcodeVersion.patch = xcodeVersion.patch || "0";
 			let shouldUseXcproj = semver.lt(cocoapodsVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0");
