@@ -775,7 +775,7 @@ var CacheStore = function (_NetworkStore) {
 
         return _this9.find(query, options);
       }).then(function (result) {
-        return result.network;
+        return result.networkPromise;
       });
       return promise;
     }
