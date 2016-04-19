@@ -204,26 +204,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				args = args.concat((buildConfig && buildConfig.architectures) || defaultArchitectures);
 			} else {
-				let currentSimulator = this.$iOSSimResolver.iOSSim.getRunningSimulator();
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
+					"-arch", "i386",
+					'VALID_ARCHS="i386"',
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
-
-				let additionalArgs: string[] = [],
-					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
-
-				xcodeVersion.patch = xcodeVersion.patch || "0";
-				// passing -destination apparently only works with Xcode 7.2+
-				if (xcodeVersion.major && xcodeVersion.minor &&
-					helpers.versionCompare(xcodeVersion, "7.2.0") < 0) {
-					additionalArgs = ["-arch", "i386", 'VALID_ARCHS="i386"'];
-				} else {
-					additionalArgs = ["-destination", `platform=iOS Simulator,name=${this.$iOSSimResolver.iOSSim.getSimulatorName(currentSimulator && currentSimulator.name)}`];
-				}
-
-				args = args.concat(additionalArgs);
 			}
 
 			if (buildConfig && buildConfig.codeSignIdentity) {
