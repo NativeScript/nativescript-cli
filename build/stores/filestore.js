@@ -337,4 +337,3 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
 
   return FileStore;
 }(_networkstore.NetworkStore);
-//# sourceMappingURL=filestore.js.map

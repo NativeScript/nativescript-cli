@@ -23,4 +23,3 @@ _loglevel2.default.methodFactory = function methodFactory(methodName, logLevel, 
 
 _loglevel2.default.setLevel(_loglevel2.default.levels.ERROR);
 exports.Log = _loglevel2.default;
-//# sourceMappingURL=log.js.map

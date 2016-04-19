@@ -1,8 +1,7 @@
- /* eslint-disable */
+/* eslint-disable */
 var gulp = require('gulp');
 var eslint = require('gulp-eslint');
 var util = require('gulp-util');
-var sourcemaps = require('gulp-sourcemaps');
 var git = require('gulp-git');
 var prompt = require('gulp-prompt');
 var bump = require('gulp-bump');
@@ -29,9 +28,7 @@ gulp.task('clean', function(done) {
 
 gulp.task('build', ['clean', 'lint'], function() {
   return gulp.src('src/**/*.js')
-    .pipe(sourcemaps.init())
     .pipe(babel())
-    .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('./build'))
 });
 

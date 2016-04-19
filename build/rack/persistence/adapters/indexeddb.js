@@ -57,11 +57,11 @@ var IndexedDB = exports.IndexedDB = function () {
     _classCallCheck(this, IndexedDB);
 
     if (!name) {
-      throw new _errors.KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
+      throw new _errors.KinveyError('A name for the collection is required to use the indexeddb persistence adapter.', name);
     }
 
     if (!(0, _isString2.default)(name)) {
-      throw new _errors.KinveyError('The name of the collection must be a string to use the memory persistence adapter', name);
+      throw new _errors.KinveyError('The name of the collection must be a string to use the indexeddb persistence adapter', name);
     }
 
     this.name = name;
@@ -327,10 +327,9 @@ var IndexedDB = exports.IndexedDB = function () {
   }], [{
     key: 'isSupported',
     value: function isSupported() {
-      return indexedDB !== undefined;
+      return !!indexedDB;
     }
   }]);
 
   return IndexedDB;
 }();
-//# sourceMappingURL=indexeddb.js.map

@@ -53,7 +53,6 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   _createClass(SyncStore, [{
     key: 'find',
 
-
     /**
      * Finds all entities in a collection. A query can be optionally provided to return
      * a subset of all entities in a collection or omitted to return all entities in
@@ -313,6 +312,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       });
 
       if (entity[idAttribute]) {
+        request.method = _enums.HttpMethod.PUT;
         request.url = _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -328,8 +328,8 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
       promise.then(function (response) {
         _log.Log.info('Saved the entity(s) to the ' + _this6.name + ' collection.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to save the entity(s) to the ' + _this6.name + ' collection.', err);
+      }).catch(function (error) {
+        _log.Log.error('Failed to save the entity(s) to the ' + _this6.name + ' collection.', error);
       });
 
       return promise;
@@ -477,4 +477,3 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   return SyncStore;
 }(_cachestore.CacheStore);
-//# sourceMappingURL=syncStore.js.map

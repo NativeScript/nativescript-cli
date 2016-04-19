@@ -95,4 +95,3 @@ var KinveyMiddleware = exports.KinveyMiddleware = function (_Middleware) {
 
   return KinveyMiddleware;
 }(Middleware);
-//# sourceMappingURL=middleware.js.map

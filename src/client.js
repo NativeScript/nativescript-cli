@@ -1,4 +1,5 @@
 import { KinveyError } from './errors';
+import { SyncManager } from './sync';
 import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -6,7 +7,7 @@ import isString from 'lodash/isString';
 const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
 const activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME
                                                 || 'kinvey_activeSocialIdentityToken';
-let sharedInstance;
+global.Kinvey = global.Kinvey || {};
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -39,16 +40,6 @@ export class Client {
       protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
-
-    if (!options.appKey && !options.appId) {
-      throw new KinveyError('No App Key was provided. ' +
-        'Unable to create a new Client without an App Key.');
-    }
-
-    if (!options.appSecret && !options.masterSecret) {
-      throw new KinveyError('No App Secret or Master Secret was provided. ' +
-        'Unable to create a new Client without an App Key.');
-    }
 
     if (options.hostname && isString(options.hostname)) {
       const hostnameParsed = url.parse(options.hostname);
@@ -85,6 +76,12 @@ export class Client {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {SyncManager}
+     */
+    this.syncManager = new SyncManager();
+    this.syncManager.client = this;
   }
 
   get baseUrl() {
@@ -169,7 +166,7 @@ export class Client {
    */
   static init(options) {
     const client = new Client(options);
-    sharedInstance = client;
+    global.Kinvey.sharedClientInstance = client;
     return client;
   }
 
@@ -181,13 +178,11 @@ export class Client {
    * @return {Client} The shared instance.
    */
   static sharedInstance() {
-    const client = sharedInstance;
-
-    if (!client) {
+    if (!global.Kinvey.sharedClientInstance) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return client;
+    return global.Kinvey.sharedClientInstance;
   }
 }

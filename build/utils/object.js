@@ -22,7 +22,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  */
 function nested(obj, dotProperty, value) {
   if (!dotProperty) {
-    obj = value !== undefined ? value : obj;
+    obj = !!value ? value : obj;
     return obj;
   }
 
@@ -33,7 +33,7 @@ function nested(obj, dotProperty, value) {
     current = parts.shift();
   }
 
-  return value !== undefined ? value : obj;
+  return !!value ? value : obj;
 }
 
 /**
@@ -65,4 +65,3 @@ function use(nsInterface) {
     });
   };
 }
-//# sourceMappingURL=object.js.map

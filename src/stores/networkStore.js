@@ -348,7 +348,7 @@ export class NetworkStore {
     }
 
     const request = new NetworkRequest({
-      method: HttpMethod.GET,
+      method: HttpMethod.DELETE,
       authType: AuthType.Default,
       url: url.format({
         protocol: this.client.protocol,
@@ -397,7 +397,7 @@ export class NetworkStore {
     }, options);
 
     const request = new NetworkRequest({
-      method: HttpMethod.GET,
+      method: HttpMethod.DELETE,
       authType: AuthType.Default,
       url: url.format({
         protocol: this.client.protocol,

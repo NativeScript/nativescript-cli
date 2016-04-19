@@ -1,1 +1,0 @@
-{"version":3,"sources":["utils/promise.js"],"names":[],"mappings":";;;;;;AAAA","file":"utils/promise.js","sourcesContent":["import Promise from 'babybird';\n// import prfunWrap from 'prfun/wrap';\n// const WrappedPromise = prfunWrap(Promise);\nexport default Promise;\n"],"sourceRoot":"/source/"}

@@ -37,8 +37,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var sharedCacheRackInstance = void 0;
-var sharedNetworkRackInstance = void 0;
+var sharedCacheRackInstance = Symbol();
+var sharedNetworkRackInstance = Symbol();
 
 /**
  * @private
@@ -257,11 +257,11 @@ var CacheRack = exports.CacheRack = function (_KinveyRack) {
   _createClass(CacheRack, null, [{
     key: 'sharedInstance',
     value: function sharedInstance() {
-      var instance = sharedCacheRackInstance;
+      var instance = this[sharedCacheRackInstance];
 
       if (!instance) {
         instance = new CacheRack();
-        sharedCacheRackInstance = instance;
+        this[sharedCacheRackInstance] = instance;
       }
 
       return instance;
@@ -294,11 +294,11 @@ var NetworkRack = exports.NetworkRack = function (_KinveyRack2) {
   _createClass(NetworkRack, null, [{
     key: 'sharedInstance',
     value: function sharedInstance() {
-      var instance = sharedNetworkRackInstance;
+      var instance = this[sharedNetworkRackInstance];
 
       if (!instance) {
         instance = new NetworkRack();
-        sharedNetworkRackInstance = instance;
+        this[sharedNetworkRackInstance] = instance;
       }
 
       return instance;
@@ -307,4 +307,3 @@ var NetworkRack = exports.NetworkRack = function (_KinveyRack2) {
 
   return NetworkRack;
 }(KinveyRack);
-//# sourceMappingURL=rack.js.map

@@ -59,4 +59,3 @@ var ParseMiddleware = exports.ParseMiddleware = function (_KinveyMiddleware) {
 
   return ParseMiddleware;
 }(_middleware.KinveyMiddleware);
-//# sourceMappingURL=parse.js.map

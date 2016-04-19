@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import { use } from './object';
 
 /**
  * @private
@@ -30,5 +29,3 @@ export class Popup extends EventEmitter {
     throw new Error('method unsupported');
   }
 }
-
-Popup.use = use(['open', 'close', 'loadHandler', 'clickHandler', 'closeHandler']);

@@ -186,4 +186,3 @@ var Memory = exports.Memory = function () {
 
   return Memory;
 }();
-//# sourceMappingURL=memory.js.map

@@ -8,14 +8,14 @@ export class HttpMiddleware extends KinveyMiddleware {
 
   handle(request) {
     return super.handle(request).then(() => {
-      return fetch(request.url, {
+      const promise = fetch(request.url, {
         method: request.method,
         headers: request.headers,
         body: request.data,
         redirect: request.followRedirect === false ? 0 : request.followRedirect,
         timeout: request.timeout
       }).then(fetchResponse => {
-        return fetchResponse.text().then(data => {
+        const promise = fetchResponse.text().then(data => {
           const response = {
             statusCode: fetchResponse.status,
             headers: {},
@@ -26,7 +26,9 @@ export class HttpMiddleware extends KinveyMiddleware {
           request.response = response;
           return request;
         });
+        return promise;
       });
+      return promise;
     });
   }
 }

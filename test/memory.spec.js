@@ -174,9 +174,7 @@ describe('Memory', function() {
         expect(savedEntities.length).to.equal(2);
         expect(savedEntities).to.deep.equal(entities);
         const savedEntityIds = Object.keys(keyBy(savedEntities, '_id'));
-        const promises = map(savedEntityIds, id => {
-          return this.db.removeById(collectionName, id);
-        });
+        const promises = map(savedEntityIds, id => this.db.removeById(collectionName, id));
         return Promise.all(promises);
       });
     });

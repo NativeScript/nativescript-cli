@@ -69,4 +69,3 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
 
   return SerializeMiddleware;
 }(_middleware.KinveyMiddleware);
-//# sourceMappingURL=serialize.js.map

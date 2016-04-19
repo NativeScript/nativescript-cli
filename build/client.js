@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
+var _sync = require('./sync');
+
 var _localStorage = require('local-storage');
 
 var _localStorage2 = _interopRequireDefault(_localStorage);
@@ -31,7 +33,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
 var activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME || 'kinvey_activeSocialIdentityToken';
-var _sharedInstance = void 0;
+global.Kinvey = global.Kinvey || {};
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -71,14 +73,6 @@ var Client = exports.Client = function () {
       host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
-    if (!options.appKey && !options.appId) {
-      throw new _errors.KinveyError('No App Key was provided. ' + 'Unable to create a new Client without an App Key.');
-    }
-
-    if (!options.appSecret && !options.masterSecret) {
-      throw new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.');
-    }
-
     if (options.hostname && (0, _isString2.default)(options.hostname)) {
       var hostnameParsed = _url2.default.parse(options.hostname);
       options.protocol = hostnameParsed.protocol;
@@ -114,6 +108,12 @@ var Client = exports.Client = function () {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {SyncManager}
+     */
+    this.syncManager = new _sync.SyncManager();
+    this.syncManager.client = this;
   }
 
   _createClass(Client, [{
@@ -210,7 +210,7 @@ var Client = exports.Client = function () {
     key: 'init',
     value: function init(options) {
       var client = new Client(options);
-      _sharedInstance = client;
+      global.Kinvey.sharedClientInstance = client;
       return client;
     }
 
@@ -225,16 +225,13 @@ var Client = exports.Client = function () {
   }, {
     key: 'sharedInstance',
     value: function sharedInstance() {
-      var client = _sharedInstance;
-
-      if (!client) {
+      if (!global.Kinvey.sharedClientInstance) {
         throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
       }
 
-      return client;
+      return global.Kinvey.sharedClientInstance;
     }
   }]);
 
   return Client;
 }();
-//# sourceMappingURL=client.js.map

@@ -15,16 +15,6 @@ var _db = require('../persistence/db');
 
 var _enums = require('../../enums');
 
-var _urlPattern = require('url-pattern');
-
-var _urlPattern2 = _interopRequireDefault(_urlPattern);
-
-var _url = require('url');
-
-var _url2 = _interopRequireDefault(_url);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -55,40 +45,31 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
       var _this2 = this;
 
       return _get(Object.getPrototypeOf(CacheMiddleware.prototype), 'handle', this).call(this, request).then(function () {
-        var pathname = _url2.default.parse(request.url).pathname;
-        var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:id)(/)');
-
-        var _ref = pattern.match(pathname) || {};
-
-        var appKey = _ref.appKey;
-        var collection = _ref.collection;
-        var id = _ref.id;
-
         var method = request.method;
         var query = request.query;
         var data = request.data;
-        var db = new _db.DB(appKey, _this2.adapters);
+        var db = new _db.DB(request.appKey, _this2.adapters);
         var promise = void 0;
 
         if (method === _enums.HttpMethod.GET) {
-          if (id) {
-            if (id === '_count') {
-              promise = db.count(collection, query);
-            } else if (id === '_group') {
-              promise = db.group(collection, data);
+          if (request.entityId) {
+            if (request.entityId === '_count') {
+              promise = db.count(request.collectionName, query);
+            } else if (request.entityId === '_group') {
+              promise = db.group(request.collectionName, data);
             } else {
-              promise = db.findById(collection, id);
+              promise = db.findById(request.collectionName, request.entityId);
             }
           } else {
-            promise = db.find(collection, query);
+            promise = db.find(request.collectionName, query);
           }
         } else if (method === _enums.HttpMethod.POST || method === _enums.HttpMethod.PUT) {
-          promise = db.save(collection, data);
+          promise = db.save(request.collectionName, data);
         } else if (method === _enums.HttpMethod.DELETE) {
-          if (id) {
-            promise = db.removeById(collection, id);
+          if (request.entityId) {
+            promise = db.removeById(request.collectionName, request.entityId);
           } else {
-            promise = db.remove(collection, query);
+            promise = db.remove(request.collectionName, query);
           }
         }
 
@@ -113,4 +94,3 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
 
   return CacheMiddleware;
 }(_middleware.KinveyMiddleware);
-//# sourceMappingURL=cache.js.map

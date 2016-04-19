@@ -76,4 +76,3 @@ var DataStore = exports.DataStore = function () {
 
   return DataStore;
 }();
-//# sourceMappingURL=datastore.js.map

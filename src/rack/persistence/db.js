@@ -176,7 +176,6 @@ export class DB {
         kmd.local = true;
       }
 
-      delete kmd.lmt;
       entity[idAttribute] = id;
       entity[kmdAttribute] = kmd;
       return entity;

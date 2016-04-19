@@ -212,4 +212,3 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
   return DeltaFetchRequest;
 }(_request.KinveyRequest);
-//# sourceMappingURL=deltafetch.js.map

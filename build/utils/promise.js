@@ -13,4 +13,3 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // import prfunWrap from 'prfun/wrap';
 // const WrappedPromise = prfunWrap(Promise);
 exports.default = _babybird2.default;
-//# sourceMappingURL=promise.js.map

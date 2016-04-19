@@ -10,7 +10,6 @@ import url from 'url';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 export class SyncStore extends CacheStore {
-
   /**
    * Finds all entities in a collection. A query can be optionally provided to return
    * a subset of all entities in a collection or omitted to return all entities in
@@ -231,6 +230,7 @@ export class SyncStore extends CacheStore {
     });
 
     if (entity[idAttribute]) {
+      request.method = HttpMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
@@ -242,8 +242,8 @@ export class SyncStore extends CacheStore {
 
     promise.then(response => {
       Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
+    }).catch(error => {
+      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, error);
     });
 
     return promise;

@@ -6,7 +6,7 @@ import isFunction from 'lodash/isFunction';
  */
 export function nested(obj, dotProperty, value) {
   if (!dotProperty) {
-    obj = value !== undefined ? value : obj;
+    obj = !!value ? value : obj;
     return obj;
   }
 
@@ -17,7 +17,7 @@ export function nested(obj, dotProperty, value) {
     current = parts.shift();
   }
 
-  return value !== undefined ? value : obj;
+  return !!value ? value : obj;
 }
 
 /**

@@ -19,7 +19,7 @@ var _network = require('./requests/network');
 
 var _client = require('./client');
 
-var _popup = require('./utils/popup');
+var _popup = require('popup');
 
 var _path = require('path');
 
@@ -296,4 +296,3 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
 
   return MobileIdentityConnect;
 }();
-//# sourceMappingURL=mic.js.map

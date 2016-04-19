@@ -84,4 +84,3 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
 
   return LocalRequest;
 }(_request.KinveyRequest);
-//# sourceMappingURL=local.js.map

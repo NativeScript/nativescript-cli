@@ -185,4 +185,3 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
 
   return NetworkRequest;
 }(_request.KinveyRequest);
-//# sourceMappingURL=network.js.map

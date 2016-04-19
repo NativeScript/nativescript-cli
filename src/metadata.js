@@ -60,6 +60,10 @@ export class Metadata {
     this.kmd.authtoken = authtoken;
   }
 
+  isLocal() {
+    return !!this.kmd.local;
+  }
+
   toJSON() {
     return this.kmd;
   }

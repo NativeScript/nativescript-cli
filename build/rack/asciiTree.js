@@ -50,4 +50,3 @@ var AsciiTree = exports.AsciiTree = {
     return result;
   }
 };
-//# sourceMappingURL=asciiTree.js.map

@@ -11,6 +11,8 @@ var _babybird = require('babybird');
 
 var _babybird2 = _interopRequireDefault(_babybird);
 
+var _errors = require('./errors');
+
 var _aggregation = require('./aggregation');
 
 var _client = require('./client');
@@ -51,6 +53,7 @@ var Kinvey = function () {
   _createClass(Kinvey, null, [{
     key: 'init',
 
+
     /**
      * Initializes the library with your app's information.
      *
@@ -73,8 +76,15 @@ var Kinvey = function () {
      * });
      */
     value: function init(options) {
-      var client = _client.Client.init(options);
-      return client;
+      if (!options.appKey && !options.appId) {
+        throw new _errors.KinveyError('No App Key was provided. ' + 'Unable to create a new Client without an App Key.');
+      }
+
+      if (!options.appSecret && !options.masterSecret) {
+        throw new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.');
+      }
+
+      this._client = _client.Client.init(options);
     }
 
     /**
@@ -103,6 +113,15 @@ var Kinvey = function () {
       });
       return promise;
     }
+  }, {
+    key: 'client',
+    get: function get() {
+      if (!this._client) {
+        throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
+      }
+
+      return this._client;
+    }
   }]);
 
   return Kinvey;
@@ -121,4 +140,3 @@ Kinvey.SocialIdentity = _enums.SocialIdentity;
 Kinvey.Sync = _sync.Sync;
 Kinvey.User = _user.User;
 exports.Kinvey = Kinvey;
-//# sourceMappingURL=kinvey.js.map

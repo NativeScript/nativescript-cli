@@ -431,7 +431,7 @@ var NetworkStore = exports.NetworkStore = function () {
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.GET,
+        method: _enums.HttpMethod.DELETE,
         authType: _enums.AuthType.Default,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -489,7 +489,7 @@ var NetworkStore = exports.NetworkStore = function () {
       }, options);
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.GET,
+        method: _enums.HttpMethod.DELETE,
         authType: _enums.AuthType.Default,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -527,4 +527,3 @@ var NetworkStore = exports.NetworkStore = function () {
 
   return NetworkStore;
 }();
-//# sourceMappingURL=networkStore.js.map

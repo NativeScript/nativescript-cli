@@ -1,15 +1,13 @@
 {
-  "parser": "babel-eslint",
-  "rules": {
-    "strict": 0,
-    "quotes": [2, "single"],
-    "no-unused-expressions": 0,
-    "func-names": 0
-  },
+  "extends": "../.eslintrc",
   "env": {
     "browser": true,
     "node": true,
     "mocha": true
+  },
+  "rules": {
+    "prefer-arrow-callback": 0,
+    "no-unused-expressions": 0
   },
   "globals": {
     "spy": true,
@@ -17,7 +15,6 @@
     "chai": true,
     "sinon": true,
     "stub": true,
-    "spy": true,
     "Common": true
   }
 }

@@ -1,8 +1,6 @@
 import { KinveyMiddleware } from '../middleware';
 import { DB, DBAdapter } from '../persistence/db';
 import { HttpMethod, StatusCode } from '../../enums';
-import UrlPattern from 'url-pattern';
-import url from 'url';
 
 /**
  * @private
@@ -15,34 +13,31 @@ export class CacheMiddleware extends KinveyMiddleware {
 
   handle(request) {
     return super.handle(request).then(() => {
-      const pathname = url.parse(request.url).pathname;
-      const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:id)(/)');
-      const { appKey, collection, id } = pattern.match(pathname) || {};
       const method = request.method;
       const query = request.query;
       const data = request.data;
-      const db = new DB(appKey, this.adapters);
+      const db = new DB(request.appKey, this.adapters);
       let promise;
 
       if (method === HttpMethod.GET) {
-        if (id) {
-          if (id === '_count') {
-            promise = db.count(collection, query);
-          } else if (id === '_group') {
-            promise = db.group(collection, data);
+        if (request.entityId) {
+          if (request.entityId === '_count') {
+            promise = db.count(request.collectionName, query);
+          } else if (request.entityId === '_group') {
+            promise = db.group(request.collectionName, data);
           } else {
-            promise = db.findById(collection, id);
+            promise = db.findById(request.collectionName, request.entityId);
           }
         } else {
-          promise = db.find(collection, query);
+          promise = db.find(request.collectionName, query);
         }
       } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
-        promise = db.save(collection, data);
+        promise = db.save(request.collectionName, data);
       } else if (method === HttpMethod.DELETE) {
-        if (id) {
-          promise = db.removeById(collection, id);
+        if (request.entityId) {
+          promise = db.removeById(request.collectionName, request.entityId);
         } else {
-          promise = db.remove(collection, query);
+          promise = db.remove(request.collectionName, query);
         }
       }
 
