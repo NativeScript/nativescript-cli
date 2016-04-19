@@ -96,7 +96,8 @@ export class MobileIdentityConnect {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      const popup = new Popup(url.format({
+      const popup = new Popup();
+      return popup.open(url.format({
         protocol: this.client.protocol,
         host: this.client.host,
         pathname: path.join(pathname, authPathname),
@@ -106,7 +107,6 @@ export class MobileIdentityConnect {
           response_type: 'code'
         }
       }));
-      return popup.open();
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
