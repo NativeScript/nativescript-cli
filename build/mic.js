@@ -146,7 +146,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        var popup = new _popup.Popup(_url2.default.format({
+        var popup = new _popup.Popup();
+        return popup.open(_url2.default.format({
           protocol: _this2.client.protocol,
           host: _this2.client.host,
           pathname: _path2.default.join(pathname, authPathname),
@@ -156,7 +157,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
             response_type: 'code'
           }
         }));
-        return popup.open();
       }).then(function (popup) {
         var promise = new _babybird2.default(function (resolve, reject) {
           var redirected = false;
