@@ -117,10 +117,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
 			if(this.$options.symlink) {
-				this.symlinkDirectory("build-tools", this.platformData.projectRoot, frameworkDir).wait();
 				this.symlinkDirectory("libs", this.platformData.projectRoot, frameworkDir).wait();
 			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "build-tools libs", "-R");
+				this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
 			}
 
 			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
@@ -129,7 +128,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.createDirectory(mainPath).wait();
 				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
 			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
+				this.copy(this.platformData.projectRoot, frameworkDir, "src build-tools", "-R");
 			}
 			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties", "-f");
 
