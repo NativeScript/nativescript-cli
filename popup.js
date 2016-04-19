@@ -6,7 +6,7 @@ import bind from 'lodash/bind';
  * @private
  */
 export class Popup extends EventEmitter {
-  open() {
+  open(url = '/') {
     this.eventListeners = {
       loadHandler: bind(this.loadHandler, this),
       closeHandler: bind(this.closeHandler, this)
@@ -14,7 +14,7 @@ export class Popup extends EventEmitter {
 
     const promise = new Promise((resolve, reject) => {
       if (isBrowser()) {
-        this.popup = global.open(this.url, '_blank', 'toolbar=no,location=no');
+        this.popup = global.open(url, '_blank', 'toolbar=no,location=no');
 
         if (this.popup) {
           this.interval = setInterval(() => {
@@ -34,7 +34,7 @@ export class Popup extends EventEmitter {
           return reject(new Error('The popup was blocked.'));
         }
       } else {
-        this.popup = global.open(this.url, '_blank', 'location=yes');
+        this.popup = global.open(url, '_blank', 'location=yes');
 
         if (this.popup) {
           this.popup.addEventListener('loadstart', this.eventListeners.loadHandler);
