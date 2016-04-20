@@ -1,4 +1,7 @@
 ## Changelog
+### 3.0.0-beta.17 (2016-04-20)
+* Bugfix: Fixed bug when notifying sync to add an item that should be synce at a later time.
+
 ### 3.0.0-beta.16 (2016-04-19)
 * Bugfix: Fixed missing url when opening popup for MIC login.
 
