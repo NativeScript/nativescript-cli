@@ -11,5 +11,17 @@ networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
 // Add Push module
 Kinvey.Push = Push;
 
+const _init = Kinvey.init;
+Kinvey.init = (options) => {
+  // Initialize Kinvey
+  const client = _init(options);
+
+  // Add Push module to Kinvey
+  Kinvey.Push = new Push();
+
+  // Return the client
+  return client;
+};
+
 // Export
 module.exports = Kinvey;

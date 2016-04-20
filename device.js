@@ -21,9 +21,9 @@ export class Device {
                       [];
 
       return {
-        environment: 'phonegap',
+        environment: 'angular',
         library: {
-          name: 'phonegap'
+          name: 'angular'
         },
         os: {
           name: browser[1],
@@ -56,3 +56,4 @@ export class Device {
     };
   }
 }
+
