@@ -31,9 +31,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
-var activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME || 'kinvey_activeSocialIdentityToken';
-global.Kinvey = global.Kinvey || {};
+var userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
+var socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME || 'kinvey_socialIdentity';
+var pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
+var _sharedInstance = null;
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -117,50 +118,14 @@ var Client = exports.Client = function () {
   }
 
   _createClass(Client, [{
-    key: 'getActiveUserData',
-    value: function getActiveUserData() {
-      return _localStorage2.default.get('' + this.appKey + activeUserCollectionName);
-    }
-  }, {
-    key: 'setActiveUserData',
-    value: function setActiveUserData(data) {
-      if (data) {
-        try {
-          return _localStorage2.default.set('' + this.appKey + activeUserCollectionName, data);
-        } catch (error) {
-          return false;
-        }
-      }
+    key: 'toJSON',
 
-      return _localStorage2.default.remove('' + this.appKey + activeUserCollectionName);
-    }
-  }, {
-    key: 'getActiveSocialIdentity',
-    value: function getActiveSocialIdentity() {
-      return _localStorage2.default.get('' + this.appKey + activeSocialIdentityTokenCollectionName);
-    }
-  }, {
-    key: 'setActiveSocialIdentity',
-    value: function setActiveSocialIdentity(socialIdentity) {
-      if (socialIdentity) {
-        try {
-          return _localStorage2.default.set('' + this.appKey + activeSocialIdentityTokenCollectionName, socialIdentity);
-        } catch (error) {
-          return false;
-        }
-      }
-
-      return _localStorage2.default.remove('' + this.appKey + activeSocialIdentityTokenCollectionName);
-    }
 
     /**
      * Returns an object containing all the information for this Client.
      *
      * @return {Object} JSON
      */
-
-  }, {
-    key: 'toJSON',
     value: function toJSON() {
       var json = {
         protocol: this.protocol,
@@ -206,11 +171,59 @@ var Client = exports.Client = function () {
         host: this.host
       });
     }
+  }, {
+    key: 'user',
+    get: function get() {
+      return _localStorage2.default.get('' + this.appKey + userCollectionName);
+    },
+    set: function set(data) {
+      if (data) {
+        try {
+          return _localStorage2.default.set('' + this.appKey + userCollectionName, data);
+        } catch (error) {
+          return false;
+        }
+      }
+
+      return _localStorage2.default.remove('' + this.appKey + userCollectionName);
+    }
+  }, {
+    key: 'socialIdentity',
+    get: function get() {
+      return _localStorage2.default.get('' + this.appKey + socialIdentityCollectionName);
+    },
+    set: function set(socialIdentity) {
+      if (socialIdentity) {
+        try {
+          return _localStorage2.default.set('' + this.appKey + socialIdentityCollectionName, socialIdentity);
+        } catch (error) {
+          return false;
+        }
+      }
+
+      return _localStorage2.default.remove('' + this.appKey + socialIdentityCollectionName);
+    }
+  }, {
+    key: 'push',
+    get: function get() {
+      return _localStorage2.default.get('' + this.appKey + pushCollectionName);
+    },
+    set: function set(data) {
+      if (data) {
+        try {
+          return _localStorage2.default.set('' + this.appKey + pushCollectionName, data);
+        } catch (error) {
+          return false;
+        }
+      }
+
+      return _localStorage2.default.remove('' + this.appKey + pushCollectionName);
+    }
   }], [{
     key: 'init',
     value: function init(options) {
       var client = new Client(options);
-      global.Kinvey.sharedClientInstance = client;
+      _sharedInstance = client;
       return client;
     }
 
@@ -225,11 +238,11 @@ var Client = exports.Client = function () {
   }, {
     key: 'sharedInstance',
     value: function sharedInstance() {
-      if (!global.Kinvey.sharedClientInstance) {
+      if (!_sharedInstance) {
         throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
       }
 
-      return global.Kinvey.sharedClientInstance;
+      return _sharedInstance;
     }
   }]);
 

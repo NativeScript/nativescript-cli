@@ -160,15 +160,15 @@ var Auth = {
    * @returns {Object}
    */
   session: function session(client) {
-    var activeUserData = client.getActiveUserData();
+    var activeUser = client.user;
 
-    if (!activeUserData) {
+    if (!activeUser) {
       throw new Error('There is not an active user.');
     }
 
     return {
       scheme: 'Kinvey',
-      credentials: activeUserData[kmdAttribute].authtoken
+      credentials: activeUser[kmdAttribute].authtoken
     };
   }
 };

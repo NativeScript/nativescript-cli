@@ -127,6 +127,14 @@ var SyncManager = exports.SyncManager = function () {
       }).then(function (response) {
         return response.data;
       }).then(function (syncEntity) {
+        if (!syncEntity) {
+          syncEntity = {
+            _id: name,
+            entities: {},
+            size: 0
+          };
+        }
+
         if (!(0, _isArray2.default)(entities)) {
           entities = [entities];
         }

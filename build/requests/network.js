@@ -86,12 +86,12 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
         if (error instanceof _errors.InvalidCredentialsError && _this2.automaticallyRefreshAuthToken) {
           var _ret = function () {
             _this2.automaticallyRefreshAuthToken = false;
-            var activeSocialIdentity = _this2.client.getActiveSocialIdentity();
+            var socialIdentity = _this2.client.socialIdentity;
 
             // Refresh MIC Auth Token
-            if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
+            if (socialIdentity && socialIdentity.identity === micIdentity) {
               // Refresh the token
-              var token = activeSocialIdentity.token;
+              var token = socialIdentity.token;
               var request = new NetworkRequest({
                 method: _enums.HttpMethod.POST,
                 headers: {
@@ -99,15 +99,15 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                 },
                 authType: _enums.AuthType.App,
                 url: _url2.default.format({
-                  protocol: activeSocialIdentity.client.protocol,
-                  host: activeSocialIdentity.client.host,
+                  protocol: socialIdentity.client.protocol,
+                  host: socialIdentity.client.host,
                   pathname: tokenPathname
                 }),
                 properties: _this2.properties,
                 data: {
                   grant_type: 'refresh_token',
                   client_id: token.audience,
-                  redirect_uri: activeSocialIdentity.redirectUri,
+                  redirect_uri: socialIdentity.redirectUri,
                   refresh_token: token.refresh_token
                 }
               });
@@ -118,10 +118,10 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                   return response.data;
                 }).then(function (token) {
                   // Login the user with the new token
-                  var activeUserData = _this2.client.getActiveUserData();
-                  var socialIdentity = activeUserData[socialIdentityAttribute];
-                  socialIdentity[activeSocialIdentity.identity] = token;
-                  activeUserData[socialIdentityAttribute] = socialIdentity;
+                  var activeUser = _this2.client.user;
+                  var socialIdentity = activeUser[socialIdentityAttribute];
+                  socialIdentity[socialIdentity.identity] = token;
+                  activeUser[socialIdentityAttribute] = socialIdentity;
 
                   var request = new NetworkRequest({
                     method: _enums.HttpMethod.POST,
@@ -132,7 +132,7 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                       pathname: '/' + usersNamespace + '/' + _this2.client.appKey + '/login'
                     }),
                     properties: _this2.properties,
-                    data: activeUserData,
+                    data: activeUser,
                     timeout: _this2.timeout,
                     client: _this2.client
                   });
@@ -140,13 +140,13 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                   return request.execute();
                 }).then(function (response) {
                   // Store the new data
-                  _this2.client.setActiveUserData(response.data);
-                  _this2.client.setActiveSocialIdentity({
-                    identity: activeSocialIdentity.identity,
-                    redirectUri: activeSocialIdentity.redirectUri,
-                    token: response.data[socialIdentityAttribute][activeSocialIdentity.identity],
-                    client: activeSocialIdentity.client
-                  });
+                  _this2.client.user = response.data;
+                  _this2.client.socialIdentity = {
+                    identity: socialIdentity.identity,
+                    redirectUri: socialIdentity.redirectUri,
+                    token: response.data[socialIdentityAttribute][socialIdentity.identity],
+                    client: socialIdentity.client
+                  };
 
                   // Execute the original request
                   return _this2.execute();

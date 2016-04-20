@@ -471,12 +471,12 @@ var User = exports.User = function () {
 
         throw err;
       }).then(function () {
-        _this5.client.setActiveSocialIdentity({
+        _this5.client.socialIdentity = {
           identity: identity,
           token: _this5._socialIdentity[identity],
           redirectUri: options.redirectUri,
           client: options.micClient
-        });
+        };
         return _this5;
       });
 
@@ -502,10 +502,10 @@ var User = exports.User = function () {
 
         return _this6.update(data, options);
       }).then(function () {
-        var activeSocialIdentity = _this6.client.getActiveSocialIdentity();
+        var socialIdentity = _this6.client.socialIdentity;
 
-        if (activeSocialIdentity.identity === identity) {
-          _this6.client.setActiveSocialIdentity(null);
+        if (socialIdentity.identity === identity) {
+          _this6.client.socialIdentity = null;
         }
 
         return _this6;
@@ -882,7 +882,7 @@ var User = exports.User = function () {
     value: function getActiveUser() {
       var client = arguments.length <= 0 || arguments[0] === undefined ? _client.Client.sharedInstance() : arguments[0];
 
-      var data = client.getActiveUserData();
+      var data = client.user;
       var user = null;
 
       if (data) {
@@ -919,7 +919,7 @@ var User = exports.User = function () {
       var client = arguments.length <= 1 || arguments[1] === undefined ? _client.Client.sharedInstance() : arguments[1];
 
       var data = (0, _result2.default)(user, 'toJSON', user);
-      client.setActiveUserData(data);
+      client.user = data;
       return User.getActiveUser(client);
     }
   }, {
