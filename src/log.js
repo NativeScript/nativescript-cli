@@ -9,5 +9,5 @@ Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   };
 };
 
-Log.setLevel(Log.levels.ERROR);
+log.setDefaultLevel(Log.levels.SILENT);
 export { Log };
