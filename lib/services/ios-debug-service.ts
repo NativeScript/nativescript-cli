@@ -68,7 +68,7 @@ class IOSDebugService implements IDebugService {
     public debugStart(): IFuture<void> {
         return (() => {
             this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesService.execute((device: Mobile.IiOSDevice) => this.debugBrkCore(device)).wait();
+            this.$devicesService.execute((device: Mobile.IiOSDevice) => device.isEmulator ? this.emulatorDebugBrk() : this.debugBrkCore(device)).wait();
         }).future<void>()();
     }
 
@@ -112,6 +112,9 @@ class IOSDebugService implements IDebugService {
         return (() => {
             this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
             this.$devicesService.execute((device: iOSDevice.IOSDevice) => (() => {
+                if(device.isEmulator) {
+                    return this.emulatorDebugBrk().wait();
+                }
                 // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
                 let deploy = this.$platformService.deployOnDevice(this.platform);
                 this.debugBrkCore(device).wait();
@@ -133,7 +136,7 @@ class IOSDebugService implements IDebugService {
     private deviceStart(): IFuture<void> {
         return (() => {
             this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
-            this.$devicesService.execute((device: Mobile.IiOSDevice) => this.deviceStartCore(device)).wait();
+            this.$devicesService.execute((device: Mobile.IiOSDevice) => device.isEmulator ? this.emulatorStart() : this.deviceStartCore(device)).wait();
         }).future<void>()();
     }
 
