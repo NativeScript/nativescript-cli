@@ -565,12 +565,15 @@ var CacheStore = function (_NetworkStore) {
 
         return request.execute();
       }).then(function (response) {
-        var promise = _this6._sync(response.data, options).then(function () {
-          var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
+        var entity = response.data;
+        // const singular = isArray(entity) ? false : true;
+        var promise = _this6._sync(entity, options).then(function () {
+          var data = (0, _isArray2.default)(entity) ? entity : [entity];
           var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
           var query = new _query.Query().contains(idAttribute, ids);
           return _this6.push(query, options);
-        }).then(function () {
+        }).then(function (pushResponse) {
+          console.log(pushResponse);
           return response.data;
         });
         return promise;

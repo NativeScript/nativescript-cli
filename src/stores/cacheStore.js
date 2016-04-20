@@ -459,12 +459,17 @@ class CacheStore extends NetworkStore {
 
       return request.execute();
     }).then(response => {
-      const promise = this._sync(response.data, options).then(() => {
-        const data = isArray(response.data) ? response.data : [response.data];
+      const entity = response.data;
+      // const singular = isArray(entity) ? false : true;
+      const promise = this._sync(entity, options).then(() => {
+        const data = isArray(entity) ? entity : [entity];
         const ids = Object.keys(keyBy(data, idAttribute));
         const query = new Query().contains(idAttribute, ids);
         return this.push(query, options);
-      }).then(() => response.data);
+      }).then(pushResponse => {
+        console.log(pushResponse);
+        return response.data;
+      });
       return promise;
     });
 
