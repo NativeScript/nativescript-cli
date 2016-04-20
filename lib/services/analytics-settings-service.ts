@@ -3,6 +3,9 @@
 import { createGUID } from "../common/helpers";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
+	private static SESSIONS_STARTED_OBSOLETE_KEY = "SESSIONS_STARTED";
+	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
+
 	constructor(private $userSettingsService: UserSettings.IUserSettingsService,
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger) { }
@@ -33,14 +36,23 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		return "http://www.telerik.com/company/privacy-policy";
 	}
 
-	public getUserSessionsCount(): IFuture<number> {
+	public getUserSessionsCount(projectName: string): IFuture<number> {
 		return (() => {
-			return this.$userSettingsService.getSettingValue<number>("SESSIONS_STARTED").wait() || 0;
+			let oldSessionCount = this.$userSettingsService.getSettingValue<number>(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY).wait();
+			if(oldSessionCount) {
+				// remove the old property for sessions count
+				this.$userSettingsService.removeSetting(AnalyticsSettingsService.SESSIONS_STARTED_OBSOLETE_KEY).wait();
+			}
+			return this.$userSettingsService.getSettingValue<number>(this.getSessionsProjectKey(projectName)).wait() || oldSessionCount || 0;
 		}).future<number>()();
 	}
 
-	public setUserSessionsCount(count: number): IFuture<void> {
-		return this.$userSettingsService.saveSetting<number>("SESSIONS_STARTED", count);
+	public setUserSessionsCount(count: number, projectName: string): IFuture<void> {
+		return this.$userSettingsService.saveSetting<number>(this.getSessionsProjectKey(projectName), count);
+	}
+
+	private getSessionsProjectKey(projectName: string): string {
+		return `${AnalyticsSettingsService.SESSIONS_STARTED_KEY_PREFIX}${projectName}`;
 	}
 }
 $injector.register("analyticsSettingsService", AnalyticsSettingsService);
