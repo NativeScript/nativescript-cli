@@ -1,5 +1,5 @@
 import Promise from 'babybird';
-import { HttpMethod } from './enums';
+import { HttpMethod, AuthType } from './enums';
 import { InsufficientCredentialsError, NotFoundError, KinveyError } from './errors';
 import { Metadata } from './metadata';
 import { LocalRequest } from './requests/local';
@@ -179,6 +179,7 @@ export class SyncManager {
 
                 const request = new NetworkRequest({
                   method: HttpMethod.PUT,
+                  authType: AuthType.Session,
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
@@ -263,6 +264,7 @@ export class SyncManager {
               const removed = map(remove, id => {
                 const request = new NetworkRequest({
                   method: HttpMethod.DELETE,
+                  authType: AuthType.Session,
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,

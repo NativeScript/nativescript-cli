@@ -243,6 +243,7 @@ var SyncManager = exports.SyncManager = function () {
 
                   var request = new _network.NetworkRequest({
                     method: _enums.HttpMethod.PUT,
+                    authType: _enums.AuthType.Session,
                     url: _url2.default.format({
                       protocol: _this2.client.protocol,
                       host: _this2.client.host,
@@ -332,6 +333,7 @@ var SyncManager = exports.SyncManager = function () {
                 var removed = (0, _map2.default)(remove, function (id) {
                   var request = new _network.NetworkRequest({
                     method: _enums.HttpMethod.DELETE,
+                    authType: _enums.AuthType.Session,
                     url: _url2.default.format({
                       protocol: _this2.client.protocol,
                       host: _this2.client.host,
