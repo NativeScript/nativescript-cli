@@ -579,7 +579,7 @@ var CacheStore = function (_NetworkStore) {
           var entities = (0, _map2.default)(success, function (successItem) {
             return successItem.entity;
           });
-          return entities.length === 1 ? entities[0] : entities;
+          return !(0, _isArray2.default)(entity) && entities.length === 1 ? entities[0] : entities;
         });
         return promise;
       });

@@ -468,7 +468,7 @@ class CacheStore extends NetworkStore {
       }).then(pushResult => {
         const success = pushResult.success;
         const entities = map(success, successItem => successItem.entity);
-        return entities.length === 1 ? entities[0] : entities;
+        return !isArray(entity) && entities.length === 1 ? entities[0] : entities;
       });
       return promise;
     });
