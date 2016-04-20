@@ -418,9 +418,9 @@ export class KinveyRequest extends Request {
     const pathname = global.escape(url.parse(urlString).pathname);
     const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
     const { appKey, collectionName, entityId } = pattern.match(pathname) || {};
-    this.appKey = appKey;
-    this.collectionName = collectionName;
-    this.entityId = entityId;
+    this.appKey = global.unescape(appKey);
+    this.collectionName = global.unescape(collectionName);
+    this.entityId = global.unescape(entityId);
   }
 
   get authorizationHeader() {
