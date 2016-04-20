@@ -9,14 +9,17 @@ export class KinveyProvider {
     // Use Http middleware after the Serialize middleware
     const networkRack = NetworkRack.sharedInstance();
     networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
-
-    // Add Push module to Kinvey
-    Kinvey.Push = Push;
   }
 
   init(options) {
     // Initialize Kinvey
-    return Kinvey.init(options);
+    const client = Kinvey.init(options);
+
+    // Add Push module to Kinvey
+    Kinvey.Push = new Push();
+
+    // Return the client
+    return client;
   }
 
   $get() {
