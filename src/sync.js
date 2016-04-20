@@ -74,6 +74,14 @@ export class SyncManager {
 
       throw error;
     }).then(response => response.data).then(syncEntity => {
+      if (!syncEntity) {
+        syncEntity = {
+          _id: name,
+          entities: {},
+          size: 0
+        };
+      }
+
       if (!isArray(entities)) {
         entities = [entities];
       }
