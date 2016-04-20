@@ -160,15 +160,15 @@ var Auth = {
    * @returns {Object}
    */
   session: function session(client) {
-    var activeUserData = client.getActiveUserData();
+    var activeUser = client.user;
 
-    if (!activeUserData) {
+    if (!activeUser) {
       throw new Error('There is not an active user.');
     }
 
     return {
       scheme: 'Kinvey',
-      credentials: activeUserData[kmdAttribute].authtoken
+      credentials: activeUser[kmdAttribute].authtoken
     };
   }
 };
@@ -547,9 +547,9 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       var collectionName = _ref.collectionName;
       var entityId = _ref.entityId;
 
-      this.appKey = appKey;
-      this.collectionName = collectionName;
-      this.entityId = entityId;
+      this.appKey = !!appKey ? global.unescape(appKey) : appKey;
+      this.collectionName = !!collectionName ? global.unescape(collectionName) : collectionName;
+      this.entityId = !!entityId ? global.unescape(entityId) : entityId;
     }
   }, {
     key: 'authorizationHeader',

@@ -127,6 +127,14 @@ var SyncManager = exports.SyncManager = function () {
       }).then(function (response) {
         return response.data;
       }).then(function (syncEntity) {
+        if (!syncEntity) {
+          syncEntity = {
+            _id: name,
+            entities: {},
+            size: 0
+          };
+        }
+
         if (!(0, _isArray2.default)(entities)) {
           entities = [entities];
         }
@@ -177,6 +185,7 @@ var SyncManager = exports.SyncManager = function () {
           pathname: this._pathname
         }),
         properties: options.properties,
+        query: query,
         timeout: options.timeout,
         client: this.client
       });
@@ -235,6 +244,7 @@ var SyncManager = exports.SyncManager = function () {
 
                   var request = new _network.NetworkRequest({
                     method: _enums.HttpMethod.PUT,
+                    authType: _enums.AuthType.Session,
                     url: _url2.default.format({
                       protocol: _this2.client.protocol,
                       host: _this2.client.host,
@@ -324,6 +334,7 @@ var SyncManager = exports.SyncManager = function () {
                 var removed = (0, _map2.default)(remove, function (id) {
                   var request = new _network.NetworkRequest({
                     method: _enums.HttpMethod.DELETE,
+                    authType: _enums.AuthType.Session,
                     url: _url2.default.format({
                       protocol: _this2.client.protocol,
                       host: _this2.client.host,

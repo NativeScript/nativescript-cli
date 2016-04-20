@@ -94,15 +94,15 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUserData = client.getActiveUserData();
+    const activeUser = client.user;
 
-    if (!activeUserData) {
+    if (!activeUser) {
       throw new Error('There is not an active user.');
     }
 
     return {
       scheme: 'Kinvey',
-      credentials: activeUserData[kmdAttribute].authtoken
+      credentials: activeUser[kmdAttribute].authtoken
     };
   }
 };
@@ -418,9 +418,9 @@ export class KinveyRequest extends Request {
     const pathname = global.escape(url.parse(urlString).pathname);
     const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
     const { appKey, collectionName, entityId } = pattern.match(pathname) || {};
-    this.appKey = appKey;
-    this.collectionName = collectionName;
-    this.entityId = entityId;
+    this.appKey = !!appKey ? global.unescape(appKey) : appKey;
+    this.collectionName = !!collectionName ? global.unescape(collectionName) : collectionName;
+    this.entityId = !!entityId ? global.unescape(entityId) : entityId;
   }
 
   get authorizationHeader() {

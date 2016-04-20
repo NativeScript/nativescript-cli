@@ -4,10 +4,11 @@ import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
-const activeUserCollectionName = process.env.KINVEY_ACTIVE_USER_COLLECTION_NAME || 'kinvey_activeUser';
-const activeSocialIdentityTokenCollectionName = process.env.KINVEY_ACTIVE_SOCIAL_IDENTITY_TOKEN_COLLECTION_NAME
-                                                || 'kinvey_activeSocialIdentityToken';
-global.Kinvey = global.Kinvey || {};
+const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
+const socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME
+                                                || 'kinvey_socialIdentity';
+const pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
+let sharedInstance = null;
 
 /**
  * The Client class stores information regarding your application. You can create mutiple clients
@@ -91,36 +92,52 @@ export class Client {
     });
   }
 
-  getActiveUserData() {
-    return localStorage.get(`${this.appKey}${activeUserCollectionName}`);
+  get user() {
+    return localStorage.get(`${this.appKey}${userCollectionName}`);
   }
 
-  setActiveUserData(data) {
+  set user(data) {
     if (data) {
       try {
-        return localStorage.set(`${this.appKey}${activeUserCollectionName}`, data);
+        return localStorage.set(`${this.appKey}${userCollectionName}`, data);
       } catch (error) {
         return false;
       }
     }
 
-    return localStorage.remove(`${this.appKey}${activeUserCollectionName}`);
+    return localStorage.remove(`${this.appKey}${userCollectionName}`);
   }
 
-  getActiveSocialIdentity() {
-    return localStorage.get(`${this.appKey}${activeSocialIdentityTokenCollectionName}`);
+  get socialIdentity() {
+    return localStorage.get(`${this.appKey}${socialIdentityCollectionName}`);
   }
 
-  setActiveSocialIdentity(socialIdentity) {
+  set socialIdentity(socialIdentity) {
     if (socialIdentity) {
       try {
-        return localStorage.set(`${this.appKey}${activeSocialIdentityTokenCollectionName}`, socialIdentity);
+        return localStorage.set(`${this.appKey}${socialIdentityCollectionName}`, socialIdentity);
       } catch (error) {
         return false;
       }
     }
 
-    return localStorage.remove(`${this.appKey}${activeSocialIdentityTokenCollectionName}`);
+    return localStorage.remove(`${this.appKey}${socialIdentityCollectionName}`);
+  }
+
+  get push() {
+    return localStorage.get(`${this.appKey}${pushCollectionName}`);
+  }
+
+  set push(data) {
+    if (data) {
+      try {
+        return localStorage.set(`${this.appKey}${pushCollectionName}`, data);
+      } catch (error) {
+        return false;
+      }
+    }
+
+    return localStorage.remove(`${this.appKey}${pushCollectionName}`);
   }
 
   /**
@@ -166,7 +183,7 @@ export class Client {
    */
   static init(options) {
     const client = new Client(options);
-    global.Kinvey.sharedClientInstance = client;
+    sharedInstance = client;
     return client;
   }
 
@@ -178,11 +195,11 @@ export class Client {
    * @return {Client} The shared instance.
    */
   static sharedInstance() {
-    if (!global.Kinvey.sharedClientInstance) {
+    if (!sharedInstance) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return global.Kinvey.sharedClientInstance;
+    return sharedInstance;
   }
 }

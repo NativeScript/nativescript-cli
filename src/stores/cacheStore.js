@@ -12,6 +12,7 @@ import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
+import map from 'lodash/map';
 import differenceBy from 'lodash/differenceBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
@@ -464,7 +465,11 @@ class CacheStore extends NetworkStore {
         const ids = Object.keys(keyBy(data, idAttribute));
         const query = new Query().contains(idAttribute, ids);
         return this.push(query, options);
-      }).then(() => response.data);
+      }).then(pushResult => {
+        const success = pushResult.success;
+        const entities = map(success, successItem => successItem.entity);
+        return !isArray(entity) && entities.length === 1 ? entities[0] : entities;
+      });
       return promise;
     });
 
