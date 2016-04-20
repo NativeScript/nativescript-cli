@@ -28,6 +28,7 @@ import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
 import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
 import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
+import { LockFile } from "../lib/lockfile";
 import Future = require("fibers/future");
 
 import path = require("path");
@@ -48,7 +49,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("platformService", PlatformServiceLib.PlatformService);
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("npmInstallationManager", {});
-	testInjector.register("lockfile", {});
+	testInjector.register("lockfile", LockFile);
 	testInjector.register("prompter", {});
 	testInjector.register("androidProjectService", {});
 	testInjector.register("iOSProjectService", {});
@@ -235,6 +236,7 @@ describe("Npm support tests", () => {
 
 	it("Ensures that tns_modules absent when bundling", () => {
 		let fs = testInjector.resolve("fs");
+		let lockfile = testInjector.resolve("lockfile");
 		let options = testInjector.resolve("options");
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 
