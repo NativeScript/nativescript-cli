@@ -18,9 +18,8 @@ export class Builder implements IBroccoliBuilder {
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
-		private $logger: ILogger
-	) {
-	}
+		private $logger: ILogger,
+		private $lockfile: ILockFile) { }
 
 	public getChangedNodeModules(absoluteOutputPath: string, platform: string, lastModifiedTime?: Date): IFuture<any> {
 		return (() => {
@@ -38,10 +37,13 @@ export class Builder implements IBroccoliBuilder {
 					stat: true
 				}, (er: Error, files: string[]) => {
 					fiberBootstrap.run(() => {
+						this.$lockfile.lock().wait();
 						if (er) {
 							if (!future.isResolved()) {
 								future.throw(er);
 							}
+
+							this.$lockfile.unlock().wait();
 							match.abort();
 							return;
 						}
@@ -59,6 +61,7 @@ export class Builder implements IBroccoliBuilder {
 							}
 							if (file === constants.NODE_MODULES_FOLDER_NAME) {
 								isNodeModulesModified = true;
+								this.$lockfile.unlock().wait();
 								match.abort();
 								if (!future.isResolved()) {
 									future.return();
@@ -69,21 +72,30 @@ export class Builder implements IBroccoliBuilder {
 							let rootModuleFullPath = path.join(nodeModulesPath, rootModuleName);
 							nodeModules[rootModuleFullPath] = rootModuleFullPath;
 						}
+
+						this.$lockfile.unlock().wait();
 					});
 				});
 				match.on("end", () => {
 					if (!future.isResolved()) {
-						future.return();
+						let intervalId = setInterval(() => {
+							fiberBootstrap.run(() => {
+								if (!this.$lockfile.check().wait()) {
+									future.return();
+									clearInterval(intervalId);
+								}
+							});
+						}, 100);
 					}
 				});
 
 				future.wait();
 			}
 
-			if(isNodeModulesModified && this.$fs.exists(absoluteOutputPath).wait()) {
+			if (isNodeModulesModified && this.$fs.exists(absoluteOutputPath).wait()) {
 				let currentPreparedTnsModules = this.$fs.readDirectory(absoluteOutputPath).wait();
 				let tnsModulesPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.TNS_MODULES_FOLDER_NAME);
-				if(!this.$fs.exists(tnsModulesPath).wait()) {
+				if (!this.$fs.exists(tnsModulesPath).wait()) {
 					tnsModulesPath = path.join(projectDir, constants.NODE_MODULES_FOLDER_NAME, constants.TNS_CORE_MODULES_NAME);
 				}
 				let tnsModulesInApp = this.$fs.readDirectory(tnsModulesPath).wait();
@@ -91,7 +103,7 @@ export class Builder implements IBroccoliBuilder {
 				_.each(modulesToDelete, moduleName => this.$fs.deleteDirectory(path.join(absoluteOutputPath, moduleName)).wait());
 			}
 
-			if(!lastModifiedTime || isNodeModulesModified) {
+			if (!lastModifiedTime || isNodeModulesModified) {
 				this.listModules(nodeModulesPath, nodeModules);
 			}
 
