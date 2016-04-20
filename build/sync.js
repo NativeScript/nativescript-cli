@@ -185,6 +185,7 @@ var SyncManager = exports.SyncManager = function () {
           pathname: this._pathname
         }),
         properties: options.properties,
+        query: query,
         timeout: options.timeout,
         client: this.client
       });
