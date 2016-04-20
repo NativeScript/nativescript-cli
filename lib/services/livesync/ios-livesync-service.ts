@@ -9,13 +9,15 @@ let currentPageReloadId = 0;
 
 class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobile.IiOSDevice> implements IPlatformLiveSyncService {
 	private static BACKEND_PORT = 18181;
+	private socket: net.Socket;
 
 	constructor(_device: Mobile.IDevice,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $iOSNotification: IiOSNotification,
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $injector: IInjector,
-		private $logger: ILogger) {
+		private $logger: ILogger,
+		private $options: IOptions) {
 			super(_device);
 		}
 
@@ -34,36 +36,71 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 		return (() => {
 			let timeout = 9000;
 			if (this.device.isEmulator) {
-				helpers.connectEventually(() => net.connect(IOSLiveSyncService.BACKEND_PORT), (socket: net.Socket) => this.sendPageReloadMessage(socket));
+				if (!this.socket) {
+					helpers.connectEventually(() => net.connect(IOSLiveSyncService.BACKEND_PORT), (socket: net.Socket) => {
+						this.socket = socket;
+						if(this.$options.watch) {
+							this.attachProcessExitHandlers();
+						}
+						this.sendPageReloadMessage();
+					});
+				} else {
+					this.sendPageReloadMessage();
+				}
 			 	this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest).wait();
 			} else {
 				this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout).wait();
-				let socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
-				this.sendPageReloadMessage(socket);
+				this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+				this.sendPageReloadMessage();
 			}
 		}).future<void>()();
 	}
 
-	private sendPageReloadMessage(socket: net.Socket): void {
+	private sendPageReloadMessage(): void {
 		try {
-			this.sendPageReloadMessageCore(socket);
-			socket.once("data", (data: NodeBuffer|string) => {
+			this.sendPageReloadMessageCore();
+			this.socket.on("data", (data: NodeBuffer|string) => {
 				this.$logger.trace(`Socket sent data: ${data.toString()}`);
-				socket.destroy();
+				this.destroySocketIfNecessary();
 			});
 		} catch(err) {
 			this.$logger.trace("Error while sending page reload:", err);
-			socket.destroy();
+			this.destroySocketIfNecessary();
 		}
 	}
 
-	private sendPageReloadMessageCore(socket: net.Socket): void {
+	private sendPageReloadMessageCore(): void {
 		let message = `{ "method":"Page.reload","params":{"ignoreCache":false},"id":${++currentPageReloadId} }`;
 		let length = Buffer.byteLength(message, "utf16le");
 		let payload = new Buffer(length + 4);
 		payload.writeInt32BE(length, 0);
 		payload.write(message, 4, length, "utf16le");
-		socket.write(payload);
+		this.socket.write(payload);
+	}
+
+	private attachProcessExitHandlers(): void {
+		process.on("exit", (exitCode: number) => {
+			this.destroySocket();
+		});
+
+		process.on("SIGTERM", () => {
+			this.destroySocket();
+		});
+
+		process.on("SIGINT", () => {
+			this.destroySocket();
+		});
+	}
+
+	private destroySocketIfNecessary(): void {
+		if(!this.$options.watch) {
+			this.destroySocket();
+		}
+	}
+
+	private destroySocket(): void {
+		this.socket.destroy();
+		this.socket = null;
 	}
 }
 $injector.register("iosLiveSyncServiceLocator", {factory: IOSLiveSyncService});

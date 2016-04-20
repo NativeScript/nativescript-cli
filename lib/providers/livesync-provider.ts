@@ -12,13 +12,22 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml"];
 
+	private platformSpecificLiveSyncServicesCache: IDictionary<any> = {};
 	public get platformSpecificLiveSyncServices(): IDictionary<any> {
 		return {
 			android: (_device: Mobile.IDevice, $injector: IInjector): IPlatformLiveSyncService => {
-				return $injector.resolve(this.$androidLiveSyncServiceLocator.factory, {_device: _device});
+				if(!this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
+					this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$androidLiveSyncServiceLocator.factory, {_device: _device});
+				}
+
+				return this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
 			},
 			ios: (_device: Mobile.IDevice, $injector: IInjector) => {
-				return $injector.resolve(this.$iosLiveSyncServiceLocator.factory, {_device: _device});
+				if(!this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
+					this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$iosLiveSyncServiceLocator.factory, {_device: _device});
+				}
+
+				return this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
 			}
 		};
 	}
