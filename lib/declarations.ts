@@ -48,6 +48,7 @@ interface IApplicationPackage {
 interface ILockFile {
 	lock(): IFuture<void>;
 	unlock(): IFuture<void>;
+	check(): IFuture<boolean>;
 }
 
 interface IOpener {

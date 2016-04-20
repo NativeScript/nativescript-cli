@@ -42,5 +42,18 @@ export class LockFile implements ILockFile {
 		});
 		return future;
 	}
+
+	public check(): IFuture<boolean> {
+		let future = new Future<boolean>();
+		lockfile.check(this.lockFilePath, LockFile.LOCK_PARAMS, (err: Error, isLocked: boolean) => {
+			if(err) {
+				future.throw(err);
+			} else {
+				future.return(isLocked);
+			}
+		});
+		return future;
+	}
 }
+
 $injector.register("lockfile", LockFile);
