@@ -547,9 +547,9 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       var collectionName = _ref.collectionName;
       var entityId = _ref.entityId;
 
-      this.appKey = appKey;
-      this.collectionName = collectionName;
-      this.entityId = entityId;
+      this.appKey = global.unescape(appKey);
+      this.collectionName = global.unescape(collectionName);
+      this.entityId = global.unescape(entityId);
     }
   }, {
     key: 'authorizationHeader',
