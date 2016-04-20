@@ -3,8 +3,8 @@
 * Bugfix: Fixed missing url when opening popup for MIC login.
 
 ### 3.0.0-beta.15 (2016-04-19)
-* Bugfix (MLIBZ-1029) Fixed NetworkStore sends remove calls as a GET
-* Bugfix (MLIBZ-1030) Fixed pull response is undefined
+* Bugfix (MLIBZ-1029): Fixed a bug in the NetworkStore that would send remove calls as a GET request.
+* Bugfix (MLIBZ-1030): Fixed the pull response for a data store to not be undefined.
 
 #### 3.0.0-beta.13 (2016-04-04)
 * Enhancement: Optimize delta fetch when no documents exist in cache.
