@@ -185,7 +185,7 @@ export class User {
    * var _id = user._id;
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = client.getActiveUserData();
+    const data = client.user;
     let user = null;
 
     if (data) {
@@ -217,7 +217,7 @@ export class User {
    */
   static setActiveUser(user, client = Client.sharedInstance()) {
     const data = result(user, 'toJSON', user);
-    client.setActiveUserData(data);
+    client.user = data;
     return User.getActiveUser(client);
   }
 
@@ -612,12 +612,12 @@ export class User {
 
       throw err;
     }).then(() => {
-      this.client.setActiveSocialIdentity({
+      this.client.socialIdentity = {
         identity: identity,
         token: this._socialIdentity[identity],
         redirectUri: options.redirectUri,
         client: options.micClient
-      });
+      };
       return this;
     });
 
@@ -638,10 +638,10 @@ export class User {
 
       return this.update(data, options);
     }).then(() => {
-      const activeSocialIdentity = this.client.getActiveSocialIdentity();
+      const socialIdentity = this.client.socialIdentity;
 
-      if (activeSocialIdentity.identity === identity) {
-        this.client.setActiveSocialIdentity(null);
+      if (socialIdentity.identity === identity) {
+        this.client.socialIdentity = null;
       }
 
       return this;

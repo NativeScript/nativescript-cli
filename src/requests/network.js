@@ -43,12 +43,12 @@ export class NetworkRequest extends KinveyRequest {
     }).catch(error => {
       if (error instanceof InvalidCredentialsError && this.automaticallyRefreshAuthToken) {
         this.automaticallyRefreshAuthToken = false;
-        const activeSocialIdentity = this.client.getActiveSocialIdentity();
+        const socialIdentity = this.client.socialIdentity;
 
         // Refresh MIC Auth Token
-        if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
+        if (socialIdentity && socialIdentity.identity === micIdentity) {
           // Refresh the token
-          const token = activeSocialIdentity.token;
+          const token = socialIdentity.token;
           const request = new NetworkRequest({
             method: HttpMethod.POST,
             headers: {
@@ -56,15 +56,15 @@ export class NetworkRequest extends KinveyRequest {
             },
             authType: AuthType.App,
             url: url.format({
-              protocol: activeSocialIdentity.client.protocol,
-              host: activeSocialIdentity.client.host,
+              protocol: socialIdentity.client.protocol,
+              host: socialIdentity.client.host,
               pathname: tokenPathname
             }),
             properties: this.properties,
             data: {
               grant_type: 'refresh_token',
               client_id: token.audience,
-              redirect_uri: activeSocialIdentity.redirectUri,
+              redirect_uri: socialIdentity.redirectUri,
               refresh_token: token.refresh_token
             }
           });
@@ -72,10 +72,10 @@ export class NetworkRequest extends KinveyRequest {
 
           return request.execute().then(response => response.data).then(token => {
             // Login the user with the new token
-            const activeUserData = this.client.getActiveUserData();
-            const socialIdentity = activeUserData[socialIdentityAttribute];
-            socialIdentity[activeSocialIdentity.identity] = token;
-            activeUserData[socialIdentityAttribute] = socialIdentity;
+            const activeUser = this.client.user;
+            const socialIdentity = activeUser[socialIdentityAttribute];
+            socialIdentity[socialIdentity.identity] = token;
+            activeUser[socialIdentityAttribute] = socialIdentity;
 
             const request = new NetworkRequest({
               method: HttpMethod.POST,
@@ -86,7 +86,7 @@ export class NetworkRequest extends KinveyRequest {
                 pathname: `/${usersNamespace}/${this.client.appKey}/login`
               }),
               properties: this.properties,
-              data: activeUserData,
+              data: activeUser,
               timeout: this.timeout,
               client: this.client
             });
@@ -94,13 +94,13 @@ export class NetworkRequest extends KinveyRequest {
             return request.execute();
           }).then(response => {
             // Store the new data
-            this.client.setActiveUserData(response.data);
-            this.client.setActiveSocialIdentity({
-              identity: activeSocialIdentity.identity,
-              redirectUri: activeSocialIdentity.redirectUri,
-              token: response.data[socialIdentityAttribute][activeSocialIdentity.identity],
-              client: activeSocialIdentity.client
-            });
+            this.client.user = response.data;
+            this.client.socialIdentity = {
+              identity: socialIdentity.identity,
+              redirectUri: socialIdentity.redirectUri,
+              token: response.data[socialIdentityAttribute][socialIdentity.identity],
+              client: socialIdentity.client
+            };
 
             // Execute the original request
             return this.execute();

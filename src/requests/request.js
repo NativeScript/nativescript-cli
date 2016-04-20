@@ -94,15 +94,15 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUserData = client.getActiveUserData();
+    const activeUser = client.user;
 
-    if (!activeUserData) {
+    if (!activeUser) {
       throw new Error('There is not an active user.');
     }
 
     return {
       scheme: 'Kinvey',
-      credentials: activeUserData[kmdAttribute].authtoken
+      credentials: activeUser[kmdAttribute].authtoken
     };
   }
 };
