@@ -49,6 +49,10 @@ var _keyBy = require('lodash/keyBy');
 
 var _keyBy2 = _interopRequireDefault(_keyBy);
 
+var _map = require('lodash/map');
+
+var _map2 = _interopRequireDefault(_map);
+
 var _differenceBy = require('lodash/differenceBy');
 
 var _differenceBy2 = _interopRequireDefault(_differenceBy);
@@ -565,16 +569,17 @@ var CacheStore = function (_NetworkStore) {
 
         return request.execute();
       }).then(function (response) {
-        var entity = response.data;
-        // const singular = isArray(entity) ? false : true;
-        var promise = _this6._sync(entity, options).then(function () {
-          var data = (0, _isArray2.default)(entity) ? entity : [entity];
+        var promise = _this6._sync(response.data, options).then(function () {
+          var data = (0, _isArray2.default)(response.data) ? response.data : [response.data];
           var ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
           var query = new _query.Query().contains(idAttribute, ids);
           return _this6.push(query, options);
-        }).then(function (pushResponse) {
-          console.log(pushResponse);
-          return response.data;
+        }).then(function (pushResult) {
+          var success = pushResult.success;
+          var entities = (0, _map2.default)(success, function (successItem) {
+            return successItem.entity;
+          });
+          return entities.length === 1 ? entities[0] : entities;
         });
         return promise;
       });
