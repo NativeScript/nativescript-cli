@@ -5,7 +5,7 @@ export function isNode() {
 }
 
 export function isPhoneGap() {
-  return document.URL.indexOf( 'http://' ) === -1 && document.URL.indexOf( 'https://' ) === -1;
+  return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
 }
 
 export function isTitanium() {
@@ -21,7 +21,7 @@ export function isiOS() {
     return Titanium.Platform.osname === 'iphone' || Titanium.Platform.osname === 'ipad';
   }
 
-  return /iPad|iPhone|iPod/.test(global.navigator.userAgent) && !window.MSStream;;
+  return /iPad|iPhone|iPod/.test(global.navigator.userAgent) && !window.MSStream;
 }
 
 export function isAndroid() {
@@ -54,6 +54,8 @@ export function isBrowser() {
 export class Device {
   static toJSON() {
     if (isNode()) {
+      const os = require('os');
+
       return {
         latform: {
           name: 'node',

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { isTitanium, isAndroid, isPhoneGap, isiOS, isBrowser } from './device';
+import { isTitanium, isAndroid, isPhoneGap, isiOS } from './device';
 import bind from 'lodash/bind';
 
 /**

@@ -16,6 +16,8 @@
     "browser": true,
     "node": true,
     "mocha": true,
-    "Titanium": true,
+  },
+  "globals": {
+    "Titanium": true
   }
 }
