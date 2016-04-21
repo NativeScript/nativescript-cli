@@ -83,6 +83,7 @@ $injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
 $injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
 
 $injector.require("doctorService", "./services/doctor-service");
+$injector.require("xcprojService", "./services/xcproj-service");
 $injector.require("versionsService", "./services/versions-service");
 $injector.requireCommand("install", "./commands/install");
 

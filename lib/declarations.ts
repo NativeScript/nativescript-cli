@@ -320,3 +320,43 @@ interface IProjectNameService {
 	ensureValidName(projectName: string, validateOptions?: { force: boolean }): IFuture<string>;
 }
 
+/**
+ * Designed for getting information about xcproj.
+ */
+interface IXcprojService {
+	/**
+	 * Checks whether the system needs xcproj to execute ios builds successfully.
+	 * In case the system does need xcproj but does not have it, prints an error message.
+	 * @param {boolean} whether to fail with error message or not
+	 * @return {IFuture<boolean>} whether an error occurred or not.
+	 */
+	verifyXcproj(shouldFail: boolean): IFuture<boolean>;
+	/**
+	 * Collects information about xcproj.
+	 * @return {IFuture<XcprojInfo>} collected info about xcproj.
+	 */
+	getXcprojInfo(): IFuture<IXcprojInfo>;
+}
+
+/**
+ * Describes information about xcproj brew formula.
+ */
+interface IXcprojInfo {
+	/**
+	 * determines whether the system needs xcproj to execute ios builds sucessfully
+	 */
+	shouldUseXcproj: boolean;
+	/**
+	 * pod version string, as returned by `pod --version`
+	 */
+	cocoapodVer: string;
+	/**
+	 * Xcode's version
+	 */
+	xcodeVersion: IVersionData;
+	/**
+	 * determines whether xcproj can be called from the command line
+	 */
+	xcprojAvailable: boolean;
+}
+

@@ -28,7 +28,8 @@ class DoctorService implements IDoctorService {
 		private $opener: IOpener,
 		private $prompter: IPrompter,
 		private $fs: IFileSystem,
-		private $versionsService: IVersionsService) { }
+		private $versionsService: IVersionsService,
+		private $xcprojService: IXcprojService) { }
 
 	public printWarnings(configOptions?: { trackResult: boolean }): IFuture<boolean> {
 		return (() => {
@@ -99,6 +100,10 @@ class DoctorService implements IDoctorService {
 					this.$logger.warn(`WARNING: Your current CocoaPods version is earlier than ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
 					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
 						+ `To be able to build such projects, verify that you have at least ${DoctorService.MIN_SUPPORTED_POD_VERSION} version installed.`);
+					result = true;
+				}
+
+				if (this.$xcprojService.verifyXcproj(false).wait()) {
 					result = true;
 				}
 			} else {
@@ -198,11 +203,16 @@ class DoctorService implements IDoctorService {
 				this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod",
 				["install"],
 				"exit",
-				{ stdio: "inherit", cwd: iosDir },
-				{ throwError: true }
+				{ cwd: iosDir },
+				{ throwError: false }
 			);
 
 			this.$progressIndicator.showProgressIndicator(future, 5000).wait();
+			let result = future.get();
+			if(result.exitCode) {
+				this.$logger.out(result.stdout, result.stderr);
+				return true;
+			}
 
 			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
 		} catch (err) {
