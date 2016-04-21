@@ -40,9 +40,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $devicesService: Mobile.IDevicesService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginVariablesService: IPluginVariablesService,
-		private $staticConfig: IStaticConfig,
-		private $sysInfo: ISysInfo,
-		private $xcodeSelectService: IXcodeSelectService) {
+		private $xcprojService: IXcprojService) {
 			super($fs, $projectData, $projectDataService);
 		}
 
@@ -661,30 +659,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 			}
 
-			let cocoapodsVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
-				xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
-
-			if(!semver.valid(cocoapodsVer)) {
-				// Cocoapods betas have names like 1.0.0.beta.8
-				// These 1.0.0 betas are not valid semver versions, but they are working fine with XCode 7.3
-				// So get only the major.minor.patch version and consider them as 1.0.0
-				cocoapodsVer = _.take(cocoapodsVer.split("."), 3).join(".");
-			}
-
-			xcodeVersion.patch = xcodeVersion.patch || "0";
-			let shouldUseXcproj = semver.lt(cocoapodsVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0");
-
-			// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
-			// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
-			// as a result of this all .pbxprojects touched by CocoaPods get converted to XML plist format
-			if (shouldUseXcproj) {
-				// if that's the case we can use xcproj gem to convert them back to ASCII plist format
-				try {
-					this.$childProcess.exec("xcproj --version").wait();
-				} catch(e) {
-					this.$errors.failWithoutHelp(`You are using CocoaPods version ${cocoapodsVer} which does not support Xcode ${xcodeVersion.major}.${xcodeVersion.minor} yet. In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH.`);
-				}
-			}
+			this.$xcprojService.verifyXcproj(true).wait();
 
 			this.$logger.info("Installing pods...");
 			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
@@ -705,7 +680,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				}
 			}
 
-			if (shouldUseXcproj) {
+			if (this.$xcprojService.getXcprojInfo().wait().shouldUseXcproj) {
 				this.$childProcess.exec(`xcproj --project ${this.xcodeprojPath} touch`).wait();
 				this.$childProcess.exec(`xcproj --project ${this.cocoaPodsXcodeprojPath} touch`).wait();
 			}

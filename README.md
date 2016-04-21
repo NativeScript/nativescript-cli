@@ -155,6 +155,7 @@ sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/native
 	* [Xcode command-line tools][12]
 	* [xcodeproj ruby gem][13]
 	* (Optional) [CocoaPods 0.38.2][CocoaPods 0.38.2]
+	* (Optional) [Xcproj][Xcproj]
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Android SDK 22][Android SDK 22] or a later stable official release
@@ -608,6 +609,7 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Android SDK 22]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
 [CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
-[Android SDK Build-tools 22.0.0]: http://developer.android.com/sdk/index.html
+[Xcproj]: https://github.com/0xced/xcproj#installation
+[Android SDK Build-tools 23.0.0]: http://developer.android.com/sdk/index.html
 [Local Maven repository for Support Libraries]: http://developer.android.com/sdk/index.html
 ![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel)
