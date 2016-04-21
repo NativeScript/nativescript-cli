@@ -13,6 +13,8 @@ export class InitService implements IInitService {
 		"tns-core-modules": "1.2.0"
 	};
 
+	private static VERSION_KEY_NAME = "version";
+
 	private _projectFilePath: string;
 
 	constructor(private $fs: IFileSystem,
@@ -27,16 +29,16 @@ export class InitService implements IInitService {
 
 	public initialize(): IFuture<void> {
 		return (() => {
-			let projectData: any = { };
+			let projectData: any = {};
 
-			if(this.$fs.exists(this.projectFilePath).wait()) {
+			if (this.$fs.exists(this.projectFilePath).wait()) {
 				projectData = this.$fs.readJson(this.projectFilePath).wait();
 			}
 
 			let projectDataBackup = _.extend({}, projectData);
 
-			if(!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
-				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = { };
+			if (!projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
+				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = {};
 				this.$fs.writeJson(this.projectFilePath, projectData).wait(); // We need to create package.json file here in order to prevent "No project found at or above and neither was a --path specified." when resolving platformsData
 			}
 
@@ -44,20 +46,22 @@ export class InitService implements IInitService {
 
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]["id"] = this.getProjectId().wait();
 
-				if(this.$options.frameworkName && this.$options.frameworkVersion) {
+				if (this.$options.frameworkName && this.$options.frameworkVersion) {
 					projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = this.buildVersionData(this.$options.frameworkVersion);
 				} else {
 					let $platformsData = this.$injector.resolve("platformsData");
 					_.each($platformsData.platformsNames, platform => {
 						let platformData: IPlatformData = $platformsData.getPlatformData(platform);
-						if(!platformData.targetedOS || (platformData.targetedOS && _.contains(platformData.targetedOS, process.platform))) {
-							projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] = this.getVersionData(platformData.frameworkPackageName).wait();
+						if (!platformData.targetedOS || (platformData.targetedOS && _.contains(platformData.targetedOS, process.platform))) {
+							let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] || {};
+
+							projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][platformData.frameworkPackageName] = _.extend(currentPlatformData, this.getVersionData(platformData.frameworkPackageName).wait());
 						}
 					});
 				}
 
 				let dependencies = projectData.dependencies;
-				if(!dependencies) {
+				if (!dependencies) {
 					projectData.dependencies = Object.create(null);
 				}
 				// In case console is interactive and --force is not specified, do not read the version from package.json, show all available versions to the user.
@@ -65,7 +69,7 @@ export class InitService implements IInitService {
 				projectData.dependencies[constants.TNS_CORE_MODULES_NAME] = this.$options.tnsModulesVersion || tnsCoreModulesVersionInPackageJson || this.getVersionData(constants.TNS_CORE_MODULES_NAME).wait()["version"];
 
 				this.$fs.writeJson(this.projectFilePath, projectData).wait();
-			} catch(err) {
+			} catch (err) {
 				this.$fs.writeJson(this.projectFilePath, projectDataBackup).wait();
 				throw err;
 			}
@@ -75,7 +79,7 @@ export class InitService implements IInitService {
 	}
 
 	private get projectFilePath(): string {
-		if(!this._projectFilePath) {
+		if (!this._projectFilePath) {
 			let projectDir = path.resolve(this.$options.path || ".");
 			this._projectFilePath = path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME);
 		}
@@ -85,12 +89,12 @@ export class InitService implements IInitService {
 
 	private getProjectId(): IFuture<string> {
 		return (() => {
-			if(this.$options.appid) {
+			if (this.$options.appid) {
 				return this.$options.appid;
 			}
 
 			let defaultAppId = this.$projectHelper.generateDefaultAppId(path.basename(path.dirname(this.projectFilePath)), constants.DEFAULT_APP_IDENTIFIER_PREFIX);
-			if(this.useDefaultValue) {
+			if (this.useDefaultValue) {
 				return defaultAppId;
 			}
 
@@ -101,13 +105,14 @@ export class InitService implements IInitService {
 	private getVersionData(packageName: string): IFuture<IStringDictionary> {
 		return (() => {
 			let latestVersion = this.$npmInstallationManager.getLatestCompatibleVersion(packageName).wait();
-			if(this.useDefaultValue) {
+
+			if (this.useDefaultValue) {
 				return this.buildVersionData(latestVersion);
 			}
 
 			let data = this.$npm.view(packageName, "versions").wait();
 			let versions = _.filter(data[latestVersion].versions, (version: string) => semver.gte(version, InitService.MIN_SUPPORTED_FRAMEWORK_VERSIONS[packageName]));
-			if(versions.length === 1) {
+			if (versions.length === 1) {
 				this.$logger.info(`Only ${versions[0]} version is available for ${packageName}.`);
 				return this.buildVersionData(versions[0]);
 			}
@@ -118,7 +123,11 @@ export class InitService implements IInitService {
 	}
 
 	private buildVersionData(version: string): IStringDictionary {
-		 return { "version": version };
+		let result: IStringDictionary = {};
+
+		result[InitService.VERSION_KEY_NAME] = version;
+
+		return result;
 	}
 
 	private get useDefaultValue(): boolean {
