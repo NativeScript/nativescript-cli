@@ -1,11 +1,10 @@
+import './setup';
 import { Kinvey } from '../src/kinvey';
 import { Client } from '../src/client';
-import { UserHelper } from './helper';
+import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-chai.use(chaiAsPromised);
 const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -25,7 +24,7 @@ describe('Kinvey', function () {
 
   describe('ping()', function() {
     after(function() {
-      return UserHelper.logout();
+      return logoutUser();
     });
 
     it('should respond', function() {
@@ -65,7 +64,7 @@ describe('Kinvey', function () {
           'content-type': 'application/json'
         });
 
-      UserHelper.login();
+      loginUser();
       return Kinvey.ping().then(response => {
         expect(response).to.deep.equal(reply);
       });

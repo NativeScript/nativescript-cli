@@ -1,3 +1,6 @@
+/* eslint-disable */
+var path = require('path');
+
 module.exports = function(config) {
   config.set({
     // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -5,12 +8,11 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['browserify', 'mocha'],
+    frameworks: ['mocha', 'chai-as-promised', 'sinon-chai'],
 
     // list of files / patterns to load in the browser
     files: [
-      'test/setup.js',
-      'test/**/*.spec.js'
+      'tests.webpack.js'
     ],
 
     // list of files to exclude
@@ -20,15 +22,34 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/setup.js': 'browserify',
-      'test/**/*.spec.js': 'browserify'
+      'tests.webpack.js': ['webpack', 'sourcemap']
     },
 
-    browserify: {
-      debug: true,
-      transform: [
-        ['babelify']
-      ]
+    webpack: {
+      devtool: 'inline-source-map',
+      module: {
+        loaders: [
+          {
+            test: /(\.js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel'
+          },
+          {
+            test: /(\.json)$/,
+            loader: 'json'
+          }
+        ],
+      },
+      externals: {
+        fs: 'empty',
+        tls: 'empty',
+        net: 'empty',
+        console: true
+      }
+    },
+
+    webpackServer: {
+      noInfo: true // please don't spam the console when running in karma!
     },
 
     // test results reporter to use
@@ -56,6 +77,6 @@ module.exports = function(config) {
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
-    singleRun: false
+    singleRun: true
   });
 };

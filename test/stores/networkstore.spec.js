@@ -1,17 +1,22 @@
-import { UserHelper } from './helper';
-import { NetworkStore } from '../src/stores/networkstore';
-import { KinveyError } from '../src/errors';
+import '../setup';
+import { loginUser, logoutUser } from '../utils/user';
+import { NetworkStore } from '../../src/stores/networkstore';
+import { KinveyError } from '../../src/errors';
 import nock from 'nock';
 import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('NetworkStore', function() {
   before(function() {
-    return UserHelper.login();
+    return loginUser();
   });
 
   after(function() {
-    return UserHelper.logout();
+    return logoutUser();
   });
 
   before(function() {

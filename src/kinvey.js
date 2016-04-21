@@ -12,6 +12,7 @@ import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 import { NetworkRequest } from './requests/network';
 import url from 'url';
+import result from 'lodash/result';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 class Kinvey {
@@ -22,6 +23,18 @@ class Kinvey {
     }
 
     return this._client;
+  }
+
+  static set client(client) {
+    if (!client) {
+      throw new KinveyError('Client must not be undefined.');
+    }
+
+    if (!(client instanceof Client)) {
+      client = new Client(result(client, 'toJSON', client));
+    }
+
+    this._client = client;
   }
 
   /**
@@ -56,7 +69,8 @@ class Kinvey {
         'Unable to create a new Client without an App Key.');
     }
 
-    this._client = Client.init(options);
+    this.client = Client.init(options);
+    return this.client;
   }
 
   /**

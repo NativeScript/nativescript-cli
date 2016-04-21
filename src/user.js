@@ -439,7 +439,7 @@ export class User {
    * var isIdentitySupported = user.isIdentitySupported('identity');
    */
   static isIdentitySupported(identity) {
-    return hello && supportedIdentities.indexOf(identity) !== -1;
+    return typeof hello !== 'undefined' && supportedIdentities.indexOf(identity) !== -1;
   }
 
   /**

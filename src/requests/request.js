@@ -1,6 +1,6 @@
 import Promise from 'babybird';
 import { HttpMethod, AuthType } from '../enums';
-import { Device } from 'device';
+import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import { Client } from '../client';
@@ -325,9 +325,7 @@ export class KinveyRequest extends Request {
 
     const headers = {};
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
-
-    const device = new Device();
-    headers['X-Kinvey-Device-Information'] = JSON.stringify(device.toJSON());
+    headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;

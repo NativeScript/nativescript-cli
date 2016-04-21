@@ -1,4 +1,4 @@
-import Promise from 'babybird';
+import Promise from 'bluebird';
 import { CacheStore } from './cachestore';
 import { LocalRequest } from '../requests/local';
 import { Aggregation } from '../aggregation';

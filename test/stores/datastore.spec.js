@@ -1,9 +1,10 @@
-import { DataStore, DataStoreType } from '../src/stores/datastore';
-import { CacheStore } from '../src/stores/cachestore';
-import { FileStore } from '../src/stores/filestore';
-import { NetworkStore } from '../src/stores/networkstore';
-import { SyncStore } from '../src/stores/syncstore';
-import { UserStore } from '../src/stores/userstore';
+import '../setup';
+import { DataStore, DataStoreType } from '../../src/stores/datastore';
+import { CacheStore } from '../../src/stores/cachestore';
+import { FileStore } from '../../src/stores/filestore';
+import { NetworkStore } from '../../src/stores/networkstore';
+import { SyncStore } from '../../src/stores/syncstore';
+import { UserStore } from '../../src/stores/userstore';
 import chai from 'chai';
 const expect = chai.expect;
 

@@ -1,4 +1,4 @@
-import packageJSON from '../package.json';
+import packageJSON from '../../package.json';
 
 export function isNode() {
   return typeof module !== 'undefined' && !!module.exports;
