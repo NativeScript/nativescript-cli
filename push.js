@@ -1,4 +1,5 @@
 import Promise from 'babybird';
+import { isPhoneGap } from 'kinvey-javascript-sdk-core/build/utils/device';
 import { KinveyError, NotFoundError } from 'kinvey-javascript-sdk-core/build/errors';
 import { EventEmitter } from 'events';
 import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/datastore';
@@ -25,19 +26,26 @@ export class Push extends EventEmitter {
     this.client = Client.sharedInstance();
     notificationEventListener = bind(this.notificationListener, this);
 
-    this.deviceReady = new Promise(resolve => {
-      const onDeviceReady = bind(() => {
-        document.removeEventListener('deviceready', onDeviceReady);
-        resolve();
-      }, this);
+    if (isPhoneGap()) {
+      this.deviceReady = new Promise(resolve => {
+        const onDeviceReady = bind(() => {
+          document.removeEventListener('deviceready', onDeviceReady);
+          resolve();
+        }, this);
 
-      document.addEventListener('deviceready', onDeviceReady, false);
-      this.deviceReady = new Promise(() => {});
-    }).then(() => {
-      const pushOptions = this.client.push;
-      if (pushOptions) {
-        this.phonegapPush = global.PushNotification.init(pushOptions);
-        this.phonegapPush.on(notificationEvent, notificationEventListener);
+        document.addEventListener('deviceready', onDeviceReady, false);
+      });
+    } else {
+      this.deviceReady = Promise.resolve();
+    }
+
+    this.deviceReady = this.deviceReady.then(() => {
+      if (this.isSupported()) {
+        const pushOptions = this.client.push;
+        if (pushOptions) {
+          this.phonegapPush = global.PushNotification.init(pushOptions);
+          this.phonegapPush.on(notificationEvent, notificationEventListener);
+        }
       }
     });
   }
