@@ -83,7 +83,7 @@ export class ProjectService implements IProjectService {
 				this.$fs.deleteDirectory(projectDir).wait();
 				throw err;
 			}
-			this.$logger.out("Project %s was successfully created", projectName);
+			this.$logger.printMarkdown("Project `%s` was successfully created.", projectName);
 
 		}).future<void>()();
 	}
