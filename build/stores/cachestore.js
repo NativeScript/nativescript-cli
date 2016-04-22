@@ -9,9 +9,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _bluebird = require('bluebird');
+var _babybird = require('babybird');
 
-var _bluebird2 = _interopRequireDefault(_bluebird);
+var _babybird2 = _interopRequireDefault(_babybird);
 
 var _networkstore = require('./networkstore');
 
@@ -59,7 +59,7 @@ var _differenceBy2 = _interopRequireDefault(_differenceBy);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _bluebird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _bluebird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _babybird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _babybird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -611,7 +611,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                 }
 
                 _log.Log.warn('No entity was provided to be saved.', entity);
-                return _context5.abrupt('return', _bluebird2.default.resolve(null));
+                return _context5.abrupt('return', _babybird2.default.resolve(null));
 
               case 3:
                 request = new _local.LocalRequest({
@@ -706,7 +706,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                   break;
                 }
 
-                return _context6.abrupt('return', _bluebird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.')));
+                return _context6.abrupt('return', _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.')));
 
               case 2:
                 request = new _local.LocalRequest({
@@ -782,7 +782,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                 }
 
                 _log.Log.warn('No id was provided to be removed.');
-                return _context7.abrupt('return', _bluebird2.default.resolve(null));
+                return _context7.abrupt('return', _babybird2.default.resolve(null));
 
               case 3:
                 request = new _local.LocalRequest({
@@ -856,7 +856,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       if (!this.isSyncEnabled()) {
-        return _bluebird2.default.reject(new _errors.KinveyError('Sync is disabled.'));
+        return _babybird2.default.reject(new _errors.KinveyError('Sync is disabled.'));
       }
 
       if (!(query instanceof _query.Query)) {

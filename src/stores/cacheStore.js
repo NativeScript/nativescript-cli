@@ -1,4 +1,4 @@
-import Promise from 'bluebird';
+import Promise from 'babybird';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';
