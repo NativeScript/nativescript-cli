@@ -2,15 +2,21 @@
 "use strict";
 import * as constants from "../constants";
 import * as semver from "semver";
+import * as path from "path";
 import {createTable} from "../common/helpers";
 
 class VersionsService implements IVersionsService {
+	private static UP_TO_DATE_MESSAGE = "Up to date".green.toString();
+	private static UPDATE_AVAILABLE_MESSAGE = "Update available".yellow.toString();
+	private static NOT_INSTALLED_MESSAGE = "Not installed".grey.toString();
+
 	private projectData: IProjectData;
 
 	constructor(private $fs: IFileSystem,
 		private $npmInstallationManager: INpmInstallationManager,
 		private $injector: IInjector,
-		private $staticConfig: Config.IStaticConfig) {
+		private $staticConfig: Config.IStaticConfig,
+		private $pluginsService: IPluginsService) {
 		this.projectData = this.getProjectData();
 	}
 
@@ -36,7 +42,14 @@ class VersionsService implements IVersionsService {
 			};
 
 			if (this.projectData) {
-				let currentTnsCoreModulesVersion = this.projectData.dependencies[constants.TNS_CORE_MODULES_NAME];
+				let nodeModulesPath = path.join(this.projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME);
+				let tnsCoreModulesPath = path.join(nodeModulesPath, constants.TNS_CORE_MODULES_NAME);
+				if (!this.$fs.exists(nodeModulesPath).wait() ||
+					!this.$fs.exists(tnsCoreModulesPath).wait()) {
+					this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
+				}
+
+				let currentTnsCoreModulesVersion = this.$fs.readJson(path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)).wait().version;
 				nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
 			}
 
@@ -119,19 +132,18 @@ class VersionsService implements IVersionsService {
 	public createTableWithVersionsInformation(versionsInformation: IVersionInformation[]): any {
 		let headers = ["Component", "Current version", "Latest version", "Information"];
 		let data: string[][] = [];
-		let upToDate: string = "Up to date".green.toString();
 
 		_.forEach(versionsInformation, (componentInformation: IVersionInformation) => {
 			let row: string[] = [
 				componentInformation.componentName,
-				componentInformation.currentVersion || "",
+				componentInformation.currentVersion,
 				componentInformation.latestVersion
 			];
 
-			if (componentInformation.currentVersion && semver.lt(componentInformation.currentVersion, componentInformation.latestVersion)) {
-				row.push("Update available".yellow.toString());
+			if (componentInformation.currentVersion) {
+				semver.lt(componentInformation.currentVersion, componentInformation.latestVersion) ? row.push(VersionsService.UPDATE_AVAILABLE_MESSAGE) : row.push(VersionsService.UP_TO_DATE_MESSAGE);
 			} else {
-				row.push(upToDate);
+				row.push(VersionsService.NOT_INSTALLED_MESSAGE);
 			}
 
 			data.push(row);
