@@ -49,8 +49,10 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 				}
 			 	this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest).wait();
 			} else {
-				this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout).wait();
-				this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+				if(!this.socket) {
+					this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout).wait();
+					this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+				}
 				this.sendPageReloadMessage();
 			}
 		}).future<void>()();
