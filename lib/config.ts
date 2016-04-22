@@ -32,6 +32,7 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 	public ERROR_REPORT_SETTING_NAME = "TrackExceptions";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
 	public START_PACKAGE_ACTIVITY_NAME = "com.tns.NativeScriptActivity";
+	public INSTALLATION_SUCCESS_MESSAGE = "Installation successful. You are good to go. Connect with us on `http://twitter.com/NativeScript`.";
 
 	constructor($injector: IInjector) {
 		super($injector);
