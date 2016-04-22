@@ -1,4 +1,3 @@
-import 'babel-polyfill';
 import Promise from 'bluebird';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';
