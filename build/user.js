@@ -943,7 +943,7 @@ var User = exports.User = function () {
   }, {
     key: 'isIdentitySupported',
     value: function isIdentitySupported(identity) {
-      return hello && supportedIdentities.indexOf(identity) !== -1;
+      return typeof hello !== 'undefined' && supportedIdentities.indexOf(identity) !== -1;
     }
 
     /**

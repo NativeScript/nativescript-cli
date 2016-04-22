@@ -15,6 +15,9 @@
   "env": {
     "browser": true,
     "node": true,
-    "mocha": true
+    "mocha": true,
+  },
+  "globals": {
+    "Titanium": true
   }
 }

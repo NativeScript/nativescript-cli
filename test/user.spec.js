@@ -1,3 +1,4 @@
+import './setup';
 import { User } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
@@ -5,7 +6,7 @@ import { ActiveUserError, KinveyError } from '../src/errors';
 import { AuthorizationGrant, SocialIdentity } from '../src/enums';
 import { MobileIdentityConnect } from '../src/mic';
 import { randomString } from '../src/utils/string';
-import { UserHelper } from './helper';
+import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -370,11 +371,11 @@ describe('User', function () {
 
   describe('logout', function() {
     beforeEach(function() {
-      this.user = UserHelper.login();
+      this.user = loginUser();
     });
 
     afterEach(function() {
-      UserHelper.logout();
+      logoutUser();
       delete this.user;
     });
 
@@ -416,14 +417,6 @@ describe('User', function () {
   describe('isIdentitySupported', function() {
     it('should be a static method', function() {
       expect(User).itself.to.respondTo('isIdentitySupported');
-    });
-
-    it('should return true', function() {
-      expect(User.isIdentitySupported('facebook')).to.be.true;
-    });
-
-    it('should return false', function() {
-      expect(User.isIdentitySupported('foo')).to.be.false;
     });
   });
 

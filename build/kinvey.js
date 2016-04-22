@@ -39,6 +39,10 @@ var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
 
+var _result = require('lodash/result');
+
+var _result2 = _interopRequireDefault(_result);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -84,7 +88,8 @@ var Kinvey = function () {
         throw new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.');
       }
 
-      this._client = _client.Client.init(options);
+      Kinvey.client = _client.Client.init(options);
+      return Kinvey.client;
     }
 
     /**
@@ -116,11 +121,22 @@ var Kinvey = function () {
   }, {
     key: 'client',
     get: function get() {
-      if (!this._client) {
+      if (!Kinvey._client) {
         throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
       }
 
-      return this._client;
+      return Kinvey._client;
+    },
+    set: function set(client) {
+      if (!client) {
+        throw new _errors.KinveyError('Client must not be undefined.');
+      }
+
+      if (!(client instanceof _client.Client)) {
+        client = new _client.Client((0, _result2.default)(client, 'toJSON', client));
+      }
+
+      Kinvey._client = client;
     }
   }]);
 

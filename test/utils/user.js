@@ -1,22 +1,19 @@
-import { User } from '../src/user';
-import { randomString } from '../src/utils/string';
+import { User } from '../../src/user';
+import { randomString } from '../../src/utils/string';
 
-const UserHelper = {
-  login() {
-    const user = new User({
-      _id: randomString(),
-      _kmd: {
-        authtoken: randomString()
-      }
-    });
-    return user.setAsActiveUser();
-  },
+export function loginUser() {
+  const user = new User({
+    _id: randomString(),
+    _kmd: {
+      authtoken: randomString()
+    }
+  });
+  return user.setAsActiveUser();
+}
 
-  logout() {
-    return User.setActiveUser(null);
-  }
-};
-export { UserHelper };
+export function logoutUser() {
+  return User.setActiveUser(null);
+}
 
 // // Tests whether both deferreds and callbacks are supported on success.
 // export function success(promiseFn) {

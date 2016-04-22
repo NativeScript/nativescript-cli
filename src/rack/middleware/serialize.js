@@ -9,27 +9,27 @@ export class SerializeMiddleware extends KinveyMiddleware {
     super(name);
   }
 
-  handle(request) {
-    return super.handle(request).then(() => {
-      if (request && request.data) {
-        const contentType = request.headers['content-type'] || request.headers['Content-Type'];
+  async handle(request) {
+    request = await super.handle(request);
 
-        if (contentType.indexOf('application/json') === 0) {
-          request.data = JSON.stringify(request.data);
-        } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
-          const data = request.data;
-          const str = [];
-          const keys = Object.keys(data);
+    if (request && request.data) {
+      const contentType = request.headers['content-type'] || request.headers['Content-Type'];
 
-          forEach(keys, key => {
-            str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(data[key])}`);
-          });
+      if (contentType.indexOf('application/json') === 0) {
+        request.data = JSON.stringify(request.data);
+      } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
+        const data = request.data;
+        const str = [];
+        const keys = Object.keys(data);
 
-          request.data = str.join('&');
-        }
+        forEach(keys, key => {
+          str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(data[key])}`);
+        });
+
+        request.data = str.join('&');
       }
+    }
 
-      return request;
-    });
+    return request;
   }
 }

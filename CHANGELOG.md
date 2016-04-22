@@ -1,4 +1,8 @@
 ## Changelog
+### 3.0.0-beta.18 (2016-04-22)
+* Enhancement: Add device and popup plugins to core.
+* Enhancement: Use ES7 async logic.
+
 ### 3.0.0-beta.17 (2016-04-20)
 * Bugfix: Fixed bug when notifying sync to add an item that should be synce at a later time.
 

@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { AsciiTree } from './asciiTree';
 
 /**
@@ -9,8 +8,12 @@ export class Middleware {
     this.name = name;
   }
 
-  handle(request = {}) {
-    return Promise.resolve(request);
+  async handle(request) {
+    if (!request) {
+      throw new Error('Request is null. Please provide a valid request.');
+    }
+
+    return request;
   }
 
   generateTree(level = 0) {
@@ -36,13 +39,7 @@ export class KinveyMiddleware extends Middleware {
     super(name);
   }
 
-  handle(request) {
-    return new Promise((resolve, reject) => {
-      if (!request) {
-        return reject(new Error('Request is null. Please provide a valid request.', request));
-      }
-
-      return resolve(request);
-    });
+  async handle(request) {
+    return super.handle(request);
   }
 }

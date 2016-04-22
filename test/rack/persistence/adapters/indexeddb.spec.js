@@ -1,9 +1,14 @@
-import { IndexedDB } from '../src/rack/persistence/adapters/indexeddb';
-import { KinveyError, NotFoundError } from '../src/errors';
-import { randomString } from '../src/utils/string';
+import '../../../setup';
+import { IndexedDB } from '../../../../src/rack/persistence/adapters/indexeddb';
+import { KinveyError, NotFoundError } from '../../../../src/errors';
+import { randomString } from '../../../../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import sinonChai from 'sinon-chai';
+chai.use(chaiAsPromised);
+chai.use(sinonChai);
 const expect = chai.expect;
 const databaseName = 'testDatabase';
 const collectionName = 'testCollection';

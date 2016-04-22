@@ -165,7 +165,7 @@ var Response = exports.Response = function () {
       var message = data.message || data.description;
       var debug = data.debug;
 
-      if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound') {
+      if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound' || this.statusCode === 404) {
         return new _errors.NotFoundError(message, debug);
       } else if (name === 'InsufficientCredentials') {
         return new _errors.InsufficientCredentialsError(message, debug);

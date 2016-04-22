@@ -12,16 +12,29 @@ import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 import { NetworkRequest } from './requests/network';
 import url from 'url';
+import result from 'lodash/result';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 class Kinvey {
   static get client() {
-    if (!this._client) {
+    if (!Kinvey._client) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return this._client;
+    return Kinvey._client;
+  }
+
+  static set client(client) {
+    if (!client) {
+      throw new KinveyError('Client must not be undefined.');
+    }
+
+    if (!(client instanceof Client)) {
+      client = new Client(result(client, 'toJSON', client));
+    }
+
+    Kinvey._client = client;
   }
 
   /**
@@ -56,7 +69,8 @@ class Kinvey {
         'Unable to create a new Client without an App Key.');
     }
 
-    this._client = Client.init(options);
+    Kinvey.client = Client.init(options);
+    return Kinvey.client;
   }
 
   /**

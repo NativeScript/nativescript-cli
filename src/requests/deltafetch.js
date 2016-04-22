@@ -11,6 +11,7 @@ import reduce from 'lodash/reduce';
 import result from 'lodash/result';
 import values from 'lodash/values';
 import forEach from 'lodash/forEach';
+import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
@@ -44,9 +45,9 @@ export class DeltaFetchRequest extends KinveyRequest {
       }
 
       throw error;
-    }).then(cacheResponse => {
-      if (cacheResponse.data.length > 0) {
-        const cacheDocuments = keyBy(cacheResponse.data, idAttribute);
+    }).then(cacheResponse => cacheResponse.data).then(cacheData => {
+      if (isArray(cacheData) && cacheData.length > 0) {
+        const cacheDocuments = keyBy(cacheData, idAttribute);
         const query = new Query(result(this.query, 'toJSON', this.query));
         query.fields([idAttribute, kmdAttribute]);
         const networkRequest = new NetworkRequest({

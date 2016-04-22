@@ -148,11 +148,7 @@ var RequestProperties = exports.RequestProperties = function () {
      * @return {RequestProperties} The request properties instance.
      */
     ,
-    set: function set() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
+    set: function set(args) {
       var version = Array.prototype.slice.call(args, 1);
       var major = args[0];
       var minor = version[1];

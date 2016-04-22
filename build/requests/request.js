@@ -17,7 +17,7 @@ var _babybird2 = _interopRequireDefault(_babybird);
 
 var _enums = require('../enums');
 
-var _device = require('device');
+var _device = require('../utils/device');
 
 var _properties = require('./properties');
 
@@ -423,9 +423,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
 
     var headers = {};
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
-
-    var device = new _device.Device();
-    headers['X-Kinvey-Device-Information'] = JSON.stringify(device.toJSON());
+    headers['X-Kinvey-Device-Information'] = JSON.stringify(_device.Device.toJSON());
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;

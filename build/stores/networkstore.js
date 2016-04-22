@@ -196,7 +196,8 @@ var NetworkStore = exports.NetworkStore = function () {
         }),
         properties: options.properties,
         data: aggregation.toJSON(),
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
 
       var promise = request.execute().then(function (response) {
@@ -256,7 +257,8 @@ var NetworkStore = exports.NetworkStore = function () {
         }),
         properties: options.properties,
         query: query,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
 
       var promise = request.execute().then(function (response) {
@@ -313,7 +315,8 @@ var NetworkStore = exports.NetworkStore = function () {
           pathname: this._pathname + '/' + id
         }),
         properties: options.properties,
-        timeout: options.timeout
+        timeout: options.timeout,
+        client: this.client
       });
 
       var promise = request.execute().then(function (response) {
