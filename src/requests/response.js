@@ -38,7 +38,8 @@ export class Response {
         || name === 'AppNotFound'
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
-        || name === 'DocumentNotFound') {
+        || name === 'DocumentNotFound'
+        || this.statusCode === 404) {
       return new NotFoundError(message, debug);
     } else if (name === 'InsufficientCredentials') {
       return new InsufficientCredentialsError(message, debug);

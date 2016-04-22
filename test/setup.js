@@ -10,6 +10,13 @@ before(function() {
   networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
 });
 
+before(function() {
+  this.client = Kinvey.init({
+    appKey: randomString(),
+    appSecret: randomString()
+  });
+});
+
 beforeEach(function() {
   this.client = Kinvey.init({
     appKey: randomString(),

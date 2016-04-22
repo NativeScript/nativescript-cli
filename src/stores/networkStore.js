@@ -149,7 +149,8 @@ export class NetworkStore {
       }),
       properties: options.properties,
       data: aggregation.toJSON(),
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this.client
     });
 
     const promise = request.execute().then(response => response.data);
@@ -200,7 +201,8 @@ export class NetworkStore {
       }),
       properties: options.properties,
       query: query,
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this.client
     });
 
     const promise = request.execute().then(response => response.data);
@@ -248,7 +250,8 @@ export class NetworkStore {
         pathname: `${this._pathname}/${id}`,
       }),
       properties: options.properties,
-      timeout: options.timeout
+      timeout: options.timeout,
+      client: this.client
     });
 
     const promise = request.execute().then(response => response.data);

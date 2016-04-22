@@ -289,7 +289,16 @@ export class CacheStore extends NetworkStore {
       timeout: options.timeout,
       client: this.client
     });
-    const cachedEntity = await request.execute().then(response => response.data);
+    let cachedEntity = null;
+
+    try {
+      cachedEntity = await request.execute().then(response => response.data);
+    } catch (error) {
+      if (!(error instanceof NotFoundError)) {
+        throw error;
+      }
+    }
+
     const promise = this.syncCount().then(count => {
       if (count > 0) {
         return this.push().then(() => this.syncCount());
