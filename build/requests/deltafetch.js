@@ -49,6 +49,10 @@ var _forEach = require('lodash/forEach');
 
 var _forEach2 = _interopRequireDefault(_forEach);
 
+var _isArray = require('lodash/isArray');
+
+var _isArray2 = _interopRequireDefault(_isArray);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -104,9 +108,11 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
         throw error;
       }).then(function (cacheResponse) {
-        if (cacheResponse.data.length > 0) {
+        return cacheResponse.data;
+      }).then(function (cacheData) {
+        if ((0, _isArray2.default)(cacheData) && cacheData.length > 0) {
           var _ret = function () {
-            var cacheDocuments = (0, _keyBy2.default)(cacheResponse.data, idAttribute);
+            var cacheDocuments = (0, _keyBy2.default)(cacheData, idAttribute);
             var query = new _query3.Query((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
             query.fields([idAttribute, kmdAttribute]);
             var networkRequest = new _network.NetworkRequest({

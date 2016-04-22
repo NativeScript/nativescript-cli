@@ -14,7 +14,7 @@ exports.isiOS = isiOS;
 exports.isAndroid = isAndroid;
 exports.isBrowser = isBrowser;
 
-var _package = require('../package.json');
+var _package = require('../../package.json');
 
 var _package2 = _interopRequireDefault(_package);
 

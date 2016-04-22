@@ -1,10 +1,4 @@
 {
   "presets": ["es2015", "stage-2"],
-  "ignore": "/\/node_modules\/(?!qs\/)/",
-  "plugins": [
-    ["transform-async-to-module-method", {
-      "module": "bluebird-co",
-      "method": "coroutine"
-    }]
-  ]
+  "ignore": "/\/node_modules\/(?!qs\/)/"
 }

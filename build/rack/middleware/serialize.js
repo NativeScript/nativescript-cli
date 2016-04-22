@@ -17,6 +17,8 @@ var _forEach2 = _interopRequireDefault(_forEach);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -40,31 +42,57 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
 
   _createClass(SerializeMiddleware, [{
     key: 'handle',
-    value: function handle(request) {
-      return _get(Object.getPrototypeOf(SerializeMiddleware.prototype), 'handle', this).call(this, request).then(function () {
-        if (request && request.data) {
-          var contentType = request.headers['content-type'] || request.headers['Content-Type'];
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(request) {
+        var contentType;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return _get(Object.getPrototypeOf(SerializeMiddleware.prototype), 'handle', this).call(this, request);
 
-          if (contentType.indexOf('application/json') === 0) {
-            request.data = JSON.stringify(request.data);
-          } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
-            (function () {
-              var data = request.data;
-              var str = [];
-              var keys = Object.keys(data);
+              case 2:
+                request = _context.sent;
 
-              (0, _forEach2.default)(keys, function (key) {
-                str.push(global.encodeURIComponent(key) + '=' + global.encodeURIComponent(data[key]));
-              });
 
-              request.data = str.join('&');
-            })();
+                if (request && request.data) {
+                  contentType = request.headers['content-type'] || request.headers['Content-Type'];
+
+
+                  if (contentType.indexOf('application/json') === 0) {
+                    request.data = JSON.stringify(request.data);
+                  } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
+                    (function () {
+                      var data = request.data;
+                      var str = [];
+                      var keys = Object.keys(data);
+
+                      (0, _forEach2.default)(keys, function (key) {
+                        str.push(global.encodeURIComponent(key) + '=' + global.encodeURIComponent(data[key]));
+                      });
+
+                      request.data = str.join('&');
+                    })();
+                  }
+                }
+
+                return _context.abrupt('return', request);
+
+              case 5:
+              case 'end':
+                return _context.stop();
+            }
           }
-        }
+        }, _callee, this);
+      }));
 
-        return request;
-      });
-    }
+      function handle(_x2) {
+        return ref.apply(this, arguments);
+      }
+
+      return handle;
+    }()
   }]);
 
   return SerializeMiddleware;

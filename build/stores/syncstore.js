@@ -9,9 +9,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _babybird = require('babybird');
+var _bluebird = require('bluebird');
 
-var _babybird2 = _interopRequireDefault(_babybird);
+var _bluebird2 = _interopRequireDefault(_bluebird);
 
 var _cachestore = require('./cachestore');
 
@@ -78,7 +78,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       _log.Log.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
 
       if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+        return _bluebird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var request = new _local.LocalRequest({
@@ -133,7 +133,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       _log.Log.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
 
       if (!(aggregation instanceof _aggregation.Aggregation)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid aggregation. ' + 'It must be an instance of the Kinvey.Aggregation class.'));
+        return _bluebird2.default.reject(new _errors.KinveyError('Invalid aggregation. ' + 'It must be an instance of the Kinvey.Aggregation class.'));
       }
 
       var request = new _local.LocalRequest({
@@ -188,7 +188,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       _log.Log.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
 
       if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+        return _bluebird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var request = new _local.LocalRequest({
@@ -240,7 +240,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
       if (!id) {
         _log.Log.warn('No id was provided to retrieve an entity.', id);
-        return _babybird2.default.resolve(null);
+        return _bluebird2.default.resolve(null);
       }
 
       _log.Log.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
@@ -293,7 +293,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
       if (!entity) {
         _log.Log.warn('No entity was provided to be saved.', entity);
-        return _babybird2.default.resolve(null);
+        return _bluebird2.default.resolve(null);
       }
 
       _log.Log.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
@@ -359,7 +359,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
       _log.Log.debug('Removing the entities in the ' + this.name + ' collection.', query);
 
       if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+        return _bluebird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
       }
 
       var request = new _local.LocalRequest({
@@ -411,7 +411,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
       if (!id) {
         _log.Log.warn('No id was provided to be removed.', id);
-        return _babybird2.default.resolve(null);
+        return _bluebird2.default.resolve(null);
       }
 
       _log.Log.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');

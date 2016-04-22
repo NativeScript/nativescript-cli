@@ -17,12 +17,12 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 class Kinvey {
   static get client() {
-    if (!this._client) {
+    if (!Kinvey._client) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return this._client;
+    return Kinvey._client;
   }
 
   static set client(client) {
@@ -34,7 +34,7 @@ class Kinvey {
       client = new Client(result(client, 'toJSON', client));
     }
 
-    this._client = client;
+    Kinvey._client = client;
   }
 
   /**
@@ -69,8 +69,8 @@ class Kinvey {
         'Unable to create a new Client without an App Key.');
     }
 
-    this.client = Client.init(options);
-    return this.client;
+    Kinvey.client = Client.init(options);
+    return Kinvey.client;
   }
 
   /**

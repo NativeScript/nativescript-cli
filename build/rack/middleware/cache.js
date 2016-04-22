@@ -15,6 +15,8 @@ var _db = require('../persistence/db');
 
 var _enums = require('../../enums');
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -41,55 +43,147 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
 
   _createClass(CacheMiddleware, [{
     key: 'handle',
-    value: function handle(request) {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(request) {
+        var method, query, data, db, result;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return _get(Object.getPrototypeOf(CacheMiddleware.prototype), 'handle', this).call(this, request);
 
-      return _get(Object.getPrototypeOf(CacheMiddleware.prototype), 'handle', this).call(this, request).then(function () {
-        var method = request.method;
-        var query = request.query;
-        var data = request.data;
-        var db = new _db.DB(request.appKey, _this2.adapters);
-        var promise = void 0;
+              case 2:
+                request = _context.sent;
+                method = request.method;
+                query = request.query;
+                data = request.data;
+                db = new _db.DB(request.appKey, this.adapters);
+                result = void 0;
 
-        if (method === _enums.HttpMethod.GET) {
-          if (request.entityId) {
-            if (request.entityId === '_count') {
-              promise = db.count(request.collectionName, query);
-            } else if (request.entityId === '_group') {
-              promise = db.group(request.collectionName, data);
-            } else {
-              promise = db.findById(request.collectionName, request.entityId);
+                if (!(method === _enums.HttpMethod.GET)) {
+                  _context.next = 32;
+                  break;
+                }
+
+                if (!request.entityId) {
+                  _context.next = 27;
+                  break;
+                }
+
+                if (!(request.entityId === '_count')) {
+                  _context.next = 16;
+                  break;
+                }
+
+                _context.next = 13;
+                return db.count(request.collectionName, query);
+
+              case 13:
+                result = _context.sent;
+                _context.next = 25;
+                break;
+
+              case 16:
+                if (!(request.entityId === '_group')) {
+                  _context.next = 22;
+                  break;
+                }
+
+                _context.next = 19;
+                return db.group(request.collectionName, data);
+
+              case 19:
+                result = _context.sent;
+                _context.next = 25;
+                break;
+
+              case 22:
+                _context.next = 24;
+                return db.findById(request.collectionName, request.entityId);
+
+              case 24:
+                result = _context.sent;
+
+              case 25:
+                _context.next = 30;
+                break;
+
+              case 27:
+                _context.next = 29;
+                return db.find(request.collectionName, query);
+
+              case 29:
+                result = _context.sent;
+
+              case 30:
+                _context.next = 48;
+                break;
+
+              case 32:
+                if (!(method === _enums.HttpMethod.POST || method === _enums.HttpMethod.PUT)) {
+                  _context.next = 38;
+                  break;
+                }
+
+                _context.next = 35;
+                return db.save(request.collectionName, data);
+
+              case 35:
+                result = _context.sent;
+                _context.next = 48;
+                break;
+
+              case 38:
+                if (!(method === _enums.HttpMethod.DELETE)) {
+                  _context.next = 48;
+                  break;
+                }
+
+                if (!request.entityId) {
+                  _context.next = 45;
+                  break;
+                }
+
+                _context.next = 42;
+                return db.removeById(request.collectionName, request.entityId);
+
+              case 42:
+                result = _context.sent;
+                _context.next = 48;
+                break;
+
+              case 45:
+                _context.next = 47;
+                return db.remove(request.collectionName, query);
+
+              case 47:
+                result = _context.sent;
+
+              case 48:
+
+                request.response = {
+                  statusCode: method === _enums.HttpMethod.POST ? _enums.StatusCode.Created : _enums.StatusCode.Ok,
+                  headers: {},
+                  data: result
+                };
+
+                return _context.abrupt('return', request);
+
+              case 50:
+              case 'end':
+                return _context.stop();
             }
-          } else {
-            promise = db.find(request.collectionName, query);
           }
-        } else if (method === _enums.HttpMethod.POST || method === _enums.HttpMethod.PUT) {
-          promise = db.save(request.collectionName, data);
-        } else if (method === _enums.HttpMethod.DELETE) {
-          if (request.entityId) {
-            promise = db.removeById(request.collectionName, request.entityId);
-          } else {
-            promise = db.remove(request.collectionName, query);
-          }
-        }
+        }, _callee, this);
+      }));
 
-        return promise.then(function (result) {
-          var statusCode = _enums.StatusCode.Ok;
+      function handle(_x2) {
+        return ref.apply(this, arguments);
+      }
 
-          if (method === _enums.HttpMethod.POST) {
-            statusCode = _enums.StatusCode.Created;
-          }
-
-          request.response = {
-            statusCode: statusCode,
-            headers: {},
-            data: result
-          };
-
-          return request;
-        });
-      });
-    }
+      return handle;
+    }()
   }]);
 
   return CacheMiddleware;
