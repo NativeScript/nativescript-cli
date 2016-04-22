@@ -2,7 +2,7 @@ import { Kinvey } from 'kinvey-javascript-sdk-core';
 import { NetworkRack } from 'kinvey-javascript-sdk-core/build/rack/rack';
 import { SerializeMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware/serialize';
 import { HttpMiddleware } from './http';
-import { Push } from './push';
+import { Push } from 'kinvey-phonegap-sdk/build/push';
 
 export class KinveyProvider {
   constructor() {
