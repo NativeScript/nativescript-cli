@@ -271,23 +271,16 @@ export class Request {
   }
 
   isExecuting() {
-    return this.executing === true;
+    return !!this.executing;
   }
 
-  execute() {
-    if (this.executing) {
-      return Promise.reject(new Error('Unable to execute the request. The request is already executing.'));
+  async execute() {
+    if (this.isExecuting()) {
+      throw new Error('Unable to execute the request. The request is already executing.');
     }
 
-    this.executing = Promise.resolve().then(response => {
-      this.executing = false;
-      return response;
-    }).catch(error => {
-      this.executing = false;
-      throw error;
-    });
-
-    return this.executing;
+    // Flip the executing flag to true
+    this.executing = true;
   }
 
   toJSON() {
@@ -478,13 +471,11 @@ export class KinveyRequest extends Request {
       this.addHeader(authorizationHeader);
     }
 
-    const promise = super.execute();
-    return promise;
+    return super.execute();
   }
 
   cancel() {
-    const promise = super.cancel();
-    return promise;
+    return super.cancel();
   }
 
   toJSON() {

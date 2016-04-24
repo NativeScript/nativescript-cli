@@ -35,6 +35,8 @@ export class NetworkRequest extends KinveyRequest {
 
       return response;
     }).then(response => {
+      this.executing = false;
+
       if (!response.isSuccess()) {
         throw response.error;
       }
