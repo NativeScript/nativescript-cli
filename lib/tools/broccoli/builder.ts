@@ -80,8 +80,10 @@ export class Builder implements IBroccoliBuilder {
 					if (!future.isResolved()) {
 						let intervalId = setInterval(() => {
 							fiberBootstrap.run(() => {
-								if (!this.$lockfile.check().wait()) {
-									future.return();
+								if (!this.$lockfile.check().wait() || future.isResolved()) {
+									if(!future.isResolved()) {
+										future.return();
+									}
 									clearInterval(intervalId);
 								}
 							});
