@@ -16,7 +16,7 @@ const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sy
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
-export class SyncManager {
+export class Sync {
   get _pathname() {
     return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}`;
   }

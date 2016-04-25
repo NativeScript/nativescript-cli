@@ -2,7 +2,7 @@ import Promise from 'babybird';
 import { KinveyError } from './errors';
 import { Aggregation } from './aggregation';
 import { Client } from './client';
-import { Command } from './command';
+import CustomEndpoint from './endpoint';
 import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
@@ -96,7 +96,7 @@ class Kinvey {
 
 Kinvey.Aggregation = Aggregation;
 Kinvey.AuthorizationGrant = AuthorizationGrant;
-Kinvey.Command = Command;
+Kinvey.CustomEndpoint = CustomEndpoint;
 Kinvey.DataStore = DataStore;
 Kinvey.DataStoreType = DataStoreType;
 Kinvey.Log = Log;

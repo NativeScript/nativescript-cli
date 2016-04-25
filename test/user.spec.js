@@ -136,7 +136,7 @@ describe('User', function () {
 
   describe('getActiveUser', function() {
     after(function() {
-      return User.setActiveUser(null);
+      return logoutUser.call(this);
     });
 
     it('should be a static method', function() {
@@ -150,60 +150,27 @@ describe('User', function () {
 
     it('should return the active user', function() {
       const user = new User();
-      user.setAsActiveUser();
-      const activeUser = User.getActiveUser();
-      expect(activeUser).to.deep.equal(user);
-    });
-  });
-
-  describe('setActiveUser', function() {
-    after(function() {
-      return User.setActiveUser(null);
-    });
-
-    it('should be a static method', function() {
-      expect(User).itself.to.respondTo('setActiveUser');
-    });
-
-    it('should set the active user', function() {
-      const user = new User();
-      User.setActiveUser(user);
-      const activeUser = User.getActiveUser();
-      expect(activeUser).to.deep.equal(user);
-    });
-
-    it('should remove the active user when set to null', function() {
-      const user = new User();
-      User.setActiveUser(user);
-      let activeUser = User.getActiveUser();
-      expect(activeUser).to.deep.equal(user);
-
-      User.setActiveUser(null);
-      activeUser = User.getActiveUser();
-      expect(activeUser).to.be.null;
-    });
-  });
-
-  describe('setAsActiveUser', function() {
-    after(function() {
-      return User.setActiveUser(null);
-    });
-
-    it('should be a method', function() {
-      expect(User).to.respondTo('setAsActiveUser');
-    });
-
-    it('should set a user as the active user', function() {
-      const user = new User();
-      user.setAsActiveUser();
-      const activeUser = User.getActiveUser();
-      expect(activeUser).to.deep.equal(user);
+      nock(this.client.baseUrl)
+        .post(`${user._pathname}/login`, () => true)
+        .query(true)
+        .reply(200, {
+          _id: randomString(),
+          _kmd: {
+            authtoken: randomString()
+          }
+        }, {
+          'content-type': 'application/json'
+        });
+      return user.login('foo', 'foo').then(() => {
+        const activeUser = User.getActiveUser();
+        expect(activeUser).to.deep.equal(user);
+      });
     });
   });
 
   describe('isActive', function() {
     after(function() {
-      return User.setActiveUser(null);
+      return logoutUser.call(this);
     });
 
     it('should be a method', function() {
@@ -217,16 +184,16 @@ describe('User', function () {
     });
 
     it('should return true if the user is the active user', function() {
-      const user = new User();
-      user.setAsActiveUser();
-      const isActive = user.isActive();
-      expect(isActive).to.be.true;
+      return loginUser.call(this).then(user => {
+        const isActive = user.isActive();
+        expect(isActive).to.be.true;
+      });
     });
   });
 
   describe('login()', function() {
     afterEach(function() {
-      return User.setActiveUser(null);
+      return logoutUser.call(this);
     });
 
     it('should be a static method', function() {
@@ -250,23 +217,23 @@ describe('User', function () {
     });
 
     it('should throw an error if the user is already active', function() {
-      const user = new User();
-      user.setAsActiveUser();
-      const promise = user.login({
-        username: randomString(),
-        password: randomString()
+      return loginUser.call(this).then(user => {
+        const promise = user.login({
+          username: randomString(),
+          password: randomString()
+        });
+        return expect(promise).to.be.rejectedWith(ActiveUserError);
       });
-      return expect(promise).to.be.rejectedWith(ActiveUserError);
     });
 
     it('should throw an error if an active user already exists', function() {
-      const user = new User();
-      user.setAsActiveUser();
-      const promise = User.login({
-        username: randomString(),
-        password: randomString()
+      return loginUser.call(this).then(() => {
+        const promise = User.login({
+          username: randomString(),
+          password: randomString()
+        });
+        return expect(promise).to.be.rejectedWith(ActiveUserError);
       });
-      return expect(promise).to.be.rejectedWith(ActiveUserError);
     });
 
     it('should throw an error if a username is not provided', function() {
@@ -335,7 +302,7 @@ describe('User', function () {
 
   describe('loginWithMIC', function() {
     afterEach(function() {
-      return User.setActiveUser(null);
+      return logoutUser.call(this);
     });
 
     it('should be a static method', function() {
@@ -371,12 +338,15 @@ describe('User', function () {
 
   describe('logout', function() {
     beforeEach(function() {
-      this.user = loginUser();
+      return loginUser.call(this).then(user => {
+        this.user = user;
+      });
     });
 
     afterEach(function() {
-      logoutUser();
-      delete this.user;
+      return logoutUser.call(this).then(() => {
+        delete this.user;
+      });
     });
 
     it('should be a method', function() {
@@ -384,16 +354,17 @@ describe('User', function () {
     });
 
     it('should logout a user when the user is not the active user', function() {
-      User.setActiveUser(null);
-      const promise = this.user.logout();
-      return expect(promise).to.be.fulfilled;
+      return logoutUser.call(this).then(() => {
+        const promise = this.user.logout();
+        return expect(promise).to.be.fulfilled;
+      });
     });
 
     it('should logout a user when the user is the active user', function() {
       nock(this.client.baseUrl)
         .post(`${this.user._pathname}/_logout`)
         .query(true)
-        .reply(200, null, {
+        .reply(204, null, {
           'content-type': 'application/json'
         });
 

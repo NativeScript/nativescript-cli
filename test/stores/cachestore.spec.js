@@ -14,11 +14,11 @@ const expect = chai.expect;
 
 describe('CacheStore', function() {
   before(function() {
-    return loginUser();
+    return loginUser.call(this);
   });
 
   after(function() {
-    return logoutUser();
+    return logoutUser.call(this);
   });
 
   before(function() {
@@ -61,6 +61,8 @@ describe('CacheStore', function() {
 
       return this.store.save(entity).then(entity => {
         this.entity = entity;
+      }).catch(error => {
+        console.log(error);
       });
     });
 

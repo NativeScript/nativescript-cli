@@ -1,9 +1,9 @@
-import Promise from 'babybird';
 import { HttpMethod, AuthType } from '../enums';
 import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import { Client } from '../client';
+import { NoActiveUserError } from '../errors';
 import { byteCount } from '../utils/string';
 import UrlPattern from 'url-pattern';
 import qs from 'qs';
@@ -97,7 +97,7 @@ const Auth = {
     const activeUser = client.user;
 
     if (!activeUser) {
-      throw new Error('There is not an active user.');
+      throw new NoActiveUserError('There is not an active user. Please login a user and retry the request.');
     }
 
     return {

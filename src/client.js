@@ -1,5 +1,4 @@
 import { KinveyError } from './errors';
-import { SyncManager } from './sync';
 import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
@@ -77,12 +76,6 @@ export class Client {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
-
-    /**
-     * @type {SyncManager}
-     */
-    this.syncManager = new SyncManager();
-    this.syncManager.client = this;
   }
 
   get baseUrl() {
@@ -94,18 +87,6 @@ export class Client {
 
   get user() {
     return localStorage.get(`${this.appKey}${userCollectionName}`);
-  }
-
-  set user(data) {
-    if (data) {
-      try {
-        return localStorage.set(`${this.appKey}${userCollectionName}`, data);
-      } catch (error) {
-        return false;
-      }
-    }
-
-    return localStorage.remove(`${this.appKey}${userCollectionName}`);
   }
 
   get socialIdentity() {

@@ -24,7 +24,7 @@ describe('Kinvey', function () {
 
   describe('ping()', function() {
     after(function() {
-      return logoutUser();
+      return logoutUser.call(this);
     });
 
     it('should respond', function() {
@@ -64,8 +64,7 @@ describe('Kinvey', function () {
           'content-type': 'application/json'
         });
 
-      loginUser();
-      return Kinvey.ping().then(response => {
+      return loginUser.call(this).then(() => Kinvey.ping()).then(response => {
         expect(response).to.deep.equal(reply);
       });
     });

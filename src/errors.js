@@ -35,5 +35,6 @@ export const InsufficientCredentialsError = Error.extend('InsufficientCredential
 export const InvalidCredentialsError = Error.extend('InvalidCredentialsError');
 export const KinveyError = Error.extend('KinveyError');
 export const NetworkConnectionError = Error.extend('NetworkConnectionError');
+export const NoActiveUserError = Error.extend('NoActiveUserError');
 export const NotFoundError = Error.extend('NotFoundError');
 export const NoResponseError = Error.extend('NoResponseError');

@@ -12,6 +12,7 @@ import assign from 'lodash/assign';
 import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const clientSymbol = Symbol();
 
 /**
  * The NetworkStore class is used to find, save, update, remove, count and group enitities
@@ -42,13 +43,25 @@ export class NetworkStore {
     this.client = Client.sharedInstance();
   }
 
+  get client() {
+    return this[clientSymbol];
+  }
+
+  set client(client) {
+    this[clientSymbol] = client;
+  }
+
   /**
    * The pathname for the store.
    *
    * @return  {string}                Pathname
    */
   get _pathname() {
-    let pathname = `/${appdataNamespace}/${this.client.appKey}`;
+    let pathname = `/${appdataNamespace}`;
+
+    if (this.client) {
+      pathname = `${pathname}/${this.client.appKey}`;
+    }
 
     if (this.name) {
       pathname = `${pathname}/${this.name}`;

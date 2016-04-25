@@ -24,7 +24,7 @@ beforeEach(function() {
   });
 });
 
-afterEach(function() {
+after(function() {
   delete this.client;
 });
 

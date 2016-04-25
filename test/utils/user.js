@@ -1,18 +1,38 @@
 import { User } from '../../src/user';
 import { randomString } from '../../src/utils/string';
+import nock from 'nock';
 
 export function loginUser() {
-  const user = new User({
-    _id: randomString(),
-    _kmd: {
-      authtoken: randomString()
-    }
-  });
-  return user.setAsActiveUser();
+  const user = new User();
+  user.client = this.client;
+  nock(this.client.baseUrl)
+    .post(`${user._pathname}/login`, () => true)
+    .query(true)
+    .reply(200, {
+      _id: randomString(),
+      _kmd: {
+        authtoken: randomString()
+      }
+    }, {
+      'content-type': 'application/json'
+    });
+  return user.login('test', 'test');
 }
 
 export function logoutUser() {
-  return User.setActiveUser(null);
+  const user = User.getActiveUser(this.client);
+
+  if (user) {
+    nock(this.client.baseUrl)
+      .post(`${user._pathname}/_logout`, () => true)
+      .query(true)
+      .reply(204, null, {
+        'content-type': 'application/json'
+      });
+    return user.logout();
+  }
+
+  return Promise.resolve();
 }
 
 // // Tests whether both deferreds and callbacks are supported on success.

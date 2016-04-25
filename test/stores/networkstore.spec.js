@@ -12,11 +12,11 @@ const expect = chai.expect;
 
 describe('NetworkStore', function() {
   before(function() {
-    return loginUser();
+    return loginUser.call(this);
   });
 
   after(function() {
-    return logoutUser();
+    return logoutUser.call(this);
   });
 
   before(function() {

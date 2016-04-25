@@ -1,4 +1,5 @@
 import Promise from 'babybird';
+import { Sync } from '../sync';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';
@@ -15,6 +16,7 @@ import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
 import differenceBy from 'lodash/differenceBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const syncEnabledSymbol = Symbol();
 
 /**
  * The CacheStore class is used to find, save, update, remove, count and group enitities
@@ -36,20 +38,35 @@ export class CacheStore extends NetworkStore {
      */
     this.ttl = undefined;
 
+    /**
+     * @type {Sync}
+     */
+    this.sync = new Sync();
+    this.sync.client = this.client;
+
     // Enable sync
     this.enableSync();
   }
 
+  get client() {
+    return super.client;
+  }
+
+  set client(client) {
+    super.client = client;
+    this.sync.client = client;
+  }
+
   disableSync() {
-    this._syncEnabled = false;
+    this[syncEnabledSymbol] = false;
   }
 
   enableSync() {
-    this._syncEnabled = true;
+    this[syncEnabledSymbol] = true;
   }
 
   isSyncEnabled() {
-    return !!this._syncEnabled;
+    return !!this[syncEnabledSymbol];
   }
 
   /**
@@ -509,7 +526,7 @@ export class CacheStore extends NetworkStore {
     }
 
     query.contains(idAttribute, [this.name]);
-    return this.client.syncManager.execute(query, options);
+    return this.sync.execute(query, options);
   }
 
   /**
@@ -598,7 +615,7 @@ export class CacheStore extends NetworkStore {
     }
 
     query.contains(idAttribute, [this.name]);
-    return this.client.syncManager.count(query, options);
+    return this.sync.count(query, options);
   }
 
   /**
@@ -642,6 +659,6 @@ export class CacheStore extends NetworkStore {
       return null;
     }
 
-    return this.client.syncManager.notify(this.name, entities, options);
+    return this.sync.notify(this.name, entities, options);
   }
 }

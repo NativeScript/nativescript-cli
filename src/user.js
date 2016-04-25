@@ -12,6 +12,8 @@ import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isObject from 'lodash/isObject';
+import localStorage from 'local-storage';
+const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -25,6 +27,19 @@ let hello;
 
 if (typeof window !== 'undefined') {
   hello = require('hellojs');
+}
+
+// Set the active user
+function setActiveUser(data) {
+  if (data) {
+    try {
+      return localStorage.set(`${this.client.appKey}${userCollectionName}`, data);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return localStorage.remove(`${this.client.appKey}${userCollectionName}`);
 }
 
 /**
@@ -197,48 +212,6 @@ export class User {
   }
 
   /**
-   * Sets the active user. You can optionally provide a client to
-   * set the active user on. Only one active user per client is
-   * allowed.
-   *
-   * @param  {?(User|Object)}      [user]                               User to set as the active user.
-   * @param  {Client}              [client=Client.sharedInstance()]     The client to use to set the active user on.
-   * @return {Promise<User>}                                            The active user on the client. The active user
-   *                                                                    could be null if one does not exist.
-   *
-   * @example
-   * var user = new User();
-   * var promise = User.setActiveUser(user);
-   * promise.then(function(activeUser) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  static setActiveUser(user, client = Client.sharedInstance()) {
-    const data = result(user, 'toJSON', user);
-    client.user = data;
-    return User.getActiveUser(client);
-  }
-
-  /**
-   * Set this user as the active user.
-   *
-   * @return {Promise<User>}  The active user.
-   *
-   * @example
-   * var promise = user.setAsActiveUser();
-   * promise.then(function(activeUser) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  setAsActiveUser() {
-    return User.setActiveUser(this, this.client);
-  }
-
-  /**
    * Checks if this user is the active user.
    *
    * @return {Promise<Boolean>} True or false if this user is the active user.
@@ -339,7 +312,8 @@ export class User {
 
     const promise = request.execute().then(response => {
       this.data = response.data;
-      return this.setAsActiveUser();
+      setActiveUser.call(this, this.data);
+      return User.getActiveUser(this.client);
     });
 
     return promise;
@@ -420,7 +394,7 @@ export class User {
     const promise = request.execute().catch(() => null).then(() => {
       const isActive = this.isActive();
       if (isActive) {
-        return User.setActiveUser(null, this.client);
+        setActiveUser.call(this, null);
       }
 
       return null;
@@ -714,7 +688,7 @@ export class User {
       this.data = response.data;
 
       if (options.state === true) {
-        return this.setAsActiveUser();
+        setActiveUser.call(this, this.data);
       }
 
       return this;
@@ -735,7 +709,7 @@ export class User {
       this.data = data;
 
       if (this.isActive()) {
-        return this.setAsActiveUser();
+        setActiveUser.call(this, this.data);
       }
 
       return this;
@@ -766,7 +740,8 @@ export class User {
         }
       }
 
-      return this.setAsActiveUser();
+      setActiveUser.call(this, this.data);
+      return this;
     });
 
     return promise;
