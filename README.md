@@ -153,9 +153,9 @@ sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/native
 * For iOS development
 	* [Latest Xcode][12]
 	* [Xcode command-line tools][12]
-	* [xcodeproj ruby gem][13]
-	* (Optional) [CocoaPods 0.38.2][CocoaPods 0.38.2]
-	* (Optional) [Xcproj][Xcproj]
+	* [xcodeproj ruby gem][13] - can be installed by running `$ [sudo] gem install xcodeproj` in the terminal
+	* (Optional) [CocoaPods][CocoaPods]
+	* (Optional) [xcproj][xcproj] - you only need this command line tool in case you have Xcode 7.3 or later installed and CocoaPods 0.39.0 or earlier. `xcproj` can either be installed by running `$ brew install xcproj` in the terminal, or by building it manually with xcodebuild
 * For Android development
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Android SDK 22][Android SDK 22] or a later stable official release
@@ -608,8 +608,8 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [JDK 8]: http://www.oracle.com/technetwork/java/javase/downloads/index.html
 [Android SDK 22]: http://developer.android.com/sdk/index.html
 [Genymotion]: https://www.genymotion.com/#!/
-[CocoaPods 0.38.2]: https://guides.cocoapods.org/using/getting-started.html#getting-started
-[Xcproj]: https://github.com/0xced/xcproj#installation
+[CocoaPods]: https://guides.cocoapods.org/using/getting-started.html#getting-started
+[xcproj]: https://github.com/0xced/xcproj#installation
 [Android SDK Build-tools 23.0.0]: http://developer.android.com/sdk/index.html
 [Local Maven repository for Support Libraries]: http://developer.android.com/sdk/index.html
 ![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel)

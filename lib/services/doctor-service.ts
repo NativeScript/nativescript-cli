@@ -89,13 +89,6 @@ class DoctorService implements IDoctorService {
 					}
 				}
 
-				if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) === null) {
-					this.$logger.warn(`WARNING: Your current CocoaPods version is not a valid semver string.`);
-					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
-						+ `To be able to build such projects, verify that you have installed a CocoaPods version which is a valid semver string and is at least ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
-					result = true;
-				}
-
 				if (sysInfo.cocoapodVer && semver.valid(sysInfo.cocoapodVer) && semver.lt(sysInfo.cocoapodVer, DoctorService.MIN_SUPPORTED_POD_VERSION)) {
 					this.$logger.warn(`WARNING: Your current CocoaPods version is earlier than ${DoctorService.MIN_SUPPORTED_POD_VERSION}.`);
 					this.$logger.out("You will not be able to build your projects for iOS if they contain plugin with CocoaPod file." + EOL
