@@ -1,5 +1,5 @@
 import Promise from 'babybird';
-import { Sync } from '../sync';
+import Sync from '../sync';
 import { NetworkStore } from './networkstore';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError, NotFoundError } from '../errors';

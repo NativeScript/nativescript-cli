@@ -1,5 +1,5 @@
 {
   "presets": ["es2015", "stage-2"],
   "ignore": "/\/node_modules\/(?!qs\/)/",
-  "plugins": ["transform-regenerator"]
+  "plugins": ["transform-regenerator", "transform-inline-environment-variables"]
 }

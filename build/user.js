@@ -45,23 +45,41 @@ var _isObject = require('lodash/isObject');
 
 var _isObject2 = _interopRequireDefault(_isObject);
 
+var _localStorage = require('local-storage');
+
+var _localStorage2 = _interopRequireDefault(_localStorage);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-var usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-var rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
-var socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
-var usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
-var emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
+var userCollectionName = undefined || 'kinvey_user';
+var appdataNamespace = undefined || 'appdata';
+var usersNamespace = undefined || 'user';
+var rpcNamespace = undefined || 'rpc';
+var idAttribute = undefined || '_id';
+var kmdAttribute = undefined || '_kmd';
+var socialIdentityAttribute = undefined || '_socialIdentity';
+var usernameAttribute = undefined || 'username';
+var emailAttribute = undefined || 'email';
 var supportedIdentities = ['facebook', 'google', 'linkedIn'];
 var hello = void 0;
 
 if (typeof window !== 'undefined') {
-  hello = require('hellojs');
+  hello = require('hellojs'); // eslint-disable-line global-require
+}
+
+// Set the active user
+function setActiveUser(data) {
+  if (data) {
+    try {
+      return _localStorage2.default.set('' + this.client.appKey + userCollectionName, data);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return _localStorage2.default.remove('' + this.client.appKey + userCollectionName);
 }
 
 /**
@@ -112,25 +130,8 @@ var User = exports.User = function () {
 
 
   _createClass(User, [{
-    key: 'setAsActiveUser',
+    key: 'isActive',
 
-
-    /**
-     * Set this user as the active user.
-     *
-     * @return {Promise<User>}  The active user.
-     *
-     * @example
-     * var promise = user.setAsActiveUser();
-     * promise.then(function(activeUser) {
-     *   ...
-     * }).catch(function(error) {
-     *   ...
-     * });
-     */
-    value: function setAsActiveUser() {
-      return User.setActiveUser(this, this.client);
-    }
 
     /**
      * Checks if this user is the active user.
@@ -145,9 +146,6 @@ var User = exports.User = function () {
      *   ...
      * });
      */
-
-  }, {
-    key: 'isActive',
     value: function isActive() {
       var activeUser = User.getActiveUser(this.client);
 
@@ -229,7 +227,8 @@ var User = exports.User = function () {
 
       var promise = request.execute().then(function (response) {
         _this.data = response.data;
-        return _this.setAsActiveUser();
+        setActiveUser.call(_this, _this.data);
+        return User.getActiveUser(_this.client);
       });
 
       return promise;
@@ -322,7 +321,7 @@ var User = exports.User = function () {
       }).then(function () {
         var isActive = _this3.isActive();
         if (isActive) {
-          return User.setActiveUser(null, _this3.client);
+          setActiveUser.call(_this3, null);
         }
 
         return null;
@@ -574,7 +573,7 @@ var User = exports.User = function () {
         _this7.data = response.data;
 
         if (options.state === true) {
-          return _this7.setAsActiveUser();
+          setActiveUser.call(_this7, _this7.data);
         }
 
         return _this7;
@@ -599,7 +598,7 @@ var User = exports.User = function () {
         _this8.data = data;
 
         if (_this8.isActive()) {
-          return _this8.setAsActiveUser();
+          setActiveUser.call(_this8, _this8.data);
         }
 
         return _this8;
@@ -635,7 +634,8 @@ var User = exports.User = function () {
           }
         }
 
-        return _this9.setAsActiveUser();
+        setActiveUser.call(_this9, _this9.data);
+        return _this9;
       });
 
       return promise;
@@ -891,36 +891,6 @@ var User = exports.User = function () {
       }
 
       return user;
-    }
-
-    /**
-     * Sets the active user. You can optionally provide a client to
-     * set the active user on. Only one active user per client is
-     * allowed.
-     *
-     * @param  {?(User|Object)}      [user]                               User to set as the active user.
-     * @param  {Client}              [client=Client.sharedInstance()]     The client to use to set the active user on.
-     * @return {Promise<User>}                                            The active user on the client. The active user
-     *                                                                    could be null if one does not exist.
-     *
-     * @example
-     * var user = new User();
-     * var promise = User.setActiveUser(user);
-     * promise.then(function(activeUser) {
-     *   ...
-     * }).catch(function(error) {
-     *   ...
-     * });
-     */
-
-  }, {
-    key: 'setActiveUser',
-    value: function setActiveUser(user) {
-      var client = arguments.length <= 1 || arguments[1] === undefined ? _client.Client.sharedInstance() : arguments[1];
-
-      var data = (0, _result2.default)(user, 'toJSON', user);
-      client.user = data;
-      return User.getActiveUser(client);
     }
   }, {
     key: 'login',

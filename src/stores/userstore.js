@@ -37,11 +37,9 @@ export class UserStore extends NetworkStore {
       if (options._identity) {
         const socialIdentity = user[socialIdentityAttribute];
         if (socialIdentity) {
-          for (const identity in socialIdentity) {
-            if (socialIdentity.hasOwnProperty(identity)) {
-              if (socialIdentity[identity] && options._identity !== identity) {
-                delete socialIdentity[identity];
-              }
+          for (const [key] of socialIdentity) {
+            if (socialIdentity[key] && options._identity !== key) {
+              delete socialIdentity[key];
             }
           }
         }

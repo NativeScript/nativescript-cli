@@ -1,9 +1,10 @@
 import Promise from 'babybird';
 import { HttpMethod, AuthType } from './enums';
-import { InsufficientCredentialsError, NotFoundError, KinveyError } from './errors';
+import { InsufficientCredentialsError, NotFoundError, KinveyError, SyncError } from './errors';
 import { Metadata } from './metadata';
 import { LocalRequest } from './requests/local';
 import { NetworkRequest } from './requests/network';
+import { Client } from './client';
 import url from 'url';
 import map from 'lodash/map';
 import reduce from 'lodash/reduce';
@@ -16,12 +17,38 @@ const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sy
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
-export class Sync {
+export default class Sync {
+  constructor() {
+    /**
+     * @private
+     * @type {Client}
+     */
+    this.client = Client.sharedInstance();
+  }
+
   get _pathname() {
     return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}`;
   }
 
+  /**
+   * Count the number of entities that are waiting to be synced. A query can be
+   * provided to only count a subset of entities.
+   *
+   * @param   {Query}         [query]                     Query
+   * @param   {Object}        [options={}]                Options
+   * @param   {Number}        [options.timeout]           Timeout for the request.
+   * @return  {Promise}                                   Promise
+   *
+   * @example
+   * var sync = new Sync();
+   * var promise = sync.count().then(function(count) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   async count(query, options = {}) {
+    // Get all sync entities
     const request = new LocalRequest({
       method: HttpMethod.GET,
       url: url.format({
@@ -34,20 +61,48 @@ export class Sync {
       timeout: options.timeout,
       client: this.client
     });
-
     const syncEntities = await request.execute().then(response => response.data);
-    return reduce(syncEntities, (sum, entity) => sum + entity.size, 0);
+
+    // Add up the size of each sync entity and return the result
+    return reduce(syncEntities, (sum, syncEntity) => sum + syncEntity.size, 0);
   }
 
+  /**
+   * Add entities to the sync table. You can add a single entity or an array
+   * of entities. Each entity must have an _id.
+   *
+   * @param   {String}        name                        Collection name for entities.
+   * @param   {Object|Array}  entiies                     Entities to add to the sync table.
+   * @param   {Object}        [options={}]                Options
+   * @param   {Number}        [options.timeout]           Timeout for the request.
+   * @return  {Promise}                                   Promise
+   *
+   * @example
+   * var entities = [{
+   *   _id: '1',
+   *   prop: 'value'
+   * }];
+   * var promise = sync.notify('collectionName', entities).then(function(entities) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   async notify(name, entities, options = {}) {
+    let singular = false;
+
+    // Check that a name was provided
     if (!name) {
-      throw new KinveyError('Unable to add entities to the sync table for a store with no name.');
+      throw new KinveyError('A name for a collection must be provided to add entities to the sync table.');
     }
 
+    // Just return null if nothing was provided
+    // to be added to the sync table
     if (!entities) {
       return null;
     }
 
+    // Get the sync entity for the collection
     const getRequest = new LocalRequest({
       method: HttpMethod.GET,
       url: url.format({
@@ -74,22 +129,30 @@ export class Sync {
       }
     }
 
+    // Cast entities to an array
     if (!isArray(entities)) {
+      singular = true;
       entities = [entities];
     }
 
+    // Loop through all the entities and update
+    // the sync entity
     forEach(entities, entity => {
       const id = entity[idAttribute];
 
-      if (id) {
-        if (!syncEntity.entities.hasOwnProperty(id)) {
-          syncEntity.size = syncEntity.size + 1;
-        }
-
-        syncEntity.entities[id] = {};
+      if (!id) {
+        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
+          'added to the sync table.', entity);
       }
+
+      if (!syncEntity.entities.hasOwnProperty(id)) {
+        syncEntity.size = syncEntity.size + 1;
+      }
+
+      syncEntity.entities[id] = {};
     });
 
+    // Update the sync entity in the sync table
     const putRequest = new LocalRequest({
       method: HttpMethod.PUT,
       url: url.format({
@@ -103,7 +166,9 @@ export class Sync {
       client: this.client
     });
     await putRequest.execute();
-    return entities;
+
+    // Return the entities that were added to the sync table
+    return singular ? entities[0] : entities;
   }
 
   async execute(query, options = {}) {
@@ -478,5 +543,21 @@ export class Sync {
         return results.length === 1 ? resolve(results[0]) : resolve(results);
       });
     });
+  }
+
+  clear(query, options = {}) {
+    const request = new LocalRequest({
+      method: HttpMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this._pathname
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+    return request.execute();
   }
 }

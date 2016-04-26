@@ -44,41 +44,49 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
     value: function execute() {
       var _this2 = this;
 
-      var promise = _get(Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this).then(function () {
+      return _get(Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this).then(function () {
         return _this2.rack.execute(_this2);
       }).then(function (response) {
+        // Throw a NoResponseError if we did not receive
+        // a response
         if (!response) {
           throw new _errors.NoResponseError();
         }
 
+        // Make sure the response is an instance of the
+        // Response class
         if (!(response instanceof _response.Response)) {
-          return new _response.Response({
+          response = new _response.Response({
             statusCode: response.statusCode,
             headers: response.headers,
             data: response.data
           });
         }
 
+        // Return the response
         return response;
       }).then(function (response) {
+        // Flip the executing flag to false
+        _this2.executing = false;
+
+        // Throw the response error if we did not receive
+        // a successfull response
         if (!response.isSuccess()) {
           throw response.error;
         }
 
+        // Just return the response
         return response;
       });
-
-      return promise;
     }
   }, {
     key: 'cancel',
     value: function cancel() {
       var _this3 = this;
 
-      var promise = _get(Object.getPrototypeOf(LocalRequest.prototype), 'cancel', this).call(this).then(function () {
+      return _get(Object.getPrototypeOf(LocalRequest.prototype), 'cancel', this).call(this).then(function () {
         return _this3.rack.cancel();
       });
-      return promise;
     }
   }]);
 

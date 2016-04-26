@@ -7,11 +7,17 @@ exports.CacheStore = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
+
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _babybird = require('babybird');
 
 var _babybird2 = _interopRequireDefault(_babybird);
+
+var _sync2 = require('../sync');
+
+var _sync3 = _interopRequireDefault(_sync2);
 
 var _networkstore = require('./networkstore');
 
@@ -67,7 +73,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var idAttribute = undefined || '_id';
+var syncEnabledSymbol = Symbol();
 
 /**
  * The CacheStore class is used to find, save, update, remove, count and group enitities
@@ -96,6 +103,12 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
     _this.ttl = undefined;
 
+    /**
+     * @type {Sync}
+     */
+    _this.sync = new _sync3.default();
+    _this.sync.client = _this.client;
+
     // Enable sync
     _this.enableSync();
     return _this;
@@ -104,17 +117,17 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
   _createClass(CacheStore, [{
     key: 'disableSync',
     value: function disableSync() {
-      this._syncEnabled = false;
+      this[syncEnabledSymbol] = false;
     }
   }, {
     key: 'enableSync',
     value: function enableSync() {
-      this._syncEnabled = true;
+      this[syncEnabledSymbol] = true;
     }
   }, {
     key: 'isSyncEnabled',
     value: function isSyncEnabled() {
-      return !!this._syncEnabled;
+      return !!this[syncEnabledSymbol];
     }
 
     /**
@@ -864,7 +877,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
       }
 
       query.contains(idAttribute, [this.name]);
-      return this.client.syncManager.execute(query, options);
+      return this.sync.execute(query, options);
     }
 
     /**
@@ -1023,7 +1036,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
       }
 
       query.contains(idAttribute, [this.name]);
-      return this.client.syncManager.count(query, options);
+      return this.sync.count(query, options);
     }
 
     /**
@@ -1087,7 +1100,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                 return _context10.abrupt('return', null);
 
               case 2:
-                return _context10.abrupt('return', this.client.syncManager.notify(this.name, entities, options));
+                return _context10.abrupt('return', this.sync.notify(this.name, entities, options));
 
               case 3:
               case 'end':
@@ -1103,6 +1116,15 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
       return _sync;
     }()
+  }, {
+    key: 'client',
+    get: function get() {
+      return _get(Object.getPrototypeOf(CacheStore.prototype), 'client', this);
+    },
+    set: function set(client) {
+      _set(Object.getPrototypeOf(CacheStore.prototype), 'client', client, this);
+      this.sync.client = client;
+    }
   }]);
 
   return CacheStore;

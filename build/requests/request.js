@@ -11,10 +11,6 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _enums = require('../enums');
 
 var _device = require('../utils/device');
@@ -24,6 +20,8 @@ var _properties = require('./properties');
 var _rack = require('../rack/rack');
 
 var _client = require('../client');
+
+var _errors = require('../errors');
 
 var _string = require('../utils/string');
 
@@ -73,9 +71,11 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+var kmdAttribute = undefined || '_kmd';
 
 var Auth = {
   /**
@@ -163,7 +163,7 @@ var Auth = {
     var activeUser = client.user;
 
     if (!activeUser) {
-      throw new Error('There is not an active user.');
+      throw new _errors.NoActiveUserError('There is not an active user. Please login a user and retry the request.');
     }
 
     return {
@@ -188,7 +188,7 @@ var Request = exports.Request = function () {
       headers: {},
       url: '',
       data: null,
-      timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
+      timeout: undefined || 10000,
       followRedirect: true
     }, options);
 
@@ -295,27 +295,42 @@ var Request = exports.Request = function () {
   }, {
     key: 'isExecuting',
     value: function isExecuting() {
-      return this.executing === true;
+      return !!this.executing;
     }
   }, {
     key: 'execute',
-    value: function execute() {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                if (!this.isExecuting()) {
+                  _context.next = 2;
+                  break;
+                }
 
-      if (this.executing) {
-        return _babybird2.default.reject(new Error('Unable to execute the request. The request is already executing.'));
+                throw new Error('Unable to execute the request. The request is already executing.');
+
+              case 2:
+
+                // Flip the executing flag to true
+                this.executing = true;
+
+              case 3:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function execute() {
+        return ref.apply(this, arguments);
       }
 
-      this.executing = _babybird2.default.resolve().then(function (response) {
-        _this2.executing = false;
-        return response;
-      }).catch(function (error) {
-        _this2.executing = false;
-        throw error;
-      });
-
-      return this.executing;
-    }
+      return execute;
+    }()
   }, {
     key: 'toJSON',
     value: function toJSON() {
@@ -406,7 +421,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
 
     _classCallCheck(this, KinveyRequest);
 
-    var _this3 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
+    var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
 
     options = (0, _assign2.default)({
       authType: _enums.AuthType.None,
@@ -415,14 +430,14 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       client: _client.Client.sharedInstance()
     }, options);
 
-    _this3.rack = new _rack.KinveyRack();
-    _this3.authType = options.authType;
-    _this3.properties = options.properties;
-    _this3.query = (0, _result2.default)(options.query, 'toJSON', options.query);
-    _this3.client = options.client;
+    _this2.rack = new _rack.KinveyRack();
+    _this2.authType = options.authType;
+    _this2.properties = options.properties;
+    _this2.query = (0, _result2.default)(options.query, 'toJSON', options.query);
+    _this2.client = options.client;
 
     var headers = {};
-    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
+    headers['X-Kinvey-Api-Version'] = undefined || 3;
     headers['X-Kinvey-Device-Information'] = JSON.stringify(_device.Device.toJSON());
 
     if (options.contentType) {
@@ -438,8 +453,8 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       headers['X-Kinvey-ResponseWrapper'] = true;
     }
 
-    _this3.addHeaders(headers);
-    return _this3;
+    _this2.addHeaders(headers);
+    return _this2;
   }
 
   _createClass(KinveyRequest, [{
@@ -451,14 +466,12 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
         this.addHeader(authorizationHeader);
       }
 
-      var promise = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this);
-      return promise;
+      return _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this);
     }
   }, {
     key: 'cancel',
     value: function cancel() {
-      var promise = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'cancel', this).call(this);
-      return promise;
+      return _get(Object.getPrototypeOf(KinveyRequest.prototype), 'cancel', this).call(this);
     }
   }, {
     key: 'toJSON',
@@ -487,7 +500,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
         delete customProperties.appVersion;
         var customPropertiesHeader = JSON.stringify(customProperties);
         var customPropertiesByteCount = (0, _string.byteCount)(customPropertiesHeader);
-        var customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
+        var customPropertiesMaxBytesAllowed = undefined || 2000;
 
         if (customPropertiesByteCount >= customPropertiesMaxBytesAllowed) {
           throw new Error('The custom properties are ' + customPropertiesByteCount + ' bytes.' + ('It must be less then ' + customPropertiesMaxBytesAllowed + ' bytes.'), 'Please remove some custom properties.');

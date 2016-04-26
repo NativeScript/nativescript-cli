@@ -55,8 +55,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+var idAttribute = undefined || '_id';
+var kmdAttribute = undefined || '_kmd';
 
 /**
  * @private
@@ -259,7 +259,9 @@ var DB = exports.DB = function () {
 
       // Removing should not take the query sort, limit, and skip into account.
       if (query) {
-        query.sort(null).limit(null).skip(0);
+        query.sort = null;
+        query.limit = null;
+        query.skip = 0;
       }
 
       var promise = this.find(collection, query).then(function (entities) {

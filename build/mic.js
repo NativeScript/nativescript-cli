@@ -37,8 +37,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
-var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+var authPathname = undefined || '/oauth/auth';
+var tokenPathname = undefined || '/oauth/token';
 
 /**
  * @private
@@ -51,8 +51,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
     _classCallCheck(this, MobileIdentityConnect);
 
     this.client = new _client.Client({
-      protocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
-      host: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
+      protocol: undefined || 'https:',
+      host: undefined || 'auth.kinvey.com',
       appKey: client.appKey,
       appSecret: client.appSecret,
       masterSecret: client.masterSecret,
@@ -290,7 +290,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
   }], [{
     key: 'identity',
     get: function get() {
-      return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+      return undefined || 'kinveyAuth';
     }
   }]);
 

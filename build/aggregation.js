@@ -9,7 +9,7 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
-var _query2 = require('./query');
+var _query = require('./query');
 
 var _result = require('lodash/result');
 
@@ -23,13 +23,13 @@ var _forEach = require('lodash/forEach');
 
 var _forEach2 = _interopRequireDefault(_forEach);
 
-var _isObject = require('lodash/isObject');
-
-var _isObject2 = _interopRequireDefault(_isObject);
-
 var _isString = require('lodash/isString');
 
 var _isString2 = _interopRequireDefault(_isString);
+
+var _isObject = require('lodash/isObject');
+
+var _isObject2 = _interopRequireDefault(_isObject);
 
 var _isFunction = require('lodash/isFunction');
 
@@ -39,7 +39,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Aggregation = function () {
+var Aggregation = exports.Aggregation = function () {
   function Aggregation(options) {
     _classCallCheck(this, Aggregation);
 
@@ -47,44 +47,19 @@ var Aggregation = function () {
       query: null,
       initial: {},
       key: {},
-      reduce: function () {}.toString()
+      reduceFn: function () {}.toString()
     }, options);
 
-    this.query(options.query);
-    this._initial = options.initial;
-    this._key = options.key;
-    this._reduce = options.reduce;
+    this.query = options.query;
+    this.initial = options.initial;
+    this.key = options.key;
+    this.reduceFn = options.reduceFn;
   }
 
   _createClass(Aggregation, [{
     key: 'by',
     value: function by(field) {
-      this._key[field] = true;
-      return this;
-    }
-  }, {
-    key: 'initial',
-    value: function initial(objectOrKey, value) {
-      if (typeof value === 'undefined' && !(0, _isObject2.default)(objectOrKey)) {
-        throw new _errors.KinveyError('objectOrKey argument must be an Object.');
-      }
-
-      if ((0, _isObject2.default)(objectOrKey)) {
-        this._initial = objectOrKey;
-      } else {
-        this._initial[objectOrKey] = value;
-      }
-
-      return this;
-    }
-  }, {
-    key: 'query',
-    value: function query(_query) {
-      if (_query && !(_query instanceof _query2.Query)) {
-        _query = new _query2.Query((0, _result2.default)(_query, 'toJSON', _query));
-      }
-
-      this._query = _query;
+      this.key[field] = true;
       return this;
     }
   }, {
@@ -95,11 +70,11 @@ var Aggregation = function () {
       var groups = {};
       var response = [];
       var aggregation = this.toJSON();
-      var reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-      aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
+      var reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+      aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
 
-      if (this._query) {
-        entities = this._query.process(entities);
+      if (this.query) {
+        entities = this.query.process(entities);
       }
 
       (0, _forEach2.default)(entities, function (entity) {
@@ -131,8 +106,48 @@ var Aggregation = function () {
       return response;
     }
   }, {
-    key: 'reduce',
-    value: function reduce(fn) {
+    key: 'toJSON',
+    value: function toJSON() {
+      var json = {
+        key: this.key,
+        initial: this.initial,
+        reduceFn: this.reduceFn,
+        condition: this.query ? this.query.toJSON().filter : {},
+        query: this.query ? this.query.toJSON() : null
+      };
+
+      return json;
+    }
+  }, {
+    key: 'initial',
+    get: function get() {
+      return this.aggregationInitial;
+    },
+    set: function set(initial) {
+      if (!(0, _isObject2.default)(initial)) {
+        throw new _errors.KinveyError('initial must be an Object.');
+      }
+
+      this.aggregationInitial = initial;
+    }
+  }, {
+    key: 'query',
+    get: function get() {
+      return this.aggregationQuery;
+    },
+    set: function set(query) {
+      if (query && !(query instanceof _query.Query)) {
+        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+      }
+
+      this.aggregationQuery = query;
+    }
+  }, {
+    key: 'reduceFn',
+    get: function get() {
+      return this.aggregationReduceFn;
+    },
+    set: function set(fn) {
       if ((0, _isFunction2.default)(fn)) {
         fn = fn.toString();
       }
@@ -141,21 +156,7 @@ var Aggregation = function () {
         throw new _errors.KinveyError('fn argument must be of type function or string.');
       }
 
-      this._reduce = fn;
-      return this;
-    }
-  }, {
-    key: 'toJSON',
-    value: function toJSON() {
-      var json = {
-        key: this._key,
-        initial: this._initial,
-        reduce: this._reduce,
-        condition: this._query ? this._query.toJSON().filter : {},
-        query: this._query ? this._query.toJSON() : null
-      };
-
-      return json;
+      this.aggregationReduceFn = fn;
     }
   }], [{
     key: 'count',
@@ -168,11 +169,11 @@ var Aggregation = function () {
         aggregation.by(field);
       }
 
-      aggregation.initial({ result: 0 });
-      aggregation.reduce(function (doc, out) {
+      aggregation.initial = { result: 0 };
+      aggregation.reduceFn = function (doc, out) {
         out.result += 1;
         return out;
-      });
+      };
       return aggregation;
     }
   }, {
@@ -183,8 +184,10 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial({ result: 0 });
-      aggregation.reduce('function(doc, out) { ' + (' out.result += doc["' + field + '"]; ') + '}');
+      aggregation.initial = { result: 0 };
+      aggregation.reduceFn = function (doc, out) {
+        out.result += doc['\'' + field + '\''];
+      };
       return aggregation;
     }
   }, {
@@ -195,8 +198,10 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial({ result: Infinity });
-      aggregation.reduce('function(doc, out) { ' + (' out.result = Math.min(out.result, doc["' + field + '"]); ') + '}');
+      aggregation.initial = { result: Infinity };
+      aggregation.reduceFn = function (doc, out) {
+        out.result = Math.min(out.result, doc['\'' + field + '\'']);
+      };
       return aggregation;
     }
   }, {
@@ -207,8 +212,10 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial({ result: -Infinity });
-      aggregation.reduce('function(doc, out) { ' + (' out.result = Math.max(out.result, doc["' + field + '"]); ') + '}');
+      aggregation.initial = { result: -Infinity };
+      aggregation.reduceFn = function (doc, out) {
+        out.result = Math.max(out.result, doc['\'' + field + '\'']);
+      };
       return aggregation;
     }
   }, {
@@ -219,13 +226,14 @@ var Aggregation = function () {
       field = field.replace('\'', '\\\'');
 
       var aggregation = new Aggregation();
-      aggregation.initial({ count: 0, result: 0 });
-      aggregation.reduce('function(doc, out) { ' + (' out.result = (out.result * out.count + doc["' + field + '"]) / (out.count + 1);') + ' out.count += 1;' + '}');
+      aggregation.initial = { count: 0, result: 0 };
+      aggregation.reduceFn = function (doc, out) {
+        out.result = (out.result * out.count + doc['\'' + field + '\'']) / (out.count + 1);
+        out.count += 1;
+      };
       return aggregation;
     }
   }]);
 
   return Aggregation;
 }();
-
-exports.Aggregation = Aggregation;

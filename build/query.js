@@ -64,35 +64,35 @@ var Query = function () {
      *
      * @type {Array}
      */
-    this._fields = options.fields;
+    this.fields = options.fields;
 
     /**
      * The MongoDB query.
      *
      * @type {Object}
      */
-    this._filter = options.filter;
+    this.filter = options.filter;
 
     /**
      * The sorting order.
      *
      * @type {Object}
      */
-    this._sort = options.sort;
+    this.sort = options.sort;
 
     /**
      * Number of documents to select.
      *
      * @type {?Number}
      */
-    this._limit = options.limit;
+    this.limit = options.limit;
 
     /**
      * Number of documents to skip from the start.
      *
      * @type {Number}
      */
-    this._skip = options.skip;
+    this.skip = options.skip;
 
     /**
      * Maintain reference to the parent query in case the query is part of a
@@ -103,21 +103,21 @@ var Query = function () {
     this.parent = null;
   }
 
-  /**
-   * Adds an equal to filter to the query. Requires `field` to equal `value`.
-   * Any existing filters on `field` will be discarded.
-   * http://docs.mongodb.org/manual/reference/operators/#comparison
-   *
-   * @param   {String}        field     Field.
-   * @param   {*}             value     Value.
-   * @returns {Query}                   The query.
-   */
-
-
   _createClass(Query, [{
     key: 'equalTo',
+
+
+    /**
+     * Adds an equal to filter to the query. Requires `field` to equal `value`.
+     * Any existing filters on `field` will be discarded.
+     * http://docs.mongodb.org/manual/reference/operators/#comparison
+     *
+     * @param   {String}        field     Field.
+     * @param   {*}             value     Value.
+     * @returns {Query}                   The query.
+     */
     value: function equalTo(field, value) {
-      this._filter[field] = value;
+      this.filter[field] = value;
       return this;
     }
 
@@ -279,11 +279,11 @@ var Query = function () {
       }
 
       if (!(0, _isNumber2.default)(divisor)) {
-        throw new Error('Divisor must be a number.');
+        throw new Error('divisor must be a number');
       }
 
       if (!(0, _isNumber2.default)(remainder)) {
-        throw new Error('Remainder must be a number.');
+        throw new Error('remainder must be a number');
       }
 
       return this.addFilter(field, '$mod', [divisor, remainder]);
@@ -331,7 +331,7 @@ var Query = function () {
     key: 'near',
     value: function near(field, coord, maxDistance) {
       if (!(0, _isArray2.default)(coord) || !coord[0] || !coord[1]) {
-        throw new Error('coord argument must be of type: [number, number]');
+        throw new Error('coord must be a [number, number]');
       }
 
       coord[0] = parseFloat(coord[0]);
@@ -349,11 +349,11 @@ var Query = function () {
     key: 'withinBox',
     value: function withinBox(field, bottomLeftCoord, upperRightCoord) {
       if (!(0, _isArray2.default)(bottomLeftCoord) || !bottomLeftCoord[0] || !bottomLeftCoord[1]) {
-        throw new Error('bottomLeftCoord argument must be of type: [number, number]');
+        throw new Error('bottomLeftCoord must be a [number, number]');
       }
 
       if (!(0, _isArray2.default)(upperRightCoord) || !upperRightCoord[0] || !upperRightCoord[1]) {
-        throw new Error('upperRightCoord argument must be of type: [number, number]');
+        throw new Error('upperRightCoord must be a [number, number]');
       }
 
       bottomLeftCoord[0] = parseFloat(bottomLeftCoord[0]);
@@ -368,12 +368,12 @@ var Query = function () {
     key: 'withinPolygon',
     value: function withinPolygon(field, coords) {
       if (!(0, _isArray2.default)(coords) || coords.length > 3) {
-        throw new Error('coords argument must be of type: [[number, number]]');
+        throw new Error('coords must be [[number, number]]');
       }
 
       coords = coords.map(function (coord) {
         if (!coord[0] || !coord[1]) {
-          throw new Error('coords argument must be of type: [number, number]');
+          throw new Error('coords argument must be [number, number]');
         }
 
         return [parseFloat(coord[0]), parseFloat(coord[1])];
@@ -389,65 +389,10 @@ var Query = function () {
       }
 
       if (!(0, _isNumber2.default)(_size)) {
-        throw new Error('size argument must be a number');
+        throw new Error('size must be a number');
       }
 
       return this.addFilter(field, '$size', _size);
-    }
-  }, {
-    key: 'fields',
-    value: function fields(_fields) {
-      _fields = _fields || [];
-
-      if (!(0, _isArray2.default)(_fields)) {
-        throw new Error('fields argument must an Array.');
-      }
-
-      if (this.parent) {
-        this.parent.fields(_fields);
-      } else {
-        this._fields = _fields;
-      }
-
-      return this;
-    }
-  }, {
-    key: 'limit',
-    value: function limit(_limit) {
-      if ((0, _isString2.default)(_limit)) {
-        _limit = parseFloat(_limit);
-      }
-
-      if (_limit && !(0, _isNumber2.default)(_limit)) {
-        throw new Error('limit argument must be of type: number.');
-      }
-
-      if (this._parent) {
-        this.parent.limit(_limit);
-      } else {
-        this._limit = _limit;
-      }
-
-      return this;
-    }
-  }, {
-    key: 'skip',
-    value: function skip(_skip) {
-      if ((0, _isString2.default)(_skip)) {
-        _skip = parseFloat(_skip);
-      }
-
-      if (!(0, _isNumber2.default)(_skip)) {
-        throw new Error('skip argument must be of type: number.');
-      }
-
-      if (this.parent) {
-        this.parent.skip(_skip);
-      } else {
-        this._skip = _skip;
-      }
-
-      return this;
     }
   }, {
     key: 'ascending',
@@ -455,7 +400,7 @@ var Query = function () {
       if (this.parent) {
         this.parent.ascending(field);
       } else {
-        this._sort[field] = 1;
+        this.sort[field] = 1;
       }
 
       return this;
@@ -466,22 +411,7 @@ var Query = function () {
       if (this.parent) {
         this.parent.descending(field);
       } else {
-        this._sort[field] = -1;
-      }
-
-      return this;
-    }
-  }, {
-    key: 'sort',
-    value: function sort(_sort) {
-      if (_sort && !(0, _isObject2.default)(_sort)) {
-        throw new Error('sort argument must be of type: Object.');
-      }
-
-      if (this.parent) {
-        this.parent.sort(_sort);
-      } else {
-        this._sort = _sort || {};
+        this.sort[field] = -1;
       }
 
       return this;
@@ -499,11 +429,11 @@ var Query = function () {
   }, {
     key: 'addFilter',
     value: function addFilter(field, condition, values) {
-      if (!(0, _isObject2.default)(this._filter[field])) {
-        this._filter[field] = {};
+      if (!(0, _isObject2.default)(this.filter[field])) {
+        this.filter[field] = {};
       }
 
-      this._filter[field][condition] = values;
+      this.filter[field][condition] = values;
       return this;
     }
 
@@ -519,9 +449,9 @@ var Query = function () {
   }, {
     key: 'join',
     value: function join(operator, queries) {
-      var _this2 = this;
-
       var _this = this;
+
+      var that = this;
       var currentQuery = {};
 
       // Cast, validate, and parse arguments. If `queries` are supplied, obtain
@@ -543,26 +473,26 @@ var Query = function () {
       // This query is the right-hand side of the join expression, and will be
       // returned to allow for a fluent interface.
       if (queries.length === 0) {
-        _this = new Query();
-        queries = [_this.toJSON().filter];
-        _this.parent = this; // Required for operator precedence and `toJSON`.
+        that = new Query();
+        queries = [that.toJSON().filter];
+        that.parent = this; // Required for operator precedence and `toJSON`.
       }
 
       // Join operators operate on the top-level of `filter`. Since the `toJSON`
       // magic requires `filter` to be passed by reference, we cannot simply re-
       // assign `filter`. Instead, empty it without losing the reference.
-      var members = Object.keys(this._filter);
+      var members = Object.keys(this.filter);
       (0, _forEach2.default)(members, function (member) {
-        currentQuery[member] = _this2._filter[member];
-        delete _this2._filter[member];
+        currentQuery[member] = _this.filter[member];
+        delete _this.filter[member];
       });
 
       // `currentQuery` is the left-hand side query. Join with `queries`.
-      this._filter[operator] = [currentQuery].concat(queries);
+      this.filter[operator] = [currentQuery].concat(queries);
 
       // Return the current query if there are `queries`, and the new (empty)
       // `PrivateQuery` otherwise.
-      return _this;
+      return that;
     }
 
     /**
@@ -576,7 +506,7 @@ var Query = function () {
   }, {
     key: '_process',
     value: function _process(data) {
-      var _this3 = this;
+      var _this2 = this;
 
       if (data) {
         var _ret = function () {
@@ -586,7 +516,7 @@ var Query = function () {
           }
 
           // Apply the query
-          var json = _this3.toJSON();
+          var json = _this2.toJSON();
           data = (0, _sift2.default)(json.filter, data);
 
           // Remove fields
@@ -668,14 +598,96 @@ var Query = function () {
 
       // Return set of parameters.
       var json = {
-        fields: this._fields,
-        filter: this._filter,
-        sort: this._sort,
-        skip: this._skip,
-        limit: this._limit
+        fields: this.fields,
+        filter: this.filter,
+        sort: this.sort,
+        skip: this.skip,
+        limit: this.limit
       };
 
       return json;
+    }
+  }, {
+    key: 'fields',
+    get: function get() {
+      return this.queryFields;
+    },
+    set: function set(fields) {
+      fields = fields || [];
+
+      if (!(0, _isArray2.default)(fields)) {
+        throw new Error('fields must be an Array');
+      }
+
+      if (this.parent) {
+        this.parent.fields = fields;
+      } else {
+        this.queryFields = fields;
+      }
+    }
+  }, {
+    key: 'filter',
+    get: function get() {
+      return this.queryFilter;
+    },
+    set: function set(filter) {
+      this.queryFilter = filter;
+    }
+  }, {
+    key: 'sort',
+    get: function get() {
+      return this.querySort;
+    },
+    set: function set(sort) {
+      if (sort && !(0, _isObject2.default)(sort)) {
+        throw new Error('sort must an Object');
+      }
+
+      if (this.parent) {
+        this.parent.sort(sort);
+      } else {
+        this.querySort = sort || {};
+      }
+    }
+  }, {
+    key: 'limit',
+    get: function get() {
+      return this.queryLimit;
+    },
+    set: function set(limit) {
+      if ((0, _isString2.default)(limit)) {
+        limit = parseFloat(limit);
+      }
+
+      if (limit && !(0, _isNumber2.default)(limit)) {
+        throw new Error('limit must be a number');
+      }
+
+      if (this.parent) {
+        this.parent.limit = limit;
+      } else {
+        this.queryLimit = limit;
+      }
+    }
+  }, {
+    key: 'skip',
+    get: function get() {
+      return this.querySkip;
+    },
+    set: function set(skip) {
+      if ((0, _isString2.default)(skip)) {
+        skip = parseFloat(skip);
+      }
+
+      if (!(0, _isNumber2.default)(skip)) {
+        throw new Error('skip must be a number');
+      }
+
+      if (this.parent) {
+        this.parent.skip(skip);
+      } else {
+        this.querySkip = skip;
+      }
     }
   }]);
 

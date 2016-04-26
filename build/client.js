@@ -9,8 +9,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
-var _sync = require('./sync');
-
 var _localStorage = require('local-storage');
 
 var _localStorage2 = _interopRequireDefault(_localStorage);
@@ -31,9 +29,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
-var socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME || 'kinvey_socialIdentity';
-var pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
+var userCollectionName = undefined || 'kinvey_user';
+var socialIdentityCollectionName = undefined || 'kinvey_socialIdentity';
+var pushCollectionName = undefined || 'kinvey_push';
 var _sharedInstance = null;
 
 /**
@@ -70,8 +68,8 @@ var Client = exports.Client = function () {
     _classCallCheck(this, Client);
 
     options = (0, _assign2.default)({
-      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
-      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
+      protocol: undefined || 'https:',
+      host: undefined || 'baas.kinvey.com'
     }, options);
 
     if (options.hostname && (0, _isString2.default)(options.hostname)) {
@@ -109,12 +107,6 @@ var Client = exports.Client = function () {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
-
-    /**
-     * @type {SyncManager}
-     */
-    this.syncManager = new _sync.SyncManager();
-    this.syncManager.client = this;
   }
 
   _createClass(Client, [{
@@ -175,17 +167,6 @@ var Client = exports.Client = function () {
     key: 'user',
     get: function get() {
       return _localStorage2.default.get('' + this.appKey + userCollectionName);
-    },
-    set: function set(data) {
-      if (data) {
-        try {
-          return _localStorage2.default.set('' + this.appKey + userCollectionName, data);
-        } catch (error) {
-          return false;
-        }
-      }
-
-      return _localStorage2.default.remove('' + this.appKey + userCollectionName);
     }
   }, {
     key: 'socialIdentity',

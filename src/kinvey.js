@@ -7,46 +7,33 @@ import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
 import { DataStore } from './stores/datastore';
-import { Sync } from './sync';
+import Sync from './sync';
 import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
 import { NetworkRequest } from './requests/network';
 import url from 'url';
-import result from 'lodash/result';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+let client = null;
 
-class Kinvey {
+export class Kinvey {
   static get client() {
-    if (!Kinvey._client) {
+    if (!client) {
       throw new KinveyError('You have not initialized the library. ' +
         'Please call Kinvey.init() to initialize the library.');
     }
 
-    return Kinvey._client;
-  }
-
-  static set client(client) {
-    if (!client) {
-      throw new KinveyError('Client must not be undefined.');
-    }
-
-    if (!(client instanceof Client)) {
-      client = new Client(result(client, 'toJSON', client));
-    }
-
-    Kinvey._client = client;
+    return client;
   }
 
   /**
    * Initializes the library with your app's information.
    *
    * @param   {Object}        options                         Options
-   * @param   {string}        options.appKey                  My app key
-   * @param   {string}        [options.appSecret]             My app secret
-   * @param   {string}        [options.masterSecret]          My app's master secret
-   * @param   {string}        [options.encryptionKey]         My app's encryption key
-   * @param   {string}        [options.protocol]              The protocol of the client.
-   * @param   {string}        [options.host]                  The host of the client.
+   * @param   {string}        options.appKey                Kinvey App Key
+   * @param   {string}        [options.appSecret]             Kinvey App Secret
+   * @param   {string}        [options.masterSecret]          Kinvey Master Secret
+   * @param   {string}        [options.encryptionKey]         Your applications encryption key
+   * @param   {string}        [options.hostname]              Custom Kinvey API Hostname
    * @return  {Client}                                        An instance of Client.
    *
    * @throws  {KinveyError}  If an `options.appKey` is not provided.
@@ -59,18 +46,37 @@ class Kinvey {
    * });
    */
   static init(options) {
+    // Check that an appKey or appId was provided
     if (!options.appKey && !options.appId) {
       throw new KinveyError('No App Key was provided. ' +
         'Unable to create a new Client without an App Key.');
     }
 
+    // Check that an appSecret or masterSecret was provided
     if (!options.appSecret && !options.masterSecret) {
       throw new KinveyError('No App Secret or Master Secret was provided. ' +
         'Unable to create a new Client without an App Key.');
     }
 
-    Kinvey.client = Client.init(options);
-    return Kinvey.client;
+    // Initialize the client
+    client = Client.init(options);
+
+    // Add all the modules to the Kinvey namespace
+    Kinvey.Aggregation = Aggregation;
+    Kinvey.AuthorizationGrant = AuthorizationGrant;
+    Kinvey.CustomEndpoint = CustomEndpoint;
+    Kinvey.DataStore = DataStore;
+    Kinvey.DataStoreType = DataStoreType;
+    Kinvey.Log = Log;
+    Kinvey.Metadata = Metadata;
+    Kinvey.Promise = Promise;
+    Kinvey.Query = Query;
+    Kinvey.SocialIdentity = SocialIdentity;
+    Kinvey.Sync = Sync;
+    Kinvey.User = User;
+
+    // Return the client
+    return client;
   }
 
   /**
@@ -93,17 +99,3 @@ class Kinvey {
     return promise;
   }
 }
-
-Kinvey.Aggregation = Aggregation;
-Kinvey.AuthorizationGrant = AuthorizationGrant;
-Kinvey.CustomEndpoint = CustomEndpoint;
-Kinvey.DataStore = DataStore;
-Kinvey.DataStoreType = DataStoreType;
-Kinvey.Log = Log;
-Kinvey.Metadata = Metadata;
-Kinvey.Promise = Promise;
-Kinvey.Query = Query;
-Kinvey.SocialIdentity = SocialIdentity;
-Kinvey.Sync = Sync;
-Kinvey.User = User;
-export { Kinvey };

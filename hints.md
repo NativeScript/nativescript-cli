@@ -1,0 +1,2 @@
+- tag and push to repo to update bower
+- npm publish . --tag beta to update npm

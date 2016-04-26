@@ -5,7 +5,7 @@ install:
 	@echo "Installing Dependencies" && npm install
 
 release:
-	@./node_modules/.bin/gulp release
+	@./node_modules/.bin/gulp
 
 all: clean \
 	install \

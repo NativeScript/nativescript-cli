@@ -41,8 +41,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var filesNamespace = undefined || 'blob';
+var idAttribute = undefined || '_id';
 
 /**
  * The FilesStore class is used to find, save, update, remove, count and group files.

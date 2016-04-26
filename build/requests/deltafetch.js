@@ -61,10 +61,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
-var lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
-var maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
+var idAttribute = undefined || '_id';
+var kmdAttribute = undefined || '_kmd';
+var lmtAttribute = undefined || 'lmt';
+var maxIdsPerRequest = undefined || 200;
 
 /**
  * @private
@@ -114,7 +114,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
           var _ret = function () {
             var cacheDocuments = (0, _keyBy2.default)(cacheData, idAttribute);
             var query = new _query3.Query((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
-            query.fields([idAttribute, kmdAttribute]);
+            query.fields = [idAttribute, kmdAttribute];
             var networkRequest = new _network.NetworkRequest({
               method: _enums.HttpMethod.GET,
               url: _this2.url,

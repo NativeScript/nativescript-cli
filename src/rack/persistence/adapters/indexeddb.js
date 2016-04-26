@@ -13,7 +13,7 @@ const TransactionMode = {
 Object.freeze(TransactionMode);
 
 if (typeof window !== 'undefined') {
-  require('indexeddbshim');
+  require('indexeddbshim'); // eslint-disable-line global-require
   global.shimIndexedDB.__useShim();
 }
 

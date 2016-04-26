@@ -45,8 +45,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var appdataNamespace = undefined || 'appdata';
+var idAttribute = undefined || '_id';
+var clientSymbol = Symbol();
 
 /**
  * The NetworkStore class is used to find, save, update, remove, count and group enitities
@@ -80,13 +81,6 @@ var NetworkStore = exports.NetworkStore = function () {
      */
     this.client = _client.Client.sharedInstance();
   }
-
-  /**
-   * The pathname for the store.
-   *
-   * @return  {string}                Pathname
-   */
-
 
   _createClass(NetworkStore, [{
     key: 'find',
@@ -516,9 +510,28 @@ var NetworkStore = exports.NetworkStore = function () {
       return promise;
     }
   }, {
+    key: 'client',
+    get: function get() {
+      return this[clientSymbol];
+    },
+    set: function set(client) {
+      this[clientSymbol] = client;
+    }
+
+    /**
+     * The pathname for the store.
+     *
+     * @return  {string}                Pathname
+     */
+
+  }, {
     key: '_pathname',
     get: function get() {
-      var pathname = '/' + appdataNamespace + '/' + this.client.appKey;
+      var pathname = '/' + appdataNamespace;
+
+      if (this.client) {
+        pathname = pathname + '/' + this.client.appKey;
+      }
 
       if (this.name) {
         pathname = pathname + '/' + this.name;

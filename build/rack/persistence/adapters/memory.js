@@ -49,7 +49,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var idAttribute = undefined || '_id';
 var caches = [];
 
 _promiseQueue2.default.configure(_babybird2.default);

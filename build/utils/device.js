@@ -85,7 +85,7 @@ var Device = exports.Device = function () {
     key: 'toJSON',
     value: function toJSON() {
       if (isNode()) {
-        var os = require('os');
+        var os = require('os'); // eslint-disable-line global-require
 
         return {
           latform: {

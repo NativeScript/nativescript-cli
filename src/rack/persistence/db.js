@@ -197,7 +197,9 @@ export class DB {
 
     // Removing should not take the query sort, limit, and skip into account.
     if (query) {
-      query.sort(null).limit(null).skip(0);
+      query.sort = null;
+      query.limit = null;
+      query.skip = 0;
     }
 
     const promise = this.find(collection, query).then(entities => {

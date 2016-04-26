@@ -17,7 +17,9 @@ var _aggregation = require('./aggregation');
 
 var _client = require('./client');
 
-var _command = require('./command');
+var _endpoint = require('./endpoint');
+
+var _endpoint2 = _interopRequireDefault(_endpoint);
 
 var _log = require('./log');
 
@@ -29,6 +31,8 @@ var _datastore = require('./stores/datastore');
 
 var _sync = require('./sync');
 
+var _sync2 = _interopRequireDefault(_sync);
+
 var _user = require('./user');
 
 var _enums = require('./enums');
@@ -39,17 +43,14 @@ var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
 
-var _result = require('lodash/result');
-
-var _result2 = _interopRequireDefault(_result);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+var appdataNamespace = undefined || 'appdata';
+var client = null;
 
-var Kinvey = function () {
+var Kinvey = exports.Kinvey = function () {
   function Kinvey() {
     _classCallCheck(this, Kinvey);
   }
@@ -62,12 +63,11 @@ var Kinvey = function () {
      * Initializes the library with your app's information.
      *
      * @param   {Object}        options                         Options
-     * @param   {string}        options.appKey                  My app key
-     * @param   {string}        [options.appSecret]             My app secret
-     * @param   {string}        [options.masterSecret]          My app's master secret
-     * @param   {string}        [options.encryptionKey]         My app's encryption key
-     * @param   {string}        [options.protocol]              The protocol of the client.
-     * @param   {string}        [options.host]                  The host of the client.
+     * @param   {string}        options.appKey                Kinvey App Key
+     * @param   {string}        [options.appSecret]             Kinvey App Secret
+     * @param   {string}        [options.masterSecret]          Kinvey Master Secret
+     * @param   {string}        [options.encryptionKey]         Your applications encryption key
+     * @param   {string}        [options.hostname]              Custom Kinvey API Hostname
      * @return  {Client}                                        An instance of Client.
      *
      * @throws  {KinveyError}  If an `options.appKey` is not provided.
@@ -80,16 +80,35 @@ var Kinvey = function () {
      * });
      */
     value: function init(options) {
+      // Check that an appKey or appId was provided
       if (!options.appKey && !options.appId) {
         throw new _errors.KinveyError('No App Key was provided. ' + 'Unable to create a new Client without an App Key.');
       }
 
+      // Check that an appSecret or masterSecret was provided
       if (!options.appSecret && !options.masterSecret) {
         throw new _errors.KinveyError('No App Secret or Master Secret was provided. ' + 'Unable to create a new Client without an App Key.');
       }
 
-      Kinvey.client = _client.Client.init(options);
-      return Kinvey.client;
+      // Initialize the client
+      client = _client.Client.init(options);
+
+      // Add all the modules to the Kinvey namespace
+      Kinvey.Aggregation = _aggregation.Aggregation;
+      Kinvey.AuthorizationGrant = _enums.AuthorizationGrant;
+      Kinvey.CustomEndpoint = _endpoint2.default;
+      Kinvey.DataStore = _datastore.DataStore;
+      Kinvey.DataStoreType = _enums.DataStoreType;
+      Kinvey.Log = _log.Log;
+      Kinvey.Metadata = _metadata.Metadata;
+      Kinvey.Promise = _babybird2.default;
+      Kinvey.Query = _query.Query;
+      Kinvey.SocialIdentity = _enums.SocialIdentity;
+      Kinvey.Sync = _sync2.default;
+      Kinvey.User = _user.User;
+
+      // Return the client
+      return client;
     }
 
     /**
@@ -121,38 +140,13 @@ var Kinvey = function () {
   }, {
     key: 'client',
     get: function get() {
-      if (!Kinvey._client) {
+      if (!client) {
         throw new _errors.KinveyError('You have not initialized the library. ' + 'Please call Kinvey.init() to initialize the library.');
       }
 
-      return Kinvey._client;
-    },
-    set: function set(client) {
-      if (!client) {
-        throw new _errors.KinveyError('Client must not be undefined.');
-      }
-
-      if (!(client instanceof _client.Client)) {
-        client = new _client.Client((0, _result2.default)(client, 'toJSON', client));
-      }
-
-      Kinvey._client = client;
+      return client;
     }
   }]);
 
   return Kinvey;
 }();
-
-Kinvey.Aggregation = _aggregation.Aggregation;
-Kinvey.AuthorizationGrant = _enums.AuthorizationGrant;
-Kinvey.Command = _command.Command;
-Kinvey.DataStore = _datastore.DataStore;
-Kinvey.DataStoreType = _enums.DataStoreType;
-Kinvey.Log = _log.Log;
-Kinvey.Metadata = _metadata.Metadata;
-Kinvey.Promise = _babybird2.default;
-Kinvey.Query = _query.Query;
-Kinvey.SocialIdentity = _enums.SocialIdentity;
-Kinvey.Sync = _sync.Sync;
-Kinvey.User = _user.User;
-exports.Kinvey = Kinvey;

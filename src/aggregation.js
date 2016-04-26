@@ -23,7 +23,7 @@ export class Aggregation {
   }
 
   get initial() {
-    return this.i;
+    return this.aggregationInitial;
   }
 
   set initial(initial) {
@@ -31,11 +31,11 @@ export class Aggregation {
       throw new KinveyError('initial must be an Object.');
     }
 
-    this.i = initial;
+    this.aggregationInitial = initial;
   }
 
   get query() {
-    return this.q;
+    return this.aggregationQuery;
   }
 
   set query(query) {
@@ -43,11 +43,11 @@ export class Aggregation {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    this.q = query;
+    this.aggregationQuery = query;
   }
 
   get reduceFn() {
-    return this.reduce;
+    return this.aggregationReduceFn;
   }
 
   set reduceFn(fn) {
@@ -59,7 +59,7 @@ export class Aggregation {
       throw new KinveyError('fn argument must be of type function or string.');
     }
 
-    this.reduce = fn;
+    this.aggregationReduceFn = fn;
   }
 
   by(field) {

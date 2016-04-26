@@ -49,7 +49,7 @@ export class DeltaFetchRequest extends KinveyRequest {
       if (isArray(cacheData) && cacheData.length > 0) {
         const cacheDocuments = keyBy(cacheData, idAttribute);
         const query = new Query(result(this.query, 'toJSON', this.query));
-        query.fields([idAttribute, kmdAttribute]);
+        query.fields = [idAttribute, kmdAttribute];
         const networkRequest = new NetworkRequest({
           method: HttpMethod.GET,
           url: this.url,

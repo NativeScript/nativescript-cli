@@ -38,3 +38,4 @@ export const NetworkConnectionError = Error.extend('NetworkConnectionError');
 export const NoActiveUserError = Error.extend('NoActiveUserError');
 export const NotFoundError = Error.extend('NotFoundError');
 export const NoResponseError = Error.extend('NoResponseError');
+export const SyncError = Error.extend('SyncError');

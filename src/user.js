@@ -26,7 +26,7 @@ const supportedIdentities = ['facebook', 'google', 'linkedIn'];
 let hello;
 
 if (typeof window !== 'undefined') {
-  hello = require('hellojs');
+  hello = require('hellojs'); // eslint-disable-line global-require
 }
 
 // Set the active user

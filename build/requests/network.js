@@ -33,10 +33,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
-var micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
-var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
-var usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+var socialIdentityAttribute = undefined || '_socialIdentity';
+var micIdentity = undefined || 'kinveyAuth';
+var tokenPathname = undefined || '/oauth/token';
+var usersNamespace = undefined || 'user';
 
 /**
  * @private
@@ -77,6 +77,8 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
 
         return response;
       }).then(function (response) {
+        _this2.executing = false;
+
         if (!response.isSuccess()) {
           throw response.error;
         }

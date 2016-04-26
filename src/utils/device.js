@@ -54,7 +54,7 @@ export function isBrowser() {
 export class Device {
   static toJSON() {
     if (isNode()) {
-      const os = require('os');
+      const os = require('os'); // eslint-disable-line global-require
 
       return {
         latform: {
