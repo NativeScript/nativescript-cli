@@ -313,6 +313,8 @@ export class CacheStore extends NetworkStore {
       if (!(error instanceof NotFoundError)) {
         throw error;
       }
+
+      cachedEntity = null;
     }
 
     const promise = this.syncCount().then(count => {

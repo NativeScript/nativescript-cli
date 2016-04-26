@@ -118,7 +118,8 @@ export class Request {
       url: '',
       data: null,
       timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
-      followRedirect: true
+      followRedirect: true,
+      noCache: false
     }, options);
 
     this.method = options.method;
@@ -126,6 +127,7 @@ export class Request {
     this.data = options.data || options.body;
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
+    this.noCache = options.noCache;
     this.executing = false;
 
     const headers = options.headers && isPlainObject(options.headers) ? options.headers : {};
@@ -162,9 +164,15 @@ export class Request {
   }
 
   get url() {
-    return appendQuery(this._url, qs.stringify({
-      _: Math.random().toString(36).substr(2)
-    }));
+    // Unless `noCache` is true, add a cache busting query string.
+    // This is useful for Android < 4.0 which caches all requests aggressively.
+    if (this.noCache) {
+      return appendQuery(this._url, qs.stringify({
+        _: Math.random().toString(36).substr(2)
+      }));
+    }
+
+    return this._url;
   }
 
   set url(urlString) {
