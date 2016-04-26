@@ -56,10 +56,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = undefined || 'appdata';
-var syncCollectionName = undefined || 'kinvey_sync';
-var idAttribute = undefined || '_id';
-var kmdAttribute = undefined || '_kmd';
+var appdataNamespace = 'appdata' || 'appdata';
+var syncCollectionName = 'kinvey_sync' || 'kinvey_sync';
+var idAttribute = '_id' || '_id';
+var kmdAttribute = '_kmd' || '_kmd';
 
 var Sync = function () {
   function Sync() {
@@ -71,6 +71,13 @@ var Sync = function () {
      */
     this.client = _client.Client.sharedInstance();
   }
+
+  /**
+   * Pathname used to send sync requests.
+   *
+   * @return {String} sync pathname
+   */
+
 
   _createClass(Sync, [{
     key: 'count',
@@ -107,7 +114,7 @@ var Sync = function () {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   query: query,
@@ -155,6 +162,7 @@ var Sync = function () {
      *   _id: '1',
      *   prop: 'value'
      * }];
+     * var sync = new Sync();
      * var promise = sync.notify('collectionName', entities).then(function(entities) {
      *   ...
      * }).catch(function(error) {
@@ -199,7 +207,7 @@ var Sync = function () {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname + '/' + name
+                    pathname: this.pathname + '/' + name
                   }),
                   properties: options.properties,
                   timeout: options.timeout,
@@ -262,7 +270,7 @@ var Sync = function () {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   timeout: options.timeout,
@@ -289,6 +297,25 @@ var Sync = function () {
 
       return notify;
     }()
+
+    /**
+     * Sync entities with the network. A query can be provided to
+     * sync a subset of entities.
+     *
+     * @param   {Query}         [query]                     Query
+     * @param   {Object}        [options={}]                Options
+     * @param   {Number}        [options.timeout]           Timeout for the request.
+     * @return  {Promise}                                   Promise
+     *
+     * @example
+     * var sync = new Sync();
+     * var promise = sync.execute().then(function(response) {
+     *   ...
+     * }).catch(function(error) {
+     *   ...
+     * });
+     */
+
   }, {
     key: 'execute',
     value: function () {
@@ -307,7 +334,7 @@ var Sync = function () {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   query: query,
@@ -331,7 +358,7 @@ var Sync = function () {
                         while (1) {
                           switch (_context11.prev = _context11.next) {
                             case 0:
-                              collectionName = syncEntity._id;
+                              collectionName = syncEntity[idAttribute];
                               syncSize = syncEntity.size;
                               entities = syncEntity.entities;
                               ids = Object.keys(entities);
@@ -932,7 +959,7 @@ var Sync = function () {
                                 url: _url2.default.format({
                                   protocol: _this.client.protocol,
                                   host: _this.client.host,
-                                  pathname: _this._pathname + '/' + syncEntity[idAttribute]
+                                  pathname: _this.pathname + '/' + syncEntity[idAttribute]
                                 }),
                                 properties: options.properties,
                                 timeout: options.timeout,
@@ -990,6 +1017,25 @@ var Sync = function () {
 
       return execute;
     }()
+
+    /**
+     * Clear the sync table. A query can be provided to
+     * only clear a subet of the sync table.
+     *
+     * @param   {Query}         [query]                     Query
+     * @param   {Object}        [options={}]                Options
+     * @param   {Number}        [options.timeout]           Timeout for the request.
+     * @return  {Promise}                                   Promise
+     *
+     * @example
+     * var sync = new Sync();
+     * var promise = sync.clear().then(function(response) {
+     *   ...
+     * }).catch(function(error) {
+     *   ...
+     * });
+     */
+
   }, {
     key: 'clear',
     value: function clear(query) {
@@ -1000,7 +1046,7 @@ var Sync = function () {
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: query,
@@ -1010,7 +1056,7 @@ var Sync = function () {
       return request.execute();
     }
   }, {
-    key: '_pathname',
+    key: 'pathname',
     get: function get() {
       return '/' + appdataNamespace + '/' + this.client.appKey + '/' + syncCollectionName;
     }

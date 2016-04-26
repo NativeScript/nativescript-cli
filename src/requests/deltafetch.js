@@ -14,8 +14,7 @@ import forEach from 'lodash/forEach';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
-const lmtAttribute = process.env.KINVEY_LMT_ATTRIBUTE || 'lmt';
-const maxIdsPerRequest = process.env.KINVEY_MAX_IDS || 200;
+const maxIdsPerRequest = 200;
 
 /**
  * @private
@@ -71,7 +70,7 @@ export class DeltaFetchRequest extends KinveyRequest {
 
             if (networkDocument) {
               if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute]
-                  && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
+                  && networkDocument[kmdAttribute].lmt === cacheDocument[kmdAttribute].lmt) {
                 delete deltaSet[id];
               } else {
                 delete cacheDocuments[id];

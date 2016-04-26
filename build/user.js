@@ -53,15 +53,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var userCollectionName = undefined || 'kinvey_user';
-var appdataNamespace = undefined || 'appdata';
-var usersNamespace = undefined || 'user';
-var rpcNamespace = undefined || 'rpc';
-var idAttribute = undefined || '_id';
-var kmdAttribute = undefined || '_kmd';
-var socialIdentityAttribute = undefined || '_socialIdentity';
-var usernameAttribute = undefined || 'username';
-var emailAttribute = undefined || 'email';
+var userCollectionName = 'kinvey_user' || 'kinvey_user';
+var appdataNamespace = 'appdata' || 'appdata';
+var usersNamespace = 'user' || 'user';
+var rpcNamespace = 'rpc' || 'rpc';
+var idAttribute = '_id' || '_id';
+var kmdAttribute = '_kmd' || '_kmd';
+var socialIdentityAttribute = '_socialIdentity' || '_socialIdentity';
+var usernameAttribute = 'username' || 'username';
+var emailAttribute = 'email' || 'email';
 var supportedIdentities = ['facebook', 'google', 'linkedIn'];
 var hello = void 0;
 

@@ -33,7 +33,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = undefined || '_id';
+var idAttribute = '_id' || '_id';
 var localStorage = global.localStorage;
 
 /**

@@ -17,7 +17,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var kmdAttribute = undefined || '_kmd';
+var kmdAttribute = '_kmd' || '_kmd';
 
 /**
  * Wrapper for accessing the `_kmd` properties of an entity.

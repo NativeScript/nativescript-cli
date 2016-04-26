@@ -32,7 +32,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var rpcNamespace = undefined || 'rpc';
+var rpcNamespace = 'rpc' || 'rpc';
 
 /**
  * Executes a custom command.

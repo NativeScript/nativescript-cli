@@ -61,10 +61,9 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var idAttribute = undefined || '_id';
-var kmdAttribute = undefined || '_kmd';
-var lmtAttribute = undefined || 'lmt';
-var maxIdsPerRequest = undefined || 200;
+var idAttribute = '_id' || '_id';
+var kmdAttribute = '_kmd' || '_kmd';
+var maxIdsPerRequest = 200;
 
 /**
  * @private
@@ -136,7 +135,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                   var networkDocument = networkDocuments[id];
 
                   if (networkDocument) {
-                    if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute] && networkDocument[kmdAttribute][lmtAttribute] === cacheDocument[kmdAttribute][lmtAttribute]) {
+                    if (networkDocument[kmdAttribute] && cacheDocument[kmdAttribute] && networkDocument[kmdAttribute].lmt === cacheDocument[kmdAttribute].lmt) {
                       delete deltaSet[id];
                     } else {
                       delete cacheDocuments[id];

@@ -39,10 +39,10 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var usersNamespace = undefined || 'user';
-var rpcNamespace = undefined || 'rpc';
-var idAttribute = undefined || '_id';
-var socialIdentityAttribute = undefined || '_socialIdentity';
+var usersNamespace = 'user' || 'user';
+var rpcNamespace = 'rpc' || 'rpc';
+var idAttribute = '_id' || '_id';
+var socialIdentityAttribute = '_socialIdentity' || '_socialIdentity';
 
 var UserStore = exports.UserStore = function (_NetworkStore) {
   _inherits(UserStore, _NetworkStore);

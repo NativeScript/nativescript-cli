@@ -29,9 +29,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var userCollectionName = undefined || 'kinvey_user';
+var userCollectionName = 'kinvey_user' || 'kinvey_user';
 var socialIdentityCollectionName = undefined || 'kinvey_socialIdentity';
-var pushCollectionName = undefined || 'kinvey_push';
+var pushCollectionName = 'kinvey_push' || 'kinvey_push';
 var _sharedInstance = null;
 
 /**

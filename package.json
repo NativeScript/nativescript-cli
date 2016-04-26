@@ -56,6 +56,7 @@
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-bump": "^2.1.0",
+    "gulp-env": "^0.4.0",
     "gulp-eslint": "^2.0.0",
     "gulp-git": "^1.7.1",
     "gulp-prompt": "^0.2.0",
