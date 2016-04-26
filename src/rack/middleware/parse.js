@@ -18,7 +18,7 @@ export class ParseMiddleware extends KinveyMiddleware {
       if (contentType.indexOf('application/json') === 0) {
         try {
           response.data = JSON.parse(response.data);
-        } catch (err) {
+        } catch (error) {
           response.data = response.data;
         }
 

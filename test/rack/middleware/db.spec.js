@@ -1,9 +1,14 @@
-import '../../../setup';
-import { IndexedDB } from '../../../../src/rack/persistence/adapters/indexeddb';
-import { KinveyError, NotFoundError } from '../../../../src/errors';
-import { randomString } from '../../../../src/utils/string';
+import '../../setup';
+import { DB, DBAdapter } from '../../../src/rack/middleware/cache';
+import { Memory } from '../../../src/rack/middleware/adapters/memory';
+import IndexedDB from '../../../src/rack/middleware/adapters/indexeddb';
+import { WebSQL } from '../../../src/rack/middleware/adapters/websql';
+import { LocalStorage } from '../../../src/rack/middleware/adapters/localstorage';
+import { KinveyError, NotFoundError } from '../../../src/errors';
+import { randomString } from '../../../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
+import forEach from 'lodash/forEach';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
@@ -13,9 +18,9 @@ const expect = chai.expect;
 const databaseName = 'testDatabase';
 const collectionName = 'testCollection';
 
-describe('IndexedDB', function() {
+describe('DB', function() {
   before(function() {
-    this.db = new IndexedDB(databaseName);
+    this.db = new DB(databaseName);
   });
 
   after(function() {
@@ -24,22 +29,64 @@ describe('IndexedDB', function() {
 
   it('should throw an error if no name is provided', function() {
     expect(function() {
-      const db = new IndexedDB();
+      const db = new DB();
       return db;
     }).to.throw(KinveyError);
   });
 
   it('should throw an error if name is not a string', function() {
     expect(function() {
-      const db = new IndexedDB({});
+      const db = new DB({});
       return db;
     }).to.throw(KinveyError);
   });
 
-  it('should set name with constructor', function() {
-    const name = 'foo';
-    const db = new IndexedDB(name);
-    expect(db.name).to.equal(name);
+  it('should allow to specify a single adapter', function() {
+    const db = new DB(databaseName, DBAdapter.Memory);
+    expect(db.adapter).to.be.instanceof(Memory);
+  });
+
+  it('should allow to specify an array of adapters', function() {
+    const adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory];
+    const db = new DB(databaseName, adapters);
+    let adapterInstance = Memory;
+
+    forEach(adapters, adapter => {
+      switch (adapter) {
+        case DBAdapter.IndexedDB:
+          if (IndexedDB.isSupported()) {
+            adapterInstance = IndexedDB;
+            return false;
+          }
+
+          break;
+        case DBAdapter.LocalStorage:
+          if (LocalStorage.isSupported()) {
+            adapterInstance = LocalStorage;
+            return false;
+          }
+
+          break;
+        case DBAdapter.Memory:
+          if (Memory.isSupported()) {
+            adapterInstance = Memory;
+            return false;
+          }
+
+          break;
+        case DBAdapter.WebSQL:
+          if (WebSQL.isSupported()) {
+            adapterInstance = WebSQL;
+            return false;
+          }
+
+          break;
+        default:
+          console.log(`The ${adapter} adapter is is not recognized.`);
+      }
+    });
+
+    expect(db.adapter).to.be.instanceof(adapterInstance);
   });
 
   describe('find()', function() {
@@ -74,7 +121,7 @@ describe('IndexedDB', function() {
     });
 
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('find');
+      expect(DB).to.respondTo('find');
     });
 
     it('should return an empty array if a collection does not contain eny entities', function() {
@@ -124,7 +171,7 @@ describe('IndexedDB', function() {
     });
 
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('findById');
+      expect(DB).to.respondTo('findById');
     });
 
     it('should throw a NotFoundError for an entity that does not exist', function() {
@@ -140,18 +187,18 @@ describe('IndexedDB', function() {
         _id: randomString(),
         attribute: randomString()
       };
-      return this.db.save(collectionName, entity)
-        .then(savedEntity => this.db.findById(collectionName, savedEntity._id))
-        .then(savedEntity => {
-          expect(savedEntity).to.deep.equal(entity);
-          return this.db.removeById(collectionName, savedEntity._id);
-        });
+      return this.db.save(collectionName, entity).then(savedEntity => {
+        return this.db.findById(collectionName, savedEntity._id);
+      }).then(savedEntity => {
+        expect(savedEntity).to.deep.equal(entity);
+        return this.db.removeById(collectionName, savedEntity._id);
+      });
     });
   });
 
   describe('save()', function() {
     it('should be a function', function() {
-      expect(IndexedDB).to.respondTo('save');
+      expect(DB).to.respondTo('save');
     });
 
     it('should save one entity', function() {
@@ -195,19 +242,12 @@ describe('IndexedDB', function() {
           }
         }
 
-        const promises = map(Object.keys(savedEntities), id => this.db.removeById(collectionName, id));
+        const promises = map(Object.keys(savedEntities), id => {
+          return this.db.removeById(collectionName, id);
+        });
+
         return Promise.all(promises);
       });
-    });
-  });
-
-  describe('isSupported()', function() {
-    it('should be a static function', function() {
-      expect(IndexedDB).itself.to.respondTo('isSupported');
-    });
-
-    it('should return true', function() {
-      expect(IndexedDB.isSupported()).to.be.true;
     });
   });
 });

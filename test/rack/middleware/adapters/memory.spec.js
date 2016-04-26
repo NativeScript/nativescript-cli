@@ -1,5 +1,5 @@
 import '../../../setup';
-import { Memory } from '../../../../src/rack/persistence/adapters/memory';
+import { Memory } from '../../../../src/rack/middleware/adapters/memory';
 import { KinveyError, NotFoundError } from '../../../../src/errors';
 import { randomString } from '../../../../src/utils/string';
 import keyBy from 'lodash/keyBy';

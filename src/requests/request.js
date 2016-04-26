@@ -140,7 +140,7 @@ export class Request {
   }
 
   get method() {
-    return this._method;
+    return this.requestMethod;
   }
 
   set method(method) {
@@ -156,7 +156,7 @@ export class Request {
       case HttpMethod.PATCH:
       case HttpMethod.PUT:
       case HttpMethod.DELETE:
-        this._method = method;
+        this.requestMethod = method;
         break;
       default:
         throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
@@ -167,41 +167,39 @@ export class Request {
     // Unless `noCache` is true, add a cache busting query string.
     // This is useful for Android < 4.0 which caches all requests aggressively.
     if (this.noCache) {
-      return appendQuery(this._url, qs.stringify({
+      return appendQuery(this.requestUrl, qs.stringify({
         _: Math.random().toString(36).substr(2)
       }));
     }
 
-    return this._url;
+    return this.requestUrl;
   }
 
   set url(urlString) {
-    this._url = urlString;
+    this.requestUrl = urlString;
   }
 
   get body() {
-    return this.data;
+    return this.requestBody;
   }
 
   set body(body) {
-    this.data = body;
-  }
-
-  get data() {
-    return this._data;
-  }
-
-  set data(data) {
-    if (data) {
+    if (body) {
       const contentTypeHeader = this.getHeader('Content-Type');
       if (!contentTypeHeader) {
         this.setHeader('Content-Type', 'application/json; charset=utf-8');
       }
-    } else {
-      this.removeHeader('Content-Type');
     }
 
-    this._data = data;
+    this.requestBody = body;
+  }
+
+  get data() {
+    return this.body;
+  }
+
+  set data(data) {
+    this.body = data;
   }
 
   getHeader(name) {

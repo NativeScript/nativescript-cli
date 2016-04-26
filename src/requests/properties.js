@@ -11,11 +11,11 @@ export class RequestProperties {
   }
 
   get properties() {
-    return this._properties;
+    return this.requestProperties;
   }
 
   set properties(properties) {
-    this._properties = properties;
+    this.requestProperties = properties;
   }
 
   /**

@@ -1,5 +1,4 @@
 import { KinveyMiddleware } from '../middleware';
-import forEach from 'lodash/forEach';
 
 /**
  * @private
@@ -18,15 +17,14 @@ export class SerializeMiddleware extends KinveyMiddleware {
       if (contentType.indexOf('application/json') === 0) {
         request.data = JSON.stringify(request.data);
       } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
-        const data = request.data;
+        const body = request.body;
         const str = [];
-        const keys = Object.keys(data);
 
-        forEach(keys, key => {
-          str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(data[key])}`);
-        });
+        for (const [key] of body) {
+          str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(body[key])}`);
+        }
 
-        request.data = str.join('&');
+        request.body = str.join('&');
       }
     }
 

@@ -26,7 +26,7 @@ const indexedDB = global.shimIndexedDB ||
 /**
  * @private
  */
-export class IndexedDB {
+export default class IndexedDB {
   constructor(name) {
     if (!name) {
       throw new KinveyError('A name for the collection is required to use the indexeddb persistence adapter.', name);
