@@ -1,5 +1,19 @@
 import { StatusCode } from '../enums';
-import { InsufficientCredentialsError, InvalidCredentialsError, KinveyError, NotFoundError } from '../errors';
+import {
+  FeatureUnavailableError,
+  IncompleteRequestBodyError,
+  InsufficientCredentialsError,
+  InvalidCredentialsError,
+  InvalidIdentifierError,
+  InvalidQuerySyntaxError,
+  JSONParseError,
+  KinveyError,
+  MissingQueryError,
+  MissingRequestHeaderError,
+  MissingRequestParameterError,
+  NotFoundError,
+  ParameterValueOutOfRangeError
+} from '../errors';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
@@ -33,7 +47,27 @@ export class Response {
     const message = data.message || data.description;
     const debug = data.debug;
 
-    if (name === 'EntityNotFound'
+    if (name === 'FeatureUnavailableError') {
+      return new FeatureUnavailableError(message, debug);
+    } else if (name === 'IncompleteRequestBodyError') {
+      return new IncompleteRequestBodyError(message, debug);
+    } else if (name === 'InsufficientCredentials') {
+      return new InsufficientCredentialsError(message, debug);
+    } else if (name === 'InvalidCredentials') {
+      return new InvalidCredentialsError(message, debug);
+    } else if (name === 'InvalidIdentifierError') {
+      return new InvalidIdentifierError(message, debug);
+    } else if (name === 'InvalidQuerySyntaxError') {
+      return new InvalidQuerySyntaxError(message, debug);
+    } else if (name === 'JSONParseError') {
+      return new JSONParseError(message, debug);
+    } else if (name === 'MissingQueryError') {
+      return new MissingQueryError(message, debug);
+    } else if (name === 'MissingRequestHeaderError') {
+      return new MissingRequestHeaderError(message, debug);
+    } else if (name === 'MissingRequestParameterError') {
+      return new MissingRequestParameterError(message, debug);
+    } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
         || name === 'AppNotFound'
         || name === 'UserNotFound'
@@ -41,10 +75,8 @@ export class Response {
         || name === 'DocumentNotFound'
         || this.statusCode === 404) {
       return new NotFoundError(message, debug);
-    } else if (name === 'InsufficientCredentials') {
-      return new InsufficientCredentialsError(message, debug);
-    } else if (name === 'InvalidCredentials') {
-      return new InvalidCredentialsError(message, debug);
+    } else if (name === 'ParameterValueOutOfRangeError') {
+      return new ParameterValueOutOfRangeError(message, debug);
     }
 
     return new KinveyError(message, debug);
