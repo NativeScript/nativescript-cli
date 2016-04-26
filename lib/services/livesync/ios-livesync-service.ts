@@ -39,9 +39,7 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 				if (!this.socket) {
 					helpers.connectEventually(() => net.connect(IOSLiveSyncService.BACKEND_PORT), (socket: net.Socket) => {
 						this.socket = socket;
-						if(this.$options.watch) {
-							this.attachProcessExitHandlers();
-						}
+						this.attachEventHandlersIfNecessary();
 						this.sendPageReloadMessage();
 					});
 				} else {
@@ -52,10 +50,25 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 				if(!this.socket) {
 					this.$iOSSocketRequestExecutor.executeAttachRequest(this.device, timeout).wait();
 					this.socket = this.device.connectToPort(IOSLiveSyncService.BACKEND_PORT);
+					this.attachEventHandlersIfNecessary();
 				}
 				this.sendPageReloadMessage();
 			}
 		}).future<void>()();
+	}
+
+	private attachEventHandlersIfNecessary(): void {
+		if(this.$options.watch) {
+			this.attachProcessExitHandlers();
+			this.attachSocketCloseEvent();
+		}
+	}
+
+	private attachSocketCloseEvent(): void {
+		this.socket.on("close", (hadError: boolean) => {
+			this.$logger.trace(`Socket closed, hadError is ${hadError}.`);
+			this.socket = null;
+		});
 	}
 
 	private sendPageReloadMessage(): void {
@@ -101,8 +114,10 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 	}
 
 	private destroySocket(): void {
-		this.socket.destroy();
-		this.socket = null;
+		if(this.socket) {
+			this.socket.destroy();
+			this.socket = null;
+		}
 	}
 }
 $injector.register("iosLiveSyncServiceLocator", {factory: IOSLiveSyncService});
