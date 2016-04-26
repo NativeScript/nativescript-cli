@@ -47,7 +47,9 @@ export class InitService implements IInitService {
 				projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]["id"] = this.getProjectId().wait();
 
 				if (this.$options.frameworkName && this.$options.frameworkVersion) {
-					projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = this.buildVersionData(this.$options.frameworkVersion);
+					let currentPlatformData = projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] || {};
+
+					projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][this.$options.frameworkName] = _.extend(currentPlatformData, this.buildVersionData(this.$options.frameworkVersion));
 				} else {
 					let $platformsData = this.$injector.resolve("platformsData");
 					_.each($platformsData.platformsNames, platform => {
