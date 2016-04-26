@@ -3,8 +3,8 @@ import { Query } from './query';
 import result from 'lodash/result';
 import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
-import isObject from 'lodash/isObject';
 import isString from 'lodash/isString';
+import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 
 export class Aggregation {
@@ -13,40 +13,57 @@ export class Aggregation {
       query: null,
       initial: {},
       key: {},
-      reduce: function () {}.toString()
+      reduceFn: function () {}.toString()
     }, options);
 
-    this.query(options.query);
-    this._initial = options.initial;
-    this._key = options.key;
-    this._reduce = options.reduce;
+    this.query = options.query;
+    this.initial = options.initial;
+    this.key = options.key;
+    this.reduceFn = options.reduceFn;
   }
 
-  by(field) {
-    this._key[field] = true;
-    return this;
+  get initial() {
+    return this.i;
   }
 
-  initial(objectOrKey, value) {
-    if (typeof value === 'undefined' && !isObject(objectOrKey)) {
-      throw new KinveyError('objectOrKey argument must be an Object.');
+  set initial(initial) {
+    if (!isObject(initial)) {
+      throw new KinveyError('initial must be an Object.');
     }
 
-    if (isObject(objectOrKey)) {
-      this._initial = objectOrKey;
-    } else {
-      this._initial[objectOrKey] = value;
-    }
-
-    return this;
+    this.i = initial;
   }
 
-  query(query) {
+  get query() {
+    return this.q;
+  }
+
+  set query(query) {
     if (query && !(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    this._query = query;
+    this.q = query;
+  }
+
+  get reduceFn() {
+    return this.reduce;
+  }
+
+  set reduceFn(fn) {
+    if (isFunction(fn)) {
+      fn = fn.toString();
+    }
+
+    if (!isString(fn)) {
+      throw new KinveyError('fn argument must be of type function or string.');
+    }
+
+    this.reduce = fn;
+  }
+
+  by(field) {
+    this.key[field] = true;
     return this;
   }
 
@@ -54,11 +71,11 @@ export class Aggregation {
     const groups = {};
     const response = [];
     const aggregation = this.toJSON();
-    const reduce = aggregation.reduce.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
-    aggregation.reduce = new Function(['doc', 'out'], reduce); // eslint-disable-line no-new-func
+    const reduceFn = aggregation.reduceFn.replace(/function[\s\S]*?\([\s\S]*?\)/, '');
+    aggregation.reduce = new Function(['doc', 'out'], reduceFn); // eslint-disable-line no-new-func
 
-    if (this._query) {
-      entities = this._query.process(entities);
+    if (this.query) {
+      entities = this.query.process(entities);
     }
 
     forEach(entities, entity => {
@@ -90,26 +107,13 @@ export class Aggregation {
     return response;
   }
 
-  reduce(fn) {
-    if (isFunction(fn)) {
-      fn = fn.toString();
-    }
-
-    if (!isString(fn)) {
-      throw new KinveyError('fn argument must be of type function or string.');
-    }
-
-    this._reduce = fn;
-    return this;
-  }
-
   toJSON() {
     const json = {
-      key: this._key,
-      initial: this._initial,
-      reduce: this._reduce,
-      condition: this._query ? this._query.toJSON().filter : {},
-      query: this._query ? this._query.toJSON() : null
+      key: this.key,
+      initial: this.initial,
+      reduceFn: this.reduceFn,
+      condition: this.query ? this.query.toJSON().filter : {},
+      query: this.query ? this.query.toJSON() : null
     };
 
     return json;
@@ -122,11 +126,11 @@ export class Aggregation {
       aggregation.by(field);
     }
 
-    aggregation.initial({ result: 0 });
-    aggregation.reduce((doc, out) => {
+    aggregation.initial = { result: 0 };
+    aggregation.reduceFn = (doc, out) => {
       out.result += 1;
       return out;
-    });
+    };
     return aggregation;
   }
 
@@ -134,11 +138,10 @@ export class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial({ result: 0 });
-    aggregation.reduce('function(doc, out) { ' +
-      ` out.result += doc["${field}"]; ` +
-      '}'
-    );
+    aggregation.initial = { result: 0 };
+    aggregation.reduceFn = (doc, out) => {
+      out.result += doc[`'${field}'`];
+    };
     return aggregation;
   }
 
@@ -146,11 +149,10 @@ export class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial({ result: Infinity });
-    aggregation.reduce('function(doc, out) { ' +
-      ` out.result = Math.min(out.result, doc["${field}"]); ` +
-      '}'
-    );
+    aggregation.initial = { result: Infinity };
+    aggregation.reduceFn = (doc, out) => {
+      out.result = Math.min(out.result, doc[`'${field}'`]);
+    };
     return aggregation;
   }
 
@@ -158,11 +160,10 @@ export class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial({ result: -Infinity });
-    aggregation.reduce('function(doc, out) { ' +
-      ` out.result = Math.max(out.result, doc["${field}"]); ` +
-      '}'
-    );
+    aggregation.initial = { result: -Infinity };
+    aggregation.reduceFn = (doc, out) => {
+      out.result = Math.max(out.result, doc[`'${field}'`]);
+    };
     return aggregation;
   }
 
@@ -170,12 +171,11 @@ export class Aggregation {
     field = field.replace('\'', '\\\'');
 
     const aggregation = new Aggregation();
-    aggregation.initial({ count: 0, result: 0 });
-    aggregation.reduce('function(doc, out) { ' +
-      ` out.result = (out.result * out.count + doc["${field}"]) / (out.count + 1);` +
-      ' out.count += 1;' +
-      '}'
-    );
+    aggregation.initial = { count: 0, result: 0 };
+    aggregation.reduceFn = (doc, out) => {
+      out.result = (out.result * out.count + doc[`'${field}'`]) / (out.count + 1);
+      out.count += 1;
+    };
     return aggregation;
   }
 }
