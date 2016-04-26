@@ -1,11 +1,9 @@
 import { KinveyError } from './errors';
+import { getActiveUser, getActiveSocialIdentity } from './utils/storage';
 import localStorage from 'local-storage';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
-const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
-const socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME
-                                                || 'kinvey_socialIdentity';
 const pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
 let sharedInstance = null;
 
@@ -86,11 +84,11 @@ export class Client {
   }
 
   get activeUser() {
-    return localStorage.get(`${this.appKey}${userCollectionName}`);
+    return getActiveUser(this);
   }
 
   get activeSocialIdentity() {
-    return localStorage.get(`${this.appKey}${socialIdentityCollectionName}`);
+    return getActiveSocialIdentity(this);
   }
 
   get push() {

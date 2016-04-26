@@ -8,12 +8,11 @@ import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
 import { DataStore, DataStoreType } from './stores/datastore';
 import { NetworkRequest } from './requests/network';
+import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isObject from 'lodash/isObject';
-import localStorage from 'local-storage';
-const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -22,39 +21,11 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
-const socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME
-                                                || 'kinvey_socialIdentity';
 const supportedIdentities = ['facebook', 'google', 'linkedIn'];
 let hello;
 
 if (typeof window !== 'undefined') {
   hello = require('hellojs'); // eslint-disable-line global-require
-}
-
-// Set the active user
-function setActiveUser(data) {
-  if (data) {
-    try {
-      return localStorage.set(`${this.client.appKey}${userCollectionName}`, data);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  return localStorage.remove(`${this.client.appKey}${userCollectionName}`);
-}
-
-// Set the active social identity
-function setActiveSocialIdentity(data) {
-  if (data) {
-    try {
-      return localStorage.set(`${this.appKey}${socialIdentityCollectionName}`, data);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  return localStorage.remove(`${this.appKey}${socialIdentityCollectionName}`);
 }
 
 /**
@@ -327,7 +298,7 @@ export class User {
 
     const promise = request.execute().then(response => {
       this.data = response.data;
-      setActiveUser.call(this, this.data);
+      setActiveUser(this.client, this.data);
       return User.getActiveUser(this.client);
     });
 
@@ -409,7 +380,7 @@ export class User {
     const promise = request.execute().catch(() => null).then(() => {
       const isActive = this.isActive();
       if (isActive) {
-        setActiveUser.call(this, null);
+        setActiveUser(this.client, null);
       }
 
       return null;
@@ -601,7 +572,7 @@ export class User {
 
       throw err;
     }).then(() => {
-      setActiveSocialIdentity({
+      setActiveSocialIdentity(this.client, {
         identity: identity,
         token: this._socialIdentity[identity],
         redirectUri: options.redirectUri,
@@ -630,7 +601,7 @@ export class User {
       const activeSocialIdentity = this.client.activeSocialIdentity;
 
       if (activeSocialIdentity.identity === identity) {
-        setActiveSocialIdentity(null);
+        setActiveSocialIdentity(this.client, null);
       }
 
       return this;
@@ -703,7 +674,7 @@ export class User {
       this.data = response.data;
 
       if (options.state === true) {
-        setActiveUser.call(this, this.data);
+        setActiveUser(this.client, this.data);
       }
 
       return this;
@@ -724,7 +695,7 @@ export class User {
       this.data = data;
 
       if (this.isActive()) {
-        setActiveUser.call(this, this.data);
+        setActiveUser(this.client, this.data);
       }
 
       return this;
@@ -755,7 +726,7 @@ export class User {
         }
       }
 
-      setActiveUser.call(this, this.data);
+      setActiveUser(this.client, this.data);
       return this;
     });
 

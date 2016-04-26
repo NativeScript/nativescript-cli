@@ -3,41 +3,12 @@ import { NetworkRack } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { HttpMethod, AuthType } from '../enums';
 import { Response } from './response';
+import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
 import url from 'url';
-import localStorage from 'local-storage';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
-const socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME
-                                                || 'kinvey_socialIdentity';
-
-// Set the active user
-function setActiveUser(data) {
-  if (data) {
-    try {
-      return localStorage.set(`${this.client.appKey}${userCollectionName}`, data);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  return localStorage.remove(`${this.client.appKey}${userCollectionName}`);
-}
-
-// Set the active social identity
-function setActiveSocialIdentity(data) {
-  if (data) {
-    try {
-      return localStorage.set(`${this.appKey}${socialIdentityCollectionName}`, data);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  return localStorage.remove(`${this.appKey}${socialIdentityCollectionName}`);
-}
 
 /**
  * @private
@@ -126,8 +97,8 @@ export class NetworkRequest extends KinveyRequest {
           const user = await loginRequest.execute().then(response => response.data);
 
           // Store the new data
-          setActiveUser(user);
-          setActiveSocialIdentity({
+          setActiveUser(this.client, user);
+          setActiveSocialIdentity(this.client, {
             identity: activeSocialIdentity.identity,
             redirectUri: activeSocialIdentity.redirectUri,
             token: user[socialIdentityAttribute][activeSocialIdentity.identity],
