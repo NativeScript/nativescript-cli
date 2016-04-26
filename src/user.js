@@ -22,6 +22,8 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
+const socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME
+                                                || 'kinvey_socialIdentity';
 const supportedIdentities = ['facebook', 'google', 'linkedIn'];
 let hello;
 
@@ -40,6 +42,19 @@ function setActiveUser(data) {
   }
 
   return localStorage.remove(`${this.client.appKey}${userCollectionName}`);
+}
+
+// Set the active social identity
+function setActiveSocialIdentity(data) {
+  if (data) {
+    try {
+      return localStorage.set(`${this.appKey}${socialIdentityCollectionName}`, data);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return localStorage.remove(`${this.appKey}${socialIdentityCollectionName}`);
 }
 
 /**
@@ -200,7 +215,7 @@ export class User {
    * var _id = user._id;
    */
   static getActiveUser(client = Client.sharedInstance()) {
-    const data = client.user;
+    const data = client.activeUser;
     let user = null;
 
     if (data) {
@@ -586,12 +601,12 @@ export class User {
 
       throw err;
     }).then(() => {
-      this.client.socialIdentity = {
+      setActiveSocialIdentity({
         identity: identity,
         token: this._socialIdentity[identity],
         redirectUri: options.redirectUri,
         client: options.micClient
-      };
+      });
       return this;
     });
 
@@ -612,10 +627,10 @@ export class User {
 
       return this.update(data, options);
     }).then(() => {
-      const socialIdentity = this.client.socialIdentity;
+      const activeSocialIdentity = this.client.activeSocialIdentity;
 
-      if (socialIdentity.identity === identity) {
-        this.client.socialIdentity = null;
+      if (activeSocialIdentity.identity === identity) {
+        setActiveSocialIdentity(null);
       }
 
       return this;

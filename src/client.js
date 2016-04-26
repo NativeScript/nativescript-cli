@@ -85,24 +85,12 @@ export class Client {
     });
   }
 
-  get user() {
+  get activeUser() {
     return localStorage.get(`${this.appKey}${userCollectionName}`);
   }
 
-  get socialIdentity() {
+  get activeSocialIdentity() {
     return localStorage.get(`${this.appKey}${socialIdentityCollectionName}`);
-  }
-
-  set socialIdentity(socialIdentity) {
-    if (socialIdentity) {
-      try {
-        return localStorage.set(`${this.appKey}${socialIdentityCollectionName}`, socialIdentity);
-      } catch (error) {
-        return false;
-      }
-    }
-
-    return localStorage.remove(`${this.appKey}${socialIdentityCollectionName}`);
   }
 
   get push() {

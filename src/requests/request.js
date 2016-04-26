@@ -94,7 +94,7 @@ const Auth = {
    * @returns {Object}
    */
   session(client) {
-    const activeUser = client.user;
+    const activeUser = client.activeUser;
 
     if (!activeUser) {
       throw new NoActiveUserError('There is not an active user. Please login a user and retry the request.');
