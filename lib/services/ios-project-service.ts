@@ -503,10 +503,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return path.join(this.platformData.projectRoot, this.$projectData.projectName + IOSProjectService.XCODE_PROJECT_EXT_NAME);
 	}
 
-	private get cocoaPodsXcodeprojPath(): string {
-		return path.join(this.platformData.projectRoot, "Pods", "Pods" + IOSProjectService.XCODE_PROJECT_EXT_NAME);
-	}
-
 	private get projectPodFilePath(): string {
 		return path.join(this.platformData.projectRoot, "Podfile");
 	}
@@ -682,7 +678,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			if (this.$xcprojService.getXcprojInfo().wait().shouldUseXcproj) {
 				this.$childProcess.exec(`xcproj --project ${this.xcodeprojPath} touch`).wait();
-				this.$childProcess.exec(`xcproj --project ${this.cocoaPodsXcodeprojPath} touch`).wait();
 			}
 
 			return childProcess;
