@@ -26,7 +26,12 @@ export default class Sync {
     this.client = Client.sharedInstance();
   }
 
-  get _pathname() {
+  /**
+   * Pathname used to send sync requests.
+   *
+   * @return {String} sync pathname
+   */
+  get pathname() {
     return `/${appdataNamespace}/${this.client.appKey}/${syncCollectionName}`;
   }
 
@@ -54,7 +59,7 @@ export default class Sync {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
@@ -82,6 +87,7 @@ export default class Sync {
    *   _id: '1',
    *   prop: 'value'
    * }];
+   * var sync = new Sync();
    * var promise = sync.notify('collectionName', entities).then(function(entities) {
    *   ...
    * }).catch(function(error) {
@@ -108,7 +114,7 @@ export default class Sync {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${name}`
+        pathname: `${this.pathname}/${name}`
       }),
       properties: options.properties,
       timeout: options.timeout,
@@ -158,7 +164,7 @@ export default class Sync {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       timeout: options.timeout,
@@ -171,6 +177,23 @@ export default class Sync {
     return singular ? entities[0] : entities;
   }
 
+  /**
+   * Sync entities with the network. A query can be provided to
+   * sync a subset of entities.
+   *
+   * @param   {Query}         [query]                     Query
+   * @param   {Object}        [options={}]                Options
+   * @param   {Number}        [options.timeout]           Timeout for the request.
+   * @return  {Promise}                                   Promise
+   *
+   * @example
+   * var sync = new Sync();
+   * var promise = sync.execute().then(function(response) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   async execute(query, options = {}) {
     // Make a request for the pending sync entities
     const request = new LocalRequest({
@@ -178,7 +201,7 @@ export default class Sync {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
@@ -190,7 +213,7 @@ export default class Sync {
     return new Promise((resolve, reject) => {
       // Sync each individual entity in series
       mapSeries(syncEntities, async (syncEntity, callback) => {
-        const collectionName = syncEntity._id;
+        const collectionName = syncEntity[idAttribute];
         let syncSize = syncEntity.size;
         const entities = syncEntity.entities;
         const ids = Object.keys(entities);
@@ -520,7 +543,7 @@ export default class Sync {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this._pathname}/${syncEntity[idAttribute]}`
+              pathname: `${this.pathname}/${syncEntity[idAttribute]}`
             }),
             properties: options.properties,
             timeout: options.timeout,
@@ -545,13 +568,30 @@ export default class Sync {
     });
   }
 
+  /**
+   * Clear the sync table. A query can be provided to
+   * only clear a subet of the sync table.
+   *
+   * @param   {Query}         [query]                     Query
+   * @param   {Object}        [options={}]                Options
+   * @param   {Number}        [options.timeout]           Timeout for the request.
+   * @return  {Promise}                                   Promise
+   *
+   * @example
+   * var sync = new Sync();
+   * var promise = sync.clear().then(function(response) {
+   *   ...
+   * }).catch(function(error) {
+   *   ...
+   * });
+   */
   clear(query, options = {}) {
     const request = new LocalRequest({
       method: HttpMethod.DELETE,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
