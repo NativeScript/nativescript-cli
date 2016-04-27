@@ -1,6 +1,26 @@
 NativeScript CLI Changelog
 ================
 
+2.0.0 (2016, April 28)
+==
+
+### New
+* [Implemented #1262](https://github.com/NativeScript/nativescript-cli/issues/1262): LiveSync with console.log support for iOS simulators.
+* [Implemented #1431](https://github.com/NativeScript/nativescript-cli/issues/1431): `tns doctor` should warn about new versions of NativeScript components.
+* [Implemented #1595](https://github.com/NativeScript/nativescript-cli/issues/1595): Provide a shorthand for starting Angular 2 apps (`--ng`).
+* [Implemented #1665](https://github.com/NativeScript/nativescript-cli/issues/1665): Add command for searching nativescript plugins.
+
+### Fixed
+* [Fixed #1203](https://github.com/NativeScript/nativescript-cli/issues/1203): Forbid creating projects with names starting with number.
+* [Fixed #1419](https://github.com/NativeScript/nativescript-cli/issues/1419): Cannot find module `colors` during uninstall.
+* [Fixed #1504](https://github.com/NativeScript/nativescript-cli/issues/1504): Avoid NPM warnings on the create command .
+* [Fixed #1526](https://github.com/NativeScript/nativescript-cli/issues/1526): Executing `tns platform add <platform>` prints command help when platform is already added.
+* [Fixed #1532](https://github.com/NativeScript/nativescript-cli/issues/1532): `tns livesync ios --watch` doesn't sync js changes if pacakgeId and folder name does not match.
+* [Fixed #1611](https://github.com/NativeScript/nativescript-cli/issues/1611): Unable to build a project with CocoaPods version: `1.0.0.beta.x`.
+* [Fixed #1639](https://github.com/NativeScript/nativescript-cli/issues/1639): Fix compatibility with XCode 7.3
+* [Fixed #1674](https://github.com/NativeScript/nativescript-cli/issues/1674): Can't build ios project is cocoapods is not installed.
+* [Fixed #1689](https://github.com/NativeScript/nativescript-cli/issues/1689): Executing `tns run android` fails to deploy app on new Android emulator.
+
 1.7.1 (2016, March 30)
 ==
 
@@ -64,7 +84,6 @@ The existing `AndroidManifest.xml` will be renamed and default manifest will be 
 * [Implemented #1089](https://github.com/NativeScript/nativescript-cli/issues/1089): Allow full `Info.plist` and `AndroidManifest.xml` files to be placed in `app/App_Resources/<platform>`.
 * [Implemented #1239](https://github.com/NativeScript/nativescript-cli/issues/1239): Remove support for `library add` command.
 * [Implemented #1243](https://github.com/NativeScript/nativescript-cli/issues/1243): Fast livesync for images in `app` directory.
-* [Implemented #1262](https://github.com/NativeScript/nativescript-cli/issues/1262): LiveSync with console.log support for iOS simulators.
 * [Implemented #1294](https://github.com/NativeScript/nativescript-cli/issues/1294): `tns doctor` should check CocoaPods/Ruby version.
 * [Implemented #1302](https://github.com/NativeScript/nativescript-cli/issues/1302): Add command for generating html help pages - `dev-generate-help`.
 * [Implemented #1329](https://github.com/NativeScript/nativescript-cli/issues/1329): `tns device` to show status of connected devices.
