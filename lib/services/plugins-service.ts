@@ -114,23 +114,26 @@ export class PluginsService implements IPluginsService {
 		return (() => {
 			platform = platform.toLowerCase();
 			let platformData = this.$platformsData.getPlatformData(platform);
-			let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
+			let allPluginsDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 			let pluginData = this.convertToPluginData(dependencyData);
+			let pluginDestinationPath = path.join(allPluginsDestinationPath, pluginData.name);
 
 			if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
+				// The plugin is not supported for the selected platform and does not need to be in the plugins destination path.
+				shelljs.rm("-rf", pluginDestinationPath);
 				return;
 			}
 
 			if (this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
-				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
-				shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
+				this.$fs.ensureDirectoryExists(allPluginsDestinationPath).wait();
+				shelljs.cp("-Rf", pluginData.fullPath, allPluginsDestinationPath);
 
-				this.$projectFilesManager.processPlatformSpecificFiles(pluginDestinationPath, platform).wait();
+				this.$projectFilesManager.processPlatformSpecificFiles(allPluginsDestinationPath, platform).wait();
 
 				pluginData.pluginPlatformsFolderPath = (_platform: string) => path.join(pluginData.fullPath, "platforms", _platform);
 				platformData.platformProjectService.preparePluginNativeCode(pluginData).wait();
 
-				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
+				shelljs.rm("-rf", path.join(pluginDestinationPath, "platforms"));
 
 				// Show message
 				this.$logger.out(`Successfully prepared plugin ${pluginData.name} for ${platform}.`);
