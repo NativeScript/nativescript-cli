@@ -27,11 +27,39 @@ var _query = require('../query');
 
 var _log = require('../log');
 
+var _metadata = require('../metadata');
+
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
 
+var _xorWith = require('lodash/xorWith');
+
+var _xorWith2 = _interopRequireDefault(_xorWith);
+
+var _filter = require('lodash/filter');
+
+var _filter2 = _interopRequireDefault(_filter);
+
+var _keyBy = require('lodash/keyBy');
+
+var _keyBy2 = _interopRequireDefault(_keyBy);
+
+var _map = require('lodash/map');
+
+var _map2 = _interopRequireDefault(_map);
+
+var _isArray = require('lodash/isArray');
+
+var _isArray2 = _interopRequireDefault(_isArray);
+
+var _parallel = require('async/parallel');
+
+var _parallel2 = _interopRequireDefault(_parallel);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _babybird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _babybird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -286,54 +314,85 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'save',
-    value: function save(entity) {
-      var _this6 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(entities) {
+        var _this6 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var singular, request;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                singular = false;
 
-      if (!entity) {
-        _log.Log.warn('No entity was provided to be saved.', entity);
-        return _babybird2.default.resolve(null);
+                if (entities) {
+                  _context.next = 4;
+                  break;
+                }
+
+                _log.Log.warn('No entity was provided to be saved.', entities);
+                return _context.abrupt('return', _babybird2.default.resolve(null));
+
+              case 4:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.POST,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this._pathname
+                  }),
+                  properties: options.properties,
+                  body: entities,
+                  timeout: options.timeout
+                });
+
+
+                if (entities[idAttribute]) {
+                  request.method = _enums.HttpMethod.PUT;
+                  request.url = _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this._pathname + '/' + entities[idAttribute]
+                  });
+                }
+
+                _context.next = 8;
+                return request.execute().then(function (response) {
+                  return response.data;
+                });
+
+              case 8:
+                entities = _context.sent;
+
+
+                if (!(0, _isArray2.default)(entities)) {
+                  singular = true;
+                  entities = [entities];
+                }
+
+                _context.next = 12;
+                return _babybird2.default.all((0, _map2.default)(entities, function (entity) {
+                  return _this6.sync.save(_this6.name, entity, options);
+                }));
+
+              case 12:
+                return _context.abrupt('return', singular ? entities[0] : entities);
+
+              case 13:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function save(_x5, _x6) {
+        return ref.apply(this, arguments);
       }
 
-      _log.Log.debug('Saving the entity(s) to the ' + this.name + ' collection.', entity);
-
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.POST,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname
-        }),
-        properties: options.properties,
-        data: entity,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      if (entity[idAttribute]) {
-        request.method = _enums.HttpMethod.PUT;
-        request.url = _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname + '/' + entity[idAttribute]
-        });
-      }
-
-      var promise = request.execute().then(function (response) {
-        return _this6._sync(response.data, options).then(function () {
-          return response.data;
-        });
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Saved the entity(s) to the ' + _this6.name + ' collection.', response);
-      }).catch(function (error) {
-        _log.Log.error('Failed to save the entity(s) to the ' + _this6.name + ' collection.', error);
-      });
-
-      return promise;
-    }
+      return save;
+    }()
 
     /**
      * Remove entities in a collection. A query can be optionally provided to remove
@@ -351,44 +410,124 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'remove',
-    value: function remove(query) {
-      var _this7 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(query) {
+        var _this7 = this;
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request, entities, localEntities, syncEntities;
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (!(query && !(query instanceof _query.Query))) {
+                  _context4.next = 2;
+                  break;
+                }
 
-      _log.Log.debug('Removing the entities in the ' + this.name + ' collection.', query);
+                return _context4.abrupt('return', _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.')));
 
-      if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+              case 2:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.DELETE,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this._pathname
+                  }),
+                  properties: options.properties,
+                  query: query,
+                  timeout: options.timeout,
+                  client: this.client
+                });
+                _context4.next = 5;
+                return request.execute().then(function (response) {
+                  return response.data;
+                });
+
+              case 5:
+                entities = _context4.sent;
+                localEntities = (0, _filter2.default)(entities, function (entity) {
+                  var metadata = new _metadata.Metadata(entity);
+                  return metadata.isLocal();
+                });
+                syncEntities = (0, _xorWith2.default)(entities, localEntities, function (entity, localEntity) {
+                  return entity[idAttribute] === localEntity[idAttribute];
+                });
+                return _context4.abrupt('return', new _babybird2.default(function (reject, resolve) {
+                  (0, _parallel2.default)([function () {
+                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(callback) {
+                      var query;
+                      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                        while (1) {
+                          switch (_context2.prev = _context2.next) {
+                            case 0:
+                              query = new _query.Query();
+
+                              query.contains('entityId', Object.keys((0, _keyBy2.default)(localEntities, idAttribute)));
+                              _context2.next = 4;
+                              return _this7.sync.clear(query, options);
+
+                            case 4:
+                              callback();
+
+                            case 5:
+                            case 'end':
+                              return _context2.stop();
+                          }
+                        }
+                      }, _callee2, _this7);
+                    }));
+
+                    return function (_x11) {
+                      return ref.apply(this, arguments);
+                    };
+                  }(), function () {
+                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(callback) {
+                      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                        while (1) {
+                          switch (_context3.prev = _context3.next) {
+                            case 0:
+                              _context3.next = 2;
+                              return _this7.sync.remove(_this7.name, syncEntities, options);
+
+                            case 2:
+                              callback();
+
+                            case 3:
+                            case 'end':
+                              return _context3.stop();
+                          }
+                        }
+                      }, _callee3, _this7);
+                    }));
+
+                    return function (_x12) {
+                      return ref.apply(this, arguments);
+                    };
+                  }()], function (error) {
+                    if (error) {
+                      return reject(error);
+                    }
+
+                    return resolve(entities);
+                  });
+                }));
+
+              case 9:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function remove(_x8, _x9) {
+        return ref.apply(this, arguments);
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.DELETE,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return _this7._sync(response.data.entities, options).then(function () {
-          return response.data;
-        });
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Removed the entities in the ' + _this7.name + ' collection.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to remove the entities in the ' + _this7.name + ' collection.', err);
-      });
-
-      return promise;
-    }
+      return remove;
+    }()
 
     /**
      * Remove an entity in a collection. A promise will be returned that will be
@@ -404,44 +543,79 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'removeById',
-    value: function removeById(id) {
-      var _this8 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(id) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request, entity, metadata, query;
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                if (id) {
+                  _context5.next = 3;
+                  break;
+                }
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                _log.Log.warn('No id was provided to be removed.', id);
+                return _context5.abrupt('return', _babybird2.default.resolve(null));
 
-      if (!id) {
-        _log.Log.warn('No id was provided to be removed.', id);
-        return _babybird2.default.resolve(null);
+              case 3:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.DELETE,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this._pathname + '/' + id
+                  }),
+                  properties: options.properties,
+                  timeout: options.timeout,
+                  client: this.client
+                });
+                _context5.next = 6;
+                return request.execute().then(function (response) {
+                  return response.data;
+                });
+
+              case 6:
+                entity = _context5.sent;
+                metadata = new _metadata.Metadata(entity);
+
+                if (!metadata.isLocal()) {
+                  _context5.next = 15;
+                  break;
+                }
+
+                query = new _query.Query();
+
+                query.equalTo('entityId', entity[idAttribute]);
+                _context5.next = 13;
+                return this.sync.clear(this.name, query, options);
+
+              case 13:
+                _context5.next = 17;
+                break;
+
+              case 15:
+                _context5.next = 17;
+                return this.sync.remove(this.name, entity, options);
+
+              case 17:
+                return _context5.abrupt('return', entity);
+
+              case 18:
+              case 'end':
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      function removeById(_x13, _x14) {
+        return ref.apply(this, arguments);
       }
 
-      _log.Log.debug('Removing an entity in the ' + this.name + ' collection with id = ' + id + '.');
-
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.DELETE,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname + '/' + id
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return _this8._sync(response.data.entities, options).then(function () {
-          return response.data;
-        });
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Removed the entity in the ' + _this8.name + ' collection with id = ' + id + '.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to remove the entity in the ' + _this8.name + ' collection with id = ' + id + '.', err);
-      });
-
-      return promise;
-    }
+      return removeById;
+    }()
 
     /**
      * Pull items for a collection from the network to your local cache. A promise will be
@@ -458,7 +632,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   }, {
     key: 'pull',
     value: function pull(query) {
-      var _this9 = this;
+      var _this8 = this;
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -467,7 +641,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
           throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
         }
 
-        return _get(Object.getPrototypeOf(SyncStore.prototype), 'find', _this9).call(_this9, query, options);
+        return _get(Object.getPrototypeOf(SyncStore.prototype), 'find', _this8).call(_this8, query, options);
       }).then(function (result) {
         return result.networkPromise;
       });

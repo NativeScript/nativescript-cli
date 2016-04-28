@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.IndexedDB = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -52,7 +51,7 @@ var indexedDB = global.shimIndexedDB || global.indexedDB || global.mozIndexedDB 
  * @private
  */
 
-var IndexedDB = exports.IndexedDB = function () {
+var IndexedDB = function () {
   function IndexedDB(name) {
     _classCallCheck(this, IndexedDB);
 
@@ -310,10 +309,7 @@ var IndexedDB = exports.IndexedDB = function () {
               return reject(new _errors.NotFoundError('An entity with id = ' + id + ' was not found in the ' + collection + ' ' + ('collection on the ' + _this5.name + ' indexedDB database.')));
             }
 
-            return resolve({
-              count: 1,
-              entities: [doc.result]
-            });
+            return resolve(doc.result);
           };
 
           request.onerror = function (e) {
@@ -333,3 +329,5 @@ var IndexedDB = exports.IndexedDB = function () {
 
   return IndexedDB;
 }();
+
+exports.default = IndexedDB;

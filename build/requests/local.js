@@ -17,6 +17,8 @@ var _errors = require('../errors');
 
 var _response = require('./response');
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -41,53 +43,104 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
 
   _createClass(LocalRequest, [{
     key: 'execute',
-    value: function execute() {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
+        var response;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.next = 2;
+                return _get(Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this);
 
-      return _get(Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this).then(function () {
-        return _this2.rack.execute(_this2);
-      }).then(function (response) {
-        // Throw a NoResponseError if we did not receive
-        // a response
-        if (!response) {
-          throw new _errors.NoResponseError();
-        }
+              case 2:
+                _context.next = 4;
+                return this.rack.execute(this);
 
-        // Make sure the response is an instance of the
-        // Response class
-        if (!(response instanceof _response.Response)) {
-          response = new _response.Response({
-            statusCode: response.statusCode,
-            headers: response.headers,
-            data: response.data
-          });
-        }
+              case 4:
+                response = _context.sent;
 
-        // Return the response
-        return response;
-      }).then(function (response) {
-        // Flip the executing flag to false
-        _this2.executing = false;
 
-        // Throw the response error if we did not receive
-        // a successfull response
-        if (!response.isSuccess()) {
-          throw response.error;
-        }
+                // Flip the executing flag to false
+                this.executing = false;
 
-        // Just return the response
-        return response;
-      });
-    }
+                // Throw a NoResponseError if we did not receive
+                // a response
+
+                if (response) {
+                  _context.next = 8;
+                  break;
+                }
+
+                throw new _errors.NoResponseError();
+
+              case 8:
+
+                // Make sure the response is an instance of the
+                // Response class
+                if (!(response instanceof _response.Response)) {
+                  response = new _response.Response({
+                    statusCode: response.statusCode,
+                    headers: response.headers,
+                    data: response.data
+                  });
+                }
+
+                // Throw the response error if we did not receive
+                // a successfull response
+
+                if (response.isSuccess()) {
+                  _context.next = 11;
+                  break;
+                }
+
+                throw response.error;
+
+              case 11:
+                return _context.abrupt('return', response);
+
+              case 12:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function execute() {
+        return ref.apply(this, arguments);
+      }
+
+      return execute;
+    }()
   }, {
     key: 'cancel',
-    value: function cancel() {
-      var _this3 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return _get(Object.getPrototypeOf(LocalRequest.prototype), 'cancel', this).call(this);
 
-      return _get(Object.getPrototypeOf(LocalRequest.prototype), 'cancel', this).call(this).then(function () {
-        return _this3.rack.cancel();
-      });
-    }
+              case 2:
+                return _context2.abrupt('return', this.rack.cancel());
+
+              case 3:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function cancel() {
+        return ref.apply(this, arguments);
+      }
+
+      return cancel;
+    }()
   }]);
 
   return LocalRequest;

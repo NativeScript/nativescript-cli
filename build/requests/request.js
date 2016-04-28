@@ -160,7 +160,7 @@ var Auth = {
    * @returns {Object}
    */
   session: function session(client) {
-    var activeUser = client.user;
+    var activeUser = client.activeUser;
 
     if (!activeUser) {
       throw new _errors.NoActiveUserError('There is not an active user. Please login a user and retry the request.');
@@ -189,7 +189,8 @@ var Request = exports.Request = function () {
       url: '',
       data: null,
       timeout: undefined || 10000,
-      followRedirect: true
+      followRedirect: true,
+      noCache: false
     }, options);
 
     this.method = options.method;
@@ -197,6 +198,7 @@ var Request = exports.Request = function () {
     this.data = options.data || options.body;
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
+    this.noCache = options.noCache;
     this.executing = false;
 
     var headers = options.headers && (0, _isPlainObject2.default)(options.headers) ? options.headers : {};
@@ -347,7 +349,7 @@ var Request = exports.Request = function () {
   }, {
     key: 'method',
     get: function get() {
-      return this._method;
+      return this.requestMethod;
     },
     set: function set(method) {
       if (!(0, _isString2.default)(method)) {
@@ -362,7 +364,7 @@ var Request = exports.Request = function () {
         case _enums.HttpMethod.PATCH:
         case _enums.HttpMethod.PUT:
         case _enums.HttpMethod.DELETE:
-          this._method = method;
+          this.requestMethod = method;
           break;
         default:
           throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
@@ -371,37 +373,41 @@ var Request = exports.Request = function () {
   }, {
     key: 'url',
     get: function get() {
-      return (0, _appendQuery2.default)(this._url, _qs2.default.stringify({
-        _: Math.random().toString(36).substr(2)
-      }));
+      // Unless `noCache` is true, add a cache busting query string.
+      // This is useful for Android < 4.0 which caches all requests aggressively.
+      if (this.noCache) {
+        return (0, _appendQuery2.default)(this.requestUrl, _qs2.default.stringify({
+          _: Math.random().toString(36).substr(2)
+        }));
+      }
+
+      return this.requestUrl;
     },
     set: function set(urlString) {
-      this._url = urlString;
+      this.requestUrl = urlString;
     }
   }, {
     key: 'body',
     get: function get() {
-      return this.data;
+      return this.requestBody;
     },
     set: function set(body) {
-      this.data = body;
-    }
-  }, {
-    key: 'data',
-    get: function get() {
-      return this._data;
-    },
-    set: function set(data) {
-      if (data) {
+      if (body) {
         var contentTypeHeader = this.getHeader('Content-Type');
         if (!contentTypeHeader) {
           this.setHeader('Content-Type', 'application/json; charset=utf-8');
         }
-      } else {
-        this.removeHeader('Content-Type');
       }
 
-      this._data = data;
+      this.requestBody = body;
+    }
+  }, {
+    key: 'data',
+    get: function get() {
+      return this.body;
+    },
+    set: function set(data) {
+      this.body = data;
     }
   }]);
 

@@ -126,10 +126,7 @@ var LocalStorage = exports.LocalStorage = function () {
         delete entitiesById[id];
         localStorage.setItem('' + _this4.name + collection, JSON.stringify((0, _values2.default)(entitiesById)));
 
-        return {
-          count: 1,
-          entities: [entity]
-        };
+        return entity;
       });
     }
   }], [{

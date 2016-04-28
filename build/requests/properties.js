@@ -122,10 +122,10 @@ var RequestProperties = exports.RequestProperties = function () {
   }, {
     key: 'properties',
     get: function get() {
-      return this._properties;
+      return this.requestProperties;
     },
     set: function set(properties) {
-      this._properties = properties;
+      this.requestProperties = properties;
     }
 
     /**

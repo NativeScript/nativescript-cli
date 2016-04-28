@@ -9,6 +9,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
+var _storage = require('./utils/storage');
+
 var _localStorage = require('local-storage');
 
 var _localStorage2 = _interopRequireDefault(_localStorage);
@@ -29,8 +31,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var userCollectionName = 'kinvey_user' || 'kinvey_user';
-var socialIdentityCollectionName = undefined || 'kinvey_socialIdentity';
 var pushCollectionName = 'kinvey_push' || 'kinvey_push';
 var _sharedInstance = null;
 
@@ -164,25 +164,14 @@ var Client = exports.Client = function () {
       });
     }
   }, {
-    key: 'user',
+    key: 'activeUser',
     get: function get() {
-      return _localStorage2.default.get('' + this.appKey + userCollectionName);
+      return (0, _storage.getActiveUser)(this);
     }
   }, {
-    key: 'socialIdentity',
+    key: 'activeSocialIdentity',
     get: function get() {
-      return _localStorage2.default.get('' + this.appKey + socialIdentityCollectionName);
-    },
-    set: function set(socialIdentity) {
-      if (socialIdentity) {
-        try {
-          return _localStorage2.default.set('' + this.appKey + socialIdentityCollectionName, socialIdentity);
-        } catch (error) {
-          return false;
-        }
-      }
-
-      return _localStorage2.default.remove('' + this.appKey + socialIdentityCollectionName);
+      return (0, _storage.getActiveSocialIdentity)(this);
     }
   }, {
     key: 'push',

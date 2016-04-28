@@ -668,14 +668,8 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   async _sync(entities, options = {}) {
-    let singuler = false;
-
     if (!this.isSyncEnabled()) {
       return null;
-    }
-
-    if (!isArray(entity)) {
-
     }
 
     return this.sync.notify(this.name, entities, options);

@@ -35,6 +35,12 @@ var _aggregation = require('../aggregation');
 
 var _log = require('../log');
 
+var _metadata = require('../metadata');
+
+var _filter = require('lodash/filter');
+
+var _filter2 = _interopRequireDefault(_filter);
+
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -504,7 +510,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
               case 9:
                 cachedEntity = _context4.sent;
-                _context4.next = 16;
+                _context4.next = 17;
                 break;
 
               case 12:
@@ -519,6 +525,10 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                 throw _context4.t0;
 
               case 16:
+
+                cachedEntity = null;
+
+              case 17:
                 promise = this.syncCount().then(function (count) {
                   if (count > 0) {
                     return _this5.push().then(function () {
@@ -579,7 +589,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                   networkPromise: promise
                 });
 
-              case 18:
+              case 19:
               case 'end':
                 return _context4.stop();
             }
@@ -611,22 +621,26 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
   }, {
     key: 'save',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(entity) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(entities) {
+        var _this6 = this;
+
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, data, ids, query, push, success, entities;
+        var singular, request, ids, query, push;
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                if (entity) {
-                  _context5.next = 3;
+                singular = false;
+
+                if (entities) {
+                  _context5.next = 4;
                   break;
                 }
 
-                _log.Log.warn('No entity was provided to be saved.', entity);
+                _log.Log.warn('No entity was provided to be saved.', entities);
                 return _context5.abrupt('return', _babybird2.default.resolve(null));
 
-              case 3:
+              case 4:
                 request = new _local.LocalRequest({
                   method: _enums.HttpMethod.POST,
                   url: _url2.default.format({
@@ -635,47 +649,57 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                     pathname: this._pathname
                   }),
                   properties: options.properties,
-                  data: entity,
-                  timeout: options.timeout,
-                  client: this.client
+                  body: entities,
+                  timeout: options.timeout
                 });
 
 
-                if (entity[idAttribute]) {
+                if (entities[idAttribute]) {
                   request.method = _enums.HttpMethod.PUT;
                   request.url = _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname + '/' + entity[idAttribute]
+                    pathname: this._pathname + '/' + entities[idAttribute]
                   });
                 }
 
-                _context5.next = 7;
+                _context5.next = 8;
                 return request.execute().then(function (response) {
                   return response.data;
                 });
 
-              case 7:
-                entity = _context5.sent;
-                _context5.next = 10;
-                return this._sync(entity, options);
+              case 8:
+                entities = _context5.sent;
 
-              case 10:
-                data = (0, _isArray2.default)(entity) ? entity : [entity];
-                ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
+
+                if (!(0, _isArray2.default)(entities)) {
+                  singular = true;
+                  entities = [entities];
+                }
+
+                _context5.next = 12;
+                return _babybird2.default.all((0, _map2.default)(entities, function (entity) {
+                  return _this6.sync.save(_this6.name, entity, options);
+                }));
+
+              case 12:
+                ids = Object.keys((0, _keyBy2.default)(entities, idAttribute));
                 query = new _query.Query().contains(idAttribute, ids);
-                _context5.next = 15;
+                _context5.next = 16;
                 return this.push(query, options);
 
-              case 15:
+              case 16:
                 push = _context5.sent;
-                success = push.success;
-                entities = (0, _map2.default)(success, function (successItem) {
-                  return successItem.entity;
-                });
-                return _context5.abrupt('return', !(0, _isArray2.default)(entity) && entities.length === 1 ? entities[0] : entities);
 
-              case 19:
+                push = (0, _filter2.default)(push, function (result) {
+                  return !result.error;
+                });
+                entities = (0, _map2.default)(push, function (result) {
+                  return result.entity;
+                });
+                return _context5.abrupt('return', singular ? entities[0] : entities);
+
+              case 20:
               case 'end':
                 return _context5.stop();
             }
@@ -709,7 +733,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, result, pushQuery;
+        var request, result, entities, pushQuery;
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -741,18 +765,22 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
               case 5:
                 result = _context6.sent;
-                _context6.next = 8;
-                return this._sync(result.entities, options);
+                entities = (0, _filter2.default)(result.entities, function (entity) {
+                  var metadata = new _metadata.Metadata(entity);
+                  return !metadata.isLocal();
+                });
+                _context6.next = 9;
+                return this._sync(entities, options);
 
-              case 8:
-                pushQuery = new _query.Query().contains(idAttribute, Object.keys((0, _keyBy2.default)(result.entities, idAttribute)));
-                _context6.next = 11;
+              case 9:
+                pushQuery = new _query.Query().contains(idAttribute, Object.keys((0, _keyBy2.default)(entities, idAttribute)));
+                _context6.next = 12;
                 return this.push(pushQuery, options);
 
-              case 11:
+              case 12:
                 return _context6.abrupt('return', result);
 
-              case 12:
+              case 13:
               case 'end':
                 return _context6.stop();
             }
@@ -784,7 +812,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(id) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, result, query;
+        var request, result, entities, query;
         return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
@@ -817,18 +845,22 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
               case 6:
                 result = _context7.sent;
-                _context7.next = 9;
-                return this._sync(result.entities, options);
+                entities = (0, _filter2.default)(result.entities, function (entity) {
+                  var metadata = new _metadata.Metadata(entity);
+                  return !metadata.isLocal();
+                });
+                _context7.next = 10;
+                return this._sync(entities, options);
 
-              case 9:
-                query = new _query.Query().contains(idAttribute, Object.keys((0, _keyBy2.default)(result.entities, idAttribute)));
-                _context7.next = 12;
+              case 10:
+                query = new _query.Query().contains(idAttribute, Object.keys((0, _keyBy2.default)(entities, idAttribute)));
+                _context7.next = 13;
                 return this.push(query, options);
 
-              case 12:
+              case 13:
                 return _context7.abrupt('return', result);
 
-              case 13:
+              case 14:
               case 'end':
                 return _context7.stop();
             }
@@ -872,12 +904,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
         return _babybird2.default.reject(new _errors.KinveyError('Sync is disabled.'));
       }
 
-      if (!(query instanceof _query.Query)) {
-        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
-      }
-
-      query.contains(idAttribute, [this.name]);
-      return this.sync.execute(query, options);
+      return this.sync.execute(this.name, query, options);
     }
 
     /**
@@ -1035,7 +1062,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
         query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
       }
 
-      query.contains(idAttribute, [this.name]);
+      query.equalTo('collection', this.name);
       return this.sync.count(query, options);
     }
 

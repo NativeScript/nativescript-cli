@@ -171,10 +171,7 @@ var Memory = exports.Memory = function () {
         delete entities[id];
         _this4.cache.set('' + _this4.name + collection, JSON.stringify((0, _values2.default)(entities)));
 
-        return {
-          count: 1,
-          entities: [entity]
-        };
+        return entity;
       });
     }
   }], [{

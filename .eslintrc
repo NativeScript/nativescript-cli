@@ -1,6 +1,7 @@
 {
   "extends": "airbnb/base",
   "parser": "babel-eslint",
+  "plugins": ["import"],
   "rules": {
     "id-length": 0,
     "no-param-reassign": 0,

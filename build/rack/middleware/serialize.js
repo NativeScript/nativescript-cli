@@ -5,17 +5,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.SerializeMiddleware = undefined;
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _middleware = require('../middleware');
-
-var _forEach = require('lodash/forEach');
-
-var _forEach2 = _interopRequireDefault(_forEach);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
@@ -44,7 +40,8 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
     key: 'handle',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(request) {
-        var contentType;
+        var contentType, body, str, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, _step$value, key;
+
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -55,36 +52,88 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
               case 2:
                 request = _context.sent;
 
-
-                if (request && request.data) {
-                  contentType = request.headers['content-type'] || request.headers['Content-Type'];
-
-
-                  if (contentType.indexOf('application/json') === 0) {
-                    request.data = JSON.stringify(request.data);
-                  } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
-                    (function () {
-                      var data = request.data;
-                      var str = [];
-                      var keys = Object.keys(data);
-
-                      (0, _forEach2.default)(keys, function (key) {
-                        str.push(global.encodeURIComponent(key) + '=' + global.encodeURIComponent(data[key]));
-                      });
-
-                      request.data = str.join('&');
-                    })();
-                  }
+                if (!(request && request.data)) {
+                  _context.next = 32;
+                  break;
                 }
 
+                contentType = request.headers['content-type'] || request.headers['Content-Type'];
+
+                if (!(contentType.indexOf('application/json') === 0)) {
+                  _context.next = 9;
+                  break;
+                }
+
+                request.data = JSON.stringify(request.data);
+                _context.next = 32;
+                break;
+
+              case 9:
+                if (!(contentType.indexOf('application/x-www-form-urlencoded') === 0)) {
+                  _context.next = 32;
+                  break;
+                }
+
+                body = request.body;
+                str = [];
+                _iteratorNormalCompletion = true;
+                _didIteratorError = false;
+                _iteratorError = undefined;
+                _context.prev = 15;
+
+
+                for (_iterator = body[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  _step$value = _slicedToArray(_step.value, 1);
+                  key = _step$value[0];
+
+                  str.push(global.encodeURIComponent(key) + '=' + global.encodeURIComponent(body[key]));
+                }
+
+                _context.next = 23;
+                break;
+
+              case 19:
+                _context.prev = 19;
+                _context.t0 = _context['catch'](15);
+                _didIteratorError = true;
+                _iteratorError = _context.t0;
+
+              case 23:
+                _context.prev = 23;
+                _context.prev = 24;
+
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                  _iterator.return();
+                }
+
+              case 26:
+                _context.prev = 26;
+
+                if (!_didIteratorError) {
+                  _context.next = 29;
+                  break;
+                }
+
+                throw _iteratorError;
+
+              case 29:
+                return _context.finish(26);
+
+              case 30:
+                return _context.finish(23);
+
+              case 31:
+                request.body = str.join('&');
+
+              case 32:
                 return _context.abrupt('return', request);
 
-              case 5:
+              case 33:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this);
+        }, _callee, this, [[15, 19, 23, 31], [24,, 26, 30]]);
       }));
 
       function handle(_x2) {

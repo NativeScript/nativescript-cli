@@ -165,12 +165,30 @@ var Response = exports.Response = function () {
       var message = data.message || data.description;
       var debug = data.debug;
 
-      if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound' || this.statusCode === 404) {
-        return new _errors.NotFoundError(message, debug);
+      if (name === 'FeatureUnavailableError') {
+        return new _errors.FeatureUnavailableError(message, debug);
+      } else if (name === 'IncompleteRequestBodyError') {
+        return new _errors.IncompleteRequestBodyError(message, debug);
       } else if (name === 'InsufficientCredentials') {
         return new _errors.InsufficientCredentialsError(message, debug);
       } else if (name === 'InvalidCredentials') {
         return new _errors.InvalidCredentialsError(message, debug);
+      } else if (name === 'InvalidIdentifierError') {
+        return new _errors.InvalidIdentifierError(message, debug);
+      } else if (name === 'InvalidQuerySyntaxError') {
+        return new _errors.InvalidQuerySyntaxError(message, debug);
+      } else if (name === 'JSONParseError') {
+        return new _errors.JSONParseError(message, debug);
+      } else if (name === 'MissingQueryError') {
+        return new _errors.MissingQueryError(message, debug);
+      } else if (name === 'MissingRequestHeaderError') {
+        return new _errors.MissingRequestHeaderError(message, debug);
+      } else if (name === 'MissingRequestParameterError') {
+        return new _errors.MissingRequestParameterError(message, debug);
+      } else if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound' || this.statusCode === 404) {
+        return new _errors.NotFoundError(message, debug);
+      } else if (name === 'ParameterValueOutOfRangeError') {
+        return new _errors.ParameterValueOutOfRangeError(message, debug);
       }
 
       return new _errors.KinveyError(message, debug);

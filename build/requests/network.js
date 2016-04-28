@@ -5,8 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.NetworkRequest = undefined;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
@@ -19,13 +17,17 @@ var _errors = require('../errors');
 
 var _enums = require('../enums');
 
-var _response = require('./response');
+var _response2 = require('./response');
+
+var _storage = require('../utils/storage');
 
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -57,129 +59,186 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
 
   _createClass(NetworkRequest, [{
     key: 'execute',
-    value: function execute() {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
+        var response, activeSocialIdentity, token, refreshTokenRequest, newToken, activeUser, socialIdentity, loginRequest, user, _response;
 
-      var promise = _get(Object.getPrototypeOf(NetworkRequest.prototype), 'execute', this).call(this).then(function () {
-        return _this2.rack.execute(_this2);
-      }).then(function (response) {
-        if (!response) {
-          throw new _errors.NoResponseError();
-        }
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.prev = 0;
+                _context.next = 3;
+                return _get(Object.getPrototypeOf(NetworkRequest.prototype), 'execute', this).call(this);
 
-        if (!(response instanceof _response.Response)) {
-          return new _response.Response({
-            statusCode: response.statusCode,
-            headers: response.headers,
-            data: response.data
-          });
-        }
+              case 3:
+                _context.next = 5;
+                return this.rack.execute(this);
 
-        return response;
-      }).then(function (response) {
-        _this2.executing = false;
+              case 5:
+                response = _context.sent;
 
-        if (!response.isSuccess()) {
-          throw response.error;
-        }
+                this.executing = false;
 
-        return response;
-      }).catch(function (error) {
-        if (error instanceof _errors.InvalidCredentialsError && _this2.automaticallyRefreshAuthToken) {
-          var _ret = function () {
-            _this2.automaticallyRefreshAuthToken = false;
-            var socialIdentity = _this2.client.socialIdentity;
-
-            // Refresh MIC Auth Token
-            if (socialIdentity && socialIdentity.identity === micIdentity) {
-              // Refresh the token
-              var token = socialIdentity.token;
-              var request = new NetworkRequest({
-                method: _enums.HttpMethod.POST,
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                authType: _enums.AuthType.App,
-                url: _url2.default.format({
-                  protocol: socialIdentity.client.protocol,
-                  host: socialIdentity.client.host,
-                  pathname: tokenPathname
-                }),
-                properties: _this2.properties,
-                data: {
-                  grant_type: 'refresh_token',
-                  client_id: token.audience,
-                  redirect_uri: socialIdentity.redirectUri,
-                  refresh_token: token.refresh_token
+                if (response) {
+                  _context.next = 9;
+                  break;
                 }
-              });
-              request.automaticallyRefreshAuthToken = false;
 
-              return {
-                v: request.execute().then(function (response) {
-                  return response.data;
-                }).then(function (token) {
-                  // Login the user with the new token
-                  var activeUser = _this2.client.user;
-                  var socialIdentity = activeUser[socialIdentityAttribute];
-                  socialIdentity[socialIdentity.identity] = token;
-                  activeUser[socialIdentityAttribute] = socialIdentity;
+                throw new _errors.NoResponseError();
 
-                  var request = new NetworkRequest({
-                    method: _enums.HttpMethod.POST,
-                    authType: _enums.AuthType.App,
-                    url: _url2.default.format({
-                      protocol: _this2.client.protocol,
-                      host: _this2.client.host,
-                      pathname: '/' + usersNamespace + '/' + _this2.client.appKey + '/login'
-                    }),
-                    properties: _this2.properties,
-                    data: activeUser,
-                    timeout: _this2.timeout,
-                    client: _this2.client
+              case 9:
+
+                if (!(response instanceof _response2.Response)) {
+                  response = new _response2.Response({
+                    statusCode: response.statusCode,
+                    headers: response.headers,
+                    data: response.data
                   });
-                  request.automaticallyRefreshAuthToken = false;
-                  return request.execute();
-                }).then(function (response) {
-                  // Store the new data
-                  _this2.client.user = response.data;
-                  _this2.client.socialIdentity = {
-                    identity: socialIdentity.identity,
-                    redirectUri: socialIdentity.redirectUri,
-                    token: response.data[socialIdentityAttribute][socialIdentity.identity],
-                    client: socialIdentity.client
-                  };
+                }
 
-                  // Execute the original request
-                  return _this2.execute();
-                }).catch(function () {
-                  throw error;
-                })
-              };
+                if (response.isSuccess()) {
+                  _context.next = 12;
+                  break;
+                }
+
+                throw response.error;
+
+              case 12:
+                return _context.abrupt('return', response);
+
+              case 15:
+                _context.prev = 15;
+                _context.t0 = _context['catch'](0);
+
+                if (!(_context.t0 instanceof _errors.InvalidCredentialsError && this.automaticallyRefreshAuthToken)) {
+                  _context.next = 50;
+                  break;
+                }
+
+                this.automaticallyRefreshAuthToken = false;
+                activeSocialIdentity = this.client.activeSocialIdentity;
+
+                // Refresh MIC Auth Token
+
+                if (!(activeSocialIdentity && activeSocialIdentity.identity === micIdentity)) {
+                  _context.next = 50;
+                  break;
+                }
+
+                // Refresh the token
+                token = activeSocialIdentity.token;
+                refreshTokenRequest = new NetworkRequest({
+                  method: _enums.HttpMethod.POST,
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  authType: _enums.AuthType.App,
+                  url: _url2.default.format({
+                    protocol: activeSocialIdentity.client.protocol,
+                    host: activeSocialIdentity.client.host,
+                    pathname: tokenPathname
+                  }),
+                  properties: this.properties,
+                  data: {
+                    grant_type: 'refresh_token',
+                    client_id: token.audience,
+                    redirect_uri: activeSocialIdentity.redirectUri,
+                    refresh_token: token.refresh_token
+                  }
+                });
+
+                refreshTokenRequest.automaticallyRefreshAuthToken = false;
+                _context.next = 26;
+                return refreshTokenRequest.execute().then(function (response) {
+                  return response.data;
+                });
+
+              case 26:
+                newToken = _context.sent;
+
+
+                // Login the user with the new token
+                activeUser = this.client.activeUser;
+                socialIdentity = activeUser[socialIdentityAttribute];
+
+                socialIdentity[activeSocialIdentity.identity] = newToken;
+                activeUser[socialIdentityAttribute] = activeSocialIdentity;
+
+                loginRequest = new NetworkRequest({
+                  method: _enums.HttpMethod.POST,
+                  authType: _enums.AuthType.App,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: '/' + usersNamespace + '/' + this.client.appKey + '/login'
+                  }),
+                  properties: this.properties,
+                  data: activeUser,
+                  timeout: this.timeout,
+                  client: this.client
+                });
+
+                loginRequest.automaticallyRefreshAuthToken = false;
+                _context.next = 35;
+                return loginRequest.execute().then(function (response) {
+                  return response.data;
+                });
+
+              case 35:
+                user = _context.sent;
+
+
+                // Store the new data
+                (0, _storage.setActiveUser)(this.client, user);
+                (0, _storage.setActiveSocialIdentity)(this.client, {
+                  identity: activeSocialIdentity.identity,
+                  redirectUri: activeSocialIdentity.redirectUri,
+                  token: user[socialIdentityAttribute][activeSocialIdentity.identity],
+                  client: activeSocialIdentity.client
+                });
+
+                _context.prev = 38;
+                _context.next = 41;
+                return this.execute();
+
+              case 41:
+                _response = _context.sent;
+
+                this.automaticallyRefreshAuthToken = true;
+                return _context.abrupt('return', _response);
+
+              case 46:
+                _context.prev = 46;
+                _context.t1 = _context['catch'](38);
+
+                this.automaticallyRefreshAuthToken = true;
+                throw _context.t1;
+
+              case 50:
+                throw _context.t0;
+
+              case 51:
+              case 'end':
+                return _context.stop();
             }
-          }();
+          }
+        }, _callee, this, [[0, 15], [38, 46]]);
+      }));
 
-          if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
-        }
+      function execute() {
+        return ref.apply(this, arguments);
+      }
 
-        throw error;
-      }).then(function (response) {
-        _this2.automaticallyRefreshAuthToken = true;
-        return response;
-      }).catch(function (error) {
-        _this2.automaticallyRefreshAuthToken = true;
-        throw error;
-      });
-
-      return promise;
-    }
+      return execute;
+    }()
   }, {
     key: 'cancel',
     value: function cancel() {
-      var _this3 = this;
+      var _this2 = this;
 
       var promise = _get(Object.getPrototypeOf(NetworkRequest.prototype), 'cancel', this).call(this).then(function () {
-        return _this3.rack.cancel();
+        return _this2.rack.cancel();
       });
       return promise;
     }

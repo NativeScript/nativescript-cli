@@ -29,6 +29,8 @@ var _datastore = require('./stores/datastore');
 
 var _network = require('./requests/network');
 
+var _storage = require('./utils/storage');
+
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -45,15 +47,10 @@ var _isObject = require('lodash/isObject');
 
 var _isObject2 = _interopRequireDefault(_isObject);
 
-var _localStorage = require('local-storage');
-
-var _localStorage2 = _interopRequireDefault(_localStorage);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var userCollectionName = 'kinvey_user' || 'kinvey_user';
 var appdataNamespace = 'appdata' || 'appdata';
 var usersNamespace = 'user' || 'user';
 var rpcNamespace = 'rpc' || 'rpc';
@@ -67,19 +64,6 @@ var hello = void 0;
 
 if (typeof window !== 'undefined') {
   hello = require('hellojs'); // eslint-disable-line global-require
-}
-
-// Set the active user
-function setActiveUser(data) {
-  if (data) {
-    try {
-      return _localStorage2.default.set('' + this.client.appKey + userCollectionName, data);
-    } catch (error) {
-      return false;
-    }
-  }
-
-  return _localStorage2.default.remove('' + this.client.appKey + userCollectionName);
 }
 
 /**
@@ -227,7 +211,7 @@ var User = exports.User = function () {
 
       var promise = request.execute().then(function (response) {
         _this.data = response.data;
-        setActiveUser.call(_this, _this.data);
+        (0, _storage.setActiveUser)(_this.client, _this.data);
         return User.getActiveUser(_this.client);
       });
 
@@ -321,7 +305,7 @@ var User = exports.User = function () {
       }).then(function () {
         var isActive = _this3.isActive();
         if (isActive) {
-          setActiveUser.call(_this3, null);
+          (0, _storage.setActiveUser)(_this3.client, null);
         }
 
         return null;
@@ -470,12 +454,12 @@ var User = exports.User = function () {
 
         throw err;
       }).then(function () {
-        _this5.client.socialIdentity = {
+        (0, _storage.setActiveSocialIdentity)(_this5.client, {
           identity: identity,
           token: _this5._socialIdentity[identity],
           redirectUri: options.redirectUri,
           client: options.micClient
-        };
+        });
         return _this5;
       });
 
@@ -501,10 +485,10 @@ var User = exports.User = function () {
 
         return _this6.update(data, options);
       }).then(function () {
-        var socialIdentity = _this6.client.socialIdentity;
+        var activeSocialIdentity = _this6.client.activeSocialIdentity;
 
-        if (socialIdentity.identity === identity) {
-          _this6.client.socialIdentity = null;
+        if (activeSocialIdentity.identity === identity) {
+          (0, _storage.setActiveSocialIdentity)(_this6.client, null);
         }
 
         return _this6;
@@ -573,7 +557,7 @@ var User = exports.User = function () {
         _this7.data = response.data;
 
         if (options.state === true) {
-          setActiveUser.call(_this7, _this7.data);
+          (0, _storage.setActiveUser)(_this7.client, _this7.data);
         }
 
         return _this7;
@@ -598,7 +582,7 @@ var User = exports.User = function () {
         _this8.data = data;
 
         if (_this8.isActive()) {
-          setActiveUser.call(_this8, _this8.data);
+          (0, _storage.setActiveUser)(_this8.client, _this8.data);
         }
 
         return _this8;
@@ -634,7 +618,7 @@ var User = exports.User = function () {
           }
         }
 
-        setActiveUser.call(_this9, _this9.data);
+        (0, _storage.setActiveUser)(_this9.client, _this9.data);
         return _this9;
       });
 
@@ -882,7 +866,7 @@ var User = exports.User = function () {
     value: function getActiveUser() {
       var client = arguments.length <= 0 || arguments[0] === undefined ? _client.Client.sharedInstance() : arguments[0];
 
-      var data = client.user;
+      var data = client.activeUser;
       var user = null;
 
       if (data) {
