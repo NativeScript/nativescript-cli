@@ -208,14 +208,10 @@ export class DB {
       const promises = entities.map(entity => this.removeById(collection, entity[idAttribute]));
       return Promise.all(promises);
     }).then(responses => {
-      const result = reduce(responses, (result, response) => {
-        result.count += response.count;
-        result.entities = result.entities.concat(response.entities);
-        return result;
-      }, {
-        count: 0,
-        entities: []
-      });
+      const result = reduce(responses, (allEntities, entities) => {
+        allEntities = allEntities.concat(entities);
+        return allEntities;
+      }, []);
       return result;
     });
 
@@ -224,10 +220,7 @@ export class DB {
 
   removeById(collection, id) {
     if (!id) {
-      return Promise.resolve({
-        count: 0,
-        entities: []
-      });
+      return Promise.resolve(null);
     }
 
     if (!isString(id)) {

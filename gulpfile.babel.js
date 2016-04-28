@@ -30,6 +30,7 @@ gulp.task('build', ['clean', 'lint'], () => {
     KINVEY_SOCIAL_IDENTITY_ATTRIBUTE: '_socialIdentity',
     KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME: 'kinvey_socialIdentity',
     KINVEY_SYNC_COLLECTION_NAME: 'kinvey_sync',
+    KINVEY_SYNC_KEY_COLLECTION_NAME: 'kinvey_syncKey',
     KINVEY_USER_COLLECTION_NAME: 'kinvey_user',
     KINVEY_USERNAME_ATTRIBUTE: 'username',
     KINVEY_USERS_NAMESPACE: 'user',

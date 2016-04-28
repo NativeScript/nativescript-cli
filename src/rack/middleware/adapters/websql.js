@@ -163,10 +163,7 @@ export class WebSQL {
           `collection on the ${this.name} webSQL database.`);
       }
 
-      return {
-        count: 1,
-        entities: entities
-      };
+      return entities[0];
     });
 
     return promise;

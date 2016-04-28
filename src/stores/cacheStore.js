@@ -8,6 +8,8 @@ import { DeltaFetchRequest } from '../requests/deltafetch';
 import { Query } from '../query';
 import { Aggregation } from '../aggregation';
 import { Log } from '../log';
+import { Metadata } from '../metadata';
+import filter from 'lodash/filter';
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -387,9 +389,11 @@ export class CacheStore extends NetworkStore {
    *                                                                            in the cache.
    * @return  {Promise}                                                         Promise
    */
-  async save(entity, options = {}) {
-    if (!entity) {
-      Log.warn('No entity was provided to be saved.', entity);
+  async save(entities, options = {}) {
+    let singular = false;
+
+    if (!entities) {
+      Log.warn('No entity was provided to be saved.', entities);
       return Promise.resolve(null);
     }
 
@@ -401,29 +405,33 @@ export class CacheStore extends NetworkStore {
         pathname: this._pathname
       }),
       properties: options.properties,
-      data: entity,
-      timeout: options.timeout,
-      client: this.client
+      body: entities,
+      timeout: options.timeout
     });
 
-    if (entity[idAttribute]) {
+    if (entities[idAttribute]) {
       request.method = HttpMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${entity[idAttribute]}`
+        pathname: `${this._pathname}/${entities[idAttribute]}`
       });
     }
 
-    entity = await request.execute().then(response => response.data);
-    await this._sync(entity, options);
-    const data = isArray(entity) ? entity : [entity];
-    const ids = Object.keys(keyBy(data, idAttribute));
+    entities = await request.execute().then(response => response.data);
+
+    if (!isArray(entities)) {
+      singular = true;
+      entities = [entities];
+    }
+
+    await Promise.all(map(entities, entity => this.sync.save(this.name, entity, options)));
+    const ids = Object.keys(keyBy(entities, idAttribute));
     const query = new Query().contains(idAttribute, ids);
-    const push = await this.push(query, options);
-    const success = push.success;
-    const entities = map(success, successItem => successItem.entity);
-    return !isArray(entity) && entities.length === 1 ? entities[0] : entities;
+    let push = await this.push(query, options);
+    push = filter(push, result => !result.error);
+    entities = map(push, result => result.entity);
+    return singular ? entities[0] : entities;
   }
 
   /**
@@ -457,8 +465,12 @@ export class CacheStore extends NetworkStore {
       client: this.client
     });
     const result = await request.execute().then(response => response.data);
-    await this._sync(result.entities, options);
-    const pushQuery = new Query().contains(idAttribute, Object.keys(keyBy(result.entities, idAttribute)));
+    const entities = filter(result.entities, entity => {
+      const metadata = new Metadata(entity);
+      return !metadata.isLocal();
+    });
+    await this._sync(entities, options);
+    const pushQuery = new Query().contains(idAttribute, Object.keys(keyBy(entities, idAttribute)));
     await this.push(pushQuery, options);
     return result;
   }
@@ -493,8 +505,12 @@ export class CacheStore extends NetworkStore {
       client: this.client
     });
     const result = await request.execute().then(response => response.data);
-    await this._sync(result.entities, options);
-    const query = new Query().contains(idAttribute, Object.keys(keyBy(result.entities, idAttribute)));
+    const entities = filter(result.entities, entity => {
+      const metadata = new Metadata(entity);
+      return !metadata.isLocal();
+    });
+    await this._sync(entities, options);
+    const query = new Query().contains(idAttribute, Object.keys(keyBy(entities, idAttribute)));
     await this.push(query, options);
     return result;
   }
@@ -523,12 +539,7 @@ export class CacheStore extends NetworkStore {
       return Promise.reject(new KinveyError('Sync is disabled.'));
     }
 
-    if (!(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
-
-    query.contains(idAttribute, [this.name]);
-    return this.sync.execute(query, options);
+    return this.sync.execute(this.name, query, options);
   }
 
   /**
@@ -616,7 +627,7 @@ export class CacheStore extends NetworkStore {
       query = new Query(result(query, 'toJSON', query));
     }
 
-    query.contains(idAttribute, [this.name]);
+    query.equalTo('collection', this.name);
     return this.sync.count(query, options);
   }
 
@@ -657,8 +668,14 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                         Promise
    */
   async _sync(entities, options = {}) {
+    let singuler = false;
+
     if (!this.isSyncEnabled()) {
       return null;
+    }
+
+    if (!isArray(entity)) {
+
     }
 
     return this.sync.notify(this.name, entities, options);

@@ -6,7 +6,14 @@ import { HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
 import { Query } from '../query';
 import { Log } from '../log';
+import { Metadata } from '../metadata';
 import url from 'url';
+import xorWith from 'lodash/xorWith';
+import filter from 'lodash/filter';
+import keyBy from 'lodash/keyBy';
+import map from 'lodash/map';
+import isArray from 'lodash/isArray';
+import parallel from 'async/parallel';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 export class SyncStore extends CacheStore {
@@ -208,13 +215,13 @@ export class SyncStore extends CacheStore {
    *                                                                            in the cache.
    * @return  {Promise}                                                         Promise
    */
-  save(entity, options = {}) {
-    if (!entity) {
-      Log.warn('No entity was provided to be saved.', entity);
+  async save(entities, options = {}) {
+    let singular = false;
+
+    if (!entities) {
+      Log.warn('No entity was provided to be saved.', entities);
       return Promise.resolve(null);
     }
-
-    Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     const request = new LocalRequest({
       method: HttpMethod.POST,
@@ -224,29 +231,28 @@ export class SyncStore extends CacheStore {
         pathname: this._pathname
       }),
       properties: options.properties,
-      data: entity,
-      timeout: options.timeout,
-      client: this.client
+      body: entities,
+      timeout: options.timeout
     });
 
-    if (entity[idAttribute]) {
+    if (entities[idAttribute]) {
       request.method = HttpMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${entity[idAttribute]}`
+        pathname: `${this._pathname}/${entities[idAttribute]}`
       });
     }
 
-    const promise = request.execute().then(response => this._sync(response.data, options).then(() => response.data));
+    entities = await request.execute().then(response => response.data);
 
-    promise.then(response => {
-      Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
-    }).catch(error => {
-      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, error);
-    });
+    if (!isArray(entities)) {
+      singular = true;
+      entities = [entities];
+    }
 
-    return promise;
+    await Promise.all(map(entities, entity => this.sync.save(this.name, entity, options)));
+    return singular ? entities[0] : entities;
   }
 
   /**
@@ -262,9 +268,7 @@ export class SyncStore extends CacheStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  remove(query, options = {}) {
-    Log.debug(`Removing the entities in the ${this.name} collection.`, query);
-
+  async remove(query, options = {}) {
     if (query && !(query instanceof Query)) {
       return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
     }
@@ -282,16 +286,34 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute()
-      .then(response => this._sync(response.data.entities, options).then(() => response.data));
-
-    promise.then(response => {
-      Log.info(`Removed the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
+    const entities = await request.execute().then(response => response.data);
+    const localEntities = filter(entities, entity => {
+      const metadata = new Metadata(entity);
+      return metadata.isLocal();
     });
+    const syncEntities = xorWith(entities, localEntities,
+      (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
 
-    return promise;
+    return new Promise((reject, resolve) => {
+      parallel([
+        async callback => {
+          const query = new Query();
+          query.contains('entityId', Object.keys(keyBy(localEntities, idAttribute)));
+          await this.sync.clear(query, options);
+          callback();
+        },
+        async callback => {
+          await this.sync.remove(this.name, syncEntities, options);
+          callback();
+        }
+      ], error => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(entities);
+      });
+    });
   }
 
   /**
@@ -305,13 +327,11 @@ export class SyncStore extends CacheStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  removeById(id, options = {}) {
+  async removeById(id, options = {}) {
     if (!id) {
       Log.warn('No id was provided to be removed.', id);
       return Promise.resolve(null);
     }
-
-    Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     const request = new LocalRequest({
       method: HttpMethod.DELETE,
@@ -325,16 +345,18 @@ export class SyncStore extends CacheStore {
       client: this.client
     });
 
-    const promise = request.execute()
-      .then(response => this._sync(response.data.entities, options).then(() => response.data));
+    const entity = await request.execute().then(response => response.data);
+    const metadata = new Metadata(entity);
 
-    promise.then(response => {
-      Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      Log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
-    });
+    if (metadata.isLocal()) {
+      const query = new Query();
+      query.equalTo('entityId', entity[idAttribute]);
+      await this.sync.clear(this.name, query, options);
+    } else {
+      await this.sync.remove(this.name, entity, options);
+    }
 
-    return promise;
+    return entity;
   }
 
   /**

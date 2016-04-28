@@ -79,10 +79,7 @@ export class LocalStorage {
       delete entitiesById[id];
       localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
 
-      return {
-        count: 1,
-        entities: [entity]
-      };
+      return entity;
     });
   }
 

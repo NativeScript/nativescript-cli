@@ -114,10 +114,7 @@ export class Memory {
       delete entities[id];
       this.cache.set(`${this.name}${collection}`, JSON.stringify(values(entities)));
 
-      return {
-        count: 1,
-        entities: [entity]
-      };
+      return entity;
     });
   }
 

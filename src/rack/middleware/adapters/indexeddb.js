@@ -273,10 +273,7 @@ export default class IndexedDB {
               + `collection on the ${this.name} indexedDB database.`));
           }
 
-          return resolve({
-            count: 1,
-            entities: [doc.result]
-          });
+          return resolve(doc.result);
         };
 
         request.onerror = e => {
