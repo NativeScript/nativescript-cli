@@ -48,7 +48,7 @@ describe('NetworkStore', function() {
     it('should return an empty array when the collection does not contain any entities', function() {
       const reply = [];
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, reply, {
           'content-type': 'application/json'

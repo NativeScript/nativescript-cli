@@ -99,7 +99,7 @@ export default class Sync {
    *   ...
    * });
    */
-  async save(collection, entities, options = {}) {
+  async createSaveOperation(collection, entities, options = {}) {
     let singular = false;
 
     // Check that a name was provided
@@ -190,7 +190,7 @@ export default class Sync {
    *   ...
    * });
    */
-  async remove(collection, entities, options = {}) {
+  async createDeleteOperation(collection, entities, options = {}) {
     let singular = false;
 
     // Check that a name was provided
@@ -277,7 +277,7 @@ export default class Sync {
    *   ...
    * });
    */
-  async execute(query, options = {}) {
+  async push(query, options = {}) {
     let syncResults = [];
     const failedSyncEntities = [];
     const batchSize = 100;

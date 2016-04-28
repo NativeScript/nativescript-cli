@@ -98,42 +98,51 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
      *                                                                            from the cache.
      * @return  {Promise}                                                         Promise
      */
-    value: function find(query) {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                if (!(query && !(query instanceof _query.Query))) {
+                  _context.next = 2;
+                  break;
+                }
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                throw new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
 
-      _log.Log.debug('Retrieving the entities in the ' + this.name + ' collection.', query);
+              case 2:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.GET,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname
+                  }),
+                  properties: options.properties,
+                  query: query,
+                  timeout: options.timeout
+                });
+                return _context.abrupt('return', request.execute().then(function (response) {
+                  return response.data;
+                }));
 
-      if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+              case 4:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function find(_x, _x2) {
+        return ref.apply(this, arguments);
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return response.data;
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Retrieved the entities in the ' + _this2.name + ' collection.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to retrieve the entities in the ' + _this2.name + ' collection.', err);
-      });
-
-      return promise;
-    }
+      return find;
+    }()
 
     /**
      * Groups entities in a collection. An aggregation can be optionally provided to group
@@ -153,42 +162,51 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'group',
-    value: function group(aggregation) {
-      var _this3 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(aggregation) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                if (aggregation instanceof _aggregation.Aggregation) {
+                  _context2.next = 2;
+                  break;
+                }
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                throw new _errors.KinveyError('Invalid aggregation. It must be an instance of the Kinvey.Aggregation class.');
 
-      _log.Log.debug('Grouping the entities in the ' + this.name + ' collection.', aggregation, options);
+              case 2:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.GET,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname + '/_group'
+                  }),
+                  properties: options.properties,
+                  body: aggregation.toJSON(),
+                  timeout: options.timeout
+                });
+                return _context2.abrupt('return', request.execute().then(function (response) {
+                  return response.data;
+                }));
 
-      if (!(aggregation instanceof _aggregation.Aggregation)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid aggregation. ' + 'It must be an instance of the Kinvey.Aggregation class.'));
+              case 4:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function group(_x4, _x5) {
+        return ref.apply(this, arguments);
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname + '/_group'
-        }),
-        properties: options.properties,
-        data: aggregation.toJSON(),
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return response.data;
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Grouped the entities in the ' + _this3.name + ' collection.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to group the entities in the ' + _this3.name + ' collection.', err);
-      });
-
-      return promise;
-    }
+      return group;
+    }()
 
     /**
      * Counts entities in a collection. A query can be optionally provided to count
@@ -208,42 +226,51 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'count',
-    value: function count(query) {
-      var _this4 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request;
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                if (!(query && !(query instanceof _query.Query))) {
+                  _context3.next = 2;
+                  break;
+                }
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                throw new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
 
-      _log.Log.debug('Counting the number of entities in the ' + this.name + ' collection.', query);
+              case 2:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.GET,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname + '/_count'
+                  }),
+                  properties: options.properties,
+                  query: query,
+                  timeout: options.timeout
+                });
+                return _context3.abrupt('return', request.execute().then(function (response) {
+                  return response.data;
+                }));
 
-      if (query && !(query instanceof _query.Query)) {
-        return _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+              case 4:
+              case 'end':
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function count(_x7, _x8) {
+        return ref.apply(this, arguments);
       }
 
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname + '/_count'
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return response.data;
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Counted the number of entities in the ' + _this4.name + ' collection.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to count the number of entities in the ' + _this4.name + ' collection.', err);
-      });
-
-      return promise;
-    }
+      return count;
+    }()
 
     /**
      * Retrieves a single entity in a collection by id. A promise will be returned that will
@@ -261,42 +288,51 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'findById',
-    value: function findById(id) {
-      var _this5 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(id) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var request;
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                if (id) {
+                  _context4.next = 3;
+                  break;
+                }
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+                _log.Log.warn('No id was provided to retrieve an entity.', id);
+                return _context4.abrupt('return', null);
 
-      if (!id) {
-        _log.Log.warn('No id was provided to retrieve an entity.', id);
-        return _babybird2.default.resolve(null);
+              case 3:
+                request = new _local.LocalRequest({
+                  method: _enums.HttpMethod.GET,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname + '/' + id
+                  }),
+                  properties: options.properties,
+                  timeout: options.timeout
+                });
+                return _context4.abrupt('return', request.execute().then(function (response) {
+                  return response.data;
+                }));
+
+              case 5:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function findById(_x10, _x11) {
+        return ref.apply(this, arguments);
       }
 
-      _log.Log.debug('Retrieving the entity in the ' + this.name + ' collection with id = ' + id + '.');
-
-      var request = new _local.LocalRequest({
-        method: _enums.HttpMethod.GET,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this._pathname + '/' + id
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        client: this.client
-      });
-
-      var promise = request.execute().then(function (response) {
-        return response.data;
-      });
-
-      promise.then(function (response) {
-        _log.Log.info('Retrieved the entity in the ' + _this5.name + ' collection with id = ' + id + '.', response);
-      }).catch(function (err) {
-        _log.Log.error('Failed to retrieve the entity in the ' + _this5.name + ' collection with id = ' + id + '.', err);
-      });
-
-      return promise;
-    }
+      return findById;
+    }()
 
     /**
      * Save a entity or an array of entities to a collection. A promise will be returned that
@@ -315,24 +351,24 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   }, {
     key: 'save',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(entities) {
-        var _this6 = this;
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(entities) {
+        var _this2 = this;
 
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var singular, request;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context5.prev = _context5.next) {
               case 0:
                 singular = false;
 
                 if (entities) {
-                  _context.next = 4;
+                  _context5.next = 4;
                   break;
                 }
 
                 _log.Log.warn('No entity was provided to be saved.', entities);
-                return _context.abrupt('return', _babybird2.default.resolve(null));
+                return _context5.abrupt('return', null);
 
               case 4:
                 request = new _local.LocalRequest({
@@ -340,7 +376,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   body: entities,
@@ -353,17 +389,17 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                   request.url = _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname + '/' + entities[idAttribute]
+                    pathname: this.pathname + '/' + entities[idAttribute]
                   });
                 }
 
-                _context.next = 8;
+                _context5.next = 8;
                 return request.execute().then(function (response) {
                   return response.data;
                 });
 
               case 8:
-                entities = _context.sent;
+                entities = _context5.sent;
 
 
                 if (!(0, _isArray2.default)(entities)) {
@@ -371,23 +407,23 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                   entities = [entities];
                 }
 
-                _context.next = 12;
+                _context5.next = 12;
                 return _babybird2.default.all((0, _map2.default)(entities, function (entity) {
-                  return _this6.sync.save(_this6.name, entity, options);
+                  return _this2.sync.createSaveOperation(_this2.name, entity, options);
                 }));
 
               case 12:
-                return _context.abrupt('return', singular ? entities[0] : entities);
+                return _context5.abrupt('return', singular ? entities[0] : entities);
 
               case 13:
               case 'end':
-                return _context.stop();
+                return _context5.stop();
             }
           }
-        }, _callee, this);
+        }, _callee5, this);
       }));
 
-      function save(_x5, _x6) {
+      function save(_x13, _x14) {
         return ref.apply(this, arguments);
       }
 
@@ -411,21 +447,21 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   }, {
     key: 'remove',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(query) {
-        var _this7 = this;
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(query) {
+        var _this3 = this;
 
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var request, entities, localEntities, syncEntities;
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
                 if (!(query && !(query instanceof _query.Query))) {
-                  _context4.next = 2;
+                  _context8.next = 2;
                   break;
                 }
 
-                return _context4.abrupt('return', _babybird2.default.reject(new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.')));
+                throw new _errors.KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
 
               case 2:
                 request = new _local.LocalRequest({
@@ -433,20 +469,20 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname
+                    pathname: this.pathname
                   }),
                   properties: options.properties,
                   query: query,
                   timeout: options.timeout,
                   client: this.client
                 });
-                _context4.next = 5;
+                _context8.next = 5;
                 return request.execute().then(function (response) {
                   return response.data;
                 });
 
               case 5:
-                entities = _context4.sent;
+                entities = _context8.sent;
                 localEntities = (0, _filter2.default)(entities, function (entity) {
                   var metadata = new _metadata.Metadata(entity);
                   return metadata.isLocal();
@@ -454,55 +490,55 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                 syncEntities = (0, _xorWith2.default)(entities, localEntities, function (entity, localEntity) {
                   return entity[idAttribute] === localEntity[idAttribute];
                 });
-                return _context4.abrupt('return', new _babybird2.default(function (reject, resolve) {
+                return _context8.abrupt('return', new _babybird2.default(function (reject, resolve) {
                   (0, _parallel2.default)([function () {
-                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(callback) {
+                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(callback) {
                       var query;
-                      return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                      return regeneratorRuntime.wrap(function _callee6$(_context6) {
                         while (1) {
-                          switch (_context2.prev = _context2.next) {
+                          switch (_context6.prev = _context6.next) {
                             case 0:
                               query = new _query.Query();
 
                               query.contains('entityId', Object.keys((0, _keyBy2.default)(localEntities, idAttribute)));
-                              _context2.next = 4;
-                              return _this7.sync.clear(query, options);
+                              _context6.next = 4;
+                              return _this3.sync.clear(query, options);
 
                             case 4:
                               callback();
 
                             case 5:
                             case 'end':
-                              return _context2.stop();
+                              return _context6.stop();
                           }
                         }
-                      }, _callee2, _this7);
+                      }, _callee6, _this3);
                     }));
 
-                    return function (_x11) {
+                    return function (_x19) {
                       return ref.apply(this, arguments);
                     };
                   }(), function () {
-                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(callback) {
-                      return regeneratorRuntime.wrap(function _callee3$(_context3) {
+                    var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(callback) {
+                      return regeneratorRuntime.wrap(function _callee7$(_context7) {
                         while (1) {
-                          switch (_context3.prev = _context3.next) {
+                          switch (_context7.prev = _context7.next) {
                             case 0:
-                              _context3.next = 2;
-                              return _this7.sync.remove(_this7.name, syncEntities, options);
+                              _context7.next = 2;
+                              return _this3.sync.createDeleteOperation(_this3.name, syncEntities, options);
 
                             case 2:
                               callback();
 
                             case 3:
                             case 'end':
-                              return _context3.stop();
+                              return _context7.stop();
                           }
                         }
-                      }, _callee3, _this7);
+                      }, _callee7, _this3);
                     }));
 
-                    return function (_x12) {
+                    return function (_x20) {
                       return ref.apply(this, arguments);
                     };
                   }()], function (error) {
@@ -516,13 +552,13 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
               case 9:
               case 'end':
-                return _context4.stop();
+                return _context8.stop();
             }
           }
-        }, _callee4, this);
+        }, _callee8, this);
       }));
 
-      function remove(_x8, _x9) {
+      function remove(_x16, _x17) {
         return ref.apply(this, arguments);
       }
 
@@ -544,20 +580,20 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
   }, {
     key: 'removeById',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(id) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(id) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var request, entity, metadata, query;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
                 if (id) {
-                  _context5.next = 3;
+                  _context9.next = 3;
                   break;
                 }
 
                 _log.Log.warn('No id was provided to be removed.', id);
-                return _context5.abrupt('return', _babybird2.default.resolve(null));
+                return _context9.abrupt('return', null);
 
               case 3:
                 request = new _local.LocalRequest({
@@ -565,52 +601,52 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: this._pathname + '/' + id
+                    pathname: this.pathname + '/' + id
                   }),
                   properties: options.properties,
                   timeout: options.timeout,
                   client: this.client
                 });
-                _context5.next = 6;
+                _context9.next = 6;
                 return request.execute().then(function (response) {
                   return response.data;
                 });
 
               case 6:
-                entity = _context5.sent;
+                entity = _context9.sent;
                 metadata = new _metadata.Metadata(entity);
 
                 if (!metadata.isLocal()) {
-                  _context5.next = 15;
+                  _context9.next = 15;
                   break;
                 }
 
                 query = new _query.Query();
 
                 query.equalTo('entityId', entity[idAttribute]);
-                _context5.next = 13;
+                _context9.next = 13;
                 return this.sync.clear(this.name, query, options);
 
               case 13:
-                _context5.next = 17;
+                _context9.next = 17;
                 break;
 
               case 15:
-                _context5.next = 17;
-                return this.sync.remove(this.name, entity, options);
+                _context9.next = 17;
+                return this.sync.createDeleteOperation(this.name, entity, options);
 
               case 17:
-                return _context5.abrupt('return', entity);
+                return _context9.abrupt('return', entity);
 
               case 18:
               case 'end':
-                return _context5.stop();
+                return _context9.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee9, this);
       }));
 
-      function removeById(_x13, _x14) {
+      function removeById(_x21, _x22) {
         return ref.apply(this, arguments);
       }
 
@@ -631,22 +667,49 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
   }, {
     key: 'pull',
-    value: function pull(query) {
-      var _this8 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var count, result;
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
+          while (1) {
+            switch (_context10.prev = _context10.next) {
+              case 0:
+                _context10.next = 2;
+                return this.syncCount(null, options);
 
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+              case 2:
+                count = _context10.sent;
 
-      var promise = this.syncCount(null, options).then(function (count) {
-        if (count > 0) {
-          throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
-        }
+                if (!(count > 0)) {
+                  _context10.next = 5;
+                  break;
+                }
 
-        return _get(Object.getPrototypeOf(SyncStore.prototype), 'find', _this8).call(_this8, query, options);
-      }).then(function (result) {
-        return result.networkPromise;
-      });
-      return promise;
-    }
+                throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
+
+              case 5:
+                _context10.next = 7;
+                return _get(Object.getPrototypeOf(SyncStore.prototype), 'find', this).call(this, query, options);
+
+              case 7:
+                result = _context10.sent;
+                return _context10.abrupt('return', result.networkPromise);
+
+              case 9:
+              case 'end':
+                return _context10.stop();
+            }
+          }
+        }, _callee10, this);
+      }));
+
+      function pull(_x24, _x25) {
+        return ref.apply(this, arguments);
+      }
+
+      return pull;
+    }()
   }]);
 
   return SyncStore;

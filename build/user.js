@@ -202,7 +202,7 @@ var User = exports.User = function () {
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname + '/login'
+          pathname: this.pathname + '/login'
         }),
         data: usernameOrData,
         properties: options.properties,
@@ -843,7 +843,7 @@ var User = exports.User = function () {
       return this.data[emailAttribute];
     }
   }, {
-    key: '_pathname',
+    key: 'pathname',
     get: function get() {
       return '/' + usersNamespace + '/' + this.client.appKey;
     }

@@ -263,7 +263,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname
+          pathname: this.pathname
         }),
         properties: options.properties,
         timeout: options.timeout,
@@ -276,7 +276,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
         request.url = _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname + '/' + metadata._id
+          pathname: this.pathname + '/' + metadata._id
         });
       }
 
@@ -323,7 +323,7 @@ var FileStore = exports.FileStore = function (_NetworkStore) {
       return _babybird2.default.reject(new _errors.KinveyError('Please use `upload()` to update files.'));
     }
   }, {
-    key: '_pathname',
+    key: 'pathname',
 
     /**
      * The pathname for the store.

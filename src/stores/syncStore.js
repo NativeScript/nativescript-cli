@@ -34,11 +34,9 @@ export class SyncStore extends CacheStore {
    *                                                                            from the cache.
    * @return  {Promise}                                                         Promise
    */
-  find(query, options = {}) {
-    Log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
-
+  async find(query, options = {}) {
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new LocalRequest({
@@ -46,23 +44,13 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -80,12 +68,9 @@ export class SyncStore extends CacheStore {
    *                                                                            from the cache.
    * @return  {Promise}                                                         Promise
    */
-  group(aggregation, options = {}) {
-    Log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
-
+  async group(aggregation, options = {}) {
     if (!(aggregation instanceof Aggregation)) {
-      return Promise.reject(new KinveyError('Invalid aggregation. ' +
-        'It must be an instance of the Kinvey.Aggregation class.'));
+      throw new KinveyError('Invalid aggregation. It must be an instance of the Kinvey.Aggregation class.');
     }
 
     const request = new LocalRequest({
@@ -93,23 +78,13 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_group`
+        pathname: `${this.pathname}/_group`
       }),
       properties: options.properties,
-      data: aggregation.toJSON(),
-      timeout: options.timeout,
-      client: this.client
+      body: aggregation.toJSON(),
+      timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Grouped the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to group the entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -127,11 +102,9 @@ export class SyncStore extends CacheStore {
    *                                                                            from the cache.
    * @return  {Promise}                                                         Promise
    */
-  count(query, options = {}) {
-    Log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
-
+  async count(query, options = {}) {
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new LocalRequest({
@@ -139,23 +112,13 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_count`
+        pathname: `${this.pathname}/_count`
       }),
       properties: options.properties,
       query: query,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -171,35 +134,23 @@ export class SyncStore extends CacheStore {
    *                                                                            from the cache.
    * @return  {Promise}                                                         Promise
    */
-  findById(id, options = {}) {
+  async findById(id, options = {}) {
     if (!id) {
       Log.warn('No id was provided to retrieve an entity.', id);
-      return Promise.resolve(null);
+      return null;
     }
-
-    Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     const request = new LocalRequest({
       method: HttpMethod.GET,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`
+        pathname: `${this.pathname}/${id}`
       }),
       properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -220,7 +171,7 @@ export class SyncStore extends CacheStore {
 
     if (!entities) {
       Log.warn('No entity was provided to be saved.', entities);
-      return Promise.resolve(null);
+      return null;
     }
 
     const request = new LocalRequest({
@@ -228,7 +179,7 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       body: entities,
@@ -240,7 +191,7 @@ export class SyncStore extends CacheStore {
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${entities[idAttribute]}`
+        pathname: `${this.pathname}/${entities[idAttribute]}`
       });
     }
 
@@ -251,7 +202,7 @@ export class SyncStore extends CacheStore {
       entities = [entities];
     }
 
-    await Promise.all(map(entities, entity => this.sync.save(this.name, entity, options)));
+    await Promise.all(map(entities, entity => this.sync.createSaveOperation(this.name, entity, options)));
     return singular ? entities[0] : entities;
   }
 
@@ -270,7 +221,7 @@ export class SyncStore extends CacheStore {
    */
   async remove(query, options = {}) {
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new LocalRequest({
@@ -278,7 +229,7 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
@@ -303,7 +254,7 @@ export class SyncStore extends CacheStore {
           callback();
         },
         async callback => {
-          await this.sync.remove(this.name, syncEntities, options);
+          await this.sync.createDeleteOperation(this.name, syncEntities, options);
           callback();
         }
       ], error => {
@@ -330,7 +281,7 @@ export class SyncStore extends CacheStore {
   async removeById(id, options = {}) {
     if (!id) {
       Log.warn('No id was provided to be removed.', id);
-      return Promise.resolve(null);
+      return null;
     }
 
     const request = new LocalRequest({
@@ -338,7 +289,7 @@ export class SyncStore extends CacheStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`
+        pathname: `${this.pathname}/${id}`
       }),
       properties: options.properties,
       timeout: options.timeout,
@@ -353,7 +304,7 @@ export class SyncStore extends CacheStore {
       query.equalTo('entityId', entity[idAttribute]);
       await this.sync.clear(this.name, query, options);
     } else {
-      await this.sync.remove(this.name, entity, options);
+      await this.sync.createDeleteOperation(this.name, entity, options);
     }
 
     return entity;
@@ -370,15 +321,15 @@ export class SyncStore extends CacheStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  pull(query, options = {}) {
-    const promise = this.syncCount(null, options).then(count => {
-      if (count > 0) {
-        throw new KinveyError('Unable to pull data. You must push the pending sync items first.',
-          'Call store.push() to push the pending sync items before you pull new data.');
-      }
+  async pull(query, options = {}) {
+    const count = await this.syncCount(null, options);
 
-      return super.find(query, options);
-    }).then(result => result.networkPromise);
-    return promise;
+    if (count > 0) {
+      throw new KinveyError('Unable to pull data. You must push the pending sync items first.',
+        'Call store.push() to push the pending sync items before you pull new data.');
+    }
+
+    const result = await super.find(query, options);
+    return result.networkPromise;
   }
 }

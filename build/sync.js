@@ -173,7 +173,7 @@ var Sync = function () {
      */
 
   }, {
-    key: 'save',
+    key: 'createSaveOperation',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(collection, entities) {
         var _this = this;
@@ -299,11 +299,11 @@ var Sync = function () {
         }, _callee3, this);
       }));
 
-      function save(_x4, _x5, _x6) {
+      function createSaveOperation(_x4, _x5, _x6) {
         return ref.apply(this, arguments);
       }
 
-      return save;
+      return createSaveOperation;
     }()
 
     /**
@@ -329,7 +329,7 @@ var Sync = function () {
      */
 
   }, {
-    key: 'remove',
+    key: 'createDeleteOperation',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(collection, entities) {
         var _this2 = this;
@@ -455,11 +455,11 @@ var Sync = function () {
         }, _callee5, this);
       }));
 
-      function remove(_x9, _x10, _x11) {
+      function createDeleteOperation(_x9, _x10, _x11) {
         return ref.apply(this, arguments);
       }
 
-      return remove;
+      return createDeleteOperation;
     }()
 
     /**
@@ -481,7 +481,7 @@ var Sync = function () {
      */
 
   }, {
-    key: 'execute',
+    key: 'push',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(query) {
         var _this3 = this;
@@ -665,7 +665,7 @@ var Sync = function () {
                                                       }());
                                                     } else if (method === _enums.HttpMethod.POST || method === _enums.HttpMethod.PUT) {
                                                       // Save the entity to the network.
-                                                      var putNetworkRequest = new _network.NetworkRequest({
+                                                      var _request = new _network.NetworkRequest({
                                                         method: _enums.HttpMethod.PUT,
                                                         authType: _enums.AuthType.Default,
                                                         url: _url2.default.format({
@@ -684,16 +684,16 @@ var Sync = function () {
                                                       if (metadata.isLocal()) {
                                                         delete entity[idAttribute];
                                                         delete entity[kmdAttribute].local;
-                                                        putNetworkRequest.method = _enums.HttpMethod.POST;
-                                                        putNetworkRequest.url = _url2.default.format({
+                                                        _request.method = _enums.HttpMethod.POST;
+                                                        _request.url = _url2.default.format({
                                                           protocol: _this3.client.protocol,
                                                           host: _this3.client.host,
                                                           pathname: '/' + appdataNamespace + '/' + _this3.client.appKey + '/' + collection
                                                         });
-                                                        putNetworkRequest.body = entity;
+                                                        _request.body = entity;
                                                       }
 
-                                                      return putNetworkRequest.execute().then(function (response) {
+                                                      return _request.execute().then(function (response) {
                                                         return response.data;
                                                       }).then(function () {
                                                         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(entity) {
@@ -943,11 +943,11 @@ var Sync = function () {
         }, _callee12, this);
       }));
 
-      function execute(_x14, _x15) {
+      function push(_x14, _x15) {
         return ref.apply(this, arguments);
       }
 
-      return execute;
+      return push;
     }()
 
     /**

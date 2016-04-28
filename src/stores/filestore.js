@@ -18,7 +18,7 @@ export class FileStore extends NetworkStore {
    *
    * @return  {string}                Pathname
    */
-  get _pathname() {
+  get pathname() {
     return `/${filesNamespace}/${this.client.appKey}`;
   }
 
@@ -196,7 +196,7 @@ export class FileStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       timeout: options.timeout,
@@ -209,7 +209,7 @@ export class FileStore extends NetworkStore {
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${metadata._id}`
+        pathname: `${this.pathname}/${metadata._id}`
       });
     }
 

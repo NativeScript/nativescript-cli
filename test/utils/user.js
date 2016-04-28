@@ -6,7 +6,7 @@ export function loginUser() {
   const user = new User();
   user.client = this.client;
   nock(this.client.baseUrl)
-    .post(`${user._pathname}/login`, () => true)
+    .post(`${user.pathname}/login`, () => true)
     .query(true)
     .reply(200, {
       _id: randomString(),
@@ -24,7 +24,7 @@ export function logoutUser() {
 
   if (user) {
     nock(this.client.baseUrl)
-      .post(`${user._pathname}/_logout`, () => true)
+      .post(`${user.pathname}/_logout`, () => true)
       .query(true)
       .reply(204, null, {
         'content-type': 'application/json'

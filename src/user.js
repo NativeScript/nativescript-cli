@@ -169,7 +169,7 @@ export class User {
     return this.data[emailAttribute];
   }
 
-  get _pathname() {
+  get pathname() {
     return `/${usersNamespace}/${this.client.appKey}`;
   }
 
@@ -289,7 +289,7 @@ export class User {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/login`
+        pathname: `${this.pathname}/login`
       }),
       data: usernameOrData,
       properties: options.properties,

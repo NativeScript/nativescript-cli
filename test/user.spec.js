@@ -151,7 +151,7 @@ describe('User', function () {
     it('should return the active user', function() {
       const user = new User();
       nock(this.client.baseUrl)
-        .post(`${user._pathname}/login`, () => true)
+        .post(`${user.pathname}/login`, () => true)
         .query(true)
         .reply(200, {
           _id: randomString(),
@@ -282,7 +282,7 @@ describe('User', function () {
         }
       };
       nock(this.client.baseUrl)
-        .post(`${user._pathname}/login`)
+        .post(`${user.pathname}/login`)
         .query(true)
         .reply(200, reply, {
           'content-type': 'application/json'
@@ -362,7 +362,7 @@ describe('User', function () {
 
     it('should logout a user when the user is the active user', function() {
       nock(this.client.baseUrl)
-        .post(`${this.user._pathname}/_logout`)
+        .post(`${this.user.pathname}/_logout`)
         .query(true)
         .reply(204, null, {
           'content-type': 'application/json'
@@ -374,7 +374,7 @@ describe('User', function () {
 
     it('should logout a user when the REST API rejects the logout request', function() {
       nock(this.client.baseUrl)
-        .post(`${this.user._pathname}/_logout`)
+        .post(`${this.user.pathname}/_logout`)
         .query(true)
         .reply(500, null, {
           'content-type': 'application/json'

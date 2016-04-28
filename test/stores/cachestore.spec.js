@@ -13,19 +13,19 @@ chai.use(sinonChai);
 const expect = chai.expect;
 
 describe('CacheStore', function() {
-  before(function() {
+  beforeEach(function() {
     return loginUser.call(this);
   });
 
-  after(function() {
+  afterEach(function() {
     return logoutUser.call(this);
   });
 
-  before(function() {
+  beforeEach(function() {
     this.store = new CacheStore('kinveytests');
   });
 
-  after(function() {
+  afterEach(function() {
     delete this.store;
   });
 
@@ -53,7 +53,7 @@ describe('CacheStore', function() {
         prop: randomString()
       };
       nock(this.client.baseUrl)
-        .put(`${this.store._pathname}/${entity._id}`, () => true)
+        .put(`${this.store.pathname}/${entity._id}`, () => true)
         .query(true)
         .reply(200, entity, {
           'content-type': 'application/json'
@@ -61,14 +61,12 @@ describe('CacheStore', function() {
 
       return this.store.save(entity).then(entity => {
         this.entity = entity;
-      }).catch(error => {
-        console.log(error);
       });
     });
 
     afterEach(function() {
       nock(this.client.baseUrl)
-        .delete(`${this.store._pathname}/${this.entity._id}`)
+        .delete(`${this.store.pathname}/${this.entity._id}`)
         .query(true)
         .reply(200, null, {
           'content-type': 'application/json'
@@ -96,7 +94,7 @@ describe('CacheStore', function() {
 
       // Delta response
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, [
           {
@@ -113,7 +111,7 @@ describe('CacheStore', function() {
 
       // Fetch response
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, [entity2], {
           'content-type': 'application/json'
@@ -156,7 +154,7 @@ describe('CacheStore', function() {
 
       // Fetch response
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, [this.entity, entity2], {
           'content-type': 'application/json'
@@ -164,7 +162,7 @@ describe('CacheStore', function() {
 
       // Delete response
       nock(this.client.baseUrl)
-        .delete(`${this.store._pathname}/${entity2._id}`)
+        .delete(`${this.store.pathname}/${entity2._id}`)
         .query(true)
         .reply(200, null, {
           'content-type': 'application/json'
@@ -207,7 +205,7 @@ describe('CacheStore', function() {
 
       // Fetch response
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, [entity2], {
           'content-type': 'application/json'
@@ -215,7 +213,7 @@ describe('CacheStore', function() {
 
       // Delete response
       nock(this.client.baseUrl)
-        .delete(`${this.store._pathname}/${entity2._id}`)
+        .delete(`${this.store.pathname}/${entity2._id}`)
         .query(true)
         .reply(200, null, {
           'content-type': 'application/json'
@@ -254,7 +252,7 @@ describe('CacheStore', function() {
 
       // Fetch response
       nock(this.client.baseUrl)
-        .get(this.store._pathname)
+        .get(this.store.pathname)
         .query(true)
         .reply(200, [entity2], {
           'content-type': 'application/json'
@@ -262,7 +260,7 @@ describe('CacheStore', function() {
 
       // Delete response
       nock(this.client.baseUrl)
-        .delete(`${this.store._pathname}/${entity2._id}`)
+        .delete(`${this.store.pathname}/${entity2._id}`)
         .query(true)
         .reply(200, null, {
           'content-type': 'application/json'
@@ -296,7 +294,7 @@ describe('CacheStore', function() {
         prop: randomString()
       };
       nock(this.client.baseUrl)
-        .put(`${this.store._pathname}/${entity._id}`, () => true)
+        .put(`${this.store.pathname}/${entity._id}`, () => true)
         .query(true)
         .reply(200, entity, {
           'content-type': 'application/json'
@@ -309,7 +307,7 @@ describe('CacheStore', function() {
 
     afterEach(function() {
       nock(this.client.baseUrl)
-        .delete(`${this.store._pathname}/${this.entity._id}`)
+        .delete(`${this.store.pathname}/${this.entity._id}`)
         .query(true)
         .reply(200, null, {
           'content-type': 'application/json'
@@ -324,7 +322,7 @@ describe('CacheStore', function() {
       // Fetch response
       const id = randomString();
       nock(this.client.baseUrl)
-        .get(`${this.store._pathname}/${id}`)
+        .get(`${this.store.pathname}/${id}`)
         .query(true)
         .reply(404, null, {
           'content-type': 'application/json'
@@ -344,7 +342,7 @@ describe('CacheStore', function() {
       // Fetch response
       const id = randomString();
       nock(this.client.baseUrl)
-        .get(`${this.store._pathname}/${id}`)
+        .get(`${this.store.pathname}/${id}`)
         .query(true)
         .reply(404, null, {
           'content-type': 'application/json'
@@ -373,7 +371,7 @@ describe('CacheStore', function() {
 
       // GET response
       nock(this.client.baseUrl)
-        .get(`${this.store._pathname}/${entity2._id}`)
+        .get(`${this.store.pathname}/${entity2._id}`)
         .query(true)
         .reply(200, entity2, {
           'content-type': 'application/json'
@@ -402,7 +400,7 @@ describe('CacheStore', function() {
 
       // GET response
       nock(this.client.baseUrl)
-        .get(`${this.store._pathname}/${entity2._id}`)
+        .get(`${this.store.pathname}/${entity2._id}`)
         .query(true)
         .reply(200, entity2, {
           'content-type': 'application/json'

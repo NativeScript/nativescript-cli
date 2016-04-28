@@ -16,6 +16,8 @@ import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
+import xorWith from 'lodash/xorWith';
+import parallel from 'async/parallel';
 import differenceBy from 'lodash/differenceBy';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const syncEnabledSymbol = Symbol();
@@ -56,7 +58,10 @@ export class CacheStore extends NetworkStore {
 
   set client(client) {
     super.client = client;
-    this.sync.client = client;
+
+    if (this.sync) {
+      this.sync.client = client;
+    }
   }
 
   disableSync() {
@@ -102,12 +107,11 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
     const cachedEntities = await request.execute().then(response => response.data);
     const promise = this.syncCount().then(count => {
@@ -129,7 +133,7 @@ export class CacheStore extends NetworkStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: this._pathname
+            pathname: this.pathname
           }),
           properties: options.properties,
           query: query,
@@ -150,12 +154,11 @@ export class CacheStore extends NetworkStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname
+          pathname: this.pathname
         }),
         properties: options.properties,
         query: removeQuery,
-        timeout: options.timeout,
-        client: this.client
+        timeout: options.timeout
       });
       return request.execute().then(() => this._cache(networkEntities));
     });
@@ -191,7 +194,7 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_group`
+        pathname: `${this.pathname}/_group`
       }),
       properties: options.properties,
       data: aggregation.toJSON(),
@@ -244,7 +247,7 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_count`
+        pathname: `${this.pathname}/_count`
       }),
       properties: options.properties,
       query: query,
@@ -301,7 +304,7 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`
+        pathname: `${this.pathname}/${id}`
       }),
       properties: options.properties,
       timeout: options.timeout,
@@ -338,7 +341,7 @@ export class CacheStore extends NetworkStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `${this._pathname}/${id}`
+            pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
           timeout: options.timeout,
@@ -356,7 +359,7 @@ export class CacheStore extends NetworkStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `${this._pathname}/${id}`
+            pathname: `${this.pathname}/${id}`
           }),
           properties: options.properties,
           timeout: options.timeout,
@@ -394,7 +397,7 @@ export class CacheStore extends NetworkStore {
 
     if (!entities) {
       Log.warn('No entity was provided to be saved.', entities);
-      return Promise.resolve(null);
+      return null;
     }
 
     const request = new LocalRequest({
@@ -402,7 +405,7 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       body: entities,
@@ -414,7 +417,7 @@ export class CacheStore extends NetworkStore {
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${entities[idAttribute]}`
+        pathname: `${this.pathname}/${entities[idAttribute]}`
       });
     }
 
@@ -425,9 +428,9 @@ export class CacheStore extends NetworkStore {
       entities = [entities];
     }
 
-    await Promise.all(map(entities, entity => this.sync.save(this.name, entity, options)));
+    await Promise.all(map(entities, entity => this.sync.createSaveOperation(this.name, entity, options)));
     const ids = Object.keys(keyBy(entities, idAttribute));
-    const query = new Query().contains(idAttribute, ids);
+    const query = new Query().contains('entityId', ids);
     let push = await this.push(query, options);
     push = filter(push, result => !result.error);
     entities = map(push, result => result.entity);
@@ -457,22 +460,41 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
-    const result = await request.execute().then(response => response.data);
-    const entities = filter(result.entities, entity => {
+
+    const entities = await request.execute().then(response => response.data);
+    const localEntities = filter(entities, entity => {
       const metadata = new Metadata(entity);
-      return !metadata.isLocal();
+      return metadata.isLocal();
     });
-    await this._sync(entities, options);
-    const pushQuery = new Query().contains(idAttribute, Object.keys(keyBy(entities, idAttribute)));
-    await this.push(pushQuery, options);
-    return result;
+    const syncEntities = xorWith(entities, localEntities,
+      (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
+
+    return new Promise((reject, resolve) => {
+      parallel([
+        async callback => {
+          const query = new Query();
+          query.contains('entityId', Object.keys(keyBy(localEntities, idAttribute)));
+          await this.sync.clear(query, options);
+          callback();
+        },
+        async callback => {
+          await this.sync.createDeleteOperation(this.name, syncEntities, options);
+          callback();
+        }
+      ], error => {
+        if (error) {
+          return reject(error);
+        }
+
+        return resolve(entities);
+      });
+    });
   }
 
   /**
@@ -497,22 +519,25 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`
+        pathname: `${this.pathname}/${id}`
       }),
       properties: options.properties,
       authType: AuthType.Default,
-      timeout: options.timeout,
-      client: this.client
+      timeout: options.timeout
     });
-    const result = await request.execute().then(response => response.data);
-    const entities = filter(result.entities, entity => {
-      const metadata = new Metadata(entity);
-      return !metadata.isLocal();
-    });
-    await this._sync(entities, options);
-    const query = new Query().contains(idAttribute, Object.keys(keyBy(entities, idAttribute)));
-    await this.push(query, options);
-    return result;
+
+    const entity = await request.execute().then(response => response.data);
+    const metadata = new Metadata(entity);
+
+    if (metadata.isLocal()) {
+      const query = new Query();
+      query.equalTo('entityId', entity[idAttribute]);
+      await this.sync.clear(this.name, query, options);
+    } else {
+      await this.sync.createDeleteOperation(this.name, entity, options);
+    }
+
+    return entity;
   }
 
   /**
@@ -539,7 +564,12 @@ export class CacheStore extends NetworkStore {
       return Promise.reject(new KinveyError('Sync is disabled.'));
     }
 
-    return this.sync.execute(this.name, query, options);
+    if (!(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    query.equalTo('collection', this.name);
+    return this.sync.push(query, options);
   }
 
   /**
@@ -648,30 +678,12 @@ export class CacheStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       data: entities,
       timeout: options.timeout,
       client: this.client
     }).execute().then(response => response.data);
-  }
-
-  /**
-   * Add entities to be pushed. A promise will be returned with null or rejected with an error.
-   *
-   * @param   {Object|Array}          entities                                  Entity(s) to add to the sync table.
-   * @param   {Object}                options                                   Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.
-   * @return  {Promise}                                                         Promise
-   */
-  async _sync(entities, options = {}) {
-    if (!this.isSyncEnabled()) {
-      return null;
-    }
-
-    return this.sync.notify(this.name, entities, options);
   }
 }

@@ -16,7 +16,7 @@ export class UserStore extends NetworkStore {
    *
    * @return  {string}   Pathname
    */
-  get _pathname() {
+  get pathname() {
     return `/${usersNamespace}/${this.client.appKey}`;
   }
 
@@ -77,7 +77,7 @@ export class UserStore extends NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/id`
+        pathname: `${this.pathname}/id`
       }),
       properties: options.properties,
       timeout: options.timeout,

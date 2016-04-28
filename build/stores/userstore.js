@@ -145,7 +145,7 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this._pathname + '/id'
+          pathname: this.pathname + '/id'
         }),
         properties: options.properties,
         timeout: options.timeout,
@@ -158,7 +158,7 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
       return promise;
     }
   }, {
-    key: '_pathname',
+    key: 'pathname',
 
     /**
      * The pathname for the store.

@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { Aggregation } from '../aggregation';
 import { AuthType, HttpMethod } from '../enums';
 import { KinveyError } from '../errors';
@@ -56,7 +55,7 @@ export class NetworkStore {
    *
    * @return  {string}                Pathname
    */
-  get _pathname() {
+  get pathname() {
     let pathname = `/${appdataNamespace}`;
 
     if (this.client) {
@@ -85,9 +84,7 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  find(query, options = {}) {
-    Log.debug(`Retrieving the entities in the ${this.name} collection.`, query);
-
+  async find(query, options = {}) {
     options = assign({
       properties: null,
       timeout: undefined,
@@ -96,7 +93,7 @@ export class NetworkStore {
     options.flags = qs.parse(options.flags);
 
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new NetworkRequest({
@@ -105,23 +102,14 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       query: query,
       timeout: options.timeout,
       client: this.client
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Retrieved the entities in the ${this.name} collection.`, response);
-    }).catch(error => {
-      Log.error(`Failed to retrieve the entities in the ${this.name} collection.`, error);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -137,9 +125,7 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  group(aggregation, options = {}) {
-    Log.debug(`Grouping the entities in the ${this.name} collection.`, aggregation, options);
-
+  async group(aggregation, options = {}) {
     options = assign({
       properties: null,
       timeout: undefined,
@@ -148,8 +134,7 @@ export class NetworkStore {
     }, options);
 
     if (!(aggregation instanceof Aggregation)) {
-      return Promise.reject(new KinveyError('Invalid aggregation. ' +
-        'It must be an instance of the Kinvey.Aggregation class.'));
+      throw new KinveyError('Invalid aggregation. It must be an instance of the Kinvey.Aggregation class.');
     }
 
     const request = new NetworkRequest({
@@ -158,7 +143,7 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_group`
+        pathname: `${this.pathname}/_group`
       }),
       properties: options.properties,
       data: aggregation.toJSON(),
@@ -166,15 +151,7 @@ export class NetworkStore {
       client: this.client
     });
 
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Grouped the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to group the entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -190,9 +167,7 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  count(query, options = {}) {
-    Log.debug(`Counting the number of entities in the ${this.name} collection.`, query);
-
+  async count(query, options = {}) {
     options = assign({
       properties: null,
       timeout: undefined,
@@ -201,7 +176,7 @@ export class NetworkStore {
     }, options);
 
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new NetworkRequest({
@@ -210,23 +185,14 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/_count`
+        pathname: `${this.pathname}/_count`
       }),
       properties: options.properties,
       query: query,
       timeout: options.timeout,
       client: this.client
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Counted the number of entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to count the number of entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -240,13 +206,11 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  findById(id, options = {}) {
+  async findById(id, options = {}) {
     if (!id) {
       Log.warn('No id was provided to retrieve an entity.', id);
-      return Promise.resolve(null);
+      return null;
     }
-
-    Log.debug(`Retrieving the entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       properties: null,
@@ -260,22 +224,13 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`,
+        pathname: `${this.pathname}/${id}`,
       }),
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Retrieved the entity in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      Log.error(`Failed to retrieve the entity in the ${this.name} collection with id = ${id}.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -289,13 +244,11 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  save(entity, options = {}) {
+  async save(entity, options = {}) {
     if (!entity) {
       Log.warn('No entity was provided to be saved.', entity);
-      return Promise.resolve(null);
+      return null;
     }
-
-    Log.debug(`Saving the entity(s) to the ${this.name} collection.`, entity);
 
     options = assign({
       properties: null,
@@ -309,7 +262,7 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname
+        pathname: this.pathname
       }),
       properties: options.properties,
       data: entity,
@@ -317,24 +270,17 @@ export class NetworkStore {
       client: this.client
     });
 
-    if (entity[idAttribute]) {
+    const id = entity[idAttribute];
+    if (id) {
       request.method = HttpMethod.PUT;
       request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${entity[idAttribute]}`
+        pathname: `${this.pathname}/${id}`
       });
     }
 
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Saved the entity(s) to the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to save the entity(s) to the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -350,9 +296,7 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  remove(query, options = {}) {
-    Log.debug(`Removing the entities in the ${this.name} collection.`, query);
-
+  async remove(query, options = {}) {
     options = assign({
       properties: null,
       timeout: undefined,
@@ -360,7 +304,7 @@ export class NetworkStore {
     }, options);
 
     if (query && !(query instanceof Query)) {
-      return Promise.reject(new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.'));
+      throw new KinveyError('Invalid query. It must be an instance of the Kinvey.Query class.');
     }
 
     const request = new NetworkRequest({
@@ -369,22 +313,13 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this._pathname,
+        pathname: this.pathname,
       }),
       properties: options.properties,
       query: query,
       timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Removed the entities in the ${this.name} collection.`, response);
-    }).catch(err => {
-      Log.error(`Failed to remove the entities in the ${this.name} collection.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 
   /**
@@ -398,13 +333,11 @@ export class NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  removeById(id, options = {}) {
+  async removeById(id, options = {}) {
     if (!id) {
       Log.warn('No id was provided to be removed.', id);
-      return Promise.resolve(null);
+      return null;
     }
-
-    Log.debug(`Removing an entity in the ${this.name} collection with id = ${id}.`);
 
     options = assign({
       properties: null,
@@ -418,20 +351,11 @@ export class NetworkStore {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `${this._pathname}/${id}`,
+        pathname: `${this.pathname}/${id}`,
       }),
       properties: options.properties,
       timeout: options.timeout
     });
-
-    const promise = request.execute().then(response => response.data);
-
-    promise.then(response => {
-      Log.info(`Removed the entity in the ${this.name} collection with id = ${id}.`, response);
-    }).catch(err => {
-      Log.error(`Failed to remove the entity in the ${this.name} collection with id = ${id}.`, err);
-    });
-
-    return promise;
+    return request.execute().then(response => response.data);
   }
 }
