@@ -393,7 +393,7 @@ var MIC = {
       popup = Titanium.UI.createWindow({
         backgroundColor: 'white',
         barColor: '#000',
-        title: 'Kinvey - MIC',
+        title: options.popupTitle || 'Kinvey - MIC',
         modal: true
       });
 
@@ -405,7 +405,7 @@ var MIC = {
         var win = Titanium.UI.createWindow({
           backgroundColor: 'white',
           barColor: '#e3e3e3',
-          title: 'Kinvey - MIC'
+          title: options.popupTitle || 'Kinvey - MIC'
         });
 
         // Add the web view to the window
