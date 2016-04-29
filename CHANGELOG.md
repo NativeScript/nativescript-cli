@@ -1,4 +1,7 @@
 ## Changelog
+#### 1.6.9 (2016-04-29)
+* Enhancement (MLIBZ-1064): Provide the ability to customize the popup title for Mobile Identity Connect.
+
 #### 1.6.8 (2016-02-10)
 * Bugfix (MLIBZ-574): Do not check response type for file uploads from Google.
 * Bugfix (MLIBZ-779): Do not send an empty username/password in a login request.
