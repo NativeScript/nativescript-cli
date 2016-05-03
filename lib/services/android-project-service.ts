@@ -18,11 +18,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
 	private static MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS = "4.2.1";
 	private static REQUIRED_DEV_DEPENDENCIES = [
-		{ name: "babel-traverse", version: "^6.4.5"},
-		{ name: "babel-types", version: "^6.4.5"},
-		{ name: "babylon", version: "^6.4.5"},
-		{ name: "filewalker", version: "^0.1.2"},
-		{ name: "lazy", version: "^1.0.11"}
+		{ name: "babel-traverse", version: "^6.4.5" },
+		{ name: "babel-types", version: "^6.4.5" },
+		{ name: "babylon", version: "^6.4.5" },
+		{ name: "filewalker", version: "^0.1.2" },
+		{ name: "lazy", version: "^1.0.11" }
 	];
 
 	private get sysInfoData(): ISysInfoData {
@@ -50,8 +50,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager) {
-			super($fs, $projectData, $projectDataService);
-			this._androidProjectPropertiesManagers = Object.create(null);
+		super($fs, $projectData, $projectDataService);
+		this._androidProjectPropertiesManagers = Object.create(null);
 	}
 
 	private _platformData: IPlatformData = null;
@@ -86,7 +86,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getAppResourcesDestinationDirectoryPath(frameworkVersion?: string): IFuture<string> {
 		return (() => {
-			if(this.canUseGradle(frameworkVersion).wait()) {
+			if (this.canUseGradle(frameworkVersion).wait()) {
 				return path.join(this.platformData.projectRoot, "src", "main", "res");
 			}
 
@@ -100,30 +100,30 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.validateProjectName(this.$projectData.projectName);
 
 			// this call will fail in case `android` is not set correctly.
-			this.$androidToolsInfo.getPathToAndroidExecutable({showWarningsAsErrors: true}).wait();
-			this.$androidToolsInfo.validateJavacVersion(this.sysInfoData.javacVersion, {showWarningsAsErrors: true}).wait();
+			this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true }).wait();
+			this.$androidToolsInfo.validateJavacVersion(this.sysInfoData.javacVersion, { showWarningsAsErrors: true }).wait();
 		}).future<void>()();
 	}
 
 	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
-			if(semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+			if (semver.lt(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				this.$errors.failWithoutHelp(`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`);
 			}
 
 			this.$fs.ensureDirectoryExists(this.platformData.projectRoot).wait();
-			this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
+			this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
 			let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 			let targetSdkVersion = androidToolsInfo.targetSdkVersion;
 			this.$logger.trace(`Using Android SDK '${targetSdkVersion}'.`);
-			if(this.$options.symlink) {
+			if (this.$options.symlink) {
 				this.symlinkDirectory("libs", this.platformData.projectRoot, frameworkDir).wait();
 			} else {
 				this.copy(this.platformData.projectRoot, frameworkDir, "libs", "-R");
 			}
 
 			// These files and directories should not be symlinked as CLI is modifying them and we'll change the original values as well.
-			if(pathToTemplate) {
+			if (pathToTemplate) {
 				let mainPath = path.join(this.platformData.projectRoot, "src", "main");
 				this.$fs.createDirectory(mainPath).wait();
 				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
@@ -138,7 +138,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
-			if(this.canUseStaticBindingGenerator()) {
+			if (this.canUseStaticBindingGenerator()) {
 				let npmConfig = {
 					"save": true,
 					"save-dev": true,
@@ -146,9 +146,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					"silent": true
 				};
 
-				_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) =>
-					this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait()
-				);
+				let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath).wait();
+
+				_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
+					let dependencyVersionInProject = projectPackageJson.dependencies[dependency.name] || projectPackageJson.devDependencies[dependency.name];
+
+					if (!dependencyVersionInProject) {
+						this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait();
+					} else if (!semver.satisfies(dependencyVersionInProject, dependency.version)) {
+						this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${dependencyVersionInProject} but Android platform requires version ${dependency.version}.`);
+					}
+				});
 			} else {
 				this.$logger.printMarkdown(` As you are using Node.js \`${this.sysInfoData.nodeVer}\` Static Binding Generator will be turned off.` +
 					`Upgrade your Node.js to ${AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS} or later, so you can use this feature.`);
@@ -170,14 +178,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let resDestinationDir = this.getAppResourcesDestinationDirectoryPath(frameworkVersion).wait();
 			let directoriesInResFolder = this.$fs.readDirectory(resDestinationDir).wait();
 			let directoriesToClean = directoriesInResFolder
-				.map(dir => { return {
+				.map(dir => {
+					return {
 						dirName: dir,
 						sdkNum: parseInt(dir.substr(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length))
 					};
 				})
 				.filter(dir => dir.dirName.match(AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX)
-								&& dir.sdkNum
-								&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
+					&& dir.sdkNum
+					&& (!targetSdkVersion || (targetSdkVersion < dir.sdkNum)))
 				.map(dir => path.join(resDestinationDir, dir.dirName));
 			this.$logger.trace("Directories to clean:");
 			this.$logger.trace(directoriesToClean);
@@ -209,7 +218,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private getProjectNameFromId(): string {
 		let id: string;
-		if(this.$projectData && this.$projectData.projectId) {
+		if (this.$projectData && this.$projectData.projectId) {
 			id = this.$projectData.projectId.split(".")[2];
 		}
 
@@ -226,7 +235,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean, addPlatform?: Function, removePlatforms?: (platforms: string[]) => IFuture<void>): IFuture<boolean> {
 		return (() => {
-			if(semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
+			if (semver.eq(newVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE)) {
 				let platformLowercase = this.platformData.normalizedPlatformName.toLowerCase();
 				removePlatforms([platformLowercase.split("@")[0]]).wait();
 				addPlatform(platformLowercase).wait();
@@ -239,8 +248,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
-			if(this.canUseGradle().wait()) {
-				this.$androidToolsInfo.validateInfo({showWarningsAsErrors: true, validateTargetSdk: true}).wait();
+			if (this.canUseGradle().wait()) {
+				this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
 				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 				let compileSdk = androidToolsInfo.compileSdkVersion;
 				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
@@ -253,7 +262,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					`-PsupportVersion=${appCompatVersion}`,
 				];
 
-				if(this.$options.release) {
+				if (this.$options.release) {
 					buildOptions.push("-Prelease");
 					buildOptions.push(`-PksPath=${path.resolve(this.$options.keyStorePath)}`);
 					buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
@@ -261,7 +270,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
 				}
 
-				if(!this.canUseStaticBindingGenerator()) {
+				if (!this.canUseStaticBindingGenerator()) {
 					buildOptions.push("-PdontRunSbg");
 				}
 
@@ -296,7 +305,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// In case the file is not correct, looks like we are still using the default AndroidManifest.xml from runtime and the current file (in res dir)
 			// should be merged with it.
-			if(this.isAndroidManifestFileCorrect(androidManifestPath).wait()) {
+			if (this.isAndroidManifestFileCorrect(androidManifestPath).wait()) {
 				// Delete the AndroidManifest.xml file from res directory as the runtime will consider it as addition to the one in src/main and will try to merge them.
 				// However now they are the same file.
 				this.$fs.deleteFile(androidManifestPath).wait();
@@ -312,7 +321,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// In case we should extract the manifest from default template, but for some reason we cannot, break the execution,
 			// so the original file from Android runtime will be used.
-			if(shouldExtractDefaultManifest && !this.extractAndroidManifestFromDefaultTemplate(originalAndroidManifestFilePath).wait()) {
+			if (shouldExtractDefaultManifest && !this.extractAndroidManifestFromDefaultTemplate(originalAndroidManifestFilePath).wait()) {
 				return;
 			}
 
@@ -366,7 +375,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// Copy include.gradle file
 			let includeGradleFilePath = path.join(pluginPlatformsFolderPath, "include.gradle");
-			if(this.$fs.exists(includeGradleFilePath).wait()) {
+			if (this.$fs.exists(includeGradleFilePath).wait()) {
 				shell.cp("-f", includeGradleFilePath, pluginConfigurationDirectoryPath);
 			}
 		}).future<void>()();
@@ -377,7 +386,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			try {
 				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "configurations", pluginData.name)).wait();
 				this.$fs.deleteDirectory(path.join(this.platformData.projectRoot, "src", pluginData.name)).wait();
-			} catch(e) {
+			} catch (e) {
 				if (e.code === "ENOENT") {
 					this.$logger.debug("No native code jars found: " + e.message);
 				} else {
@@ -412,8 +421,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private _canUseGradle: boolean;
 	private canUseGradle(frameworkVersion?: string): IFuture<boolean> {
 		return (() => {
-			if(!this._canUseGradle) {
-				if(!frameworkVersion) {
+			if (!this._canUseGradle) {
+				if (!frameworkVersion) {
 					this.$projectDataService.initialize(this.$projectData.projectDir);
 					frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait().version;
 				}
@@ -431,7 +440,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private spawn(command: string, args: string[], opts?: any): IFuture<void> {
-		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit"});
+		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" });
 	}
 
 	private validatePackageName(packageName: string): void {
@@ -442,7 +451,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		//Class is a reserved word
-		if(/\b[Cc]lass\b/.test(packageName)) {
+		if (/\b[Cc]lass\b/.test(packageName)) {
 			this.$errors.fail("class is a reserved word");
 		}
 	}
@@ -463,9 +472,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			let versionInManifest: string;
 			if (this.$fs.exists(this.platformData.configurationFilePath).wait()) {
 				let targetFromAndroidManifest: string = this.$fs.readText(this.platformData.configurationFilePath).wait();
-				if(targetFromAndroidManifest) {
+				if (targetFromAndroidManifest) {
 					let match = targetFromAndroidManifest.match(/.*?android:targetSdkVersion=\"(.*?)\"/);
-					if(match && match[1]) {
+					if (match && match[1]) {
 						versionInManifest = match[1];
 					}
 				}
@@ -483,7 +492,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			_.each(directoryContent, (file: string) => {
 				let sourceFilePath = path.join(frameworkDir, directoryName, file);
 				let destinationFilePath = path.join(projectRoot, directoryName, file);
-				if(this.$fs.getFsStats(sourceFilePath).wait().isFile()) {
+				if (this.$fs.getFsStats(sourceFilePath).wait().isFile()) {
 					this.$fs.symlink(sourceFilePath, destinationFilePath).wait();
 				} else {
 					this.$fs.symlink(sourceFilePath, destinationFilePath, "dir").wait();
@@ -500,15 +509,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				// Use a real magic to detect if this is the correct file, by checking some mandatory strings.
 				let fileContent = this.$fs.readText(pathToAndroidManifest).wait(),
 					isFileCorrect = !!(~fileContent.indexOf("android:minSdkVersion") && ~fileContent.indexOf("android:targetSdkVersion")
-									&& ~fileContent.indexOf("uses-permission") && ~fileContent.indexOf("<application")
-									&& ~fileContent.indexOf("<activity") && ~fileContent.indexOf("<intent-filter>")
-									&& ~fileContent.indexOf("android.intent.action.MAIN") && ~fileContent.indexOf("com.tns.ErrorReportActivity")
-									&& ~fileContent.indexOf("android:versionCode")
-									&& !this.$xmlValidator.getXmlFileErrors(pathToAndroidManifest).wait());
+						&& ~fileContent.indexOf("uses-permission") && ~fileContent.indexOf("<application")
+						&& ~fileContent.indexOf("<activity") && ~fileContent.indexOf("<intent-filter>")
+						&& ~fileContent.indexOf("android.intent.action.MAIN") && ~fileContent.indexOf("com.tns.ErrorReportActivity")
+						&& ~fileContent.indexOf("android:versionCode")
+						&& !this.$xmlValidator.getXmlFileErrors(pathToAndroidManifest).wait());
 
 				this.$logger.trace(`Existing ${this.platformData.configurationFileName} is ${isFileCorrect ? "" : "NOT "}correct.`);
 				return isFileCorrect;
-			} catch(err) {
+			} catch (err) {
 				this.$logger.trace(`Error while checking ${pathToAndroidManifest}: `, err);
 				return false;
 			}
@@ -519,9 +528,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private getConfigurationFileBackupName(originalAndroidManifestFilePath: string): IFuture<string> {
 		return (() => {
-			if(!this._configurationFileBackupName) {
+			if (!this._configurationFileBackupName) {
 				let defaultBackupName = this.platformData.configurationFileName + ".backup";
-				if(this.$fs.exists(path.join(path.dirname(originalAndroidManifestFilePath), defaultBackupName)).wait()) {
+				if (this.$fs.exists(path.join(path.dirname(originalAndroidManifestFilePath), defaultBackupName)).wait()) {
 					defaultBackupName += `_${createGUID(false)}`;
 				}
 				this._configurationFileBackupName = defaultBackupName;
@@ -541,7 +550,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath: string): IFuture<void> {
 		return (() => {
 			let pathToBackupFile = path.join(path.dirname(originalAndroidManifestFilePath), this.getConfigurationFileBackupName(originalAndroidManifestFilePath).wait());
-			if(this.$fs.exists(pathToBackupFile).wait()) {
+			if (this.$fs.exists(pathToBackupFile).wait()) {
 				this.$logger.trace(`Could not extract ${this.platformData.configurationFileName} from default template. Reverting the change of your app/App_Resources/${this.platformData.configurationFileName}.`);
 				shell.mv(pathToBackupFile, originalAndroidManifestFilePath);
 			}
@@ -556,11 +565,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if (this.$fs.exists(templateAndroidManifest).wait()) {
 				this.$logger.trace(`${originalAndroidManifestFilePath} is missing. Upgrading the source of the project with one from the new project template. Copy ${templateAndroidManifest} to ${originalAndroidManifestFilePath}`);
 				try {
-					if(alreadyHasAndroidManifest) {
+					if (alreadyHasAndroidManifest) {
 						this.backupOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
 					}
 					this.$fs.copyFile(templateAndroidManifest, originalAndroidManifestFilePath).wait();
-				} catch(e) {
+				} catch (e) {
 					this.$logger.trace(`Copying template's ${this.platformData.configurationFileName} failed. `, e);
 					this.revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
 					return false;
@@ -570,7 +579,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				return false;
 			}
 
-			if(alreadyHasAndroidManifest) {
+			if (alreadyHasAndroidManifest) {
 				this.$logger.warn(`Your ${this.platformData.configurationFileName} in app/App_Resources/Android will be replaced by the default one from hello-world template.`);
 				this.$logger.printMarkdown(`The original file will be moved to \`${this.getConfigurationFileBackupName(originalAndroidManifestFilePath).wait()}\`. Merge it **manually** with the new \`${this.platformData.configurationFileName}\` in your app/App_Resources/Android.`);
 			}

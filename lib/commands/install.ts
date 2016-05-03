@@ -1,5 +1,6 @@
 ///<reference path="../.d.ts"/>
 "use strict";
+import {EOL} from "os";
 
 export class InstallCommand implements ICommand {
 	constructor(private $platformsData: IPlatformsData,
@@ -34,7 +35,7 @@ export class InstallCommand implements ICommand {
 					try {
 						this.$platformService.addPlatforms([`${platform}@${frameworkPackageData.version}`]).wait();
 					} catch (err) {
-						error += err;
+						error = `${error}${EOL}${err}`;
 					}
 				}
 			});
