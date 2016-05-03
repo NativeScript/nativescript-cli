@@ -271,7 +271,7 @@ export default class Sync {
    *
    * @example
    * var sync = new Sync();
-   * var promise = sync.execute().then(function(response) {
+   * var promise = sync.push().then(function(response) {
    *   ...
    * }).catch(function(error) {
    *   ...
@@ -526,18 +526,20 @@ export default class Sync {
       syncResults = await batchSync([]);
 
       // Add back the failed sync entities to the sync table
-      const putRequest = new LocalRequest({
-        method: HttpMethod.PUT,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        timeout: options.timeout,
-        data: failedSyncEntities
-      });
-      await putRequest.execute();
+      if (failedSyncEntities.length > 0) {
+        const putRequest = new LocalRequest({
+          method: HttpMethod.PUT,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname
+          }),
+          properties: options.properties,
+          timeout: options.timeout,
+          data: failedSyncEntities
+        });
+        await putRequest.execute();
+      }
     }
 
     // Return the sync result
