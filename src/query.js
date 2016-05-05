@@ -6,6 +6,7 @@ import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isRegExp from 'lodash/isRegExp';
+import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
 
 export class Query {
@@ -585,5 +586,40 @@ export class Query {
     };
 
     return json;
+  }
+
+  /**
+   * Returns serialized representation that can be appended
+   * to network paths as a query parameter.
+   *
+   * @returns {Object} Query object
+   */
+  toQueryString() {
+    const queryString = {
+      filter: this.filter
+    };
+
+    if (!isEmpty(this.fields)) {
+      queryString.fields = this.fields.join(',');
+    }
+
+    if (this.limit) {
+      queryString.limit = this.limit;
+    }
+
+    if (this.skip > 0) {
+      queryString.skip = this.skip;
+    }
+
+    if (!isEmpty(this.sort)) {
+      queryString.sort = this.sort;
+    }
+
+    const keys = Object.keys(queryString);
+    forEach(keys, key => {
+      queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+    });
+
+    return queryString;
   }
 }

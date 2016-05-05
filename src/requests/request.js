@@ -319,7 +319,7 @@ export class KinveyRequest extends Request {
     this.rack = new KinveyRack();
     this.authType = options.authType;
     this.properties = options.properties;
-    this.query = result(options.query, 'toJSON', options.query);
+    this.query = options.query;
     this.client = options.client;
 
     const headers = {};
@@ -375,32 +375,7 @@ export class KinveyRequest extends Request {
 
   get url() {
     const urlString = super.url;
-    const queryString = {};
-
-    if (this.query) {
-      queryString.query = this.query.filter;
-
-      if (!isEmpty(this.query.fields)) {
-        queryString.fields = this.query.fields.join(',');
-      }
-
-      if (this.query.limit) {
-        queryString.limit = this.query.limit;
-      }
-
-      if (this.query.skip > 0) {
-        queryString.skip = this.query.skip;
-      }
-
-      if (!isEmpty(this.query.sort)) {
-        queryString.sort = this.query.sort;
-      }
-    }
-
-    const keys = Object.keys(queryString);
-    forEach(keys, key => {
-      queryString[key] = isString(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
-    });
+    const queryString = this.query ? this.query.toQueryString() : {};
 
     if (isEmpty(queryString)) {
       return urlString;
