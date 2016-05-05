@@ -3,6 +3,7 @@ import { NetworkRack } from 'kinvey-javascript-sdk-core/build/rack/rack';
 import { SerializeMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware/serialize';
 import { HttpMiddleware } from './http';
 import { Push } from 'kinvey-phonegap-sdk/build/push';
+import Device from './device';
 
 export class KinveyProvider {
   constructor() {
@@ -16,7 +17,9 @@ export class KinveyProvider {
     const client = Kinvey.init(options);
 
     // Add Push module to Kinvey
-    Kinvey.Push = new Push();
+    if (Device.isiOS() || Device.isAndroid()) {
+      Kinvey.Push = new Push();
+    }
 
     // Return the client
     return client;
