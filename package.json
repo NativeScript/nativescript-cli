@@ -37,7 +37,7 @@
     "colors": "1.1.2",
     "esprima": "2.7.0",
     "ffi": "https://github.com/icenium/node-ffi/tarball/v2.0.0.1",
-    "fibers": "https://github.com/icenium/node-fibers/tarball/v1.0.6.3",
+    "fibers": "1.0.13",
     "filesize": "3.1.2",
     "gaze": "0.5.2",
     "glob": "^7.0.3",
