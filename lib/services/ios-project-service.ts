@@ -12,6 +12,7 @@ import * as helpers from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import Future = require("fibers/future");
 import { PlistSession } from "plist-merge-patch";
+import {EOL} from "os";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -41,8 +42,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $pluginVariablesService: IPluginVariablesService,
 		private $xcprojService: IXcprojService) {
-			super($fs, $projectData, $projectDataService);
-		}
+		super($fs, $projectData, $projectDataService);
+	}
 
 	public get platformData(): IPlatformData {
 		let projectRoot = path.join(this.$projectData.platformsDir, "ios");
@@ -67,7 +68,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			frameworkDirectoriesNames: ["Metadata", "metadataGenerator", "NativeScript", "internal"],
 			targetedOS: ['darwin'],
 			configurationFileName: "Info.plist",
-			configurationFilePath: path.join(projectRoot, this.$projectData.projectName,  this.$projectData.projectName+"-Info.plist"),
+			configurationFilePath: path.join(projectRoot, this.$projectData.projectName, this.$projectData.projectName + "-Info.plist"),
 			relativeToFrameworkConfigurationFilePath: path.join("__PROJECT_NAME__", "__PROJECT_NAME__-Info.plist"),
 			fastLivesyncFileExtensions: [".tiff", ".tif", ".jpg", "jpeg", "gif", ".png", ".bmp", ".BMPf", ".ico", ".cur", ".xbm"] // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 		};
@@ -77,7 +78,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return (() => {
 			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
 
-			if(semver.lt(frameworkVersion, "1.3.0")) {
+			if (semver.lt(frameworkVersion, "1.3.0")) {
 				return path.join(this.platformData.projectRoot, this.$projectData.projectName, "Resources", "icons");
 			}
 
@@ -89,17 +90,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return (() => {
 			try {
 				this.$childProcess.exec("which xcodebuild").wait();
-			} catch(error) {
+			} catch (error) {
 				this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
 			}
 
 			let xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
 			let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
-			if(splitedXcodeBuildVersion.length === 3) {
+			if (splitedXcodeBuildVersion.length === 3) {
 				xcodeBuildVersion = util.format("%s.%s", splitedXcodeBuildVersion[0], splitedXcodeBuildVersion[1]);
 			}
 
-			if(helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
+			if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
 				this.$errors.fail("NativeScript can only run in Xcode version %s or greater", IOSProjectService.XCODEBUILD_MIN_VERSION);
 			}
 
@@ -109,13 +110,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public createProject(frameworkDir: string, frameworkVersion: string, pathToTemplate?: string): IFuture<void> {
 		return (() => {
 			this.$fs.ensureDirectoryExists(path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER)).wait();
-			if(pathToTemplate) {
+			if (pathToTemplate) {
 				// Copy everything except the template from the runtime
 				this.$fs.readDirectory(frameworkDir).wait()
 					.filter(dirName => dirName.indexOf(IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER) === -1)
 					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
 				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
-			} else if(this.$options.symlink) {
+			} else if (this.$options.symlink) {
 				let xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 
 				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
@@ -126,7 +127,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				_.each(frameworkFiles, (file: string) => {
 					this.$fs.symlink(path.join(frameworkDir, file), path.join(this.platformData.projectRoot, file)).wait();
 				});
-			}  else {
+			} else {
 				shell.cp("-R", path.join(frameworkDir, "*"), this.platformData.projectRoot);
 			}
 		}).future<void>()();
@@ -140,7 +141,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
 			// Starting with NativeScript for iOS 1.6.0, the project Info.plist file resides not in the platform project,
 			// but in the hello-world app template as a platform specific resource.
-			if(this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist")).wait()) {
+			if (this.$fs.exists(path.join(projectRootFilePath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + "-Info.plist")).wait()) {
 				this.replaceFileName("-Info.plist", projectRootFilePath).wait();
 			}
 			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
@@ -173,7 +174,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			];
 
 			let xcworkspacePath = path.join(projectRoot, this.$projectData.projectName + ".xcworkspace");
-			if(this.$fs.exists(xcworkspacePath).wait()) {
+			if (this.$fs.exists(xcworkspacePath).wait()) {
 				basicArgs.push("-workspace", xcworkspacePath);
 				basicArgs.push("-scheme", this.$projectData.projectName);
 			} else {
@@ -219,7 +220,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				args.push(`PROVISIONING_PROFILE=${buildConfig.mobileProvisionIdentifier}`);
 			}
 
-			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
 
 			if (buildForDevice) {
 				let buildOutputPath = path.join(projectRoot, "build", "device");
@@ -232,7 +233,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					"-o", path.join(buildOutputPath, this.$projectData.projectName + ".ipa")
 				];
 
-				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", {cwd: this.$options, stdio: 'inherit'}).wait();
+				this.$childProcess.spawnFromEvent("xcrun", xcrunArgs, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
 			}
 		}).future<void>()();
 	}
@@ -257,7 +258,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			architectures.push('ONLY_ACTIVE_ARCH=NO');
 		}
 
-		buildConfig = buildConfig || { };
+		buildConfig = buildConfig || {};
 		buildConfig.architectures = architectures;
 
 		return this.buildProject(this.platformData.projectRoot, buildConfig);
@@ -287,7 +288,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			let frameworkAddOptions: xcode.Options = { customFramework: true };
 
-			if(isDynamic) {
+			if (isDynamic) {
 				frameworkAddOptions["embed"] = true;
 				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
 				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
@@ -338,9 +339,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public updatePlatform(currentVersion: string, newVersion: string, canUpdate: boolean): IFuture<boolean> {
 		return (() => {
-			if(!canUpdate) {
+			if (!canUpdate) {
 				let isUpdateConfirmed = this.$prompter.confirm(`We need to override xcodeproj file. The old one will be saved at ${this.$options.profileDir}. Are you sure?`, () => true).wait();
-				if(isUpdateConfirmed) {
+				if (isUpdateConfirmed) {
 					// Copy old file to options["profile-dir"]
 					let sourceDir = this.xcodeprojPath;
 					let destinationDir = path.join(this.$options.profileDir, "xcodeproj");
@@ -370,7 +371,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let project = this.createPbxProj();
 			let resources = project.pbxGroupByName("Resources");
 
-			if(resources) {
+			if (resources) {
 				let references = project.pbxFileReferenceSection();
 
 				let xcodeProjectImages = _.map(<any[]>resources.children, resource => this.replace(references[resource.value].name));
@@ -430,7 +431,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.$logger.trace("Info.plist: app/App_Resources/iOS/Info.plist is missing. Upgrading the source of the project with one from the new project template. Copy " + templateInfoPlist + " to " + infoPlistPath);
 					try {
 						this.$fs.copyFile(templateInfoPlist, infoPlistPath).wait();
-					} catch(e) {
+					} catch (e) {
 						this.$logger.trace("Copying template's Info.plist failed. " + e);
 					}
 				} else {
@@ -481,7 +482,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						<plist version="1.0">
 						<dict>
 							<key>CFBundleIdentifier</key>
-							<string>${ this.$projectData.projectId }</string>
+							<string>${ this.$projectData.projectId}</string>
 						</dict>
 						</plist>`
 				});
@@ -516,8 +517,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private replace(name: string): string {
-		if(_.startsWith(name, '"')) {
-			name = name.substr(1, name.length-2);
+		if (_.startsWith(name, '"')) {
+			name = name.substr(1, name.length - 2);
 		}
 
 		return name.replace(/\\\"/g, "\"");
@@ -541,7 +542,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private savePbxProj(project: any): IFuture<void> {
-		 return this.$fs.writeFile(this.pbxProjPath, project.writeSync());
+		return this.$fs.writeFile(this.pbxProjPath, project.writeSync());
 	}
 
 	public preparePluginNativeCode(pluginData: IPluginData, opts?: any): IFuture<void> {
@@ -566,19 +567,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public afterPrepareAllPlugins(): IFuture<void> {
 		return (() => {
-			if(this.$fs.exists(this.projectPodFilePath).wait()) {
+			if (this.$fs.exists(this.projectPodFilePath).wait()) {
 				let projectPodfileContent = this.$fs.readText(this.projectPodFilePath).wait();
 				this.$logger.trace("Project Podfile content");
 				this.$logger.trace(projectPodfileContent);
 
 				let firstPostInstallIndex = projectPodfileContent.indexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME);
-				if(firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
+				if (firstPostInstallIndex !== -1 && firstPostInstallIndex !== projectPodfileContent.lastIndexOf(IOSProjectService.PODFILE_POST_INSTALL_SECTION_NAME)) {
 					this.$logger.warn(`Podfile contains more than one post_install sections. You need to open ${this.projectPodFilePath} file and manually resolve this issue.`);
 				}
 
 				let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
-				if(!this.$fs.exists(xcuserDataPath).wait()) {
+				if (!this.$fs.exists(xcuserDataPath).wait()) {
 					this.$logger.info("Creating project scheme...");
+
+					this.checkIfXcodeprojIsRequired().wait();
+
 					let createSchemeRubyScript = `ruby -e "require 'xcodeproj'; xcproj = Xcodeproj::Project.open('${this.$projectData.projectName}.xcodeproj'); xcproj.recreate_user_schemes; xcproj.save"`;
 					this.$childProcess.exec(createSchemeRubyScript, { cwd: this.platformData.projectRoot }).wait();
 				}
@@ -651,7 +655,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			try {
 				this.$childProcess.exec("gem which cocoapods").wait();
 				this.$childProcess.exec("gem which xcodeproj").wait();
-			} catch(e) {
+			} catch (e) {
 				this.$errors.failWithoutHelp("CocoaPods or ruby gem 'xcodeproj' is not installed. Run `sudo gem install cocoapods` and try again.");
 			}
 
@@ -659,7 +663,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this.$logger.info("Installing pods...");
 			let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
-			let childProcess = this.$childProcess.spawnFromEvent(podTool,  ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] }).wait();
+			let childProcess = this.$childProcess.spawnFromEvent(podTool, ["install"], "close", { cwd: this.platformData.projectRoot, stdio: ['pipe', process.stdout, 'pipe'] }).wait();
 			if (childProcess.stderr) {
 				let warnings = childProcess.stderr.match(/(\u001b\[(?:\d*;){0,5}\d*m[\s\S]+?\u001b\[(?:\d*;){0,5}\d*m)|(\[!\].*?\n)|(.*?warning.*)/gi);
 				_.each(warnings, (warning: string) => {
@@ -671,7 +675,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					errors = errors.replace(warning, "");
 				});
 
-				if(errors.trim()) {
+				if (errors.trim()) {
 					this.$errors.failWithoutHelp(`Pod install command failed. Error output: ${errors}`);
 				}
 			}
@@ -699,7 +703,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private prepareCocoapods(pluginPlatformsFolderPath: string, opts?: any): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			if(this.$fs.exists(pluginPodFilePath).wait()) {
+			if (this.$fs.exists(pluginPodFilePath).wait()) {
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait(),
 					pluginPodFilePreparedContent = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent),
 					projectPodFileContent = this.$fs.exists(this.projectPodFilePath).wait() ? this.$fs.readText(this.projectPodFilePath).wait() : "";
@@ -726,7 +730,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				}
 			}
 
-			if(opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
+			if (opts && opts.executePodInstall && this.$fs.exists(pluginPodFilePath).wait()) {
 				this.executePodInstall().wait();
 			}
 		}).future<void>()();
@@ -765,12 +769,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private removeCocoapods(pluginPlatformsFolderPath: string): IFuture<void> {
 		return (() => {
 			let pluginPodFilePath = path.join(pluginPlatformsFolderPath, "Podfile");
-			if(this.$fs.exists(pluginPodFilePath).wait() && this.$fs.exists(this.projectPodFilePath).wait()) {
+			if (this.$fs.exists(pluginPodFilePath).wait() && this.$fs.exists(this.projectPodFilePath).wait()) {
 				let pluginPodFileContent = this.$fs.readText(pluginPodFilePath).wait();
 				let projectPodFileContent = this.$fs.readText(this.projectPodFilePath).wait();
-				let contentToRemove= this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
+				let contentToRemove = this.buildPodfileContent(pluginPodFilePath, pluginPodFileContent);
 				projectPodFileContent = helpers.stringReplaceAll(projectPodFileContent, contentToRemove, "");
-				if(projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${os.EOL}end`) {
+				if (projectPodFileContent.trim() === `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}${os.EOL}end`) {
 					this.$fs.deleteFile(this.projectPodFilePath).wait();
 				} else {
 					this.$fs.writeFile(this.projectPodFilePath, projectPodFileContent).wait();
@@ -806,6 +810,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$fs.writeFile(projectFile, "").wait();
 			}
 
+			this.checkIfXcodeprojIsRequired().wait();
 			let escapedProjectFile = projectFile.replace(/'/g, "\\'"),
 				escapedPluginFile = pluginFile.replace(/'/g, "\\'"),
 				mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedProjectFile}').merge(Xcodeproj::Config.new('${escapedPluginFile}')).save_as(Pathname.new('${escapedProjectFile}'))`;
@@ -839,6 +844,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			if (this.$fs.exists(podFolder).wait()) {
 				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.debug.xcconfig`), this.pluginsDebugXcconfigFilePath).wait();
 				this.mergeXcconfigFiles(path.join(this.platformData.projectRoot, podFilesRootDirName, `Pods-${this.$projectData.projectName}.release.xcconfig`), this.pluginsReleaseXcconfigFilePath).wait();
+			}
+		}).future<void>()();
+	}
+
+	private checkIfXcodeprojIsRequired(): IFuture<void> {
+		return (() => {
+			let xcprojInfo = this.$xcprojService.getXcprojInfo().wait();
+			if (xcprojInfo.shouldUseXcproj && !xcprojInfo.xcprojAvailable) {
+				let errorMessage = `You are using CocoaPods version ${xcprojInfo.cocoapodVer} which does not support Xcode ${xcprojInfo.xcodeVersion.major}.${xcprojInfo.xcodeVersion.minor} yet.${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH. Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`;
+
+				this.$errors.failWithoutHelp(errorMessage);
+
+				return true;
 			}
 		}).future<void>()();
 	}

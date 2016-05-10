@@ -221,7 +221,7 @@ export class PlatformService implements IPlatformService {
 				_.each(this.$pluginsService.getAllInstalledPlugins().wait(), (pluginData: IPluginData) => {
 					if (this.$fs.exists(path.join(pluginData.pluginPlatformsFolderPath(platform), "Podfile")).wait() &&
 						!this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer) {
-						this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please install Cocoapods and configure it correctly.`);
+						this.$errors.failWithoutHelp(`${pluginData.name} has Podfile and you don't have Cocoapods installed or it is not configured correctly. Please verify Cocoapods can work on your machine.`);
 					}
 				});
 			}
