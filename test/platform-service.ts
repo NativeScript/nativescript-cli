@@ -38,6 +38,7 @@ function createTestInjector() {
 	testInjector.register('androidEmulatorServices', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});
+	testInjector.register('sysInfo', {});
 	testInjector.register('lockfile', stubs.LockFile);
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => { /* intentionally left blank */ }

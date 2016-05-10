@@ -51,6 +51,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("npmInstallationManager", {});
 	testInjector.register("lockfile", LockFile);
 	testInjector.register("prompter", {});
+	testInjector.register("sysInfo", {});
 	testInjector.register("androidProjectService", {});
 	testInjector.register("iOSProjectService", {});
 	testInjector.register("devicesService", {});

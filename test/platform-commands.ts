@@ -102,6 +102,7 @@ function createTestInjector() {
 	testInjector.register('devicesService', {});
 	testInjector.register('projectDataService', stubs.ProjectDataService);
 	testInjector.register('prompter', {});
+	testInjector.register('sysInfo', {});
 	testInjector.register('commands-service', CommandsServiceLib.CommandsService);
 	testInjector.registerCommand("platform|add", PlatformAddCommandLib.AddPlatformCommand);
 	testInjector.registerCommand("platform|remove", PlatformRemoveCommandLib.RemovePlatformCommand);
