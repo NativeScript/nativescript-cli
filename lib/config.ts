@@ -22,6 +22,8 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 $injector.register("config", Configuration);
 
 export class StaticConfig extends StaticConfigBase implements IStaticConfig {
+	public disableAnalytics = true;
+
 	public PROJECT_FILE_NAME = "package.json";
 	public CLIENT_NAME_KEY_IN_PROJECT_FILE = "nativescript";
 	public CLIENT_NAME = "tns";

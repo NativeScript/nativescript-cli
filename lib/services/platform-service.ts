@@ -301,10 +301,10 @@ export class PlatformService implements IPlatformService {
 			let excludedDirs = [constants.APP_RESOURCES_FOLDER_NAME];
 			this.$projectFilesManager.processPlatformSpecificFiles(directoryPath, platform, excludedDirs).wait();
 
+			this.applyBaseConfigOption(platformData).wait();
+
 			// Process configurations files from App_Resources
 			platformData.platformProjectService.processConfigurationFilesFromAppResources().wait();
-
-			this.applyBaseConfigOption(platformData).wait();
 
 			// Replace placeholders in configuration files
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
