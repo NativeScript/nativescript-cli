@@ -128,9 +128,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$fs.createDirectory(mainPath).wait();
 				shell.cp("-R", path.join(path.resolve(pathToTemplate), "*"), mainPath);
 			} else {
-				this.copy(this.platformData.projectRoot, frameworkDir, "src build-tools", "-R");
+				this.copy(this.platformData.projectRoot, frameworkDir, "src", "-R");
 			}
-			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties", "-f");
+			this.copy(this.platformData.projectRoot, frameworkDir, "build.gradle settings.gradle gradle.properties build-tools", "-Rf");
 
 			if (this.useGradleWrapper(frameworkDir)) {
 				this.copy(this.platformData.projectRoot, frameworkDir, "gradle", "-R");

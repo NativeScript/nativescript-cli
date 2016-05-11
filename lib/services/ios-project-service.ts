@@ -419,7 +419,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	public ensureConfigurationFileInAppResources(): IFuture<void> {
 		return (() => {
 			let projectDir = this.$projectData.projectDir;
-			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+			let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
 
 			if (!this.$fs.exists(infoPlistPath).wait()) {
 				// The project is missing Info.plist, try to populate it from the project template.
@@ -444,7 +444,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private mergeInfoPlists(): IFuture<void> {
 		return (() => {
 			let projectDir = this.$projectData.projectDir;
-			let infoPlistPath = path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
+			let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
 			this.ensureConfigurationFileInAppResources().wait();
 
 			if (!this.$fs.exists(infoPlistPath).wait()) {
