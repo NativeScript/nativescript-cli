@@ -677,7 +677,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			if (this.$xcprojService.getXcprojInfo().wait().shouldUseXcproj) {
-				this.$childProcess.exec(`xcproj --project ${this.xcodeprojPath} touch`).wait();
+				this.$childProcess.spawnFromEvent("xcproj", ["--project", this.xcodeprojPath, "touch"], "close").wait();
 			}
 
 			return childProcess;
