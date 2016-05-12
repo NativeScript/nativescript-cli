@@ -4,7 +4,7 @@ import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-a
 import Future = require("fibers/future");
 import * as path from "path";
 import {AndroidDeviceHashService} from "../common/mobile/android/android-device-hash-service";
-import {AndroidDebugBridge} from "../common/mobile/android/android-debug-bridge";
+import {DeviceAndroidDebugBridge} from "../common/mobile/android/device-android-debug-bridge";
 
 const SYNC_DIR_NAME = "sync";
 const FULLSYNC_DIR_NAME = "fullsync";
@@ -64,7 +64,7 @@ export class AndroidAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase
 
 	private getSyncFolderName(): IFuture<string> {
 		return ((): string =>{
-			let adb =  this.$injector.resolve(AndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
+			let adb =  this.$injector.resolve(DeviceAndroidDebugBridge, { identifier: this.device.deviceInfo.identifier });
 			let deviceHashService = this.$injector.resolve(AndroidDeviceHashService, {adb: adb, appIdentifier: this.appIdentifier});
 			let hashFile = this.$options.force ? null : deviceHashService.doesShasumFileExistsOnDevice().wait();
 			return this.$options.watch || hashFile ? SYNC_DIR_NAME : FULLSYNC_DIR_NAME;

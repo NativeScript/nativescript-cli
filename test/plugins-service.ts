@@ -47,6 +47,8 @@ function createTestInjector() {
 	testInjector.register("messagesService", MessagesService);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("fs", FileSystem);
+	testInjector.register("adb", {});
+	testInjector.register("androidDebugBridgeResultHandler", {});
 	testInjector.register("projectData", ProjectData);
 	testInjector.register("platforsmData", stubs.PlatformsDataStub);
 	testInjector.register("childProcess", ChildProcess);

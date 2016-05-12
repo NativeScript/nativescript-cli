@@ -41,6 +41,7 @@ let assert = require("chai").assert;
 function createTestInjector(): IInjector {
 	let testInjector = new yok.Yok();
 	testInjector.register("fs", FsLib.FileSystem);
+	testInjector.register("adb", {});
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("errors", ErrorsLib.Errors);
 	testInjector.register("staticConfig", StaticConfigLib.StaticConfig);
