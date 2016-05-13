@@ -99,11 +99,11 @@ if (!$env:JAVA_HOME) {
 # following commands are separated in case of having to answer to license agreements
 # the android tool will introduce a --accept-license option in subsequent releases
 $androidExecutable = [io.path]::combine($env:ANDROID_HOME, "tools", "android")
-echo y | cmd /c "$androidExecutable" update sdk --filter "platform-tools" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "tools" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "android-23" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-23.0.2" --all --no-ui
-echo y | cmd /c "$androidExecutable" update sdk --filter "extra-android-m2repository" --all --no-ui
+echo y | cmd /c "($androidExecutable)" update sdk --filter "platform-tools" --all --no-ui
+echo y | cmd /c "($androidExecutable)" update sdk --filter "tools" --all --no-ui
+echo y | cmd /c "($androidExecutable)" update sdk --filter "android-23" --all --no-ui
+echo y | cmd /c "($androidExecutable)" update sdk --filter "build-tools-23.0.2" --all --no-ui
+echo y | cmd /c "($androidExecutable)" update sdk --filter "extra-android-m2repository" --all --no-ui
 
 
 Write-Host -ForegroundColor Green "This script has modified your environment. You need to log off and log back on for the changes to take effect."
