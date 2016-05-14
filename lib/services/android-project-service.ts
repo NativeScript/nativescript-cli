@@ -149,12 +149,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath).wait();
 
 				_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
-					let dependencyVersionInProject = projectPackageJson.dependencies[dependency.name] || projectPackageJson.devDependencies[dependency.name];
+					let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
+						(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
 					if (!dependencyVersionInProject) {
 						this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait();
-					} else if (!semver.satisfies(dependencyVersionInProject, dependency.version)) {
-						this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${dependencyVersionInProject} but Android platform requires version ${dependency.version}.`);
+					} else {
+						let cleanedVerson = semver.clean(dependencyVersionInProject);
+
+						// The plugin version is not valid. Check node_modules for the valid version.
+						if (!cleanedVerson) {
+							let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
+							dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson).wait() && this.$fs.readJson(pathToPluginPackageJson).wait().version;
+						}
+
+						if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
+							this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
+						}
 					}
 				});
 			} else {
