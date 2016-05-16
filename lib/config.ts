@@ -4,6 +4,7 @@
 import * as path from "path";
 import {StaticConfigBase} from "./common/static-config-base";
 import {ConfigBase} from "./common/config-base";
+import { StartPackageActivityNames } from "./common/mobile/constants";
 
 export class Configuration extends ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
@@ -31,7 +32,7 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 	public TRACK_FEATURE_USAGE_SETTING_NAME = "TrackFeatureUsage";
 	public ERROR_REPORT_SETTING_NAME = "TrackExceptions";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
-	public START_PACKAGE_ACTIVITY_NAME = "com.tns.NativeScriptActivity";
+	public START_PACKAGE_ACTIVITY_NAME = StartPackageActivityNames.NATIVESCRIPT;
 	public INSTALLATION_SUCCESS_MESSAGE = "Installation successful. You are good to go. Connect with us on `http://twitter.com/NativeScript`.";
 
 	constructor($injector: IInjector) {
