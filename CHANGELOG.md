@@ -1,5 +1,10 @@
 NativeScript CLI Changelog
 ================
+2.0.1 (2016, May 18)
+==
+### Fixed
+* [Fixed #1746](https://github.com/NativeScript/nativescript-cli/issues/1746): Remove node_modules after preparing plugins.
+* [Fixed #1741](https://github.com/NativeScript/nativescript-cli/issues/1741): Cocoapods problem in tns doctor.
 
 2.0.0 (2016, April 28)
 ==
