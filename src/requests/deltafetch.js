@@ -1,9 +1,9 @@
 import Promise from 'babybird';
 import { KinveyRequest } from './request';
-import { LocalRequest } from './local';
+import CacheRequest from './cache';
 import { NetworkRequest } from './network';
 import { Response } from './response';
-import { HttpMethod, StatusCode } from '../enums';
+import { RequestMethod, StatusCode } from '../enums';
 import { NotFoundError } from '../errors';
 import { Query } from '../query';
 import keyBy from 'lodash/keyBy';
@@ -36,15 +36,15 @@ export class DeltaFetchRequest extends KinveyRequest {
 
     // Verify that the method is allowed
     switch (method) {
-      case HttpMethod.GET:
+      case RequestMethod.GET:
         super.method = method;
         break;
-      case HttpMethod.POST:
-      case HttpMethod.PATCH:
-      case HttpMethod.PUT:
-      case HttpMethod.DELETE:
+      case RequestMethod.POST:
+      case RequestMethod.PATCH:
+      case RequestMethod.PUT:
+      case RequestMethod.DELETE:
       default:
-        throw new Error('Invalid Http Method. Only GET is allowed.');
+        throw new Error('Invalid request Method. Only RequestMethod.GET is allowed.');
     }
   }
 
@@ -53,8 +53,8 @@ export class DeltaFetchRequest extends KinveyRequest {
     await super.execute();
 
     try {
-      const request = new LocalRequest({
-        method: HttpMethod.GET,
+      const request = new CacheRequest({
+        method: RequestMethod.GET,
         url: this.url,
         headers: this.headers,
         query: this.query,
@@ -75,7 +75,7 @@ export class DeltaFetchRequest extends KinveyRequest {
       const query = new Query(result(this.query, 'toJSON', this.query));
       query.fields = [idAttribute, `${kmdAttribute}.lmt`];
       const networkRequest = new NetworkRequest({
-        method: HttpMethod.GET,
+        method: RequestMethod.GET,
         url: this.url,
         headers: this.headers,
         auth: this.auth,
@@ -115,7 +115,7 @@ export class DeltaFetchRequest extends KinveyRequest {
                                          maxIdsPerRequest : deltaSetIds.length);
         query.contains(idAttribute, ids);
         const networkRequest = new NetworkRequest({
-          method: HttpMethod.GET,
+          method: RequestMethod.GET,
           url: this.url,
           headers: this.headers,
           auth: this.auth,
@@ -154,7 +154,7 @@ export class DeltaFetchRequest extends KinveyRequest {
     }
 
     const networkRequest = new NetworkRequest({
-      method: HttpMethod.GET,
+      method: RequestMethod.GET,
       url: this.url,
       headers: this.headers,
       auth: this.auth,

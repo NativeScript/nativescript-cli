@@ -1,4 +1,4 @@
-import { HttpMethod, AuthType } from '../enums';
+import { RequestMethod, AuthType } from '../enums';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import Client from '../client';
@@ -113,7 +113,7 @@ const Auth = {
 export class Request {
   constructor(options = {}) {
     options = assign({
-      method: HttpMethod.GET,
+      method: RequestMethod.GET,
       headers: {},
       url: '',
       data: null,
@@ -151,15 +151,15 @@ export class Request {
     method = method.toUpperCase();
 
     switch (method) {
-      case HttpMethod.GET:
-      case HttpMethod.POST:
-      case HttpMethod.PATCH:
-      case HttpMethod.PUT:
-      case HttpMethod.DELETE:
+      case RequestMethod.GET:
+      case RequestMethod.POST:
+      case RequestMethod.PATCH:
+      case RequestMethod.PUT:
+      case RequestMethod.DELETE:
         this.requestMethod = method;
         break;
       default:
-        throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
+        throw new Error('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
     }
   }
 

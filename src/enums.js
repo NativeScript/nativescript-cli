@@ -37,15 +37,15 @@ export { DataStoreType };
  * @private
  * Enum for Http Methods.
  */
-const HttpMethod = {
+const RequestMethod = {
   GET: 'GET',
   POST: 'POST',
   PATCH: 'PATCH',
   PUT: 'PUT',
   DELETE: 'DELETE'
 };
-Object.freeze(HttpMethod);
-export { HttpMethod };
+Object.freeze(RequestMethod);
+export { RequestMethod };
 
 /**
  * Enum for Social Identities.

@@ -1,8 +1,8 @@
 import Promise from 'babybird';
-import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
+import { AuthType, RequestMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
-import { Client } from './client';
+import Client from './client';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
@@ -63,7 +63,7 @@ export class MobileIdentityConnect {
     }
 
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
@@ -147,7 +147,7 @@ export class MobileIdentityConnect {
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
       const request = new NetworkRequest({
-        method: HttpMethod.POST,
+        method: RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -178,7 +178,7 @@ export class MobileIdentityConnect {
 
   requestToken(code, clientId, redirectUri, options = {}) {
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },

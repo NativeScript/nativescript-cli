@@ -5,7 +5,7 @@ import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect } from './mic';
-import { AuthType, SocialIdentity, HttpMethod } from './enums';
+import { AuthType, SocialIdentity, RequestMethod } from './enums';
 import { DataStore, DataStoreType } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
@@ -213,7 +213,7 @@ export class User {
   isActive() {
     const activeUser = User.getActiveUser(this.client);
 
-    if (activeUser && activeUser._id === this._id) {
+    if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
       return true;
     }
 
@@ -284,7 +284,7 @@ export class User {
     }
 
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.protocol,
@@ -306,8 +306,9 @@ export class User {
   }
 
   loginWithIdentity(identity, token, options) {
-    const data = { _socialIdentity: {} };
-    data._socialIdentity[identity] = token;
+    const data = {};
+    data[socialIdentityAttribute] = {};
+    data[socialIdentityAttribute][identity] = token;
     return this.login(data, options);
   }
 
@@ -366,7 +367,7 @@ export class User {
     }
 
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.Session,
       url: url.format({
         protocol: this.client.protocol,
@@ -496,7 +497,7 @@ export class User {
 
       const query = new Query().equalTo('identity', identity);
       const request = new NetworkRequest({
-        method: HttpMethod.GET,
+        method: RequestMethod.GET,
         authType: AuthType.None,
         url: url.format({
           protocol: this.client.protocol,
@@ -574,7 +575,7 @@ export class User {
     }).then(() => {
       setActiveSocialIdentity(this.client, {
         identity: identity,
-        token: this._socialIdentity[identity],
+        token: this[socialIdentityAttribute][identity],
         redirectUri: options.redirectUri,
         client: options.micClient
       });
@@ -592,7 +593,7 @@ export class User {
     this.data = data;
 
     const promise = Promise.resolve().then(() => {
-      if (!this._id) {
+      if (!this[idAttribute]) {
         return this;
       }
 
@@ -658,7 +659,7 @@ export class User {
       }
     }).then(() => {
       const request = new NetworkRequest({
-        method: HttpMethod.POST,
+        method: RequestMethod.POST,
         authType: AuthType.App,
         url: url.format({
           protocol: this.client.protocol,
@@ -684,8 +685,9 @@ export class User {
   }
 
   signupWithIdentity(identity, tokens, options) {
-    const data = { _socialIdentity: {} };
-    data._socialIdentity[identity] = tokens;
+    const data = {};
+    data[socialIdentityAttribute] = {};
+    data[socialIdentityAttribute][identity] = tokens;
     return this.signup(data, options);
   }
 
@@ -704,7 +706,7 @@ export class User {
 
   me(options = {}) {
     const request = new NetworkRequest({
-      method: HttpMethod.GET,
+      method: RequestMethod.GET,
       authType: AuthType.Session,
       url: url.format({
         protocol: this.client.protocol,
@@ -735,7 +737,7 @@ export class User {
 
   verifyEmail(options = {}) {
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.protocol,
@@ -753,7 +755,7 @@ export class User {
 
   forgotUsername(options = {}) {
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.protocol,
@@ -772,7 +774,7 @@ export class User {
 
   resetPassword(options = {}) {
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.protocol,

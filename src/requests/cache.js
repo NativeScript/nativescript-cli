@@ -6,7 +6,7 @@ import { Response } from './response';
 /**
  * @private
  */
-export class LocalRequest extends KinveyRequest {
+export default class CacheRequest extends KinveyRequest {
   constructor(options) {
     super(options);
     this.rack = CacheRack.sharedInstance();

@@ -1,8 +1,8 @@
 import Promise from 'babybird';
-import { HttpMethod, AuthType } from './enums';
+import { RequestMethod, AuthType } from './enums';
 import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors';
 import { Metadata } from './metadata';
-import { LocalRequest } from './requests/local';
+import CacheRequest from './requests/cache';
 import { NetworkRequest } from './requests/network';
 import Client from './client';
 import { getSyncKey, setSyncKey } from './utils/storage';
@@ -55,8 +55,8 @@ export default class Sync {
     let syncEntities = [];
 
     // Get all sync entities
-    const request = new LocalRequest({
-      method: HttpMethod.GET,
+    const request = new CacheRequest({
+      method: RequestMethod.GET,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
@@ -139,7 +139,7 @@ export default class Sync {
         entityId: id,
         collection: collection,
         state: {
-          method: HttpMethod.POST
+          method: RequestMethod.POST
         },
         entity: entity
       };
@@ -151,8 +151,8 @@ export default class Sync {
       }
 
       // Send a request to save the sync entity
-      const request = new LocalRequest({
-        method: HttpMethod.POST,
+      const request = new CacheRequest({
+        method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -209,7 +209,7 @@ export default class Sync {
         entityId: id,
         collection: collection,
         state: {
-          method: HttpMethod.PUT
+          method: RequestMethod.PUT
         },
         entity: entity
       };
@@ -221,8 +221,8 @@ export default class Sync {
       }
 
       // Send a request to save the sync entity
-      const request = new LocalRequest({
-        method: HttpMethod.POST,
+      const request = new CacheRequest({
+        method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -300,7 +300,7 @@ export default class Sync {
         entityId: id,
         collection: collection,
         state: {
-          method: HttpMethod.DELETE
+          method: RequestMethod.DELETE
         },
         entity: entity
       };
@@ -312,8 +312,8 @@ export default class Sync {
       }
 
       // Send a request to save the sync entity
-      const request = new LocalRequest({
-        method: HttpMethod.POST,
+      const request = new CacheRequest({
+        method: RequestMethod.POST,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -354,8 +354,8 @@ export default class Sync {
     let i = 0;
 
     // Make a request for the pending sync entities
-    const deleteRequest = new LocalRequest({
-      method: HttpMethod.DELETE,
+    const deleteRequest = new CacheRequest({
+      method: RequestMethod.DELETE,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
@@ -388,10 +388,10 @@ export default class Sync {
             const originalId = entity[idAttribute];
             const method = syncEntity.state.method;
 
-            if (method === HttpMethod.DELETE) {
+            if (method === RequestMethod.DELETE) {
               // Remove the entity from the network.
               const request = new NetworkRequest({
-                method: HttpMethod.DELETE,
+                method: RequestMethod.DELETE,
                 authType: AuthType.Default,
                 url: url.format({
                   protocol: this.client.protocol,
@@ -416,7 +416,7 @@ export default class Sync {
                   try {
                     // Try and reset the state of the entity
                     const getNetworkRequest = new NetworkRequest({
-                      method: HttpMethod.GET,
+                      method: RequestMethod.GET,
                       authType: AuthType.Default,
                       url: url.format({
                         protocol: this.client.protocol,
@@ -428,8 +428,8 @@ export default class Sync {
                       client: this.client
                     });
                     const originalEntity = await getNetworkRequest.execute().then(response => response.data);
-                    const putLocalRequest = new LocalRequest({
-                      method: HttpMethod.PUT,
+                    const putCacheRequest = new CacheRequest({
+                      method: RequestMethod.PUT,
                       url: url.format({
                         protocol: this.client.protocol,
                         host: this.client.host,
@@ -439,7 +439,7 @@ export default class Sync {
                       timeout: options.timeout,
                       body: originalEntity
                     });
-                    await putLocalRequest.execute();
+                    await putCacheRequest.execute();
                   } catch (error) {
                     // Throw away the error
                   }
@@ -452,7 +452,7 @@ export default class Sync {
                   error: error
                 };
               });
-            } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
+            } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
               // Save the entity to the network.
               const request = new NetworkRequest({
                 method: method,
@@ -473,7 +473,7 @@ export default class Sync {
               if (metadata.isLocal()) {
                 delete entity[idAttribute];
                 delete entity[kmdAttribute].local;
-                request.method = HttpMethod.POST;
+                request.method = RequestMethod.POST;
                 request.url = url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
@@ -484,8 +484,8 @@ export default class Sync {
 
               return request.execute().then(response => response.data).then(async entity => {
                 // Save the result of the network request locally.
-                const putLocalRequest = new LocalRequest({
-                  method: HttpMethod.PUT,
+                const putCacheRequest = new CacheRequest({
+                  method: RequestMethod.PUT,
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
@@ -495,13 +495,13 @@ export default class Sync {
                   timeout: options.timeout,
                   body: entity
                 });
-                entity = await putLocalRequest.execute().then(response => response.data);
+                entity = await putCacheRequest.execute().then(response => response.data);
 
                 // Remove the original entity if it was created on the device
                 // using the SDK.
                 if (metadata.isLocal()) {
-                  const deleteLocalRequest = new LocalRequest({
-                    method: HttpMethod.DELETE,
+                  const deleteCacheRequest = new CacheRequest({
+                    method: RequestMethod.DELETE,
                     url: url.format({
                       protocol: this.client.protocol,
                       host: this.client.host,
@@ -510,7 +510,7 @@ export default class Sync {
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  await deleteLocalRequest.execute();
+                  await deleteCacheRequest.execute();
                 }
 
                 // Return the result of the sync operation.
@@ -532,7 +532,7 @@ export default class Sync {
                     // is not local
                     if (!metadata.isLocal()) {
                       const getNetworkRequest = new NetworkRequest({
-                        method: HttpMethod.GET,
+                        method: RequestMethod.GET,
                         authType: AuthType.Default,
                         url: url.format({
                           protocol: this.client.protocol,
@@ -544,8 +544,8 @@ export default class Sync {
                         client: this.client
                       });
                       const originalEntity = await getNetworkRequest.execute().then(response => response.data);
-                      const putLocalRequest = new LocalRequest({
-                        method: HttpMethod.PUT,
+                      const putCacheRequest = new CacheRequest({
+                        method: RequestMethod.PUT,
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
@@ -555,7 +555,7 @@ export default class Sync {
                         timeout: options.timeout,
                         body: originalEntity
                       });
-                      await putLocalRequest.execute();
+                      await putCacheRequest.execute();
                     }
                   } catch (error) {
                     // Throw away the error
@@ -597,8 +597,8 @@ export default class Sync {
 
       // Add back the failed sync entities to the sync table
       if (failedSyncEntities.length > 0) {
-        const putRequest = new LocalRequest({
-          method: HttpMethod.PUT,
+        const putRequest = new CacheRequest({
+          method: RequestMethod.PUT,
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
@@ -634,8 +634,8 @@ export default class Sync {
    * });
    */
   clear(query, options = {}) {
-    const request = new LocalRequest({
-      method: HttpMethod.DELETE,
+    const request = new CacheRequest({
+      method: RequestMethod.DELETE,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,

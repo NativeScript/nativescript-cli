@@ -1,7 +1,7 @@
 import { KinveyRequest } from './request';
 import { NetworkRack } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
-import { HttpMethod, AuthType } from '../enums';
+import { RequestMethod, AuthType } from '../enums';
 import { Response } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
 import url from 'url';
@@ -53,7 +53,7 @@ export class NetworkRequest extends KinveyRequest {
           // Refresh the token
           const token = activeSocialIdentity.token;
           const refreshTokenRequest = new NetworkRequest({
-            method: HttpMethod.POST,
+            method: RequestMethod.POST,
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
             },
@@ -81,7 +81,7 @@ export class NetworkRequest extends KinveyRequest {
           activeUser[socialIdentityAttribute] = activeSocialIdentity;
 
           const loginRequest = new NetworkRequest({
-            method: HttpMethod.POST,
+            method: RequestMethod.POST,
             authType: AuthType.App,
             url: url.format({
               protocol: this.client.protocol,

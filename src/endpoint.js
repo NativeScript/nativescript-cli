@@ -1,5 +1,5 @@
 import { Client } from './client';
-import { HttpMethod, AuthType } from './enums';
+import { RequestMethod, AuthType } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import url from 'url';
@@ -44,7 +44,7 @@ export default class CustomEndpoint {
     }
 
     const request = new NetworkRequest({
-      method: HttpMethod.POST,
+      method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
         protocol: options.client.protocol,

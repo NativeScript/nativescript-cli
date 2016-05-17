@@ -8,7 +8,7 @@ import { WebSQL } from './adapters/websql';
 import { KinveyError } from '../../errors';
 import { Log } from '../../log';
 import { KinveyMiddleware } from '../middleware';
-import { HttpMethod, StatusCode } from '../../enums';
+import { RequestMethod, StatusCode } from '../../enums';
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
@@ -251,7 +251,7 @@ export class CacheMiddleware extends KinveyMiddleware {
     const db = new DB(request.appKey, this.adapters);
     let data;
 
-    if (method === HttpMethod.GET) {
+    if (method === RequestMethod.GET) {
       if (request.entityId) {
         if (request.entityId === '_count') {
           data = await db.count(request.collectionName, query);
@@ -263,9 +263,9 @@ export class CacheMiddleware extends KinveyMiddleware {
       } else {
         data = await db.find(request.collectionName, query);
       }
-    } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
+    } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
       data = await db.save(request.collectionName, body);
-    } else if (method === HttpMethod.DELETE) {
+    } else if (method === RequestMethod.DELETE) {
       if (request.entityId) {
         data = await db.removeById(request.collectionName, request.entityId);
       } else {
@@ -274,7 +274,7 @@ export class CacheMiddleware extends KinveyMiddleware {
     }
 
     request.response = {
-      statusCode: method === HttpMethod.POST ? StatusCode.Created : StatusCode.Ok,
+      statusCode: method === RequestMethod.POST ? StatusCode.Created : StatusCode.Ok,
       headers: {},
       data: data
     };

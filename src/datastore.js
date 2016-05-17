@@ -1,8 +1,8 @@
 import { KinveyError, NotFoundError } from './errors';
-import { LocalRequest } from './requests/local';
+import CacheRequest from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
-import { AuthType, HttpMethod } from './enums';
+import { AuthType, RequestMethod } from './enums';
 import { Query } from './query';
 import { Observable } from 'rxjs/Observable';
 import { toPromise } from 'rxjs/operator/toPromise';
@@ -214,8 +214,8 @@ export class DataStore {
               'to be synced before data is loaded from the network.');
           }
 
-          const request = new LocalRequest({
-            method: HttpMethod.GET,
+          const request = new CacheRequest({
+            method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -235,7 +235,7 @@ export class DataStore {
         if (this.isOnline()) {
           const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
           const requestOptions = {
-            method: HttpMethod.GET,
+            method: RequestMethod.GET,
             authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
@@ -263,8 +263,8 @@ export class DataStore {
             const removedData = differenceBy(cacheData, networkData, idAttribute);
             const removedIds = Object.keys(keyBy(removedData, idAttribute));
             const removeQuery = new Query().contains(idAttribute, removedIds);
-            const request = new LocalRequest({
-              method: HttpMethod.DELETE,
+            const request = new CacheRequest({
+              method: RequestMethod.DELETE,
               url: url.format({
                 protocol: this.client.protocol,
                 host: this.client.host,
@@ -321,8 +321,8 @@ export class DataStore {
 
       // Fetch data from the cache
       if (this.isCacheEnabled()) {
-        const request = new LocalRequest({
-          method: HttpMethod.GET,
+        const request = new CacheRequest({
+          method: RequestMethod.GET,
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
@@ -344,7 +344,7 @@ export class DataStore {
       if (this.isOnline()) {
         const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
         const requestOptions = {
-          method: HttpMethod.GET,
+          method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
             protocol: this.client.protocol,
@@ -368,8 +368,8 @@ export class DataStore {
           await this.updateCache(data);
         } catch (error) {
           if (error instanceof NotFoundError) {
-            const request = new LocalRequest({
-              method: HttpMethod.DELETE,
+            const request = new CacheRequest({
+              method: RequestMethod.DELETE,
               authType: AuthType.Default,
               url: url.format({
                 protocol: this.client.protocol,
@@ -419,8 +419,8 @@ export class DataStore {
               'to be synced before data is counted.');
           }
 
-          const request = new LocalRequest({
-            method: HttpMethod.GET,
+          const request = new CacheRequest({
+            method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -438,7 +438,7 @@ export class DataStore {
 
         if (this.isOnline()) {
           const request = new NetworkRequest({
-            method: HttpMethod.GET,
+            method: RequestMethod.GET,
             authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
@@ -472,8 +472,8 @@ export class DataStore {
         if (!data) {
           observer.next(null);
         } else if (this.isCacheEnabled()) {
-          const request = new LocalRequest({
-            method: HttpMethod.POST,
+          const request = new CacheRequest({
+            method: RequestMethod.POST,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -505,7 +505,7 @@ export class DataStore {
           observer.next(singular ? data[0] : data);
         } else {
           const request = new NetworkRequest({
-            method: HttpMethod.POST,
+            method: RequestMethod.POST,
             authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
@@ -542,8 +542,8 @@ export class DataStore {
         }
 
         if (this.isCacheEnabled()) {
-          const request = new LocalRequest({
-            method: HttpMethod.PUT,
+          const request = new CacheRequest({
+            method: RequestMethod.PUT,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -576,7 +576,7 @@ export class DataStore {
         }
 
         const request = new NetworkRequest({
-          method: HttpMethod.POST,
+          method: RequestMethod.POST,
           authType: AuthType.Default,
           url: url.format({
             protocol: this.client.protocol,
@@ -615,8 +615,8 @@ export class DataStore {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         } else if (this.isCacheEnabled()) {
-          const request = new LocalRequest({
-            method: HttpMethod.DELETE,
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -654,7 +654,7 @@ export class DataStore {
           observer.next(data);
         } else {
           const request = new NetworkRequest({
-            method: HttpMethod.DELETE,
+            method: RequestMethod.DELETE,
             authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
@@ -685,8 +685,8 @@ export class DataStore {
         if (!id) {
           observer.next(null);
         } else if (this.isCacheEnabled()) {
-          const request = new LocalRequest({
-            method: HttpMethod.DELETE,
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -719,7 +719,7 @@ export class DataStore {
           observer.next(data);
         } else {
           const request = new NetworkRequest({
-            method: HttpMethod.DELETE,
+            method: RequestMethod.DELETE,
             authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
@@ -875,8 +875,8 @@ export class DataStore {
    * @return  {Promise}                                                         Promise
    */
   async updateCache(entities, options = {}) {
-    const request = new LocalRequest({
-      method: HttpMethod.PUT,
+    const request = new CacheRequest({
+      method: RequestMethod.PUT,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,

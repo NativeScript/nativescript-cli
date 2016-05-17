@@ -8,7 +8,7 @@ import { Query } from './query';
 import { DataStore } from './datastore';
 import Sync from './sync';
 import { User } from './user';
-import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
+import { AuthType, AuthorizationGrant, SocialIdentity, RequestMethod, DataStoreType } from './enums';
 import { NetworkRequest } from './requests/network';
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -84,7 +84,7 @@ export default class Kinvey {
    */
   static ping(client = Client.sharedInstance()) {
     const request = new NetworkRequest({
-      method: HttpMethod.GET,
+      method: RequestMethod.GET,
       authType: AuthType.All,
       url: url.format({
         protocol: client.protocol,
