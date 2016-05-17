@@ -44,8 +44,8 @@ var rpcNamespace = 'rpc' || 'rpc';
 var idAttribute = '_id' || '_id';
 var socialIdentityAttribute = '_socialIdentity' || '_socialIdentity';
 
-var UserStore = exports.UserStore = function (_NetworkStore) {
-  _inherits(UserStore, _NetworkStore);
+var UserStore = exports.UserStore = function (_DataStore) {
+  _inherits(UserStore, _DataStore);
 
   function UserStore() {
     _classCallCheck(this, UserStore);
@@ -171,4 +171,4 @@ var UserStore = exports.UserStore = function (_NetworkStore) {
   }]);
 
   return UserStore;
-}(_networkstore.NetworkStore);
+}(_networkstore.DataStore);

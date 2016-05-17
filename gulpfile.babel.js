@@ -4,12 +4,14 @@ import babel from 'gulp-babel';
 import del from 'del';
 import env from 'gulp-env';
 import runSequence from 'run-sequence';
+import webpack from 'webpack';
+import gulpWebpack from 'webpack-stream';
 
 gulp.task('lint', () => {
   const stream = gulp.src('src/**/*.js')
     .pipe(eslint())
-    .pipe(eslint.format())
-    .pipe(eslint.failAfterError());
+    .pipe(eslint.format());
+    // .pipe(eslint.failAfterError());
   return stream;
 });
 
@@ -41,6 +43,27 @@ gulp.task('build', ['clean', 'lint'], () => {
     .pipe(babel())
     .pipe(envs.reset)
     .pipe(gulp.dest('./build'));
+  return stream;
+});
+
+gulp.task('bundle', ['build'], () => {
+  const stream = gulp.src('./build/index.js')
+    .pipe(gulpWebpack({
+      context: `${__dirname}/build`,
+      entry: [
+        './kinvey.js'
+      ],
+      output: {
+        path: `${__dirname}/dist`,
+        filename: 'kinvey-core-sdk.js'
+      },
+      module: {
+        loaders: [
+          { test: /\.json$/, loader: 'json' }
+        ]
+      }
+    }, webpack))
+    .pipe(gulp.dest('./dist'));
   return stream;
 });
 

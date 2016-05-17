@@ -13,8 +13,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _enums = require('../enums');
 
-var _device = require('../utils/device');
-
 var _properties = require('./properties');
 
 var _rack = require('../rack/rack');
@@ -75,6 +73,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Device = global.KinveyDevice;
 var kmdAttribute = '_kmd' || '_kmd';
 
 var Auth = {
@@ -439,12 +438,15 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     _this2.rack = new _rack.KinveyRack();
     _this2.authType = options.authType;
     _this2.properties = options.properties;
-    _this2.query = (0, _result2.default)(options.query, 'toJSON', options.query);
+    _this2.query = options.query;
     _this2.client = options.client;
 
     var headers = {};
     headers['X-Kinvey-Api-Version'] = undefined || 3;
-    headers['X-Kinvey-Device-Information'] = JSON.stringify(_device.Device.toJSON());
+
+    if (Device) {
+      headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
+    }
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;
@@ -519,32 +521,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     key: 'url',
     get: function get() {
       var urlString = _get(Object.getPrototypeOf(KinveyRequest.prototype), 'url', this);
-      var queryString = {};
-
-      if (this.query) {
-        queryString.query = this.query.filter;
-
-        if (!(0, _isEmpty2.default)(this.query.fields)) {
-          queryString.fields = this.query.fields.join(',');
-        }
-
-        if (this.query.limit) {
-          queryString.limit = this.query.limit;
-        }
-
-        if (this.query.skip > 0) {
-          queryString.skip = this.query.skip;
-        }
-
-        if (!(0, _isEmpty2.default)(this.query.sort)) {
-          queryString.sort = this.query.sort;
-        }
-      }
-
-      var keys = Object.keys(queryString);
-      (0, _forEach2.default)(keys, function (key) {
-        queryString[key] = (0, _isString2.default)(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
-      });
+      var queryString = this.query ? this.query.toQueryString() : {};
 
       if ((0, _isEmpty2.default)(queryString)) {
         return urlString;

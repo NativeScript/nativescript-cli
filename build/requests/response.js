@@ -146,12 +146,11 @@ var Response = exports.Response = function () {
   }, {
     key: 'toJSON',
     value: function toJSON() {
-      var json = {
+      return {
         statusCode: this.statusCode,
         headers: this.headers,
         data: this.data
       };
-      return json;
     }
   }, {
     key: 'error',

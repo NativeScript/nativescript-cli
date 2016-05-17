@@ -39,6 +39,10 @@ var _isRegExp = require('lodash/isRegExp');
 
 var _isRegExp2 = _interopRequireDefault(_isRegExp);
 
+var _isEmpty = require('lodash/isEmpty');
+
+var _isEmpty2 = _interopRequireDefault(_isEmpty);
+
 var _forEach = require('lodash/forEach');
 
 var _forEach2 = _interopRequireDefault(_forEach);
@@ -606,6 +610,44 @@ var Query = function () {
       };
 
       return json;
+    }
+
+    /**
+     * Returns serialized representation that can be appended
+     * to network paths as a query parameter.
+     *
+     * @returns {Object} Query object
+     */
+
+  }, {
+    key: 'toQueryString',
+    value: function toQueryString() {
+      var queryString = {
+        filter: this.filter
+      };
+
+      if (!(0, _isEmpty2.default)(this.fields)) {
+        queryString.fields = this.fields.join(',');
+      }
+
+      if (this.limit) {
+        queryString.limit = this.limit;
+      }
+
+      if (this.skip > 0) {
+        queryString.skip = this.skip;
+      }
+
+      if (!(0, _isEmpty2.default)(this.sort)) {
+        queryString.sort = this.sort;
+      }
+
+      var keys = Object.keys(queryString);
+      (0, _forEach2.default)(keys, function (key) {
+        queryString[key] = (0, _isString2.default)(queryString[key]) ? queryString[key] : JSON.stringify(queryString[key]);
+      });
+
+      return queryString;
     }
   }, {
     key: 'fields',

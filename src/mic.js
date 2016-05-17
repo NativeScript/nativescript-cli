@@ -3,10 +3,10 @@ import { AuthType, HttpMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import { Client } from './client';
-import { Popup } from './utils/popup';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
+const Popup = global.KinveyPopup;
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
@@ -111,7 +111,7 @@ export class MobileIdentityConnect {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        function loadHandler(loadedUrl) {
+        function loadedCallback(loadedUrl) {
           if (loadedUrl.indexOf(redirectUri) === 0) {
             redirected = true;
             popup.removeAllListeners();
@@ -120,7 +120,13 @@ export class MobileIdentityConnect {
           }
         }
 
-        function closeHandler() {
+        function errorCallback(message) {
+          popup.removeAllListeners();
+          popup.close();
+          reject(new Error(message));
+        }
+
+        function closedCallback() {
           popup.removeAllListeners();
 
           if (!redirected) {
@@ -128,8 +134,9 @@ export class MobileIdentityConnect {
           }
         }
 
-        popup.on('loaded', loadHandler);
-        popup.on('closed', closeHandler);
+        popup.on('loaded', loadedCallback);
+        popup.on('error', errorCallback);
+        popup.on('closed', closedCallback);
       });
       return promise;
     });
@@ -194,38 +201,4 @@ export class MobileIdentityConnect {
     const promise = request.execute().then(response => response.data);
     return promise;
   }
-
-  // refresh(token, options) {
-  //   const clientId = this.client.appKey;
-  //   return this.refreshToken(clientId, token, options);
-  // }
-
-  // refreshToken(clientId, token, options = {}) {
-  //   const request = new NetworkRequest({
-  //     method: HttpMethod.POST,
-  //     headers: {
-  //       'Content-Type': 'application/x-www-form-urlencoded'
-  //     },
-  //     authType: AuthType.App,
-  //     url: url.format({
-  //       protocol: this.client.protocol,
-  //       host: this.client.host,
-  //       pathname: tokenPathname
-  //     }),
-  //     properties: options.properties,
-  //     data: {
-  //       grant_type: 'refresh_token',
-  //       client_id: clientId,
-  //       redirect_uri: token.redirect_uri,
-  //       refresh_token: token.refresh_token
-  //     }
-  //   });
-  //   request.automaticallyRefreshAuthToken = false;
-
-  //   const promise = request.execute().then(response => {
-  //     return response.data;
-  //   });
-
-  //   return promise;
-  // }
 }

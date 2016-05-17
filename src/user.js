@@ -1,12 +1,12 @@
 import Promise from 'babybird';
-import { Client } from './client';
+import Client from './client';
 import { Query } from './query';
 import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect } from './mic';
 import { AuthType, SocialIdentity, HttpMethod } from './enums';
-import { DataStore, DataStoreType } from './stores/datastore';
+import { DataStore, DataStoreType } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import url from 'url';
@@ -255,7 +255,7 @@ export class User {
       };
     }
 
-    if (!usernameOrData._socialIdentity) {
+    if (!usernameOrData[socialIdentityAttribute]) {
       if (usernameOrData.username) {
         usernameOrData.username = String(usernameOrData.username).trim();
       }

@@ -1,8 +1,7 @@
 import { HttpMethod, AuthType } from '../enums';
-import { Device } from '../utils/device';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
-import { Client } from '../client';
+import Client from '../client';
 import { NoActiveUserError } from '../errors';
 import { byteCount } from '../utils/string';
 import UrlPattern from 'url-pattern';
@@ -15,6 +14,7 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
+const Device = global.KinveyDevice;
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 const Auth = {
@@ -294,7 +294,8 @@ export class Request {
       method: this.method,
       headers: this.headers,
       url: this.url,
-      data: this.data,
+      body: this.body,
+      data: this.body,
       followRedirect: this.followRedirect
     };
 
@@ -324,7 +325,10 @@ export class KinveyRequest extends Request {
 
     const headers = {};
     headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
-    headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
+
+    if (Device) {
+      headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
+    }
 
     if (options.contentType) {
       headers['X-Kinvey-Content-Type'] = options.contentType;

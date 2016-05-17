@@ -19,8 +19,6 @@ var _network = require('./requests/network');
 
 var _client = require('./client');
 
-var _popup = require('./utils/popup');
-
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
@@ -37,6 +35,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
+var Popup = global.KinveyPopup;
 var authPathname = '/oauth/auth' || '/oauth/auth';
 var tokenPathname = '/oauth/token' || '/oauth/token';
 
@@ -146,7 +145,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        var popup = new _popup.Popup();
+        var popup = new Popup();
         return popup.open(_url2.default.format({
           protocol: _this2.client.protocol,
           host: _this2.client.host,
@@ -161,7 +160,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
         var promise = new _babybird2.default(function (resolve, reject) {
           var redirected = false;
 
-          function loadHandler(loadedUrl) {
+          function loadedCallback(loadedUrl) {
             if (loadedUrl.indexOf(redirectUri) === 0) {
               redirected = true;
               popup.removeAllListeners();
@@ -170,7 +169,13 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
             }
           }
 
-          function closeHandler() {
+          function errorCallback(message) {
+            popup.removeAllListeners();
+            popup.close();
+            reject(new Error(message));
+          }
+
+          function closedCallback() {
             popup.removeAllListeners();
 
             if (!redirected) {
@@ -178,8 +183,9 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
             }
           }
 
-          popup.on('loaded', loadHandler);
-          popup.on('closed', closeHandler);
+          popup.on('loaded', loadedCallback);
+          popup.on('error', errorCallback);
+          popup.on('closed', closedCallback);
         });
         return promise;
       });
@@ -252,41 +258,6 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       });
       return promise;
     }
-
-    // refresh(token, options) {
-    //   const clientId = this.client.appKey;
-    //   return this.refreshToken(clientId, token, options);
-    // }
-
-    // refreshToken(clientId, token, options = {}) {
-    //   const request = new NetworkRequest({
-    //     method: HttpMethod.POST,
-    //     headers: {
-    //       'Content-Type': 'application/x-www-form-urlencoded'
-    //     },
-    //     authType: AuthType.App,
-    //     url: url.format({
-    //       protocol: this.client.protocol,
-    //       host: this.client.host,
-    //       pathname: tokenPathname
-    //     }),
-    //     properties: options.properties,
-    //     data: {
-    //       grant_type: 'refresh_token',
-    //       client_id: clientId,
-    //       redirect_uri: token.redirect_uri,
-    //       refresh_token: token.refresh_token
-    //     }
-    //   });
-    //   request.automaticallyRefreshAuthToken = false;
-
-    //   const promise = request.execute().then(response => {
-    //     return response.data;
-    //   });
-
-    //   return promise;
-    // }
-
   }], [{
     key: 'identity',
     get: function get() {

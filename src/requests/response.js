@@ -161,11 +161,10 @@ export class Response {
   }
 
   toJSON() {
-    const json = {
+    return {
       statusCode: this.statusCode,
       headers: this.headers,
       data: this.data
     };
-    return json;
   }
 }

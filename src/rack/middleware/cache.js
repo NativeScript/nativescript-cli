@@ -128,8 +128,10 @@ export class DB {
   }
 
   count(collection, query) {
-    const promise = this.find(collection, query).then(entities => entities.length);
-    return promise;
+    return this.find(collection, query).then(entities => {
+      const data = { count: entities.length };
+      return data;
+    });
   }
 
   group(collection, aggregation) {

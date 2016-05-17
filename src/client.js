@@ -17,7 +17,7 @@ let sharedInstance = null;
  *   appSecret: '<appSecret>'
  * });
  */
-export class Client {
+export default class Client {
   /**
    * Creates a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.

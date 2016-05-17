@@ -11,6 +11,10 @@ var _events = require('events');
 
 var _device = require('./device');
 
+var _isFunction = require('lodash/isFunction');
+
+var _isFunction2 = _interopRequireDefault(_isFunction);
+
 var _bind = require('lodash/bind');
 
 var _bind2 = _interopRequireDefault(_bind);
@@ -154,9 +158,12 @@ var Popup = exports.Popup = function (_EventEmitter) {
     key: 'closeHandler',
     value: function closeHandler() {
       clearTimeout(this.interval);
-      this.popup.removeEventListener('close', this.eventListeners.closeHandler);
-      this.popup.removeEventListener('loadstart', this.eventListeners.loadHandler);
-      this.popup.removeEventListener('exit', this.eventListeners.closeHander);
+
+      if ((0, _isFunction2.default)(this.popup.removeEventListener)) {
+        this.popup.removeEventListener('close', this.eventListeners.closeHandler);
+        this.popup.removeEventListener('loadstart', this.eventListeners.loadHandler);
+        this.popup.removeEventListener('exit', this.eventListeners.closeHander);
+      }
 
       if ((0, _device.isTitanium)()) {
         this.tiWebView.removeEventListener('load', this.eventListeners.loadHandler);
@@ -166,7 +173,10 @@ var Popup = exports.Popup = function (_EventEmitter) {
           this.tiCloseButton.removeEventListener('click', this.eventListeners.clickHandler);
         } else if ((0, _device.isAndroid)()) {
           this.popup.close();
-          this.popup.removeEventListener('androidback', this.eventListeners.closeHandler);
+
+          if ((0, _isFunction2.default)(this.popup.removeEventListener)) {
+            this.popup.removeEventListener('androidback', this.eventListeners.closeHandler);
+          }
         }
       }
 

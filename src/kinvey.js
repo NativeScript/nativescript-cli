@@ -1,12 +1,11 @@
-import Promise from 'babybird';
 import { KinveyError } from './errors';
 import { Aggregation } from './aggregation';
-import { Client } from './client';
+import Client from './client';
 import CustomEndpoint from './endpoint';
 import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
-import { DataStore } from './stores/datastore';
+import { DataStore } from './datastore';
 import Sync from './sync';
 import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, HttpMethod, DataStoreType } from './enums';
@@ -15,7 +14,7 @@ import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 let client = null;
 
-export class Kinvey {
+export default class Kinvey {
   static get client() {
     if (!client) {
       throw new KinveyError('You have not initialized the library. ' +
@@ -62,18 +61,17 @@ export class Kinvey {
     client = Client.init(options);
 
     // Add all the modules to the Kinvey namespace
-    Kinvey.Aggregation = Aggregation;
-    Kinvey.AuthorizationGrant = AuthorizationGrant;
-    Kinvey.CustomEndpoint = CustomEndpoint;
-    Kinvey.DataStore = DataStore;
-    Kinvey.DataStoreType = DataStoreType;
-    Kinvey.Log = Log;
-    Kinvey.Metadata = Metadata;
-    Kinvey.Promise = Promise;
-    Kinvey.Query = Query;
-    Kinvey.SocialIdentity = SocialIdentity;
-    Kinvey.Sync = Sync;
-    Kinvey.User = User;
+    this.Aggregation = Aggregation;
+    this.AuthorizationGrant = AuthorizationGrant;
+    this.CustomEndpoint = CustomEndpoint;
+    this.DataStore = DataStore;
+    this.DataStoreType = DataStoreType;
+    this.Log = Log;
+    this.Metadata = Metadata;
+    this.Query = Query;
+    this.SocialIdentity = SocialIdentity;
+    this.Sync = Sync;
+    this.User = User;
 
     // Return the client
     return client;

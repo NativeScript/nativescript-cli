@@ -4,7 +4,7 @@ import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors
 import { Metadata } from './metadata';
 import { LocalRequest } from './requests/local';
 import { NetworkRequest } from './requests/network';
-import { Client } from './client';
+import Client from './client';
 import { getSyncKey, setSyncKey } from './utils/storage';
 import url from 'url';
 import map from 'lodash/map';
@@ -99,7 +99,7 @@ export default class Sync {
    *   ...
    * });
    */
-  async createSaveOperation(collection, entities, options = {}) {
+  async addCreateOperation(collection, entities, options = {}) {
     let singular = false;
 
     // Check that a name was provided
@@ -169,6 +169,76 @@ export default class Sync {
     return singular ? entities[0] : entities;
   }
 
+  async addUpdateOperation(collection, entities, options = {}) {
+    let singular = false;
+
+    // Check that a name was provided
+    if (!collection) {
+      throw new SyncError('A name for a collection must be provided to add entities to the sync table.');
+    }
+
+    // Cast the entities to an array
+    if (!isArray(entities)) {
+      singular = true;
+      entities = [entities];
+    }
+
+    // Process the array of entities
+    await Promise.all(map(entities, async entity => {
+      // Just return null if nothing was provided
+      // to be added to the sync table
+      if (!entity) {
+        return null;
+      }
+
+      // Validate that the entity has an id
+      const id = entity[idAttribute];
+      if (!id) {
+        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
+          'added to the sync table.', entity);
+      }
+
+      // Get the sync key, increment it by 1 and save
+      let key = getSyncKey(this.client) || 0;
+      key += 1;
+      setSyncKey(this.client, key);
+
+      // Create the sync entity
+      const syncEntity = {
+        key: key,
+        entityId: id,
+        collection: collection,
+        state: {
+          method: HttpMethod.PUT
+        },
+        entity: entity
+      };
+
+      // Validate that the entity has an id
+      if (!id) {
+        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
+          'added to the sync table.', entity);
+      }
+
+      // Send a request to save the sync entity
+      const request = new LocalRequest({
+        method: HttpMethod.POST,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname
+        }),
+        properties: options.properties,
+        body: syncEntity,
+        timeout: options.timeout
+      });
+      return request.execute();
+    }));
+
+    // Return the entity
+    return singular ? entities[0] : entities;
+  }
+
   /**
    * Save a sync entity to the sync table with a DELETE method.
    *
@@ -190,7 +260,7 @@ export default class Sync {
    *   ...
    * });
    */
-  async createDeleteOperation(collection, entities, options = {}) {
+  async addDeleteOperation(collection, entities, options = {}) {
     let singular = false;
 
     // Check that a name was provided
@@ -385,7 +455,7 @@ export default class Sync {
             } else if (method === HttpMethod.POST || method === HttpMethod.PUT) {
               // Save the entity to the network.
               const request = new NetworkRequest({
-                method: HttpMethod.PUT,
+                method: method,
                 authType: AuthType.Default,
                 url: url.format({
                   protocol: this.client.protocol,

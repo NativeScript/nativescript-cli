@@ -254,7 +254,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                     timeout: options.timeout
                   });
                   return request.execute().then(function () {
-                    return _this2._cache(networkEntities);
+                    return _this2.updateCache(networkEntities);
                   });
                 });
                 return _context.abrupt('return', {
@@ -568,7 +568,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                   return _get(Object.getPrototypeOf(CacheStore.prototype), 'findById', _this5).call(_this5, id, options);
                 }).then(function (data) {
-                  return _this5._cache(data);
+                  return _this5.updateCache(data);
                 }).catch(function (error) {
                   if (error instanceof _errors.NotFoundError) {
                     var _request3 = new _local.LocalRequest({
@@ -964,20 +964,43 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
   }, {
     key: 'push',
-    value: function push(query) {
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
+          while (1) {
+            switch (_context10.prev = _context10.next) {
+              case 0:
+                if (this.isSyncEnabled()) {
+                  _context10.next = 2;
+                  break;
+                }
 
-      if (!this.isSyncEnabled()) {
-        return _babybird2.default.reject(new _errors.KinveyError('Sync is disabled.'));
+                throw new _errors.KinveyError('Sync is disabled.');
+
+              case 2:
+
+                if (!(query instanceof _query.Query)) {
+                  query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+                }
+
+                query.equalTo('collection', this.name);
+                return _context10.abrupt('return', this.sync.push(query, options));
+
+              case 5:
+              case 'end':
+                return _context10.stop();
+            }
+          }
+        }, _callee10, this);
+      }));
+
+      function push(_x24, _x25) {
+        return ref.apply(this, arguments);
       }
 
-      if (!(query instanceof _query.Query)) {
-        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
-      }
-
-      query.equalTo('collection', this.name);
-      return this.sync.push(query, options);
-    }
+      return push;
+    }()
 
     /**
      * Pull items for a collection from the network to your local cache. A promise will be
@@ -1002,40 +1025,40 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
   }, {
     key: 'pull',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var count;
-        return regeneratorRuntime.wrap(function _callee10$(_context10) {
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context10.prev = _context10.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                _context10.next = 2;
+                _context11.next = 2;
                 return this.syncCount(null, options);
 
               case 2:
-                count = _context10.sent;
+                count = _context11.sent;
 
                 if (!(count > 0)) {
-                  _context10.next = 5;
+                  _context11.next = 5;
                   break;
                 }
 
                 throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
 
               case 5:
-                return _context10.abrupt('return', this.find(query, options).then(function (result) {
+                return _context11.abrupt('return', this.find(query, options).then(function (result) {
                   return result.networkPromise;
                 }));
 
               case 6:
               case 'end':
-                return _context10.stop();
+                return _context11.stop();
             }
           }
-        }, _callee10, this);
+        }, _callee11, this);
       }));
 
-      function pull(_x25, _x26) {
+      function pull(_x27, _x28) {
         return ref.apply(this, arguments);
       }
 
@@ -1066,37 +1089,37 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
   }, {
     key: 'sync',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var push, pull;
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                _context11.next = 2;
+                _context12.next = 2;
                 return this.push(null, options);
 
               case 2:
-                push = _context11.sent;
-                _context11.next = 5;
+                push = _context12.sent;
+                _context12.next = 5;
                 return this.pull(query, options);
 
               case 5:
-                pull = _context11.sent;
-                return _context11.abrupt('return', {
+                pull = _context12.sent;
+                return _context12.abrupt('return', {
                   push: push,
                   pull: pull
                 });
 
               case 7:
               case 'end':
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
-      function sync(_x28, _x29) {
+      function sync(_x30, _x31) {
         return ref.apply(this, arguments);
       }
 
@@ -1151,8 +1174,8 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
      */
 
   }, {
-    key: '_cache',
-    value: function _cache(entities) {
+    key: 'updateCache',
+    value: function updateCache(entities) {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       return new _local.LocalRequest({

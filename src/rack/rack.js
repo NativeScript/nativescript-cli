@@ -142,8 +142,9 @@ export class Rack extends KinveyMiddleware {
  * @private
  */
 export class KinveyRack extends Rack {
-  execute(request) {
-    return super.execute(request).then(request => request.response);
+  async execute(request) {
+    request = await super.execute(request);
+    return request.response;
   }
 }
 

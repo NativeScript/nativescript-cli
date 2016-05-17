@@ -1,4 +1,4 @@
-import { Kinvey } from '../src/kinvey';
+import Kinvey from '../src/kinvey';
 import { randomString } from '../src/utils/string';
 import { NetworkRack } from '../src/rack/rack';
 import { SerializeMiddleware } from '../src/rack/middleware/serialize';

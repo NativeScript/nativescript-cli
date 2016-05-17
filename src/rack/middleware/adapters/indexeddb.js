@@ -1,27 +1,21 @@
 import Promise from 'babybird';
 import { KinveyError, NotFoundError } from '../../../errors';
-import forEach from 'lodash/forEach';
-import isArray from 'lodash/isArray';
+import { open } from 'idb-factory';
+import { request, requestTransaction } from 'idb-request';
+import map from 'lodash/map';
 import isString from 'lodash/isString';
-import isFunction from 'lodash/isFunction';
-const dbCache = {};
+import isArray from 'lodash/isArray';
+const indexedDB = global.indexedDB ||
+                  global.mozIndexedDB ||
+                  global.webkitIndexedDB ||
+                  global.msIndexedDB;
+
 
 const TransactionMode = {
   ReadWrite: 'readwrite',
   ReadOnly: 'readonly',
 };
 Object.freeze(TransactionMode);
-
-if (typeof window !== 'undefined') {
-  require('indexeddbshim'); // eslint-disable-line global-require
-  global.shimIndexedDB.__useShim();
-}
-
-const indexedDB = global.shimIndexedDB ||
-                  global.indexedDB ||
-                  global.mozIndexedDB ||
-                  global.webkitIndexedDB ||
-                  global.msIndexedDB;
 
 /**
  * @private
@@ -38,121 +32,18 @@ export default class IndexedDB {
     }
 
     this.name = name;
-    this.inTransaction = false;
-    this.queue = [];
   }
 
-  openTransaction(collection, write = false, success, error, force = false) {
-    let db = dbCache[this.name];
-
-    if (db) {
-      const containsCollection = isFunction(db.objectStoreNames.contains) ?
-        db.objectStoreNames.contains(collection) : db.objectStoreNames.indexOf(collection) !== -1;
-
-      if (containsCollection) {
-        try {
-          const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
-          const txn = db.transaction([collection], mode);
-
-          if (txn) {
-            const store = txn.objectStore(collection);
-            return success(store);
-          }
-
-          throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
-            `collection on the ${this.name} indexedDB database.`);
-        } catch (err) {
-          return error(err);
-        }
-      } else if (!write) {
-        return error(new NotFoundError(`The ${collection} collection was not found on ` +
-          `the ${this.name} indexedDB database.`));
+  async createTransaction(collection, write = false) {
+    const db = await open(name, 1, e => {
+      if (e.oldVersion < 1) {
+        e.target.result.createObjectStore(collection, { keyPath: '_id' });
       }
-    }
+    });
 
-    if (!force && this.inTransaction) {
-      return this.queue.push(() => {
-        this.openTransaction(collection, write, success, error);
-      });
-    }
-
-    // Switch flag
-    this.inTransaction = true;
-    let request;
-
-    if (db) {
-      const version = db.version + 1;
-      request = indexedDB.open(this.name, version);
-    } else {
-      request = indexedDB.open(this.name);
-    }
-
-    // If the database is opened with an higher version than its current, the
-    // `upgradeneeded` event is fired. Save the handle to the database, and
-    // create the collection.
-    request.onupgradeneeded = e => {
-      db = e.target.result;
-
-      if (write) {
-        db.createObjectStore(collection, { keyPath: '_id' });
-      }
-    };
-
-    // The `success` event is fired after `upgradeneeded` terminates.
-    // Save the handle to the database.
-    request.onsuccess = e => {
-      db = e.target.result;
-      dbCache[this.name] = db;
-
-      // If a second instance of the same IndexedDB database performs an
-      // upgrade operation, the `versionchange` event is fired. Then, close the
-      // database to allow the external upgrade to proceed.
-      db.onversionchange = () => {
-        if (db) {
-          db.close();
-          db = null;
-          dbCache[this.name] = null;
-        }
-      };
-
-      // Try to obtain the collection handle by recursing. Append the handlers
-      // to empty the queue upon success and failure. Set the `force` flag so
-      // all but the current transaction remain queued.
-      const wrap = done => {
-        const callbackFn = arg => {
-          done(arg);
-
-          // Switch flag
-          this.inTransaction = false;
-
-          // The database handle has been established, we can now safely empty
-          // the queue. The queue must be emptied before invoking the concurrent
-          // operations to avoid infinite recursion.
-          if (this.queue.length > 0) {
-            const pending = this.queue;
-            this.queue = [];
-            forEach(pending, fn => {
-              fn.call(this);
-            });
-          }
-        };
-        return callbackFn;
-      };
-
-      return this.openTransaction(collection, write, wrap(success), wrap(error), true);
-    };
-
-    request.onblocked = () => {
-      error(new KinveyError(`The ${this.name} indexedDB database version can't be upgraded ` +
-        'because the database is already open.'));
-    };
-
-    request.onerror = e => {
-      error(new KinveyError(`Unable to open the ${this.name} indexedDB database. ` +
-        `Received the error code ${e.target.errorCode}.`));
-    };
-
-    return null;
+    const mode = write ? TransactionMode.ReadWrite : TransactionMode.ReadOnly;
+    const txn = db.transaction([collection], mode);
+    return txn;
   }
 
   find(collection) {
@@ -227,34 +118,22 @@ export default class IndexedDB {
   }
 
   save(collection, entities) {
-    let singular = false;
+    const promise = this.createTransaction(collection, true).then(txn => {
+      const store = txn.objectStore(collection);
+      let singular = false;
 
-    if (!isArray(entities)) {
-      entities = [entities];
-      singular = true;
-    }
+      if (!isArray(entities)) {
+        singular = true;
+        entities = [entities];
+      }
 
-    if (entities.length === 0) {
-      return Promise.resolve(entities);
-    }
+      const promises = map(entities, entity => request(store.put(entity)));
+      promises.push(requestTransaction(txn));
 
-    const promise = new Promise((resolve, reject) => {
-      this.openTransaction(collection, true, store => {
-        const request = store.transaction;
-
-        forEach(entities, entity => {
-          store.put(entity);
-        });
-
-        request.oncomplete = function onComplete() {
-          resolve(singular ? entities[0] : entities);
-        };
-
-        request.onerror = (e) => {
-          reject(new KinveyError(`An error occurred while saving the entities to the ${collection} ` +
-            `collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
-        };
-      }, reject);
+      return Promise.all(promises).then(results => {
+        console.log(results);
+        return singular ? entities[0] : entities;
+      });
     });
 
     return promise;

@@ -473,7 +473,7 @@ var Sync = function () {
      *
      * @example
      * var sync = new Sync();
-     * var promise = sync.execute().then(function(response) {
+     * var promise = sync.push().then(function(response) {
      *   ...
      * }).catch(function(error) {
      *   ...
@@ -908,8 +908,11 @@ var Sync = function () {
                         case 5:
                           syncResults = _context11.sent;
 
+                          if (!(failedSyncEntities.length > 0)) {
+                            _context11.next = 10;
+                            break;
+                          }
 
-                          // Add back the failed sync entities to the sync table
                           putRequest = new _local.LocalRequest({
                             method: _enums.HttpMethod.PUT,
                             url: _url2.default.format({
@@ -921,10 +924,10 @@ var Sync = function () {
                             timeout: options.timeout,
                             data: failedSyncEntities
                           });
-                          _context11.next = 9;
+                          _context11.next = 10;
                           return putRequest.execute();
 
-                        case 9:
+                        case 10:
                         case 'end':
                           return _context11.stop();
                       }

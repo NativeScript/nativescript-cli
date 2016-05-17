@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { isTitanium, isAndroid, isPhoneGap, isiOS } from './device';
+import isFunction from 'lodash/isFunction';
 import bind from 'lodash/bind';
 
 /**
@@ -112,9 +113,12 @@ export class Popup extends EventEmitter {
 
   closeHandler() {
     clearTimeout(this.interval);
-    this.popup.removeEventListener('close', this.eventListeners.closeHandler);
-    this.popup.removeEventListener('loadstart', this.eventListeners.loadHandler);
-    this.popup.removeEventListener('exit', this.eventListeners.closeHander);
+
+    if (isFunction(this.popup.removeEventListener)) {
+      this.popup.removeEventListener('close', this.eventListeners.closeHandler);
+      this.popup.removeEventListener('loadstart', this.eventListeners.loadHandler);
+      this.popup.removeEventListener('exit', this.eventListeners.closeHander);
+    }
 
     if (isTitanium()) {
       this.tiWebView.removeEventListener('load', this.eventListeners.loadHandler);
@@ -124,7 +128,10 @@ export class Popup extends EventEmitter {
         this.tiCloseButton.removeEventListener('click', this.eventListeners.clickHandler);
       } else if (isAndroid()) {
         this.popup.close();
-        this.popup.removeEventListener('androidback', this.eventListeners.closeHandler);
+
+        if (isFunction(this.popup.removeEventListener)) {
+          this.popup.removeEventListener('androidback', this.eventListeners.closeHandler);
+        }
       }
     }
 

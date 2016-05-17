@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import Queue from 'promise-queue';
 import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';

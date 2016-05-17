@@ -595,9 +595,11 @@ export class Query {
    * @returns {Object} Query object
    */
   toQueryString() {
-    const queryString = {
-      filter: this.filter
-    };
+    const queryString = {};
+
+    if (!isEmpty(this.filter)) {
+      queryString.filter = this.filter;
+    }
 
     if (!isEmpty(this.fields)) {
       queryString.fields = this.fields.join(',');
