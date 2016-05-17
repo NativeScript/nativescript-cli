@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { Query } from '../../query';
 import { Aggregation } from '../../aggregation';
 import IndexedDB from './adapters/indexeddb';

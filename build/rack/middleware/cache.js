@@ -9,10 +9,6 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _query = require('../../query');
 
 var _aggregation = require('../../aggregation');
@@ -61,7 +57,7 @@ var _isArray2 = _interopRequireDefault(_isArray);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _babybird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _babybird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
@@ -69,8 +65,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = '_id' || '_id';
-var kmdAttribute = '_kmd' || '_kmd';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * @private
@@ -190,10 +186,10 @@ var DB = exports.DB = function () {
   }, {
     key: 'count',
     value: function count(collection, query) {
-      var promise = this.find(collection, query).then(function (entities) {
-        return entities.length;
+      return this.find(collection, query).then(function (entities) {
+        var data = { count: entities.length };
+        return data;
       });
-      return promise;
     }
   }, {
     key: 'group',
@@ -216,7 +212,7 @@ var DB = exports.DB = function () {
     key: 'findById',
     value: function findById(collection, id) {
       if (!(0, _isString2.default)(id)) {
-        return _babybird2.default.reject(new _errors.KinveyError('id must be a string', id));
+        return Promise.reject(new _errors.KinveyError('id must be a string', id));
       }
 
       var promise = this.adapter.findById(collection, id);
@@ -232,7 +228,7 @@ var DB = exports.DB = function () {
       var singular = false;
 
       if (!entities) {
-        return _babybird2.default.resolve(null);
+        return Promise.resolve(null);
       }
 
       if (!(0, _isArray2.default)(entities)) {
@@ -282,7 +278,7 @@ var DB = exports.DB = function () {
         var promises = entities.map(function (entity) {
           return _this3.removeById(collection, entity[idAttribute]);
         });
-        return _babybird2.default.all(promises);
+        return Promise.all(promises);
       }).then(function (responses) {
         var result = (0, _reduce2.default)(responses, function (allEntities, entities) {
           allEntities = allEntities.concat(entities);
@@ -297,11 +293,11 @@ var DB = exports.DB = function () {
     key: 'removeById',
     value: function removeById(collection, id) {
       if (!id) {
-        return _babybird2.default.resolve(null);
+        return Promise.resolve(null);
       }
 
       if (!(0, _isString2.default)(id)) {
-        return _babybird2.default.reject(new _errors.KinveyError('id must be a string', id));
+        return Promise.reject(new _errors.KinveyError('id must be a string', id));
       }
 
       var promise = this.adapter.removeById(collection, id);
@@ -356,7 +352,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
                 db = new DB(request.appKey, this.adapters);
                 data = void 0;
 
-                if (!(method === _enums.HttpMethod.GET)) {
+                if (!(method === _enums.RequestMethod.GET)) {
                   _context.next = 32;
                   break;
                 }
@@ -416,7 +412,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
                 break;
 
               case 32:
-                if (!(method === _enums.HttpMethod.POST || method === _enums.HttpMethod.PUT)) {
+                if (!(method === _enums.RequestMethod.POST || method === _enums.RequestMethod.PUT)) {
                   _context.next = 38;
                   break;
                 }
@@ -430,7 +426,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
                 break;
 
               case 38:
-                if (!(method === _enums.HttpMethod.DELETE)) {
+                if (!(method === _enums.RequestMethod.DELETE)) {
                   _context.next = 48;
                   break;
                 }
@@ -458,7 +454,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
               case 48:
 
                 request.response = {
-                  statusCode: method === _enums.HttpMethod.POST ? _enums.StatusCode.Created : _enums.StatusCode.Ok,
+                  statusCode: method === _enums.RequestMethod.POST ? _enums.StatusCode.Created : _enums.StatusCode.Ok,
                   headers: {},
                   data: data
                 };

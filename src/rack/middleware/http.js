@@ -1,8 +1,8 @@
-import { KinveyMiddleware } from '../../src/rack/middleware';
+import { KinveyMiddleware } from '../middleware';
 import http from 'request';
 
 export class HttpMiddleware extends KinveyMiddleware {
-  constructor(name = 'Test Http Middleware') {
+  constructor(name = 'Kinvey Http Middleware') {
     super(name);
   }
 

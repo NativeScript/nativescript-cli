@@ -1,8 +1,8 @@
-import Promise from 'babybird';
 import { Middleware, KinveyMiddleware } from './middleware';
 import { CacheMiddleware } from './middleware/cache';
 import { ParseMiddleware } from './middleware/parse';
 import { SerializeMiddleware } from './middleware/serialize';
+import { HttpMiddleware } from './middleware/http';
 import findIndex from 'lodash/findIndex';
 import reduce from 'lodash/reduce';
 const sharedCacheRackInstance = Symbol();
@@ -176,6 +176,7 @@ export class NetworkRack extends KinveyRack {
   constructor(name = 'Kinvey Network Rack') {
     super(name);
     this.use(new SerializeMiddleware());
+    this.use(new HttpMiddleware());
     this.use(new ParseMiddleware());
   }
 

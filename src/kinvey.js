@@ -5,7 +5,7 @@ import CustomEndpoint from './endpoint';
 import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
-import { DataStore } from './datastore';
+import { DataStore, FileStore } from './datastore';
 import Sync from './sync';
 import { User } from './user';
 import { AuthType, AuthorizationGrant, SocialIdentity, RequestMethod, DataStoreType } from './enums';
@@ -66,6 +66,7 @@ export default class Kinvey {
     this.CustomEndpoint = CustomEndpoint;
     this.DataStore = DataStore;
     this.DataStoreType = DataStoreType;
+    this.FileStore = FileStore;
     this.Log = Log;
     this.Metadata = Metadata;
     this.Query = Query;

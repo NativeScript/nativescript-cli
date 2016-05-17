@@ -19,6 +19,8 @@ var _rack = require('../rack/rack');
 
 var _client = require('../client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _errors = require('../errors');
 
 var _string = require('../utils/string');
@@ -74,7 +76,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Device = global.KinveyDevice;
-var kmdAttribute = '_kmd' || '_kmd';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 var Auth = {
   /**
@@ -183,11 +185,11 @@ var Request = exports.Request = function () {
     _classCallCheck(this, Request);
 
     options = (0, _assign2.default)({
-      method: _enums.HttpMethod.GET,
+      method: _enums.RequestMethod.GET,
       headers: {},
       url: '',
       data: null,
-      timeout: undefined || 10000,
+      timeout: process.env.KINVEY_DEFAULT_TIMEOUT || 10000,
       followRedirect: true,
       noCache: false
     }, options);
@@ -339,7 +341,8 @@ var Request = exports.Request = function () {
         method: this.method,
         headers: this.headers,
         url: this.url,
-        data: this.data,
+        body: this.body,
+        data: this.body,
         followRedirect: this.followRedirect
       };
 
@@ -358,15 +361,15 @@ var Request = exports.Request = function () {
       method = method.toUpperCase();
 
       switch (method) {
-        case _enums.HttpMethod.GET:
-        case _enums.HttpMethod.POST:
-        case _enums.HttpMethod.PATCH:
-        case _enums.HttpMethod.PUT:
-        case _enums.HttpMethod.DELETE:
+        case _enums.RequestMethod.GET:
+        case _enums.RequestMethod.POST:
+        case _enums.RequestMethod.PATCH:
+        case _enums.RequestMethod.PUT:
+        case _enums.RequestMethod.DELETE:
           this.requestMethod = method;
           break;
         default:
-          throw new Error('Invalid Http Method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
+          throw new Error('Invalid request method. Only GET, POST, PATCH, PUT, and DELETE are allowed.');
       }
     }
   }, {
@@ -432,7 +435,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       authType: _enums.AuthType.None,
       properties: null,
       query: null,
-      client: _client.Client.sharedInstance()
+      client: _client2.default.sharedInstance()
     }, options);
 
     _this2.rack = new _rack.KinveyRack();
@@ -442,7 +445,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     _this2.client = options.client;
 
     var headers = {};
-    headers['X-Kinvey-Api-Version'] = undefined || 3;
+    headers['X-Kinvey-Api-Version'] = process.env.KINVEY_API_VERSION || 3;
 
     if (Device) {
       headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
@@ -508,7 +511,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
         delete customProperties.appVersion;
         var customPropertiesHeader = JSON.stringify(customProperties);
         var customPropertiesByteCount = (0, _string.byteCount)(customPropertiesHeader);
-        var customPropertiesMaxBytesAllowed = undefined || 2000;
+        var customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
 
         if (customPropertiesByteCount >= customPropertiesMaxBytesAllowed) {
           throw new Error('The custom properties are ' + customPropertiesByteCount + ' bytes.' + ('It must be less then ' + customPropertiesMaxBytesAllowed + ' bytes.'), 'Please remove some custom properties.');

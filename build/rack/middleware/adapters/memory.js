@@ -7,10 +7,6 @@ exports.Memory = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _promiseQueue = require('promise-queue');
 
 var _promiseQueue2 = _interopRequireDefault(_promiseQueue);
@@ -49,10 +45,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = '_id' || '_id';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 var caches = [];
 
-_promiseQueue2.default.configure(_babybird2.default);
+_promiseQueue2.default.configure(Promise);
 var queue = new _promiseQueue2.default(1, Infinity);
 
 /**
@@ -86,7 +82,7 @@ var Memory = exports.Memory = function () {
       var _this = this;
 
       return queue.add(function () {
-        var promise = _babybird2.default.resolve().then(function () {
+        var promise = Promise.resolve().then(function () {
           var entities = _this.cache.get('' + _this.name + collection);
 
           if (entities) {
@@ -138,7 +134,7 @@ var Memory = exports.Memory = function () {
       }
 
       if (entities.length === 0) {
-        return _babybird2.default.resolve(entities);
+        return Promise.resolve(entities);
       }
 
       return this.find(collection).then(function (existingEntities) {

@@ -9,10 +9,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _middleware = require('./middleware');
 
 var _cache = require('./middleware/cache');
@@ -20,6 +16,8 @@ var _cache = require('./middleware/cache');
 var _parse = require('./middleware/parse');
 
 var _serialize = require('./middleware/serialize');
+
+var _http = require('./middleware/http');
 
 var _findIndex = require('lodash/findIndex');
 
@@ -31,7 +29,7 @@ var _reduce2 = _interopRequireDefault(_reduce);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _babybird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _babybird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -188,7 +186,7 @@ var Rack = exports.Rack = function (_KinveyMiddleware) {
                   return promise.then(function (request) {
                     return middleware.handle(request);
                   });
-                }, _babybird2.default.resolve(request)));
+                }, Promise.resolve(request)));
 
               case 3:
               case 'end':
@@ -249,11 +247,33 @@ var KinveyRack = exports.KinveyRack = function (_Rack) {
 
   _createClass(KinveyRack, [{
     key: 'execute',
-    value: function execute(request) {
-      return _get(Object.getPrototypeOf(KinveyRack.prototype), 'execute', this).call(this, request).then(function (request) {
-        return request.response;
-      });
-    }
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(request) {
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return _get(Object.getPrototypeOf(KinveyRack.prototype), 'execute', this).call(this, request);
+
+              case 2:
+                request = _context2.sent;
+                return _context2.abrupt('return', request.response);
+
+              case 4:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function execute(_x5) {
+        return ref.apply(this, arguments);
+      }
+
+      return execute;
+    }()
   }]);
 
   return KinveyRack;
@@ -311,6 +331,7 @@ var NetworkRack = exports.NetworkRack = function (_KinveyRack2) {
     var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(NetworkRack).call(this, name));
 
     _this4.use(new _serialize.SerializeMiddleware());
+    _this4.use(new _http.HttpMiddleware());
     _this4.use(new _parse.ParseMiddleware());
     return _this4;
   }

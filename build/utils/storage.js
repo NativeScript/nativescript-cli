@@ -16,9 +16,9 @@ var _localStorage2 = _interopRequireDefault(_localStorage);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var userCollectionName = 'kinvey_user' || 'kinvey_user';
-var socialIdentityCollectionName = 'kinvey_socialIdentity' || 'kinvey_socialIdentity';
-var syncKeyCollectionName = 'kinvey_syncKey' || 'kinvey_syncKey';
+var userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
+var socialIdentityCollectionName = process.env.KINVEY_SOCIAL_IDENTITY_COLLECTION_NAME || 'kinvey_socialIdentity';
+var syncKeyCollectionName = process.env.KINVEY_SYNC_KEY_COLLECTION_NAME || 'kinvey_syncKey';
 
 // Get the active user
 function getActiveUser(client) {

@@ -32,7 +32,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var rpcNamespace = 'rpc' || 'rpc';
+var rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**
  * Executes a custom command.
@@ -94,7 +94,7 @@ var CustomEndpoint = function () {
 
               case 5:
                 request = new _network.NetworkRequest({
-                  method: _enums.HttpMethod.POST,
+                  method: _enums.RequestMethod.POST,
                   authType: _enums.AuthType.Default,
                   url: _url2.default.format({
                     protocol: options.client.protocol,

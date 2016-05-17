@@ -3,19 +3,16 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Kinvey = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
 
 var _errors = require('./errors');
 
 var _aggregation = require('./aggregation');
 
 var _client = require('./client');
+
+var _client2 = _interopRequireDefault(_client);
 
 var _endpoint = require('./endpoint');
 
@@ -27,7 +24,7 @@ var _metadata = require('./metadata');
 
 var _query = require('./query');
 
-var _datastore = require('./stores/datastore');
+var _datastore = require('./datastore');
 
 var _sync = require('./sync');
 
@@ -47,10 +44,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = 'appdata' || 'appdata';
+var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 var client = null;
 
-var Kinvey = exports.Kinvey = function () {
+var Kinvey = function () {
   function Kinvey() {
     _classCallCheck(this, Kinvey);
   }
@@ -91,21 +88,21 @@ var Kinvey = exports.Kinvey = function () {
       }
 
       // Initialize the client
-      client = _client.Client.init(options);
+      client = _client2.default.init(options);
 
       // Add all the modules to the Kinvey namespace
-      Kinvey.Aggregation = _aggregation.Aggregation;
-      Kinvey.AuthorizationGrant = _enums.AuthorizationGrant;
-      Kinvey.CustomEndpoint = _endpoint2.default;
-      Kinvey.DataStore = _datastore.DataStore;
-      Kinvey.DataStoreType = _enums.DataStoreType;
-      Kinvey.Log = _log.Log;
-      Kinvey.Metadata = _metadata.Metadata;
-      Kinvey.Promise = _babybird2.default;
-      Kinvey.Query = _query.Query;
-      Kinvey.SocialIdentity = _enums.SocialIdentity;
-      Kinvey.Sync = _sync2.default;
-      Kinvey.User = _user.User;
+      this.Aggregation = _aggregation.Aggregation;
+      this.AuthorizationGrant = _enums.AuthorizationGrant;
+      this.CustomEndpoint = _endpoint2.default;
+      this.DataStore = _datastore.DataStore;
+      this.DataStoreType = _enums.DataStoreType;
+      this.FileStore = _datastore.FileStore;
+      this.Log = _log.Log;
+      this.Metadata = _metadata.Metadata;
+      this.Query = _query.Query;
+      this.SocialIdentity = _enums.SocialIdentity;
+      this.Sync = _sync2.default;
+      this.User = _user.User;
 
       // Return the client
       return client;
@@ -120,10 +117,10 @@ var Kinvey = exports.Kinvey = function () {
   }, {
     key: 'ping',
     value: function ping() {
-      var client = arguments.length <= 0 || arguments[0] === undefined ? _client.Client.sharedInstance() : arguments[0];
+      var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.GET,
+        method: _enums.RequestMethod.GET,
         authType: _enums.AuthType.All,
         url: _url2.default.format({
           protocol: client.protocol,
@@ -150,3 +147,5 @@ var Kinvey = exports.Kinvey = function () {
 
   return Kinvey;
 }();
+
+exports.default = Kinvey;

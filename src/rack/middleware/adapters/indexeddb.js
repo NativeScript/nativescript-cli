@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { KinveyError, NotFoundError } from '../../../errors';
 import { open } from 'idb-factory';
 import { request, requestTransaction } from 'idb-request';
@@ -130,10 +129,7 @@ export default class IndexedDB {
       const promises = map(entities, entity => request(store.put(entity)));
       promises.push(requestTransaction(txn));
 
-      return Promise.all(promises).then(results => {
-        console.log(results);
-        return singular ? entities[0] : entities;
-      });
+      return Promise.all(promises).then(results => singular ? results[0] : results);
     });
 
     return promise;

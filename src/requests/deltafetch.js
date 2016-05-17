@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { KinveyRequest } from './request';
 import CacheRequest from './cache';
 import { NetworkRequest } from './network';

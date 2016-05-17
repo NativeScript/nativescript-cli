@@ -622,9 +622,11 @@ var Query = function () {
   }, {
     key: 'toQueryString',
     value: function toQueryString() {
-      var queryString = {
-        filter: this.filter
-      };
+      var queryString = {};
+
+      if (!(0, _isEmpty2.default)(this.filter)) {
+        queryString.filter = this.filter;
+      }
 
       if (!(0, _isEmpty2.default)(this.fields)) {
         queryString.fields = this.fields.join(',');

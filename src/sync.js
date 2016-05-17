@@ -1,4 +1,3 @@
-import Promise from 'babybird';
 import { RequestMethod, AuthType } from './enums';
 import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors';
 import { Metadata } from './metadata';

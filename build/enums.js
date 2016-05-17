@@ -45,15 +45,15 @@ exports.DataStoreType = DataStoreType;
  * Enum for Http Methods.
  */
 
-var HttpMethod = {
+var RequestMethod = {
   GET: 'GET',
   POST: 'POST',
   PATCH: 'PATCH',
   PUT: 'PUT',
   DELETE: 'DELETE'
 };
-Object.freeze(HttpMethod);
-exports.HttpMethod = HttpMethod;
+Object.freeze(RequestMethod);
+exports.RequestMethod = RequestMethod;
 
 /**
  * Enum for Social Identities.

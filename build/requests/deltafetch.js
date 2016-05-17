@@ -13,13 +13,11 @@ var _set = function set(object, property, value, receiver) { var desc = Object.g
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _request = require('./request');
 
-var _local = require('./local');
+var _cache = require('./cache');
+
+var _cache2 = _interopRequireDefault(_cache);
 
 var _network = require('./network');
 
@@ -61,7 +59,7 @@ var _isString2 = _interopRequireDefault(_isString);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _babybird2.default(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _babybird2.default.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -69,8 +67,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var idAttribute = '_id' || '_id';
-var kmdAttribute = '_kmd' || '_kmd';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 var maxIdsPerRequest = 200;
 
 /**
@@ -104,8 +102,8 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
               case 3:
                 _context2.prev = 3;
-                request = new _local.LocalRequest({
-                  method: _enums.HttpMethod.GET,
+                request = new _cache2.default({
+                  method: _enums.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
                   query: this.query,
@@ -153,9 +151,9 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                           cacheDocuments = (0, _keyBy2.default)(cacheData, idAttribute);
                           query = new _query3.Query((0, _result2.default)(_this2.query, 'toJSON', _this2.query));
 
-                          query.fields = [idAttribute, kmdAttribute];
+                          query.fields = [idAttribute, kmdAttribute + '.lmt'];
                           networkRequest = new _network.NetworkRequest({
-                            method: _enums.HttpMethod.GET,
+                            method: _enums.RequestMethod.GET,
                             url: _this2.url,
                             headers: _this2.headers,
                             auth: _this2.auth,
@@ -201,7 +199,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
                             _query.contains(idAttribute, ids);
                             _networkRequest = new _network.NetworkRequest({
-                              method: _enums.HttpMethod.GET,
+                              method: _enums.RequestMethod.GET,
                               url: _this2.url,
                               headers: _this2.headers,
                               auth: _this2.auth,
@@ -216,7 +214,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                           }
 
                           _context.next = 17;
-                          return _babybird2.default.all(promises);
+                          return Promise.all(promises);
 
                         case 17:
                           responses = _context.sent;
@@ -266,7 +264,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
               case 20:
                 networkRequest = new _network.NetworkRequest({
-                  method: _enums.HttpMethod.GET,
+                  method: _enums.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
                   auth: this.auth,
@@ -306,15 +304,15 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
       // Verify that the method is allowed
       switch (method) {
-        case _enums.HttpMethod.GET:
+        case _enums.RequestMethod.GET:
           _set(Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', method, this);
           break;
-        case _enums.HttpMethod.POST:
-        case _enums.HttpMethod.PATCH:
-        case _enums.HttpMethod.PUT:
-        case _enums.HttpMethod.DELETE:
+        case _enums.RequestMethod.POST:
+        case _enums.RequestMethod.PATCH:
+        case _enums.RequestMethod.PUT:
+        case _enums.RequestMethod.DELETE:
         default:
-          throw new Error('Invalid Http Method. Only GET is allowed.');
+          throw new Error('Invalid request Method. Only RequestMethod.GET is allowed.');
       }
     }
   }]);

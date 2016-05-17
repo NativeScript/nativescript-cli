@@ -24,7 +24,7 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 // const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 // const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 // const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
-// const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
+const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const cacheEnabledSymbol = Symbol();
 const onlineSymbol = Symbol();
 
@@ -76,10 +76,10 @@ export class DataStore {
     this.sync = new Sync();
     this.sync.client = this.client;
 
-    // Enable cache by default
+    // Enable the cache
     this.enableCache();
 
-    // Make the store online by default
+    // Make the store online
     this.online();
   }
 
@@ -219,7 +219,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             query: query,
@@ -240,7 +241,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             query: query,
@@ -268,7 +270,8 @@ export class DataStore {
               url: url.format({
                 protocol: this.client.protocol,
                 host: this.client.host,
-                pathname: this.pathname
+                pathname: this.pathname,
+                query: options.query
               }),
               properties: options.properties,
               query: removeQuery,
@@ -291,112 +294,100 @@ export class DataStore {
   }
 
   findById(id, options = {}) {
-    const observable = Observable.create(async observer => {
-      if (!id) {
-        observer.next(null);
-        return observer.complete();
-      }
+    const stream = Observable.create(async observer => {
+      try {
+        if (!id) {
+          observer.next(null);
+        } else if (this.isCacheEnabled()) {
+          const syncQuery = new Query().equalTo('collection', this.collection);
+          let count = await this.syncCount(syncQuery);
 
-      // Sync data
-      const syncQuery = new Query().equalTo('collection', this.collection);
-
-      // Get the sync count for this collection
-      if (this.isCacheEnabled()) {
-        let count = await this.syncCount(syncQuery);
-
-        // Attempt to push any pending sync data before fetching from the network.
-        if (count > 0) {
-          await this.push(syncQuery);
-          count = await this.syncCount(syncQuery);
-        }
-
-        // Throw an error if there are still items that need to be synced
-        if (count > 0) {
-          observer.error(new KinveyError('Unable to load data from the network. ' +
-            `There are ${count} entities that need ` +
-            'to be synced before data is loaded from the network.'));
-          return observer.complete();
-        }
-      }
-
-      // Fetch data from the cache
-      if (this.isCacheEnabled()) {
-        const request = new CacheRequest({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/${id}`
-          }),
-          properties: options.properties,
-          timeout: options.timeout
-        });
-
-        try {
-          const response = await request.execute();
-          observer.next(response.data);
-        } catch (error) {
-          observer.error(error);
-        }
-      }
-
-      // Fetch data from the network
-      if (this.isOnline()) {
-        const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
-        const requestOptions = {
-          method: RequestMethod.GET,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/${id}`
-          }),
-          properties: options.properties,
-          timeout: options.timeout,
-          client: this.client
-        };
-        let request = new NetworkRequest(requestOptions);
-
-        if (useDeltaFetch) {
-          request = new DeltaFetchRequest(requestOptions);
-        }
-
-        try {
-          const response = await request.execute();
-          const data = response.data;
-          observer.next(data);
-          await this.updateCache(data);
-        } catch (error) {
-          if (error instanceof NotFoundError) {
-            const request = new CacheRequest({
-              method: RequestMethod.DELETE,
-              authType: AuthType.Default,
-              url: url.format({
-                protocol: this.client.protocol,
-                host: this.client.host,
-                pathname: `${this.pathname}/${id}`
-              }),
-              properties: options.properties,
-              timeout: options.timeout
-            });
-
-            try {
-              await request.execute();
-            } catch (error) {
-              // Just catch the error
-            }
+          // Attempt to push any pending sync data before fetching from the network.
+          if (count > 0) {
+            await this.push(syncQuery);
+            count = await this.syncCount(syncQuery);
           }
 
-          observer.error(error);
+          // Throw an error if there are still items that need to be synced
+          if (count > 0) {
+            throw new KinveyError('Unable to load data. ' +
+              `There are ${count} entities that need ` +
+              'to be synced before data can be loaded.');
+          }
+
+          const request = new CacheRequest({
+            method: RequestMethod.GET,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${id}`,
+              query: options.query
+            }),
+            properties: options.properties,
+            timeout: options.timeout
+          });
+
+          const response = await request.execute();
+          observer.next(response.data);
         }
+
+        // Fetch data from the network
+        if (this.isOnline()) {
+          const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
+          const requestOptions = {
+            method: RequestMethod.GET,
+            authType: AuthType.Default,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${id}`,
+              query: options.query
+            }),
+            properties: options.properties,
+            timeout: options.timeout,
+            client: this.client
+          };
+          let request = new NetworkRequest(requestOptions);
+
+          if (useDeltaFetch) {
+            request = new DeltaFetchRequest(requestOptions);
+          }
+
+          try {
+            const response = await request.execute();
+            const data = response.data;
+            observer.next(data);
+            await this.updateCache(data);
+          } catch (error) {
+            if (error instanceof NotFoundError) {
+              const request = new CacheRequest({
+                method: RequestMethod.DELETE,
+                authType: AuthType.Default,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: `${this.pathname}/${id}`,
+                  query: options.query
+                }),
+                properties: options.properties,
+                timeout: options.timeout
+              });
+
+              await request.execute();
+            }
+
+            throw error;
+          }
+        }
+      } catch (error) {
+        return observer.error(error);
       }
 
       // Complete the observer
       return observer.complete();
     });
 
-    // Return the observable
-    return observable;
+    return stream;
   }
 
   count(query, options = {}) {
@@ -424,7 +415,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this.pathname}/_count`
+              pathname: `${this.pathname}/_count`,
+              query: options.query
             }),
             properties: options.properties,
             query: query,
@@ -443,7 +435,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this.pathname}/_count`
+              pathname: `${this.pathname}/_count`,
+              query: options.query
             }),
             properties: options.properties,
             query: query,
@@ -477,7 +470,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             body: data,
@@ -510,7 +504,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             data: data,
@@ -547,7 +542,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: id ? `${this.pathname}/${id}` : this.pathname
+              pathname: id ? `${this.pathname}/${id}` : this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             body: data,
@@ -581,7 +577,8 @@ export class DataStore {
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: id ? `${this.pathname}/${id}` : this.pathname
+            pathname: id ? `${this.pathname}/${id}` : this.pathname,
+            query: options.query
           }),
           properties: options.properties,
           data: data,
@@ -611,7 +608,6 @@ export class DataStore {
   remove(query, options = {}) {
     const stream = Observable.create(async observer => {
       try {
-        // Check that the query is valid
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         } else if (this.isCacheEnabled()) {
@@ -620,10 +616,11 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
-            query: query,
+            query: query, // eslint-disable-line no-use-before-define
             timeout: options.timeout
           });
 
@@ -659,7 +656,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: this.pathname
+              pathname: this.pathname,
+              query: options.query
             }),
             properties: options.properties,
             query: query,
@@ -690,7 +688,8 @@ export class DataStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this.pathname}/${id}`
+              pathname: `${this.pathname}/${id}`,
+              query: options.query
             }),
             properties: options.properties,
             authType: AuthType.Default,
@@ -725,6 +724,7 @@ export class DataStore {
               protocol: this.client.protocol,
               host: this.client.host,
               pathname: `${this.pathname}/${id}`,
+              query: options.query
             }),
             properties: options.properties,
             timeout: options.timeout
@@ -996,248 +996,242 @@ export class DataStore {
 //   }
 // }
 
-// /**
-//  * The FileStore class is used to find, save, update, remove, count and group files.
-//  */
-// export class FileStore extends DataStore {
-//   /**
-//    * The pathname for the store.
-//    *
-//    * @return  {string}                Pathname
-//    */
-//   get pathname() {
-//     return `/${filesNamespace}/${this.client.appKey}`;
-//   }
+/**
+ * The FileStore class is used to find, save, update, remove, count and group files.
+ */
+export class FileStore extends DataStore {
+  constructor() {
+    super();
+    this.disableCache();
+  }
 
-//   /**
-//    * Finds all files. A query can be optionally provided to return
-//    * a subset of all the files for your application or omitted to return all the files.
-//    * The number of files returned will adhere to the limits specified
-//    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
-//    * promise will be returned that will be resolved with the files or rejected with
-//    * an error.
-//    *
-//    * @param   {Query}                 [query]                                   Query used to filter result.
-//    * @param   {Object}                [options]                                 Options
-//    * @param   {Properties}            [options.properties]                      Custom properties to send with
-//    *                                                                            the request.
-//    * @param   {Number}                [options.timeout]                         Timeout for the request.
-//    * @param   {Boolean}               [options.tls]                             Use Transport Layer Security
-//    * @param   {Boolean}               [options.download]                        Download the files
-//    * @return  {Promise}                                                         Promise
-//    *
-//    * @example
-//    * var filesStore = new Kinvey.FilesStore();
-//    * var query = new Kinvey.Query();
-//    * query.equalTo('location', 'Boston');
-//    * files.find(query, {
-//    *   tls: true, // Use transport layer security
-//    *   ttl: 60 * 60 * 24, // 1 day in seconds
-//    *   download: true // download the files
-//    * }).then(function(files) {
-//    *   ...
-//    * }).catch(function(err) {
-//    *   ...
-//    * });
-//    */
-//   find(query, options = {}) {
-//     options = assign({
-//       download: false,
-//       tls: false
-//     }, options);
+  /**
+   * Enable cache.
+   *
+   * @return {DataStore}  DataStore instance.
+   */
+  enableCache() {
+    // Log a warning
+    // throw new KinveyError('Unable to enable cache for the file store.');
+  }
 
-//     options.flags = {
-//       tls: options.tls === true,
-//       ttl_in_seconds: options.ttl
-//     };
+  /**
+   * Make the store offline.
+   *
+   * @return {DataStore}  DataStore instance.
+   */
+  offline() {
+    // Log a warning
+    // throw new KinveyError('Unable to go offline for the file store.');
+  }
 
-//     const promise = super.find(query, options).then(files => {
-//       if (options.download === true) {
-//         const promises = map(files, file => this.downloadByUrl(file._downloadURL, options));
-//         return Promise.all(promises);
-//       }
+  /**
+   * The pathname for the store.
+   *
+   * @return  {string}  Pathname
+   */
+  get pathname() {
+    return `/${filesNamespace}/${this.client.appKey}`;
+  }
 
-//       return files;
-//     });
+  /**
+   * Finds all files. A query can be optionally provided to return
+   * a subset of all the files for your application or omitted to return all the files.
+   * The number of files returned will adhere to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions. A
+   * promise will be returned that will be resolved with the files or rejected with
+   * an error.
+   *
+   * @param   {Query}                 [query]                                   Query used to filter result.
+   * @param   {Object}                [options]                                 Options
+   * @param   {Properties}            [options.properties]                      Custom properties to send with
+   *                                                                            the request.
+   * @param   {Number}                [options.timeout]                         Timeout for the request.
+   * @param   {Boolean}               [options.tls]                             Use Transport Layer Security
+   * @param   {Boolean}               [options.download]                        Download the files
+   * @return  {Promise}                                                         Promise
+   *
+   * @example
+   * var filesStore = new Kinvey.FilesStore();
+   * var query = new Kinvey.Query();
+   * query.equalTo('location', 'Boston');
+   * files.find(query, {
+   *   tls: true, // Use transport layer security
+   *   ttl: 60 * 60 * 24, // 1 day in seconds
+   *   download: true // download the files
+   * }).then(function(files) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
+  async find(query, options = {}) {
+    options.query = options.query || {};
+    options.query.tls = options.tls === true;
+    options.ttl_in_seconds = options.ttl;
 
-//     return promise;
-//   }
+    const stream = super.find(query, options);
+    const files = await stream::toPromise();
 
-//   findById(id, options) {
-//     return this.download(id, options);
-//   }
+    if (options.download === true) {
+      return Promise.all(map(files, file => this.downloadByUrl(file._downloadURL, options)));
+    }
 
-//   *
-//    * Download a file. A promise will be returned that will be resolved with the file or rejected with
-//    * an error.
-//    *
-//    * @param   {string}        name                                          Name
-//    * @param   {Object}        [options]                                     Options
-//    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
-//    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-//    * @param   {Boolean}       [options.stream]                              Stream the file
-//    * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
-//    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
-//    * @return  {Promise}                                                     Promise
-//    *
-//    * @example
-//    * var files = new Kinvey.Files();
-//    * files.download('BostonTeaParty.png', {
-//    *   tls: true, // Use transport layer security
-//    *   ttl: 60 * 60 * 24, // 1 day in seconds
-//    *   stream: true // stream the file
-//    * }).then(function(file) {
-//    *   ...
-//    * }).catch(function(err) {
-//    *   ...
-//    * });
+    return files;
+  }
 
-//   download(name, options = {}) {
-//     options = assign({
-//       stream: false,
-//       tls: false
-//     }, options);
+  findById(id, options) {
+    return this.download(id, options);
+  }
 
-//     options.flags = {
-//       tls: options.tls === true,
-//       ttl_in_seconds: options.ttl
-//     };
+  /**
+   * Download a file. A promise will be returned that will be resolved with the file or rejected with
+   * an error.
+   *
+   * @param   {string}        name                                          Name
+   * @param   {Object}        [options]                                     Options
+   * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
+   * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
+   * @param   {Boolean}       [options.stream]                              Stream the file
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
+   * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
+   * @return  {Promise}                                                     Promise
+   *
+   * @example
+   * var files = new Kinvey.Files();
+   * files.download('BostonTeaParty.png', {
+   *   tls: true, // Use transport layer security
+   *   ttl: 60 * 60 * 24, // 1 day in seconds
+   *   stream: true // stream the file
+   * }).then(function(file) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+  */
+  async download(name, options = {}) {
+    options.query = options.query || {};
+    options.query.tls = options.tls === true;
+    options.ttl_in_seconds = options.ttl;
 
-//     const promise = super.findById(name, options).then(file => {
-//       if (options.stream === true) {
-//         return file;
-//       }
+    const stream = super.findById(name, options);
+    const file = await stream::toPromise();
 
-//       return this.downloadByUrl(file._downloadURL, options);
-//     });
+    if (options.stream === true) {
+      return file;
+    }
 
-//     return promise;
-//   }
+    return this.downloadByUrl(file._downloadURL, options);
+  }
 
-//   downloadByUrl(url, options = {}) {
-//     const promise = Promise.resolve().then(() => {
-//       const request = new NetworkRequest({
-//         method: HttpMethod.GET,
-//         url: url,
-//         timeout: options.timeout
-//       });
-//       request.setHeader('Accept', options.mimeType || 'application-octet-stream');
-//       request.removeHeader('Content-Type');
-//       request.removeHeader('X-Kinvey-Api-Version');
-//       return request.execute();
-//     }).then(response => response.data);
+  async downloadByUrl(url, options = {}) {
+    const request = new NetworkRequest({
+      method: RequestMethod.GET,
+      url: url,
+      timeout: options.timeout
+    });
+    request.setHeader('Accept', options.mimeType || 'application-octet-stream');
+    request.removeHeader('Content-Type');
+    request.removeHeader('X-Kinvey-Api-Version');
+    const response = await request.execute();
+    return response.data;
+  }
 
-//     return promise;
-//   }
+  /**
+   * Stream a file. A promise will be returned that will be resolved with the file or rejected with
+   * an error.
+   *
+   * @param   {string}        name                                          File name
+   * @param   {Object}        [options]                                     Options
+   * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
+   * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
+   * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
+   * @return  {Promise}                                                     Promise
+   *
+   * @example
+   * var files = new Kinvey.Files();
+   * files.stream('BostonTeaParty.png', {
+   *   tls: true, // Use transport layer security
+   *   ttl: 60 * 60 * 24, // 1 day in seconds
+   * }).then(function(file) {
+   *   ...
+   * }).catch(function(err) {
+   *   ...
+   * });
+   */
+  stream(name, options = {}) {
+    options.stream = true;
+    return this.download(name, options);
+  }
 
-//   /**
-//    * Stream a file. A promise will be returned that will be resolved with the file or rejected with
-//    * an error.
-//    *
-//    * @param   {string}        name                                          File name
-//    * @param   {Object}        [options]                                     Options
-//    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
-//    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-//    * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
-//    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
-//    * @return  {Promise}                                                     Promise
-//    *
-//    * @example
-//    * var files = new Kinvey.Files();
-//    * files.stream('BostonTeaParty.png', {
-//    *   tls: true, // Use transport layer security
-//    *   ttl: 60 * 60 * 24, // 1 day in seconds
-//    * }).then(function(file) {
-//    *   ...
-//    * }).catch(function(err) {
-//    *   ...
-//    * });
-//    */
-//   stream(name, options = {}) {
-//     options.stream = true;
-//     return this.download(name, options);
-//   }
+  async upload(file, metadata = {}, options = {}) {
+    metadata._filename = metadata._filename || file._filename || file.name;
+    metadata.size = metadata.size || file.size || file.length;
+    metadata.mimeType = metadata.mimeType || file.mimeType || file.type || 'application/octet-stream';
 
-//   upload(file, metadata = {}, options = {}) {
-//     metadata._filename = metadata._filename || file._filename || file.name;
-//     metadata.size = metadata.size || file.size || file.length;
-//     metadata.mimeType = metadata.mimeType || file.mimeType || file.type || 'application/octet-stream';
+    if (options.public === true) {
+      metadata._public = true;
+    }
 
-//     options = assign({
-//       properties: null,
-//       timeout: undefined,
-//       public: false,
-//       handler() {}
-//     }, options);
+    const createRequest = new NetworkRequest({
+      method: RequestMethod.POST,
+      headers: {
+        'X-Kinvey-Content-Type': metadata.mimeType
+      },
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      data: metadata,
+      client: this.client
+    });
 
-//     if (options.public) {
-//       metadata._public = true;
-//     }
+    if (metadata[idAttribute]) {
+      createRequest.method = RequestMethod.PUT;
+      createRequest.url = url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this.pathname}/${metadata._id}`,
+        query: options.query
+      });
+    }
 
-//     const request = new NetworkRequest({
-//       method: HttpMethod.POST,
-//       headers: {
-//         'X-Kinvey-Content-Type': metadata.mimeType
-//       },
-//       authType: AuthType.Default,
-//       url: url.format({
-//         protocol: this.client.protocol,
-//         host: this.client.host,
-//         pathname: this.pathname
-//       }),
-//       properties: options.properties,
-//       timeout: options.timeout,
-//       data: metadata,
-//       client: this.client
-//     });
+    const createResponse = await createRequest.execute();
+    const data = createResponse.data;
+    const uploadUrl = data._uploadURL;
+    const headers = data._requiredHeaders || {};
+    headers['Content-Type'] = metadata.mimeType;
+    headers['Content-Length'] = metadata.size;
 
-//     if (metadata[idAttribute]) {
-//       request.method = HttpMethod.PUT;
-//       request.url = url.format({
-//         protocol: this.client.protocol,
-//         host: this.client.host,
-//         pathname: `${this.pathname}/${metadata._id}`
-//       });
-//     }
+    // Delete fields from the response
+    delete data._expiresAt;
+    delete data._requiredHeaders;
+    delete data._uploadURL;
 
-//     const promise = request.execute().then(response => {
-//       const uploadUrl = response.data._uploadURL;
-//       const headers = response.data._requiredHeaders || {};
-//       headers['Content-Type'] = metadata.mimeType;
-//       headers['Content-Length'] = metadata.size;
+    // Upload the file
+    const uploadRequest = new NetworkRequest({
+      method: RequestMethod.PUT,
+      url: uploadUrl,
+      data: file
+    });
+    uploadRequest.clearHeaders();
+    uploadRequest.addHeaders(headers);
+    await uploadRequest.execute();
 
-//       // Delete fields from the response
-//       delete response.data._expiresAt;
-//       delete response.data._requiredHeaders;
-//       delete response.data._uploadURL;
+    data._data = file;
+    return data;
+  }
 
-//       // Upload the file
-//       const request = new NetworkRequest({
-//         method: HttpMethod.PUT,
-//         url: uploadUrl,
-//         data: file
-//       });
-//       request.clearHeaders();
-//       request.addHeaders(headers);
+  create(file, metadata, options) {
+    return this.upload(file, metadata, options);
+  }
 
-//       return request.execute().then(uploadResponse => {
-//         if (uploadResponse.isSuccess()) {
-//           response.data._data = file;
-//           return response.data;
-//         }
-
-//         throw uploadResponse.error;
-//       });
-//     });
-
-//     return promise;
-//   }
-
-//   save() {
-//     return Promise.reject(new KinveyError('Please use `upload()` to save files.'));
-//   }
-
-//   update() {
-//     return Promise.reject(new KinveyError('Please use `upload()` to update files.'));
-//   }
-// }
+  update(file, metadata, options) {
+    return this.upload(file, metadata, options);
+  }
+}

@@ -7,11 +7,9 @@ exports.User = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _client = require('./client');
+
+var _client2 = _interopRequireDefault(_client);
 
 var _query = require('./query');
 
@@ -25,7 +23,7 @@ var _mic = require('./mic');
 
 var _enums = require('./enums');
 
-var _datastore = require('./stores/datastore');
+var _datastore = require('./datastore');
 
 var _network = require('./requests/network');
 
@@ -51,14 +49,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var appdataNamespace = 'appdata' || 'appdata';
-var usersNamespace = 'user' || 'user';
-var rpcNamespace = 'rpc' || 'rpc';
-var idAttribute = '_id' || '_id';
-var kmdAttribute = '_kmd' || '_kmd';
-var socialIdentityAttribute = '_socialIdentity' || '_socialIdentity';
-var usernameAttribute = 'username' || 'username';
-var emailAttribute = 'email' || 'email';
+var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+var usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+var rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+var socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
+var usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
+var emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
 var supportedIdentities = ['facebook', 'google', 'linkedIn'];
 var hello = void 0;
 
@@ -100,7 +98,7 @@ var User = exports.User = function () {
      *
      * @type {Client}
      */
-    this.client = _client.Client.sharedInstance();
+    this.client = _client2.default.sharedInstance();
   }
 
   /**
@@ -133,7 +131,7 @@ var User = exports.User = function () {
     value: function isActive() {
       var activeUser = User.getActiveUser(this.client);
 
-      if (activeUser && activeUser._id === this._id) {
+      if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
         return true;
       }
 
@@ -172,7 +170,7 @@ var User = exports.User = function () {
         };
       }
 
-      if (!usernameOrData._socialIdentity) {
+      if (!usernameOrData[socialIdentityAttribute]) {
         if (usernameOrData.username) {
           usernameOrData.username = String(usernameOrData.username).trim();
         }
@@ -184,20 +182,20 @@ var User = exports.User = function () {
 
       var isActiveUser = this.isActive();
       if (isActiveUser) {
-        return _babybird2.default.reject(new _errors.ActiveUserError('This user is already the active user.'));
+        return Promise.reject(new _errors.ActiveUserError('This user is already the active user.'));
       }
 
       var activeUser = User.getActiveUser(this.client);
       if (activeUser) {
-        return _babybird2.default.reject(new _errors.ActiveUserError('An active user already exists. ' + 'Please logout the active user before you login.'));
+        return Promise.reject(new _errors.ActiveUserError('An active user already exists. ' + 'Please logout the active user before you login.'));
       }
 
       if ((!usernameOrData.username || usernameOrData.username === '' || !usernameOrData.password || usernameOrData.password === '') && !usernameOrData[socialIdentityAttribute]) {
-        return _babybird2.default.reject(new _errors.KinveyError('Username and/or password missing. ' + 'Please provide both a username and password to login.'));
+        return Promise.reject(new _errors.KinveyError('Username and/or password missing. ' + 'Please provide both a username and password to login.'));
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         authType: _enums.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -220,8 +218,9 @@ var User = exports.User = function () {
   }, {
     key: 'loginWithIdentity',
     value: function loginWithIdentity(identity, token, options) {
-      var data = { _socialIdentity: {} };
-      data._socialIdentity[identity] = token;
+      var data = {};
+      data[socialIdentityAttribute] = {};
+      data[socialIdentityAttribute][identity] = token;
       return this.login(data, options);
     }
   }, {
@@ -285,11 +284,11 @@ var User = exports.User = function () {
       var isActive = this.isActive();
 
       if (!isActive) {
-        return _babybird2.default.resolve();
+        return Promise.resolve();
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         authType: _enums.AuthType.Session,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -358,7 +357,7 @@ var User = exports.User = function () {
         collectionName: 'identities'
       }, options);
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         if (!identity) {
           throw new _errors.KinveyError('An identity is required to connect the user.');
         }
@@ -369,7 +368,7 @@ var User = exports.User = function () {
 
         var query = new _query.Query().equalTo('identity', identity);
         var request = new _network.NetworkRequest({
-          method: _enums.HttpMethod.GET,
+          method: _enums.RequestMethod.GET,
           authType: _enums.AuthType.None,
           url: _url2.default.format({
             protocol: _this4.client.protocol,
@@ -436,7 +435,7 @@ var User = exports.User = function () {
       data[socialIdentityAttribute] = socialIdentity;
       this.data = data;
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         var isActive = _this5.isActive();
 
         if (isActive) {
@@ -456,7 +455,7 @@ var User = exports.User = function () {
       }).then(function () {
         (0, _storage.setActiveSocialIdentity)(_this5.client, {
           identity: identity,
-          token: _this5._socialIdentity[identity],
+          token: _this5[socialIdentityAttribute][identity],
           redirectUri: options.redirectUri,
           client: options.micClient
         });
@@ -478,8 +477,8 @@ var User = exports.User = function () {
       data[socialIdentityAttribute] = socialIdentity;
       this.data = data;
 
-      var promise = _babybird2.default.resolve().then(function () {
-        if (!_this6._id) {
+      var promise = Promise.resolve().then(function () {
+        if (!_this6[idAttribute]) {
           return _this6;
         }
 
@@ -532,7 +531,7 @@ var User = exports.User = function () {
         state: true
       }, options);
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         if (options.state === true) {
           var activeUser = User.getActiveUser(_this7.client);
           if (activeUser) {
@@ -541,7 +540,7 @@ var User = exports.User = function () {
         }
       }).then(function () {
         var request = new _network.NetworkRequest({
-          method: _enums.HttpMethod.POST,
+          method: _enums.RequestMethod.POST,
           authType: _enums.AuthType.App,
           url: _url2.default.format({
             protocol: _this7.client.protocol,
@@ -568,8 +567,9 @@ var User = exports.User = function () {
   }, {
     key: 'signupWithIdentity',
     value: function signupWithIdentity(identity, tokens, options) {
-      var data = { _socialIdentity: {} };
-      data._socialIdentity[identity] = tokens;
+      var data = {};
+      data[socialIdentityAttribute] = {};
+      data[socialIdentityAttribute][identity] = tokens;
       return this.signup(data, options);
     }
   }, {
@@ -596,7 +596,7 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.GET,
+        method: _enums.RequestMethod.GET,
         authType: _enums.AuthType.Session,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -630,7 +630,7 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         authType: _enums.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -653,7 +653,7 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         authType: _enums.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -677,7 +677,7 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         authType: _enums.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -864,7 +864,7 @@ var User = exports.User = function () {
   }], [{
     key: 'getActiveUser',
     value: function getActiveUser() {
-      var client = arguments.length <= 0 || arguments[0] === undefined ? _client.Client.sharedInstance() : arguments[0];
+      var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
 
       var data = client.activeUser;
       var user = null;

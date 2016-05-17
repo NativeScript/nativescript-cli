@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Client = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -31,7 +30,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var pushCollectionName = 'kinvey_push' || 'kinvey_push';
+var pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
 var _sharedInstance = null;
 
 /**
@@ -45,7 +44,7 @@ var _sharedInstance = null;
  * });
  */
 
-var Client = exports.Client = function () {
+var Client = function () {
   /**
    * Creates a new instance of the Client class. An `options.appKey` must be provided along with
    * either and `options.appSecret` or `options.masterSecret`.
@@ -68,8 +67,8 @@ var Client = exports.Client = function () {
     _classCallCheck(this, Client);
 
     options = (0, _assign2.default)({
-      protocol: undefined || 'https:',
-      host: undefined || 'baas.kinvey.com'
+      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
+      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
     }, options);
 
     if (options.hostname && (0, _isString2.default)(options.hostname)) {
@@ -218,3 +217,5 @@ var Client = exports.Client = function () {
 
   return Client;
 }();
+
+exports.default = Client;

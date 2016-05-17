@@ -2,7 +2,6 @@
 import './setup';
 import { DataStore, DataStoreType } from '../src/datastore';
 import { KinveyError } from '../src/errors';
-// import { Query } from '../src/query';
 import { randomString } from '../src/utils/string';
 import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';

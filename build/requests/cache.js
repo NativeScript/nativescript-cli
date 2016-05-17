@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.LocalRequest = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
@@ -29,19 +28,19 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
  * @private
  */
 
-var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
-  _inherits(LocalRequest, _KinveyRequest);
+var CacheRequest = function (_KinveyRequest) {
+  _inherits(CacheRequest, _KinveyRequest);
 
-  function LocalRequest(options) {
-    _classCallCheck(this, LocalRequest);
+  function CacheRequest(options) {
+    _classCallCheck(this, CacheRequest);
 
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(LocalRequest).call(this, options));
+    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheRequest).call(this, options));
 
     _this.rack = _rack.CacheRack.sharedInstance();
     return _this;
   }
 
-  _createClass(LocalRequest, [{
+  _createClass(CacheRequest, [{
     key: 'execute',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
@@ -51,7 +50,7 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.next = 2;
-                return _get(Object.getPrototypeOf(LocalRequest.prototype), 'execute', this).call(this);
+                return _get(Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this);
 
               case 2:
                 _context.next = 4;
@@ -122,7 +121,7 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
             switch (_context2.prev = _context2.next) {
               case 0:
                 _context2.next = 2;
-                return _get(Object.getPrototypeOf(LocalRequest.prototype), 'cancel', this).call(this);
+                return _get(Object.getPrototypeOf(CacheRequest.prototype), 'cancel', this).call(this);
 
               case 2:
                 return _context2.abrupt('return', this.rack.cancel());
@@ -143,5 +142,7 @@ var LocalRequest = exports.LocalRequest = function (_KinveyRequest) {
     }()
   }]);
 
-  return LocalRequest;
+  return CacheRequest;
 }(_request.KinveyRequest);
+
+exports.default = CacheRequest;

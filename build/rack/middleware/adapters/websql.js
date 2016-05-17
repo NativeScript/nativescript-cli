@@ -7,10 +7,6 @@ exports.WebSQL = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _errors = require('../../../errors');
 
 var _map = require('lodash/map');
@@ -37,7 +33,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = '_id' || '_id';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 var masterCollectionName = 'sqlite_master';
 var size = 5 * 1000 * 1000; // Database size in bytes
 var webSQL = null;
@@ -81,7 +77,7 @@ var WebSQL = exports.WebSQL = function () {
         dbCache[this.name] = db;
       }
 
-      var promise = new _babybird2.default(function (resolve, reject) {
+      var promise = new Promise(function (resolve, reject) {
         var writeTxn = write || !(0, _isFunction2.default)(db.readTransaction);
         db[writeTxn ? 'transaction' : 'readTransaction'](function (tx) {
           if (write && !isMaster) {

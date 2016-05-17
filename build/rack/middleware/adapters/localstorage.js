@@ -7,10 +7,6 @@ exports.LocalStorage = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _errors = require('../../../errors');
 
 var _keyBy = require('lodash/keyBy');
@@ -33,7 +29,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var idAttribute = '_id' || '_id';
+var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 var localStorage = global.localStorage;
 
 /**
@@ -54,7 +50,7 @@ var LocalStorage = exports.LocalStorage = function () {
     value: function find(collection) {
       var _this = this;
 
-      return _babybird2.default.resolve().then(function () {
+      return Promise.resolve().then(function () {
         var data = localStorage.getItem('' + _this.name + collection);
 
         try {

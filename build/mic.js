@@ -7,10 +7,6 @@ exports.MobileIdentityConnect = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _babybird = require('babybird');
-
-var _babybird2 = _interopRequireDefault(_babybird);
-
 var _enums = require('./enums');
 
 var _errors = require('./errors');
@@ -18,6 +14,8 @@ var _errors = require('./errors');
 var _network = require('./requests/network');
 
 var _client = require('./client');
+
+var _client2 = _interopRequireDefault(_client);
 
 var _path = require('path');
 
@@ -36,8 +34,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Popup = global.KinveyPopup;
-var authPathname = '/oauth/auth' || '/oauth/auth';
-var tokenPathname = '/oauth/token' || '/oauth/token';
+var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
+var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
 /**
  * @private
@@ -45,13 +43,13 @@ var tokenPathname = '/oauth/token' || '/oauth/token';
 
 var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
   function MobileIdentityConnect() {
-    var client = arguments.length <= 0 || arguments[0] === undefined ? _client.Client.sharedInstance() : arguments[0];
+    var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
 
     _classCallCheck(this, MobileIdentityConnect);
 
-    this.client = new _client.Client({
-      protocol: undefined || 'https:',
-      host: undefined || 'auth.kinvey.com',
+    this.client = new _client2.default({
+      protocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
+      host: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
       appKey: client.appKey,
       appSecret: client.appSecret,
       masterSecret: client.masterSecret,
@@ -69,7 +67,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
 
       var clientId = this.client.appKey;
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         if (authorizationGrant === _enums.AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
           return _this.requestCodeWithPopup(clientId, redirectUri, options);
@@ -105,7 +103,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -132,7 +130,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
 
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         var pathname = '/';
 
         if (options.version) {
@@ -157,7 +155,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           }
         }));
       }).then(function (popup) {
-        var promise = new _babybird2.default(function (resolve, reject) {
+        var promise = new Promise(function (resolve, reject) {
           var redirected = false;
 
           function loadedCallback(loadedUrl) {
@@ -197,9 +195,9 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
     value: function requestCodeWithUrl(loginUrl, clientId, redirectUri) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-      var promise = _babybird2.default.resolve().then(function () {
+      var promise = Promise.resolve().then(function () {
         var request = new _network.NetworkRequest({
-          method: _enums.HttpMethod.POST,
+          method: _enums.RequestMethod.POST,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
@@ -233,7 +231,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       var request = new _network.NetworkRequest({
-        method: _enums.HttpMethod.POST,
+        method: _enums.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -261,7 +259,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
   }], [{
     key: 'identity',
     get: function get() {
-      return undefined || 'kinveyAuth';
+      return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
     }
   }]);
 
