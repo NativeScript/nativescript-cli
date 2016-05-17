@@ -2,7 +2,7 @@ import './setup';
 import Sync from '../src/sync';
 import { Query } from '../src/query';
 import { SyncError } from '../src/errors';
-import { SyncStore } from '../src/stores/syncstore';
+import { DataStore } from '../src/datastore';
 import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
@@ -164,7 +164,7 @@ describe('Sync', function () {
     });
 
     it('should save an entity to the network', async function() {
-      const store = new SyncStore(collection);
+      const store = new DataStore(collection);
       let entity = {
         prop: randomString()
       };
@@ -187,7 +187,7 @@ describe('Sync', function () {
     });
 
     it('should delete an entity from the network', async function() {
-      const store = new SyncStore(collection);
+      const store = new DataStore(collection);
       let entity = {
         _id: randomString(),
         prop: randomString()
@@ -209,7 +209,7 @@ describe('Sync', function () {
     });
 
     it('should not delete an entity on the network if it was created locally', async function() {
-      const store = new SyncStore(collection);
+      const store = new DataStore(collection);
       let entity = {
         prop: randomString()
       };

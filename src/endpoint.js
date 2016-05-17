@@ -56,6 +56,7 @@ export default class CustomEndpoint {
       timeout: options.timeout,
       client: options.client
     });
-    return request.execute().then(response => response.data);
+    const response = await request.execute();
+    return response.data;
   }
 }

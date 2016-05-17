@@ -298,85 +298,87 @@ export class DataStore {
       try {
         if (!id) {
           observer.next(null);
-        } else if (this.isCacheEnabled()) {
-          const syncQuery = new Query().equalTo('collection', this.collection);
-          let count = await this.syncCount(syncQuery);
+        } else {
+          if (this.isCacheEnabled()) {
+            const syncQuery = new Query().equalTo('collection', this.collection);
+            let count = await this.syncCount(syncQuery);
 
-          // Attempt to push any pending sync data before fetching from the network.
-          if (count > 0) {
-            await this.push(syncQuery);
-            count = await this.syncCount(syncQuery);
-          }
-
-          // Throw an error if there are still items that need to be synced
-          if (count > 0) {
-            throw new KinveyError('Unable to load data. ' +
-              `There are ${count} entities that need ` +
-              'to be synced before data can be loaded.');
-          }
-
-          const request = new CacheRequest({
-            method: RequestMethod.GET,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            timeout: options.timeout
-          });
-
-          const response = await request.execute();
-          observer.next(response.data);
-        }
-
-        // Fetch data from the network
-        if (this.isOnline()) {
-          const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
-          const requestOptions = {
-            method: RequestMethod.GET,
-            authType: AuthType.Default,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            timeout: options.timeout,
-            client: this.client
-          };
-          let request = new NetworkRequest(requestOptions);
-
-          if (useDeltaFetch) {
-            request = new DeltaFetchRequest(requestOptions);
-          }
-
-          try {
-            const response = await request.execute();
-            const data = response.data;
-            observer.next(data);
-            await this.updateCache(data);
-          } catch (error) {
-            if (error instanceof NotFoundError) {
-              const request = new CacheRequest({
-                method: RequestMethod.DELETE,
-                authType: AuthType.Default,
-                url: url.format({
-                  protocol: this.client.protocol,
-                  host: this.client.host,
-                  pathname: `${this.pathname}/${id}`,
-                  query: options.query
-                }),
-                properties: options.properties,
-                timeout: options.timeout
-              });
-
-              await request.execute();
+            // Attempt to push any pending sync data before fetching from the network.
+            if (count > 0) {
+              await this.push(syncQuery);
+              count = await this.syncCount(syncQuery);
             }
 
-            throw error;
+            // Throw an error if there are still items that need to be synced
+            if (count > 0) {
+              throw new KinveyError('Unable to load data. ' +
+                `There are ${count} entities that need ` +
+                'to be synced before data can be loaded.');
+            }
+
+            const request = new CacheRequest({
+              method: RequestMethod.GET,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: `${this.pathname}/${id}`,
+                query: options.query
+              }),
+              properties: options.properties,
+              timeout: options.timeout
+            });
+
+            const response = await request.execute();
+            observer.next(response.data);
+          }
+
+          // Fetch data from the network
+          if (this.isOnline()) {
+            const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
+            const requestOptions = {
+              method: RequestMethod.GET,
+              authType: AuthType.Default,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: `${this.pathname}/${id}`,
+                query: options.query
+              }),
+              properties: options.properties,
+              timeout: options.timeout,
+              client: this.client
+            };
+            let request = new NetworkRequest(requestOptions);
+
+            if (useDeltaFetch) {
+              request = new DeltaFetchRequest(requestOptions);
+            }
+
+            try {
+              const response = await request.execute();
+              const data = response.data;
+              observer.next(data);
+              await this.updateCache(data);
+            } catch (error) {
+              if (error instanceof NotFoundError) {
+                const request = new CacheRequest({
+                  method: RequestMethod.DELETE,
+                  authType: AuthType.Default,
+                  url: url.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: `${this.pathname}/${id}`,
+                    query: options.query
+                  }),
+                  properties: options.properties,
+                  timeout: options.timeout
+                });
+
+                await request.execute();
+              }
+
+              throw error;
+            }
           }
         }
       } catch (error) {
@@ -497,7 +499,7 @@ export class DataStore {
           }
 
           observer.next(singular ? data[0] : data);
-        } else {
+        } else if (this.isOnline()) {
           const request = new NetworkRequest({
             method: RequestMethod.POST,
             authType: AuthType.Default,
@@ -533,10 +535,7 @@ export class DataStore {
 
         if (!data) {
           observer.next(null);
-          return observer.complete();
-        }
-
-        if (this.isCacheEnabled()) {
+        } else if (this.isCacheEnabled()) {
           const request = new CacheRequest({
             method: RequestMethod.PUT,
             url: url.format({
@@ -553,13 +552,14 @@ export class DataStore {
           const response = await request.execute();
           data = response.data;
 
-          if (this.isOnline()) {
-            if (!isArray(data)) {
-              singular = true;
-              data = [data];
-            }
+          if (!isArray(data)) {
+            singular = true;
+            data = [data];
+          }
 
-            await Promise.all(map(data, entity => this.sync.addUpdateOperation(this.collection, entity, options)));
+          await Promise.all(map(data, entity => this.sync.addUpdateOperation(this.collection, entity, options)));
+
+          if (this.isOnline()) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entityId', ids);
             let push = await this.push(query, options);
@@ -568,27 +568,26 @@ export class DataStore {
           }
 
           observer.next(singular ? data[0] : data);
-          return observer.complete();
+        } else if (this.isOnline()) {
+          const request = new NetworkRequest({
+            method: RequestMethod.PUT,
+            authType: AuthType.Default,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: id ? `${this.pathname}/${id}` : this.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            data: data,
+            timeout: options.timeout,
+            client: this.client
+          });
+          const response = await request.execute();
+          observer.next(response.data);
         }
-
-        const request = new NetworkRequest({
-          method: RequestMethod.POST,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: id ? `${this.pathname}/${id}` : this.pathname,
-            query: options.query
-          }),
-          properties: options.properties,
-          data: data,
-          timeout: options.timeout,
-          client: this.client
-        });
-        const response = await request.execute();
-        observer.next(response.data);
       } catch (error) {
-        observer.error(error);
+        return observer.error(error);
       }
 
       return observer.complete();
@@ -649,7 +648,7 @@ export class DataStore {
           }
 
           observer.next(data);
-        } else {
+        } else if (this.isOnline()) {
           const request = new NetworkRequest({
             method: RequestMethod.DELETE,
             authType: AuthType.Default,
@@ -716,7 +715,7 @@ export class DataStore {
           }
 
           observer.next(data);
-        } else {
+        } else if (this.isOnline()) {
           const request = new NetworkRequest({
             method: RequestMethod.DELETE,
             authType: AuthType.Default,
@@ -762,16 +761,15 @@ export class DataStore {
    * });
    */
   async push(query, options = {}) {
-    if (!this.isCacheEnabled()) {
-      throw new KinveyError('The cache is disabled for this store.');
+    if (this.isCacheEnabled()) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query)).equalTo('collection', this.collection);
+      }
+
+      return this.sync.push(query, options);
     }
 
-    if (!(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
-
-    query.equalTo('collection', this.collection);
-    return this.sync.push(query, options);
+    throw new KinveyError('Unable to push because the cache is disabled.');
   }
 
   /**
@@ -794,14 +792,18 @@ export class DataStore {
    * });
    */
   async pull(query, options = {}) {
-    const count = await this.syncCount(null, options);
+    if (this.isCacheEnabled()) {
+      const count = await this.syncCount(null, options);
 
-    if (count > 0) {
-      throw new KinveyError('Unable to pull data. You must push the pending sync items first.',
-        'Call store.push() to push the pending sync items before you pull new data.');
+      if (count > 0) {
+        throw new KinveyError('Unable to pull data. You must push the pending sync items first.',
+          'Call store.push() to push the pending sync items before you pull new data.');
+      }
+
+      return this.find(query, options)::toPromise();
     }
 
-    return this.find(query, options).then(result => result.networkPromise);
+    throw new KinveyError('Unable to pull because the cache is disabled.');
   }
 
   /**
@@ -825,12 +827,16 @@ export class DataStore {
    * });
    */
   async sync(query, options = {}) {
-    const push = await this.push(null, options);
-    const pull = await this.pull(query, options);
-    return {
-      push: push,
-      pull: pull
-    };
+    if (this.isCacheEnabled()) {
+      const push = await this.push(null, options);
+      const pull = await this.pull(query, options);
+      return {
+        push: push,
+        pull: pull
+      };
+    }
+
+    throw new KinveyError('Unable to sync because the cache is disabled.');
   }
 
   /**
@@ -854,13 +860,17 @@ export class DataStore {
    *   ...
    * });
    */
-  syncCount(query, options = {}) {
-    if (!(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+  async syncCount(query, options = {}) {
+    if (this.isCacheEnabled()) {
+      if (!(query instanceof Query)) {
+        query = new Query(result(query, 'toJSON', query));
+      }
+
+      query.equalTo('collection', this.collection);
+      return this.sync.count(query, options);
     }
 
-    query.equalTo('collection', this.collection);
-    return this.sync.count(query, options);
+    throw new KinveyError('Unable to get the sync count because the cache is disabled.');
   }
 
   /**
@@ -875,19 +885,23 @@ export class DataStore {
    * @return  {Promise}                                                         Promise
    */
   async updateCache(entities, options = {}) {
-    const request = new CacheRequest({
-      method: RequestMethod.PUT,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.pathname
-      }),
-      properties: options.properties,
-      data: entities,
-      timeout: options.timeout
-    });
-    const response = await request.execute();
-    return response.data;
+    if (this.isCacheEnabled()) {
+      const request = new CacheRequest({
+        method: RequestMethod.PUT,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname
+        }),
+        properties: options.properties,
+        data: entities,
+        timeout: options.timeout
+      });
+      const response = await request.execute();
+      return response.data;
+    }
+
+    throw new KinveyError('Unable to update the cache because the cache is disabled.');
   }
 
   /**
