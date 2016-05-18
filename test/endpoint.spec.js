@@ -5,6 +5,8 @@ import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 const expect = chai.expect;
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
@@ -23,17 +25,13 @@ describe('CustomEndpoint', function () {
     });
 
     it('should throw an error if and endpoint is not provided', function() {
-      return logoutUser.call(this).then(() => {
-        const promise = CustomEndpoint.execute();
-        return expect(promise).to.be.rejectedWith(KinveyError);
-      });
+      const promise = CustomEndpoint.execute();
+      return expect(promise).to.be.rejectedWith(KinveyError);
     });
 
     it('should throw an error if the endpoint is not a string', function() {
-      return logoutUser.call(this).then(() => {
-        const promise = CustomEndpoint.execute({});
-        return expect(promise).to.be.rejectedWith(KinveyError);
-      });
+      const promise = CustomEndpoint.execute({});
+      return expect(promise).to.be.rejectedWith(KinveyError);
     });
 
     it('should return the response from the custom endpoint', function() {

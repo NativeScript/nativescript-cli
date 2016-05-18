@@ -1,6 +1,9 @@
+/* eslint-disable no-underscore-dangle */
+import fakeIndexedDB from 'fake-indexeddb';
+global.indexedDB = fakeIndexedDB;
 import '../../../setup';
 import IndexedDB from '../../../../src/rack/middleware/adapters/indexeddb';
-import { KinveyError, NotFoundError } from '../../../../src/errors';
+import { KinveyError } from '../../../../src/errors';
 import { randomString } from '../../../../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
@@ -10,16 +13,17 @@ import sinonChai from 'sinon-chai';
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
-const databaseName = 'testDatabase';
-const collectionName = 'testCollection';
+const database = 'tester';
+const collection = 'tests';
 
 describe('IndexedDB', function() {
   before(function() {
-    this.db = new IndexedDB(databaseName);
+    this.db = new IndexedDB(database);
   });
 
   after(function() {
     delete this.db;
+    delete global.indexedDB;
   });
 
   it('should throw an error if no name is provided', function() {
@@ -37,14 +41,13 @@ describe('IndexedDB', function() {
   });
 
   it('should set name with constructor', function() {
-    const name = 'foo';
-    const db = new IndexedDB(name);
-    expect(db.name).to.equal(name);
+    const db = new IndexedDB(database);
+    expect(db.name).to.equal(database);
   });
 
   describe('find()', function() {
     before(function() {
-      return this.db.save(collectionName, {
+      return this.db.save(collection, {
         _id: randomString(),
         attribute: randomString()
       }).then(entity => {
@@ -53,13 +56,13 @@ describe('IndexedDB', function() {
     });
 
     after(function() {
-      return this.db.removeById(collectionName, this.entity._id).then(() => {
+      return this.db.removeById(collection, this.entity._id).then(() => {
         delete this.entity;
       });
     });
 
     before(function() {
-      return this.db.save(collectionName, {
+      return this.db.save(collection, {
         _id: randomString(),
         attribute: randomString()
       }).then(entity => {
@@ -68,7 +71,7 @@ describe('IndexedDB', function() {
     });
 
     after(function() {
-      return this.db.removeById(collectionName, this.entity2._id).then(() => {
+      return this.db.removeById(collection, this.entity2._id).then(() => {
         delete this.entity2;
       });
     });
@@ -77,15 +80,13 @@ describe('IndexedDB', function() {
       expect(IndexedDB).to.respondTo('find');
     });
 
-    it('should return an empty array if a collection does not contain eny entities', function() {
-      return this.db.find('foo').then(entities => {
-        expect(entities).to.be.an('array');
-        expect(entities.length).to.equal(0);
-      });
+    it('should throw an error if a collection does not exist', function() {
+      const promise = this.db.find('foo');
+      return expect(promise).to.be.eventually.rejected;
     });
 
     it('should return all entities in a collection', function() {
-      return this.db.find(collectionName).then(entities => {
+      return this.db.find(collection).then(entities => {
         expect(entities).to.be.an('array');
         expect(entities.length).to.equal(2);
       });
@@ -94,7 +95,7 @@ describe('IndexedDB', function() {
 
   describe('findById()', function() {
     before(function() {
-      return this.db.save(collectionName, {
+      return this.db.save(collection, {
         _id: randomString(),
         attribute: randomString()
       }).then(entity => {
@@ -103,13 +104,13 @@ describe('IndexedDB', function() {
     });
 
     after(function() {
-      return this.db.removeById(collectionName, this.entity._id).then(() => {
+      return this.db.removeById(collection, this.entity._id).then(() => {
         delete this.entity;
       });
     });
 
     before(function() {
-      return this.db.save(collectionName, {
+      return this.db.save(collection, {
         _id: randomString(),
         attribute: randomString()
       }).then(entity => {
@@ -118,7 +119,7 @@ describe('IndexedDB', function() {
     });
 
     after(function() {
-      return this.db.removeById(collectionName, this.entity2._id).then(() => {
+      return this.db.removeById(collection, this.entity2._id).then(() => {
         delete this.entity2;
       });
     });
@@ -128,10 +129,8 @@ describe('IndexedDB', function() {
     });
 
     it('should throw a NotFoundError for an entity that does not exist', function() {
-      return this.db.findById(collectionName, randomString()).then(entity => {
-        expect(entity).to.be.null;
-      }).catch(error => {
-        expect(error).to.be.instanceof(NotFoundError);
+      return this.db.findById(collection, randomString()).then(entity => {
+        expect(entity).to.be.undefined;
       });
     });
 
@@ -140,11 +139,11 @@ describe('IndexedDB', function() {
         _id: randomString(),
         attribute: randomString()
       };
-      return this.db.save(collectionName, entity)
-        .then(savedEntity => this.db.findById(collectionName, savedEntity._id))
+      return this.db.save(collection, entity)
+        .then(savedEntity => this.db.findById(collection, savedEntity._id))
         .then(savedEntity => {
           expect(savedEntity).to.deep.equal(entity);
-          return this.db.removeById(collectionName, savedEntity._id);
+          return this.db.removeById(collection, savedEntity._id);
         });
     });
   });
@@ -159,12 +158,12 @@ describe('IndexedDB', function() {
         _id: randomString(),
         attribute: randomString()
       };
-      return this.db.save(collectionName, entity).then(savedEntity => {
+      return this.db.save(collection, entity).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
-        return this.db.findById(collectionName, savedEntity._id);
+        return this.db.findById(collection, savedEntity._id);
       }).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
-        return this.db.removeById(collectionName, savedEntity._id);
+        return this.db.removeById(collection, savedEntity._id);
       });
     });
 
@@ -179,25 +178,53 @@ describe('IndexedDB', function() {
           attribute: randomString()
         }
       ];
-      return this.db.save(collectionName, entities).then(savedEntities => {
+      return this.db.save(collection, entities).then(savedEntities => {
         expect(savedEntities).to.deep.equal(entities);
-        return this.db.find(collectionName);
+        return this.db.find(collection);
       }).then(savedEntities => {
         expect(savedEntities).to.be.an('array');
         expect(savedEntities.length).to.equal(2);
 
         entities = keyBy(entities, '_id');
         savedEntities = keyBy(savedEntities, '_id');
+        const ids = Object.keys(savedEntities);
 
-        for (const id in savedEntities) {
-          if (savedEntities.hasOwnProperty(id)) {
-            expect(savedEntities[id]).to.deep.equal(entities[id]);
-          }
+        for (const id of ids) {
+          expect(savedEntities[id]).to.deep.equal(entities[id]);
         }
 
-        const promises = map(Object.keys(savedEntities), id => this.db.removeById(collectionName, id));
+        const promises = map(Object.keys(savedEntities), id => this.db.removeById(collection, id));
         return Promise.all(promises);
       });
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should be a function', function() {
+      expect(IndexedDB).to.respondTo('removeById');
+    });
+
+    it('should return undefined when an entity does not exist', function() {
+      return this.db.removeById(collection, randomString()).then(entity => {
+        expect(entity).to.be.undefined;
+      });
+    });
+
+    it('should remove an entity and return the entity', function() {
+      const entity = {
+        _id: randomString(),
+        attribute: randomString()
+      };
+      return this.db.save(collection, entity)
+        .then(savedEntity => {
+          expect(savedEntity).to.deep.equal(entity);
+          return this.db.removeById(collection, savedEntity._id);
+        })
+        .then(savedEntity => {
+          expect(savedEntity).to.deep.equal(entity);
+          return this.db.findById(collection, savedEntity._id);
+        })
+        .then(entity => expect(entity).to.be.undefined);
     });
   });
 
@@ -206,7 +233,7 @@ describe('IndexedDB', function() {
       expect(IndexedDB).itself.to.respondTo('isSupported');
     });
 
-    it('should return true', function() {
+    it('should return a boolean', function() {
       expect(IndexedDB.isSupported()).to.be.true;
     });
   });

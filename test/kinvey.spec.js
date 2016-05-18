@@ -1,6 +1,6 @@
 import './setup';
-import { Kinvey } from '../src/kinvey';
-import { Client } from '../src/client';
+import Kinvey from '../src/kinvey';
+import Client from '../src/client';
 import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';

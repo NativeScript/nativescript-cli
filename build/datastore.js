@@ -7,7 +7,8 @@ exports.FileStore = exports.DataStore = exports.DataStoreType = undefined;
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /* eslint-disable no-underscore-dangle */
+
 // import assign from 'lodash/assign';
 
 
@@ -466,7 +467,7 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context2.next = 23;
+                  _context2.next = 45;
                   break;
 
                 case 5:
@@ -776,7 +777,7 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context4.next = 31;
+                  _context4.next = 32;
                   break;
 
                 case 6:
@@ -839,10 +840,15 @@ var DataStore = function () {
                 case 23:
 
                   observer.next(singular ? data[0] : data);
-                  _context4.next = 31;
+                  _context4.next = 32;
                   break;
 
                 case 26:
+                  if (!_this4.isOnline()) {
+                    _context4.next = 32;
+                    break;
+                  }
+
                   _request6 = new _network.NetworkRequest({
                     method: _enums.RequestMethod.POST,
                     authType: _enums.AuthType.Default,
@@ -857,32 +863,32 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this4.client
                   });
-                  _context4.next = 29;
+                  _context4.next = 30;
                   return _request6.execute();
 
-                case 29:
+                case 30:
                   _response4 = _context4.sent;
 
                   observer.next(_response4.data);
 
-                case 31:
-                  _context4.next = 36;
+                case 32:
+                  _context4.next = 37;
                   break;
 
-                case 33:
-                  _context4.prev = 33;
+                case 34:
+                  _context4.prev = 34;
                   _context4.t0 = _context4['catch'](0);
                   return _context4.abrupt('return', observer.error(_context4.t0));
 
-                case 36:
+                case 37:
                   return _context4.abrupt('return', observer.complete());
 
-                case 37:
+                case 38:
                 case 'end':
                   return _context4.stop();
               }
             }
-          }, _callee4, _this4, [[0, 33]]);
+          }, _callee4, _this4, [[0, 34]]);
         }));
 
         return function (_x8) {
@@ -899,9 +905,9 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var observable = _Observable.Observable.create(function () {
+      var stream = _Observable.Observable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(observer) {
-          var singular, id, _request7, _response5, ids, query, push, request, response;
+          var singular, id, request, response, ids, query, push, _request7, _response5;
 
           return regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
@@ -912,20 +918,21 @@ var DataStore = function () {
                   id = data[idAttribute];
 
                   if (data) {
-                    _context5.next = 6;
+                    _context5.next = 7;
                     break;
                   }
 
                   observer.next(null);
-                  return _context5.abrupt('return', observer.complete());
+                  _context5.next = 33;
+                  break;
 
-                case 6:
+                case 7:
                   if (!_this5.isCacheEnabled()) {
-                    _context5.next = 25;
+                    _context5.next = 27;
                     break;
                   }
 
-                  _request7 = new _cache2.default({
+                  request = new _cache2.default({
                     method: _enums.RequestMethod.PUT,
                     url: _url2.default.format({
                       protocol: _this5.client.protocol,
@@ -937,18 +944,13 @@ var DataStore = function () {
                     body: data,
                     timeout: options.timeout
                   });
-                  _context5.next = 10;
-                  return _request7.execute();
+                  _context5.next = 11;
+                  return request.execute();
 
-                case 10:
-                  _response5 = _context5.sent;
+                case 11:
+                  response = _context5.sent;
 
-                  data = _response5.data;
-
-                  if (!_this5.isOnline()) {
-                    _context5.next = 23;
-                    break;
-                  }
+                  data = response.data;
 
                   if (!(0, _isArray2.default)(data)) {
                     singular = true;
@@ -961,12 +963,17 @@ var DataStore = function () {
                   }));
 
                 case 16:
+                  if (!_this5.isOnline()) {
+                    _context5.next = 24;
+                    break;
+                  }
+
                   ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
                   query = new _query4.Query().contains('entityId', ids);
-                  _context5.next = 20;
+                  _context5.next = 21;
                   return _this5.push(query, options);
 
-                case 20:
+                case 21:
                   push = _context5.sent;
 
                   push = (0, _filter2.default)(push, function (result) {
@@ -976,14 +983,20 @@ var DataStore = function () {
                     return result.entity;
                   });
 
-                case 23:
+                case 24:
 
                   observer.next(singular ? data[0] : data);
-                  return _context5.abrupt('return', observer.complete());
+                  _context5.next = 33;
+                  break;
 
-                case 25:
-                  request = new _network.NetworkRequest({
-                    method: _enums.RequestMethod.POST,
+                case 27:
+                  if (!_this5.isOnline()) {
+                    _context5.next = 33;
+                    break;
+                  }
+
+                  _request7 = new _network.NetworkRequest({
+                    method: _enums.RequestMethod.PUT,
                     authType: _enums.AuthType.Default,
                     url: _url2.default.format({
                       protocol: _this5.client.protocol,
@@ -996,31 +1009,32 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this5.client
                   });
-                  _context5.next = 28;
-                  return request.execute();
+                  _context5.next = 31;
+                  return _request7.execute();
 
-                case 28:
-                  response = _context5.sent;
+                case 31:
+                  _response5 = _context5.sent;
 
-                  observer.next(response.data);
-                  _context5.next = 35;
+                  observer.next(_response5.data);
+
+                case 33:
+                  _context5.next = 38;
                   break;
 
-                case 32:
-                  _context5.prev = 32;
-                  _context5.t0 = _context5['catch'](0);
-
-                  observer.error(_context5.t0);
-
                 case 35:
+                  _context5.prev = 35;
+                  _context5.t0 = _context5['catch'](0);
+                  return _context5.abrupt('return', observer.error(_context5.t0));
+
+                case 38:
                   return _context5.abrupt('return', observer.complete());
 
-                case 36:
+                case 39:
                 case 'end':
                   return _context5.stop();
               }
             }
-          }, _callee5, _this5, [[0, 32]]);
+          }, _callee5, _this5, [[0, 35]]);
         }));
 
         return function (_x10) {
@@ -1028,7 +1042,7 @@ var DataStore = function () {
         };
       }());
 
-      return observable;
+      return _toPromise.toPromise.call(stream);
     }
   }, {
     key: 'save',
@@ -1131,10 +1145,15 @@ var DataStore = function () {
                 case 26:
 
                   observer.next(data);
-                  _context6.next = 34;
+                  _context6.next = 35;
                   break;
 
                 case 29:
+                  if (!_this6.isOnline()) {
+                    _context6.next = 35;
+                    break;
+                  }
+
                   _request8 = new _network.NetworkRequest({
                     method: _enums.RequestMethod.DELETE,
                     authType: _enums.AuthType.Default,
@@ -1149,32 +1168,32 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this6.client
                   });
-                  _context6.next = 32;
+                  _context6.next = 33;
                   return _request8.execute();
 
-                case 32:
+                case 33:
                   _response6 = _context6.sent;
 
                   observer.next(_response6.data);
 
-                case 34:
-                  _context6.next = 39;
+                case 35:
+                  _context6.next = 40;
                   break;
 
-                case 36:
-                  _context6.prev = 36;
+                case 37:
+                  _context6.prev = 37;
                   _context6.t0 = _context6['catch'](0);
                   return _context6.abrupt('return', observer.error(_context6.t0));
 
-                case 39:
+                case 40:
                   return _context6.abrupt('return', observer.complete());
 
-                case 40:
+                case 41:
                 case 'end':
                   return _context6.stop();
               }
             }
-          }, _callee6, _this6, [[0, 36]]);
+          }, _callee6, _this6, [[0, 37]]);
         }));
 
         return function (_x12) {
@@ -1207,7 +1226,7 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context7.next = 34;
+                  _context7.next = 32;
                   break;
 
                 case 5:
@@ -1278,44 +1297,46 @@ var DataStore = function () {
                 case 28:
 
                   observer.next(data);
-                  _context7.next = 34;
+                  _context7.next = 32;
                   break;
 
                 case 31:
-                  _request9 = new _network.NetworkRequest({
-                    method: _enums.RequestMethod.DELETE,
-                    authType: _enums.AuthType.Default,
-                    url: _url2.default.format({
-                      protocol: _this7.client.protocol,
-                      host: _this7.client.host,
-                      pathname: _this7.pathname + '/' + id,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    timeout: options.timeout
-                  });
-                  _response7 = _request9.execute();
+                  if (_this7.isOnline()) {
+                    _request9 = new _network.NetworkRequest({
+                      method: _enums.RequestMethod.DELETE,
+                      authType: _enums.AuthType.Default,
+                      url: _url2.default.format({
+                        protocol: _this7.client.protocol,
+                        host: _this7.client.host,
+                        pathname: _this7.pathname + '/' + id,
+                        query: options.query
+                      }),
+                      properties: options.properties,
+                      timeout: options.timeout
+                    });
+                    _response7 = _request9.execute();
 
-                  observer.next(_response7.data);
+                    observer.next(_response7.data);
+                  }
 
-                case 34:
-                  _context7.next = 39;
+                case 32:
+                  _context7.next = 37;
                   break;
 
-                case 36:
-                  _context7.prev = 36;
+                case 34:
+                  _context7.prev = 34;
                   _context7.t0 = _context7['catch'](0);
                   return _context7.abrupt('return', observer.error(_context7.t0));
 
-                case 39:
+                case 37:
                   return _context7.abrupt('return', observer.complete());
 
-                case 40:
+                case 38:
                 case 'end':
                   return _context7.stop();
               }
             }
-          }, _callee7, _this7, [[0, 36]]);
+          }, _callee7, _this7, [[0, 34]]);
         }));
 
         return function (_x14) {
@@ -1355,23 +1376,21 @@ var DataStore = function () {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                if (this.isCacheEnabled()) {
-                  _context8.next = 2;
+                if (!this.isCacheEnabled()) {
+                  _context8.next = 3;
                   break;
                 }
 
-                throw new _errors.KinveyError('The cache is disabled for this store.');
-
-              case 2:
-
                 if (!(query instanceof _query4.Query)) {
-                  query = new _query4.Query((0, _result2.default)(query, 'toJSON', query));
+                  query = new _query4.Query((0, _result2.default)(query, 'toJSON', query)).equalTo('collection', this.collection);
                 }
 
-                query.equalTo('collection', this.collection);
                 return _context8.abrupt('return', this.sync.push(query, options));
 
-              case 5:
+              case 3:
+                throw new _errors.KinveyError('Unable to push because the cache is disabled.');
+
+              case 4:
               case 'end':
                 return _context8.stop();
             }
@@ -1411,32 +1430,40 @@ var DataStore = function () {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var count;
-        return regeneratorRuntime.wrap(function _callee9$(_context9) {
+
+        var _context9, count;
+
+        return regeneratorRuntime.wrap(function _callee9$(_context10) {
           while (1) {
-            switch (_context9.prev = _context9.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
-                _context9.next = 2;
+                if (!this.isCacheEnabled()) {
+                  _context10.next = 7;
+                  break;
+                }
+
+                _context10.next = 3;
                 return this.syncCount(null, options);
 
-              case 2:
-                count = _context9.sent;
+              case 3:
+                count = _context10.sent;
 
                 if (!(count > 0)) {
-                  _context9.next = 5;
+                  _context10.next = 6;
                   break;
                 }
 
                 throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
 
-              case 5:
-                return _context9.abrupt('return', this.find(query, options).then(function (result) {
-                  return result.networkPromise;
-                }));
-
               case 6:
+                return _context10.abrupt('return', (_context9 = this.find(query, options), _toPromise.toPromise).call(_context9));
+
+              case 7:
+                throw new _errors.KinveyError('Unable to pull because the cache is disabled.');
+
+              case 8:
               case 'end':
-                return _context9.stop();
+                return _context10.stop();
             }
           }
         }, _callee9, this);
@@ -1476,28 +1503,36 @@ var DataStore = function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var push, pull;
-        return regeneratorRuntime.wrap(function _callee10$(_context10) {
+        return regeneratorRuntime.wrap(function _callee10$(_context11) {
           while (1) {
-            switch (_context10.prev = _context10.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                _context10.next = 2;
+                if (!this.isCacheEnabled()) {
+                  _context11.next = 8;
+                  break;
+                }
+
+                _context11.next = 3;
                 return this.push(null, options);
 
-              case 2:
-                push = _context10.sent;
-                _context10.next = 5;
+              case 3:
+                push = _context11.sent;
+                _context11.next = 6;
                 return this.pull(query, options);
 
-              case 5:
-                pull = _context10.sent;
-                return _context10.abrupt('return', {
+              case 6:
+                pull = _context11.sent;
+                return _context11.abrupt('return', {
                   push: push,
                   pull: pull
                 });
 
-              case 7:
+              case 8:
+                throw new _errors.KinveyError('Unable to sync because the cache is disabled.');
+
+              case 9:
               case 'end':
-                return _context10.stop();
+                return _context11.stop();
             }
           }
         }, _callee10, this);
@@ -1534,16 +1569,42 @@ var DataStore = function () {
 
   }, {
     key: 'syncCount',
-    value: function syncCount(query) {
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        return regeneratorRuntime.wrap(function _callee11$(_context12) {
+          while (1) {
+            switch (_context12.prev = _context12.next) {
+              case 0:
+                if (!this.isCacheEnabled()) {
+                  _context12.next = 4;
+                  break;
+                }
 
-      if (!(query instanceof _query4.Query)) {
-        query = new _query4.Query((0, _result2.default)(query, 'toJSON', query));
+                if (!(query instanceof _query4.Query)) {
+                  query = new _query4.Query((0, _result2.default)(query, 'toJSON', query));
+                }
+
+                query.equalTo('collection', this.collection);
+                return _context12.abrupt('return', this.sync.count(query, options));
+
+              case 4:
+                throw new _errors.KinveyError('Unable to get the sync count because the cache is disabled.');
+
+              case 5:
+              case 'end':
+                return _context12.stop();
+            }
+          }
+        }, _callee11, this);
+      }));
+
+      function syncCount(_x24, _x25) {
+        return ref.apply(this, arguments);
       }
 
-      query.equalTo('collection', this.collection);
-      return this.sync.count(query, options);
-    }
+      return syncCount;
+    }()
 
     /**
      * Add or update entities stored in the cache. A promise will be returned with the entities
@@ -1560,13 +1621,18 @@ var DataStore = function () {
   }, {
     key: 'updateCache',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(entities) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(entities) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var request, response;
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return regeneratorRuntime.wrap(function _callee12$(_context13) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
+                if (!this.isCacheEnabled()) {
+                  _context13.next = 6;
+                  break;
+                }
+
                 request = new _cache2.default({
                   method: _enums.RequestMethod.PUT,
                   url: _url2.default.format({
@@ -1578,22 +1644,25 @@ var DataStore = function () {
                   data: entities,
                   timeout: options.timeout
                 });
-                _context11.next = 3;
+                _context13.next = 4;
                 return request.execute();
 
-              case 3:
-                response = _context11.sent;
-                return _context11.abrupt('return', response.data);
+              case 4:
+                response = _context13.sent;
+                return _context13.abrupt('return', response.data);
 
-              case 5:
+              case 6:
+                throw new _errors.KinveyError('Unable to update the cache because the cache is disabled.');
+
+              case 7:
               case 'end':
-                return _context11.stop();
+                return _context13.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
-      function updateCache(_x25, _x26) {
+      function updateCache(_x27, _x28) {
         return ref.apply(this, arguments);
       }
 
@@ -1817,47 +1886,47 @@ var FileStore = exports.FileStore = function (_DataStore) {
      * });
      */
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(query) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13(query) {
         var _this9 = this;
 
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var stream, files;
-        return regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return regeneratorRuntime.wrap(function _callee13$(_context14) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
                 options.query = options.query || {};
                 options.query.tls = options.tls === true;
                 options.ttl_in_seconds = options.ttl;
 
                 stream = _get(Object.getPrototypeOf(FileStore.prototype), 'find', this).call(this, query, options);
-                _context12.next = 6;
+                _context14.next = 6;
                 return _toPromise.toPromise.call(stream);
 
               case 6:
-                files = _context12.sent;
+                files = _context14.sent;
 
                 if (!(options.download === true)) {
-                  _context12.next = 9;
+                  _context14.next = 9;
                   break;
                 }
 
-                return _context12.abrupt('return', Promise.all((0, _map2.default)(files, function (file) {
+                return _context14.abrupt('return', Promise.all((0, _map2.default)(files, function (file) {
                   return _this9.downloadByUrl(file._downloadURL, options);
                 })));
 
               case 9:
-                return _context12.abrupt('return', files);
+                return _context14.abrupt('return', files);
 
               case 10:
               case 'end':
-                return _context12.stop();
+                return _context14.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
 
-      function find(_x29, _x30) {
+      function find(_x31, _x32) {
         return ref.apply(this, arguments);
       }
 
@@ -1898,43 +1967,43 @@ var FileStore = exports.FileStore = function (_DataStore) {
   }, {
     key: 'download',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13(name) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14(name) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var stream, file;
-        return regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return regeneratorRuntime.wrap(function _callee14$(_context15) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
                 options.query = options.query || {};
                 options.query.tls = options.tls === true;
                 options.ttl_in_seconds = options.ttl;
 
                 stream = _get(Object.getPrototypeOf(FileStore.prototype), 'findById', this).call(this, name, options);
-                _context13.next = 6;
+                _context15.next = 6;
                 return _toPromise.toPromise.call(stream);
 
               case 6:
-                file = _context13.sent;
+                file = _context15.sent;
 
                 if (!(options.stream === true)) {
-                  _context13.next = 9;
+                  _context15.next = 9;
                   break;
                 }
 
-                return _context13.abrupt('return', file);
+                return _context15.abrupt('return', file);
 
               case 9:
-                return _context13.abrupt('return', this.downloadByUrl(file._downloadURL, options));
+                return _context15.abrupt('return', this.downloadByUrl(file._downloadURL, options));
 
               case 10:
               case 'end':
-                return _context13.stop();
+                return _context15.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee14, this);
       }));
 
-      function download(_x32, _x33) {
+      function download(_x34, _x35) {
         return ref.apply(this, arguments);
       }
 
@@ -1943,12 +2012,12 @@ var FileStore = exports.FileStore = function (_DataStore) {
   }, {
     key: 'downloadByUrl',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14(url) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee15(url) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var request, response;
-        return regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return regeneratorRuntime.wrap(function _callee15$(_context16) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
                 request = new _network.NetworkRequest({
                   method: _enums.RequestMethod.GET,
@@ -1959,22 +2028,22 @@ var FileStore = exports.FileStore = function (_DataStore) {
                 request.setHeader('Accept', options.mimeType || 'application-octet-stream');
                 request.removeHeader('Content-Type');
                 request.removeHeader('X-Kinvey-Api-Version');
-                _context14.next = 6;
+                _context16.next = 6;
                 return request.execute();
 
               case 6:
-                response = _context14.sent;
-                return _context14.abrupt('return', response.data);
+                response = _context16.sent;
+                return _context16.abrupt('return', response.data);
 
               case 8:
               case 'end':
-                return _context14.stop();
+                return _context16.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee15, this);
       }));
 
-      function downloadByUrl(_x35, _x36) {
+      function downloadByUrl(_x37, _x38) {
         return ref.apply(this, arguments);
       }
 
@@ -2016,13 +2085,13 @@ var FileStore = exports.FileStore = function (_DataStore) {
   }, {
     key: 'upload',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee15(file) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee16(file) {
         var metadata = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
         var createRequest, createResponse, data, uploadUrl, headers, uploadRequest;
-        return regeneratorRuntime.wrap(function _callee15$(_context15) {
+        return regeneratorRuntime.wrap(function _callee16$(_context17) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context17.prev = _context17.next) {
               case 0:
                 metadata._filename = metadata._filename || file._filename || file.name;
                 metadata.size = metadata.size || file.size || file.length;
@@ -2060,11 +2129,11 @@ var FileStore = exports.FileStore = function (_DataStore) {
                   });
                 }
 
-                _context15.next = 8;
+                _context17.next = 8;
                 return createRequest.execute();
 
               case 8:
-                createResponse = _context15.sent;
+                createResponse = _context17.sent;
                 data = createResponse.data;
                 uploadUrl = data._uploadURL;
                 headers = data._requiredHeaders || {};
@@ -2086,37 +2155,37 @@ var FileStore = exports.FileStore = function (_DataStore) {
 
                 uploadRequest.clearHeaders();
                 uploadRequest.addHeaders(headers);
-                _context15.next = 22;
+                _context17.next = 22;
                 return uploadRequest.execute();
 
               case 22:
 
                 data._data = file;
-                return _context15.abrupt('return', data);
+                return _context17.abrupt('return', data);
 
               case 24:
               case 'end':
-                return _context15.stop();
+                return _context17.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee16, this);
       }));
 
-      function upload(_x39, _x40, _x41) {
+      function upload(_x41, _x42, _x43) {
         return ref.apply(this, arguments);
       }
 
       return upload;
     }()
   }, {
-    key: 'save',
-    value: function save() {
-      return Promise.reject(new _errors.KinveyError('Please use `upload()` to save files.'));
+    key: 'create',
+    value: function create(file, metadata, options) {
+      return this.upload(file, metadata, options);
     }
   }, {
     key: 'update',
-    value: function update() {
-      return Promise.reject(new _errors.KinveyError('Please use `upload()` to update files.'));
+    value: function update(file, metadata, options) {
+      return this.upload(file, metadata, options);
     }
   }, {
     key: 'pathname',

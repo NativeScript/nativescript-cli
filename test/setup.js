@@ -2,6 +2,7 @@ import Kinvey from '../src/kinvey';
 import { randomString } from '../src/utils/string';
 import sinon from 'sinon';
 
+
 before(function() {
   this.client = Kinvey.init({
     appKey: randomString(),

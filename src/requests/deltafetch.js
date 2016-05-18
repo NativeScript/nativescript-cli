@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { KinveyRequest } from './request';
 import CacheRequest from './cache';
 import { NetworkRequest } from './network';

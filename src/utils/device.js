@@ -57,7 +57,7 @@ export class Device {
       const os = require('os'); // eslint-disable-line global-require
 
       return {
-        latform: {
+        platform: {
           name: 'node',
           version: process.version
         },

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { Query } from '../../query';
 import { Aggregation } from '../../aggregation';
 import IndexedDB from './adapters/indexeddb';

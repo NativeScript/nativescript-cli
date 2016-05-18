@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import { KinveyError, NotFoundError } from './errors';
 import CacheRequest from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
@@ -528,7 +529,7 @@ export class DataStore {
   }
 
   update(data, options = {}) {
-    const observable = Observable.create(async observer => {
+    const stream = Observable.create(async observer => {
       try {
         let singular = false;
         const id = data[idAttribute];
@@ -593,7 +594,7 @@ export class DataStore {
       return observer.complete();
     });
 
-    return observable;
+    return stream::toPromise();
   }
 
   save(data, options) {

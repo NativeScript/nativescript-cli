@@ -88,7 +88,7 @@ var Device = exports.Device = function () {
         var os = require('os'); // eslint-disable-line global-require
 
         return {
-          latform: {
+          platform: {
             name: 'node',
             version: process.version
           },

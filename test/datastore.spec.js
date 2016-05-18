@@ -6,8 +6,8 @@ import { randomString } from '../src/utils/string';
 import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';
 import chai from 'chai';
-import spies from 'chai-spies';
-chai.use(spies);
+import sinonChai from 'sinon-chai';
+chai.use(sinonChai);
 const expect = chai.expect;
 const collection = 'tests';
 
@@ -249,12 +249,9 @@ describe('DataStore', function() {
           'content-type': 'application/json'
         });
 
-      const spy = chai.spy(entities => {
-        expect(entities).to.be.an('array');
-      });
-
+      const spy = this.sandbox.spy();
       store.find().subscribe(spy, done, () => {
-        expect(spy).to.have.been.called.exactly(2);
+        expect(spy).to.have.been.called.twice;
         done();
       });
     });

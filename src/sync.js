@@ -401,56 +401,58 @@ export default class Sync {
                 timeout: options.timeout,
                 client: this.client
               });
-              return request.execute().then(() => {
-                const result = { _id: originalId, entity: entity };
-                return result;
-              }).catch(async error => {
-                if (!(error instanceof NotFoundError) || !(error instanceof InsufficientCredentialsError)) {
-                  failedSyncEntities.push(syncEntity);
-                }
-
-                // If the credentials used to authenticate this request are
-                // not authorized to run the operation
-                if (error instanceof InsufficientCredentialsError) {
-                  try {
-                    // Try and reset the state of the entity
-                    const getNetworkRequest = new NetworkRequest({
-                      method: RequestMethod.GET,
-                      authType: AuthType.Default,
-                      url: url.format({
-                        protocol: this.client.protocol,
-                        host: this.client.host,
-                        pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
-                      }),
-                      properties: options.properties,
-                      timeout: options.timeout,
-                      client: this.client
-                    });
-                    const originalEntity = await getNetworkRequest.execute().then(response => response.data);
-                    const putCacheRequest = new CacheRequest({
-                      method: RequestMethod.PUT,
-                      url: url.format({
-                        protocol: this.client.protocol,
-                        host: this.client.host,
-                        pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
-                      }),
-                      properties: options.properties,
-                      timeout: options.timeout,
-                      body: originalEntity
-                    });
-                    await putCacheRequest.execute();
-                  } catch (error) {
-                    // Throw away the error
+              return request.execute()
+                .then(() => {
+                  const result = { _id: originalId, entity: entity };
+                  return result;
+                })
+                .catch(async error => {
+                  if (!(error instanceof NotFoundError) || !(error instanceof InsufficientCredentialsError)) {
+                    failedSyncEntities.push(syncEntity);
                   }
-                }
 
-                // Return the result of the sync operation.
-                return {
-                  _id: originalId,
-                  entity: entity,
-                  error: error
-                };
-              });
+                  // If the credentials used to authenticate this request are
+                  // not authorized to run the operation
+                  if (error instanceof InsufficientCredentialsError) {
+                    try {
+                      // Try and reset the state of the entity
+                      const getNetworkRequest = new NetworkRequest({
+                        method: RequestMethod.GET,
+                        authType: AuthType.Default,
+                        url: url.format({
+                          protocol: this.client.protocol,
+                          host: this.client.host,
+                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                        }),
+                        properties: options.properties,
+                        timeout: options.timeout,
+                        client: this.client
+                      });
+                      const originalEntity = await getNetworkRequest.execute().then(response => response.data);
+                      const putCacheRequest = new CacheRequest({
+                        method: RequestMethod.PUT,
+                        url: url.format({
+                          protocol: this.client.protocol,
+                          host: this.client.host,
+                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                        }),
+                        properties: options.properties,
+                        timeout: options.timeout,
+                        body: originalEntity
+                      });
+                      await putCacheRequest.execute();
+                    } catch (error) {
+                      // Throw away the error
+                    }
+                  }
+
+                  // Return the result of the sync operation.
+                  return {
+                    _id: originalId,
+                    entity: entity,
+                    error: error
+                  };
+                });
             } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
               // Save the entity to the network.
               const request = new NetworkRequest({
@@ -481,93 +483,96 @@ export default class Sync {
                 request.body = entity;
               }
 
-              return request.execute().then(response => response.data).then(async entity => {
-                // Save the result of the network request locally.
-                const putCacheRequest = new CacheRequest({
-                  method: RequestMethod.PUT,
-                  url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${entity[idAttribute]}`
-                  }),
-                  properties: options.properties,
-                  timeout: options.timeout,
-                  body: entity
-                });
-                entity = await putCacheRequest.execute().then(response => response.data);
-
-                // Remove the original entity if it was created on the device
-                // using the SDK.
-                if (metadata.isLocal()) {
-                  const deleteCacheRequest = new CacheRequest({
-                    method: RequestMethod.DELETE,
+              return request.execute()
+                .then(response => response.data)
+                .then(async entity => {
+                  // Save the result of the network request locally.
+                  const putCacheRequest = new CacheRequest({
+                    method: RequestMethod.PUT,
                     url: url.format({
                       protocol: this.client.protocol,
                       host: this.client.host,
-                      pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                      pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${entity[idAttribute]}`
                     }),
                     properties: options.properties,
-                    timeout: options.timeout
+                    timeout: options.timeout,
+                    body: entity
                   });
-                  await deleteCacheRequest.execute();
-                }
+                  entity = await putCacheRequest.execute().then(response => response.data);
 
-                // Return the result of the sync operation.
-                return {
-                  _id: originalId,
-                  entity: entity
-                };
-              }).catch(async error => {
-                if (!(error instanceof InsufficientCredentialsError)) {
-                  failedSyncEntities.push(syncEntity);
-                }
-
-                // If the credentials used to authenticate this request are
-                // not authorized to run the operation then just remove the entity
-                // from the sync table
-                if (error instanceof InsufficientCredentialsError) {
-                  try {
-                    // Try and reset the state of the entity if the entity
-                    // is not local
-                    if (!metadata.isLocal()) {
-                      const getNetworkRequest = new NetworkRequest({
-                        method: RequestMethod.GET,
-                        authType: AuthType.Default,
-                        url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
-                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
-                        }),
-                        properties: options.properties,
-                        timeout: options.timeout,
-                        client: this.client
-                      });
-                      const originalEntity = await getNetworkRequest.execute().then(response => response.data);
-                      const putCacheRequest = new CacheRequest({
-                        method: RequestMethod.PUT,
-                        url: url.format({
-                          protocol: this.client.protocol,
-                          host: this.client.host,
-                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
-                        }),
-                        properties: options.properties,
-                        timeout: options.timeout,
-                        body: originalEntity
-                      });
-                      await putCacheRequest.execute();
-                    }
-                  } catch (error) {
-                    // Throw away the error
+                  // Remove the original entity if it was created on the device
+                  // using the SDK.
+                  if (metadata.isLocal()) {
+                    const deleteCacheRequest = new CacheRequest({
+                      method: RequestMethod.DELETE,
+                      url: url.format({
+                        protocol: this.client.protocol,
+                        host: this.client.host,
+                        pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                      }),
+                      properties: options.properties,
+                      timeout: options.timeout
+                    });
+                    await deleteCacheRequest.execute();
                   }
-                }
 
-                // Return the result of the sync operation.
-                return {
-                  _id: originalId,
-                  entity: entity,
-                  error: error
-                };
-              });
+                  // Return the result of the sync operation.
+                  return {
+                    _id: originalId,
+                    entity: entity
+                  };
+                })
+                .catch(async error => {
+                  if (!(error instanceof InsufficientCredentialsError)) {
+                    failedSyncEntities.push(syncEntity);
+                  }
+
+                  // If the credentials used to authenticate this request are
+                  // not authorized to run the operation then just remove the entity
+                  // from the sync table
+                  if (error instanceof InsufficientCredentialsError) {
+                    try {
+                      // Try and reset the state of the entity if the entity
+                      // is not local
+                      if (!metadata.isLocal()) {
+                        const getNetworkRequest = new NetworkRequest({
+                          method: RequestMethod.GET,
+                          authType: AuthType.Default,
+                          url: url.format({
+                            protocol: this.client.protocol,
+                            host: this.client.host,
+                            pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                          }),
+                          properties: options.properties,
+                          timeout: options.timeout,
+                          client: this.client
+                        });
+                        const originalEntity = await getNetworkRequest.execute().then(response => response.data);
+                        const putCacheRequest = new CacheRequest({
+                          method: RequestMethod.PUT,
+                          url: url.format({
+                            protocol: this.client.protocol,
+                            host: this.client.host,
+                            pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                          }),
+                          properties: options.properties,
+                          timeout: options.timeout,
+                          body: originalEntity
+                        });
+                        await putCacheRequest.execute();
+                      }
+                    } catch (error) {
+                      // Throw away the error
+                    }
+                  }
+
+                  // Return the result of the sync operation.
+                  return {
+                    _id: originalId,
+                    entity: entity,
+                    error: error
+                  };
+                });
             }
 
             return {

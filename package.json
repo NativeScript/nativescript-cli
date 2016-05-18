@@ -50,7 +50,6 @@
     "babel-register": "^6.7.2",
     "chai": "^3.1.0",
     "chai-as-promised": "^5.1.0",
-    "chai-spies": "^0.7.1",
     "del": "^2.2.0",
     "esdoc": "^0.4.7",
     "eslint": "^2.10.2",

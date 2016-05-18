@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import Client from './client';
 import { Query } from './query';
 import { Acl } from './acl';
@@ -377,14 +378,17 @@ export class User {
       timeout: options.timeout
     });
 
-    const promise = request.execute().catch(() => null).then(() => {
-      const isActive = this.isActive();
-      if (isActive) {
-        setActiveUser(this.client, null);
-      }
+    const promise = request.execute()
+      .catch(() => null)
+      .then(() => {
+        const isActive = this.isActive();
+        if (isActive) {
+          setActiveUser(this.client, null);
+        }
 
-      return null;
-    }).then(() => this);
+        return null;
+      })
+      .then(() => this);
 
     return promise;
   }
@@ -485,7 +489,7 @@ export class User {
       collectionName: 'identities'
     }, options);
 
-    const promise = Promise.resolve().then(() => {
+    let promise = Promise.resolve().then(() => {
       if (!identity) {
         throw new KinveyError('An identity is required to connect the user.');
       }
@@ -508,19 +512,23 @@ export class User {
         timeout: options.timeout
       });
       return request.execute();
-    }).then(response => {
-      if (response.data.length === 1) {
-        const helloSettings = {};
-        helloSettings[identity] = response.data[0].key || response.data[0].appId || response.data[0].clientId;
-        hello.init(helloSettings);
-        return hello(identity).login();
-      }
-
-      throw new KinveyError('Unsupported identity.');
-    }).then(() => {
-      const authResponse = hello(identity).getAuthResponse();
-      return this.connect(identity, authResponse, options);
     });
+
+    promise = promise
+      .then(response => {
+        if (response.data.length === 1) {
+          const helloSettings = {};
+          helloSettings[identity] = response.data[0].key || response.data[0].appId || response.data[0].clientId;
+          hello.init(helloSettings);
+          return hello(identity).login();
+        }
+
+        throw new KinveyError('Unsupported identity.');
+      })
+      .then(() => {
+        const authResponse = hello(identity).getAuthResponse();
+        return this.connect(identity, authResponse, options);
+      });
 
     return promise;
   }
@@ -556,30 +564,33 @@ export class User {
     data[socialIdentityAttribute] = socialIdentity;
     this.data = data;
 
-    const promise = Promise.resolve().then(() => {
-      const isActive = this.isActive();
+    const promise = Promise.resolve()
+      .then(() => {
+        const isActive = this.isActive();
 
-      if (isActive) {
-        options._identity = identity;
-        return this.update(data, options);
-      }
+        if (isActive) {
+          options._identity = identity;
+          return this.update(data, options);
+        }
 
-      return this.login(data, null, options);
-    }).catch(err => {
-      if (err instanceof NotFoundError) {
-        return this.signup(data, options).then(() => this.connect(identity, token, options));
-      }
+        return this.login(data, null, options);
+      })
+      .catch(err => {
+        if (err instanceof NotFoundError) {
+          return this.signup(data, options).then(() => this.connect(identity, token, options));
+        }
 
-      throw err;
-    }).then(() => {
-      setActiveSocialIdentity(this.client, {
-        identity: identity,
-        token: this[socialIdentityAttribute][identity],
-        redirectUri: options.redirectUri,
-        client: options.micClient
+        throw err;
+      })
+      .then(() => {
+        setActiveSocialIdentity(this.client, {
+          identity: identity,
+          token: this[socialIdentityAttribute][identity],
+          redirectUri: options.redirectUri,
+          client: options.micClient
+        });
+        return this;
       });
-      return this;
-    });
 
     return promise;
   }
@@ -648,37 +659,40 @@ export class User {
       state: true
     }, options);
 
-    const promise = Promise.resolve().then(() => {
-      if (options.state === true) {
-        const activeUser = User.getActiveUser(this.client);
-        if (activeUser) {
-          throw new ActiveUserError('An active user already exists. ' +
-            'Please logout the active user before you login.');
+    const promise = Promise.resolve()
+      .then(() => {
+        if (options.state === true) {
+          const activeUser = User.getActiveUser(this.client);
+          if (activeUser) {
+            throw new ActiveUserError('An active user already exists. ' +
+              'Please logout the active user before you login.');
+          }
         }
-      }
-    }).then(() => {
-      const request = new NetworkRequest({
-        method: RequestMethod.POST,
-        authType: AuthType.App,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: `/${usersNamespace}/${this.client.appKey}`
-        }),
-        data: result(data, 'toJSON', data),
-        properties: options.properties,
-        timeout: options.timeout
+      })
+      .then(() => {
+        const request = new NetworkRequest({
+          method: RequestMethod.POST,
+          authType: AuthType.App,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `/${usersNamespace}/${this.client.appKey}`
+          }),
+          data: result(data, 'toJSON', data),
+          properties: options.properties,
+          timeout: options.timeout
+        });
+        return request.execute();
+      })
+      .then(response => {
+        this.data = response.data;
+
+        if (options.state === true) {
+          setActiveUser(this.client, this.data);
+        }
+
+        return this;
       });
-      return request.execute();
-    }).then(response => {
-      this.data = response.data;
-
-      if (options.state === true) {
-        setActiveUser(this.client, this.data);
-      }
-
-      return this;
-    });
 
     return promise;
   }

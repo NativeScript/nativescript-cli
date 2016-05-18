@@ -10,8 +10,8 @@ import gulpWebpack from 'webpack-stream';
 gulp.task('lint', () => {
   const stream = gulp.src('src/**/*.js')
     .pipe(eslint())
-    .pipe(eslint.format());
-    // .pipe(eslint.failAfterError());
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
   return stream;
 });
 

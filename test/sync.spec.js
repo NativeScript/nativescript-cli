@@ -38,13 +38,13 @@ describe('Sync', function () {
 
   describe('count', function() {
     beforeEach(function() {
-      return this.sync.createSaveOperation(collection, {
+      return this.sync.addUpdateOperation(collection, {
         _id: randomString()
       });
     });
 
     beforeEach(function() {
-      return this.sync.createSaveOperation(randomString(), {
+      return this.sync.addUpdateOperation(randomString(), {
         _id: randomString()
       });
     });
@@ -64,18 +64,18 @@ describe('Sync', function () {
     });
   });
 
-  describe('createSaveOperation', function() {
+  describe('addCreateOperation', function() {
     it('should respond', function() {
-      expect(Sync).to.respondTo('createSaveOperation');
+      expect(Sync).to.respondTo('addCreateOperation');
     });
 
     it('should reject the promise when a name is not provided', function() {
-      const promise = this.sync.createSaveOperation();
+      const promise = this.sync.addCreateOperation();
       return expect(promise).to.be.rejectedWith(SyncError);
     });
 
     it('should reject the promise when an entity does not contain and _id', function() {
-      const promise = this.sync.createSaveOperation(collection, {
+      const promise = this.sync.addCreateOperation(collection, {
         prop: randomString()
       });
       return expect(promise).to.be.rejectedWith(SyncError);
@@ -85,7 +85,7 @@ describe('Sync', function () {
       const entity = {
         _id: randomString()
       };
-      const promise = this.sync.createSaveOperation(collection, entity);
+      const promise = this.sync.addCreateOperation(collection, entity);
       return expect(promise).to.eventually.deep.equal(entity);
     });
 
@@ -93,7 +93,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      const promise = this.sync.createSaveOperation(collection, entities);
+      const promise = this.sync.addCreateOperation(collection, entities);
       return expect(promise).to.eventually.deep.equal(entities);
     });
 
@@ -101,7 +101,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      return this.sync.createSaveOperation(collection, entities).then(() => {
+      return this.sync.addCreateOperation(collection, entities).then(() => {
         const query = new Query();
         query.equalTo('collection', collection);
         return this.sync.count(query);
@@ -111,18 +111,18 @@ describe('Sync', function () {
     });
   });
 
-  describe('createDeleteOperation', function() {
+  describe('addDeleteOperation', function() {
     it('should respond', function() {
-      expect(Sync).to.respondTo('createDeleteOperation');
+      expect(Sync).to.respondTo('addDeleteOperation');
     });
 
     it('should reject the promise when a name is not provided', function() {
-      const promise = this.sync.createDeleteOperation();
+      const promise = this.sync.addDeleteOperation();
       return expect(promise).to.be.rejectedWith(SyncError);
     });
 
     it('should reject the promise when an entity does not contain and _id', function() {
-      const promise = this.sync.createDeleteOperation(collection, {
+      const promise = this.sync.addDeleteOperation(collection, {
         prop: randomString()
       });
       return expect(promise).to.be.rejectedWith(SyncError);
@@ -132,7 +132,7 @@ describe('Sync', function () {
       const entity = {
         _id: randomString()
       };
-      const promise = this.sync.createDeleteOperation(collection, entity);
+      const promise = this.sync.addDeleteOperation(collection, entity);
       return expect(promise).to.eventually.deep.equal(entity);
     });
 
@@ -140,7 +140,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      const promise = this.sync.createDeleteOperation(collection, entities);
+      const promise = this.sync.addDeleteOperation(collection, entities);
       return expect(promise).to.eventually.deep.equal(entities);
     });
 
@@ -148,7 +148,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      return this.sync.createDeleteOperation(collection, entities).then(() => {
+      return this.sync.addDeleteOperation(collection, entities).then(() => {
         const query = new Query();
         query.equalTo('collection', collection);
         return this.sync.count(query);
@@ -165,6 +165,7 @@ describe('Sync', function () {
 
     it('should save an entity to the network', async function() {
       const store = new DataStore(collection);
+      store.offline();
       let entity = {
         prop: randomString()
       };
@@ -178,7 +179,7 @@ describe('Sync', function () {
         });
 
       const query = new Query();
-      query.equalTo('collection', store.name);
+      query.equalTo('collection', store.collection);
       const result = await this.sync.push(query);
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
@@ -188,6 +189,7 @@ describe('Sync', function () {
 
     it('should delete an entity from the network', async function() {
       const store = new DataStore(collection);
+      store.offline();
       let entity = {
         _id: randomString(),
         prop: randomString()
@@ -201,7 +203,7 @@ describe('Sync', function () {
         .reply(204);
 
       const query = new Query();
-      query.equalTo('collection', store.name);
+      query.equalTo('collection', store.collection);
       const result = await this.sync.push(query);
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
@@ -210,13 +212,14 @@ describe('Sync', function () {
 
     it('should not delete an entity on the network if it was created locally', async function() {
       const store = new DataStore(collection);
+      store.offline();
       let entity = {
         prop: randomString()
       };
       entity = await store.save(entity);
       await store.removeById(entity._id);
       const query = new Query();
-      query.equalTo('collection', store.name);
+      query.equalTo('collection', store.collection);
       const result = await this.sync.push(query);
       expect(result).to.be.an('array');
       expect(result).to.have.length(0);

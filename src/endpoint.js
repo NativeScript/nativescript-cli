@@ -1,4 +1,4 @@
-import { Client } from './client';
+import Client from './client';
 import { RequestMethod, AuthType } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';

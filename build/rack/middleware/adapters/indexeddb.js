@@ -30,7 +30,10 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var indexedDB = global.indexedDB || global.mozIndexedDB || global.webkitIndexedDB || global.msIndexedDB;
+if (typeof window !== 'undefined') {
+  require('indexeddbshim'); // eslint-disable-line global-require
+  global.forceIndexedDB = global.shimIndexedDB;
+}
 
 var TransactionMode = {
   ReadWrite: 'readwrite',
@@ -68,7 +71,7 @@ var IndexedDB = function () {
             switch (_context.prev = _context.next) {
               case 0:
                 _context.next = 2;
-                return (0, _idbFactory.open)(name, 1, function (e) {
+                return (0, _idbFactory.open)(this.name, 1, function (e) {
                   if (e.oldVersion < 1) {
                     e.target.result.createObjectStore(collection, { keyPath: '_id' });
                   }
@@ -96,130 +99,190 @@ var IndexedDB = function () {
     }()
   }, {
     key: 'find',
-    value: function find(collection) {
-      var _this = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(collection) {
+        var txn, store, request, response;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return this.createTransaction(collection);
 
-      var promise = new Promise(function (resolve, reject) {
-        if (!collection) {
-          return reject(new _errors.KinveyError('A collection was not provided.'));
-        }
+              case 2:
+                txn = _context2.sent;
+                store = txn.objectStore(collection);
+                request = store.openCursor();
+                response = [];
+                _context2.next = 8;
+                return (0, _idbRequest.requestCursor)(request, function (cursor) {
+                  response.push(cursor.value);
+                  cursor.continue();
+                });
 
-        return _this.openTransaction(collection, false, function (store) {
-          var request = store.openCursor();
-          var response = [];
+              case 8:
+                return _context2.abrupt('return', response);
 
-          request.onsuccess = function (e) {
-            var cursor = e.target.result;
-
-            if (cursor) {
-              response.push(cursor.value);
-              return cursor.continue();
+              case 9:
+              case 'end':
+                return _context2.stop();
             }
-
-            return resolve(response);
-          };
-
-          request.onerror = function (e) {
-            reject(new _errors.KinveyError('An error occurred while fetching data from the ' + collection + ' ' + ('collection on the ' + _this.name + ' indexedDB database. Received the error code ' + e.target.errorCode + '.')));
-          };
-        }, function (error) {
-          if (error instanceof _errors.NotFoundError) {
-            return resolve([]);
           }
+        }, _callee2, this);
+      }));
 
-          return reject(error);
-        });
-      });
+      function find(_x4) {
+        return ref.apply(this, arguments);
+      }
 
-      return promise;
-    }
+      return find;
+    }()
   }, {
     key: 'findById',
-    value: function findById(collection, id) {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(collection, id) {
+        var txn, store, request, entity;
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                _context3.next = 2;
+                return this.createTransaction(collection);
 
-      var promise = new Promise(function (resolve, reject) {
-        _this2.openTransaction(collection, false, function (store) {
-          var request = store.get(id);
+              case 2:
+                txn = _context3.sent;
+                store = txn.objectStore(collection);
+                request = store.get(id);
+                entity = undefined;
+                _context3.next = 8;
+                return (0, _idbRequest.requestCursor)(request, function (item, stop) {
+                  entity = item;
+                  stop();
+                });
 
-          request.onsuccess = function (e) {
-            var entity = e.target.result;
+              case 8:
+                _context3.next = 10;
+                return (0, _idbRequest.requestTransaction)(txn);
 
-            if (entity) {
-              return resolve(entity);
+              case 10:
+                return _context3.abrupt('return', entity);
+
+              case 11:
+              case 'end':
+                return _context3.stop();
             }
-
-            return reject(new _errors.NotFoundError('An entity with _id = ' + id + ' was not found in the ' + collection + ' ' + ('collection on the ' + _this2.name + ' indexedDB database.')));
-          };
-
-          request.onerror = function (e) {
-            reject(new _errors.KinveyError('An error occurred while retrieving an entity with _id = ' + id + ' ' + ('from the ' + collection + ' collection on the ' + _this2.name + ' indexedDB database. ') + ('Received the error code ' + e.target.errorCode + '.')));
-          };
-        }, function (error) {
-          if (error instanceof _errors.NotFoundError) {
-            return reject(new _errors.NotFoundError('An entity with _id = ' + id + ' was not found in the ' + collection + ' ' + ('collection on the ' + _this2.name + ' indexedDB database.')));
           }
+        }, _callee3, this);
+      }));
 
-          return reject(error);
-        });
-      });
+      function findById(_x5, _x6) {
+        return ref.apply(this, arguments);
+      }
 
-      return promise;
-    }
+      return findById;
+    }()
   }, {
     key: 'save',
-    value: function save(collection, entities) {
-      var promise = this.createTransaction(collection, true).then(function (txn) {
-        var store = txn.objectStore(collection);
-        var singular = false;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(collection, entities) {
+        var txn, store, singular, promises;
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                _context4.next = 2;
+                return this.createTransaction(collection, true);
 
-        if (!(0, _isArray2.default)(entities)) {
-          singular = true;
-          entities = [entities];
-        }
+              case 2:
+                txn = _context4.sent;
+                store = txn.objectStore(collection);
+                singular = false;
 
-        var promises = (0, _map2.default)(entities, function (entity) {
-          return (0, _idbRequest.request)(store.put(entity));
-        });
-        promises.push((0, _idbRequest.requestTransaction)(txn));
 
-        return Promise.all(promises).then(function (results) {
-          return singular ? results[0] : results;
-        });
-      });
+                if (!(0, _isArray2.default)(entities)) {
+                  singular = true;
+                  entities = [entities];
+                }
 
-      return promise;
-    }
+                promises = (0, _map2.default)(entities, function (entity) {
+                  return (0, _idbRequest.request)(store.put(entity));
+                });
+
+                promises.push((0, _idbRequest.requestTransaction)(txn));
+                _context4.next = 10;
+                return Promise.all(promises);
+
+              case 10:
+                return _context4.abrupt('return', singular ? entities[0] : entities);
+
+              case 11:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function save(_x7, _x8) {
+        return ref.apply(this, arguments);
+      }
+
+      return save;
+    }()
   }, {
     key: 'removeById',
-    value: function removeById(collection, id) {
-      var _this3 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(collection, id) {
+        var txn, store, request, entity;
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _context5.next = 2;
+                return this.createTransaction(collection, true);
 
-      var promise = new Promise(function (resolve, reject) {
-        _this3.openTransaction(collection, true, function (store) {
-          var request = store.transaction;
-          var doc = store.get(id);
-          store.delete(id);
+              case 2:
+                txn = _context5.sent;
+                store = txn.objectStore(collection);
+                request = store.get(id);
+                entity = undefined;
+                _context5.next = 8;
+                return (0, _idbRequest.requestCursor)(request, function (item, stop) {
+                  entity = item;
+                  stop();
+                });
 
-          request.oncomplete = function () {
-            if (!doc.result) {
-              return reject(new _errors.NotFoundError('An entity with id = ' + id + ' was not found in the ' + collection + ' ' + ('collection on the ' + _this3.name + ' indexedDB database.')));
+              case 8:
+                if (!entity) {
+                  _context5.next = 12;
+                  break;
+                }
+
+                store.delete(id);
+                _context5.next = 12;
+                return (0, _idbRequest.requestTransaction)(txn);
+
+              case 12:
+                return _context5.abrupt('return', entity);
+
+              case 13:
+              case 'end':
+                return _context5.stop();
             }
+          }
+        }, _callee5, this);
+      }));
 
-            return resolve(doc.result);
-          };
+      function removeById(_x9, _x10) {
+        return ref.apply(this, arguments);
+      }
 
-          request.onerror = function (e) {
-            reject(new _errors.KinveyError('An error occurred while deleting an entity with id = ' + id + ' ' + ('in the ' + collection + ' collection on the ' + _this3.name + ' indexedDB database. ') + ('Received the error code ' + e.target.errorCode + '.')));
-          };
-        }, reject);
-      });
-
-      return promise;
-    }
+      return removeById;
+    }()
   }], [{
     key: 'isSupported',
     value: function isSupported() {
+      var indexedDB = global.focedIndexedDB || global.indexedDB || global.webkitIndexedDB || global.mozIndexedDB || global.msIndexedDB || global.shimIndexedDB;
       return !!indexedDB;
     }
   }]);

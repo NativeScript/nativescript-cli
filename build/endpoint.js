@@ -8,6 +8,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _client = require('./client');
 
+var _client2 = _interopRequireDefault(_client);
+
 var _enums = require('./enums');
 
 var _errors = require('./errors');
@@ -68,13 +70,13 @@ var CustomEndpoint = function () {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(endpoint, args) {
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-        var request;
+        var request, response;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 options = (0, _assign2.default)({
-                  client: _client.Client.sharedInstance()
+                  client: _client2.default.sharedInstance()
                 }, options);
 
                 if (endpoint) {
@@ -106,11 +108,14 @@ var CustomEndpoint = function () {
                   timeout: options.timeout,
                   client: options.client
                 });
-                return _context.abrupt('return', request.execute().then(function (response) {
-                  return response.data;
-                }));
+                _context.next = 8;
+                return request.execute();
 
-              case 7:
+              case 8:
+                response = _context.sent;
+                return _context.abrupt('return', response.data);
+
+              case 10:
               case 'end':
                 return _context.stop();
             }
