@@ -265,6 +265,21 @@ export default class IndexedDB {
     });
   }
 
+  clear() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(this.name);
+
+      request.onsuccess = () => {
+        resolve();
+      };
+
+      request.onerror = (e) => {
+        reject(new KinveyError(`An error occurred while clearing the ${this.name} indexedDB database.`
+            + ` Received the error code ${e.target.errorCode}.`));
+      };
+    });
+  }
+
   static isSupported() {
     return !!indexedDB;
   }

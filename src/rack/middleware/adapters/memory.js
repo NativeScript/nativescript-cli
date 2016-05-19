@@ -38,7 +38,7 @@ export class Memory {
   find(collection) {
     return queue.add(() => {
       const promise = Promise.resolve().then(() => {
-        const entities = this.cache.get(`${this.name}${collection}`);
+        const entities = this.cache.get(collection);
 
         if (entities) {
           try {
@@ -94,7 +94,7 @@ export class Memory {
         existingEntities[id] = entities[id];
       });
 
-      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(existingEntities)));
+      this.cache.set(collection, JSON.stringify(values(existingEntities)));
       entities = values(entities);
       return singular ? entities[0] : entities;
     });
@@ -111,9 +111,18 @@ export class Memory {
       }
 
       delete entities[id];
-      this.cache.set(`${this.name}${collection}`, JSON.stringify(values(entities)));
+      this.cache.set(collection, JSON.stringify(values(entities)));
 
       return entity;
+    });
+  }
+
+  async clear(collection) {
+    return this.find(collection).then(entities => {
+      delete caches[this.name];
+      this.cache = new MemoryCache();
+      caches[this.name] = this.cache;
+      return entities;
     });
   }
 

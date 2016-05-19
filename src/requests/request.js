@@ -420,10 +420,10 @@ export class KinveyRequest extends Request {
     super.url = urlString;
 
     const pathname = global.escape(url.parse(urlString).pathname);
-    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
-    const { appKey, collectionName, entityId } = pattern.match(pathname) || {};
+    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
+    const { appKey, collection, entityId } = pattern.match(pathname) || {};
     this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-    this.collectionName = !!collectionName ? global.unescape(collectionName) : collectionName;
+    this.collection = !!collection ? global.unescape(collection) : collection;
     this.entityId = !!entityId ? global.unescape(entityId) : entityId;
   }
 

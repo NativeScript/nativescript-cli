@@ -20,28 +20,13 @@ describe('DataStore', function() {
     const store = new DataStore(collection);
 
     nock(this.client.baseUrl)
-      .filteringPath(path => {
-        if (path.indexOf(store.pathname) === 0) {
-          return store.pathname;
-        }
-
-        return path;
-      })
-      .delete(store.pathname)
-      .query(true)
-      .times(Infinity)
-      .reply(200, null, {
-        'content-type': 'application/json'
-      });
-
-    nock(this.client.baseUrl)
       .get(`${store.pathname}/_count`)
       .query(true)
       .reply(200, { count: 0 }, {
         'content-type': 'application/json'
       });
 
-    return store.remove().then(() => store.count()).then(count => {
+    return store.clear().then(() => store.count()).then(count => {
       expect(count).to.equal(0);
     });
   });

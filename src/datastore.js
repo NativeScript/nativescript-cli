@@ -484,14 +484,16 @@ export class DataStore {
             data = [data];
           }
 
-          await Promise.all(map(data, entity => this.sync.addCreateOperation(this.collection, entity, options)));
+          if (data.length > 0) {
+            await Promise.all(map(data, entity => this.sync.addCreateOperation(this.collection, entity, options)));
 
-          if (this.isOnline()) {
-            const ids = Object.keys(keyBy(data, idAttribute));
-            const query = new Query().contains('entityId', ids);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            if (this.isOnline()) {
+              const ids = Object.keys(keyBy(data, idAttribute));
+              const query = new Query().contains('entityId', ids);
+              let push = await this.push(query, options);
+              push = filter(push, result => !result.error);
+              data = map(push, result => result.entity);
+            }
           }
 
           observer.next(singular ? data[0] : data);
@@ -553,14 +555,16 @@ export class DataStore {
             data = [data];
           }
 
-          await Promise.all(map(data, entity => this.sync.addUpdateOperation(this.collection, entity, options)));
+          if (data.length > 0) {
+            await Promise.all(map(data, entity => this.sync.addUpdateOperation(this.collection, entity, options)));
 
-          if (this.isOnline()) {
-            const ids = Object.keys(keyBy(data, idAttribute));
-            const query = new Query().contains('entityId', ids);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            if (this.isOnline()) {
+              const ids = Object.keys(keyBy(data, idAttribute));
+              const query = new Query().contains('entityId', ids);
+              let push = await this.push(query, options);
+              push = filter(push, result => !result.error);
+              data = map(push, result => result.entity);
+            }
           }
 
           observer.next(singular ? data[0] : data);
@@ -615,32 +619,34 @@ export class DataStore {
               query: options.query
             }),
             properties: options.properties,
-            query: query, // eslint-disable-line no-use-before-define
+            query: query,
             timeout: options.timeout
           });
 
           const response = await request.execute();
           let data = response.data;
 
-          // Clear local data from the sync table
-          const localData = filter(data, entity => {
-            const metadata = new Metadata(entity);
-            return metadata.isLocal();
-          });
-          const query = new Query().contains('entityId', Object.keys(keyBy(localData, idAttribute)));
-          await this.sync.clear(query, options);
+          if (data.length > 0) {
+            // Clear local data from the sync table
+            const localData = filter(data, entity => {
+              const metadata = new Metadata(entity);
+              return metadata.isLocal();
+            });
+            const query = new Query().contains('entityId', Object.keys(keyBy(localData, idAttribute)));
+            await this.sync.clear(query, options);
 
-          // Create delete operations for non local data in the sync table
-          const syncData = xorWith(data, localData,
-            (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
-          await this.sync.addDeleteOperation(this.collection, syncData, options);
+            // Create delete operations for non local data in the sync table
+            const syncData = xorWith(data, localData,
+              (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
+            await this.sync.addDeleteOperation(this.collection, syncData, options);
 
-          if (this.isOnline()) {
-            const ids = Object.keys(keyBy(syncData, idAttribute));
-            const query = new Query().contains('entityId', ids);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            if (this.isOnline()) {
+              const ids = Object.keys(keyBy(syncData, idAttribute));
+              const query = new Query().contains('entityId', ids);
+              let push = await this.push(query, options);
+              push = filter(push, result => !result.error);
+              data = map(push, result => result.entity);
+            }
           }
 
           observer.next(data);
@@ -693,21 +699,24 @@ export class DataStore {
 
           const response = await request.execute();
           let data = response.data;
-          const metadata = new Metadata(data);
 
-          if (metadata.isLocal()) {
-            const query = new Query();
-            query.equalTo('entityId', data[idAttribute]);
-            await this.sync.clear(this.collection, query, options);
-          } else {
-            await this.sync.addDeleteOperation(this.collection, data, options);
-          }
+          if (data) {
+            const metadata = new Metadata(data);
 
-          if (this.isOnline()) {
-            const query = new Query().equalTo('entityId', data[idAttribute]);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            if (metadata.isLocal()) {
+              const query = new Query();
+              query.equalTo('entityId', data[idAttribute]);
+              await this.sync.clear(this.collection, query, options);
+            } else {
+              await this.sync.addDeleteOperation(this.collection, data, options);
+            }
+
+            if (this.isOnline()) {
+              const query = new Query().equalTo('entityId', data[idAttribute]);
+              let push = await this.push(query, options);
+              push = filter(push, result => !result.error);
+              data = map(push, result => result.entity);
+            }
           }
 
           observer.next(data);
@@ -726,6 +735,47 @@ export class DataStore {
           });
           const response = request.execute();
           observer.next(response.data);
+        }
+      } catch (error) {
+        return observer.error(error);
+      }
+
+      return observer.complete();
+    });
+
+    return stream::toPromise();
+  }
+
+  clear(query, options = {}) {
+    const stream = Observable.create(async observer => {
+      try {
+        if (this.isCacheEnabled()) {
+          const request = new CacheRequest({
+            method: RequestMethod.DELETE,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: this.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            query: query,
+            timeout: options.timeout
+          });
+          const response = await request.execute();
+          const data = response.data;
+
+          if (data.length > 0) {
+            // Clear local data from the sync table
+            const localData = filter(data, entity => {
+              const metadata = new Metadata(entity);
+              return metadata.isLocal();
+            });
+            const query = new Query().contains('entityId', Object.keys(keyBy(localData, idAttribute)));
+            await this.sync.clear(query, options);
+          }
+
+          observer.next(data);
         }
       } catch (error) {
         return observer.error(error);
@@ -887,7 +937,8 @@ export class DataStore {
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
-          pathname: this.pathname
+          pathname: this.pathname,
+          query: options.query
         }),
         properties: options.properties,
         data: entities,
@@ -921,5 +972,27 @@ export class DataStore {
     }
 
     return store;
+  }
+
+  /**
+   * Deletes the database.
+   */
+  static async clear(options = {}) {
+    const client = options.client || Client.sharedInstance();
+    const pathname = `/${appdataNamespace}/${client.appKey}`;
+
+    const request = new CacheRequest({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: pathname,
+        query: options.query
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    const response = await request.execute();
+    return response.data;
   }
 }

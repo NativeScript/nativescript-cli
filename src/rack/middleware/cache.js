@@ -164,82 +164,74 @@ export class DB {
   }
 
   async save(collection, entities = []) {
-    try {
-      let singular = false;
+    let singular = false;
 
-      if (!entities) {
-        return null;
-      }
-
-      if (!isArray(entities)) {
-        singular = true;
-        entities = [entities];
-      }
-
-      entities = map(entities, entity => {
-        let id = entity[idAttribute];
-        const kmd = entity[kmdAttribute] || {};
-
-        if (!id) {
-          id = this.generateObjectId();
-          kmd.local = true;
-        }
-
-        entity[idAttribute] = id;
-        entity[kmdAttribute] = kmd;
-        return entity;
-      });
-
-      entities = await this.adapter.save(collection, entities);
-
-      if (singular && entities.length > 0) {
-        return entities[0];
-      }
-
-      return entities;
-    } catch (error) {
-      throw error;
+    if (!entities) {
+      return null;
     }
+
+    if (!isArray(entities)) {
+      singular = true;
+      entities = [entities];
+    }
+
+    entities = map(entities, entity => {
+      let id = entity[idAttribute];
+      const kmd = entity[kmdAttribute] || {};
+
+      if (!id) {
+        id = this.generateObjectId();
+        kmd.local = true;
+      }
+
+      entity[idAttribute] = id;
+      entity[kmdAttribute] = kmd;
+      return entity;
+    });
+
+    entities = await this.adapter.save(collection, entities);
+
+    if (singular && entities.length > 0) {
+      return entities[0];
+    }
+
+    return entities;
   }
 
   async remove(collection, query) {
-    try {
-      if (query && !(query instanceof Query)) {
-        query = new Query(query);
-      }
-
-      // Removing should not take the query sort, limit, and skip into account.
-      if (query) {
-        query.sort = null;
-        query.limit = null;
-        query.skip = 0;
-      }
-
-      const entities = await this.find(collection, query);
-      const responses = await Promise.all(entities.map(entity => this.removeById(collection, entity[idAttribute])));
-      return reduce(responses, (entities, entity) => {
-        entities.push(entity);
-        return entities;
-      }, []);
-    } catch (error) {
-      throw error;
+    if (query && !(query instanceof Query)) {
+      query = new Query(query);
     }
+
+    // Removing should not take the query sort, limit, and skip into account.
+    if (query) {
+      query.sort = null;
+      query.limit = null;
+      query.skip = 0;
+    }
+
+    const entities = await this.find(collection, query);
+    const responses = await Promise.all(entities.map(entity => this.removeById(collection, entity[idAttribute])));
+    return reduce(responses, (entities, entity) => {
+      entities.push(entity);
+      return entities;
+    }, []);
   }
 
   async removeById(collection, id) {
-    try {
-      if (!id) {
-        return undefined;
-      }
-
-      if (!isString(id)) {
-        throw new KinveyError('id must be a string', id);
-      }
-
-      return this.adapter.removeById(collection, id);
-    } catch (error) {
-      throw error;
+    if (!id) {
+      return undefined;
     }
+
+    if (!isString(id)) {
+      throw new KinveyError('id must be a string', id);
+    }
+
+    return this.adapter.removeById(collection, id);
+  }
+
+  async clear() {
+    return this.adapter.clear();
   }
 }
 
@@ -254,31 +246,31 @@ export class CacheMiddleware extends KinveyMiddleware {
 
   async handle(request) {
     request = await super.handle(request);
-    const { method, query, body, collectionName, entityId } = request;
+    const { method, query, body, collection, entityId } = request;
     const db = new DB(request.appKey, this.adapters);
     let data;
 
     if (method === RequestMethod.GET) {
       if (entityId) {
         if (entityId === '_count') {
-          data = await db.count(collectionName, query);
+          data = await db.count(collection, query);
         } else if (entityId === '_group') {
-          data = await db.group(collectionName, body);
+          data = await db.group(collection, body);
         } else {
-          data = await db.findById(collectionName, request.entityId);
+          data = await db.findById(collection, request.entityId);
         }
       } else {
-        data = await db.find(collectionName, query);
+        data = await db.find(collection, query);
       }
     } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
-      data = await db.save(collectionName, body);
+      data = await db.save(collection, body);
     } else if (method === RequestMethod.DELETE) {
-      if (collectionName && entityId) {
-        data = await db.removeById(collectionName, entityId);
-      } else if (!collectionName) {
+      if (collection && entityId) {
+        data = await db.removeById(collection, entityId);
+      } else if (!collection) {
         data = await db.clear();
       } else {
-        data = await db.remove(collectionName, query);
+        data = await db.remove(collection, query);
       }
     }
 
@@ -287,6 +279,10 @@ export class CacheMiddleware extends KinveyMiddleware {
       headers: {},
       data: data
     };
+
+    if (!data) {
+      request.response.statusCode = StatusCode.Empty;
+    }
 
     return request;
   }

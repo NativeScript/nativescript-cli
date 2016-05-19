@@ -82,6 +82,10 @@ export class LocalStorage {
     });
   }
 
+  async clear() {
+    throw new Error('unsupported');
+  }
+
   static isSupported() {
     if (localStorage) {
       const item = 'testLocalStorageSupport';

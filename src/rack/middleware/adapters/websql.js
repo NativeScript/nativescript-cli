@@ -168,6 +168,31 @@ export class WebSQL {
     return promise;
   }
 
+  clear() {
+    const promise = this.openTransaction(
+      masterCollectionName,
+      'SELECT name AS value FROM #{collection} WHERE type = ?',
+      ['table'],
+      false
+    );
+
+    return promise.then(response => {
+      const tables = response.result;
+
+      // If there are no tables, return.
+      if (tables.length === 0) {
+        return null;
+      }
+
+      // Drop all tables. Filter tables first to avoid attempting to delete
+      // system tables (which will fail).
+      const queries = tables
+        .filter(table => (/^[a-zA-Z0-9\-]{1,128}/).test(table))
+        .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
+      return this.openTransaction(masterCollectionName, queries, null, true);
+    }).then(() => null);
+  }
+
   static isSupported() {
     return !!webSQL;
   }

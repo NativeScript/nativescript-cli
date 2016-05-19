@@ -388,6 +388,7 @@ export class User {
 
         return null;
       })
+      .then(() => DataStore.clear({ client: this.client }))
       .then(() => this);
 
     return promise;

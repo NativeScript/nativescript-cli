@@ -25,6 +25,7 @@ import isPlainObject from 'lodash/isPlainObject';
 const StatusCode = {
   Ok: 200,
   Created: 201,
+  Empty: 204,
   RedirectTemporarily: 301,
   RedirectPermanetly: 302,
   NotFound: 404,
