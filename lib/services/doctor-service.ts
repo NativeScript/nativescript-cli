@@ -7,6 +7,7 @@ import * as helpers from "../common/helpers";
 let clui = require("clui");
 
 class DoctorService implements IDoctorService {
+	private static PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static MIN_SUPPORTED_POD_VERSION = "0.38.2";
 	private static DarwinSetupScriptLocation = path.join(__dirname, "..", "..", "setup", "mac-startup-shell-script.sh");
 	private static DarwinSetupDocsLink = "https://docs.nativescript.org/start/ns-setup-os-x";
@@ -17,6 +18,7 @@ class DoctorService implements IDoctorService {
 
 	constructor(private $analyticsService: IAnalyticsService,
 		private $androidToolsInfo: IAndroidToolsInfo,
+		private $cocoapodsService: ICocoaPodsService,
 		private $hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $progressIndicator: IProgressIndicator,
@@ -187,7 +189,7 @@ class DoctorService implements IDoctorService {
 			let iosDir = path.join(projDir, "node_modules", "tns-ios", "framework");
 			this.$fs.writeFile(
 				path.join(iosDir, "Podfile"),
-				"pod 'AFNetworking', '~> 1.0'\n"
+				`${this.$cocoapodsService.getPodfileHeader(DoctorService.PROJECT_NAME_PLACEHOLDER)}pod 'AFNetworking', '~> 1.0'${this.$cocoapodsService.getPodfileFooter()}`
 			).wait();
 
 			spinner.message("Verifying CocoaPods. This may take some time, please be patient.");
@@ -207,7 +209,7 @@ class DoctorService implements IDoctorService {
 				return true;
 			}
 
-			return !(this.$fs.exists(path.join(iosDir, "__PROJECT_NAME__.xcworkspace")).wait());
+			return !(this.$fs.exists(path.join(iosDir, `${DoctorService.PROJECT_NAME_PLACEHOLDER}.xcworkspace`)).wait());
 		} catch (err) {
 			this.$logger.trace(`verifyCocoaPods error: ${err}`);
 			return true;

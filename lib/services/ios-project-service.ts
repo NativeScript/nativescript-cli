@@ -27,6 +27,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	constructor($projectData: IProjectData,
 		$fs: IFileSystem,
 		private $childProcess: IChildProcess,
+		private $cocoapodsService: ICocoaPodsService,
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -705,8 +706,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					projectPodFileContent = this.$fs.exists(this.projectPodFilePath).wait() ? this.$fs.readText(this.projectPodFilePath).wait() : "";
 
 				if (!~projectPodFileContent.indexOf(pluginPodFilePreparedContent)) {
-					let podFileHeader = `use_frameworks!${os.EOL}${os.EOL}target "${this.$projectData.projectName}" do${os.EOL}`,
-						podFileFooter = `${os.EOL}end`;
+					let podFileHeader = this.$cocoapodsService.getPodfileHeader(this.$projectData.projectName),
+						podFileFooter = this.$cocoapodsService.getPodfileFooter();
 
 					if (_.startsWith(projectPodFileContent, podFileHeader)) {
 						projectPodFileContent = projectPodFileContent.substr(podFileHeader.length);
