@@ -766,13 +766,11 @@ export class DataStore {
           const data = response.data;
 
           if (data.length > 0) {
-            // Clear local data from the sync table
-            const localData = filter(data, entity => {
-              const metadata = new Metadata(entity);
-              return metadata.isLocal();
-            });
-            const query = new Query().contains('entityId', Object.keys(keyBy(localData, idAttribute)));
-            await this.sync.clear(query, options);
+            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(data, idAttribute)));
+            await this.sync.clear(syncQuery, options);
+          } else if (!query) {
+            const syncQuery = new Query().equalTo('collection', this.collection);
+            await this.sync.clear(syncQuery, options);
           }
 
           observer.next(data);
