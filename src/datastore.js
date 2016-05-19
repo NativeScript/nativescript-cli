@@ -3,7 +3,7 @@ import { KinveyError, NotFoundError } from './errors';
 import CacheRequest from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
-import { AtuhType, RequestMethod } from './requests/request';
+import { AuthType, RequestMethod } from './requests/request';
 import { Query } from './query';
 import { Observable } from 'rxjs/Observable';
 import { toPromise } from 'rxjs/operator/toPromise';
