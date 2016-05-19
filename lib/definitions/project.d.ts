@@ -106,3 +106,19 @@ interface ITestExecutionService {
 	startKarmaServer(platform: string): IFuture<void>;
 }
 
+/**
+ * Describes a service used to facilitate communication with CocoaPods
+ */
+interface ICocoaPodsService {
+	/**
+	 * Get the header needed for the beginning of every Podfile
+	 * @param {string} targetName The name of the target (usually the same as the project's name).
+	 * @return {string} The header which needs to be placed at the beginning of a Podfile.
+	 */
+	getPodfileHeader(targetName: string): string;
+	/**
+	 * Get the footer needed for the end of every Podfile
+	 * @return {string} The footer which needs to be placed at the end of a Podfile.
+	 */
+	getPodfileFooter(): string;
+}
