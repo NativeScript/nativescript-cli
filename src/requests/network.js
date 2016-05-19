@@ -1,7 +1,6 @@
-import { KinveyRequest } from './request';
+import { RequestMethod, AuthType, KinveyRequest } from './request';
 import { NetworkRack } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
-import { RequestMethod, AuthType } from '../enums';
 import { Response } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
 import url from 'url';

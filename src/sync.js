@@ -1,4 +1,4 @@
-import { RequestMethod, AuthType } from './enums';
+import { RequestMethod, AuthType } from './requests/request';
 import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors';
 import { Metadata } from './metadata';
 import CacheRequest from './requests/cache';

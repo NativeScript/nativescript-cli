@@ -1,4 +1,3 @@
-import { RequestMethod, AuthType } from '../enums';
 import { RequestProperties } from './properties';
 import { KinveyRack } from '../rack/rack';
 import Client from '../client';
@@ -16,6 +15,35 @@ import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 const Device = global.KinveyDevice;
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+
+/**
+ * Enum for Auth types.
+ */
+const AuthType = {
+  All: 'All',
+  App: 'App',
+  Basic: 'Basic',
+  Default: 'Default',
+  Master: 'Master',
+  None: 'None',
+  Session: 'Session'
+};
+Object.freeze(AuthType);
+export { AuthType };
+
+/**
+ * @private
+ * Enum for Request Methods.
+ */
+const RequestMethod = {
+  GET: 'GET',
+  POST: 'POST',
+  PATCH: 'PATCH',
+  PUT: 'PUT',
+  DELETE: 'DELETE'
+};
+Object.freeze(RequestMethod);
+export { RequestMethod };
 
 const Auth = {
   /**

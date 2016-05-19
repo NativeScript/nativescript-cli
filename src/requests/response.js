@@ -1,4 +1,3 @@
-import { StatusCode } from '../enums';
 import {
   FeatureUnavailableError,
   IncompleteRequestBodyError,
@@ -18,6 +17,21 @@ import assign from 'lodash/assign';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
+
+/**
+ * @provate
+ * Enum for Status Codes.
+ */
+const StatusCode = {
+  Ok: 200,
+  Created: 201,
+  RedirectTemporarily: 301,
+  RedirectPermanetly: 302,
+  NotFound: 404,
+  ServerError: 500
+};
+Object.freeze(StatusCode);
+export { StatusCode };
 
 /**
  * @private

@@ -1,9 +1,8 @@
 /* eslint-disable no-underscore-dangle */
-import { KinveyRequest } from './request';
+import { KinveyRequest, RequestMethod } from './request';
 import CacheRequest from './cache';
 import { NetworkRequest } from './network';
-import { Response } from './response';
-import { RequestMethod, StatusCode } from '../enums';
+import { Response, StatusCode } from './response';
 import { NotFoundError } from '../errors';
 import { Query } from '../query';
 import keyBy from 'lodash/keyBy';

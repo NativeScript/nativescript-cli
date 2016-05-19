@@ -1,4 +1,3 @@
-import { AuthType, RequestMethod, AuthorizationGrant } from './enums';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import Client from './client';
@@ -8,6 +7,27 @@ import isString from 'lodash/isString';
 const Popup = global.KinveyPopup;
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+
+/**
+ * Enum for Mobile Identity Connect authorization grants.
+ */
+const AuthorizationGrant = {
+  AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
+  AuthorizationCodeAPI: 'AuthorizationCodeAPI'
+};
+Object.freeze(AuthorizationGrant);
+export { AuthorizationGrant };
+
+/**
+ * Enum for Social Identities.
+ */
+const SocialIdentity = {
+  Facebook: 'facebook',
+  Google: 'google',
+  LinkedIn: 'linkedin'
+};
+Object.freeze(SocialIdentity);
+export { SocialIdentity };
 
 /**
  * @private
