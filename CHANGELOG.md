@@ -1,4 +1,7 @@
 ## Changelog
+#### 1.6.10 (2016-05-15)
+* Enhancement (MLIBZ-1070): Do not hide custom errors from ALC when using Mobile Identity Connect.
+
 #### 1.6.9 (2016-04-29)
 * Enhancement (MLIBZ-1064): Provide the ability to customize the popup title for Mobile Identity Connect.
 
