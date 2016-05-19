@@ -25,6 +25,7 @@ import {AndroidDeviceDiscovery} from "../lib/common/mobile/mobile-core/android-d
 import {PluginVariablesService} from "../lib/services/plugin-variables-service";
 import {PluginVariablesHelper} from "../lib/common/plugin-variables-helper";
 import {Utils} from "../lib/common/utils";
+import {CocoaPodsService} from "../lib/services/cocoapods-service";
 import { assert } from "chai";
 import temp = require("temp");
 temp.track();
@@ -48,6 +49,7 @@ function createTestInjector(projectPath: string, projectName: string): IInjector
 	testInjector.register("hostInfo", HostInfoLib.HostInfo);
 	testInjector.register("injector", testInjector);
 	testInjector.register("iOSEmulatorServices", {});
+	testInjector.register("cocoapodsService", CocoaPodsService);
 	testInjector.register("iOSProjectService", iOSProjectServiceLib.IOSProjectService);
 	testInjector.register("logger", LoggerLib.Logger);
 	testInjector.register("options", OptionsLib.Options);
