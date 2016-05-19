@@ -30,7 +30,9 @@ var _log = require('../../log');
 
 var _middleware = require('../middleware');
 
-var _enums = require('../../enums');
+var _request2 = require('../../requests/request');
+
+var _response = require('../../requests/response');
 
 var _map = require('lodash/map');
 
@@ -58,11 +60,11 @@ var _isArray2 = _interopRequireDefault(_isArray);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
-
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -137,7 +139,7 @@ var DB = exports.DB = function () {
 
     if (!this.adapter) {
       if (_memory.Memory.isSupported()) {
-        _log.Log.error('Provided adapters are unsupported on this platform. ' + 'Defaulting to StoreAdapter.Memory adapter.', adapters);
+        _log.Log.error('Provided adapters are unsupported on this platform. ' + 'Defaulting to the Memory adapter.', adapters);
         this.adapter = new _memory.Memory(name);
       } else {
         _log.Log.error('Provided adapters are unsupported on this platform.', adapters);
@@ -163,147 +165,370 @@ var DB = exports.DB = function () {
     }
   }, {
     key: 'find',
-    value: function find(collection, query) {
-      var promise = this.adapter.find(collection).then(function (entities) {
-        if (!entities) {
-          return [];
-        }
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(collection, query) {
+        var entities;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                _context.prev = 0;
+                _context.next = 3;
+                return this.adapter.find(collection);
 
-        return entities;
-      }).then(function (entities) {
-        if (query && !(query instanceof _query.Query)) {
-          query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
-        }
+              case 3:
+                entities = _context.sent;
 
-        if (entities.length > 0 && query) {
-          entities = query._process(entities);
-        }
 
-        return entities;
-      });
+                if (query && !(query instanceof _query.Query)) {
+                  query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+                }
 
-      return promise;
-    }
+                if (entities.length > 0 && query) {
+                  entities = query._process(entities);
+                }
+
+                return _context.abrupt('return', entities);
+
+              case 9:
+                _context.prev = 9;
+                _context.t0 = _context['catch'](0);
+
+                if (!(_context.t0 instanceof _errors.NotFoundError)) {
+                  _context.next = 13;
+                  break;
+                }
+
+                return _context.abrupt('return', []);
+
+              case 13:
+                throw _context.t0;
+
+              case 14:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this, [[0, 9]]);
+      }));
+
+      function find(_x3, _x4) {
+        return ref.apply(this, arguments);
+      }
+
+      return find;
+    }()
   }, {
     key: 'count',
-    value: function count(collection, query) {
-      return this.find(collection, query).then(function (entities) {
-        var data = { count: entities.length };
-        return data;
-      });
-    }
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(collection, query) {
+        var entities;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return this.find(collection, query);
+
+              case 2:
+                entities = _context2.sent;
+                return _context2.abrupt('return', { count: entities.length });
+
+              case 4:
+              case 'end':
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this);
+      }));
+
+      function count(_x5, _x6) {
+        return ref.apply(this, arguments);
+      }
+
+      return count;
+    }()
   }, {
     key: 'group',
-    value: function group(collection, aggregation) {
-      var promise = this.find(collection).then(function (entities) {
-        if (!(aggregation instanceof _aggregation.Aggregation)) {
-          aggregation = new _aggregation.Aggregation((0, _result2.default)(aggregation, 'toJSON', aggregation));
-        }
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(collection, aggregation) {
+        var entities;
+        return regeneratorRuntime.wrap(function _callee3$(_context3) {
+          while (1) {
+            switch (_context3.prev = _context3.next) {
+              case 0:
+                _context3.next = 2;
+                return this.find(collection);
 
-        if (entities.length > 0 && aggregation) {
-          return aggregation.process(entities);
-        }
+              case 2:
+                entities = _context3.sent;
 
-        return null;
-      });
 
-      return promise;
-    }
+                if (!(aggregation instanceof _aggregation.Aggregation)) {
+                  aggregation = new _aggregation.Aggregation((0, _result2.default)(aggregation, 'toJSON', aggregation));
+                }
+
+                if (!(entities.length > 0 && aggregation)) {
+                  _context3.next = 6;
+                  break;
+                }
+
+                return _context3.abrupt('return', aggregation.process(entities));
+
+              case 6:
+                return _context3.abrupt('return', null);
+
+              case 7:
+              case 'end':
+                return _context3.stop();
+            }
+          }
+        }, _callee3, this);
+      }));
+
+      function group(_x7, _x8) {
+        return ref.apply(this, arguments);
+      }
+
+      return group;
+    }()
   }, {
     key: 'findById',
-    value: function findById(collection, id) {
-      if (!(0, _isString2.default)(id)) {
-        return Promise.reject(new _errors.KinveyError('id must be a string', id));
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(collection, id) {
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                _context4.prev = 0;
+
+                if ((0, _isString2.default)(id)) {
+                  _context4.next = 3;
+                  break;
+                }
+
+                throw new _errors.KinveyError('id must be a string', id);
+
+              case 3:
+                return _context4.abrupt('return', this.adapter.findById(collection, id));
+
+              case 6:
+                _context4.prev = 6;
+                _context4.t0 = _context4['catch'](0);
+
+                if (!(_context4.t0 instanceof _errors.NotFoundError)) {
+                  _context4.next = 10;
+                  break;
+                }
+
+                return _context4.abrupt('return', undefined);
+
+              case 10:
+                throw _context4.t0;
+
+              case 11:
+              case 'end':
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this, [[0, 6]]);
+      }));
+
+      function findById(_x9, _x10) {
+        return ref.apply(this, arguments);
       }
 
-      var promise = this.adapter.findById(collection, id);
-      return promise;
-    }
+      return findById;
+    }()
   }, {
     key: 'save',
-    value: function save(collection) {
-      var _this2 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(collection) {
+        var _this2 = this;
 
-      var entities = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+        var entities = arguments.length <= 1 || arguments[1] === undefined ? [] : arguments[1];
+        var singular;
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                singular = false;
 
-      var singular = false;
+                if (entities) {
+                  _context5.next = 3;
+                  break;
+                }
 
-      if (!entities) {
-        return Promise.resolve(null);
+                return _context5.abrupt('return', null);
+
+              case 3:
+
+                if (!(0, _isArray2.default)(entities)) {
+                  singular = true;
+                  entities = [entities];
+                }
+
+                entities = (0, _map2.default)(entities, function (entity) {
+                  var id = entity[idAttribute];
+                  var kmd = entity[kmdAttribute] || {};
+
+                  if (!id) {
+                    id = _this2.generateObjectId();
+                    kmd.local = true;
+                  }
+
+                  entity[idAttribute] = id;
+                  entity[kmdAttribute] = kmd;
+                  return entity;
+                });
+
+                _context5.next = 7;
+                return this.adapter.save(collection, entities);
+
+              case 7:
+                entities = _context5.sent;
+
+                if (!(singular && entities.length > 0)) {
+                  _context5.next = 10;
+                  break;
+                }
+
+                return _context5.abrupt('return', entities[0]);
+
+              case 10:
+                return _context5.abrupt('return', entities);
+
+              case 11:
+              case 'end':
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      function save(_x11, _x12) {
+        return ref.apply(this, arguments);
       }
 
-      if (!(0, _isArray2.default)(entities)) {
-        singular = true;
-        entities = [entities];
-      }
-
-      entities = (0, _map2.default)(entities, function (entity) {
-        var id = entity[idAttribute];
-        var kmd = entity[kmdAttribute] || {};
-
-        if (!id) {
-          id = _this2.generateObjectId();
-          kmd.local = true;
-        }
-
-        entity[idAttribute] = id;
-        entity[kmdAttribute] = kmd;
-        return entity;
-      });
-
-      return this.adapter.save(collection, entities).then(function (entities) {
-        if (singular && entities.length > 0) {
-          return entities[0];
-        }
-
-        return entities;
-      });
-    }
+      return save;
+    }()
   }, {
     key: 'remove',
-    value: function remove(collection, query) {
-      var _this3 = this;
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(collection, query) {
+        var _this3 = this;
 
-      if (query && !(query instanceof _query.Query)) {
-        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+        var entities, responses;
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                if (query && !(query instanceof _query.Query)) {
+                  query = new _query.Query(query);
+                }
+
+                // Removing should not take the query sort, limit, and skip into account.
+                if (query) {
+                  query.sort = null;
+                  query.limit = null;
+                  query.skip = 0;
+                }
+
+                _context6.next = 4;
+                return this.find(collection, query);
+
+              case 4:
+                entities = _context6.sent;
+                _context6.next = 7;
+                return Promise.all(entities.map(function (entity) {
+                  return _this3.removeById(collection, entity[idAttribute]);
+                }));
+
+              case 7:
+                responses = _context6.sent;
+                return _context6.abrupt('return', (0, _reduce2.default)(responses, function (entities, entity) {
+                  entities.push(entity);
+                  return entities;
+                }, []));
+
+              case 9:
+              case 'end':
+                return _context6.stop();
+            }
+          }
+        }, _callee6, this);
+      }));
+
+      function remove(_x14, _x15) {
+        return ref.apply(this, arguments);
       }
 
-      // Removing should not take the query sort, limit, and skip into account.
-      if (query) {
-        query.sort = null;
-        query.limit = null;
-        query.skip = 0;
-      }
-
-      var promise = this.find(collection, query).then(function (entities) {
-        var promises = entities.map(function (entity) {
-          return _this3.removeById(collection, entity[idAttribute]);
-        });
-        return Promise.all(promises);
-      }).then(function (responses) {
-        var result = (0, _reduce2.default)(responses, function (allEntities, entities) {
-          allEntities = allEntities.concat(entities);
-          return allEntities;
-        }, []);
-        return result;
-      });
-
-      return promise;
-    }
+      return remove;
+    }()
   }, {
     key: 'removeById',
-    value: function removeById(collection, id) {
-      if (!id) {
-        return Promise.resolve(null);
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(collection, id) {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
+          while (1) {
+            switch (_context7.prev = _context7.next) {
+              case 0:
+                if (id) {
+                  _context7.next = 2;
+                  break;
+                }
+
+                return _context7.abrupt('return', undefined);
+
+              case 2:
+                if ((0, _isString2.default)(id)) {
+                  _context7.next = 4;
+                  break;
+                }
+
+                throw new _errors.KinveyError('id must be a string', id);
+
+              case 4:
+                return _context7.abrupt('return', this.adapter.removeById(collection, id));
+
+              case 5:
+              case 'end':
+                return _context7.stop();
+            }
+          }
+        }, _callee7, this);
+      }));
+
+      function removeById(_x16, _x17) {
+        return ref.apply(this, arguments);
       }
 
-      if (!(0, _isString2.default)(id)) {
-        return Promise.reject(new _errors.KinveyError('id must be a string', id));
+      return removeById;
+    }()
+  }, {
+    key: 'clear',
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee8() {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
+          while (1) {
+            switch (_context8.prev = _context8.next) {
+              case 0:
+                return _context8.abrupt('return', this.adapter.clear());
+
+              case 1:
+              case 'end':
+                return _context8.stop();
+            }
+          }
+        }, _callee8, this);
+      }));
+
+      function clear() {
+        return ref.apply(this, arguments);
       }
 
-      var promise = this.adapter.removeById(collection, id);
-      return promise;
-    }
+      return clear;
+    }()
   }, {
     key: 'objectIdPrefix',
     get: function get() {
@@ -336,141 +561,163 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
   _createClass(CacheMiddleware, [{
     key: 'handle',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(request) {
-        var method, query, body, db, data;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee9(request) {
+        var _request, method, query, body, collection, entityId, db, data;
+
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context.prev = _context.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
-                _context.next = 2;
+                _context9.next = 2;
                 return _get(Object.getPrototypeOf(CacheMiddleware.prototype), 'handle', this).call(this, request);
 
               case 2:
-                request = _context.sent;
-                method = request.method;
-                query = request.query;
-                body = request.body;
+                request = _context9.sent;
+                _request = request;
+                method = _request.method;
+                query = _request.query;
+                body = _request.body;
+                collection = _request.collection;
+                entityId = _request.entityId;
                 db = new DB(request.appKey, this.adapters);
                 data = void 0;
 
-                if (!(method === _enums.RequestMethod.GET)) {
-                  _context.next = 32;
+                if (!(method === _request2.RequestMethod.GET)) {
+                  _context9.next = 35;
                   break;
                 }
 
-                if (!request.entityId) {
-                  _context.next = 27;
+                if (!entityId) {
+                  _context9.next = 30;
                   break;
                 }
 
-                if (!(request.entityId === '_count')) {
-                  _context.next = 16;
+                if (!(entityId === '_count')) {
+                  _context9.next = 19;
                   break;
                 }
 
-                _context.next = 13;
-                return db.count(request.collectionName, query);
-
-              case 13:
-                data = _context.sent;
-                _context.next = 25;
-                break;
+                _context9.next = 16;
+                return db.count(collection, query);
 
               case 16:
-                if (!(request.entityId === '_group')) {
-                  _context.next = 22;
-                  break;
-                }
-
-                _context.next = 19;
-                return db.group(request.collectionName, body);
+                data = _context9.sent;
+                _context9.next = 28;
+                break;
 
               case 19:
-                data = _context.sent;
-                _context.next = 25;
-                break;
+                if (!(entityId === '_group')) {
+                  _context9.next = 25;
+                  break;
+                }
+
+                _context9.next = 22;
+                return db.group(collection, body);
 
               case 22:
-                _context.next = 24;
-                return db.findById(request.collectionName, request.entityId);
-
-              case 24:
-                data = _context.sent;
+                data = _context9.sent;
+                _context9.next = 28;
+                break;
 
               case 25:
-                _context.next = 30;
-                break;
+                _context9.next = 27;
+                return db.findById(collection, request.entityId);
 
               case 27:
-                _context.next = 29;
-                return db.find(request.collectionName, query);
+                data = _context9.sent;
 
-              case 29:
-                data = _context.sent;
+              case 28:
+                _context9.next = 33;
+                break;
 
               case 30:
-                _context.next = 48;
-                break;
+                _context9.next = 32;
+                return db.find(collection, query);
 
               case 32:
-                if (!(method === _enums.RequestMethod.POST || method === _enums.RequestMethod.PUT)) {
-                  _context.next = 38;
-                  break;
-                }
+                data = _context9.sent;
 
-                _context.next = 35;
-                return db.save(request.collectionName, body);
+              case 33:
+                _context9.next = 57;
+                break;
 
               case 35:
-                data = _context.sent;
-                _context.next = 48;
-                break;
+                if (!(method === _request2.RequestMethod.POST || method === _request2.RequestMethod.PUT)) {
+                  _context9.next = 41;
+                  break;
+                }
+
+                _context9.next = 38;
+                return db.save(collection, body);
 
               case 38:
-                if (!(method === _enums.RequestMethod.DELETE)) {
-                  _context.next = 48;
-                  break;
-                }
-
-                if (!request.entityId) {
-                  _context.next = 45;
-                  break;
-                }
-
-                _context.next = 42;
-                return db.removeById(request.collectionName, request.entityId);
-
-              case 42:
-                data = _context.sent;
-                _context.next = 48;
+                data = _context9.sent;
+                _context9.next = 57;
                 break;
 
-              case 45:
-                _context.next = 47;
-                return db.remove(request.collectionName, query);
+              case 41:
+                if (!(method === _request2.RequestMethod.DELETE)) {
+                  _context9.next = 57;
+                  break;
+                }
 
-              case 47:
-                data = _context.sent;
+                if (!(collection && entityId)) {
+                  _context9.next = 48;
+                  break;
+                }
+
+                _context9.next = 45;
+                return db.removeById(collection, entityId);
+
+              case 45:
+                data = _context9.sent;
+                _context9.next = 57;
+                break;
 
               case 48:
+                if (collection) {
+                  _context9.next = 54;
+                  break;
+                }
+
+                _context9.next = 51;
+                return db.clear();
+
+              case 51:
+                data = _context9.sent;
+                _context9.next = 57;
+                break;
+
+              case 54:
+                _context9.next = 56;
+                return db.remove(collection, query);
+
+              case 56:
+                data = _context9.sent;
+
+              case 57:
 
                 request.response = {
-                  statusCode: method === _enums.RequestMethod.POST ? _enums.StatusCode.Created : _enums.StatusCode.Ok,
+                  statusCode: method === _request2.RequestMethod.POST ? _response.StatusCode.Created : _response.StatusCode.Ok,
                   headers: {},
                   data: data
                 };
 
-                return _context.abrupt('return', request);
+                if (!data) {
+                  request.response.statusCode = _response.StatusCode.Empty;
+                }
 
-              case 50:
+                return _context9.abrupt('return', request);
+
+              case 60:
               case 'end':
-                return _context.stop();
+                return _context9.stop();
             }
           }
-        }, _callee, this);
+        }, _callee9, this);
       }));
 
-      function handle(_x5) {
+      function handle(_x19) {
         return ref.apply(this, arguments);
       }
 

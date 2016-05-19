@@ -22,7 +22,7 @@ var _errors = require('./errors');
 
 var _mic = require('./mic');
 
-var _enums = require('./enums');
+var _request = require('./requests/request');
 
 var _datastore = require('./datastore');
 
@@ -196,8 +196,8 @@ var User = exports.User = function () {
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
-        authType: _enums.AuthType.App,
+        method: _request.RequestMethod.POST,
+        authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -289,8 +289,8 @@ var User = exports.User = function () {
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
-        authType: _enums.AuthType.Session,
+        method: _request.RequestMethod.POST,
+        authType: _request.AuthType.Session,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -309,6 +309,8 @@ var User = exports.User = function () {
         }
 
         return null;
+      }).then(function () {
+        return _datastore.DataStore.clear({ client: _this3.client });
       }).then(function () {
         return _this3;
       });
@@ -369,8 +371,8 @@ var User = exports.User = function () {
 
         var query = new _query.Query().equalTo('identity', identity);
         var request = new _network.NetworkRequest({
-          method: _enums.RequestMethod.GET,
-          authType: _enums.AuthType.None,
+          method: _request.RequestMethod.GET,
+          authType: _request.AuthType.None,
           url: _url2.default.format({
             protocol: _this4.client.protocol,
             host: _this4.client.host,
@@ -543,8 +545,8 @@ var User = exports.User = function () {
         }
       }).then(function () {
         var request = new _network.NetworkRequest({
-          method: _enums.RequestMethod.POST,
-          authType: _enums.AuthType.App,
+          method: _request.RequestMethod.POST,
+          authType: _request.AuthType.App,
           url: _url2.default.format({
             protocol: _this7.client.protocol,
             host: _this7.client.host,
@@ -599,8 +601,8 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.GET,
-        authType: _enums.AuthType.Session,
+        method: _request.RequestMethod.GET,
+        authType: _request.AuthType.Session,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -633,8 +635,8 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
-        authType: _enums.AuthType.App,
+        method: _request.RequestMethod.POST,
+        authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -656,8 +658,8 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
-        authType: _enums.AuthType.App,
+        method: _request.RequestMethod.POST,
+        authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -680,8 +682,8 @@ var User = exports.User = function () {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
-        authType: _enums.AuthType.App,
+        method: _request.RequestMethod.POST,
+        authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -923,7 +925,7 @@ var User = exports.User = function () {
     value: function connectWithFacebook() {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-      return User.connectWithIdentity(_enums.SocialIdentity.Facebook, options);
+      return User.connectWithIdentity(_mic.SocialIdentity.Facebook, options);
     }
 
     /**
@@ -946,7 +948,7 @@ var User = exports.User = function () {
     value: function connectWithGoogle() {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-      return User.connectWithIdentity(_enums.SocialIdentity.Google, options);
+      return User.connectWithIdentity(_mic.SocialIdentity.Google, options);
     }
 
     /**
@@ -969,7 +971,7 @@ var User = exports.User = function () {
     value: function connectWithLinkedIn() {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-      return User.connectWithIdentity(_enums.SocialIdentity.LinkedIn, options);
+      return User.connectWithIdentity(_mic.SocialIdentity.LinkedIn, options);
     }
   }, {
     key: 'connectWithIdentity',

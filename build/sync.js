@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _enums = require('./enums');
+var _request2 = require('./requests/request');
 
 var _errors = require('./errors');
 
@@ -107,7 +107,7 @@ var Sync = function () {
                 // Get all sync entities
 
                 request = new _cache2.default({
-                  method: _enums.RequestMethod.GET,
+                  method: _request2.RequestMethod.GET,
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
@@ -245,7 +245,7 @@ var Sync = function () {
                               entityId: id,
                               collection: collection,
                               state: {
-                                method: _enums.RequestMethod.POST
+                                method: _request2.RequestMethod.POST
                               },
                               entity: entity
                             };
@@ -263,7 +263,7 @@ var Sync = function () {
 
                             // Send a request to save the sync entity
                             request = new _cache2.default({
-                              method: _enums.RequestMethod.POST,
+                              method: _request2.RequestMethod.POST,
                               url: _url2.default.format({
                                 protocol: _this.client.protocol,
                                 host: _this.client.host,
@@ -378,7 +378,7 @@ var Sync = function () {
                               entityId: id,
                               collection: collection,
                               state: {
-                                method: _enums.RequestMethod.PUT
+                                method: _request2.RequestMethod.PUT
                               },
                               entity: entity
                             };
@@ -396,7 +396,7 @@ var Sync = function () {
 
                             // Send a request to save the sync entity
                             request = new _cache2.default({
-                              method: _enums.RequestMethod.POST,
+                              method: _request2.RequestMethod.POST,
                               url: _url2.default.format({
                                 protocol: _this2.client.protocol,
                                 host: _this2.client.host,
@@ -534,7 +534,7 @@ var Sync = function () {
                               entityId: id,
                               collection: collection,
                               state: {
-                                method: _enums.RequestMethod.DELETE
+                                method: _request2.RequestMethod.DELETE
                               },
                               entity: entity
                             };
@@ -552,7 +552,7 @@ var Sync = function () {
 
                             // Send a request to save the sync entity
                             request = new _cache2.default({
-                              method: _enums.RequestMethod.POST,
+                              method: _request2.RequestMethod.POST,
                               url: _url2.default.format({
                                 protocol: _this3.client.protocol,
                                 host: _this3.client.host,
@@ -620,7 +620,7 @@ var Sync = function () {
         var _this4 = this;
 
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var syncResults, failedSyncEntities, batchSize, i, deleteRequest, syncEntities;
+        var syncResults, failedSyncEntities, batchSize, i, deleteRequest, response, syncEntities;
         return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
@@ -633,7 +633,7 @@ var Sync = function () {
                 // Make a request for the pending sync entities
 
                 deleteRequest = new _cache2.default({
-                  method: _enums.RequestMethod.DELETE,
+                  method: _request2.RequestMethod.DELETE,
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
@@ -644,15 +644,14 @@ var Sync = function () {
                   timeout: options.timeout
                 });
                 _context14.next = 7;
-                return deleteRequest.execute().then(function (response) {
-                  return response.data;
-                });
+                return deleteRequest.execute();
 
               case 7:
-                syncEntities = _context14.sent;
+                response = _context14.sent;
+                syncEntities = response.data;
 
                 if (!(syncEntities.length > 0)) {
-                  _context14.next = 10;
+                  _context14.next = 11;
                   break;
                 }
 
@@ -697,11 +696,11 @@ var Sync = function () {
                                                     var originalId = entity[idAttribute];
                                                     var method = syncEntity.state.method;
 
-                                                    if (method === _enums.RequestMethod.DELETE) {
+                                                    if (method === _request2.RequestMethod.DELETE) {
                                                       // Remove the entity from the network.
                                                       var request = new _network.NetworkRequest({
-                                                        method: _enums.RequestMethod.DELETE,
-                                                        authType: _enums.AuthType.Default,
+                                                        method: _request2.RequestMethod.DELETE,
+                                                        authType: _request2.AuthType.Default,
                                                         url: _url2.default.format({
                                                           protocol: _this4.client.protocol,
                                                           host: _this4.client.host,
@@ -737,8 +736,8 @@ var Sync = function () {
 
                                                                   // Try and reset the state of the entity
                                                                   getNetworkRequest = new _network.NetworkRequest({
-                                                                    method: _enums.RequestMethod.GET,
-                                                                    authType: _enums.AuthType.Default,
+                                                                    method: _request2.RequestMethod.GET,
+                                                                    authType: _request2.AuthType.Default,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -756,7 +755,7 @@ var Sync = function () {
                                                                 case 6:
                                                                   originalEntity = _context8.sent;
                                                                   putCacheRequest = new _cache2.default({
-                                                                    method: _enums.RequestMethod.PUT,
+                                                                    method: _request2.RequestMethod.PUT,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -796,11 +795,11 @@ var Sync = function () {
                                                           return ref.apply(this, arguments);
                                                         };
                                                       }());
-                                                    } else if (method === _enums.RequestMethod.POST || method === _enums.RequestMethod.PUT) {
+                                                    } else if (method === _request2.RequestMethod.POST || method === _request2.RequestMethod.PUT) {
                                                       // Save the entity to the network.
                                                       var _request = new _network.NetworkRequest({
                                                         method: method,
-                                                        authType: _enums.AuthType.Default,
+                                                        authType: _request2.AuthType.Default,
                                                         url: _url2.default.format({
                                                           protocol: _this4.client.protocol,
                                                           host: _this4.client.host,
@@ -817,7 +816,7 @@ var Sync = function () {
                                                       if (metadata.isLocal()) {
                                                         delete entity[idAttribute];
                                                         delete entity[kmdAttribute].local;
-                                                        _request.method = _enums.RequestMethod.POST;
+                                                        _request.method = _request2.RequestMethod.POST;
                                                         _request.url = _url2.default.format({
                                                           protocol: _this4.client.protocol,
                                                           host: _this4.client.host,
@@ -837,7 +836,7 @@ var Sync = function () {
                                                                 case 0:
                                                                   // Save the result of the network request locally.
                                                                   putCacheRequest = new _cache2.default({
-                                                                    method: _enums.RequestMethod.PUT,
+                                                                    method: _request2.RequestMethod.PUT,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -861,7 +860,7 @@ var Sync = function () {
                                                                   }
 
                                                                   deleteCacheRequest = new _cache2.default({
-                                                                    method: _enums.RequestMethod.DELETE,
+                                                                    method: _request2.RequestMethod.DELETE,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -918,8 +917,8 @@ var Sync = function () {
                                                                   }
 
                                                                   getNetworkRequest = new _network.NetworkRequest({
-                                                                    method: _enums.RequestMethod.GET,
-                                                                    authType: _enums.AuthType.Default,
+                                                                    method: _request2.RequestMethod.GET,
+                                                                    authType: _request2.AuthType.Default,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -937,7 +936,7 @@ var Sync = function () {
                                                                 case 7:
                                                                   originalEntity = _context10.sent;
                                                                   putCacheRequest = new _cache2.default({
-                                                                    method: _enums.RequestMethod.PUT,
+                                                                    method: _request2.RequestMethod.PUT,
                                                                     url: _url2.default.format({
                                                                       protocol: _this4.client.protocol,
                                                                       host: _this4.client.host,
@@ -1047,7 +1046,7 @@ var Sync = function () {
                           }
 
                           putRequest = new _cache2.default({
-                            method: _enums.RequestMethod.PUT,
+                            method: _request2.RequestMethod.PUT,
                             url: _url2.default.format({
                               protocol: _this4.client.protocol,
                               host: _this4.client.host,
@@ -1066,12 +1065,12 @@ var Sync = function () {
                       }
                     }
                   }, _callee13, _this4);
-                })(), 't0', 10);
-
-              case 10:
-                return _context14.abrupt('return', syncResults);
+                })(), 't0', 11);
 
               case 11:
+                return _context14.abrupt('return', syncResults);
+
+              case 12:
               case 'end':
                 return _context14.stop();
             }
@@ -1110,7 +1109,7 @@ var Sync = function () {
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
       var request = new _cache2.default({
-        method: _enums.RequestMethod.DELETE,
+        method: _request2.RequestMethod.DELETE,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,

@@ -15,8 +15,6 @@ var _rack = require('../rack/rack');
 
 var _errors = require('../errors');
 
-var _enums = require('../enums');
-
 var _response2 = require('./response');
 
 var _storage = require('../utils/storage');
@@ -129,11 +127,11 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                 // Refresh the token
                 token = activeSocialIdentity.token;
                 refreshTokenRequest = new NetworkRequest({
-                  method: _enums.RequestMethod.POST,
+                  method: _request.RequestMethod.POST,
                   headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                   },
-                  authType: _enums.AuthType.App,
+                  authType: _request.AuthType.App,
                   url: _url2.default.format({
                     protocol: activeSocialIdentity.client.protocol,
                     host: activeSocialIdentity.client.host,
@@ -166,8 +164,8 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                 activeUser[socialIdentityAttribute] = activeSocialIdentity;
 
                 loginRequest = new NetworkRequest({
-                  method: _enums.RequestMethod.POST,
-                  authType: _enums.AuthType.App,
+                  method: _request.RequestMethod.POST,
+                  authType: _request.AuthType.App,
                   url: _url2.default.format({
                     protocol: this.client.protocol,
                     host: this.client.host,

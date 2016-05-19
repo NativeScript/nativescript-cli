@@ -3,15 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MobileIdentityConnect = undefined;
+exports.MobileIdentityConnect = exports.SocialIdentity = exports.AuthorizationGrant = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _enums = require('./enums');
 
 var _errors = require('./errors');
 
 var _network = require('./requests/network');
+
+var _request = require('./requests/request');
 
 var _client = require('./client');
 
@@ -38,6 +38,28 @@ var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
 /**
+ * Enum for Mobile Identity Connect authorization grants.
+ */
+var AuthorizationGrant = {
+  AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
+  AuthorizationCodeAPI: 'AuthorizationCodeAPI'
+};
+Object.freeze(AuthorizationGrant);
+exports.AuthorizationGrant = AuthorizationGrant;
+
+/**
+ * Enum for Social Identities.
+ */
+
+var SocialIdentity = {
+  Facebook: 'facebook',
+  Google: 'google',
+  LinkedIn: 'linkedin'
+};
+Object.freeze(SocialIdentity);
+exports.SocialIdentity = SocialIdentity;
+
+/**
  * @private
  */
 
@@ -62,16 +84,16 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
     value: function login(redirectUri) {
       var _this = this;
 
-      var authorizationGrant = arguments.length <= 1 || arguments[1] === undefined ? _enums.AuthorizationGrant.AuthorizationCodeLoginPage : arguments[1];
+      var authorizationGrant = arguments.length <= 1 || arguments[1] === undefined ? AuthorizationGrant.AuthorizationCodeLoginPage : arguments[1];
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
       var clientId = this.client.appKey;
 
       var promise = Promise.resolve().then(function () {
-        if (authorizationGrant === _enums.AuthorizationGrant.AuthorizationCodeLoginPage) {
+        if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
           // Step 1: Request a code
           return _this.requestCodeWithPopup(clientId, redirectUri, options);
-        } else if (authorizationGrant === _enums.AuthorizationGrant.AuthorizationCodeAPI) {
+        } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
           // Step 1a: Request a temp login url
           return _this.requestTempLoginUrl(clientId, redirectUri, options).then(function (url) {
             return _this.requestCodeWithUrl(url, clientId, redirectUri, options);
@@ -103,7 +125,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       }
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
+        method: _request.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
@@ -197,7 +219,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
 
       var promise = Promise.resolve().then(function () {
         var request = new _network.NetworkRequest({
-          method: _enums.RequestMethod.POST,
+          method: _request.RequestMethod.POST,
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
@@ -231,11 +253,11 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.POST,
+        method: _request.RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
-        authType: _enums.AuthType.App,
+        authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,

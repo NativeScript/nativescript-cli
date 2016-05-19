@@ -43,6 +43,8 @@ var _isArray2 = _interopRequireDefault(_isArray);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -83,7 +85,7 @@ var Memory = exports.Memory = function () {
 
       return queue.add(function () {
         var promise = Promise.resolve().then(function () {
-          var entities = _this.cache.get('' + _this.name + collection);
+          var entities = _this.cache.get(collection);
 
           if (entities) {
             try {
@@ -146,7 +148,7 @@ var Memory = exports.Memory = function () {
           existingEntities[id] = entities[id];
         });
 
-        _this3.cache.set('' + _this3.name + collection, JSON.stringify((0, _values2.default)(existingEntities)));
+        _this3.cache.set(collection, JSON.stringify((0, _values2.default)(existingEntities)));
         entities = (0, _values2.default)(entities);
         return singular ? entities[0] : entities;
       });
@@ -165,11 +167,42 @@ var Memory = exports.Memory = function () {
         }
 
         delete entities[id];
-        _this4.cache.set('' + _this4.name + collection, JSON.stringify((0, _values2.default)(entities)));
+        _this4.cache.set(collection, JSON.stringify((0, _values2.default)(entities)));
 
         return entity;
       });
     }
+  }, {
+    key: 'clear',
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(collection) {
+        var _this5 = this;
+
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                return _context.abrupt('return', this.find(collection).then(function (entities) {
+                  delete caches[_this5.name];
+                  _this5.cache = new _fastMemoryCache2.default();
+                  caches[_this5.name] = _this5.cache;
+                  return entities;
+                }));
+
+              case 1:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function clear(_x) {
+        return ref.apply(this, arguments);
+      }
+
+      return clear;
+    }()
   }], [{
     key: 'isSupported',
     value: function isSupported() {

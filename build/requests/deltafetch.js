@@ -23,8 +23,6 @@ var _network = require('./network');
 
 var _response = require('./response');
 
-var _enums = require('../enums');
-
 var _errors = require('../errors');
 
 var _query3 = require('../query');
@@ -104,7 +102,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
               case 3:
                 _context2.prev = 3;
                 request = new _cache2.default({
-                  method: _enums.RequestMethod.GET,
+                  method: _request.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
                   query: this.query,
@@ -154,7 +152,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
                           query.fields = [idAttribute, kmdAttribute + '.lmt'];
                           networkRequest = new _network.NetworkRequest({
-                            method: _enums.RequestMethod.GET,
+                            method: _request.RequestMethod.GET,
                             url: _this2.url,
                             headers: _this2.headers,
                             auth: _this2.auth,
@@ -200,7 +198,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
                             _query.contains(idAttribute, ids);
                             _networkRequest = new _network.NetworkRequest({
-                              method: _enums.RequestMethod.GET,
+                              method: _request.RequestMethod.GET,
                               url: _this2.url,
                               headers: _this2.headers,
                               auth: _this2.auth,
@@ -227,7 +225,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
                             return result;
                           }, new _response.Response({
-                            statusCode: _enums.StatusCode.Ok,
+                            statusCode: _response.StatusCode.Ok,
                             data: []
                           }));
 
@@ -265,7 +263,7 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
               case 20:
                 networkRequest = new _network.NetworkRequest({
-                  method: _enums.RequestMethod.GET,
+                  method: _request.RequestMethod.GET,
                   url: this.url,
                   headers: this.headers,
                   auth: this.auth,
@@ -305,13 +303,13 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
 
       // Verify that the method is allowed
       switch (method) {
-        case _enums.RequestMethod.GET:
+        case _request.RequestMethod.GET:
           _set(Object.getPrototypeOf(DeltaFetchRequest.prototype), 'method', method, this);
           break;
-        case _enums.RequestMethod.POST:
-        case _enums.RequestMethod.PATCH:
-        case _enums.RequestMethod.PUT:
-        case _enums.RequestMethod.DELETE:
+        case _request.RequestMethod.POST:
+        case _request.RequestMethod.PATCH:
+        case _request.RequestMethod.PUT:
+        case _request.RequestMethod.DELETE:
         default:
           throw new Error('Invalid request Method. Only RequestMethod.GET is allowed.');
       }

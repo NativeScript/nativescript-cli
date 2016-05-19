@@ -3,15 +3,13 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyRequest = exports.Request = undefined;
+exports.KinveyRequest = exports.Request = exports.RequestMethod = exports.AuthType = undefined;
 
 var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _enums = require('../enums');
 
 var _properties = require('./properties');
 
@@ -77,6 +75,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Device = global.KinveyDevice;
 var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+
+/**
+ * Enum for Auth types.
+ */
+var AuthType = {
+  All: 'All',
+  App: 'App',
+  Basic: 'Basic',
+  Default: 'Default',
+  Master: 'Master',
+  None: 'None',
+  Session: 'Session'
+};
+Object.freeze(AuthType);
+exports.AuthType = AuthType;
+
+/**
+ * @private
+ * Enum for Request Methods.
+ */
+
+var RequestMethod = {
+  GET: 'GET',
+  POST: 'POST',
+  PATCH: 'PATCH',
+  PUT: 'PUT',
+  DELETE: 'DELETE'
+};
+Object.freeze(RequestMethod);
+exports.RequestMethod = RequestMethod;
+
 
 var Auth = {
   /**
@@ -185,7 +214,7 @@ var Request = exports.Request = function () {
     _classCallCheck(this, Request);
 
     options = (0, _assign2.default)({
-      method: _enums.RequestMethod.GET,
+      method: RequestMethod.GET,
       headers: {},
       url: '',
       data: null,
@@ -361,11 +390,11 @@ var Request = exports.Request = function () {
       method = method.toUpperCase();
 
       switch (method) {
-        case _enums.RequestMethod.GET:
-        case _enums.RequestMethod.POST:
-        case _enums.RequestMethod.PATCH:
-        case _enums.RequestMethod.PUT:
-        case _enums.RequestMethod.DELETE:
+        case RequestMethod.GET:
+        case RequestMethod.POST:
+        case RequestMethod.PATCH:
+        case RequestMethod.PUT:
+        case RequestMethod.DELETE:
           this.requestMethod = method;
           break;
         default:
@@ -432,7 +461,7 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
 
     options = (0, _assign2.default)({
-      authType: _enums.AuthType.None,
+      authType: AuthType.None,
       properties: null,
       query: null,
       client: _client2.default.sharedInstance()
@@ -536,16 +565,16 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
 
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
-      var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collectionName)(/)(:entityId)(/)');
+      var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
       var _ref = pattern.match(pathname) || {};
 
       var appKey = _ref.appKey;
-      var collectionName = _ref.collectionName;
+      var collection = _ref.collection;
       var entityId = _ref.entityId;
 
       this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-      this.collectionName = !!collectionName ? global.unescape(collectionName) : collectionName;
+      this.collection = !!collection ? global.unescape(collection) : collection;
       this.entityId = !!entityId ? global.unescape(entityId) : entityId;
     }
   }, {
@@ -554,22 +583,22 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
       var authInfo = void 0;
 
       switch (this.authType) {
-        case _enums.AuthType.All:
+        case AuthType.All:
           authInfo = Auth.all(this.client);
           break;
-        case _enums.AuthType.App:
+        case AuthType.App:
           authInfo = Auth.app(this.client);
           break;
-        case _enums.AuthType.Basic:
+        case AuthType.Basic:
           authInfo = Auth.basic(this.client);
           break;
-        case _enums.AuthType.Master:
+        case AuthType.Master:
           authInfo = Auth.master(this.client);
           break;
-        case _enums.AuthType.None:
+        case AuthType.None:
           authInfo = Auth.none(this.client);
           break;
-        case _enums.AuthType.Session:
+        case AuthType.Session:
           authInfo = Auth.session(this.client);
           break;
         default:

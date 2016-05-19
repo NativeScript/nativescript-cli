@@ -3,11 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Response = undefined;
+exports.Response = exports.StatusCode = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _enums = require('../enums');
 
 var _errors = require('../errors');
 
@@ -32,6 +30,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 /**
+ * @provate
+ * Enum for Status Codes.
+ */
+var StatusCode = {
+  Ok: 200,
+  Created: 201,
+  Empty: 204,
+  RedirectTemporarily: 301,
+  RedirectPermanetly: 302,
+  NotFound: 404,
+  ServerError: 500
+};
+Object.freeze(StatusCode);
+exports.StatusCode = StatusCode;
+
+/**
  * @private
  */
 
@@ -42,7 +56,7 @@ var Response = exports.Response = function () {
     _classCallCheck(this, Response);
 
     options = (0, _assign2.default)({
-      statusCode: _enums.StatusCode.Ok,
+      statusCode: StatusCode.Ok,
       headers: {
         'Content-Type': 'application/json; charset=utf-8'
       },

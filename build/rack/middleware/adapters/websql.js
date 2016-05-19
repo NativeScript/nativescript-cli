@@ -206,6 +206,34 @@ var WebSQL = exports.WebSQL = function () {
 
       return promise;
     }
+  }, {
+    key: 'clear',
+    value: function clear() {
+      var _this4 = this;
+
+      var promise = this.openTransaction(masterCollectionName, 'SELECT name AS value FROM #{collection} WHERE type = ?', ['table'], false);
+
+      return promise.then(function (response) {
+        var tables = response.result;
+
+        // If there are no tables, return.
+        if (tables.length === 0) {
+          return null;
+        }
+
+        // Drop all tables. Filter tables first to avoid attempting to delete
+        // system tables (which will fail).
+        var queries = tables.filter(function (table) {
+          return (/^[a-zA-Z0-9\-]{1,128}/.test(table)
+          );
+        }).map(function (table) {
+          return ['DROP TABLE IF EXISTS \'' + table + '\''];
+        });
+        return _this4.openTransaction(masterCollectionName, queries, null, true);
+      }).then(function () {
+        return null;
+      });
+    }
   }], [{
     key: 'isSupported',
     value: function isSupported() {

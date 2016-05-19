@@ -10,7 +10,7 @@ var _client = require('./client');
 
 var _client2 = _interopRequireDefault(_client);
 
-var _enums = require('./enums');
+var _request = require('./requests/request');
 
 var _errors = require('./errors');
 
@@ -96,8 +96,8 @@ var CustomEndpoint = function () {
 
               case 5:
                 request = new _network.NetworkRequest({
-                  method: _enums.RequestMethod.POST,
-                  authType: _enums.AuthType.Default,
+                  method: _request.RequestMethod.POST,
+                  authType: _request.AuthType.Default,
                   url: _url2.default.format({
                     protocol: options.client.protocol,
                     host: options.client.host,

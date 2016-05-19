@@ -26,15 +26,19 @@ var _query = require('./query');
 
 var _datastore = require('./datastore');
 
+var _filestore = require('./filestore');
+
 var _sync = require('./sync');
 
 var _sync2 = _interopRequireDefault(_sync);
 
 var _user = require('./user');
 
-var _enums = require('./enums');
+var _mic = require('./mic');
 
 var _network = require('./requests/network');
+
+var _request = require('./requests/request');
 
 var _url = require('url');
 
@@ -92,15 +96,15 @@ var Kinvey = function () {
 
       // Add all the modules to the Kinvey namespace
       this.Aggregation = _aggregation.Aggregation;
-      this.AuthorizationGrant = _enums.AuthorizationGrant;
+      this.AuthorizationGrant = _mic.AuthorizationGrant;
       this.CustomEndpoint = _endpoint2.default;
       this.DataStore = _datastore.DataStore;
-      this.DataStoreType = _enums.DataStoreType;
-      this.FileStore = _datastore.FileStore;
+      this.DataStoreType = _datastore.DataStoreType;
+      this.FileStore = _filestore.FileStore;
       this.Log = _log.Log;
       this.Metadata = _metadata.Metadata;
       this.Query = _query.Query;
-      this.SocialIdentity = _enums.SocialIdentity;
+      this.SocialIdentity = _mic.SocialIdentity;
       this.Sync = _sync2.default;
       this.User = _user.User;
 
@@ -120,8 +124,8 @@ var Kinvey = function () {
       var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
 
       var request = new _network.NetworkRequest({
-        method: _enums.RequestMethod.GET,
-        authType: _enums.AuthType.All,
+        method: _request.RequestMethod.GET,
+        authType: _request.AuthType.All,
         url: _url2.default.format({
           protocol: client.protocol,
           host: client.host,
