@@ -5,7 +5,7 @@ import IndexedDB from './adapters/indexeddb';
 import { LocalStorage } from './adapters/localstorage';
 import { Memory } from './adapters/memory';
 import { WebSQL } from './adapters/websql';
-import { KinveyError } from '../../errors';
+import { KinveyError, NotFoundError } from '../../errors';
 import { Log } from '../../log';
 import { KinveyMiddleware } from '../middleware';
 import { RequestMethod, StatusCode } from '../../enums';
@@ -80,7 +80,7 @@ export class DB {
     if (!this.adapter) {
       if (Memory.isSupported()) {
         Log.error('Provided adapters are unsupported on this platform. ' +
-          'Defaulting to StoreAdapter.Memory adapter.', adapters);
+          'Defaulting to the Memory adapter.', adapters);
         this.adapter = new Memory(name);
       } else {
         Log.error('Provided adapters are unsupported on this platform.', adapters);
@@ -105,14 +105,10 @@ export class DB {
     return objectId;
   }
 
-  find(collection, query) {
-    const promise = this.adapter.find(collection).then(entities => {
-      if (!entities) {
-        return [];
-      }
+  async find(collection, query) {
+    try {
+      let entities = await this.adapter.find(collection);
 
-      return entities;
-    }).then(entities => {
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
@@ -122,115 +118,127 @@ export class DB {
       }
 
       return entities;
-    });
-
-    return promise;
-  }
-
-  count(collection, query) {
-    return this.find(collection, query).then(entities => {
-      const data = { count: entities.length };
-      return data;
-    });
-  }
-
-  group(collection, aggregation) {
-    const promise = this.find(collection).then(entities => {
-      if (!(aggregation instanceof Aggregation)) {
-        aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return [];
       }
 
-      if (entities.length > 0 && aggregation) {
-        return aggregation.process(entities);
-      }
-
-      return null;
-    });
-
-    return promise;
+      throw error;
+    }
   }
 
-  findById(collection, id) {
-    if (!isString(id)) {
-      return Promise.reject(new KinveyError('id must be a string', id));
-    }
-
-    const promise = this.adapter.findById(collection, id);
-    return promise;
+  async count(collection, query) {
+    const entities = await this.find(collection, query);
+    return { count: entities.length };
   }
 
-  save(collection, entities = []) {
-    let singular = false;
+  async group(collection, aggregation) {
+    const entities = await this.find(collection);
 
-    if (!entities) {
-      return Promise.resolve(null);
+    if (!(aggregation instanceof Aggregation)) {
+      aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
     }
 
-    if (!isArray(entities)) {
-      singular = true;
-      entities = [entities];
+    if (entities.length > 0 && aggregation) {
+      return aggregation.process(entities);
     }
 
-    entities = map(entities, entity => {
-      let id = entity[idAttribute];
-      const kmd = entity[kmdAttribute] || {};
+    return null;
+  }
 
-      if (!id) {
-        id = this.generateObjectId();
-        kmd.local = true;
+  async findById(collection, id) {
+    try {
+      if (!isString(id)) {
+        throw new KinveyError('id must be a string', id);
       }
 
-      entity[idAttribute] = id;
-      entity[kmdAttribute] = kmd;
-      return entity;
-    });
+      return this.adapter.findById(collection, id);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        return undefined;
+      }
 
-    return this.adapter.save(collection, entities).then(entities => {
+      throw error;
+    }
+  }
+
+  async save(collection, entities = []) {
+    try {
+      let singular = false;
+
+      if (!entities) {
+        return null;
+      }
+
+      if (!isArray(entities)) {
+        singular = true;
+        entities = [entities];
+      }
+
+      entities = map(entities, entity => {
+        let id = entity[idAttribute];
+        const kmd = entity[kmdAttribute] || {};
+
+        if (!id) {
+          id = this.generateObjectId();
+          kmd.local = true;
+        }
+
+        entity[idAttribute] = id;
+        entity[kmdAttribute] = kmd;
+        return entity;
+      });
+
+      entities = await this.adapter.save(collection, entities);
+
       if (singular && entities.length > 0) {
         return entities[0];
       }
 
       return entities;
-    });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  remove(collection, query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
-    }
+  async remove(collection, query) {
+    try {
+      if (query && !(query instanceof Query)) {
+        query = new Query(query);
+      }
 
-    // Removing should not take the query sort, limit, and skip into account.
-    if (query) {
-      query.sort = null;
-      query.limit = null;
-      query.skip = 0;
-    }
+      // Removing should not take the query sort, limit, and skip into account.
+      if (query) {
+        query.sort = null;
+        query.limit = null;
+        query.skip = 0;
+      }
 
-    const promise = this.find(collection, query).then(entities => {
-      const promises = entities.map(entity => this.removeById(collection, entity[idAttribute]));
-      return Promise.all(promises);
-    }).then(responses => {
-      const result = reduce(responses, (allEntities, entities) => {
-        allEntities = allEntities.concat(entities);
-        return allEntities;
+      const entities = await this.find(collection, query);
+      const responses = await Promise.all(entities.map(entity => this.removeById(collection, entity[idAttribute])));
+      return reduce(responses, (entities, entity) => {
+        entities.push(entity);
+        return entities;
       }, []);
-      return result;
-    });
-
-    return promise;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  removeById(collection, id) {
-    if (!id) {
-      return Promise.resolve(null);
-    }
+  async removeById(collection, id) {
+    try {
+      if (!id) {
+        return undefined;
+      }
 
-    if (!isString(id)) {
-      return Promise.reject(new KinveyError('id must be a string', id));
-    }
+      if (!isString(id)) {
+        throw new KinveyError('id must be a string', id);
+      }
 
-    const promise = this.adapter.removeById(collection, id);
-    return promise;
+      return this.adapter.removeById(collection, id);
+    } catch (error) {
+      throw error;
+    }
   }
 }
 
@@ -245,31 +253,31 @@ export class CacheMiddleware extends KinveyMiddleware {
 
   async handle(request) {
     request = await super.handle(request);
-    const method = request.method;
-    const query = request.query;
-    const body = request.body;
+    const { method, query, body, collectionName, entityId } = request;
     const db = new DB(request.appKey, this.adapters);
     let data;
 
     if (method === RequestMethod.GET) {
-      if (request.entityId) {
-        if (request.entityId === '_count') {
-          data = await db.count(request.collectionName, query);
-        } else if (request.entityId === '_group') {
-          data = await db.group(request.collectionName, body);
+      if (entityId) {
+        if (entityId === '_count') {
+          data = await db.count(collectionName, query);
+        } else if (entityId === '_group') {
+          data = await db.group(collectionName, body);
         } else {
-          data = await db.findById(request.collectionName, request.entityId);
+          data = await db.findById(collectionName, request.entityId);
         }
       } else {
-        data = await db.find(request.collectionName, query);
+        data = await db.find(collectionName, query);
       }
     } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
-      data = await db.save(request.collectionName, body);
+      data = await db.save(collectionName, body);
     } else if (method === RequestMethod.DELETE) {
-      if (request.entityId) {
-        data = await db.removeById(request.collectionName, request.entityId);
+      if (collectionName && entityId) {
+        data = await db.removeById(collectionName, entityId);
+      } else if (!collectionName) {
+        data = await db.clear();
       } else {
-        data = await db.remove(request.collectionName, query);
+        data = await db.remove(collectionName, query);
       }
     }
 

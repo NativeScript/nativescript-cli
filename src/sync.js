@@ -364,7 +364,8 @@ export default class Sync {
       query: query,
       timeout: options.timeout
     });
-    let syncEntities = await deleteRequest.execute().then(response => response.data);
+    const response = await deleteRequest.execute();
+    let syncEntities = response.data;
 
     if (syncEntities.length > 0) {
       // Filter the sync entities so that we only perform

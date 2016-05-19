@@ -47,10 +47,6 @@ describe('DataStore', function() {
   });
 
   afterEach(function() {
-    nock.cleanAll();
-  });
-
-  afterEach(function() {
     return logoutUser.call(this);
   });
 
@@ -92,7 +88,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.pathname', function() {
+  describe('pathname', function() {
     it('should return /appdata/<appKey>', function() {
       const store = new DataStore();
       expect(store.pathname).to.equal(`/appdata/${this.client.appKey}`);
@@ -104,7 +100,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.disableCache()', function() {
+  describe('disableCache()', function() {
     it('should disable the cache', function() {
       const store = new DataStore();
       store.disableCache();
@@ -120,7 +116,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.enableCache()', function() {
+  describe('enableCache()', function() {
     it('should enable the cache', function() {
       const store = new DataStore();
       store.enableCache();
@@ -128,7 +124,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.isCacheEnabled()', function() {
+  describe('isCacheEnabled()', function() {
     it('should return a false if the cache is disabled', function() {
       const store = new DataStore();
       store.disableCache();
@@ -142,7 +138,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.offline()', function() {
+  describe('offline()', function() {
     it('should make the store go offline', function() {
       const store = new DataStore();
       store.offline();
@@ -158,7 +154,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.online()', function() {
+  describe('online()', function() {
     it('should make the store go online', function() {
       const store = new DataStore();
       store.online();
@@ -166,7 +162,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.isOnline()', function() {
+  describe('isOnline()', function() {
     it('should return a false if the store is offline', function() {
       const store = new DataStore();
       store.offline();
@@ -180,7 +176,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.find()', function() {
+  describe('find()', function() {
     beforeEach(function() {
       const entity = {
         _id: randomString(),
@@ -257,7 +253,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.prototype.create()', function() {
+  describe('create()', function() {
     describe('cacheEnabled/online', function() {
       it('should create a single entity', function() {
         const entity = {
@@ -316,7 +312,6 @@ describe('DataStore', function() {
           prop: randomString()
         };
         const store = new DataStore(collection);
-        store.offline();
 
         nock(this.client.baseUrl)
           .post(store.pathname)
@@ -400,7 +395,7 @@ describe('DataStore', function() {
     });
   });
 
-  describe('DataStore.collection()', function() {
+  describe('collection()', function() {
     it('should be a static function', function() {
       expect(DataStore).itself.to.respondTo('collection');
     });

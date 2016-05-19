@@ -19,6 +19,12 @@ describe('Kinvey', function () {
         appKey: randomString(),
         appSecret: randomString()
       })).to.be.an.instanceof(Client);
+
+      // Reintialize with the previous client
+      Kinvey.init({
+        appKey: this.client.appKey,
+        appSecret: this.client.appSecret
+      });
     });
   });
 
