@@ -1,28 +1,34 @@
-import { Kinvey } from 'kinvey-javascript-sdk-core';
-import { NetworkRack } from 'kinvey-javascript-sdk-core/build/rack/rack';
-import { SerializeMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware/serialize';
+import { Kinvey as CoreKinvey } from 'kinvey-javascript-sdk-core';
+import { NetworkRack } from 'kinvey-javascript-sdk-core/es5/rack/rack';
+import { KinveyHttpMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware/http';
 import { HttpMiddleware } from './http';
-import { Push } from 'kinvey-phonegap-sdk/build/push';
+import { Push } from 'kinvey-phonegap-sdk/es5/push';
 import Device from './device';
 
-export class KinveyProvider {
-  constructor() {
-    // Use Http middleware after the Serialize middleware
-    const networkRack = NetworkRack.sharedInstance();
-    networkRack.useAfter(SerializeMiddleware, new HttpMiddleware());
-  }
+// Add the Http Middleware to the network rack
+const networkRack = NetworkRack.sharedInstance();
+networkRack.swap(KinveyHttpMiddleware, new HttpMiddleware());
 
-  init(options) {
+// Extend the Core Kinvey class
+class Kinvey extends CoreKinvey {
+  static init(options) {
     // Initialize Kinvey
-    const client = Kinvey.init(options);
+    const client = super.init(options);
 
     // Add Push module to Kinvey
     if (Device.isiOS() || Device.isAndroid()) {
-      Kinvey.Push = new Push();
+      this.Push = new Push();
     }
 
     // Return the client
     return client;
+  }
+}
+
+// ngKinveyProvider class
+export default class KinveyProvider {
+  init(options) {
+    return Kinvey.init(options);
   }
 
   $get() {

@@ -1,5 +1,4 @@
-import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware';
-import Device from './device';
+import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
 const $injector = angular.injector(['ng']);
 
 export class HttpMiddleware extends KinveyMiddleware {
@@ -9,16 +8,16 @@ export class HttpMiddleware extends KinveyMiddleware {
   }
 
   handle(request) {
-    return super.handle(request).then(() => {
-      // Add the device information
-      request.headers['X-Kinvey-Device-Information'] = JSON.stringify(Device.toJSON());
+    const promise = super.handle(request);
+    const { url, method, headers, body } = request;
 
+    return promise.then(() => {
       // Send the request with $http
       const promise = this.$http({
-        url: request.url,
-        method: request.method,
-        headers: request.headers,
-        data: request.data
+        url: url,
+        method: method,
+        headers: headers,
+        data: body
       }).then(response => {
         request.response = {
           statusCode: response.status,
