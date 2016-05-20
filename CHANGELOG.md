@@ -1,4 +1,7 @@
 ## Changelog
+### 3.0.0-beta.21 (2016-05-21)
+* Bugfix: Change main file in package.json to ./es5/kinvey.js.
+
 ### 3.0.0-beta.20 (2016-05-20)
 * Bugfix (MLIBZ-1052): RAPID is not compatible with DeltaFetch. Turn delta fetch off by default.
 * Bugfix (MLBIZ-1075): Fix issues related to the FileStore.

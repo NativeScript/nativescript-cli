@@ -2,7 +2,7 @@
   "name": "kinvey-javascript-sdk-core",
   "version": "3.0.0-beta.20",
   "description": "Kinvey JavaScript SDK Core",
-  "main": "./build/kinvey.js",
+  "main": "./es5/kinvey.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
     "test:ci": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
