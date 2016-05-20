@@ -106,34 +106,26 @@ export class WebSQL {
     return promise;
   }
 
-  find(collection) {
+  async find(collection) {
     const sql = 'SELECT value FROM #{collection}';
-    const promise = this.openTransaction(collection, sql, []).then(response => response.result).catch(error => {
-      if (error instanceof NotFoundError) {
-        return [];
-      }
-
-      throw error;
-    });
-    return promise;
+    const response = await this.openTransaction(collection, sql, []);
+    return response.result;
   }
 
-  findById(collection, id) {
+  async findById(collection, id) {
     const sql = 'SELECT value FROM #{collection} WHERE key = ?';
-    const promise = this.openTransaction(collection, sql, [id]).then(response => {
-      const entities = response.result;
+    const response = await this.openTransaction(collection, sql, [id]);
+    const entities = response.result;
 
-      if (entities.length === 0) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} webSQL database.`);
-      }
+    if (entities.length === 0) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} webSQL database.`);
+    }
 
-      return entities[0];
-    });
-    return promise;
+    return entities[0];
   }
 
-  save(collection, entities) {
+  async save(collection, entities) {
     const queries = [];
     entities = map(entities, entity => {
       queries.push([
@@ -144,53 +136,50 @@ export class WebSQL {
       return entity;
     });
 
-    const promise = this.openTransaction(collection, queries, null, true).then(() => entities);
-    return promise;
+    await this.openTransaction(collection, queries, null, true);
+    return entities;
   }
 
-  removeById(collection, id) {
-    const promise = this.openTransaction(collection, [
+  async removeById(collection, id) {
+    const queries = [
       ['SELECT value FROM #{collection} WHERE key = ?', [id]],
       ['DELETE FROM #{collection} WHERE key = ?', [id]],
-    ], null, true).then(response => {
-      const entities = response[0].result;
-      let count = response[1].rowCount;
-      count = !!count ? count : entities.length;
+    ];
+    const response = await this.openTransaction(collection, queries, null, true);
+    const entities = response[0].result;
+    let count = response[1].rowCount;
+    count = !!count ? count : entities.length;
 
-      if (count === 0) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} webSQL database.`);
-      }
+    if (count === 0) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} webSQL database.`);
+    }
 
-      return entities[0];
-    });
-
-    return promise;
+    return entities[0];
   }
 
-  clear() {
-    const promise = this.openTransaction(
+  async clear() {
+    const response = await this.openTransaction(
       masterCollectionName,
       'SELECT name AS value FROM #{collection} WHERE type = ?',
       ['table'],
       false
     );
 
-    return promise.then(response => {
-      const tables = response.result;
+    const tables = response.result;
 
-      // If there are no tables, return.
-      if (tables.length === 0) {
-        return null;
-      }
+    // If there are no tables, return.
+    if (tables.length === 0) {
+      return null;
+    }
 
-      // Drop all tables. Filter tables first to avoid attempting to delete
-      // system tables (which will fail).
-      const queries = tables
-        .filter(table => (/^[a-zA-Z0-9\-]{1,128}/).test(table))
-        .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
-      return this.openTransaction(masterCollectionName, queries, null, true);
-    }).then(() => null);
+    // Drop all tables. Filter tables first to avoid attempting to delete
+    // system tables (which will fail).
+    const queries = tables
+      .filter(table => (/^[a-zA-Z0-9\-]{1,128}/).test(table))
+      .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
+    await this.openTransaction(masterCollectionName, queries, null, true);
+    return null;
   }
 
   static isSupported() {

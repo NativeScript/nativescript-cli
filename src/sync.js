@@ -71,7 +71,7 @@ export default class Sync {
     // Filter the sync entities so that we only perform
     // one sync operation per unique entity.
     syncEntities = orderBy(syncEntities, 'key', ['desc']);
-    syncEntities = sortedUniqBy(syncEntities, 'entityId');
+    syncEntities = sortedUniqBy(syncEntities, syncEntity => syncEntity.entity[idAttribute]);
 
     // Return the length of sync entities
     return syncEntities.length;
@@ -135,7 +135,6 @@ export default class Sync {
       // Create the sync entity
       const syncEntity = {
         key: key,
-        entityId: id,
         collection: collection,
         state: {
           method: RequestMethod.POST
@@ -205,7 +204,6 @@ export default class Sync {
       // Create the sync entity
       const syncEntity = {
         key: key,
-        entityId: id,
         collection: collection,
         state: {
           method: RequestMethod.PUT
@@ -296,7 +294,6 @@ export default class Sync {
       // Create the sync entity
       const syncEntity = {
         key: key,
-        entityId: id,
         collection: collection,
         state: {
           method: RequestMethod.DELETE
@@ -371,7 +368,7 @@ export default class Sync {
       // Filter the sync entities so that we only perform
       // one sync operation per unique entity.
       syncEntities = orderBy(syncEntities, 'key', ['desc']);
-      syncEntities = sortedUniqBy(syncEntities, 'entityId');
+      syncEntities = sortedUniqBy(syncEntities, syncEntity => syncEntity.entity[idAttribute]);
 
       // Sync the entities in batches to prevent exhausting
       // available network connections

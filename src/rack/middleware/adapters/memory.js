@@ -1,4 +1,3 @@
-import Queue from 'promise-queue';
 import { KinveyError, NotFoundError } from '../../../errors';
 import MemoryCache from 'fast-memory-cache';
 import keyBy from 'lodash/keyBy';
@@ -9,9 +8,6 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const caches = [];
-
-Queue.configure(Promise);
-const queue = new Queue(1, Infinity);
 
 /**
  * @private
@@ -35,45 +31,29 @@ export class Memory {
     }
   }
 
-  find(collection) {
-    return queue.add(() => {
-      const promise = Promise.resolve().then(() => {
-        const entities = this.cache.get(collection);
+  async find(collection) {
+    const entities = this.cache.get(collection);
 
-        if (entities) {
-          try {
-            return JSON.parse(entities);
-          } catch (err) {
-            return entities;
-          }
-        }
+    if (entities) {
+      return JSON.parse(entities);
+    }
 
-        return entities;
-      }).then(entities => {
-        if (!entities) {
-          return [];
-        }
-
-        return entities;
-      });
-      return promise;
-    });
+    return [];
   }
 
-  findById(collection, id) {
-    return this.find(collection).then(entities => {
-      const entity = find(entities, entity => entity[idAttribute] === id);
+  async findById(collection, id) {
+    const entities = await this.find(collection);
+    const entity = find(entities, entity => entity[idAttribute] === id);
 
-      if (!entity) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} memory database.`);
-      }
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} memory database.`);
+    }
 
-      return entity;
-    });
+    return entity;
   }
 
-  save(collection, entities) {
+  async save(collection, entities) {
     let singular = false;
 
     if (!isArray(entities)) {
@@ -82,48 +62,43 @@ export class Memory {
     }
 
     if (entities.length === 0) {
-      return Promise.resolve(entities);
+      return entities;
     }
 
-    return this.find(collection).then(existingEntities => {
-      existingEntities = keyBy(existingEntities, idAttribute);
-      entities = keyBy(entities, idAttribute);
-      const entityIds = Object.keys(entities);
+    let existingEntities = await this.find(collection);
+    existingEntities = keyBy(existingEntities, idAttribute);
+    entities = keyBy(entities, idAttribute);
+    const entityIds = Object.keys(entities);
 
-      forEach(entityIds, id => {
-        existingEntities[id] = entities[id];
-      });
-
-      this.cache.set(collection, JSON.stringify(values(existingEntities)));
-      entities = values(entities);
-      return singular ? entities[0] : entities;
+    forEach(entityIds, id => {
+      existingEntities[id] = entities[id];
     });
+
+    this.cache.set(collection, JSON.stringify(values(existingEntities)));
+
+    entities = values(entities);
+    return singular ? entities[0] : entities;
   }
 
-  removeById(collection, id) {
-    return this.find(collection).then(entities => {
-      entities = keyBy(entities, idAttribute);
-      const entity = entities[id];
+  async removeById(collection, id) {
+    let entities = await this.find(collection);
+    entities = keyBy(entities, idAttribute);
+    const entity = entities[id];
 
-      if (!entity) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} memory database.`);
-      }
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} memory database.`);
+    }
 
-      delete entities[id];
-      this.cache.set(collection, JSON.stringify(values(entities)));
+    delete entities[id];
+    this.cache.set(collection, JSON.stringify(values(entities)));
 
-      return entity;
-    });
+    return entity;
   }
 
-  async clear(collection) {
-    return this.find(collection).then(entities => {
-      delete caches[this.name];
-      this.cache = new MemoryCache();
-      caches[this.name] = this.cache;
-      return entities;
-    });
+  async clear() {
+    this.cache.clear();
+    return null;
   }
 
   static isSupported() {

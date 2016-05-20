@@ -458,8 +458,6 @@ export class DataStore {
   create(data, options = {}) {
     const stream = Observable.create(async observer => {
       try {
-        let singular = false;
-
         if (!data) {
           observer.next(null);
         } else if (this.isCacheEnabled()) {
@@ -478,25 +476,20 @@ export class DataStore {
 
           const response = await request.execute();
           data = response.data;
+          observer.next(data);
 
-          if (!isArray(data)) {
-            singular = true;
-            data = [data];
-          }
-
-          if (data.length > 0) {
-            await Promise.all(map(data, entity => this.sync.addCreateOperation(this.collection, entity, options)));
+          if (data) {
+            await this.sync.addCreateOperation(this.collection, data, options);
 
             if (this.isOnline()) {
               const ids = Object.keys(keyBy(data, idAttribute));
-              const query = new Query().contains('entityId', ids);
+              const query = new Query().contains('entity._id', ids);
               let push = await this.push(query, options);
               push = filter(push, result => !result.error);
               data = map(push, result => result.entity);
+              observer.next(data);
             }
           }
-
-          observer.next(singular ? data[0] : data);
         } else if (this.isOnline()) {
           const request = new NetworkRequest({
             method: RequestMethod.POST,
@@ -556,11 +549,11 @@ export class DataStore {
           }
 
           if (data.length > 0) {
-            await Promise.all(map(data, entity => this.sync.addUpdateOperation(this.collection, entity, options)));
+            await this.sync.addUpdateOperation(this.collection, data, options);
 
             if (this.isOnline()) {
               const ids = Object.keys(keyBy(data, idAttribute));
-              const query = new Query().contains('entityId', ids);
+              const query = new Query().contains('entity._id', ids);
               let push = await this.push(query, options);
               push = filter(push, result => !result.error);
               data = map(push, result => result.entity);
@@ -632,7 +625,7 @@ export class DataStore {
               const metadata = new Metadata(entity);
               return metadata.isLocal();
             });
-            const query = new Query().contains('entityId', Object.keys(keyBy(localData, idAttribute)));
+            const query = new Query().contains('entity._id', Object.keys(keyBy(localData, idAttribute)));
             await this.sync.clear(query, options);
 
             // Create delete operations for non local data in the sync table
@@ -642,7 +635,7 @@ export class DataStore {
 
             if (this.isOnline()) {
               const ids = Object.keys(keyBy(syncData, idAttribute));
-              const query = new Query().contains('entityId', ids);
+              const query = new Query().contains('entity._id', ids);
               let push = await this.push(query, options);
               push = filter(push, result => !result.error);
               data = map(push, result => result.entity);
@@ -705,14 +698,14 @@ export class DataStore {
 
             if (metadata.isLocal()) {
               const query = new Query();
-              query.equalTo('entityId', data[idAttribute]);
+              query.equalTo('entity._id', data[idAttribute]);
               await this.sync.clear(this.collection, query, options);
             } else {
               await this.sync.addDeleteOperation(this.collection, data, options);
             }
 
             if (this.isOnline()) {
-              const query = new Query().equalTo('entityId', data[idAttribute]);
+              const query = new Query().equalTo('entity._id', data[idAttribute]);
               let push = await this.push(query, options);
               push = filter(push, result => !result.error);
               data = map(push, result => result.entity);
@@ -766,7 +759,7 @@ export class DataStore {
           const data = response.data;
 
           if (data.length > 0) {
-            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(data, idAttribute)));
+            const syncQuery = new Query().contains('entity._id', Object.keys(keyBy(data, idAttribute)));
             await this.sync.clear(syncQuery, options);
           } else if (!query) {
             const syncQuery = new Query().equalTo('collection', this.collection);

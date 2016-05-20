@@ -15,7 +15,7 @@ gulp.task('lint', () => {
   return stream;
 });
 
-gulp.task('clean', done => del(['build'], done));
+gulp.task('clean', done => del(['es5'], done));
 
 gulp.task('transpile', ['clean', 'lint'], () => {
   const envs = env.set({
@@ -68,5 +68,5 @@ gulp.task('bundle', ['transpile'], () => {
 });
 
 gulp.task('default', () => {
-  runSequence('build');
+  runSequence('transpile');
 });

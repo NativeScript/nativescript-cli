@@ -3,7 +3,9 @@ import keyBy from 'lodash/keyBy';
 import merge from 'lodash/merge';
 import values from 'lodash/values';
 import forEach from 'lodash/forEach';
+import findIndex from 'lodash/findIndex';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const masterCollectionName = 'master';
 const localStorage = global.localStorage;
 
 /**
@@ -14,76 +16,76 @@ export class LocalStorage {
     this.name = name;
   }
 
-  find(collection) {
-    return Promise.resolve().then(() => {
-      const data = localStorage.getItem(`${this.name}${collection}`);
+  async find(collection) {
+    const entities = localStorage.getItem(`${this.name}${collection}`);
 
-      try {
-        return JSON.parse(data);
-      } catch (err) {
-        return data;
-      }
-    }).then(entities => {
-      if (!entities) {
-        return [];
-      }
+    if (entities) {
+      return JSON.parse(entities);
+    }
 
-      return entities;
-    });
+    return entities;
   }
 
-  findById(collection, id) {
-    return this.find(collection).then(entities => {
-      const entity = find(entities, entity => entity[idAttribute] === id);
+  async findById(collection, id) {
+    const entities = await this.find(collection);
+    const entity = find(entities, entity => entity[idAttribute] === id);
 
-      if (!entity) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} memory database.`);
-      }
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} localstorage database.`);
+    }
 
-      return entity;
-    });
+    return entity;
   }
 
-  save(collection, entities) {
-    return this.find(collection).then(existingEntities => {
-      const existingEntitiesById = keyBy(existingEntities, idAttribute);
-      const entitiesById = keyBy(entities, idAttribute);
-      const existingEntityIds = Object.keys(existingEntitiesById);
+  async save(collection, entities) {
+    const collections = await this.find(masterCollectionName);
 
-      forEach(existingEntityIds, id => {
-        const existingEntity = existingEntitiesById[id];
-        const entity = entitiesById[id];
+    if (findIndex(collections, collection) === -1) {
+      collections.push(collection);
+      localStorage.setItem(`${this.name}${masterCollectionName}`, JSON.stringify(collections));
+    }
 
-        if (entity) {
-          entitiesById[id] = merge(existingEntity, entity);
-        }
-      });
+    const existingEntities = await this.find(collection);
+    const existingEntitiesById = keyBy(existingEntities, idAttribute);
+    const entitiesById = keyBy(entities, idAttribute);
+    const existingEntityIds = Object.keys(existingEntitiesById);
 
-      localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
-      return entities;
-    });
-  }
-
-  removeById(collection, id) {
-    return this.find(collection).then(entities => {
-      const entitiesById = keyBy(entities, idAttribute);
+    forEach(existingEntityIds, id => {
+      const existingEntity = existingEntitiesById[id];
       const entity = entitiesById[id];
 
-      if (!entity) {
-        throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
-          `collection on the ${this.name} memory database.`);
+      if (entity) {
+        entitiesById[id] = merge(existingEntity, entity);
       }
-
-      delete entitiesById[id];
-      localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
-
-      return entity;
     });
+
+    localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+    return entities;
+  }
+
+  async removeById(collection, id) {
+    const entities = await this.find(collection);
+    const entitiesById = keyBy(entities, idAttribute);
+    const entity = entitiesById[id];
+
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
+        `collection on the ${this.name} memory database.`);
+    }
+
+    delete entitiesById[id];
+    localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));
+
+    return entity;
   }
 
   async clear() {
-    throw new Error('unsupported');
+    const collections = await this.find(masterCollectionName);
+
+    forEach(collections, collection => {
+      localStorage.removeItem(`${this.name}${collection}`);
+    });
   }
 
   static isSupported() {

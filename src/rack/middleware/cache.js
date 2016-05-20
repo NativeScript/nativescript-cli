@@ -10,6 +10,7 @@ import { Log } from '../../log';
 import { KinveyMiddleware } from '../middleware';
 import { RequestMethod } from '../../requests/request';
 import { StatusCode } from '../../requests/response';
+import Queue from 'promise-queue';
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
@@ -18,6 +19,8 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+Queue.configure(Promise);
+const queue = new Queue(1, Infinity);
 
 /**
  * @private
@@ -110,6 +113,10 @@ export class DB {
     try {
       let entities = await this.adapter.find(collection);
 
+      if (!entities) {
+        return [];
+      }
+
       if (query && !(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));
       }
@@ -163,39 +170,41 @@ export class DB {
     }
   }
 
-  async save(collection, entities = []) {
-    let singular = false;
+  save(collection, entities = []) {
+    return queue.add(async () => {
+      let singular = false;
 
-    if (!entities) {
-      return null;
-    }
-
-    if (!isArray(entities)) {
-      singular = true;
-      entities = [entities];
-    }
-
-    entities = map(entities, entity => {
-      let id = entity[idAttribute];
-      const kmd = entity[kmdAttribute] || {};
-
-      if (!id) {
-        id = this.generateObjectId();
-        kmd.local = true;
+      if (!entities) {
+        return null;
       }
 
-      entity[idAttribute] = id;
-      entity[kmdAttribute] = kmd;
-      return entity;
+      if (!isArray(entities)) {
+        singular = true;
+        entities = [entities];
+      }
+
+      entities = map(entities, entity => {
+        let id = entity[idAttribute];
+        const kmd = entity[kmdAttribute] || {};
+
+        if (!id) {
+          id = this.generateObjectId();
+          kmd.local = true;
+        }
+
+        entity[idAttribute] = id;
+        entity[kmdAttribute] = kmd;
+        return entity;
+      });
+
+      entities = await this.adapter.save(collection, entities);
+
+      if (singular && entities.length > 0) {
+        return entities[0];
+      }
+
+      return entities;
     });
-
-    entities = await this.adapter.save(collection, entities);
-
-    if (singular && entities.length > 0) {
-      return entities[0];
-    }
-
-    return entities;
   }
 
   async remove(collection, query) {
@@ -218,20 +227,22 @@ export class DB {
     }, []);
   }
 
-  async removeById(collection, id) {
-    if (!id) {
-      return undefined;
-    }
+  removeById(collection, id) {
+    return queue.add(() => {
+      if (!id) {
+        return undefined;
+      }
 
-    if (!isString(id)) {
-      throw new KinveyError('id must be a string', id);
-    }
+      if (!isString(id)) {
+        throw new KinveyError('id must be a string', id);
+      }
 
-    return this.adapter.removeById(collection, id);
+      return this.adapter.removeById(collection, id);
+    });
   }
 
-  async clear() {
-    return this.adapter.clear();
+  clear() {
+    return queue.add(() => this.adapter.clear());
   }
 }
 
