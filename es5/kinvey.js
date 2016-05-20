@@ -34,6 +34,8 @@ var _sync2 = _interopRequireDefault(_sync);
 
 var _user = require('./user');
 
+var _userstore = require('./userstore');
+
 var _mic = require('./mic');
 
 var _network = require('./requests/network');
@@ -45,6 +47,8 @@ var _url = require('url');
 var _url2 = _interopRequireDefault(_url);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -107,6 +111,7 @@ var Kinvey = function () {
       this.SocialIdentity = _mic.SocialIdentity;
       this.Sync = _sync2.default;
       this.User = _user.User;
+      this.UserStore = _userstore.UserStore;
 
       // Return the client
       return client;
@@ -120,24 +125,44 @@ var Kinvey = function () {
 
   }, {
     key: 'ping',
-    value: function ping() {
-      var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
+    value: function () {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
+        var client = arguments.length <= 0 || arguments[0] === undefined ? _client2.default.sharedInstance() : arguments[0];
+        var request, response;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                request = new _network.NetworkRequest({
+                  method: _request.RequestMethod.GET,
+                  authType: _request.AuthType.All,
+                  url: _url2.default.format({
+                    protocol: client.protocol,
+                    host: client.host,
+                    pathname: appdataNamespace + '/' + client.appKey
+                  })
+                });
+                _context.next = 3;
+                return request.execute();
 
-      var request = new _network.NetworkRequest({
-        method: _request.RequestMethod.GET,
-        authType: _request.AuthType.All,
-        url: _url2.default.format({
-          protocol: client.protocol,
-          host: client.host,
-          pathname: appdataNamespace + '/' + client.appKey
-        })
-      });
+              case 3:
+                response = _context.sent;
+                return _context.abrupt('return', response.data);
 
-      var promise = request.execute().then(function (response) {
-        return response.data;
-      });
-      return promise;
-    }
+              case 5:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function ping(_x) {
+        return ref.apply(this, arguments);
+      }
+
+      return ping;
+    }()
   }, {
     key: 'client',
     get: function get() {
