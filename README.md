@@ -72,12 +72,12 @@ You can install and run the NativeScript CLI on Windows, OS X or Linux.
 ### Setup Script
 To quickly set up your system for the latest NativeScript CLI, paste the following PowerShell script in the **Command Prompt** and hit `Enter`:
 ```cmd
-@powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
+@powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))"
 ```
 
 Alternatively, your can paste the following PowerShell setup script in a **Windows PowerShell console** and hit `Enter`:
 ```PowerShell
-start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.ps1'))"
+start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))"
 ```
 > Both scripts require that you have **.NET 4.0 or later** installed on your system. You can download .NET 4.6.1 from this [link](http://go.microsoft.com/fwlink/?LinkId=671729).
 
@@ -143,7 +143,7 @@ android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,s
 ### Setup Script
 To quickly set up your system for the latest NativeScript CLI, paste the following Ruby script in the **Terminal** and hit `Enter`:
 ```Shell
-sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.rb)"
+sudo ruby -e "$(curl -fsSL https://www.nativescript.org/setup/mac)"
 ```
 
 ### Manual Setup

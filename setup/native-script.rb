@@ -2,7 +2,7 @@
 
 # A script to setup developer's workstation for developing with NativeScript
 # To run it against PRODUCTION branch (only one supported with self-elevation) use
-# sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/NativeScript/nativescript-cli/production/setup/native-script.rb)"
+# sudo ruby -e "$(curl -fsSL https://www.nativescript.org/setup/mac)"
 
 # Only the user can manually download and install Xcode from App Store
 unless Process.uid == 0
