@@ -61,27 +61,28 @@ export class Response {
     const name = data.name || data.error;
     const message = data.message || data.description;
     const debug = data.debug;
+    const code = this.statusCode;
 
     if (name === 'FeatureUnavailableError') {
-      return new FeatureUnavailableError(message, debug);
+      return new FeatureUnavailableError(message, debug, code);
     } else if (name === 'IncompleteRequestBodyError') {
-      return new IncompleteRequestBodyError(message, debug);
+      return new IncompleteRequestBodyError(message, debug, code);
     } else if (name === 'InsufficientCredentials') {
-      return new InsufficientCredentialsError(message, debug);
+      return new InsufficientCredentialsError(message, debug, code);
     } else if (name === 'InvalidCredentials') {
-      return new InvalidCredentialsError(message, debug);
+      return new InvalidCredentialsError(message, debug, code);
     } else if (name === 'InvalidIdentifierError') {
-      return new InvalidIdentifierError(message, debug);
+      return new InvalidIdentifierError(message, debug, code);
     } else if (name === 'InvalidQuerySyntaxError') {
-      return new InvalidQuerySyntaxError(message, debug);
+      return new InvalidQuerySyntaxError(message, debug, code);
     } else if (name === 'JSONParseError') {
-      return new JSONParseError(message, debug);
+      return new JSONParseError(message, debug, code);
     } else if (name === 'MissingQueryError') {
-      return new MissingQueryError(message, debug);
+      return new MissingQueryError(message, debug, code);
     } else if (name === 'MissingRequestHeaderError') {
-      return new MissingRequestHeaderError(message, debug);
+      return new MissingRequestHeaderError(message, debug, code);
     } else if (name === 'MissingRequestParameterError') {
-      return new MissingRequestParameterError(message, debug);
+      return new MissingRequestParameterError(message, debug, code);
     } else if (name === 'EntityNotFound'
         || name === 'CollectionNotFound'
         || name === 'AppNotFound'
@@ -89,12 +90,12 @@ export class Response {
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound'
         || this.statusCode === 404) {
-      return new NotFoundError(message, debug);
+      return new NotFoundError(message, debug, code);
     } else if (name === 'ParameterValueOutOfRangeError') {
-      return new ParameterValueOutOfRangeError(message, debug);
+      return new ParameterValueOutOfRangeError(message, debug, code);
     }
 
-    return new KinveyError(message, debug);
+    return new KinveyError(message, debug, code);
   }
 
   getHeader(name) {

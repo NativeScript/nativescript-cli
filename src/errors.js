@@ -1,9 +1,10 @@
 import ExtendableError from 'es6-error';
 
 export class KinveyError extends ExtendableError {
-  constructor(message = 'An error has occurred.', debug = '') {
+  constructor(message = 'An error has occurred.', debug = '', code = -1) {
     super(message);
     this.debug = debug;
+    this.code = code;
   }
 }
 
