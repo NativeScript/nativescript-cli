@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/build/rack/middleware';
+import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
 import parseHeaders from 'parse-headers';
 
 export class HttpMiddleware extends KinveyMiddleware {
@@ -15,10 +15,9 @@ export class HttpMiddleware extends KinveyMiddleware {
         xhr.responseType = request.responseType;
 
         // Append request headers
-        for (const name in request.headers) {
-          if (request.headers.hasOwnProperty(name)) {
-            xhr.setRequestHeader(name, request.headers[name]);
-          }
+        const names = Object.keys(request.headers);
+        for (const name of names) {
+          xhr.setRequestHeader(name, request.headers[name]);
         }
 
         xhr.onload = xhr.ontimeout = xhr.onabort = xhr.onerror = () => {

@@ -1,22 +1,19 @@
-import Promise from 'babybird';
-import { isPhoneGap } from 'kinvey-javascript-sdk-core/build/utils/device';
-import { KinveyError, NotFoundError } from 'kinvey-javascript-sdk-core/build/errors';
+import { Device } from './device';
+import { KinveyError } from 'kinvey-javascript-sdk-core/es5/errors';
 import { EventEmitter } from 'events';
-import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/build/stores/datastore';
-import { HttpMethod, AuthType } from 'kinvey-javascript-sdk-core/build/enums';
-import { User } from 'kinvey-javascript-sdk-core/build/user';
-import { NetworkRequest } from 'kinvey-javascript-sdk-core/build/requests/network';
-import { Client } from 'kinvey-javascript-sdk-core/build/client';
-import { Query } from 'kinvey-javascript-sdk-core/build/query';
-import { isiOS, isAndroid } from './utils';
+import { DataStore, DataStoreType } from 'kinvey-javascript-sdk-core/es5/datastore';
+import { RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/es5/requests/request';
+import { User } from 'kinvey-javascript-sdk-core/es5/user';
+import { NetworkRequest } from 'kinvey-javascript-sdk-core/es5/requests/network';
+import { Client } from 'kinvey-javascript-sdk-core/es5/client';
 import assign from 'lodash/assign';
 import url from 'url';
 import bind from 'lodash/bind';
-import map from 'lodash/map';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';
 const notificationEvent = process.env.KINVEY_NOTIFICATION_EVENT || 'notification';
 const deviceCollectionName = process.env.KINVEY_DEVICE_COLLECTION_NAME || 'kinvey_device';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const storage = global.localStorage;
 let notificationEventListener;
 
 export class Push extends EventEmitter {
@@ -26,7 +23,7 @@ export class Push extends EventEmitter {
     this.client = Client.sharedInstance();
     notificationEventListener = bind(this.notificationListener, this);
 
-    if (isPhoneGap()) {
+    if (Device.isPhoneGap()) {
       this.deviceReady = new Promise(resolve => {
         const onDeviceReady = bind(() => {
           document.removeEventListener('deviceready', onDeviceReady);
@@ -67,7 +64,7 @@ export class Push extends EventEmitter {
   }
 
   isSupported() {
-    return isiOS() || isAndroid();
+    return Device.isiOS() || Device.isAndroid();
   }
 
   onNotification(listener) {
@@ -100,41 +97,34 @@ export class Push extends EventEmitter {
             'setting up your project.'));
         }
 
-        return global.PushNotification.hasPermission(data => {
-          if (!data.isEnabled) {
-            return reject(new KinveyError('Permission for push notifications has not been granted by the user.'));
-          }
+        if (this.phonegapPush) {
+          this.phonegapPush.off(notificationEvent, notificationEventListener);
+        }
 
-          if (this.phonegapPush) {
-            this.phonegapPush.off(notificationEvent, notificationEventListener);
-          }
+        this.phonegapPush = global.PushNotification.init(options);
+        this.phonegapPush.on(notificationEvent, notificationEventListener);
 
-          this.phonegapPush = global.PushNotification.init(options);
-          this.phonegapPush.on(notificationEvent, notificationEventListener);
-
-          this.phonegapPush.on('registration', data => {
-            resolve(data.registrationId);
-          });
-
-          this.phonegapPush.on('error', error => {
-            reject(new KinveyError('An error occurred registering this device for push notifications.', error));
-          });
-          return promise;
+        this.phonegapPush.on('registration', data => {
+          resolve(data.registrationId);
         });
+
+        this.phonegapPush.on('error', error => {
+          reject(new KinveyError('An error occurred registering this device for push notifications.', error));
+        });
+
+        return this.phonegapPush;
       }).then(deviceId => {
         if (!deviceId) {
           throw new KinveyError('Unable to retrieve the device id to register this device for push notifications.');
         }
 
-        const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
-        store.client = this.client;
-        store.disableSync();
-        return store.findById(deviceId).catch(error => {
-          if (error instanceof NotFoundError) {
-            return undefined;
+        return new Promise((resolve, reject) => {
+          try {
+            const entity = JSON.parse(storage.getItem(deviceCollectionName));
+            resolve(entity);
+          } catch (error) {
+            reject(error);
           }
-
-          throw error;
         }).then(entity => {
           if (entity && options.force !== true) {
             return entity;
@@ -142,7 +132,7 @@ export class Push extends EventEmitter {
 
           const user = User.getActiveUser(this.client);
           const request = new NetworkRequest({
-            method: HttpMethod.POST,
+            method: RequestMethod.POST,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
@@ -159,9 +149,11 @@ export class Push extends EventEmitter {
             timeout: options.timeout,
             client: this.client
           });
-          return request.execute().then(() => store.save({ _id: deviceId, registered: true })).then(() => {
-            this.client.push = options;
-          });
+          return request.execute()
+            .then(() => storage.setItem(deviceCollectionName, JSON.stringify({ _id: deviceId, registered: true })))
+            .then(() => {
+              this.client.push = options;
+            });
         });
       });
 
@@ -176,7 +168,7 @@ export class Push extends EventEmitter {
           'push notifications on iOS and Android platforms.'));
       }
 
-      const store = DataStore.getInstance(deviceCollectionName, DataStoreType.Sync);
+      const store = DataStore.collection(deviceCollectionName, DataStoreType.Sync);
       store.client = this.client;
       store.disableSync();
 
@@ -194,38 +186,41 @@ export class Push extends EventEmitter {
       });
 
       promise = promise.then(() => {
-        const query = new Query();
-        query.equalTo('registered', true);
-        return store.find(query);
-      }).then(entities => {
-        if (!entities.length === 0) {
+        const promise = new Promise((resolve, reject) => {
+          try {
+            const entity = JSON.parse(storage.getItem(deviceCollectionName));
+            resolve(entity);
+          } catch (error) {
+            reject(error);
+          }
+        });
+        return promise;
+      }).then(entity => {
+        if (!entity) {
           throw new KinveyError('This device has not been registered for push notifications.');
         }
 
         const user = User.getActiveUser(this.client);
-        const promises = map(entities, entity => {
-          const deviceId = entity[idAttribute];
-          const request = new NetworkRequest({
-            method: HttpMethod.POST,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this._pathname}/unregister-device`
-            }),
-            properties: options.properties,
-            authType: user ? AuthType.Session : AuthType.Master,
-            data: {
-              platform: global.device.platform.toLowerCase(),
-              framework: 'phonegap',
-              deviceId: deviceId,
-              userId: user ? null : options.userId
-            },
-            timeout: options.timeout,
-            client: this.client
-          });
-          return request.execute().then(() => store.removeById(deviceId));
+        const deviceId = entity[idAttribute];
+        const request = new NetworkRequest({
+          method: RequestMethod.POST,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `${this._pathname}/unregister-device`
+          }),
+          properties: options.properties,
+          authType: user ? AuthType.Session : AuthType.Master,
+          data: {
+            platform: global.device.platform.toLowerCase(),
+            framework: 'phonegap',
+            deviceId: deviceId,
+            userId: user ? null : options.userId
+          },
+          timeout: options.timeout,
+          client: this.client
         });
-        return Promise.all(promises);
+        return request.execute().then(() => storage.removeItem(deviceId));
       }).then(() => {
         this.client.push = null;
       });
