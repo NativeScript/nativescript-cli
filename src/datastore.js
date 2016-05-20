@@ -29,9 +29,7 @@ const onlineSymbol = Symbol();
  */
 const DataStoreType = {
   Sync: 'Sync',
-  Network: 'Network',
-  User: 'User',
-  File: 'File'
+  Network: 'Network'
 };
 Object.freeze(DataStoreType);
 export { DataStoreType };
@@ -184,7 +182,6 @@ export class DataStore {
   find(query, options = {}) {
     const stream = Observable.create(async observer => {
       try {
-        const syncQuery = new Query().equalTo('collection', this.collection);
         let cacheData = [];
         let networkData = [];
 
@@ -195,19 +192,21 @@ export class DataStore {
 
         // Fetch data from cache
         if (this.isCacheEnabled()) {
-          let count = await this.syncCount(syncQuery);
+          if (this.isOnline()) {
+            let count = await this.syncCount();
 
-          // Attempt to push any pending sync data before fetching from the network.
-          if (count > 0) {
-            await this.push(syncQuery);
-            count = await this.syncCount(syncQuery);
-          }
+            // Attempt to push any pending sync data before fetching from the network.
+            if (count > 0) {
+              await this.push();
+              count = await this.syncCount();
+            }
 
-          // Throw an error if there are still items that need to be synced
-          if (count > 0) {
-            throw new KinveyError('Unable to load data from the network. ' +
-              `There are ${count} entities that need ` +
-              'to be synced before data is loaded from the network.');
+            // Throw an error if there are still items that need to be synced
+            if (count > 0) {
+              throw new KinveyError('Unable to load data from the network. ' +
+                `There are ${count} entities that need ` +
+                'to be synced before data is loaded from the network.');
+            }
           }
 
           const request = new CacheRequest({
@@ -296,20 +295,21 @@ export class DataStore {
           observer.next(null);
         } else {
           if (this.isCacheEnabled()) {
-            const syncQuery = new Query().equalTo('collection', this.collection);
-            let count = await this.syncCount(syncQuery);
+            if (this.isOnline()) {
+              let count = await this.syncCount();
 
-            // Attempt to push any pending sync data before fetching from the network.
-            if (count > 0) {
-              await this.push(syncQuery);
-              count = await this.syncCount(syncQuery);
-            }
+              // Attempt to push any pending sync data before fetching from the network.
+              if (count > 0) {
+                await this.push();
+                count = await this.syncCount();
+              }
 
-            // Throw an error if there are still items that need to be synced
-            if (count > 0) {
-              throw new KinveyError('Unable to load data. ' +
-                `There are ${count} entities that need ` +
-                'to be synced before data can be loaded.');
+              // Throw an error if there are still items that need to be synced
+              if (count > 0) {
+                throw new KinveyError('Unable to load data. ' +
+                  `There are ${count} entities that need ` +
+                  'to be synced before data can be loaded.');
+              }
             }
 
             const request = new CacheRequest({
@@ -392,20 +392,21 @@ export class DataStore {
     const stream = Observable.create(async observer => {
       try {
         if (this.isCacheEnabled()) {
-          const syncQuery = new Query().equalTo('collection', this.collection);
-          let count = await this.syncCount(syncQuery);
+          if (this.isOnline()) {
+            let count = await this.syncCount();
 
-          // Attempt to push any pending sync data before fetching from the network.
-          if (count > 0) {
-            await this.push(syncQuery);
-            count = await this.syncCount(syncQuery);
-          }
+            // Attempt to push any pending sync data before fetching from the network.
+            if (count > 0) {
+              await this.push();
+              count = await this.syncCount();
+            }
 
-          // Throw an error if there are still items that need to be synced
-          if (count > 0) {
-            throw new KinveyError('Unable to count data. ' +
-              `There are ${count} entities that need ` +
-              'to be synced before data is counted.');
+            // Throw an error if there are still items that need to be synced
+            if (count > 0) {
+              throw new KinveyError('Unable to count data. ' +
+                `There are ${count} entities that need ` +
+                'to be synced before data is counted.');
+            }
           }
 
           const request = new CacheRequest({
@@ -460,53 +461,66 @@ export class DataStore {
       try {
         if (!data) {
           observer.next(null);
-        } else if (this.isCacheEnabled()) {
-          const request = new CacheRequest({
-            method: RequestMethod.POST,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            body: data,
-            timeout: options.timeout
-          });
+        } else {
+          let singular = false;
 
-          const response = await request.execute();
-          data = response.data;
-          observer.next(data);
-
-          if (data) {
-            await this.sync.addCreateOperation(this.collection, data, options);
-
-            if (this.isOnline()) {
-              const ids = Object.keys(keyBy(data, idAttribute));
-              const query = new Query().contains('entity._id', ids);
-              let push = await this.push(query, options);
-              push = filter(push, result => !result.error);
-              data = map(push, result => result.entity);
-              observer.next(data);
-            }
+          if (!isArray(data)) {
+            singular = true;
+            data = [data];
           }
-        } else if (this.isOnline()) {
-          const request = new NetworkRequest({
-            method: RequestMethod.POST,
-            authType: AuthType.Default,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            data: data,
-            timeout: options.timeout,
-            client: this.client
-          });
-          const response = await request.execute();
-          observer.next(response.data);
+
+          if (this.isCacheEnabled()) {
+            const request = new CacheRequest({
+              method: RequestMethod.POST,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: this.pathname,
+                query: options.query
+              }),
+              properties: options.properties,
+              body: data,
+              timeout: options.timeout
+            });
+
+            const response = await request.execute();
+            data = response.data;
+
+            if (data.length > 0) {
+              await this.sync.addCreateOperation(this.collection, data, options);
+
+              if (this.isOnline()) {
+                const ids = Object.keys(keyBy(data, idAttribute));
+                const query = new Query().contains('entity._id', ids);
+                let push = await this.push(query, options);
+                push = filter(push, result => !result.error);
+                data = map(push, result => result.entity);
+              }
+            }
+
+            observer.next(singular ? data[0] : data);
+          } else if (this.isOnline()) {
+            const responses = await Promise.all(map(data, entity => {
+              const request = new NetworkRequest({
+                method: RequestMethod.POST,
+                authType: AuthType.Default,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: this.pathname,
+                  query: options.query
+                }),
+                properties: options.properties,
+                data: entity,
+                timeout: options.timeout,
+                client: this.client
+              });
+              return request.execute();
+            }));
+
+            data = map(responses, response => response.data);
+            observer.next(singular ? data[0] : data);
+          }
         }
       } catch (error) {
         return observer.error(error);
@@ -521,63 +535,70 @@ export class DataStore {
   update(data, options = {}) {
     const stream = Observable.create(async observer => {
       try {
-        let singular = false;
-        const id = data[idAttribute];
-
         if (!data) {
           observer.next(null);
-        } else if (this.isCacheEnabled()) {
-          const request = new CacheRequest({
-            method: RequestMethod.PUT,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: id ? `${this.pathname}/${id}` : this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            body: data,
-            timeout: options.timeout
-          });
-
-          const response = await request.execute();
-          data = response.data;
+        } else {
+          let singular = false;
+          const id = data[idAttribute];
 
           if (!isArray(data)) {
             singular = true;
             data = [data];
           }
 
-          if (data.length > 0) {
-            await this.sync.addUpdateOperation(this.collection, data, options);
+          if (this.isCacheEnabled()) {
+            const request = new CacheRequest({
+              method: RequestMethod.PUT,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: id ? `${this.pathname}/${id}` : this.pathname,
+                query: options.query
+              }),
+              properties: options.properties,
+              body: data,
+              timeout: options.timeout
+            });
 
-            if (this.isOnline()) {
-              const ids = Object.keys(keyBy(data, idAttribute));
-              const query = new Query().contains('entity._id', ids);
-              let push = await this.push(query, options);
-              push = filter(push, result => !result.error);
-              data = map(push, result => result.entity);
+            const response = await request.execute();
+            data = response.data;
+
+            if (data.length > 0) {
+              await this.sync.addUpdateOperation(this.collection, data, options);
+
+              if (this.isOnline()) {
+                const ids = Object.keys(keyBy(data, idAttribute));
+                const query = new Query().contains('entity._id', ids);
+                let push = await this.push(query, options);
+                push = filter(push, result => !result.error);
+                data = map(push, result => result.entity);
+              }
             }
-          }
 
-          observer.next(singular ? data[0] : data);
-        } else if (this.isOnline()) {
-          const request = new NetworkRequest({
-            method: RequestMethod.PUT,
-            authType: AuthType.Default,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: id ? `${this.pathname}/${id}` : this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            data: data,
-            timeout: options.timeout,
-            client: this.client
-          });
-          const response = await request.execute();
-          observer.next(response.data);
+            observer.next(singular ? data[0] : data);
+          } else if (this.isOnline()) {
+            const responses = await Promise.all(map(data, entity => {
+              const id = entity[idAttribute];
+              const request = new NetworkRequest({
+                method: RequestMethod.PUT,
+                authType: AuthType.Default,
+                url: url.format({
+                  protocol: this.client.protocol,
+                  host: this.client.host,
+                  pathname: id ? `${this.pathname}/${id}` : this.pathname,
+                  query: options.query
+                }),
+                properties: options.properties,
+                data: entity,
+                timeout: options.timeout,
+                client: this.client
+              });
+              return request.execute();
+            }));
+
+            data = map(responses, response => response.data);
+            observer.next(singular ? data[0] : data);
+          }
         }
       } catch (error) {
         return observer.error(error);
@@ -797,12 +818,13 @@ export class DataStore {
    *   ...
    * });
    */
-  async push(query, options = {}) {
+  async push(query = new Query(), options = {}) {
     if (this.isCacheEnabled()) {
       if (!(query instanceof Query)) {
-        query = new Query(result(query, 'toJSON', query)).equalTo('collection', this.collection);
+        query = new Query(result(query, 'toJSON', query));
       }
 
+      query.equalTo('collection', this.collection);
       return this.sync.push(query, options);
     }
 
@@ -897,7 +919,7 @@ export class DataStore {
    *   ...
    * });
    */
-  async syncCount(query, options = {}) {
+  async syncCount(query = new Query(), options = {}) {
     if (this.isCacheEnabled()) {
       if (!(query instanceof Query)) {
         query = new Query(result(query, 'toJSON', query));

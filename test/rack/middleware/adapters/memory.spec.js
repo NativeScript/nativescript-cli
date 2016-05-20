@@ -16,6 +16,11 @@ const collectionName = 'testCollection';
 describe('Memory', function() {
   before(function() {
     this.db = new Memory(databaseName);
+    return this.db.clear();
+  });
+
+  after(function() {
+    return this.db.clear();
   });
 
   after(function() {

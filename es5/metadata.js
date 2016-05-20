@@ -9,6 +9,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
+var _clone = require('lodash/clone');
+
+var _clone2 = _interopRequireDefault(_clone);
+
 var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
@@ -39,15 +43,7 @@ var Metadata = exports.Metadata = function () {
      * @private
      * @type {Object}
      */
-    this.kmd = entity[kmdAttribute] || {};
-
-    /**
-     * The entity.
-     *
-     * @private
-     * @type {Object}
-     */
-    this.entity = entity;
+    this.kmd = (0, _clone2.default)(entity[kmdAttribute] || {});
   }
 
   _createClass(Metadata, [{

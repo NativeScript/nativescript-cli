@@ -9,6 +9,10 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('./errors');
 
+var _clone = require('lodash/clone');
+
+var _clone2 = _interopRequireDefault(_clone);
+
 var _isPlainObject = require('lodash/isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
@@ -43,7 +47,7 @@ var Acl = exports.Acl = function () {
      * @private
      * @type {Object}
      */
-    this.acl = entity[aclAttribute];
+    this.acl = (0, _clone2.default)(entity[aclAttribute]);
   }
 
   _createClass(Acl, [{

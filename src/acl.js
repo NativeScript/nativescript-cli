@@ -1,4 +1,5 @@
 import { KinveyError } from './errors';
+import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 
@@ -21,7 +22,7 @@ export class Acl {
      * @private
      * @type {Object}
      */
-    this.acl = entity[aclAttribute];
+    this.acl = clone(entity[aclAttribute]);
   }
 
   get creator() {

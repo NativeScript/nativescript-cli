@@ -199,7 +199,7 @@ var Response = exports.Response = function () {
         return new _errors.MissingRequestHeaderError(message, debug, code);
       } else if (name === 'MissingRequestParameterError') {
         return new _errors.MissingRequestParameterError(message, debug, code);
-      } else if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound' || this.statusCode === 404) {
+      } else if (name === 'EntityNotFound' || name === 'CollectionNotFound' || name === 'AppNotFound' || name === 'UserNotFound' || name === 'BlobNotFound' || name === 'DocumentNotFound' || code === 404) {
         return new _errors.NotFoundError(message, debug, code);
       } else if (name === 'ParameterValueOutOfRangeError') {
         return new _errors.ParameterValueOutOfRangeError(message, debug, code);

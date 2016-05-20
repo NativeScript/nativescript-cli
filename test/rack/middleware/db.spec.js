@@ -21,6 +21,11 @@ const collectionName = 'testCollection';
 describe('DB', function() {
   before(function() {
     this.db = new DB(databaseName);
+    return this.db.clear();
+  });
+
+  after(function() {
+    return this.db.clear();
   });
 
   after(function() {
@@ -58,28 +63,24 @@ describe('DB', function() {
             adapterInstance = IndexedDB;
             return false;
           }
-
           break;
         case DBAdapter.LocalStorage:
           if (LocalStorage.isSupported()) {
             adapterInstance = LocalStorage;
             return false;
           }
-
           break;
         case DBAdapter.Memory:
           if (Memory.isSupported()) {
             adapterInstance = Memory;
             return false;
           }
-
           break;
         case DBAdapter.WebSQL:
           if (WebSQL.isSupported()) {
             adapterInstance = WebSQL;
             return false;
           }
-
           break;
         default:
           console.log(`The ${adapter} adapter is is not recognized.`);

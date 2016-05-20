@@ -89,7 +89,7 @@ export class Response {
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound'
-        || this.statusCode === 404) {
+        || code === 404) {
       return new NotFoundError(message, debug, code);
     } else if (name === 'ParameterValueOutOfRangeError') {
       return new ParameterValueOutOfRangeError(message, debug, code);

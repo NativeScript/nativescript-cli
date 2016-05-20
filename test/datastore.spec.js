@@ -366,7 +366,14 @@ describe('DataStore', function() {
         nock(this.client.baseUrl)
           .post(store.pathname)
           .query(true)
-          .reply(200, [entity1, entity2], {
+          .reply(200, entity1, {
+            'content-type': 'application/json'
+          });
+
+        nock(this.client.baseUrl)
+          .post(store.pathname)
+          .query(true)
+          .reply(200, entity2, {
             'content-type': 'application/json'
           });
 
