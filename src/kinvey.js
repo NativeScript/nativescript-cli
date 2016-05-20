@@ -9,6 +9,7 @@ import { DataStore, DataStoreType } from './datastore';
 import { FileStore } from './filestore';
 import Sync from './sync';
 import { User } from './user';
+import { UserStore } from './userstore';
 import { AuthorizationGrant, SocialIdentity } from './mic';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
@@ -75,6 +76,7 @@ export default class Kinvey {
     this.SocialIdentity = SocialIdentity;
     this.Sync = Sync;
     this.User = User;
+    this.UserStore = UserStore;
 
     // Return the client
     return client;
@@ -85,7 +87,7 @@ export default class Kinvey {
    *
    * @returns {Promise} The response.
    */
-  static ping(client = Client.sharedInstance()) {
+  static async ping(client = Client.sharedInstance()) {
     const request = new NetworkRequest({
       method: RequestMethod.GET,
       authType: AuthType.All,
@@ -95,8 +97,7 @@ export default class Kinvey {
         pathname: `${appdataNamespace}/${client.appKey}`
       })
     });
-
-    const promise = request.execute().then(response => response.data);
-    return promise;
+    const response = await request.execute();
+    return response.data;
   }
 }
