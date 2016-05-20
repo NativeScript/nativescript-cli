@@ -11,12 +11,6 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _middleware = require('../middleware');
 
-var _request = require('request');
-
-var _request2 = _interopRequireDefault(_request);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -39,29 +33,7 @@ var HttpMiddleware = exports.HttpMiddleware = function (_KinveyMiddleware) {
     value: function handle(request) {
       return _get(Object.getPrototypeOf(HttpMiddleware.prototype), 'handle', this).call(this, request).then(function () {
         var promise = new Promise(function (resolve, reject) {
-          (0, _request2.default)({
-            url: request.url,
-            method: request.method,
-            headers: request.headers,
-            body: request.data,
-            followRedirect: request.followRedirect
-          }, function (error, response, body) {
-            if (error) {
-              if (error.code === 'ENOTFOUND') {
-                return reject(new Error('It looks like you do not have a network connection. ' + 'Please check that you are connected to a network and try again.'));
-              }
-
-              return reject(error);
-            }
-
-            request.response = {
-              statusCode: response.statusCode,
-              headers: response.headers,
-              data: body
-            };
-
-            return resolve(request);
-          });
+          reject(new Error('http middleware not installed'));
         });
         return promise;
       });
