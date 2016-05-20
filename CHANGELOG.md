@@ -1,4 +1,14 @@
 ## Changelog
+### 3.0.0-beta.20 (2016-05-20)
+* Bugfix (MLIBZ-1052): RAPID is not compatible with DeltaFetch. Turn delta fetch off by default.
+* Bugfix (MLBIZ-1075): Fix issues related to the FileStore.
+* Bugfix: Fixed race condition when saving an array of entities to the cache.
+* Enhancement (MLIBZ-1066): Clear the database after user logout.
+* Enhancement: Replace promise pattern with observable patter when fetching data using a data store.
+* Enhancement: Reduce data store types to only two types: `DataStoreType.Network` and `DataStoreType.Sync`
+* Enhancement: Provide a way to make a data store go online or offline.
+* Enhancement: Provide a way to enable or disable the cache for a data store.
+
 ### 3.0.0-beta.18 (2016-04-22)
 * Enhancement: Add device and popup plugins to core.
 * Enhancement: Use ES7 async logic.
