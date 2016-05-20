@@ -22,11 +22,9 @@
     "append-query": "^1.1.0",
     "async": "^2.0.0-rc.3",
     "babel-regenerator-runtime": "^6.5.0",
-    "es6-error": "^2.1.1",
+    "es6-error": "^3.0.0",
     "fast-memory-cache": "^2.0.4",
     "hellojs": "^1.13.1",
-    "idb-factory": "^1.0.0",
-    "idb-request": "^3.2.0",
     "local-storage": "^1.4.2",
     "lodash": "^4.12.0",
     "loglevel": "^1.3.1",
@@ -76,6 +74,8 @@
     "run-sequence": "^1.2.0",
     "sinon": "^1.17.4",
     "sinon-chai": "^2.8.0",
-    "uid": "0.0.2"
+    "uid": "0.0.2",
+    "webpack": "^1.13.1",
+    "webpack-stream": "^3.2.0"
   }
 }

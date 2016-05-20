@@ -17,7 +17,7 @@ gulp.task('lint', () => {
 
 gulp.task('clean', done => del(['build'], done));
 
-gulp.task('build', ['clean', 'lint'], () => {
+gulp.task('transpile', ['clean', 'lint'], () => {
   const envs = env.set({
     KINVEY_ACL_ATTRIBUTE: '_acl',
     KINVEY_DATASTORE_NAMESPACE: 'appdata',
@@ -42,14 +42,14 @@ gulp.task('build', ['clean', 'lint'], () => {
     .pipe(envs)
     .pipe(babel())
     .pipe(envs.reset)
-    .pipe(gulp.dest('./build'));
+    .pipe(gulp.dest('./es5'));
   return stream;
 });
 
-gulp.task('bundle', ['build'], () => {
-  const stream = gulp.src('./build/index.js')
+gulp.task('bundle', ['transpile'], () => {
+  const stream = gulp.src('./transpile/index.js')
     .pipe(gulpWebpack({
-      context: `${__dirname}/build`,
+      context: `${__dirname}/transpile`,
       entry: [
         './kinvey.js'
       ],
