@@ -56,14 +56,14 @@ export default class IndexedDB {
             return success(txn);
           }
 
-          throw new KinveyError(`Unable to open a transaction for the ${collection} ` +
-            `collection on the ${this.name} indexedDB database.`);
+          throw new KinveyError(`Unable to open a transaction for the ${collection}`
+            + ` collection on the ${this.name} indexedDB database.`);
         } catch (err) {
           return error(err);
         }
       } else if (!write) {
-        return error(new NotFoundError(`The ${collection} collection was not found on ` +
-          `the ${this.name} indexedDB database.`));
+        return error(new NotFoundError(`The ${collection} collection was not found on`
+          + ` the ${this.name} indexedDB database.`));
       }
     }
 
@@ -151,10 +151,10 @@ export default class IndexedDB {
         `Received the error code ${e.target.errorCode}.`));
     };
 
-    return null;
+    return request;
   }
 
-  find(collection) {
+  async find(collection) {
     return new Promise((resolve, reject) => {
       this.openTransaction(collection, false, async txn => {
         const store = txn.objectStore(collection);
@@ -215,7 +215,7 @@ export default class IndexedDB {
     }
 
     if (entities.length === 0) {
-      return Promise.resolve(null);
+      return null;
     }
 
     return new Promise((resolve, reject) => {
@@ -265,7 +265,7 @@ export default class IndexedDB {
     });
   }
 
-  clear() {
+  async clear() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.deleteDatabase(this.name);
 

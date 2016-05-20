@@ -25,6 +25,7 @@
     "es6-error": "^3.0.0",
     "fast-memory-cache": "^2.0.4",
     "hellojs": "^1.13.1",
+    "indexeddbshim": "^2.2.1",
     "local-storage": "^1.4.2",
     "lodash": "^4.12.0",
     "loglevel": "^1.3.1",
