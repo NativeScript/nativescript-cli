@@ -1,3 +1,4 @@
+
 /* eslint-disable no-underscore-dangle */
 import { KinveyError, NotFoundError } from './errors';
 import CacheRequest from './requests/cache';
@@ -985,6 +986,10 @@ export class DataStore {
     }
 
     return store;
+  }
+
+  static getInstance(collection, type) {
+    return DataStore.collection(collection, type);
   }
 
   /**
