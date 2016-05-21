@@ -1,4 +1,4 @@
-import { Device } from './device';
+import Device from './device';
 import { KinveyError } from 'kinvey-javascript-sdk-core/es5/errors';
 import { EventEmitter } from 'events';
 import { RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/es5/requests/request';
@@ -14,7 +14,7 @@ const pushSettingsCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'k
 const storage = global.localStorage;
 let notificationEventListener;
 
-export class Push extends EventEmitter {
+export default class Push extends EventEmitter {
   constructor() {
     super();
 

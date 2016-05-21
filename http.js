@@ -1,7 +1,7 @@
 import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
 import parseHeaders from 'parse-headers';
 
-export class HttpMiddleware extends KinveyMiddleware {
+export default class PhoneGapHttpMiddleware extends KinveyMiddleware {
   constructor(name = 'Kinvey PhoneGap Http Middleware') {
     super(name);
   }
