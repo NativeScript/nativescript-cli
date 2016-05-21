@@ -4,7 +4,7 @@ import packageJSON from '../package.json';
 /**
  * @private
  */
-class Device extends PhoneGapDevice {
+export default class Device extends PhoneGapDevice {
   static toJSON() {
     const json = super.toJSON();
 

@@ -1,7 +1,7 @@
 import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
 const $injector = angular.injector(['ng']);
 
-export class HttpMiddleware extends KinveyMiddleware {
+export default class AngularHttpMiddleware extends KinveyMiddleware {
   constructor() {
     super('Kinvey Angular Http Middleware');
     this.$http = $injector.get('$http');
