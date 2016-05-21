@@ -8,6 +8,10 @@ class Device extends PhoneGapDevice {
   static toJSON() {
     const json = super.toJSON();
 
+    if (Device.isBrowser()) {
+      json.platform.name = 'web browser';
+    }
+
     // Add angular information
     json.library = {
       name: 'angular',
