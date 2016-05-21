@@ -23,7 +23,7 @@ export default class Device {
   }
 
   static isBrowser() {
-    return document.URL.indexOf('http://') !== -1 && document.URL.indexOf('https://') !== -1;
+    return document.URL.indexOf('http://') !== -1 || document.URL.indexOf('https://') !== -1;
   }
 
   static isiOS() {
