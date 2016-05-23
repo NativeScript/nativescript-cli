@@ -148,7 +148,7 @@ export default class IndexedDB {
 
     request.onerror = e => {
       error(new KinveyError(`Unable to open the ${this.name} indexedDB database. ` +
-        `${e.targer.error.message}.`));
+        `${e.target.error.message}.`));
     };
 
     return request;
@@ -174,7 +174,7 @@ export default class IndexedDB {
 
         request.onerror = e => {
           reject(new KinveyError(`An error occurred while fetching data from the ${collection}`
-            + ` collection on the ${this.name} indexedDB database. ${e.targer.error.message}`));
+            + ` collection on the ${this.name} indexedDB database. ${e.target.error.message}`));
         };
       }, reject);
     });
@@ -200,7 +200,7 @@ export default class IndexedDB {
         request.onerror = e => {
           reject(new KinveyError(`An error occurred while retrieving an entity with _id = ${id}`
             + ` from the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` ${e.targer.error.message}.`));
+            + ` ${e.target.error.message}.`));
         };
       }, reject);
     });
@@ -232,7 +232,7 @@ export default class IndexedDB {
 
         txn.onerror = e => {
           reject(new KinveyError(`An error occurred while saving the entities to the ${collection}`
-            + ` collection on the ${this.name} indexedDB database. ${e.targer.error.message}.`));
+            + ` collection on the ${this.name} indexedDB database. ${e.target.error.message}.`));
         };
       }, reject);
     });
@@ -259,7 +259,7 @@ export default class IndexedDB {
         txn.onerror = e => {
           reject(new KinveyError(`An error occurred while deleting an entity with id = ${id}`
             + ` in the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` ${e.targer.error.message}.`));
+            + ` ${e.target.error.message}.`));
         };
       }, reject);
     });
@@ -275,7 +275,7 @@ export default class IndexedDB {
 
       request.onerror = (e) => {
         reject(new KinveyError(`An error occurred while clearing the ${this.name} indexedDB database.`
-            + ` ${e.targer.error.message}.`));
+            + ` ${e.target.error.message}.`));
       };
     });
   }

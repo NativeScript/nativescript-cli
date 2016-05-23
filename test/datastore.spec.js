@@ -26,8 +26,14 @@ describe('DataStore', function() {
         'content-type': 'application/json'
       });
 
-    return store.clear().then(() => store.count()).then(count => {
-      expect(count).to.equal(0);
+    return store.clear().then(() => {
+      const promise = new Promise((resolve, reject) => {
+        const stream = store.count();
+        stream.subscribe(count => {
+          expect(count).to.equal(0);
+        }, reject, resolve);
+      });
+      return promise;
     });
   });
 
