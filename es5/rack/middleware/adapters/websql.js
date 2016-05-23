@@ -334,9 +334,10 @@ var WebSQL = exports.WebSQL = function () {
                 return this.openTransaction(masterCollectionName, queries, null, true);
 
               case 9:
+                dbCache = {};
                 return _context5.abrupt('return', null);
 
-              case 10:
+              case 11:
               case 'end':
                 return _context5.stop();
             }

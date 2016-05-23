@@ -8,7 +8,7 @@ const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const masterCollectionName = 'sqlite_master';
 const size = 5 * 1000 * 1000; // Database size in bytes
 let webSQL = null;
-const dbCache = {};
+let dbCache = {};
 
 if (typeof window !== 'undefined') {
   webSQL = {
@@ -179,6 +179,7 @@ export class WebSQL {
       .filter(table => (/^[a-zA-Z0-9\-]{1,128}/).test(table))
       .map(table => [`DROP TABLE IF EXISTS '${table}'`]);
     await this.openTransaction(masterCollectionName, queries, null, true);
+    dbCache = {};
     return null;
   }
 
