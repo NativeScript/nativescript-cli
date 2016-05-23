@@ -178,7 +178,7 @@ var IndexedDB = function () {
       };
 
       request.onerror = function (e) {
-        error(new _errors.KinveyError('Unable to open the ' + _this.name + ' indexedDB database. ' + ('Received the error code ' + e.target.errorCode + '.')));
+        error(new _errors.KinveyError('Unable to open the ' + _this.name + ' indexedDB database. ' + (e.targer.error.message + '.')));
       };
 
       return request;
@@ -218,7 +218,7 @@ var IndexedDB = function () {
                               };
 
                               request.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while fetching data from the ' + collection + (' collection on the ' + _this2.name + ' indexedDB database. Received the error code ' + e.target.errorCode + '.')));
+                                reject(new _errors.KinveyError('An error occurred while fetching data from the ' + collection + (' collection on the ' + _this2.name + ' indexedDB database. ' + e.targer.error.message)));
                               };
 
                             case 5:
@@ -282,7 +282,7 @@ var IndexedDB = function () {
                               };
 
                               request.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while retrieving an entity with _id = ' + id + (' from the ' + collection + ' collection on the ' + _this3.name + ' indexedDB database.') + (' Received the error code ' + e.target.errorCode + '.')));
+                                reject(new _errors.KinveyError('An error occurred while retrieving an entity with _id = ' + id + (' from the ' + collection + ' collection on the ' + _this3.name + ' indexedDB database.') + (' ' + e.targer.error.message + '.')));
                               };
 
                             case 4:
@@ -360,7 +360,7 @@ var IndexedDB = function () {
                               };
 
                               txn.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while saving the entities to the ' + collection + (' collection on the ' + _this4.name + ' indexedDB database. Received the error code ' + e.target.errorCode + '.')));
+                                reject(new _errors.KinveyError('An error occurred while saving the entities to the ' + collection + (' collection on the ' + _this4.name + ' indexedDB database. ' + e.targer.error.message + '.')));
                               };
 
                             case 4:
@@ -425,7 +425,7 @@ var IndexedDB = function () {
                               };
 
                               txn.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while deleting an entity with id = ' + id + (' in the ' + collection + ' collection on the ' + _this5.name + ' indexedDB database.') + (' Received the error code ' + e.target.errorCode + '.')));
+                                reject(new _errors.KinveyError('An error occurred while deleting an entity with id = ' + id + (' in the ' + collection + ' collection on the ' + _this5.name + ' indexedDB database.') + (' ' + e.targer.error.message + '.')));
                               };
 
                             case 5:
@@ -474,7 +474,7 @@ var IndexedDB = function () {
                   };
 
                   request.onerror = function (e) {
-                    reject(new _errors.KinveyError('An error occurred while clearing the ' + _this6.name + ' indexedDB database.' + (' Received the error code ' + e.target.errorCode + '.')));
+                    reject(new _errors.KinveyError('An error occurred while clearing the ' + _this6.name + ' indexedDB database.' + (' ' + e.targer.error.message + '.')));
                   };
                 }));
 
