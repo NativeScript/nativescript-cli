@@ -23,6 +23,7 @@
     "async": "^2.0.0-rc.3",
     "babel-regenerator-runtime": "^6.5.0",
     "es6-error": "^3.0.0",
+    "es6-symbol": "^3.0.2",
     "fast-memory-cache": "^2.0.4",
     "hellojs": "^1.13.1",
     "indexeddbshim": "^2.2.1",

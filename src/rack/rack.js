@@ -5,6 +5,7 @@ import { SerializeMiddleware } from './middleware/serialize';
 import { HttpMiddleware } from './middleware/http';
 import findIndex from 'lodash/findIndex';
 import reduce from 'lodash/reduce';
+import Symbol from 'es6-symbol';
 const sharedCacheRackInstance = Symbol();
 const sharedNetworkRackInstance = Symbol();
 

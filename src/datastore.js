@@ -10,6 +10,7 @@ import { Observable } from 'rxjs/Observable';
 import { toPromise } from 'rxjs/operator/toPromise';
 import { Metadata } from './metadata';
 import Client from './client';
+import Symbol from 'es6-symbol';
 import Sync from './sync';
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
