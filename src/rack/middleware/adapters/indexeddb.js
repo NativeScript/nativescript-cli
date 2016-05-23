@@ -172,9 +172,9 @@ export default class IndexedDB {
           return resolve(entities);
         };
 
-        request.onerror = e => {
-          reject(new KinveyError(`An error occurred while fetching data from the ${collection}`
-            + ` collection on the ${this.name} indexedDB database. ${e.target.error.message}`));
+        request.onerror = () => {
+          // TODO: log error
+          resolve([]);
         };
       }, reject);
     });
@@ -197,10 +197,9 @@ export default class IndexedDB {
           }
         };
 
-        request.onerror = e => {
-          reject(new KinveyError(`An error occurred while retrieving an entity with _id = ${id}`
-            + ` from the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` ${e.target.error.message}.`));
+        request.onerror = () => {
+          reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+             + ` collection on the ${this.name} indexedDB database.`));
         };
       }, reject);
     });
@@ -256,10 +255,9 @@ export default class IndexedDB {
           }
         };
 
-        txn.onerror = e => {
-          reject(new KinveyError(`An error occurred while deleting an entity with id = ${id}`
-            + ` in the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` ${e.target.error.message}.`));
+        txn.onerror = () => {
+          reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection}`
+              + ` collection on the ${this.name} indexedDB database.`));
         };
       }, reject);
     });
