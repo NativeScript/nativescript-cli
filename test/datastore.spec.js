@@ -62,12 +62,12 @@ describe('DataStore', function() {
       expect(store.useDeltaFetch).to.be.false;
     });
 
-    it('should enable the cache as the default', function() {
+    it('should have the cache enabled as the default', function() {
       const store = new DataStore();
       expect(store.isCacheEnabled()).to.be.true;
     });
 
-    it('should make the store online as the default', function() {
+    it('should have the store online as the default', function() {
       const store = new DataStore();
       expect(store.isOnline()).to.be.true;
     });
@@ -110,13 +110,13 @@ describe('DataStore', function() {
   });
 
   describe('isCacheEnabled()', function() {
-    it('should return a false if the cache is disabled', function() {
+    it('should return false if the cache is disabled', function() {
       const store = new DataStore();
       store.disableCache();
       expect(store.isCacheEnabled()).to.be.false;
     });
 
-    it('should return a true if the cache is enabled', function() {
+    it('should return true if the cache is enabled', function() {
       const store = new DataStore();
       store.enableCache();
       expect(store.isCacheEnabled()).to.be.true;
@@ -398,10 +398,16 @@ describe('DataStore', function() {
       expect(store.isCacheEnabled()).to.be.true;
     });
 
-    it('should return a DataStore that is offline and has cache enabled by default for DataStoreType.Sync', function() {
+    it('should return a DataStore that is offline and has cache enabled for DataStoreType.Sync', function() {
       const store = DataStore.collection(null, DataStoreType.Sync);
       expect(store.isOnline()).to.be.false;
       expect(store.isCacheEnabled()).to.be.true;
+    });
+
+    it('should return a DataStore that is online and has cache disabled for DataStoreType.Network', function() {
+      const store = DataStore.collection(null, DataStoreType.Network);
+      expect(store.isOnline()).to.be.true;
+      expect(store.isCacheEnabled()).to.be.false;
     });
 
     it('should accept a name as an argument', function() {

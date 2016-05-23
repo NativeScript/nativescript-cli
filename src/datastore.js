@@ -72,11 +72,8 @@ export class DataStore {
     this.sync = new Sync();
     this.sync.client = this.client;
 
-    // Enable the cache
-    this.enableCache();
-
-    // Make the store online
     this.online();
+    this.enableCache();
   }
 
   /**
@@ -973,7 +970,7 @@ export class DataStore {
    * @param  {StoreType}    [type=DataStoreType.Network]  Type of store to return.
    * @return {DataStore}                                  DataStore instance.
    */
-  static collection(collection, type = DataStoreType.Network) {
+  static collection(collection, type = DataStoreType.Cache) {
     const store = new DataStore(collection);
 
     switch (type) {
@@ -982,8 +979,8 @@ export class DataStore {
         store.disableCache();
         break;
       case DataStoreType.Sync:
-        store.offline();
         store.enableCache();
+        store.offline();
         break;
       case DataStoreType.Cache:
       default:
