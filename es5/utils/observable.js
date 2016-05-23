@@ -31,6 +31,11 @@ var KinveyObservable = exports.KinveyObservable = function (_Observable) {
     value: function toPromise() {
       return _toPromise2.toPromise.call(this);
     }
+  }], [{
+    key: 'create',
+    value: function create(subscriber) {
+      return new KinveyObservable(subscriber);
+    }
   }]);
 
   return KinveyObservable;
