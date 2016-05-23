@@ -3,7 +3,7 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
-const dbCache = {};
+let dbCache = {};
 
 if (typeof window !== 'undefined') {
   require('indexeddbshim'); // eslint-disable-line global-require
@@ -268,6 +268,7 @@ export default class IndexedDB {
       const request = indexedDB.deleteDatabase(this.name);
 
       request.onsuccess = () => {
+        dbCache = {};
         resolve();
       };
 

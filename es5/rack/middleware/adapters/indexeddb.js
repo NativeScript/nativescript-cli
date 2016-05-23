@@ -471,6 +471,7 @@ var IndexedDB = function () {
                   var request = indexedDB.deleteDatabase(_this6.name);
 
                   request.onsuccess = function () {
+                    dbCache = {};
                     resolve();
                   };
 
