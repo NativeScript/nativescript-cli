@@ -29,8 +29,9 @@ const onlineSymbol = Symbol();
  * Enum for DataStore types.
  */
 const DataStoreType = {
-  Sync: 'Sync',
-  Network: 'Network'
+  Cache: 'Cache',
+  Network: 'Network',
+  Sync: 'Sync'
 };
 Object.freeze(DataStoreType);
 export { DataStoreType };
@@ -974,15 +975,21 @@ export class DataStore {
    */
   static collection(collection, type = DataStoreType.Network) {
     const store = new DataStore(collection);
-    store.enableCache();
 
     switch (type) {
+      case DataStoreType.Network:
+        store.online();
+        store.disableCache();
+        break;
       case DataStoreType.Sync:
         store.offline();
+        store.enableCache();
         break;
-      case DataStoreType.Network:
+      case DataStoreType.Cache:
       default:
         store.online();
+        store.enableCache();
+
     }
 
     return store;
