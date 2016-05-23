@@ -1,10 +1,10 @@
 import { KinveyError } from './errors';
 import { getActiveUser, getActiveSocialIdentity } from './utils/storage';
-import localStorage from 'local-storage';
+import { RequestConfig } from './requests/request';
+import result from 'lodash/result';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
-const pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
 let sharedInstance = null;
 
 /**
@@ -91,20 +91,16 @@ export default class Client {
     return getActiveSocialIdentity(this);
   }
 
-  get push() {
-    return localStorage.get(`${this.appKey}${pushCollectionName}`);
+  get requestConfig() {
+    return this.requestConfig;
   }
 
-  set push(data) {
-    if (data) {
-      try {
-        return localStorage.set(`${this.appKey}${pushCollectionName}`, data);
-      } catch (error) {
-        return false;
-      }
+  set requestConfig(config) {
+    if (!(config instanceof RequestConfig)) {
+      config = new RequestConfig(result(config, 'toJSON', result));
     }
 
-    return localStorage.remove(`${this.appKey}${pushCollectionName}`);
+    this.requestConfig = config;
   }
 
   /**

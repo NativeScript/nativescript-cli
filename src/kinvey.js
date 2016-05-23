@@ -27,6 +27,24 @@ export default class Kinvey {
     return client;
   }
 
+  static get requestConfig() {
+    const client = this.client;
+
+    if (client) {
+      return client.requestConfig;
+    }
+
+    return undefined;
+  }
+
+  static set requestConfig(config) {
+    const client = this.client;
+
+    if (client) {
+      client.requestConfig = config;
+    }
+  }
+
   /**
    * Initializes the library with your app's information.
    *
