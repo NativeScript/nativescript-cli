@@ -5,4 +5,8 @@ export class KinveyObservable extends Observable {
   toPromise() {
     return this::toPromise();
   }
+
+  static create(subscriber) {
+    return new KinveyObservable(subscriber);
+  }
 }
