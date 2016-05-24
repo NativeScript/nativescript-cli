@@ -82,13 +82,14 @@ gulp.task('bump', () => {
       && version !== 'minor'
       && version !== 'patch'
       && !semver.valid(version)) {
-      version = undefined;
+      version = 'patch';
     }
   }
 
-  gulp.src('./package.json')
-  .pipe(bump(version ? { version: version } : null))
-  .pipe(gulp.dest('./'));
+  const stream = gulp.src('./package.json')
+    .pipe(bump({ version: version }))
+    .pipe(gulp.dest('./'));
+  return stream;
 });
 
 gulp.task('default', () => {
