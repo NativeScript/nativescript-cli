@@ -16,10 +16,7 @@ build: ;@echo "Building ${PROJECT}..."; \
 version: ;@echo "Saving version to env.properties..."; \
 	echo VERSION=$PKGVERSION > env.properties
 
-publish: ;@echo "Publishing ${PROJECT}..."; \
-	npm publish . --tag beta
-
 audit: clean install test
-release: audit build version publish
+release: audit build version
 
-.PHONY: clean install test release tag publish
+.PHONY: clean install test release version
