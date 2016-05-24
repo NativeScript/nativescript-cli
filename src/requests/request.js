@@ -1,7 +1,6 @@
 import { KinveyRack } from '../rack/rack';
 import Client from '../client';
 import { KinveyError, NoActiveUserError } from '../errors';
-import { byteCount } from '../utils/string';
 import UrlPattern from 'url-pattern';
 import qs from 'qs';
 import url from 'url';
@@ -13,12 +12,27 @@ import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import isNumber from 'lodash/isNumber';
-const appVersionKey = 'appVersion';
 const Device = global.KinveyDevice;
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
 const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
+
+/**
+ * @private
+ */
+function byteCount(str) {
+  let count = 0;
+  const stringLength = str.length;
+  str = String(str || '');
+
+  for (let i = 0; i < stringLength; i++) {
+    const partCount = encodeURI(str[i]).split('%').length;
+    count += partCount === 1 ? 1 : partCount - 1;
+  }
+
+  return count;
+}
 
 /**
  * Enum for Auth types.
@@ -139,7 +153,7 @@ const Auth = {
   }
 };
 
-class Headers {
+export class Headers {
   constructor(headers = {}) {
     this.addAll(headers);
   }
@@ -227,7 +241,7 @@ class Headers {
   }
 }
 
-class Properties {
+export class Properties {
   /**
    * Returns the request property for the key or `undefined` if
    * it has not been set.
@@ -290,6 +304,10 @@ class Properties {
   clear() {
     this.properties = {};
   }
+
+  toString() {
+    return JSON.stringify(this.properties);
+  }
 }
 
 /**
@@ -314,14 +332,6 @@ export class RequestConfig {
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
     this.noCache = options.noCache;
-
-    const headers = this.headers;
-
-    if (!headers.has('accept')) {
-      headers.set('accept', 'application/json; charset=utf-8');
-    }
-
-    this.headers = headers;
   }
 
   get method() {
@@ -348,7 +358,17 @@ export class RequestConfig {
   }
 
   get headers() {
-    return this.configHeaders;
+    const headers = this.configHeaders;
+
+    if (!headers.has('accept')) {
+      headers.set('accept', 'application/json; charset=utf-8');
+    }
+
+    if (!headers.has('content-type')) {
+      headers.set('content-type', 'application/json; charset=utf-8');
+    }
+
+    return headers;
   }
 
   set headers(headers) {
@@ -422,7 +442,6 @@ export class KinveyRequestConfig extends RequestConfig {
 
     options = assign({
       authType: AuthType.None,
-      contentType: 'application/json; charseutf-8',
       query: null,
       online: true,
       cacheEnabled: true,
@@ -441,20 +460,15 @@ export class KinveyRequestConfig extends RequestConfig {
     this.apiVersion = options.apiVersion;
     this.properties = options.properties;
     this.client = options.client;
-
     const headers = this.headers;
 
     if (!headers.has('X-Kinvey-Api-Version')) {
       headers.set('X-Kinvey-Api-Version', this.apiVersion);
     }
 
-    if (Device) {
-      headers.set('X-Kinvey-Device-Information', JSON.stringify(Device.toJSON()));
-    }
-
-    if (options.contentType) {
-      headers.set('X-Kinvey-Content-Type', options.contentType);
-    }
+    // if (options.contentType) {
+    //   headers.set('X-Kinvey-Content-Type', options.contentType);
+    // }
 
     if (options.skipBL === true) {
       headers.set('X-Kinvey-Skip-Business-Logic', true);
@@ -473,21 +487,72 @@ export class KinveyRequestConfig extends RequestConfig {
 
     if (this.appVersion) {
       headers.set('X-Kinvey-Client-App-Version', this.appVersion);
-    } else {
-      headers.remove('X-Kinvey-Client-App-Version');
     }
 
-    const customPropertiesHeader = JSON.stringify(this.properties);
-    const customPropertiesByteCount = byteCount(customPropertiesHeader);
+    if (this.properties) {
+      const customPropertiesHeader = this.properties.toString();
+      const customPropertiesByteCount = byteCount(customPropertiesHeader);
 
-    if (customPropertiesByteCount >= customPropertiesMaxBytesAllowed) {
-      throw new Error(
-        `The custom properties are ${customPropertiesByteCount} bytes.` +
-        `It must be less then ${customPropertiesMaxBytesAllowed} bytes.`,
-        'Please remove some custom properties.');
+      if (customPropertiesByteCount >= customPropertiesMaxBytesAllowed) {
+        throw new Error(
+          `The custom properties are ${customPropertiesByteCount} bytes.` +
+          `It must be less then ${customPropertiesMaxBytesAllowed} bytes.`,
+          'Please remove some custom properties.');
+      }
+
+      headers.set('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
     }
 
-    this.headers.set('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
+    if (Device) {
+      headers.set('X-Kinvey-Device-Information', JSON.stringify(Device.toJSON()));
+    }
+
+    if (this.authType) {
+      let authInfo;
+
+      switch (this.authType) {
+        case AuthType.All:
+          authInfo = Auth.all(this.client);
+          break;
+        case AuthType.App:
+          authInfo = Auth.app(this.client);
+          break;
+        case AuthType.Basic:
+          authInfo = Auth.basic(this.client);
+          break;
+        case AuthType.Master:
+          authInfo = Auth.master(this.client);
+          break;
+        case AuthType.None:
+          authInfo = Auth.none(this.client);
+          break;
+        case AuthType.Session:
+          authInfo = Auth.session(this.client);
+          break;
+        default:
+          try {
+            authInfo = Auth.session(this.client);
+          } catch (error) {
+            try {
+              authInfo = Auth.master(this.client);
+            } catch (error2) {
+              throw error;
+            }
+          }
+      }
+
+      if (authInfo) {
+        let credentials = authInfo.credentials;
+
+        if (authInfo.username) {
+          credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
+        }
+
+        headers.set('authorization', `${authInfo.scheme} ${credentials}`);
+      }
+    }
+
+    return headers;
   }
 
   set headers(headers) {
@@ -677,84 +742,41 @@ export class Request {
  * @private
  */
 export class KinveyRequest extends Request {
-  constructor(config = new RequestConfig()) {
+  constructor(config) {
     super(config);
     this.rack = new KinveyRack();
   }
 
-  get url() {
-    const urlString = super.url;
-    const queryString = this.query ? this.query.toQueryString() : {};
-
-    if (isEmpty(queryString)) {
-      return urlString;
-    }
-
-    return appendQuery(urlString, qs.stringify(queryString));
+  get config() {
+    return super.config;
   }
 
-  get authorizationHeader() {
-    let authInfo;
-
-    switch (this.authType) {
-      case AuthType.All:
-        authInfo = Auth.all(this.client);
-        break;
-      case AuthType.App:
-        authInfo = Auth.app(this.client);
-        break;
-      case AuthType.Basic:
-        authInfo = Auth.basic(this.client);
-        break;
-      case AuthType.Master:
-        authInfo = Auth.master(this.client);
-        break;
-      case AuthType.None:
-        authInfo = Auth.none(this.client);
-        break;
-      case AuthType.Session:
-        authInfo = Auth.session(this.client);
-        break;
-      default:
-        try {
-          authInfo = Auth.session(this.client);
-        } catch (error) {
-          try {
-            authInfo = Auth.master(this.client);
-          } catch (error2) {
-            throw error;
-          }
-        }
+  set config(config) {
+    if (config && !(config instanceof KinveyRequestConfig)) {
+      config = new KinveyRequestConfig(result(config, 'toJSON', config));
     }
 
-    if (authInfo) {
-      let credentials = authInfo.credentials;
-
-      if (authInfo.username) {
-        credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
-      }
-
-      return {
-        name: 'Authorization',
-        value: `${authInfo.scheme} ${credentials}`
-      };
-    }
-
-    return null;
+    super.config = config;
   }
 
-  execute() {
-    const authorizationHeader = this.authorizationHeader;
-
-    if (authorizationHeader) {
-      this.addHeader(authorizationHeader);
-    }
-
-    return super.execute();
+  get query() {
+    return this.config.query;
   }
 
-  cancel() {
-    return super.cancel();
+  set query(query) {
+    this.config.query = query;
+  }
+
+  get appKey() {
+    return this.config.appKey;
+  }
+
+  get collection() {
+    return this.config.collection;
+  }
+
+  get entityId() {
+    return this.config.entityId;
   }
 
   toJSON() {

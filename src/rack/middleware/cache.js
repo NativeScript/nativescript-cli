@@ -257,8 +257,8 @@ export class CacheMiddleware extends KinveyMiddleware {
 
   async handle(request) {
     request = await super.handle(request);
-    const { method, query, body, collection, entityId } = request;
-    const db = new DB(request.appKey, this.adapters);
+    const { method, query, body, appKey, collection, entityId } = request;
+    const db = new DB(appKey, this.adapters);
     let data;
 
     if (method === RequestMethod.GET) {

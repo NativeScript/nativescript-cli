@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore } from './datastore';
 import url from 'url';
 import isArray from 'lodash/isArray';
@@ -80,7 +80,7 @@ export class UserStore extends DataStore {
   }
 
   async exists(username, options) {
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -93,14 +93,14 @@ export class UserStore extends DataStore {
       timeout: options.timeout,
       client: this.client
     });
-
+    const request = new NetworkRequest(config);
     const response = await request.execute();
     const data = response.data || {};
     return !!data.usernameExists;
   }
 
   async restore(id, options = {}) {
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.Master,
       url: url.format({
@@ -112,7 +112,7 @@ export class UserStore extends DataStore {
       timeout: options.timeout,
       client: this.client
     });
-
+    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }

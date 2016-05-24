@@ -52,7 +52,7 @@ export default class CustomEndpoint {
         pathname: `/${rpcNamespace}/${options.client.appKey}/custom/${endpoint}`
       }),
       properties: options.properties,
-      data: args,
+      body: args,
       timeout: options.timeout,
       client: options.client
     });

@@ -4,7 +4,7 @@ import { KinveyError, NotFoundError } from './errors';
 import CacheRequest from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { Query } from './query';
 import { KinveyObservable } from './utils/observable';
 import { Metadata } from './metadata';
@@ -210,7 +210,7 @@ export class DataStore {
             }
           }
 
-          const request = new CacheRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
@@ -222,7 +222,7 @@ export class DataStore {
             query: query,
             timeout: options.timeout
           });
-
+          const request = new CacheRequest(config);
           const response = await request.execute();
           cacheData = response.data;
           observer.next(cacheData);
@@ -235,7 +235,7 @@ export class DataStore {
         // Fetch data from the network
         if (this.isOnline()) {
           const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
-          const requestOptions = {
+          const config = new KinveyRequestConfig({
             method: RequestMethod.GET,
             authType: AuthType.Default,
             url: url.format({
@@ -248,12 +248,12 @@ export class DataStore {
             query: query,
             timeout: options.timeout,
             client: this.client
-          };
-          let request = new NetworkRequest(requestOptions);
+          });
+          let request = new NetworkRequest(config);
 
           // Should we use delta fetch?
           if (useDeltaFetch) {
-            request = new DeltaFetchRequest(requestOptions);
+            request = new DeltaFetchRequest(config);
           }
 
           const response = await request.execute();
@@ -265,7 +265,7 @@ export class DataStore {
             const removedData = differenceBy(cacheData, networkData, idAttribute);
             const removedIds = Object.keys(keyBy(removedData, idAttribute));
             const removeQuery = new Query().contains(idAttribute, removedIds);
-            const request = new CacheRequest({
+            const config = new KinveyRequestConfig({
               method: RequestMethod.DELETE,
               url: url.format({
                 protocol: this.client.protocol,
@@ -277,6 +277,7 @@ export class DataStore {
               query: removeQuery,
               timeout: options.timeout
             });
+            const request = new CacheRequest(config);
             await request.execute();
             await this.updateCache(networkData);
           }
@@ -317,7 +318,7 @@ export class DataStore {
               }
             }
 
-            const request = new CacheRequest({
+            const config = new KinveyRequestConfig({
               method: RequestMethod.GET,
               url: url.format({
                 protocol: this.client.protocol,
@@ -328,7 +329,7 @@ export class DataStore {
               properties: options.properties,
               timeout: options.timeout
             });
-
+            const request = new CacheRequest(config);
             const response = await request.execute();
             observer.next(response.data);
           }
@@ -340,7 +341,7 @@ export class DataStore {
           // Fetch data from the network
           if (this.isOnline()) {
             const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
-            const requestOptions = {
+            const config = new KinveyRequestConfig({
               method: RequestMethod.GET,
               authType: AuthType.Default,
               url: url.format({
@@ -352,11 +353,11 @@ export class DataStore {
               properties: options.properties,
               timeout: options.timeout,
               client: this.client
-            };
-            let request = new NetworkRequest(requestOptions);
+            });
+            let request = new NetworkRequest(config);
 
             if (useDeltaFetch) {
-              request = new DeltaFetchRequest(requestOptions);
+              request = new DeltaFetchRequest(config);
             }
 
             const response = await request.execute();
@@ -366,7 +367,7 @@ export class DataStore {
           }
         } catch (error) {
           if (error instanceof NotFoundError) {
-            const request = new CacheRequest({
+            const config = new KinveyRequestConfig({
               method: RequestMethod.DELETE,
               authType: AuthType.Default,
               url: url.format({
@@ -378,7 +379,7 @@ export class DataStore {
               properties: options.properties,
               timeout: options.timeout
             });
-
+            const request = new CacheRequest(config);
             await request.execute();
           }
 
@@ -386,7 +387,6 @@ export class DataStore {
         }
       }
 
-      // Complete the observer
       return observer.complete();
     });
 
@@ -395,7 +395,6 @@ export class DataStore {
 
   count(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
-      // Check that the query is valid
       if (query && !(query instanceof Query)) {
         return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
       }
@@ -419,7 +418,7 @@ export class DataStore {
             }
           }
 
-          const request = new CacheRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
@@ -431,7 +430,7 @@ export class DataStore {
             query: query,
             timeout: options.timeout
           });
-
+          const request = new CacheRequest(config);
           const response = await request.execute();
           const data = response.data;
           observer.next(data ? data.count : 0);
@@ -442,7 +441,7 @@ export class DataStore {
 
       try {
         if (this.isOnline()) {
-          const request = new NetworkRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.GET,
             authType: AuthType.Default,
             url: url.format({
@@ -456,6 +455,7 @@ export class DataStore {
             timeout: options.timeout,
             client: this.client
           });
+          const request = new NetworkRequest(config);
           const response = await request.execute();
           const data = response.data;
           observer.next(data ? data.count : 0);
@@ -484,7 +484,7 @@ export class DataStore {
           }
 
           if (this.isCacheEnabled()) {
-            const request = new CacheRequest({
+            const config = new KinveyRequestConfig({
               method: RequestMethod.POST,
               url: url.format({
                 protocol: this.client.protocol,
@@ -496,7 +496,7 @@ export class DataStore {
               body: data,
               timeout: options.timeout
             });
-
+            const request = new CacheRequest(config);
             const response = await request.execute();
             data = response.data;
 
@@ -515,7 +515,7 @@ export class DataStore {
             observer.next(singular ? data[0] : data);
           } else if (this.isOnline()) {
             const responses = await Promise.all(map(data, entity => {
-              const request = new NetworkRequest({
+              const config = new KinveyRequestConfig({
                 method: RequestMethod.POST,
                 authType: AuthType.Default,
                 url: url.format({
@@ -529,6 +529,7 @@ export class DataStore {
                 timeout: options.timeout,
                 client: this.client
               });
+              const request = new NetworkRequest(config);
               return request.execute();
             }));
 
@@ -561,7 +562,7 @@ export class DataStore {
           }
 
           if (this.isCacheEnabled()) {
-            const request = new CacheRequest({
+            const config = new KinveyRequestConfig({
               method: RequestMethod.PUT,
               url: url.format({
                 protocol: this.client.protocol,
@@ -573,7 +574,7 @@ export class DataStore {
               body: data,
               timeout: options.timeout
             });
-
+            const request = new CacheRequest(config);
             const response = await request.execute();
             data = response.data;
 
@@ -593,7 +594,7 @@ export class DataStore {
           } else if (this.isOnline()) {
             const responses = await Promise.all(map(data, entity => {
               const id = entity[idAttribute];
-              const request = new NetworkRequest({
+              const config = new KinveyRequestConfig({
                 method: RequestMethod.PUT,
                 authType: AuthType.Default,
                 url: url.format({
@@ -607,9 +608,9 @@ export class DataStore {
                 timeout: options.timeout,
                 client: this.client
               });
+              const request = new NetworkRequest(config);
               return request.execute();
             }));
-
             data = map(responses, response => response.data);
             observer.next(singular ? data[0] : data);
           }
@@ -638,7 +639,7 @@ export class DataStore {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         } else if (this.isCacheEnabled()) {
-          const request = new CacheRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
@@ -650,7 +651,7 @@ export class DataStore {
             query: query,
             timeout: options.timeout
           });
-
+          const request = new CacheRequest(config);
           const response = await request.execute();
           let data = response.data;
 
@@ -679,7 +680,7 @@ export class DataStore {
 
           observer.next(data);
         } else if (this.isOnline()) {
-          const request = new NetworkRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.DELETE,
             authType: AuthType.Default,
             url: url.format({
@@ -693,6 +694,7 @@ export class DataStore {
             timeout: options.timeout,
             client: this.client
           });
+          const request = new NetworkRequest(config);
           const response = await request.execute();
           observer.next(response.data);
         }
@@ -712,7 +714,7 @@ export class DataStore {
         if (!id) {
           observer.next(null);
         } else if (this.isCacheEnabled()) {
-          const request = new CacheRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
@@ -724,7 +726,7 @@ export class DataStore {
             authType: AuthType.Default,
             timeout: options.timeout
           });
-
+          const request = new CacheRequest(config);
           const response = await request.execute();
           let data = response.data;
 
@@ -749,7 +751,7 @@ export class DataStore {
 
           observer.next(data);
         } else if (this.isOnline()) {
-          const request = new NetworkRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.DELETE,
             authType: AuthType.Default,
             url: url.format({
@@ -761,6 +763,7 @@ export class DataStore {
             properties: options.properties,
             timeout: options.timeout
           });
+          const request = new NetworkRequest(config);
           const response = request.execute();
           observer.next(response.data);
         }
@@ -783,7 +786,7 @@ export class DataStore {
 
       try {
         if (this.isCacheEnabled()) {
-          const request = new CacheRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
@@ -795,6 +798,7 @@ export class DataStore {
             query: query,
             timeout: options.timeout
           });
+          const request = new CacheRequest(config);
           const response = await request.execute();
           const data = response.data;
 
@@ -964,7 +968,7 @@ export class DataStore {
    */
   async updateCache(entities, options = {}) {
     if (this.isCacheEnabled()) {
-      const request = new CacheRequest({
+      const config = new KinveyRequestConfig({
         method: RequestMethod.PUT,
         url: url.format({
           protocol: this.client.protocol,
@@ -976,6 +980,7 @@ export class DataStore {
         data: entities,
         timeout: options.timeout
       });
+      const request = new CacheRequest(config);
       const response = await request.execute();
       return response.data;
     }
@@ -1022,8 +1027,7 @@ export class DataStore {
   static async clear(options = {}) {
     const client = options.client || Client.sharedInstance();
     const pathname = `/${appdataNamespace}/${client.appKey}`;
-
-    const request = new CacheRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.DELETE,
       url: url.format({
         protocol: client.protocol,
@@ -1034,6 +1038,7 @@ export class DataStore {
       properties: options.properties,
       timeout: options.timeout
     });
+    const request = new CacheRequest(config);
     const response = await request.execute();
     return response.data;
   }
