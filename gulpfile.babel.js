@@ -6,9 +6,8 @@ import env from 'gulp-env';
 import runSequence from 'run-sequence';
 import webpack from 'webpack';
 import gulpWebpack from 'webpack-stream';
-import bump from 'npm-bump';
+import bump from 'gulp-bump';
 import { argv as args } from 'yargs';
-import semver from 'semver';
 
 gulp.task('lint', () => {
   const stream = gulp.src('src/**/*.js')
@@ -73,6 +72,7 @@ gulp.task('bundle', ['transpile'], () => {
 gulp.task('bump', () => {
   gulp.src('./package.json')
     .pipe(bump({
+      preid: 'beta',
       type: args.type,
       version: args.version
     }))
