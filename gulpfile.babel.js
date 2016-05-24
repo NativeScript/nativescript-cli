@@ -6,6 +6,9 @@ import env from 'gulp-env';
 import runSequence from 'run-sequence';
 import webpack from 'webpack';
 import gulpWebpack from 'webpack-stream';
+import bump from 'npm-bump';
+import { argv } from 'yargs';
+import semver from 'semver';
 
 gulp.task('lint', () => {
   const stream = gulp.src('src/**/*.js')
@@ -67,6 +70,27 @@ gulp.task('bundle', ['transpile'], () => {
   return stream;
 });
 
+gulp.task('bump', () => {
+  let version = argv.version;
+
+  if (version) {
+    version = semver.clean(version);
+
+    // If the version is not valid then
+    // just patch the package.json version
+    if (version !== 'major'
+      && version !== 'minor'
+      && version !== 'patch'
+      && !semver.valid(version)) {
+      version = undefined;
+    }
+  }
+
+  gulp.src('./package.json')
+  .pipe(bump(version ? { version: version } : null))
+  .pipe(gulp.dest('./'));
+});
+
 gulp.task('default', () => {
-  runSequence('transpile');
+  runSequence(['bump', 'transpile']);
 });
