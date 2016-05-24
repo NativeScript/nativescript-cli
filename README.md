@@ -1,6 +1,6 @@
-# Kinvey JavaScript Core SDK
+# Kinvey JavaScript SDK Core
 
-The Kinvey JavaScript SDK core is used to
+The Kinvey JavaScript SDK core is a package that can be used to develop JavaScript applications on the Kinvey platform. The Kinvey JavaScript SDK core is intended used as a way to share common code across different Kinvey JavaScript SDK builds.
 
 ## Building
 The simplest way to build the sdk is by running `gulp`. More advanced tasks are available.
