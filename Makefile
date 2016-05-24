@@ -1,5 +1,4 @@
 PROJECT = "Kinvey JavaScript SDK Core"
-PKGVERSION = $(shell node -pe 'require("./package.json").version')
 
 clean: ;@echo "Cleaning ${PROJECT}..."; \
 	rm -rf node_modules
