@@ -76,10 +76,9 @@ gulp.task('bump', () => {
     version: args.version
   };
 
-  const stream = gulp.src('./package.json')
+  gulp.src('./package.json')
     .pipe(bump(options))
     .pipe(gulp.dest('./'));
-  return stream;
 });
 
 gulp.task('default', () => {
