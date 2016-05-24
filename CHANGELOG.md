@@ -1,4 +1,7 @@
 ## Changelog
+### 3.0.0-beta.24 (2016-05-24)
+* Enhancement: Testing automated release
+
 ### 3.0.0-beta.21 (2016-05-20)
 * Bugfix: Change main file in package.json to ./es5/kinvey.js.
 
