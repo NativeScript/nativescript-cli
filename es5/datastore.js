@@ -23,9 +23,7 @@ var _request8 = require('./requests/request');
 
 var _query4 = require('./query');
 
-var _Observable = require('rxjs/Observable');
-
-var _toPromise = require('rxjs/operator/toPromise');
+var _observable = require('./utils/observable');
 
 var _metadata = require('./metadata');
 
@@ -88,8 +86,9 @@ var onlineSymbol = Symbol();
  * Enum for DataStore types.
  */
 var DataStoreType = {
-  Sync: 'Sync',
-  Network: 'Network'
+  Cache: 'Cache',
+  Network: 'Network',
+  Sync: 'Sync'
 };
 Object.freeze(DataStoreType);
 exports.DataStoreType = DataStoreType;
@@ -133,11 +132,10 @@ var DataStore = function () {
     this.sync = new _sync2.default();
     this.sync.client = this.client;
 
-    // Enable the cache
-    this.enableCache();
-
-    // Make the store online
+    // The store is online and has the cache enabled
+    // by default.
     this.online();
+    this.enableCache();
   }
 
   /**
@@ -255,7 +253,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(observer) {
           var cacheData, networkData, count, request, response, useDeltaFetch, requestOptions, _request, _response, removedData, removedIds, removeQuery, _request2;
 
@@ -263,20 +261,21 @@ var DataStore = function () {
             while (1) {
               switch (_context.prev = _context.next) {
                 case 0:
-                  _context.prev = 0;
                   cacheData = [];
                   networkData = [];
 
                   // Check that the query is valid
 
                   if (!(query && !(query instanceof _query4.Query))) {
-                    _context.next = 5;
+                    _context.next = 4;
                     break;
                   }
 
-                  throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
+                  return _context.abrupt('return', observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.')));
 
-                case 5:
+                case 4:
+                  _context.prev = 4;
+
                   if (!_this.isCacheEnabled()) {
                     _context.next = 24;
                     break;
@@ -339,8 +338,20 @@ var DataStore = function () {
                   observer.next(cacheData);
 
                 case 24:
+                  _context.next = 29;
+                  break;
+
+                case 26:
+                  _context.prev = 26;
+                  _context.t0 = _context['catch'](4);
+
+                  observer.next([]);
+
+                case 29:
+                  _context.prev = 29;
+
                   if (!_this.isOnline()) {
-                    _context.next = 43;
+                    _context.next = 49;
                     break;
                   }
 
@@ -367,16 +378,16 @@ var DataStore = function () {
                     _request = new _deltafetch.DeltaFetchRequest(requestOptions);
                   }
 
-                  _context.next = 31;
+                  _context.next = 37;
                   return _request.execute();
 
-                case 31:
+                case 37:
                   _response = _context.sent;
 
                   networkData = _response.data;
 
                   if (!_this.isCacheEnabled()) {
-                    _context.next = 42;
+                    _context.next = 48;
                     break;
                   }
 
@@ -397,35 +408,35 @@ var DataStore = function () {
                     query: removeQuery,
                     timeout: options.timeout
                   });
-                  _context.next = 40;
+                  _context.next = 46;
                   return _request2.execute();
 
-                case 40:
-                  _context.next = 42;
+                case 46:
+                  _context.next = 48;
                   return _this.updateCache(networkData);
 
-                case 42:
+                case 48:
 
                   observer.next(networkData);
 
-                case 43:
-                  _context.next = 48;
+                case 49:
+                  _context.next = 54;
                   break;
 
-                case 45:
-                  _context.prev = 45;
-                  _context.t0 = _context['catch'](0);
-                  return _context.abrupt('return', observer.error(_context.t0));
+                case 51:
+                  _context.prev = 51;
+                  _context.t1 = _context['catch'](29);
+                  return _context.abrupt('return', observer.error(_context.t1));
 
-                case 48:
+                case 54:
                   return _context.abrupt('return', observer.complete());
 
-                case 49:
+                case 55:
                 case 'end':
                   return _context.stop();
               }
             }
-          }, _callee, _this, [[0, 45]]);
+          }, _callee, _this, [[4, 26], [29, 51]]);
         }));
 
         return function (_x2) {
@@ -442,7 +453,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(observer) {
           var count, request, response, useDeltaFetch, requestOptions, _request3, _response2, data, _request4;
 
@@ -450,18 +461,18 @@ var DataStore = function () {
             while (1) {
               switch (_context2.prev = _context2.next) {
                 case 0:
-                  _context2.prev = 0;
-
                   if (id) {
-                    _context2.next = 5;
+                    _context2.next = 4;
                     break;
                   }
 
                   observer.next(null);
-                  _context2.next = 45;
+                  _context2.next = 50;
                   break;
 
-                case 5:
+                case 4:
+                  _context2.prev = 4;
+
                   if (!_this2.isCacheEnabled()) {
                     _context2.next = 23;
                     break;
@@ -522,8 +533,20 @@ var DataStore = function () {
                   observer.next(response.data);
 
                 case 23:
+                  _context2.next = 28;
+                  break;
+
+                case 25:
+                  _context2.prev = 25;
+                  _context2.t0 = _context2['catch'](4);
+
+                  observer.next(undefined);
+
+                case 28:
+                  _context2.prev = 28;
+
                   if (!_this2.isOnline()) {
-                    _context2.next = 45;
+                    _context2.next = 41;
                     break;
                   }
 
@@ -548,28 +571,27 @@ var DataStore = function () {
                     _request3 = new _deltafetch.DeltaFetchRequest(requestOptions);
                   }
 
-                  _context2.prev = 28;
-                  _context2.next = 31;
+                  _context2.next = 36;
                   return _request3.execute();
 
-                case 31:
+                case 36:
                   _response2 = _context2.sent;
                   data = _response2.data;
 
                   observer.next(data);
-                  _context2.next = 36;
+                  _context2.next = 41;
                   return _this2.updateCache(data);
 
-                case 36:
-                  _context2.next = 45;
+                case 41:
+                  _context2.next = 50;
                   break;
 
-                case 38:
-                  _context2.prev = 38;
-                  _context2.t0 = _context2['catch'](28);
+                case 43:
+                  _context2.prev = 43;
+                  _context2.t1 = _context2['catch'](28);
 
-                  if (!(_context2.t0 instanceof _errors.NotFoundError)) {
-                    _context2.next = 44;
+                  if (!(_context2.t1 instanceof _errors.NotFoundError)) {
+                    _context2.next = 49;
                     break;
                   }
 
@@ -585,19 +607,10 @@ var DataStore = function () {
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  _context2.next = 44;
+                  _context2.next = 49;
                   return _request4.execute();
 
-                case 44:
-                  throw _context2.t0;
-
-                case 45:
-                  _context2.next = 50;
-                  break;
-
-                case 47:
-                  _context2.prev = 47;
-                  _context2.t1 = _context2['catch'](0);
+                case 49:
                   return _context2.abrupt('return', observer.error(_context2.t1));
 
                 case 50:
@@ -608,7 +621,7 @@ var DataStore = function () {
                   return _context2.stop();
               }
             }
-          }, _callee2, _this2, [[0, 47], [28, 38]]);
+          }, _callee2, _this2, [[4, 25], [28, 43]]);
         }));
 
         return function (_x4) {
@@ -625,7 +638,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(observer) {
           var count, request, response, data, _request5, _response3, _data;
 
@@ -633,48 +646,56 @@ var DataStore = function () {
             while (1) {
               switch (_context3.prev = _context3.next) {
                 case 0:
-                  _context3.prev = 0;
+                  if (!(query && !(query instanceof _query4.Query))) {
+                    _context3.next = 2;
+                    break;
+                  }
+
+                  return _context3.abrupt('return', observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.')));
+
+                case 2:
+                  _context3.prev = 2;
 
                   if (!_this3.isCacheEnabled()) {
-                    _context3.next = 20;
+                    _context3.next = 22;
                     break;
                   }
 
                   if (!_this3.isOnline()) {
+                    _context3.next = 16;
+                    break;
+                  }
+
+                  _context3.next = 7;
+                  return _this3.syncCount();
+
+                case 7:
+                  count = _context3.sent;
+
+                  if (!(count > 0)) {
                     _context3.next = 14;
                     break;
                   }
 
-                  _context3.next = 5;
-                  return _this3.syncCount();
-
-                case 5:
-                  count = _context3.sent;
-
-                  if (!(count > 0)) {
-                    _context3.next = 12;
-                    break;
-                  }
-
-                  _context3.next = 9;
+                  _context3.next = 11;
                   return _this3.push();
 
-                case 9:
-                  _context3.next = 11;
+                case 11:
+                  _context3.next = 13;
                   return _this3.syncCount();
 
-                case 11:
+                case 13:
                   count = _context3.sent;
 
-                case 12:
+                case 14:
                   if (!(count > 0)) {
-                    _context3.next = 14;
+                    _context3.next = 16;
                     break;
                   }
 
                   throw new _errors.KinveyError('Unable to count data. ' + ('There are ' + count + ' entities that need ') + 'to be synced before data is counted.');
 
-                case 14:
+                case 16:
                   request = new _cache2.default({
                     method: _request8.RequestMethod.GET,
                     url: _url2.default.format({
@@ -687,18 +708,30 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context3.next = 17;
+                  _context3.next = 19;
                   return request.execute();
 
-                case 17:
+                case 19:
                   response = _context3.sent;
                   data = response.data;
 
                   observer.next(data ? data.count : 0);
 
-                case 20:
+                case 22:
+                  _context3.next = 27;
+                  break;
+
+                case 24:
+                  _context3.prev = 24;
+                  _context3.t0 = _context3['catch'](2);
+
+                  observer.next(null);
+
+                case 27:
+                  _context3.prev = 27;
+
                   if (!_this3.isOnline()) {
-                    _context3.next = 27;
+                    _context3.next = 35;
                     break;
                   }
 
@@ -716,33 +749,33 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this3.client
                   });
-                  _context3.next = 24;
+                  _context3.next = 32;
                   return _request5.execute();
 
-                case 24:
+                case 32:
                   _response3 = _context3.sent;
                   _data = _response3.data;
 
                   observer.next(_data ? _data.count : 0);
 
-                case 27:
-                  _context3.next = 32;
+                case 35:
+                  _context3.next = 40;
                   break;
 
-                case 29:
-                  _context3.prev = 29;
-                  _context3.t0 = _context3['catch'](0);
-                  return _context3.abrupt('return', observer.error(_context3.t0));
+                case 37:
+                  _context3.prev = 37;
+                  _context3.t1 = _context3['catch'](27);
+                  return _context3.abrupt('return', observer.error(_context3.t1));
 
-                case 32:
+                case 40:
                   return _context3.abrupt('return', observer.complete());
 
-                case 33:
+                case 41:
                 case 'end':
                   return _context3.stop();
               }
             }
-          }, _callee3, _this3, [[0, 29]]);
+          }, _callee3, _this3, [[2, 24], [27, 37]]);
         }));
 
         return function (_x6) {
@@ -750,7 +783,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream;
     }
   }, {
     key: 'create',
@@ -759,7 +792,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(observer) {
           var singular, request, response, ids, query, push, responses;
           return regeneratorRuntime.wrap(function _callee4$(_context4) {
@@ -905,7 +938,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream.toPromise();
     }
   }, {
     key: 'update',
@@ -914,7 +947,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(observer) {
           var singular, id, request, response, ids, query, push, responses;
           return regeneratorRuntime.wrap(function _callee5$(_context5) {
@@ -1062,7 +1095,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream.toPromise();
     }
   }, {
     key: 'save',
@@ -1080,7 +1113,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(observer) {
           var request, response, data, localData, _query, syncData, ids, _query2, push, _request6, _response4;
 
@@ -1225,7 +1258,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream.toPromise();
     }
   }, {
     key: 'removeById',
@@ -1234,7 +1267,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(observer) {
           var request, response, data, metadata, query, _query3, push, _request7, _response5;
 
@@ -1374,7 +1407,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream.toPromise();
     }
   }, {
     key: 'clear',
@@ -1383,7 +1416,7 @@ var DataStore = function () {
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      var stream = _Observable.Observable.create(function () {
+      var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(observer) {
           var request, response, data, syncQuery, _syncQuery;
 
@@ -1391,10 +1424,18 @@ var DataStore = function () {
             while (1) {
               switch (_context8.prev = _context8.next) {
                 case 0:
-                  _context8.prev = 0;
+                  if (!(query && !(query instanceof _query4.Query))) {
+                    _context8.next = 2;
+                    break;
+                  }
+
+                  return _context8.abrupt('return', observer.error(new _errors.KinveyError('Invalid query. It must be an instance of the Query class.')));
+
+                case 2:
+                  _context8.prev = 2;
 
                   if (!_this8.isCacheEnabled()) {
-                    _context8.next = 18;
+                    _context8.next = 20;
                     break;
                   }
 
@@ -1410,58 +1451,58 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context8.next = 5;
+                  _context8.next = 7;
                   return request.execute();
 
-                case 5:
+                case 7:
                   response = _context8.sent;
                   data = response.data;
 
                   if (!(data.length > 0)) {
-                    _context8.next = 13;
+                    _context8.next = 15;
                     break;
                   }
 
                   syncQuery = new _query4.Query().contains('entity._id', Object.keys((0, _keyBy2.default)(data, idAttribute)));
-                  _context8.next = 11;
+                  _context8.next = 13;
                   return _this8.sync.clear(syncQuery, options);
 
-                case 11:
-                  _context8.next = 17;
+                case 13:
+                  _context8.next = 19;
                   break;
 
-                case 13:
+                case 15:
                   if (query) {
-                    _context8.next = 17;
+                    _context8.next = 19;
                     break;
                   }
 
                   _syncQuery = new _query4.Query().equalTo('collection', _this8.collection);
-                  _context8.next = 17;
+                  _context8.next = 19;
                   return _this8.sync.clear(_syncQuery, options);
 
-                case 17:
+                case 19:
 
                   observer.next(data);
 
-                case 18:
-                  _context8.next = 23;
+                case 20:
+                  _context8.next = 25;
                   break;
 
-                case 20:
-                  _context8.prev = 20;
-                  _context8.t0 = _context8['catch'](0);
+                case 22:
+                  _context8.prev = 22;
+                  _context8.t0 = _context8['catch'](2);
                   return _context8.abrupt('return', observer.error(_context8.t0));
 
-                case 23:
+                case 25:
                   return _context8.abrupt('return', observer.complete());
 
-                case 24:
+                case 26:
                 case 'end':
                   return _context8.stop();
               }
             }
-          }, _callee8, _this8, [[0, 20]]);
+          }, _callee8, _this8, [[2, 22]]);
         }));
 
         return function (_x16) {
@@ -1469,7 +1510,7 @@ var DataStore = function () {
         };
       }());
 
-      return _toPromise.toPromise.call(stream);
+      return stream.toPromise();
     }
 
     /**
@@ -1557,40 +1598,38 @@ var DataStore = function () {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        var _context10, count;
-
-        return regeneratorRuntime.wrap(function _callee10$(_context11) {
+        var count;
+        return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context10.prev = _context10.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context11.next = 7;
+                  _context10.next = 7;
                   break;
                 }
 
-                _context11.next = 3;
+                _context10.next = 3;
                 return this.syncCount(null, options);
 
               case 3:
-                count = _context11.sent;
+                count = _context10.sent;
 
                 if (!(count > 0)) {
-                  _context11.next = 6;
+                  _context10.next = 6;
                   break;
                 }
 
                 throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
 
               case 6:
-                return _context11.abrupt('return', (_context10 = this.find(query, options), _toPromise.toPromise).call(_context10));
+                return _context10.abrupt('return', this.find(query, options).toPromise());
 
               case 7:
                 throw new _errors.KinveyError('Unable to pull because the cache is disabled.');
 
               case 8:
               case 'end':
-                return _context11.stop();
+                return _context10.stop();
             }
           }
         }, _callee10, this);
@@ -1630,26 +1669,26 @@ var DataStore = function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var push, pull;
-        return regeneratorRuntime.wrap(function _callee11$(_context12) {
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context12.next = 8;
+                  _context11.next = 8;
                   break;
                 }
 
-                _context12.next = 3;
+                _context11.next = 3;
                 return this.push(null, options);
 
               case 3:
-                push = _context12.sent;
-                _context12.next = 6;
+                push = _context11.sent;
+                _context11.next = 6;
                 return this.pull(query, options);
 
               case 6:
-                pull = _context12.sent;
-                return _context12.abrupt('return', {
+                pull = _context11.sent;
+                return _context11.abrupt('return', {
                   push: push,
                   pull: pull
                 });
@@ -1659,7 +1698,7 @@ var DataStore = function () {
 
               case 9:
               case 'end':
-                return _context12.stop();
+                return _context11.stop();
             }
           }
         }, _callee11, this);
@@ -1700,12 +1739,12 @@ var DataStore = function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12() {
         var query = arguments.length <= 0 || arguments[0] === undefined ? new _query4.Query() : arguments[0];
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        return regeneratorRuntime.wrap(function _callee12$(_context13) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context13.next = 4;
+                  _context12.next = 4;
                   break;
                 }
 
@@ -1714,14 +1753,14 @@ var DataStore = function () {
                 }
 
                 query.equalTo('collection', this.collection);
-                return _context13.abrupt('return', this.sync.count(query, options));
+                return _context12.abrupt('return', this.sync.count(query, options));
 
               case 4:
                 throw new _errors.KinveyError('Unable to get the sync count because the cache is disabled.');
 
               case 5:
               case 'end':
-                return _context13.stop();
+                return _context12.stop();
             }
           }
         }, _callee12, this);
@@ -1752,12 +1791,12 @@ var DataStore = function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13(entities) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var request, response;
-        return regeneratorRuntime.wrap(function _callee13$(_context14) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context14.next = 6;
+                  _context13.next = 6;
                   break;
                 }
 
@@ -1773,19 +1812,19 @@ var DataStore = function () {
                   data: entities,
                   timeout: options.timeout
                 });
-                _context14.next = 4;
+                _context13.next = 4;
                 return request.execute();
 
               case 4:
-                response = _context14.sent;
-                return _context14.abrupt('return', response.data);
+                response = _context13.sent;
+                return _context13.abrupt('return', response.data);
 
               case 6:
                 throw new _errors.KinveyError('Unable to update the cache because the cache is disabled.');
 
               case 7:
               case 'end':
-                return _context14.stop();
+                return _context13.stop();
             }
           }
         }, _callee13, this);
@@ -1824,18 +1863,24 @@ var DataStore = function () {
   }], [{
     key: 'collection',
     value: function collection(_collection) {
-      var type = arguments.length <= 1 || arguments[1] === undefined ? DataStoreType.Network : arguments[1];
+      var type = arguments.length <= 1 || arguments[1] === undefined ? DataStoreType.Cache : arguments[1];
 
       var store = new DataStore(_collection);
-      store.enableCache();
 
       switch (type) {
+        case DataStoreType.Network:
+          store.online();
+          store.disableCache();
+          break;
         case DataStoreType.Sync:
+          store.enableCache();
           store.offline();
           break;
-        case DataStoreType.Network:
+        case DataStoreType.Cache:
         default:
           store.online();
+          store.enableCache();
+
       }
 
       return store;
@@ -1856,9 +1901,9 @@ var DataStore = function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14() {
         var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
         var client, pathname, request, response;
-        return regeneratorRuntime.wrap(function _callee14$(_context15) {
+        return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
                 client = options.client || _client2.default.sharedInstance();
                 pathname = '/' + appdataNamespace + '/' + client.appKey;
@@ -1873,16 +1918,16 @@ var DataStore = function () {
                   properties: options.properties,
                   timeout: options.timeout
                 });
-                _context15.next = 5;
+                _context14.next = 5;
                 return request.execute();
 
               case 5:
-                response = _context15.sent;
-                return _context15.abrupt('return', response.data);
+                response = _context14.sent;
+                return _context14.abrupt('return', response.data);
 
               case 7:
               case 'end':
-                return _context15.stop();
+                return _context14.stop();
             }
           }
         }, _callee14, this);

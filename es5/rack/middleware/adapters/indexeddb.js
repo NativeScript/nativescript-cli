@@ -178,7 +178,7 @@ var IndexedDB = function () {
       };
 
       request.onerror = function (e) {
-        error(new _errors.KinveyError('Unable to open the ' + _this.name + ' indexedDB database. ' + ('Received the error code ' + e.target.errorCode + '.')));
+        error(new _errors.KinveyError('Unable to open the ' + _this.name + ' indexedDB database. ' + (e.target.error.message + '.')));
       };
 
       return request;
@@ -217,8 +217,9 @@ var IndexedDB = function () {
                                 return resolve(entities);
                               };
 
-                              request.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while fetching data from the ' + collection + (' collection on the ' + _this2.name + ' indexedDB database. Received the error code ' + e.target.errorCode + '.')));
+                              request.onerror = function () {
+                                // TODO: log error
+                                resolve([]);
                               };
 
                             case 5:
@@ -281,8 +282,8 @@ var IndexedDB = function () {
                                 }
                               };
 
-                              request.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while retrieving an entity with _id = ' + id + (' from the ' + collection + ' collection on the ' + _this3.name + ' indexedDB database.') + (' Received the error code ' + e.target.errorCode + '.')));
+                              request.onerror = function () {
+                                reject(new _errors.NotFoundError('An entity with _id = ' + id + ' was not found in the ' + collection + (' collection on the ' + _this3.name + ' indexedDB database.')));
                               };
 
                             case 4:
@@ -360,7 +361,7 @@ var IndexedDB = function () {
                               };
 
                               txn.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while saving the entities to the ' + collection + (' collection on the ' + _this4.name + ' indexedDB database. Received the error code ' + e.target.errorCode + '.')));
+                                reject(new _errors.KinveyError('An error occurred while saving the entities to the ' + collection + (' collection on the ' + _this4.name + ' indexedDB database. ' + e.target.error.message + '.')));
                               };
 
                             case 4:
@@ -424,8 +425,8 @@ var IndexedDB = function () {
                                 }
                               };
 
-                              txn.onerror = function (e) {
-                                reject(new _errors.KinveyError('An error occurred while deleting an entity with id = ' + id + (' in the ' + collection + ' collection on the ' + _this5.name + ' indexedDB database.') + (' Received the error code ' + e.target.errorCode + '.')));
+                              txn.onerror = function () {
+                                reject(new _errors.NotFoundError('An entity with id = ' + id + ' was not found in the ' + collection + (' collection on the ' + _this5.name + ' indexedDB database.')));
                               };
 
                             case 5:
@@ -470,11 +471,12 @@ var IndexedDB = function () {
                   var request = indexedDB.deleteDatabase(_this6.name);
 
                   request.onsuccess = function () {
+                    dbCache = {};
                     resolve();
                   };
 
                   request.onerror = function (e) {
-                    reject(new _errors.KinveyError('An error occurred while clearing the ' + _this6.name + ' indexedDB database.' + (' Received the error code ' + e.target.errorCode + '.')));
+                    reject(new _errors.KinveyError('An error occurred while clearing the ' + _this6.name + ' indexedDB database.' + (' ' + e.target.error.message + '.')));
                   };
                 }));
 

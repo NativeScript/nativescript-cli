@@ -6,8 +6,7 @@ import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
 import { Query } from './query';
-import { Observable } from 'rxjs/Observable';
-import { toPromise } from 'rxjs/operator/toPromise';
+import { KinveyObservable } from './utils/observable';
 import { Metadata } from './metadata';
 import Client from './client';
 import Symbol from 'es6-symbol';
@@ -30,8 +29,9 @@ const onlineSymbol = Symbol();
  * Enum for DataStore types.
  */
 const DataStoreType = {
-  Sync: 'Sync',
-  Network: 'Network'
+  Cache: 'Cache',
+  Network: 'Network',
+  Sync: 'Sync'
 };
 Object.freeze(DataStoreType);
 export { DataStoreType };
@@ -72,11 +72,10 @@ export class DataStore {
     this.sync = new Sync();
     this.sync.client = this.client;
 
-    // Enable the cache
-    this.enableCache();
-
-    // Make the store online
+    // The store is online and has the cache enabled
+    // by default.
     this.online();
+    this.enableCache();
   }
 
   /**
@@ -182,16 +181,16 @@ export class DataStore {
    * @return  {Promise|Object}                                                  Promise or object.
    */
   find(query, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
+      let cacheData = [];
+      let networkData = [];
+
+      // Check that the query is valid
+      if (query && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
       try {
-        let cacheData = [];
-        let networkData = [];
-
-        // Check that the query is valid
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
-
         // Fetch data from cache
         if (this.isCacheEnabled()) {
           if (this.isOnline()) {
@@ -228,7 +227,11 @@ export class DataStore {
           cacheData = response.data;
           observer.next(cacheData);
         }
+      } catch (error) {
+        observer.next([]);
+      }
 
+      try {
         // Fetch data from the network
         if (this.isOnline()) {
           const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
@@ -291,11 +294,11 @@ export class DataStore {
   }
 
   findById(id, options = {}) {
-    const stream = Observable.create(async observer => {
-      try {
-        if (!id) {
-          observer.next(null);
-        } else {
+    const stream = KinveyObservable.create(async observer => {
+      if (!id) {
+        observer.next(null);
+      } else {
+        try {
           if (this.isCacheEnabled()) {
             if (this.isOnline()) {
               let count = await this.syncCount();
@@ -329,7 +332,11 @@ export class DataStore {
             const response = await request.execute();
             observer.next(response.data);
           }
+        } catch (error) {
+          observer.next(undefined);
+        }
 
+        try {
           // Fetch data from the network
           if (this.isOnline()) {
             const useDeltaFetch = options.useDeltaFetch || !!this.useDeltaFetch;
@@ -352,35 +359,31 @@ export class DataStore {
               request = new DeltaFetchRequest(requestOptions);
             }
 
-            try {
-              const response = await request.execute();
-              const data = response.data;
-              observer.next(data);
-              await this.updateCache(data);
-            } catch (error) {
-              if (error instanceof NotFoundError) {
-                const request = new CacheRequest({
-                  method: RequestMethod.DELETE,
-                  authType: AuthType.Default,
-                  url: url.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: `${this.pathname}/${id}`,
-                    query: options.query
-                  }),
-                  properties: options.properties,
-                  timeout: options.timeout
-                });
-
-                await request.execute();
-              }
-
-              throw error;
-            }
+            const response = await request.execute();
+            const data = response.data;
+            observer.next(data);
+            await this.updateCache(data);
           }
+        } catch (error) {
+          if (error instanceof NotFoundError) {
+            const request = new CacheRequest({
+              method: RequestMethod.DELETE,
+              authType: AuthType.Default,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: `${this.pathname}/${id}`,
+                query: options.query
+              }),
+              properties: options.properties,
+              timeout: options.timeout
+            });
+
+            await request.execute();
+          }
+
+          return observer.error(error);
         }
-      } catch (error) {
-        return observer.error(error);
       }
 
       // Complete the observer
@@ -391,7 +394,12 @@ export class DataStore {
   }
 
   count(query, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
+      // Check that the query is valid
+      if (query && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
       try {
         if (this.isCacheEnabled()) {
           if (this.isOnline()) {
@@ -428,7 +436,11 @@ export class DataStore {
           const data = response.data;
           observer.next(data ? data.count : 0);
         }
+      } catch (error) {
+        observer.next(null);
+      }
 
+      try {
         if (this.isOnline()) {
           const request = new NetworkRequest({
             method: RequestMethod.GET,
@@ -455,11 +467,11 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream;
   }
 
   create(data, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
       try {
         if (!data) {
           observer.next(null);
@@ -531,11 +543,11 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream.toPromise();
   }
 
   update(data, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
       try {
         if (!data) {
           observer.next(null);
@@ -609,7 +621,7 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream.toPromise();
   }
 
   save(data, options) {
@@ -621,7 +633,7 @@ export class DataStore {
   }
 
   remove(query, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
       try {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
@@ -691,11 +703,11 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream.toPromise();
   }
 
   removeById(id, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
       try {
         if (!id) {
           observer.next(null);
@@ -759,11 +771,16 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream.toPromise();
   }
 
   clear(query, options = {}) {
-    const stream = Observable.create(async observer => {
+    const stream = KinveyObservable.create(async observer => {
+      // Check that the query is valid
+      if (query && !(query instanceof Query)) {
+        return observer.error(new KinveyError('Invalid query. It must be an instance of the Query class.'));
+      }
+
       try {
         if (this.isCacheEnabled()) {
           const request = new CacheRequest({
@@ -798,7 +815,7 @@ export class DataStore {
       return observer.complete();
     });
 
-    return stream::toPromise();
+    return stream.toPromise();
   }
 
   /**
@@ -861,7 +878,7 @@ export class DataStore {
           'Call store.push() to push the pending sync items before you pull new data.');
       }
 
-      return this.find(query, options)::toPromise();
+      return this.find(query, options).toPromise();
     }
 
     throw new KinveyError('Unable to pull because the cache is disabled.');
@@ -973,17 +990,23 @@ export class DataStore {
    * @param  {StoreType}    [type=DataStoreType.Network]  Type of store to return.
    * @return {DataStore}                                  DataStore instance.
    */
-  static collection(collection, type = DataStoreType.Network) {
+  static collection(collection, type = DataStoreType.Cache) {
     const store = new DataStore(collection);
-    store.enableCache();
 
     switch (type) {
+      case DataStoreType.Network:
+        store.online();
+        store.disableCache();
+        break;
       case DataStoreType.Sync:
+        store.enableCache();
         store.offline();
         break;
-      case DataStoreType.Network:
+      case DataStoreType.Cache:
       default:
         store.online();
+        store.enableCache();
+
     }
 
     return store;

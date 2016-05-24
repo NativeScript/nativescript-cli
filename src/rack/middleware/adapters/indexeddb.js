@@ -3,7 +3,7 @@ import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
-const dbCache = {};
+let dbCache = {};
 
 if (typeof window !== 'undefined') {
   require('indexeddbshim'); // eslint-disable-line global-require
@@ -148,7 +148,7 @@ export default class IndexedDB {
 
     request.onerror = e => {
       error(new KinveyError(`Unable to open the ${this.name} indexedDB database. ` +
-        `Received the error code ${e.target.errorCode}.`));
+        `${e.target.error.message}.`));
     };
 
     return request;
@@ -172,9 +172,9 @@ export default class IndexedDB {
           return resolve(entities);
         };
 
-        request.onerror = e => {
-          reject(new KinveyError(`An error occurred while fetching data from the ${collection}`
-            + ` collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
+        request.onerror = () => {
+          // TODO: log error
+          resolve([]);
         };
       }, reject);
     });
@@ -197,10 +197,9 @@ export default class IndexedDB {
           }
         };
 
-        request.onerror = e => {
-          reject(new KinveyError(`An error occurred while retrieving an entity with _id = ${id}`
-            + ` from the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` Received the error code ${e.target.errorCode}.`));
+        request.onerror = () => {
+          reject(new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+             + ` collection on the ${this.name} indexedDB database.`));
         };
       }, reject);
     });
@@ -232,7 +231,7 @@ export default class IndexedDB {
 
         txn.onerror = e => {
           reject(new KinveyError(`An error occurred while saving the entities to the ${collection}`
-            + ` collection on the ${this.name} indexedDB database. Received the error code ${e.target.errorCode}.`));
+            + ` collection on the ${this.name} indexedDB database. ${e.target.error.message}.`));
         };
       }, reject);
     });
@@ -256,10 +255,9 @@ export default class IndexedDB {
           }
         };
 
-        txn.onerror = e => {
-          reject(new KinveyError(`An error occurred while deleting an entity with id = ${id}`
-            + ` in the ${collection} collection on the ${this.name} indexedDB database.`
-            + ` Received the error code ${e.target.errorCode}.`));
+        txn.onerror = () => {
+          reject(new NotFoundError(`An entity with id = ${id} was not found in the ${collection}`
+              + ` collection on the ${this.name} indexedDB database.`));
         };
       }, reject);
     });
@@ -270,12 +268,13 @@ export default class IndexedDB {
       const request = indexedDB.deleteDatabase(this.name);
 
       request.onsuccess = () => {
+        dbCache = {};
         resolve();
       };
 
       request.onerror = (e) => {
         reject(new KinveyError(`An error occurred while clearing the ${this.name} indexedDB database.`
-            + ` Received the error code ${e.target.errorCode}.`));
+            + ` ${e.target.error.message}.`));
       };
     });
   }
