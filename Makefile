@@ -1,5 +1,5 @@
 PROJECT = "Kinvey JavaScript SDK Core"
-VERSION = $(shell node -pe 'require("./package.json").version')
+PKGVERSION = $(shell node -pe 'require("./package.json").version')
 
 clean: ;@echo "Cleaning ${PROJECT}..."; \
 	rm -rf node_modules
@@ -13,14 +13,13 @@ test: ;@echo "Testing ${PROJECT}..."; \
 build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
-tag: ;@echo "Tagging ${PROJECT}..."; \
-	git tag ${VERSION}
-	git push --tags origin HEAD:master
+version: ;@echo "Saving version to env.properties..."; \
+	echo VERSION=$PKGVERSION > env.properties
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
 	npm publish . --tag beta
 
 audit: clean install test
-release: audit build tag publish
+release: audit build version publish
 
 .PHONY: clean install test release tag publish
