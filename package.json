@@ -1,6 +1,6 @@
 {
   "name": "kinvey-javascript-sdk-core",
-  "version": "3.0.0-beta.24",
+  "version": "3.0.0-beta.25",
   "description": "Kinvey JavaScript SDK Core",
   "main": "./es5/kinvey.js",
   "scripts": {
@@ -62,6 +62,7 @@
     "gulp-bump": "^2.1.0",
     "gulp-env": "^0.4.0",
     "gulp-eslint": "^2.0.0",
+    "gulp-file": "^0.3.0",
     "gulp-git": "^1.7.1",
     "gulp-prompt": "^0.2.0",
     "gulp-s3-upload": "^1.6.0",

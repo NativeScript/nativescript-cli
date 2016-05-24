@@ -3,10 +3,10 @@ import eslint from 'gulp-eslint';
 import babel from 'gulp-babel';
 import del from 'del';
 import env from 'gulp-env';
-import runSequence from 'run-sequence';
 import webpack from 'webpack';
 import gulpWebpack from 'webpack-stream';
 import bump from 'gulp-bump';
+import file from 'gulp-file';
 import { argv as args } from 'yargs';
 
 gulp.task('lint', () => {
@@ -76,9 +76,9 @@ gulp.task('bump', () => {
       type: args.type,
       version: args.version
     }))
-    .pipe(gulp.dest('./'));
+    .pipe(gulp.dest(`${__dirname}/`))
+    .pipe(file('bump.txt', ''))
+    .pipe(gulp.dest(`${__dirname}/tmp`));
 });
 
-gulp.task('default', () => {
-  runSequence('transpile');
-});
+gulp.task('default', ['transpile']);
