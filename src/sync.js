@@ -13,7 +13,7 @@ import sortedUniqBy from 'lodash/sortedUniqBy';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd'
+const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 export default class Sync {
   constructor() {
