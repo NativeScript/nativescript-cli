@@ -1,14 +1,14 @@
-clean:
-	@echo "Cleaning" && rm -rf node_modules
+PROJECT = "Kinvey JavaScript SDK Core"
 
-install:
-	@echo "Installing Dependencies" && npm install
+all: clean install build
 
-release:
-	@./node_modules/.bin/gulp
+clean: ;@echo "Cleaning ${PROJECT}..."; \
+	rm -rf node_modules
 
-all: clean \
-	install \
-	release
+install: ;@echo "Installing dependencies for ${PROJECT}..."; \
+	npm install
 
-.PHONY: install release
+build: ;@echo "Building ${PROJECT}..."; \
+	./node_modules/.bin/gulp default --version ${VERSION}
+
+.PHONY: clean install build
