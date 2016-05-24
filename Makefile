@@ -13,10 +13,7 @@ test: ;@echo "Testing ${PROJECT}..."; \
 build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
-version: ;@echo "Saving version to env.properties..."; \
-	echo VERSION=$PKGVERSION > env.properties
-
 audit: clean install test
-release: audit build version
+release: audit build
 
-.PHONY: clean install test release version
+.PHONY: clean install test build audit release
