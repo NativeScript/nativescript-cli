@@ -609,6 +609,22 @@ export class KinveyRequestConfig extends RequestConfig {
     this.configProperties = properties;
   }
 
+  get client() {
+    return this.configClient;
+  }
+
+  set client(client) {
+    if (client) {
+      if (!(client instanceof Client)) {
+        throw new KinveyError('client must be an instance of the Client class.');
+      }
+
+      this.appVersion = client.appVersion;
+    }
+
+    this.configClient = client;
+  }
+
   /**
    * Return the app version request property.
    *

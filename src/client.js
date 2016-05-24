@@ -1,7 +1,5 @@
 import { KinveyError } from './errors';
 import { getActiveUser, getActiveSocialIdentity } from './utils/storage';
-import { RequestConfig } from './requests/request';
-import result from 'lodash/result';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
@@ -74,6 +72,11 @@ export default class Client {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {string}
+     */
+    this.appVersion = options.appVersion;
   }
 
   get baseUrl() {
@@ -91,16 +94,16 @@ export default class Client {
     return getActiveSocialIdentity(this);
   }
 
-  get requestConfig() {
-    return this.requestConfig;
+  get appVersion() {
+    return this.clientAppVersion;
   }
 
-  set requestConfig(config) {
-    if (!(config instanceof RequestConfig)) {
-      config = new RequestConfig(result(config, 'toJSON', result));
+  set appVersion(appVersion) {
+    if (!isString(appVersion)) {
+      appVersion = String(appVersion);
     }
 
-    this.requestConfig = config;
+    this.clientAppVersion = appVersion;
   }
 
   /**
@@ -115,7 +118,8 @@ export default class Client {
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
-      encryptionKey: this.encryptionKey
+      encryptionKey: this.encryptionKey,
+      appVersion: this.appVersion
     };
 
     return json;
