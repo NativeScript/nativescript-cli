@@ -18,7 +18,7 @@ tag: ;@echo "Tagging ${PROJECT}..."; \
 	git push --tags origin HEAD:master
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
-	npm publish .
+	npm publish . --tag beta
 
 audit: clean install test
 release: audit build tag publish
