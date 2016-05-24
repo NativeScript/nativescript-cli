@@ -17,6 +17,7 @@ The following flags are available when running `gulp bump`:
 * `--version <version>`: Sets the package version to the provided version.
 
 ## Testing
+
 You can run the tests using `npm test`.
 
 ## Releasing
