@@ -71,5 +71,4 @@ gulp.task('bump', () => {
   return stream;
 });
 
-gulp.task('release', ['bump']);
 gulp.task('default', ['build']);

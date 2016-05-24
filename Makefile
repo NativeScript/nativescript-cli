@@ -1,8 +1,6 @@
 PROJECT = "Kinvey JavaScript SDK Core"
 VERSION = $(shell node -pe 'require("./package.json").version')
 
-all: clean install test
-
 clean: ;@echo "Cleaning ${PROJECT}..."; \
 	rm -rf node_modules
 
@@ -12,7 +10,7 @@ install: ;@echo "Installing dependencies for ${PROJECT}..."; \
 test: ;@echo "Testing ${PROJECT}..."; \
 	npm run test:jenkins
 
-release: ;@echo "Building ${PROJECT}..."; \
+build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
 tag: ;@echo "Tagging ${PROJECT}..."; \
@@ -22,4 +20,7 @@ tag: ;@echo "Tagging ${PROJECT}..."; \
 publish: ;@echo "Publishing ${PROJECT}..."; \
 	npm publish .
 
-.PHONY: clean install test release
+audit: clean install test
+release: audit build tag publish
+
+.PHONY: clean install test release tag publish
