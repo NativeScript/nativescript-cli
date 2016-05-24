@@ -7,7 +7,7 @@ import runSequence from 'run-sequence';
 import webpack from 'webpack';
 import gulpWebpack from 'webpack-stream';
 import bump from 'npm-bump';
-import { argv } from 'yargs';
+import { argv as args } from 'yargs';
 import semver from 'semver';
 
 gulp.task('lint', () => {
@@ -71,23 +71,13 @@ gulp.task('bundle', ['transpile'], () => {
 });
 
 gulp.task('bump', () => {
-  let version = argv.version;
-
-  if (version) {
-    version = semver.clean(version);
-
-    // If the version is not valid then
-    // just patch the package.json version
-    if (version !== 'major'
-      && version !== 'minor'
-      && version !== 'patch'
-      && !semver.valid(version)) {
-      version = 'patch';
-    }
-  }
+  const options = {
+    type: args.type,
+    version: args.version
+  };
 
   const stream = gulp.src('./package.json')
-    .pipe(bump({ version: version }))
+    .pipe(bump(options))
     .pipe(gulp.dest('./'));
   return stream;
 });
