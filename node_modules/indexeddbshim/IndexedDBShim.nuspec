@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>IndexedDBShim</id>
+        <version>1.0.0</version>
+        <authors>Parashuram</authors>
+        <projectUrl>http://nparashuram.com/IndexedDBShim/</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A polyfill for IndexedDB using WebSql.</description>
+    </metadata>
+    <files>
+        <file src="dist\indexeddbshim.js" target="content\Scripts\indexeddbshim.js" />
+        <file src="dist\indexeddbshim.min.js" target="content\Scripts\indexeddbshim.min.js" />
+        <file src="dist\indexeddbshim.min.js.map" target="content\Scripts\indexeddbshim.min.js.map" />
+    </files>
+</package>

@@ -1,0 +1,20 @@
+{
+  "name": "array.prototype.find",
+  "main": "index.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/paulmillr/Array.prototype.find",
+  "authors": [
+    "Paul Miller <http://paulmillr.com>",
+    "Duncan Hall <http://duncanhall.net>"
+  ],
+  "description": "Array.prototype.find ES6 polyfill.",
+  "keywords": ["Array.prototype.find", "find", "es6", "ecmascript 6", "polyfill"],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

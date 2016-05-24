@@ -56,6 +56,10 @@ gulp.task('build', ['clean', 'lint'], () => {
 });
 
 gulp.task('bump', () => {
+  if (!args.type && !args.version) {
+    throw new Error('Please provide a type or version to bump the package.');
+  }
+
   const stream = gulp.src('./package.json')
     .pipe(bump({
       preid: 'beta',
@@ -71,8 +75,10 @@ gulp.task('bump', () => {
 
 gulp.task('commit', () => {
   const version = require('./package.json').version; // eslint-disable-line global-require
-  const stream = gulp.src('./*')
+  const stream = gulp.src('.')
+    .pipe(git.add({ args: '-f' }))
     .pipe(git.commit(`Release version ${version}`))
+    .pipe(git.push('origin', 'master'))
     .on('error', errorHandler);
   return stream;
 });

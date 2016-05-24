@@ -1,0 +1,37 @@
+{
+    "excludeFiles": [
+        ".git/**",
+        "node_modules/**"
+    ],
+
+    "requireCurlyBraces": ["if", "else", "for", "while", "do"],
+    "requireSpaceAfterKeywords": ["if", "else", "for", "while", "do", "switch", "return"],
+    "requireRightStickedOperators": ["!"],
+    "requireLeftStickedOperators": [","],
+
+    "disallowLeftStickedOperators": ["?", "+", "-", "/", "*", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<="],
+    "disallowRightStickedOperators": ["?", "+", "/", "*", ":", "=", "==", "===", "!=", "!==", ">", ">=", "<", "<="],
+    "disallowImplicitTypeConversion": ["string"],
+    "disallowKeywords": ["with"],
+    "disallowKeywordsOnNewLine": ["else"],
+
+    "disallowMultipleLineBreaks": true,
+    "disallowSpaceAfterObjectKeys": true,
+    "disallowSpacesInsideParentheses": true,
+    "disallowSpacesInsideArrayBrackets": true,
+    "disallowSpacesInsideObjectBrackets": true,
+
+    "requireLineFeedAtFileEnd": true,
+    "safeContextKeyword": "self",
+
+    "validateJSDoc": {
+        "checkParamNames": true,
+        "requireParamTypes": true,
+        "checkRedundantParams": true
+    },
+
+    "requireSpacesInFunctionExpression": {
+        "beforeOpeningCurlyBrace": true,
+        "beforeOpeningRoundBrace": true
+    }
+}

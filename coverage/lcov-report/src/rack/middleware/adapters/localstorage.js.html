@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/rack/middleware/adapters/localstorage.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../../../index.html">All files</a> / <a href="index.html">src/rack/middleware/adapters</a> localstorage.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">33.33% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>11/33</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">25% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>3/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">0% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>0/4</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">33.33% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>11/33</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line low'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">280x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">280x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { NotFoundError } from '../../../errors';
+import keyBy from 'lodash/keyBy';
+import merge from 'lodash/merge';
+import values from 'lodash/values';
+import forEach from 'lodash/forEach';
+import findIndex from 'lodash/findIndex';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
+const masterCollectionName = 'master';
+const localStorage = global.localStorage;
+&nbsp;
+/**
+ * @private
+ */
+export class LocalStorage {
+<span class="fstat-no" title="function not covered" >  constructor(name = 'kinvey') <span class="cstat-no" title="statement not covered" >{</span></span>
+<span class="cstat-no" title="statement not covered" >    this.name = name;</span>
+  }
+&nbsp;
+  async find(collection) {
+    const entities = localStorage.getItem(`${this.name}${collection}`);
+&nbsp;
+    if (entities) {
+      return JSON.parse(entities);
+    }
+&nbsp;
+    return entities;
+  }
+&nbsp;
+  async findById(collection, id) {
+    const entities = await this.find(collection);
+    const entity = find(entities, <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >entity =&gt; entity[idAttribute] === id);</span></span>
+&nbsp;
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} localstorage database.`);
+    }
+&nbsp;
+    return entity;
+  }
+&nbsp;
+  async save(collection, entities) {
+    const collections = await this.find(masterCollectionName);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    if (findIndex(collections, collection) === -1) {</span>
+<span class="cstat-no" title="statement not covered" >      collections.push(collection);</span>
+<span class="cstat-no" title="statement not covered" >      localStorage.setItem(`${this.name}${masterCollectionName}`, JSON.stringify(collections));</span>
+    }
+&nbsp;
+    const existingEntities = await this.find(collection);
+    const existingEntitiesById = keyBy(existingEntities, idAttribute);
+    const entitiesById = keyBy(entities, idAttribute);
+    const existingEntityIds = Object.keys(existingEntitiesById);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    forEach(existingEntityIds, <span class="fstat-no" title="function not covered" >id =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >      const existingEntity = existingEntitiesById[id];</span>
+<span class="cstat-no" title="statement not covered" >      const entity = entitiesById[id];</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >      if (entity) {</span>
+<span class="cstat-no" title="statement not covered" >        entitiesById[id] = merge(existingEntity, entity);</span>
+      }
+    });
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));</span>
+    return entities;
+  }
+&nbsp;
+  async removeById(collection, id) {
+    const entities = await this.find(collection);
+    const entitiesById = keyBy(entities, idAttribute);
+    const entity = entitiesById[id];
+&nbsp;
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection} ` +
+        `collection on the ${this.name} memory database.`);
+    }
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    delete entitiesById[id];</span>
+<span class="cstat-no" title="statement not covered" >    localStorage.setItem(`${this.name}${collection}`, JSON.stringify(values(entitiesById)));</span>
+&nbsp;
+    return entity;
+  }
+&nbsp;
+  async clear() {
+    const collections = await this.find(masterCollectionName);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    forEach(collections, <span class="fstat-no" title="function not covered" >collection =&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >      localStorage.removeItem(`${this.name}${collection}`);</span>
+    });
+  }
+&nbsp;
+  static isSupported() {
+    <span class="missing-if-branch" title="if path not taken" >I</span>if (localStorage) {
+<span class="cstat-no" title="statement not covered" >      const item = 'testLocalStorageSupport';</span>
+<span class="cstat-no" title="statement not covered" >      try {</span>
+<span class="cstat-no" title="statement not covered" >        localStorage.setItem(item, item);</span>
+<span class="cstat-no" title="statement not covered" >        localStorage.removeItem(item);</span>
+<span class="cstat-no" title="statement not covered" >        return true;</span>
+      } catch (e) {
+<span class="cstat-no" title="statement not covered" >        return false;</span>
+      }
+    }
+&nbsp;
+    return false;
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue May 24 2016 13:36:56 GMT-0400 (EDT)
+</div>
+</div>
+<script src="../../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../../sorter.js"></script>
+</body>
+</html>

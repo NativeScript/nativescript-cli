@@ -1,0 +1,22 @@
+{
+  "name": "es6-error",
+  "description": "Easily-extendable error for use with ES6 classes",
+  "main": "dist/index.js",
+  "authors": [
+    "Ben Youngblood"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "es6",
+    "error",
+    "babel"
+  ],
+  "homepage": "https://github.com/bjyoungblood/es6-error",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

@@ -1,0 +1,415 @@
+<html>
+<head>
+  <meta charset='utf-8' />
+  <title>istanbul-lib-instrument 1.0.0-alpha.4 | Documentation</title>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Code+Pro:400,500,700' rel='stylesheet' type='text/css'>
+  <link href='assets/bass.css' type='text/css' rel='stylesheet' />
+  <link href='assets/style.css' type='text/css' rel='stylesheet' />
+  <link href='assets/github.css' type='text/css' rel='stylesheet' />
+</head>
+<body class='documentation'>
+  <div class='container'>
+    <div class='clearfix md-mxn2'>
+      <div class='fixed md-show fix-3 overflow-auto max-height-100'>
+        <div class='py1 px2'>
+          <h3 class='mb0 no-anchor'>istanbul-lib-instrument</h3>
+          <div class='mb1'><code>1.0.0-alpha.4</code></div>
+          <input
+            placeholder='Filter'
+            id='filter-input'
+            class='col12 block field'
+            type='text' />
+          <div id='toc'>
+              <a
+                href='#Exports'
+                class='block bold'>
+                Exports
+              </a>
+                <a
+                  href='#Exports.createInstrumenter'
+                  class='regular block'>
+                  .createInstrumenter
+                </a>
+              <a
+                href='#Instrumenter'
+                class='block bold'>
+                Instrumenter
+              </a>
+                <a
+                  href='#Instrumenter.instrument'
+                  class='regular block'>
+                  #instrument
+                </a>
+                <a
+                  href='#Instrumenter.instrumentASTSync'
+                  class='regular block'>
+                  #instrumentASTSync
+                </a>
+                <a
+                  href='#Instrumenter.instrumentSync'
+                  class='regular block'>
+                  #instrumentSync
+                </a>
+                <a
+                  href='#Instrumenter.lastFileCoverage'
+                  class='regular block'>
+                  #lastFileCoverage
+                </a>
+                <a
+                  href='#Instrumenter.lastSourceMap'
+                  class='regular block'>
+                  #lastSourceMap
+                </a>
+              <a
+                href='#SourceCoverage'
+                class='block bold'>
+                SourceCoverage
+              </a>
+          </div>
+        </div>
+      </div>
+      <div class='fix-margin-3'>
+        <div class='px2'>
+<div class='py1'><section class='py2 clearfix'>
+  <h2 id='Exports' class='mt0'>
+    Exports<span class='gray'></span>
+  </h2>
+  
+      <h4>Static members</h4>
+        <div class='collapsible' id='Exports.createInstrumenter'>
+          <a href='#Exports.createInstrumenter'>
+            <code>
+              .createInstrumenter<span class='gray'>(opts)</span>
+            </code>
+            <span class='force-inline'>
+              <p>returns an instrumenter instance with the specified options</p>
+
+            </span>
+          </a>
+          <div class='collapser border px2 m2'>
+            <section class='py2 clearfix'>
+              <h2 id='Exports.createInstrumenter' class='mt0'>
+                createInstrumenter<span class='gray'>(opts)</span>
+              </h2>
+              <p>returns an instrumenter instance with the specified options</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code> <strong>opts</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>[opts={}] instrumenter options, see <a href="#Instrumenter"><code>#Instrumenter</code></a></p>
+            
+                      </span>
+                    </li>
+                </ul>
+                  <h4>Returns</h4>
+                  <code><code><a href="#Instrumenter">Instrumenter</a></code></code>
+                  
+                  <span class='force-inline'>
+                    
+                  </span>
+            </section>
+          </div>
+        </div>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='Instrumenter' class='mt0'>
+    Instrumenter<span class='gray'>(options)</span>
+  </h2>
+  <p>mechanism to instrument code for coverage.</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code> <strong>options</strong>
+          :
+          <span class='force-inline'>
+            <p>Configuration options.</p>
+
+          </span>
+        </li>
+          <ul>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code>]</code> options.coverageVariable
+                  (default <code>&#x60;__coverage__&#x60;</code>)
+                <p>the global variable name to use for
+tracking coverage.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.preserveComments
+                  (default <code>false</code>)
+                <p>whether comments should be preserved in the output.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.compact
+                  (default <code>true</code>)
+                <p>emit readable code when unset.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.esModules
+                  (default <code>false</code>)
+                <p>whether the code to instrument contains uses es
+imports or exports.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.autoWrap
+                  (default <code>false</code>)
+                <p>automatically wrap the source in
+an anonymous function before covering it. When set, code is wrapped in
+an anonymous function before it is parsed. This is done because
+some nodejs libraries have <code>return</code> statements outside of
+a function which is technically invalid Javascript and causes
+the parser to fail. This construct, however, works correctly in node
+since module loading is done in the context of an anonymous function.
+Note that the semantics of the code <em>returned</em> by the instrumenter does
+not change in any way. The function wrapper is &quot;unwrapped&quot; before the
+instrumented code is generated.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>]</code> options.codeGenerationOptions
+                  (default <code>{}</code>)
+                <p>an object that is directly passed to the <code>escodegen</code>
+library as configuration for code generation. The <code>compact</code> setting is not honored when this
+option is specified</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function">Function</a></code>]</code> options.sourceMapUrlCallback
+                  (default <code>null</code>)
+                <p>a callback function that is called
+with a source map URL found in the original source.</p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.debug
+                  (default <code>false</code>)
+                <p>assist in debugging. Currently, the only effect of
+setting this option is a pretty-print of the coverage variable. Defaults to <code>false</code></p>
+</li>
+              <li><code>[<code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean">Boolean</a></code>]</code> options.walkDebug
+                  (default <code>false</code>)
+                <p>assist in debugging of the AST walker used by this class.</p>
+</li>
+          </ul>
+    </ul>
+      <h4>Instance members</h4>
+        <div class='collapsible' id='Instrumenter.instrument'>
+          <a href='#Instrumenter.instrument'>
+            <code>
+              #instrument<span class='gray'>(code, filename, callback)</span>
+            </code>
+            <span class='force-inline'>
+              <p>Callback based instrumentation. Note that this still executes synchronously in the same process tick
+and calls back immediately. It only provides the options for callback style error handling as
+opposed to a <code>try-catch</code> style and nothing more. Implemented as a wrapper over <code>instrumentSync</code></p>
+
+            </span>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='Instrumenter.instrument' class='mt0'>
+                instrument<span class='gray'>(code, filename, callback)</span>
+              </h2>
+              <p>Callback based instrumentation. Note that this still executes synchronously in the same process tick
+            and calls back immediately. It only provides the options for callback style error handling as
+            opposed to a <code>try-catch</code> style and nothing more. Implemented as a wrapper over <code>instrumentSync</code></p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>code</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>the code to be instrumented as a String</p>
+            
+                      </span>
+                    </li>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>filename</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>Optional. The name of the file from which
+            the code was read. A temporary filename is generated when not specified.
+            Not specifying a filename is only useful for unit tests and demonstrations
+            of this library.</p>
+            
+                      </span>
+                    </li>
+                    <li> <strong>callback</strong>
+                      :
+                      <span class='force-inline'>
+                        
+                      </span>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Instrumenter.instrumentASTSync'>
+          <a href='#Instrumenter.instrumentASTSync'>
+            <code>
+              #instrumentASTSync<span class='gray'>(program, filename)</span>
+            </code>
+            <span class='force-inline'>
+              <p>synchronous instrumentation method that instruments an AST instead.</p>
+
+            </span>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='Instrumenter.instrumentASTSync' class='mt0'>
+                instrumentASTSync<span class='gray'>(program, filename)</span>
+              </h2>
+              <p>synchronous instrumentation method that instruments an AST instead.</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>program</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>the AST to be instrumented</p>
+            
+                      </span>
+                    </li>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>filename</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>Optional. The name of the file from which
+            the code was read. A temporary filename is generated when not specified.
+            Not specifying a filename is only useful for unit tests and demonstrations
+            of this library.</p>
+            
+                      </span>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Instrumenter.instrumentSync'>
+          <a href='#Instrumenter.instrumentSync'>
+            <code>
+              #instrumentSync<span class='gray'>(code, filename)</span>
+            </code>
+            <span class='force-inline'>
+              <p>synchronous instrumentation method. Throws when illegal code is passed to it</p>
+
+            </span>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='Instrumenter.instrumentSync' class='mt0'>
+                instrumentSync<span class='gray'>(code, filename)</span>
+              </h2>
+              <p>synchronous instrumentation method. Throws when illegal code is passed to it</p>
+            
+                <h4>Parameters</h4>
+                <ul class='suppress-p-margin'>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>code</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>the code to be instrumented as a String</p>
+            
+                      </span>
+                    </li>
+                    <li><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code> <strong>filename</strong>
+                      :
+                      <span class='force-inline'>
+                        <p>Optional. The name of the file from which
+            the code was read. A temporary filename is generated when not specified.
+            Not specifying a filename is only useful for unit tests and demonstrations
+            of this library.</p>
+            
+                      </span>
+                    </li>
+                </ul>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Instrumenter.lastFileCoverage'>
+          <a href='#Instrumenter.lastFileCoverage'>
+            <code>
+              #lastFileCoverage<span class='gray'></span>
+            </code>
+            <span class='force-inline'>
+              <p>returns the file coverage object for the code that was instrumented
+just before calling this method. Note that this represents a
+&quot;zero-coverage&quot; object which is not even representative of the code
+being loaded in node or a browser (which would increase the statement
+counts for mainline code).</p>
+
+            </span>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='Instrumenter.lastFileCoverage' class='mt0'>
+                lastFileCoverage<span class='gray'></span>
+              </h2>
+              <p>returns the file coverage object for the code that was instrumented
+            just before calling this method. Note that this represents a
+            &quot;zero-coverage&quot; object which is not even representative of the code
+            being loaded in node or a browser (which would increase the statement
+            counts for mainline code).</p>
+            
+                  <h4>Returns</h4>
+                  <code><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code></code>
+                  :
+                  <span class='force-inline'>
+                    <p>a &quot;zero-coverage&quot; file coverage object for the code last instrumented
+            by this instrumenter</p>
+            
+                  </span>
+            </section>
+          </div>
+        </div>
+        <div class='collapsible' id='Instrumenter.lastSourceMap'>
+          <a href='#Instrumenter.lastSourceMap'>
+            <code>
+              #lastSourceMap<span class='gray'></span>
+            </code>
+            <span class='force-inline'>
+              <p>returns the source map object for the code that was instrumented
+just before calling this method.</p>
+
+            </span>
+          </a>
+          <div class='collapser border px2'>
+            <section class='py2 clearfix'>
+              <h2 id='Instrumenter.lastSourceMap' class='mt0'>
+                lastSourceMap<span class='gray'></span>
+              </h2>
+              <p>returns the source map object for the code that was instrumented
+            just before calling this method.</p>
+            
+                  <h4>Returns</h4>
+                  <code><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code></code>
+                  :
+                  <span class='force-inline'>
+                    <p>a source map object for the code last instrumented
+            by this instrumenter</p>
+            
+                  </span>
+            </section>
+          </div>
+        </div>
+</section>
+</div><div class='py1'><section class='py2 clearfix'>
+  <h2 id='SourceCoverage' class='mt0'>
+    SourceCoverage<span class='gray'>(pathOrObj)</span>
+  </h2>
+    <p>
+      Extends
+        FileCoverage
+    </p>
+  <p>SourceCoverage provides mutation methods to manipulate the structure of
+a file coverage object. Used by the instrumenter to create a full coverage
+object for a file incrementally.</p>
+
+    <h4>Parameters</h4>
+    <ul class='suppress-p-margin'>
+        <li> <strong>pathOrObj</strong>
+          :
+          <span class='force-inline'>
+            <p>{String|Object} - see the argument for <a href="FileCoverage"><code>FileCoverage</code></a></p>
+
+          </span>
+        </li>
+    </ul>
+</section>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src='assets/anchor.js'></script>
+  <script src='assets/site.js'></script>
+</body>
+</html>

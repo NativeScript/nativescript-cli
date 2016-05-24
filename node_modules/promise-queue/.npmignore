@@ -1,0 +1,4 @@
+test/
+.DS_Store
+coverage.html
+html-report

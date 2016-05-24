@@ -1,0 +1,49 @@
+{
+  "name": "url-pattern",
+  "homepage": "https://github.com/snd/url-pattern",
+  "authors": [
+    "Maximilian Krüger <kruemaxi@googlemail.com>"
+  ],
+  "description": "easier than regex string matching patterns for urls and other strings. turn strings into data or data into strings.",
+  "keywords": [
+    "url",
+    "string",
+    "matching",
+    "pattern",
+    "matching",
+    "routing",
+    "route",
+    "regex",
+    "match",
+    "segment",
+    "parsing",
+    "parser",
+    "parse",
+    "combinator",
+    "combinators",
+    "custom",
+    "customizable",
+    "filepath",
+    "path",
+    "domain",
+    "separator",
+    "stringify",
+    "generate",
+    "text",
+    "processing"
+  ],
+  "main": "lib/url-pattern.js",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

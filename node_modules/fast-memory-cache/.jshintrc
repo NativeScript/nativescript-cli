@@ -1,0 +1,19 @@
+{
+  "curly": true,
+  "eqeqeq": true,
+  "immed": true,
+  "latedef": "nofunc",
+  "newcap": true,
+  "noarg": true,
+  "noempty": true,
+  "nonew": true,
+  "undef": true,
+  "unused": true,
+  "trailing": true,
+  "maxlen": 120,
+  "quotmark": "single",
+  "freeze": true,
+  "nonbsp": true,
+  "node": true,
+  "strict": true
+}

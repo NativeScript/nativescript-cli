@@ -1,0 +1,14 @@
+{
+  "name": "Array.prototype.find",
+  "repo": "paulmillr/Array.prototype.find",
+  "description": "Array.prototype.find ES6 polyfill.",
+  "version": "1.0.0",
+  "keywords": ["Array.prototype.find", "find", "es6", "ecmascript 6", "polyfill"],
+  "dependencies": {},
+  "development": {},
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": [
+    "index.js"
+  ]
+}

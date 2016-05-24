@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="/adorn/adorn.css"/>
+<script src="/adorn/adorn.js" async></script>
+<script src="client_ids.js"></script>
+
+<title>hello( google )</title>
+<h1>hello( google )</h1>
+<p>Login to google using request_type = code</p>
+
+<button onclick="login('google');">Login Google</button>
+
+<pre class="response"></pre>
+
+<script src="../src/hello.js" class="pre"></script>
+<script src="../src/modules/google.js" class="pre"></script>
+
+<script class="pre">
+function login(network){
+
+	// By defining response type to code, the OAuth flow that will return a refresh token to be used to refresh the access token
+	// However this will require the oauth_proxy server
+
+	hello(network).login({response_type: 'code'}, log);
+}
+</script>
+
+<p>Initiate the library</p>
+
+<script class="pre">
+hello.init({
+	google : GOOGLE_CLIENT_ID
+},{
+	redirect_uri: '../redirect.html',
+	scope: 'friends'
+});
+</script>
+
+<script>
+function log(s){
+	document.body.querySelector('.response').appendChild(document.createTextNode(JSON.stringify(s, true, 2)));
+}
+</script>

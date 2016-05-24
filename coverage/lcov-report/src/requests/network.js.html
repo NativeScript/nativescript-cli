@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for src/requests/network.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">All files</a> / <a href="index.html">src/requests</a> network.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">51.61% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>16/31</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">83.33% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>10/12</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">25% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>1/4</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">53.33% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>16/30</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128</td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">534x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">178x</span>
+<span class="cline-any cline-yes">178x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">178x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">178x</span>
+<span class="cline-any cline-yes">178x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { RequestMethod, AuthType, KinveyRequest } from './request';
+import { NetworkRack } from '../rack/rack';
+import { NoResponseError, InvalidCredentialsError } from '../errors';
+import { KinveyResponse, KinveyResponseConfig } from './response';
+import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
+import url from 'url';
+const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
+const micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+&nbsp;
+/**
+ * @private
+ */
+export class NetworkRequest extends KinveyRequest {
+  constructor(options) {
+    super(options);
+    this.rack = NetworkRack.sharedInstance();
+    this.automaticallyRefreshAuthToken = true;
+  }
+&nbsp;
+  async execute() {
+    try {
+      await super.execute();
+      let response = await this.rack.execute(this);
+      this.executing = false;
+&nbsp;
+      if (!response) {
+        throw new NoResponseError();
+      }
+&nbsp;
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (!(response instanceof KinveyResponse)) {
+        response = new KinveyResponse(new KinveyResponseConfig({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        }));
+      }
+&nbsp;
+      if (!response.isSuccess()) {
+        throw response.error;
+      }
+&nbsp;
+      return response;
+    } catch (error) {
+      if (error instanceof InvalidCredentialsError &amp;&amp; this.automaticallyRefreshAuthToken) {
+<span class="cstat-no" title="statement not covered" >        this.automaticallyRefreshAuthToken = false;</span>
+        const activeSocialIdentity = this.client.activeSocialIdentity;
+&nbsp;
+        // Refresh MIC Auth Token
+        if (activeSocialIdentity &amp;&amp; activeSocialIdentity.identity === micIdentity) {
+          // Refresh the token
+          const token = activeSocialIdentity.token;
+          const refreshTokenRequest = new NetworkRequest({
+            method: RequestMethod.POST,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            authType: AuthType.App,
+            url: url.format({
+              protocol: activeSocialIdentity.client.protocol,
+              host: activeSocialIdentity.client.host,
+              pathname: tokenPathname
+            }),
+            properties: this.properties,
+            data: {
+              grant_type: 'refresh_token',
+              client_id: token.audience,
+              redirect_uri: activeSocialIdentity.redirectUri,
+              refresh_token: token.refresh_token
+            }
+          });
+<span class="cstat-no" title="statement not covered" >          refreshTokenRequest.automaticallyRefreshAuthToken = false;</span>
+          const newToken = await refreshTokenRequest.execute().then(<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >response =&gt; response.data);</span></span>
+&nbsp;
+          // Login the user with the new token
+          const activeUser = this.client.activeUser;
+          const socialIdentity = activeUser[socialIdentityAttribute];
+<span class="cstat-no" title="statement not covered" >          socialIdentity[activeSocialIdentity.identity] = newToken;</span>
+<span class="cstat-no" title="statement not covered" >          activeUser[socialIdentityAttribute] = activeSocialIdentity;</span>
+&nbsp;
+          const loginRequest = new NetworkRequest({
+            method: RequestMethod.POST,
+            authType: AuthType.App,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `/${usersNamespace}/${this.client.appKey}/login`
+            }),
+            properties: this.properties,
+            data: activeUser,
+            timeout: this.timeout,
+            client: this.client
+          });
+<span class="cstat-no" title="statement not covered" >          loginRequest.automaticallyRefreshAuthToken = false;</span>
+          const user = await loginRequest.execute().then(<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >response =&gt; response.data);</span></span>
+&nbsp;
+          // Store the new data
+<span class="cstat-no" title="statement not covered" >          setActiveUser(this.client, user);</span>
+<span class="cstat-no" title="statement not covered" >          setActiveSocialIdentity(this.client, {</span>
+            identity: activeSocialIdentity.identity,
+            redirectUri: activeSocialIdentity.redirectUri,
+            token: user[socialIdentityAttribute][activeSocialIdentity.identity],
+            client: activeSocialIdentity.client
+          });
+&nbsp;
+          try {
+            // Execute the original request
+            const response = await this.execute();
+<span class="cstat-no" title="statement not covered" >            this.automaticallyRefreshAuthToken = true;</span>
+            return response;
+          } catch (error) {
+<span class="cstat-no" title="statement not covered" >            this.automaticallyRefreshAuthToken = true;</span>
+            throw error;
+          }
+        }
+      }
+&nbsp;
+      throw error;
+    }
+  }
+&nbsp;
+  cancel() <span class="cstat-no" title="statement not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    const promise = super.cancel().then(<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >() =&gt; this.rack.cancel());</span></span></span>
+<span class="cstat-no" title="statement not covered" >    return promise;</span>
+  }
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="http://istanbul-js.org/" target="_blank">istanbul</a> at Tue May 24 2016 13:36:56 GMT-0400 (EDT)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

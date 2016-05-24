@@ -1,0 +1,4 @@
+node_modules
+.bin
+client/js/vendor
+client/js/inline

@@ -1,0 +1,21 @@
+ui: tape
+browsers:
+  - name: ie
+    version: [9, 10, 11]
+  - name: chrome
+    version: latest
+  - name: firefox
+    version: latest
+  - name: opera
+    version: [11, 12]
+  - name: safari
+    version: latest
+  # - name: iphone
+  #   version: latest
+  # - name: android
+  #   version: latest
+browserify:
+  - transform: coffeeify
+browser_retries: 0
+# 3 minutes
+browser_output_timeout: 120000
