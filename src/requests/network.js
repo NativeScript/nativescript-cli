@@ -1,7 +1,7 @@
 import { RequestMethod, AuthType, KinveyRequest } from './request';
 import { NetworkRack } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
-import { Response } from './response';
+import { KinveyResponse, KinveyResponseConfig } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
 import url from 'url';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
@@ -29,12 +29,12 @@ export class NetworkRequest extends KinveyRequest {
         throw new NoResponseError();
       }
 
-      if (!(response instanceof Response)) {
-        response = new Response({
+      if (!(response instanceof KinveyResponse)) {
+        response = new KinveyResponse(new KinveyResponseConfig({
           statusCode: response.statusCode,
           headers: response.headers,
           data: response.data
-        });
+        }));
       }
 
       if (!response.isSuccess()) {

@@ -2,7 +2,7 @@
 import { KinveyRequest, RequestMethod } from './request';
 import CacheRequest from './cache';
 import { NetworkRequest } from './network';
-import { Response, StatusCode } from './response';
+import { KinveyResponse, KinveyResponseConfig, StatusCode } from './response';
 import { NotFoundError } from '../errors';
 import { Query } from '../query';
 import keyBy from 'lodash/keyBy';
@@ -131,15 +131,17 @@ export class DeltaFetchRequest extends KinveyRequest {
       const responses = await Promise.all(promises);
       const response = reduce(responses, (result, response) => {
         if (response.isSuccess()) {
-          result.addHeaders(response.headers);
+          const headers = result.headers;
+          headers.addHeaders(response.headers);
+          result.headers = headers;
           result.data = result.data.concat(response.data);
         }
 
         return result;
-      }, new Response({
+      }, new KinveyResponse(new KinveyResponseConfig({
         statusCode: StatusCode.Ok,
         data: []
-      }));
+      })));
 
       response.data = response.data.concat(values(cacheDocuments));
 

@@ -1,7 +1,7 @@
 import { KinveyRequest } from './request';
 import { CacheRack } from '../rack/rack';
 import { NoResponseError } from '../errors';
-import { Response } from './response';
+import { KinveyResponse, KinveyResponseConfig } from './response';
 
 /**
  * @private
@@ -27,12 +27,13 @@ export default class CacheRequest extends KinveyRequest {
 
     // Make sure the response is an instance of the
     // Response class
-    if (!(response instanceof Response)) {
-      response = new Response({
+    if (!(response instanceof KinveyResponse)) {
+      const config = new KinveyResponseConfig({
         statusCode: response.statusCode,
         headers: response.headers,
         data: response.data
       });
+      response = new KinveyResponse(config);
     }
 
     // Throw the response error if we did not receive

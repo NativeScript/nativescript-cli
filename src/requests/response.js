@@ -13,10 +13,9 @@ import {
   NotFoundError,
   ParameterValueOutOfRangeError
 } from '../errors';
+import { Headers } from './request';
 import assign from 'lodash/assign';
-import forEach from 'lodash/forEach';
-import isString from 'lodash/isString';
-import isPlainObject from 'lodash/isPlainObject';
+import result from 'lodash/result';
 
 /**
  * @provate
@@ -34,22 +33,110 @@ const StatusCode = {
 Object.freeze(StatusCode);
 export { StatusCode };
 
-/**
- * @private
- */
-export class Response {
+export class ResponseConfig {
   constructor(options = {}) {
     options = assign({
-      statusCode: StatusCode.Ok,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8'
-      },
+      statusCode: StatusCode.Empty,
+      headers: new Headers(),
       data: null
     }, options);
 
     this.statusCode = options.statusCode;
-    this.addHeaders(options.headers);
+    this.headers = options.headers;
     this.data = options.data;
+  }
+
+  get headers() {
+    return this.configHeaders;
+  }
+
+  set headers(headers) {
+    if (!(headers instanceof Headers)) {
+      headers = new Headers(result(headers, 'toJSON', headers));
+    }
+
+    this.configHeaders = headers;
+  }
+
+  get data() {
+    return this.configData;
+  }
+
+  set data(data) {
+    this.configData = data;
+  }
+}
+
+export class KinveyResponseConfig extends ResponseConfig {}
+
+/**
+ * @private
+ */
+export class Response {
+  constructor(config = new ResponseConfig()) {
+    this.config = config;
+  }
+
+  get config() {
+    return this.responseConfig;
+  }
+
+  set config(config) {
+    if (config && !(config instanceof ResponseConfig)) {
+      config = new ResponseConfig(config);
+    }
+
+    this.responseConfig = config;
+  }
+
+  get statusCode() {
+    return this.config.statusCode;
+  }
+
+  set statusCode(statusCode) {
+    this.config.statusCode = statusCode;
+  }
+
+  get headers() {
+    return this.config.headers;
+  }
+
+  set headers(headers) {
+    this.config.headers = headers;
+  }
+
+  get data() {
+    return this.config.data;
+  }
+
+  set data(data) {
+    this.config.data = data;
+  }
+
+  get error() {
+    if (this.isSuccess()) {
+      return null;
+    }
+
+    return new Error();
+  }
+
+  isSuccess() {
+    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === 302;
+  }
+}
+
+export class KinveyResponse extends Response {
+  get config() {
+    return super.config;
+  }
+
+  set config(config) {
+    if (config && !(config instanceof KinveyResponseConfig)) {
+      config = new KinveyResponseConfig(config);
+    }
+
+    super.config = config;
   }
 
   get error() {
@@ -96,91 +183,5 @@ export class Response {
     }
 
     return new KinveyError(message, debug, code);
-  }
-
-  getHeader(name) {
-    if (name) {
-      if (!isString(name)) {
-        name = String(name);
-      }
-
-      const headers = this.headers || {};
-      const keys = Object.keys(headers);
-
-      for (let i = 0, len = keys.length; i < len; i++) {
-        const key = keys[i];
-
-        if (key.toLowerCase() === name.toLowerCase()) {
-          return headers[key];
-        }
-      }
-    }
-
-    return undefined;
-  }
-
-  setHeader(name, value) {
-    if (!name || !value) {
-      throw new Error('A name and value must be provided to set a header.');
-    }
-
-    if (!isString(name)) {
-      name = String(name);
-    }
-
-    const headers = this.headers || {};
-
-    if (!isString(value)) {
-      headers[name] = JSON.stringify(value);
-    } else {
-      headers[name] = value;
-    }
-
-    this.headers = headers;
-  }
-
-  addHeader(header = {}) {
-    return this.setHeader(header.name, header.value);
-  }
-
-  addHeaders(headers) {
-    if (!isPlainObject(headers)) {
-      throw new Error('Headers argument must be an object.');
-    }
-
-    const names = Object.keys(headers);
-
-    forEach(names, name => {
-      const value = headers[name];
-      this.setHeader(name, value);
-    });
-  }
-
-  removeHeader(name) {
-    if (name) {
-      if (!isString(name)) {
-        name = String(name);
-      }
-
-      const headers = this.headers || {};
-      delete headers[name];
-      this.headers = headers;
-    }
-  }
-
-  clearHeaders() {
-    this.headers = {};
-  }
-
-  isSuccess() {
-    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === 302;
-  }
-
-  toJSON() {
-    return {
-      statusCode: this.statusCode,
-      headers: this.headers,
-      data: this.data
-    };
   }
 }

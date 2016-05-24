@@ -204,7 +204,7 @@ export class Headers {
   }
 
   add(header = {}) {
-    return this.setHeader(header.name, header.value);
+    return this.set(header.name, header.value);
   }
 
   addAll(headers) {
@@ -216,7 +216,7 @@ export class Headers {
 
     forEach(names, name => {
       const value = headers[name];
-      this.setHeader(name, value);
+      this.set(name, value);
     });
   }
 
@@ -310,9 +310,6 @@ export class Properties {
   }
 }
 
-/**
- * Request Properties class
- */
 export class RequestConfig {
   constructor(options = {}) {
     options = assign({
