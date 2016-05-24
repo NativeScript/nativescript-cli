@@ -27,8 +27,9 @@ The workflow for releasing a new version of the sdk is as follows:
 2. Checkout the master branch and merge the develop branch.
 3. Update the [Changelog](CHANGELOG.md).
 4. Run `gulp release --type=<type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
-5. Update the [DevCenter](https://github.com/Kinvey/devcenter).
-6. Optional: update [sample apps](https://github.com/KinveyApps).
+5. Commit all changes on the master branch and push.
+6. Update the [DevCenter](https://github.com/Kinvey/devcenter).
+7. Optional: update [sample apps](https://github.com/KinveyApps).
 
 ### Version Management
 Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):

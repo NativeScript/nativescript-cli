@@ -75,10 +75,8 @@ gulp.task('bump', () => {
 
 gulp.task('commit', () => {
   const version = require('./package.json').version; // eslint-disable-line global-require
-  const stream = gulp.src('.')
-    .pipe(git.add({ args: '-f' }))
+  const stream = gulp.src('./package.json')
     .pipe(git.commit(`Release version ${version}`))
-    .pipe(git.push('origin', 'master'))
     .on('error', errorHandler);
   return stream;
 });
