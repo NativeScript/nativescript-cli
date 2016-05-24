@@ -1,39 +1,32 @@
 # Kinvey JavaScript Core SDK
 
-This sdk is a standalone sdk designed for JavaScript-based platforms. The sdk acts as a client for the Kinvey REST API and can be used for building JavaScript-based apps.
+The Kinvey JavaScript SDK core is used to
 
 ## Building
-The simplest way to build the sdk is by running `gulp`. This will also perform [testing](#Testing).
-More advanced tasks are available.
+The simplest way to build the sdk is by running `gulp`. More advanced tasks are available.
 
-* `gulp sandbox`: build the sdk without performing any [testing](#Testing).
-* `gulp build`: build the sdk without performing a code audit or [testing](#Testing).
-* `gulp watch`: auto-build the sdk when you modify a file.
-* `gulp clean`: remove temporary files created by the build process.
+* `gulp bump`: bump the pacakge version
+* `gulp build`: build the sdk
+* `gulp clean`: remove files created by the build process
+* `gulp release`: release a new version of the sdk
+
 
 ### Flags
-The following flags are available when running `gulp`:
+The following flags are available when running `gulp release` or `gulp bump`:
 
-* `--platform=<angular|html5|node|phonegap>`: tailor to a specific platform. Defaults to `html5`.
+* `--type <major|minor|patch|prerelease>`: Bumps the package version using the [Semantic Version 2.0.0](http://semver.org/) spec. Defaults to `patch`.
+* `--version <version>`: Sets the package version to the provided version.
 
 ## Testing
-Testing is part of the [build process](#Building). You can run the tests without (re-)building the sdk using `gulp test`.
-
-Depending on the platform, however, a test set-up may be required.
-
-### HTML5
-Optional, but recommended: run `grunt client-tests` to spin up instances of Firefox and Google Chrome for automated testing.
-
-### Node.js
-The tests will be executed against the current version of Node.js available on the machine. There node version managers, like [`nvm`](https://github.com/creationix/nvm), to easily switch between Node.js versions.
+You can run the tests using `npm test`.
 
 ## Releasing
 The workflow for releasing a new version of the sdk is as follows:
 
-1. Commit all changes.
-2. Increment the [package](package.json) version. See [Version Management](#VersionManagement) below.
+1. Commit all changes on the develop branch.
+2. Checkout the master branch and merge the develop branch.
 3. Update the [Changelog](CHANGELOG.md).
-4. Run `gulp release --platform=<platform>` replacing `<platform>` with angular, html5, node, or phonegap. See [Flags](#Flags) above.
+4. Run `gulp release --type=<type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
 5. Update the [DevCenter](https://github.com/Kinvey/devcenter).
 6. Optional: update [sample apps](https://github.com/KinveyApps).
 

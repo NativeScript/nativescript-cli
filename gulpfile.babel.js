@@ -3,11 +3,17 @@ import eslint from 'gulp-eslint';
 import babel from 'gulp-babel';
 import del from 'del';
 import env from 'gulp-env';
-import webpack from 'webpack';
-import gulpWebpack from 'webpack-stream';
 import bump from 'gulp-bump';
 import file from 'gulp-file';
+import runSequence from 'run-sequence';
+import git from 'gulp-git';
+import util from 'gulp-util';
 import { argv as args } from 'yargs';
+
+function errorHandler(err) {
+  util.log(err.toString());
+  this.emit('end');
+}
 
 gulp.task('lint', () => {
   const stream = gulp.src('src/**/*.js')
@@ -17,9 +23,9 @@ gulp.task('lint', () => {
   return stream;
 });
 
-gulp.task('clean', done => del(['es5'], done));
+gulp.task('clean', done => del(['es5', 'tmp'], done));
 
-gulp.task('transpile', ['clean', 'lint'], () => {
+gulp.task('build', ['clean', 'lint'], () => {
   const envs = env.set({
     KINVEY_ACL_ATTRIBUTE: '_acl',
     KINVEY_DATASTORE_NAMESPACE: 'appdata',
@@ -44,33 +50,13 @@ gulp.task('transpile', ['clean', 'lint'], () => {
     .pipe(envs)
     .pipe(babel())
     .pipe(envs.reset)
-    .pipe(gulp.dest('./es5'));
-  return stream;
-});
-
-gulp.task('bundle', ['transpile'], () => {
-  const stream = gulp.src('./transpile/index.js')
-    .pipe(gulpWebpack({
-      context: `${__dirname}/transpile`,
-      entry: [
-        './kinvey.js'
-      ],
-      output: {
-        path: `${__dirname}/dist`,
-        filename: 'kinvey-core-sdk.js'
-      },
-      module: {
-        loaders: [
-          { test: /\.json$/, loader: 'json' }
-        ]
-      }
-    }, webpack))
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('./es5'))
+    .on('error', errorHandler);
   return stream;
 });
 
 gulp.task('bump', () => {
-  gulp.src('./package.json')
+  const stream = gulp.src('./package.json')
     .pipe(bump({
       preid: 'beta',
       type: args.type,
@@ -78,7 +64,20 @@ gulp.task('bump', () => {
     }))
     .pipe(gulp.dest(`${__dirname}/`))
     .pipe(file('bump.txt', ''))
-    .pipe(gulp.dest(`${__dirname}/tmp`));
+    .pipe(gulp.dest(`${__dirname}/tmp`))
+    .on('error', errorHandler);
+  return stream;
 });
 
-gulp.task('default', ['transpile']);
+gulp.task('commit', () => {
+  const version = require('./package.json').version; // eslint-disable-line global-require
+  const stream = gulp.src('./*')
+    .pipe(git.commit(`Release version ${version}`))
+    .on('error', errorHandler);
+  return stream;
+});
+
+gulp.task('release', () => {
+  runSequence('bump', 'commit');
+});
+gulp.task('default', ['build']);
