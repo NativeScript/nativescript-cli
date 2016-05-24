@@ -12,7 +12,7 @@ The simplest way to build the sdk is by running `gulp`. More advanced tasks are 
 
 
 ### Flags
-The following flags are available when running `gulp release` or `gulp bump`:
+The following flags are available when running `gulp bump`:
 
 * `--type <major|minor|patch|prerelease>`: Bumps the package version using the [Semantic Version 2.0.0](http://semver.org/) spec. Defaults to `patch`.
 * `--version <version>`: Sets the package version to the provided version.
@@ -25,11 +25,9 @@ The workflow for releasing a new version of the sdk is as follows:
 
 1. Commit all changes on the develop branch.
 2. Checkout the master branch and merge the develop branch.
-3. Update the [Changelog](CHANGELOG.md).
-4. Run `gulp release --type=<type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
+3. Run `gulp bump --type=<type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
+4. Update the [Changelog](CHANGELOG.md).
 5. Commit all changes on the master branch and push.
-6. Update the [DevCenter](https://github.com/Kinvey/devcenter).
-7. Optional: update [sample apps](https://github.com/KinveyApps).
 
 ### Version Management
 Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):
