@@ -1,6 +1,6 @@
 {
   "name": "kinvey-javascript-sdk-core",
-  "version": "3.0.0-beta.30",
+  "version": "3.0.0-beta.24",
   "description": "Kinvey JavaScript SDK Core",
   "main": "./es5/kinvey.js",
   "scripts": {
@@ -63,7 +63,6 @@
     "gulp-env": "^0.4.0",
     "gulp-eslint": "^2.0.0",
     "gulp-file": "^0.3.0",
-    "gulp-git": "^1.7.2",
     "gulp-prompt": "^0.2.0",
     "gulp-s3-upload": "^1.6.0",
     "gulp-sourcemaps": "^1.6.0",
@@ -72,7 +71,6 @@
     "mocha": "^2.4.5",
     "nock": "^8.0.0",
     "request": "^2.72.0",
-    "run-sequence": "^1.2.0",
     "semver": "^5.1.0",
     "sinon": "^1.17.4",
     "sinon-chai": "^2.8.0",

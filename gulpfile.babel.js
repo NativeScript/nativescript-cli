@@ -5,8 +5,6 @@ import del from 'del';
 import env from 'gulp-env';
 import bump from 'gulp-bump';
 import file from 'gulp-file';
-import runSequence from 'run-sequence';
-import git from 'gulp-git';
 import util from 'gulp-util';
 import { argv as args } from 'yargs';
 
@@ -73,15 +71,5 @@ gulp.task('bump', () => {
   return stream;
 });
 
-gulp.task('commit', () => {
-  const version = require('./package.json').version; // eslint-disable-line global-require
-  const stream = gulp.src('./package.json')
-    .pipe(git.commit(`Release version ${version}`))
-    .on('error', errorHandler);
-  return stream;
-});
-
-gulp.task('release', () => {
-  runSequence('bump', 'commit');
-});
+gulp.task('release', ['bump']);
 gulp.task('default', ['build']);
