@@ -592,13 +592,13 @@ export class Query {
    * Returns serialized representation that can be appended
    * to network paths as a query parameter.
    *
-   * @returns {Object} Query object
+   * @returns {Object} Query string object
    */
   toQueryString() {
     const queryString = {};
 
     if (!isEmpty(this.filter)) {
-      queryString.filter = this.filter;
+      queryString.query = this.filter;
     }
 
     if (!isEmpty(this.fields)) {
@@ -623,5 +623,9 @@ export class Query {
     });
 
     return queryString;
+  }
+
+  toString() {
+    return JSON.stringify(this.toQueryString());
   }
 }
