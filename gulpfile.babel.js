@@ -71,13 +71,11 @@ gulp.task('bundle', ['transpile'], () => {
 });
 
 gulp.task('bump', () => {
-  const options = {
-    type: args.type,
-    version: args.version
-  };
-
   gulp.src('./package.json')
-    .pipe(bump(options))
+    .pipe(bump({
+      type: args.type,
+      version: args.version
+    }))
     .pipe(gulp.dest('./'));
 });
 
