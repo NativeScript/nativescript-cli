@@ -231,12 +231,12 @@ var UserStore = exports.UserStore = function (_DataStore) {
     key: 'exists',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(username, options) {
-        var request, response, data;
+        var config, request, response, data;
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                request = new _network.NetworkRequest({
+                config = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.POST,
                   authType: _request.AuthType.App,
                   url: _url2.default.format({
@@ -249,15 +249,16 @@ var UserStore = exports.UserStore = function (_DataStore) {
                   timeout: options.timeout,
                   client: this.client
                 });
-                _context3.next = 3;
+                request = new _network.NetworkRequest(config);
+                _context3.next = 4;
                 return request.execute();
 
-              case 3:
+              case 4:
                 response = _context3.sent;
                 data = response.data || {};
                 return _context3.abrupt('return', !!data.usernameExists);
 
-              case 6:
+              case 7:
               case 'end':
                 return _context3.stop();
             }
@@ -276,12 +277,12 @@ var UserStore = exports.UserStore = function (_DataStore) {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(id) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, response;
+        var config, request, response;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                request = new _network.NetworkRequest({
+                config = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.POST,
                   authType: _request.AuthType.Master,
                   url: _url2.default.format({
@@ -293,14 +294,15 @@ var UserStore = exports.UserStore = function (_DataStore) {
                   timeout: options.timeout,
                   client: this.client
                 });
-                _context4.next = 3;
+                request = new _network.NetworkRequest(config);
+                _context4.next = 4;
                 return request.execute();
 
-              case 3:
+              case 4:
                 response = _context4.sent;
                 return _context4.abrupt('return', response.data);
 
-              case 5:
+              case 6:
               case 'end':
                 return _context4.stop();
             }

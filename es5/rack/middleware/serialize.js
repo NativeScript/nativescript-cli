@@ -52,25 +52,30 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
               case 2:
                 request = _context.sent;
 
-                if (!(request && request.data)) {
-                  _context.next = 32;
+                if (!(request && request.body)) {
+                  _context.next = 33;
                   break;
                 }
 
-                contentType = request.headers['content-type'] || request.headers['Content-Type'];
+                contentType = request.headers.get('content-type');
+
+                if (!contentType) {
+                  _context.next = 33;
+                  break;
+                }
 
                 if (!(contentType.indexOf('application/json') === 0)) {
-                  _context.next = 9;
+                  _context.next = 10;
                   break;
                 }
 
-                request.data = JSON.stringify(request.data);
-                _context.next = 32;
+                request.body = JSON.stringify(request.body);
+                _context.next = 33;
                 break;
 
-              case 9:
+              case 10:
                 if (!(contentType.indexOf('application/x-www-form-urlencoded') === 0)) {
-                  _context.next = 32;
+                  _context.next = 33;
                   break;
                 }
 
@@ -79,7 +84,7 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
                 _iteratorNormalCompletion = true;
                 _didIteratorError = false;
                 _iteratorError = undefined;
-                _context.prev = 15;
+                _context.prev = 16;
 
 
                 for (_iterator = body[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
@@ -89,51 +94,51 @@ var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddlew
                   str.push(global.encodeURIComponent(key) + '=' + global.encodeURIComponent(body[key]));
                 }
 
-                _context.next = 23;
+                _context.next = 24;
                 break;
 
-              case 19:
-                _context.prev = 19;
-                _context.t0 = _context['catch'](15);
+              case 20:
+                _context.prev = 20;
+                _context.t0 = _context['catch'](16);
                 _didIteratorError = true;
                 _iteratorError = _context.t0;
 
-              case 23:
-                _context.prev = 23;
+              case 24:
                 _context.prev = 24;
+                _context.prev = 25;
 
                 if (!_iteratorNormalCompletion && _iterator.return) {
                   _iterator.return();
                 }
 
-              case 26:
-                _context.prev = 26;
+              case 27:
+                _context.prev = 27;
 
                 if (!_didIteratorError) {
-                  _context.next = 29;
+                  _context.next = 30;
                   break;
                 }
 
                 throw _iteratorError;
 
-              case 29:
-                return _context.finish(26);
-
               case 30:
-                return _context.finish(23);
+                return _context.finish(27);
 
               case 31:
-                request.body = str.join('&');
+                return _context.finish(24);
 
               case 32:
-                return _context.abrupt('return', request);
+                request.body = str.join('&');
 
               case 33:
+                return _context.abrupt('return', request);
+
+              case 34:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this, [[15, 19, 23, 31], [24,, 26, 30]]);
+        }, _callee, this, [[16, 20, 24, 32], [25,, 27, 31]]);
       }));
 
       function handle(_x2) {

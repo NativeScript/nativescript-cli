@@ -27,6 +27,10 @@ var _reduce = require('lodash/reduce');
 
 var _reduce2 = _interopRequireDefault(_reduce);
 
+var _es6Symbol = require('es6-symbol');
+
+var _es6Symbol2 = _interopRequireDefault(_es6Symbol);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
@@ -37,8 +41,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var sharedCacheRackInstance = Symbol();
-var sharedNetworkRackInstance = Symbol();
+var sharedCacheRackInstance = (0, _es6Symbol2.default)();
+var sharedNetworkRackInstance = (0, _es6Symbol2.default)();
 
 /**
  * @private

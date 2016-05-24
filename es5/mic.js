@@ -242,7 +242,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           return _url2.default.parse(location, true).query.code;
         }
 
-        throw new _errors.KinveyError('Unable to authorize user with username ' + options.username + '.');
+        throw new _errors.KinveyError('Unable to authorize user with username ' + options.username + '.', 'A location header was not provided with a code to exchange for an auth token.');
       });
 
       return promise;

@@ -87,12 +87,12 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
 
               case 9:
 
-                if (!(response instanceof _response2.Response)) {
-                  response = new _response2.Response({
+                if (!(response instanceof _response2.KinveyResponse)) {
+                  response = new _response2.KinveyResponse(new _response2.KinveyResponseConfig({
                     statusCode: response.statusCode,
                     headers: response.headers,
                     data: response.data
-                  });
+                  }));
                 }
 
                 if (response.isSuccess()) {

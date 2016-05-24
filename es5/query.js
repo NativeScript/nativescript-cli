@@ -616,7 +616,7 @@ var Query = function () {
      * Returns serialized representation that can be appended
      * to network paths as a query parameter.
      *
-     * @returns {Object} Query object
+     * @returns {Object} Query string object
      */
 
   }, {
@@ -625,7 +625,7 @@ var Query = function () {
       var queryString = {};
 
       if (!(0, _isEmpty2.default)(this.filter)) {
-        queryString.filter = this.filter;
+        queryString.query = this.filter;
       }
 
       if (!(0, _isEmpty2.default)(this.fields)) {
@@ -650,6 +650,11 @@ var Query = function () {
       });
 
       return queryString;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return JSON.stringify(this.toQueryString());
     }
   }, {
     key: 'fields',

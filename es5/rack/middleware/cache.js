@@ -533,7 +533,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
     key: 'handle',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(request) {
-        var _request, method, query, body, collection, entityId, db, data;
+        var _request, method, query, body, appKey, collection, entityId, db, data;
 
         return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
@@ -548,125 +548,126 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
                 method = _request.method;
                 query = _request.query;
                 body = _request.body;
+                appKey = _request.appKey;
                 collection = _request.collection;
                 entityId = _request.entityId;
-                db = new DB(request.appKey, this.adapters);
+                db = new DB(appKey, this.adapters);
                 data = void 0;
 
                 if (!(method === _request2.RequestMethod.GET)) {
-                  _context7.next = 35;
+                  _context7.next = 36;
                   break;
                 }
 
                 if (!entityId) {
-                  _context7.next = 30;
+                  _context7.next = 31;
                   break;
                 }
 
                 if (!(entityId === '_count')) {
-                  _context7.next = 19;
+                  _context7.next = 20;
                   break;
                 }
 
-                _context7.next = 16;
+                _context7.next = 17;
                 return db.count(collection, query);
 
-              case 16:
+              case 17:
                 data = _context7.sent;
-                _context7.next = 28;
+                _context7.next = 29;
                 break;
 
-              case 19:
+              case 20:
                 if (!(entityId === '_group')) {
-                  _context7.next = 25;
+                  _context7.next = 26;
                   break;
                 }
 
-                _context7.next = 22;
+                _context7.next = 23;
                 return db.group(collection, body);
 
-              case 22:
+              case 23:
                 data = _context7.sent;
-                _context7.next = 28;
+                _context7.next = 29;
                 break;
 
-              case 25:
-                _context7.next = 27;
+              case 26:
+                _context7.next = 28;
                 return db.findById(collection, request.entityId);
 
-              case 27:
+              case 28:
                 data = _context7.sent;
 
-              case 28:
-                _context7.next = 33;
+              case 29:
+                _context7.next = 34;
                 break;
 
-              case 30:
-                _context7.next = 32;
+              case 31:
+                _context7.next = 33;
                 return db.find(collection, query);
 
-              case 32:
+              case 33:
                 data = _context7.sent;
 
-              case 33:
-                _context7.next = 57;
+              case 34:
+                _context7.next = 58;
                 break;
 
-              case 35:
+              case 36:
                 if (!(method === _request2.RequestMethod.POST || method === _request2.RequestMethod.PUT)) {
-                  _context7.next = 41;
+                  _context7.next = 42;
                   break;
                 }
 
-                _context7.next = 38;
+                _context7.next = 39;
                 return db.save(collection, body);
 
-              case 38:
+              case 39:
                 data = _context7.sent;
-                _context7.next = 57;
+                _context7.next = 58;
                 break;
 
-              case 41:
+              case 42:
                 if (!(method === _request2.RequestMethod.DELETE)) {
-                  _context7.next = 57;
+                  _context7.next = 58;
                   break;
                 }
 
                 if (!(collection && entityId)) {
-                  _context7.next = 48;
+                  _context7.next = 49;
                   break;
                 }
 
-                _context7.next = 45;
+                _context7.next = 46;
                 return db.removeById(collection, entityId);
 
-              case 45:
+              case 46:
                 data = _context7.sent;
-                _context7.next = 57;
+                _context7.next = 58;
                 break;
 
-              case 48:
+              case 49:
                 if (collection) {
-                  _context7.next = 54;
+                  _context7.next = 55;
                   break;
                 }
 
-                _context7.next = 51;
+                _context7.next = 52;
                 return db.clear();
 
-              case 51:
+              case 52:
                 data = _context7.sent;
-                _context7.next = 57;
+                _context7.next = 58;
                 break;
 
-              case 54:
-                _context7.next = 56;
+              case 55:
+                _context7.next = 57;
                 return db.remove(collection, query);
 
-              case 56:
+              case 57:
                 data = _context7.sent;
 
-              case 57:
+              case 58:
 
                 request.response = {
                   statusCode: method === _request2.RequestMethod.POST ? _response.StatusCode.Created : _response.StatusCode.Ok,
@@ -680,7 +681,7 @@ var CacheMiddleware = exports.CacheMiddleware = function (_KinveyMiddleware) {
 
                 return _context7.abrupt('return', request);
 
-              case 60:
+              case 61:
               case 'end':
                 return _context7.stop();
             }

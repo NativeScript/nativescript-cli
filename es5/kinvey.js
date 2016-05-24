@@ -172,6 +172,11 @@ var Kinvey = function () {
 
       return client;
     }
+  }, {
+    key: 'appVersion',
+    set: function set(appVersion) {
+      this.client.appVersion = appVersion;
+    }
   }]);
 
   return Kinvey;

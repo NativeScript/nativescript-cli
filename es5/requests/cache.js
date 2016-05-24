@@ -44,7 +44,7 @@ var CacheRequest = function (_KinveyRequest) {
     key: 'execute',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
-        var response;
+        var response, config;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -77,12 +77,14 @@ var CacheRequest = function (_KinveyRequest) {
 
                 // Make sure the response is an instance of the
                 // Response class
-                if (!(response instanceof _response.Response)) {
-                  response = new _response.Response({
+                if (!(response instanceof _response.KinveyResponse)) {
+                  config = new _response.KinveyResponseConfig({
                     statusCode: response.statusCode,
                     headers: response.headers,
                     data: response.data
                   });
+
+                  response = new _response.KinveyResponse(config);
                 }
 
                 // Throw the response error if we did not receive

@@ -55,14 +55,16 @@ var ParseMiddleware = exports.ParseMiddleware = function (_KinveyMiddleware) {
                   contentType = response.headers['content-type'] || response.headers['Content-Type'];
 
 
-                  if (contentType.indexOf('application/json') === 0) {
-                    try {
-                      response.data = JSON.parse(response.data);
-                    } catch (error) {
-                      response.data = response.data;
-                    }
+                  if (contentType) {
+                    if (contentType.indexOf('application/json') === 0) {
+                      try {
+                        response.data = JSON.parse(response.data);
+                      } catch (error) {
+                        response.data = response.data;
+                      }
 
-                    request.response = response;
+                      request.response = response;
+                    }
                   }
                 }
 

@@ -10,10 +10,6 @@ var _errors = require('./errors');
 
 var _storage = require('./utils/storage');
 
-var _localStorage = require('local-storage');
-
-var _localStorage2 = _interopRequireDefault(_localStorage);
-
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
@@ -30,7 +26,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var pushCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'kinvey_push';
 var _sharedInstance = null;
 
 /**
@@ -106,6 +101,11 @@ var Client = function () {
      * @type {string|undefined}
      */
     this.encryptionKey = options.encryptionKey;
+
+    /**
+     * @type {string}
+     */
+    this.appVersion = options.appVersion;
   }
 
   _createClass(Client, [{
@@ -124,7 +124,8 @@ var Client = function () {
         appKey: this.appKey,
         appSecret: this.appSecret,
         masterSecret: this.masterSecret,
-        encryptionKey: this.encryptionKey
+        encryptionKey: this.encryptionKey,
+        appVersion: this.appVersion
       };
 
       return json;
@@ -173,20 +174,16 @@ var Client = function () {
       return (0, _storage.getActiveSocialIdentity)(this);
     }
   }, {
-    key: 'push',
+    key: 'appVersion',
     get: function get() {
-      return _localStorage2.default.get('' + this.appKey + pushCollectionName);
+      return this.clientAppVersion;
     },
-    set: function set(data) {
-      if (data) {
-        try {
-          return _localStorage2.default.set('' + this.appKey + pushCollectionName, data);
-        } catch (error) {
-          return false;
-        }
+    set: function set(appVersion) {
+      if (!(0, _isString2.default)(appVersion)) {
+        appVersion = String(appVersion);
       }
 
-      return _localStorage2.default.remove('' + this.appKey + pushCollectionName);
+      this.clientAppVersion = appVersion;
     }
   }], [{
     key: 'init',

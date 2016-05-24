@@ -3,29 +3,31 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Response = exports.StatusCode = undefined;
+exports.KinveyResponse = exports.Response = exports.KinveyResponseConfig = exports.ResponseConfig = exports.StatusCode = undefined;
+
+var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
+
+var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _errors = require('../errors');
 
+var _request = require('./request');
+
 var _assign = require('lodash/assign');
 
 var _assign2 = _interopRequireDefault(_assign);
 
-var _forEach = require('lodash/forEach');
+var _result = require('lodash/result');
 
-var _forEach2 = _interopRequireDefault(_forEach);
-
-var _isString = require('lodash/isString');
-
-var _isString2 = _interopRequireDefault(_isString);
-
-var _isPlainObject = require('lodash/isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+var _result2 = _interopRequireDefault(_result);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -45,126 +47,149 @@ var StatusCode = {
 Object.freeze(StatusCode);
 exports.StatusCode = StatusCode;
 
-/**
- * @private
- */
-
-var Response = exports.Response = function () {
-  function Response() {
+var ResponseConfig = exports.ResponseConfig = function () {
+  function ResponseConfig() {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
-    _classCallCheck(this, Response);
+    _classCallCheck(this, ResponseConfig);
 
     options = (0, _assign2.default)({
-      statusCode: StatusCode.Ok,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8'
-      },
+      statusCode: StatusCode.Empty,
+      headers: new _request.Headers(),
       data: null
     }, options);
 
     this.statusCode = options.statusCode;
-    this.addHeaders(options.headers);
+    this.headers = options.headers;
     this.data = options.data;
   }
 
+  _createClass(ResponseConfig, [{
+    key: 'headers',
+    get: function get() {
+      return this.configHeaders;
+    },
+    set: function set(headers) {
+      if (!(headers instanceof _request.Headers)) {
+        headers = new _request.Headers((0, _result2.default)(headers, 'toJSON', headers));
+      }
+
+      this.configHeaders = headers;
+    }
+  }, {
+    key: 'data',
+    get: function get() {
+      return this.configData;
+    },
+    set: function set(data) {
+      this.configData = data;
+    }
+  }]);
+
+  return ResponseConfig;
+}();
+
+var KinveyResponseConfig = exports.KinveyResponseConfig = function (_ResponseConfig) {
+  _inherits(KinveyResponseConfig, _ResponseConfig);
+
+  function KinveyResponseConfig() {
+    _classCallCheck(this, KinveyResponseConfig);
+
+    return _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyResponseConfig).apply(this, arguments));
+  }
+
+  return KinveyResponseConfig;
+}(ResponseConfig);
+
+/**
+ * @private
+ */
+
+
+var Response = exports.Response = function () {
+  function Response() {
+    var config = arguments.length <= 0 || arguments[0] === undefined ? new ResponseConfig() : arguments[0];
+
+    _classCallCheck(this, Response);
+
+    this.config = config;
+  }
+
   _createClass(Response, [{
-    key: 'getHeader',
-    value: function getHeader(name) {
-      if (name) {
-        if (!(0, _isString2.default)(name)) {
-          name = String(name);
-        }
-
-        var headers = this.headers || {};
-        var keys = Object.keys(headers);
-
-        for (var i = 0, len = keys.length; i < len; i++) {
-          var key = keys[i];
-
-          if (key.toLowerCase() === name.toLowerCase()) {
-            return headers[key];
-          }
-        }
-      }
-
-      return undefined;
-    }
-  }, {
-    key: 'setHeader',
-    value: function setHeader(name, value) {
-      if (!name || !value) {
-        throw new Error('A name and value must be provided to set a header.');
-      }
-
-      if (!(0, _isString2.default)(name)) {
-        name = String(name);
-      }
-
-      var headers = this.headers || {};
-
-      if (!(0, _isString2.default)(value)) {
-        headers[name] = JSON.stringify(value);
-      } else {
-        headers[name] = value;
-      }
-
-      this.headers = headers;
-    }
-  }, {
-    key: 'addHeader',
-    value: function addHeader() {
-      var header = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-      return this.setHeader(header.name, header.value);
-    }
-  }, {
-    key: 'addHeaders',
-    value: function addHeaders(headers) {
-      var _this = this;
-
-      if (!(0, _isPlainObject2.default)(headers)) {
-        throw new Error('Headers argument must be an object.');
-      }
-
-      var names = Object.keys(headers);
-
-      (0, _forEach2.default)(names, function (name) {
-        var value = headers[name];
-        _this.setHeader(name, value);
-      });
-    }
-  }, {
-    key: 'removeHeader',
-    value: function removeHeader(name) {
-      if (name) {
-        if (!(0, _isString2.default)(name)) {
-          name = String(name);
-        }
-
-        var headers = this.headers || {};
-        delete headers[name];
-        this.headers = headers;
-      }
-    }
-  }, {
-    key: 'clearHeaders',
-    value: function clearHeaders() {
-      this.headers = {};
-    }
-  }, {
     key: 'isSuccess',
     value: function isSuccess() {
       return this.statusCode >= 200 && this.statusCode < 300 || this.statusCode === 302;
     }
   }, {
-    key: 'toJSON',
-    value: function toJSON() {
-      return {
-        statusCode: this.statusCode,
-        headers: this.headers,
-        data: this.data
-      };
+    key: 'config',
+    get: function get() {
+      return this.responseConfig;
+    },
+    set: function set(config) {
+      if (config && !(config instanceof ResponseConfig)) {
+        config = new ResponseConfig(config);
+      }
+
+      this.responseConfig = config;
+    }
+  }, {
+    key: 'statusCode',
+    get: function get() {
+      return this.config.statusCode;
+    },
+    set: function set(statusCode) {
+      this.config.statusCode = statusCode;
+    }
+  }, {
+    key: 'headers',
+    get: function get() {
+      return this.config.headers;
+    },
+    set: function set(headers) {
+      this.config.headers = headers;
+    }
+  }, {
+    key: 'data',
+    get: function get() {
+      return this.config.data;
+    },
+    set: function set(data) {
+      this.config.data = data;
+    }
+  }, {
+    key: 'error',
+    get: function get() {
+      if (this.isSuccess()) {
+        return null;
+      }
+
+      return new Error();
+    }
+  }]);
+
+  return Response;
+}();
+
+var KinveyResponse = exports.KinveyResponse = function (_Response) {
+  _inherits(KinveyResponse, _Response);
+
+  function KinveyResponse() {
+    _classCallCheck(this, KinveyResponse);
+
+    return _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyResponse).apply(this, arguments));
+  }
+
+  _createClass(KinveyResponse, [{
+    key: 'config',
+    get: function get() {
+      return _get(Object.getPrototypeOf(KinveyResponse.prototype), 'config', this);
+    },
+    set: function set(config) {
+      if (config && !(config instanceof KinveyResponseConfig)) {
+        config = new KinveyResponseConfig(config);
+      }
+
+      _set(Object.getPrototypeOf(KinveyResponse.prototype), 'config', config, this);
     }
   }, {
     key: 'error',
@@ -209,5 +234,5 @@ var Response = exports.Response = function () {
     }
   }]);
 
-  return Response;
-}();
+  return KinveyResponse;
+}(Response);

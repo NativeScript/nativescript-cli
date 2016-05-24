@@ -219,15 +219,17 @@ var DeltaFetchRequest = exports.DeltaFetchRequest = function (_KinveyRequest) {
                           responses = _context.sent;
                           response = (0, _reduce2.default)(responses, function (result, response) {
                             if (response.isSuccess()) {
-                              result.addHeaders(response.headers);
+                              var headers = result.headers;
+                              headers.addHeaders(response.headers);
+                              result.headers = headers;
                               result.data = result.data.concat(response.data);
                             }
 
                             return result;
-                          }, new _response.Response({
+                          }, new _response.KinveyResponse(new _response.KinveyResponseConfig({
                             statusCode: _response.StatusCode.Ok,
                             data: []
-                          }));
+                          })));
 
 
                           response.data = response.data.concat((0, _values2.default)(cacheDocuments));

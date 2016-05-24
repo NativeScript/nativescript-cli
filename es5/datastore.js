@@ -31,6 +31,10 @@ var _client = require('./client');
 
 var _client2 = _interopRequireDefault(_client);
 
+var _es6Symbol = require('es6-symbol');
+
+var _es6Symbol2 = _interopRequireDefault(_es6Symbol);
+
 var _sync = require('./sync');
 
 var _sync2 = _interopRequireDefault(_sync);
@@ -79,8 +83,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 var appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-var cacheEnabledSymbol = Symbol();
-var onlineSymbol = Symbol();
+var cacheEnabledSymbol = (0, _es6Symbol2.default)();
+var onlineSymbol = (0, _es6Symbol2.default)();
 
 /**
  * Enum for DataStore types.
@@ -255,7 +259,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(observer) {
-          var cacheData, networkData, count, request, response, useDeltaFetch, requestOptions, _request, _response, removedData, removedIds, removeQuery, _request2;
+          var cacheData, networkData, count, config, request, response, useDeltaFetch, _config, _request, _response, removedData, removedIds, removeQuery, _config2, _request2;
 
           return regeneratorRuntime.wrap(function _callee$(_context) {
             while (1) {
@@ -277,7 +281,7 @@ var DataStore = function () {
                   _context.prev = 4;
 
                   if (!_this.isCacheEnabled()) {
-                    _context.next = 24;
+                    _context.next = 25;
                     break;
                   }
 
@@ -316,7 +320,7 @@ var DataStore = function () {
                   throw new _errors.KinveyError('Unable to load data from the network. ' + ('There are ' + count + ' entities that need ') + 'to be synced before data is loaded from the network.');
 
                 case 18:
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     url: _url2.default.format({
                       protocol: _this.client.protocol,
@@ -328,35 +332,36 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context.next = 21;
+                  request = new _cache2.default(config);
+                  _context.next = 22;
                   return request.execute();
 
-                case 21:
+                case 22:
                   response = _context.sent;
 
                   cacheData = response.data;
                   observer.next(cacheData);
 
-                case 24:
-                  _context.next = 29;
+                case 25:
+                  _context.next = 30;
                   break;
 
-                case 26:
-                  _context.prev = 26;
+                case 27:
+                  _context.prev = 27;
                   _context.t0 = _context['catch'](4);
 
                   observer.next([]);
 
-                case 29:
-                  _context.prev = 29;
+                case 30:
+                  _context.prev = 30;
 
                   if (!_this.isOnline()) {
-                    _context.next = 49;
+                    _context.next = 51;
                     break;
                   }
 
                   useDeltaFetch = options.useDeltaFetch || !!_this.useDeltaFetch;
-                  requestOptions = {
+                  _config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     authType: _request8.AuthType.Default,
                     url: _url2.default.format({
@@ -369,25 +374,25 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout,
                     client: _this.client
-                  };
-                  _request = new _network.NetworkRequest(requestOptions);
+                  });
+                  _request = new _network.NetworkRequest(_config);
 
                   // Should we use delta fetch?
 
                   if (useDeltaFetch) {
-                    _request = new _deltafetch.DeltaFetchRequest(requestOptions);
+                    _request = new _deltafetch.DeltaFetchRequest(_config);
                   }
 
-                  _context.next = 37;
+                  _context.next = 38;
                   return _request.execute();
 
-                case 37:
+                case 38:
                   _response = _context.sent;
 
                   networkData = _response.data;
 
                   if (!_this.isCacheEnabled()) {
-                    _context.next = 48;
+                    _context.next = 50;
                     break;
                   }
 
@@ -396,7 +401,7 @@ var DataStore = function () {
                   removedData = (0, _differenceBy2.default)(cacheData, networkData, idAttribute);
                   removedIds = Object.keys((0, _keyBy2.default)(removedData, idAttribute));
                   removeQuery = new _query4.Query().contains(idAttribute, removedIds);
-                  _request2 = new _cache2.default({
+                  _config2 = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     url: _url2.default.format({
                       protocol: _this.client.protocol,
@@ -408,35 +413,36 @@ var DataStore = function () {
                     query: removeQuery,
                     timeout: options.timeout
                   });
-                  _context.next = 46;
+                  _request2 = new _cache2.default(_config2);
+                  _context.next = 48;
                   return _request2.execute();
 
-                case 46:
-                  _context.next = 48;
+                case 48:
+                  _context.next = 50;
                   return _this.updateCache(networkData);
 
-                case 48:
+                case 50:
 
                   observer.next(networkData);
 
-                case 49:
-                  _context.next = 54;
+                case 51:
+                  _context.next = 56;
                   break;
 
-                case 51:
-                  _context.prev = 51;
-                  _context.t1 = _context['catch'](29);
+                case 53:
+                  _context.prev = 53;
+                  _context.t1 = _context['catch'](30);
                   return _context.abrupt('return', observer.error(_context.t1));
 
-                case 54:
+                case 56:
                   return _context.abrupt('return', observer.complete());
 
-                case 55:
+                case 57:
                 case 'end':
                   return _context.stop();
               }
             }
-          }, _callee, _this, [[4, 26], [29, 51]]);
+          }, _callee, _this, [[4, 27], [30, 53]]);
         }));
 
         return function (_x2) {
@@ -455,7 +461,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(observer) {
-          var count, request, response, useDeltaFetch, requestOptions, _request3, _response2, data, _request4;
+          var count, config, request, response, useDeltaFetch, _config3, _request3, _response2, data, _config4, _request4;
 
           return regeneratorRuntime.wrap(function _callee2$(_context2) {
             while (1) {
@@ -467,14 +473,14 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context2.next = 50;
+                  _context2.next = 52;
                   break;
 
                 case 4:
                   _context2.prev = 4;
 
                   if (!_this2.isCacheEnabled()) {
-                    _context2.next = 23;
+                    _context2.next = 24;
                     break;
                   }
 
@@ -513,7 +519,7 @@ var DataStore = function () {
                   throw new _errors.KinveyError('Unable to load data. ' + ('There are ' + count + ' entities that need ') + 'to be synced before data can be loaded.');
 
                 case 18:
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     url: _url2.default.format({
                       protocol: _this2.client.protocol,
@@ -524,34 +530,35 @@ var DataStore = function () {
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  _context2.next = 21;
+                  request = new _cache2.default(config);
+                  _context2.next = 22;
                   return request.execute();
 
-                case 21:
+                case 22:
                   response = _context2.sent;
 
                   observer.next(response.data);
 
-                case 23:
-                  _context2.next = 28;
+                case 24:
+                  _context2.next = 29;
                   break;
 
-                case 25:
-                  _context2.prev = 25;
+                case 26:
+                  _context2.prev = 26;
                   _context2.t0 = _context2['catch'](4);
 
                   observer.next(undefined);
 
-                case 28:
-                  _context2.prev = 28;
+                case 29:
+                  _context2.prev = 29;
 
                   if (!_this2.isOnline()) {
-                    _context2.next = 41;
+                    _context2.next = 42;
                     break;
                   }
 
                   useDeltaFetch = options.useDeltaFetch || !!_this2.useDeltaFetch;
-                  requestOptions = {
+                  _config3 = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     authType: _request8.AuthType.Default,
                     url: _url2.default.format({
@@ -563,39 +570,39 @@ var DataStore = function () {
                     properties: options.properties,
                     timeout: options.timeout,
                     client: _this2.client
-                  };
-                  _request3 = new _network.NetworkRequest(requestOptions);
+                  });
+                  _request3 = new _network.NetworkRequest(_config3);
 
 
                   if (useDeltaFetch) {
-                    _request3 = new _deltafetch.DeltaFetchRequest(requestOptions);
+                    _request3 = new _deltafetch.DeltaFetchRequest(_config3);
                   }
 
-                  _context2.next = 36;
+                  _context2.next = 37;
                   return _request3.execute();
 
-                case 36:
+                case 37:
                   _response2 = _context2.sent;
                   data = _response2.data;
 
                   observer.next(data);
-                  _context2.next = 41;
+                  _context2.next = 42;
                   return _this2.updateCache(data);
 
-                case 41:
-                  _context2.next = 50;
+                case 42:
+                  _context2.next = 52;
                   break;
 
-                case 43:
-                  _context2.prev = 43;
-                  _context2.t1 = _context2['catch'](28);
+                case 44:
+                  _context2.prev = 44;
+                  _context2.t1 = _context2['catch'](29);
 
                   if (!(_context2.t1 instanceof _errors.NotFoundError)) {
-                    _context2.next = 49;
+                    _context2.next = 51;
                     break;
                   }
 
-                  _request4 = new _cache2.default({
+                  _config4 = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     authType: _request8.AuthType.Default,
                     url: _url2.default.format({
@@ -607,21 +614,22 @@ var DataStore = function () {
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  _context2.next = 49;
+                  _request4 = new _cache2.default(_config4);
+                  _context2.next = 51;
                   return _request4.execute();
 
-                case 49:
+                case 51:
                   return _context2.abrupt('return', observer.error(_context2.t1));
 
-                case 50:
+                case 52:
                   return _context2.abrupt('return', observer.complete());
 
-                case 51:
+                case 53:
                 case 'end':
                   return _context2.stop();
               }
             }
-          }, _callee2, _this2, [[4, 25], [28, 43]]);
+          }, _callee2, _this2, [[4, 26], [29, 44]]);
         }));
 
         return function (_x4) {
@@ -640,7 +648,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(observer) {
-          var count, request, response, data, _request5, _response3, _data;
+          var count, config, request, response, data, _config5, _request5, _response3, _data;
 
           return regeneratorRuntime.wrap(function _callee3$(_context3) {
             while (1) {
@@ -657,7 +665,7 @@ var DataStore = function () {
                   _context3.prev = 2;
 
                   if (!_this3.isCacheEnabled()) {
-                    _context3.next = 22;
+                    _context3.next = 23;
                     break;
                   }
 
@@ -696,7 +704,7 @@ var DataStore = function () {
                   throw new _errors.KinveyError('Unable to count data. ' + ('There are ' + count + ' entities that need ') + 'to be synced before data is counted.');
 
                 case 16:
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     url: _url2.default.format({
                       protocol: _this3.client.protocol,
@@ -708,34 +716,35 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context3.next = 19;
+                  request = new _cache2.default(config);
+                  _context3.next = 20;
                   return request.execute();
 
-                case 19:
+                case 20:
                   response = _context3.sent;
                   data = response.data;
 
                   observer.next(data ? data.count : 0);
 
-                case 22:
-                  _context3.next = 27;
+                case 23:
+                  _context3.next = 28;
                   break;
 
-                case 24:
-                  _context3.prev = 24;
+                case 25:
+                  _context3.prev = 25;
                   _context3.t0 = _context3['catch'](2);
 
                   observer.next(null);
 
-                case 27:
-                  _context3.prev = 27;
+                case 28:
+                  _context3.prev = 28;
 
                   if (!_this3.isOnline()) {
-                    _context3.next = 35;
+                    _context3.next = 37;
                     break;
                   }
 
-                  _request5 = new _network.NetworkRequest({
+                  _config5 = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.GET,
                     authType: _request8.AuthType.Default,
                     url: _url2.default.format({
@@ -749,33 +758,34 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this3.client
                   });
-                  _context3.next = 32;
+                  _request5 = new _network.NetworkRequest(_config5);
+                  _context3.next = 34;
                   return _request5.execute();
 
-                case 32:
+                case 34:
                   _response3 = _context3.sent;
                   _data = _response3.data;
 
                   observer.next(_data ? _data.count : 0);
 
-                case 35:
-                  _context3.next = 40;
+                case 37:
+                  _context3.next = 42;
                   break;
 
-                case 37:
-                  _context3.prev = 37;
-                  _context3.t1 = _context3['catch'](27);
+                case 39:
+                  _context3.prev = 39;
+                  _context3.t1 = _context3['catch'](28);
                   return _context3.abrupt('return', observer.error(_context3.t1));
 
-                case 40:
+                case 42:
                   return _context3.abrupt('return', observer.complete());
 
-                case 41:
+                case 43:
                 case 'end':
                   return _context3.stop();
               }
             }
-          }, _callee3, _this3, [[2, 24], [27, 37]]);
+          }, _callee3, _this3, [[2, 25], [28, 39]]);
         }));
 
         return function (_x6) {
@@ -794,7 +804,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(observer) {
-          var singular, request, response, ids, query, push, responses;
+          var singular, config, request, response, ids, query, push, responses;
           return regeneratorRuntime.wrap(function _callee4$(_context4) {
             while (1) {
               switch (_context4.prev = _context4.next) {
@@ -807,7 +817,7 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context4.next = 33;
+                  _context4.next = 34;
                   break;
 
                 case 5:
@@ -820,11 +830,11 @@ var DataStore = function () {
                   }
 
                   if (!_this4.isCacheEnabled()) {
-                    _context4.next = 27;
+                    _context4.next = 28;
                     break;
                   }
 
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.POST,
                     url: _url2.default.format({
                       protocol: _this4.client.protocol,
@@ -836,34 +846,35 @@ var DataStore = function () {
                     body: data,
                     timeout: options.timeout
                   });
-                  _context4.next = 11;
+                  request = new _cache2.default(config);
+                  _context4.next = 12;
                   return request.execute();
 
-                case 11:
+                case 12:
                   response = _context4.sent;
 
                   data = response.data;
 
                   if (!(data.length > 0)) {
-                    _context4.next = 24;
+                    _context4.next = 25;
                     break;
                   }
 
-                  _context4.next = 16;
+                  _context4.next = 17;
                   return _this4.sync.addCreateOperation(_this4.collection, data, options);
 
-                case 16:
+                case 17:
                   if (!_this4.isOnline()) {
-                    _context4.next = 24;
+                    _context4.next = 25;
                     break;
                   }
 
                   ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
                   query = new _query4.Query().contains('entity._id', ids);
-                  _context4.next = 21;
+                  _context4.next = 22;
                   return _this4.push(query, options);
 
-                case 21:
+                case 22:
                   push = _context4.sent;
 
                   push = (0, _filter2.default)(push, function (result) {
@@ -873,21 +884,21 @@ var DataStore = function () {
                     return result.entity;
                   });
 
-                case 24:
+                case 25:
 
                   observer.next(singular ? data[0] : data);
-                  _context4.next = 33;
+                  _context4.next = 34;
                   break;
 
-                case 27:
+                case 28:
                   if (!_this4.isOnline()) {
-                    _context4.next = 33;
+                    _context4.next = 34;
                     break;
                   }
 
-                  _context4.next = 30;
+                  _context4.next = 31;
                   return Promise.all((0, _map2.default)(data, function (entity) {
-                    var request = new _network.NetworkRequest({
+                    var config = new _request8.KinveyRequestConfig({
                       method: _request8.RequestMethod.POST,
                       authType: _request8.AuthType.Default,
                       url: _url2.default.format({
@@ -901,10 +912,11 @@ var DataStore = function () {
                       timeout: options.timeout,
                       client: _this4.client
                     });
+                    var request = new _network.NetworkRequest(config);
                     return request.execute();
                   }));
 
-                case 30:
+                case 31:
                   responses = _context4.sent;
 
 
@@ -913,24 +925,24 @@ var DataStore = function () {
                   });
                   observer.next(singular ? data[0] : data);
 
-                case 33:
-                  _context4.next = 38;
+                case 34:
+                  _context4.next = 39;
                   break;
 
-                case 35:
-                  _context4.prev = 35;
+                case 36:
+                  _context4.prev = 36;
                   _context4.t0 = _context4['catch'](0);
                   return _context4.abrupt('return', observer.error(_context4.t0));
 
-                case 38:
+                case 39:
                   return _context4.abrupt('return', observer.complete());
 
-                case 39:
+                case 40:
                 case 'end':
                   return _context4.stop();
               }
             }
-          }, _callee4, _this4, [[0, 35]]);
+          }, _callee4, _this4, [[0, 36]]);
         }));
 
         return function (_x8) {
@@ -949,7 +961,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(observer) {
-          var singular, id, request, response, ids, query, push, responses;
+          var singular, id, config, request, response, ids, query, push, responses;
           return regeneratorRuntime.wrap(function _callee5$(_context5) {
             while (1) {
               switch (_context5.prev = _context5.next) {
@@ -962,7 +974,7 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context5.next = 34;
+                  _context5.next = 35;
                   break;
 
                 case 5:
@@ -976,11 +988,11 @@ var DataStore = function () {
                   }
 
                   if (!_this5.isCacheEnabled()) {
-                    _context5.next = 28;
+                    _context5.next = 29;
                     break;
                   }
 
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.PUT,
                     url: _url2.default.format({
                       protocol: _this5.client.protocol,
@@ -992,34 +1004,35 @@ var DataStore = function () {
                     body: data,
                     timeout: options.timeout
                   });
-                  _context5.next = 12;
+                  request = new _cache2.default(config);
+                  _context5.next = 13;
                   return request.execute();
 
-                case 12:
+                case 13:
                   response = _context5.sent;
 
                   data = response.data;
 
                   if (!(data.length > 0)) {
-                    _context5.next = 25;
+                    _context5.next = 26;
                     break;
                   }
 
-                  _context5.next = 17;
+                  _context5.next = 18;
                   return _this5.sync.addUpdateOperation(_this5.collection, data, options);
 
-                case 17:
+                case 18:
                   if (!_this5.isOnline()) {
-                    _context5.next = 25;
+                    _context5.next = 26;
                     break;
                   }
 
                   ids = Object.keys((0, _keyBy2.default)(data, idAttribute));
                   query = new _query4.Query().contains('entity._id', ids);
-                  _context5.next = 22;
+                  _context5.next = 23;
                   return _this5.push(query, options);
 
-                case 22:
+                case 23:
                   push = _context5.sent;
 
                   push = (0, _filter2.default)(push, function (result) {
@@ -1029,22 +1042,22 @@ var DataStore = function () {
                     return result.entity;
                   });
 
-                case 25:
+                case 26:
 
                   observer.next(singular ? data[0] : data);
-                  _context5.next = 34;
+                  _context5.next = 35;
                   break;
 
-                case 28:
+                case 29:
                   if (!_this5.isOnline()) {
-                    _context5.next = 34;
+                    _context5.next = 35;
                     break;
                   }
 
-                  _context5.next = 31;
+                  _context5.next = 32;
                   return Promise.all((0, _map2.default)(data, function (entity) {
                     var id = entity[idAttribute];
-                    var request = new _network.NetworkRequest({
+                    var config = new _request8.KinveyRequestConfig({
                       method: _request8.RequestMethod.PUT,
                       authType: _request8.AuthType.Default,
                       url: _url2.default.format({
@@ -1058,36 +1071,36 @@ var DataStore = function () {
                       timeout: options.timeout,
                       client: _this5.client
                     });
+                    var request = new _network.NetworkRequest(config);
                     return request.execute();
                   }));
 
-                case 31:
+                case 32:
                   responses = _context5.sent;
-
 
                   data = (0, _map2.default)(responses, function (response) {
                     return response.data;
                   });
                   observer.next(singular ? data[0] : data);
 
-                case 34:
-                  _context5.next = 39;
+                case 35:
+                  _context5.next = 40;
                   break;
 
-                case 36:
-                  _context5.prev = 36;
+                case 37:
+                  _context5.prev = 37;
                   _context5.t0 = _context5['catch'](0);
                   return _context5.abrupt('return', observer.error(_context5.t0));
 
-                case 39:
+                case 40:
                   return _context5.abrupt('return', observer.complete());
 
-                case 40:
+                case 41:
                 case 'end':
                   return _context5.stop();
               }
             }
-          }, _callee5, _this5, [[0, 36]]);
+          }, _callee5, _this5, [[0, 37]]);
         }));
 
         return function (_x10) {
@@ -1115,7 +1128,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee6(observer) {
-          var request, response, data, localData, _query, syncData, ids, _query2, push, _request6, _response4;
+          var config, request, response, data, localData, _query, syncData, ids, _query2, push, _config6, _request6, _response4;
 
           return regeneratorRuntime.wrap(function _callee6$(_context6) {
             while (1) {
@@ -1132,11 +1145,11 @@ var DataStore = function () {
 
                 case 5:
                   if (!_this6.isCacheEnabled()) {
-                    _context6.next = 30;
+                    _context6.next = 31;
                     break;
                   }
 
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     url: _url2.default.format({
                       protocol: _this6.client.protocol,
@@ -1148,15 +1161,16 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context6.next = 9;
+                  request = new _cache2.default(config);
+                  _context6.next = 10;
                   return request.execute();
 
-                case 9:
+                case 10:
                   response = _context6.sent;
                   data = response.data;
 
                   if (!(data.length > 0)) {
-                    _context6.next = 27;
+                    _context6.next = 28;
                     break;
                   }
 
@@ -1166,30 +1180,30 @@ var DataStore = function () {
                     return metadata.isLocal();
                   });
                   _query = new _query4.Query().contains('entity._id', Object.keys((0, _keyBy2.default)(localData, idAttribute)));
-                  _context6.next = 16;
+                  _context6.next = 17;
                   return _this6.sync.clear(_query, options);
 
-                case 16:
+                case 17:
 
                   // Create delete operations for non local data in the sync table
                   syncData = (0, _xorWith2.default)(data, localData, function (entity, localEntity) {
                     return entity[idAttribute] === localEntity[idAttribute];
                   });
-                  _context6.next = 19;
+                  _context6.next = 20;
                   return _this6.sync.addDeleteOperation(_this6.collection, syncData, options);
 
-                case 19:
+                case 20:
                   if (!_this6.isOnline()) {
-                    _context6.next = 27;
+                    _context6.next = 28;
                     break;
                   }
 
                   ids = Object.keys((0, _keyBy2.default)(syncData, idAttribute));
                   _query2 = new _query4.Query().contains('entity._id', ids);
-                  _context6.next = 24;
+                  _context6.next = 25;
                   return _this6.push(_query2, options);
 
-                case 24:
+                case 25:
                   push = _context6.sent;
 
                   push = (0, _filter2.default)(push, function (result) {
@@ -1199,19 +1213,19 @@ var DataStore = function () {
                     return result.entity;
                   });
 
-                case 27:
+                case 28:
 
                   observer.next(data);
-                  _context6.next = 36;
+                  _context6.next = 38;
                   break;
 
-                case 30:
+                case 31:
                   if (!_this6.isOnline()) {
-                    _context6.next = 36;
+                    _context6.next = 38;
                     break;
                   }
 
-                  _request6 = new _network.NetworkRequest({
+                  _config6 = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     authType: _request8.AuthType.Default,
                     url: _url2.default.format({
@@ -1225,32 +1239,33 @@ var DataStore = function () {
                     timeout: options.timeout,
                     client: _this6.client
                   });
-                  _context6.next = 34;
+                  _request6 = new _network.NetworkRequest(_config6);
+                  _context6.next = 36;
                   return _request6.execute();
 
-                case 34:
+                case 36:
                   _response4 = _context6.sent;
 
                   observer.next(_response4.data);
 
-                case 36:
-                  _context6.next = 41;
+                case 38:
+                  _context6.next = 43;
                   break;
 
-                case 38:
-                  _context6.prev = 38;
+                case 40:
+                  _context6.prev = 40;
                   _context6.t0 = _context6['catch'](0);
                   return _context6.abrupt('return', observer.error(_context6.t0));
 
-                case 41:
+                case 43:
                   return _context6.abrupt('return', observer.complete());
 
-                case 42:
+                case 44:
                 case 'end':
                   return _context6.stop();
               }
             }
-          }, _callee6, _this6, [[0, 38]]);
+          }, _callee6, _this6, [[0, 40]]);
         }));
 
         return function (_x12) {
@@ -1269,7 +1284,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(observer) {
-          var request, response, data, metadata, query, _query3, push, _request7, _response5;
+          var config, request, response, data, metadata, query, _query3, push, _config7, _request7, _response5;
 
           return regeneratorRuntime.wrap(function _callee7$(_context7) {
             while (1) {
@@ -1283,16 +1298,16 @@ var DataStore = function () {
                   }
 
                   observer.next(null);
-                  _context7.next = 33;
+                  _context7.next = 34;
                   break;
 
                 case 5:
                   if (!_this7.isCacheEnabled()) {
-                    _context7.next = 32;
+                    _context7.next = 33;
                     break;
                   }
 
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     url: _url2.default.format({
                       protocol: _this7.client.protocol,
@@ -1304,50 +1319,51 @@ var DataStore = function () {
                     authType: _request8.AuthType.Default,
                     timeout: options.timeout
                   });
-                  _context7.next = 9;
+                  request = new _cache2.default(config);
+                  _context7.next = 10;
                   return request.execute();
 
-                case 9:
+                case 10:
                   response = _context7.sent;
                   data = response.data;
 
                   if (!data) {
-                    _context7.next = 29;
+                    _context7.next = 30;
                     break;
                   }
 
                   metadata = new _metadata.Metadata(data);
 
                   if (!metadata.isLocal()) {
-                    _context7.next = 20;
+                    _context7.next = 21;
                     break;
                   }
 
                   query = new _query4.Query();
 
                   query.equalTo('entity._id', data[idAttribute]);
-                  _context7.next = 18;
+                  _context7.next = 19;
                   return _this7.sync.clear(_this7.collection, query, options);
 
-                case 18:
-                  _context7.next = 22;
+                case 19:
+                  _context7.next = 23;
                   break;
 
-                case 20:
-                  _context7.next = 22;
+                case 21:
+                  _context7.next = 23;
                   return _this7.sync.addDeleteOperation(_this7.collection, data, options);
 
-                case 22:
+                case 23:
                   if (!_this7.isOnline()) {
-                    _context7.next = 29;
+                    _context7.next = 30;
                     break;
                   }
 
                   _query3 = new _query4.Query().equalTo('entity._id', data[idAttribute]);
-                  _context7.next = 26;
+                  _context7.next = 27;
                   return _this7.push(_query3, options);
 
-                case 26:
+                case 27:
                   push = _context7.sent;
 
                   push = (0, _filter2.default)(push, function (result) {
@@ -1357,15 +1373,15 @@ var DataStore = function () {
                     return result.entity;
                   });
 
-                case 29:
+                case 30:
 
                   observer.next(data);
-                  _context7.next = 33;
+                  _context7.next = 34;
                   break;
 
-                case 32:
+                case 33:
                   if (_this7.isOnline()) {
-                    _request7 = new _network.NetworkRequest({
+                    _config7 = new _request8.KinveyRequestConfig({
                       method: _request8.RequestMethod.DELETE,
                       authType: _request8.AuthType.Default,
                       url: _url2.default.format({
@@ -1377,29 +1393,30 @@ var DataStore = function () {
                       properties: options.properties,
                       timeout: options.timeout
                     });
+                    _request7 = new _network.NetworkRequest(_config7);
                     _response5 = _request7.execute();
 
                     observer.next(_response5.data);
                   }
 
-                case 33:
-                  _context7.next = 38;
+                case 34:
+                  _context7.next = 39;
                   break;
 
-                case 35:
-                  _context7.prev = 35;
+                case 36:
+                  _context7.prev = 36;
                   _context7.t0 = _context7['catch'](0);
                   return _context7.abrupt('return', observer.error(_context7.t0));
 
-                case 38:
+                case 39:
                   return _context7.abrupt('return', observer.complete());
 
-                case 39:
+                case 40:
                 case 'end':
                   return _context7.stop();
               }
             }
-          }, _callee7, _this7, [[0, 35]]);
+          }, _callee7, _this7, [[0, 36]]);
         }));
 
         return function (_x14) {
@@ -1418,7 +1435,7 @@ var DataStore = function () {
 
       var stream = _observable.KinveyObservable.create(function () {
         var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(observer) {
-          var request, response, data, syncQuery, _syncQuery;
+          var config, request, response, data, syncQuery, _syncQuery;
 
           return regeneratorRuntime.wrap(function _callee8$(_context8) {
             while (1) {
@@ -1435,11 +1452,11 @@ var DataStore = function () {
                   _context8.prev = 2;
 
                   if (!_this8.isCacheEnabled()) {
-                    _context8.next = 20;
+                    _context8.next = 21;
                     break;
                   }
 
-                  request = new _cache2.default({
+                  config = new _request8.KinveyRequestConfig({
                     method: _request8.RequestMethod.DELETE,
                     url: _url2.default.format({
                       protocol: _this8.client.protocol,
@@ -1451,58 +1468,59 @@ var DataStore = function () {
                     query: query,
                     timeout: options.timeout
                   });
-                  _context8.next = 7;
+                  request = new _cache2.default(config);
+                  _context8.next = 8;
                   return request.execute();
 
-                case 7:
+                case 8:
                   response = _context8.sent;
                   data = response.data;
 
                   if (!(data.length > 0)) {
-                    _context8.next = 15;
+                    _context8.next = 16;
                     break;
                   }
 
                   syncQuery = new _query4.Query().contains('entity._id', Object.keys((0, _keyBy2.default)(data, idAttribute)));
-                  _context8.next = 13;
+                  _context8.next = 14;
                   return _this8.sync.clear(syncQuery, options);
 
-                case 13:
-                  _context8.next = 19;
+                case 14:
+                  _context8.next = 20;
                   break;
 
-                case 15:
+                case 16:
                   if (query) {
-                    _context8.next = 19;
+                    _context8.next = 20;
                     break;
                   }
 
                   _syncQuery = new _query4.Query().equalTo('collection', _this8.collection);
-                  _context8.next = 19;
+                  _context8.next = 20;
                   return _this8.sync.clear(_syncQuery, options);
 
-                case 19:
+                case 20:
 
                   observer.next(data);
 
-                case 20:
-                  _context8.next = 25;
+                case 21:
+                  _context8.next = 26;
                   break;
 
-                case 22:
-                  _context8.prev = 22;
+                case 23:
+                  _context8.prev = 23;
                   _context8.t0 = _context8['catch'](2);
                   return _context8.abrupt('return', observer.error(_context8.t0));
 
-                case 25:
+                case 26:
                   return _context8.abrupt('return', observer.complete());
 
-                case 26:
+                case 27:
                 case 'end':
                   return _context8.stop();
               }
             }
-          }, _callee8, _this8, [[2, 22]]);
+          }, _callee8, _this8, [[2, 23]]);
         }));
 
         return function (_x16) {
@@ -1790,17 +1808,17 @@ var DataStore = function () {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13(entities) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, response;
+        var config, request, response;
         return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context13.next = 6;
+                  _context13.next = 7;
                   break;
                 }
 
-                request = new _cache2.default({
+                config = new _request8.KinveyRequestConfig({
                   method: _request8.RequestMethod.PUT,
                   url: _url2.default.format({
                     protocol: this.client.protocol,
@@ -1812,17 +1830,18 @@ var DataStore = function () {
                   data: entities,
                   timeout: options.timeout
                 });
-                _context13.next = 4;
+                request = new _cache2.default(config);
+                _context13.next = 5;
                 return request.execute();
 
-              case 4:
+              case 5:
                 response = _context13.sent;
                 return _context13.abrupt('return', response.data);
 
-              case 6:
+              case 7:
                 throw new _errors.KinveyError('Unable to update the cache because the cache is disabled.');
 
-              case 7:
+              case 8:
               case 'end':
                 return _context13.stop();
             }
@@ -1900,14 +1919,14 @@ var DataStore = function () {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14() {
         var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-        var client, pathname, request, response;
+        var client, pathname, config, request, response;
         return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
               case 0:
                 client = options.client || _client2.default.sharedInstance();
                 pathname = '/' + appdataNamespace + '/' + client.appKey;
-                request = new _cache2.default({
+                config = new _request8.KinveyRequestConfig({
                   method: _request8.RequestMethod.DELETE,
                   url: _url2.default.format({
                     protocol: client.protocol,
@@ -1918,14 +1937,15 @@ var DataStore = function () {
                   properties: options.properties,
                   timeout: options.timeout
                 });
-                _context14.next = 5;
+                request = new _cache2.default(config);
+                _context14.next = 6;
                 return request.execute();
 
-              case 5:
+              case 6:
                 response = _context14.sent;
                 return _context14.abrupt('return', response.data);
 
-              case 7:
+              case 8:
               case 'end':
                 return _context14.stop();
             }
