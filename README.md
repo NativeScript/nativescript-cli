@@ -10,7 +10,6 @@ The simplest way to build the sdk is by running `gulp`. More advanced tasks are 
 * `gulp clean`: remove files created by the build process
 * `gulp release`: release a new version of the sdk
 
-
 ### Flags
 The following flags are available when running `gulp bump`:
 
