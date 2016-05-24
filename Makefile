@@ -9,7 +9,7 @@ install: ;@echo "Installing dependencies for ${PROJECT}..."; \
 	npm install
 
 test: ;@echo "Testing ${PROJECT}..."; \
-	npm test
+	npm run test:jenkins
 
 release: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp release --type ${TYPE} --version ${VERSION}

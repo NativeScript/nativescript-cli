@@ -5,7 +5,8 @@
   "main": "./es5/kinvey.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
-    "test:ci": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
+    "test:watch": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
+    "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover",
     "build": "./node_modules/.bin/gulp build",
     "lint": "./node_modules/.bin/gulp lint"
   },
@@ -66,6 +67,7 @@
     "gulp-s3-upload": "^1.6.0",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-util": "^3.0.7",
+    "istanbul": "^1.0.0-alpha.2",
     "mocha": "^2.4.5",
     "nock": "^8.0.0",
     "request": "^2.72.0",
@@ -73,6 +75,7 @@
     "semver": "^5.1.0",
     "sinon": "^1.17.4",
     "sinon-chai": "^2.8.0",
+    "tape": "^4.5.1",
     "uid": "0.0.2",
     "webpack": "^1.13.1",
     "webpack-stream": "^3.2.0",
