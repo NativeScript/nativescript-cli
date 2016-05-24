@@ -12,7 +12,7 @@ The simplest way to build the sdk is by running `gulp`. More advanced tasks are 
 
 
 ### Flags
-The following flags are available when running `gulp bump`:
+The following flags are available when running `gulp bump`::
 
 * `--type <major|minor|patch|prerelease>`: Bumps the package version using the [Semantic Version 2.0.0](http://semver.org/) spec. Defaults to `patch`.
 * `--version <version>`: Sets the package version to the provided version.
