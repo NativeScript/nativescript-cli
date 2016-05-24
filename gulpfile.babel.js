@@ -79,10 +79,6 @@ gulp.task('bump', () => {
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('release', () => {
-  runSequence(['bump', 'transpile']);
-});
-
 gulp.task('default', () => {
-  runSequence(['transpile']);
+  runSequence('transpile');
 });
