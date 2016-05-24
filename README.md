@@ -12,7 +12,7 @@ More advanced tasks are available.
 * `gulp clean`: remove temporary files created by the build process.
 
 ### Flags
-The following flags are available when running `gulp`:
+The following flags are available when running `gulp`::
 
 * `--platform=<angular|html5|node|phonegap>`: tailor to a specific platform. Defaults to `html5`.
 
