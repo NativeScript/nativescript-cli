@@ -11,8 +11,6 @@ test: ;@echo "Testing ${PROJECT}..."; \
 
 build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
-	git add es5/\*.js
-	git commit -m "Update es5 files."
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
 	npm install ci-npm-publish
