@@ -13,7 +13,7 @@ build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
-	npm install ci-npm-publish
+	npm install -g ci-npm-publish
 	npm publish --npmuser ${NPM_USER} --npmemail ${NPM_EMAIL} --npmpassword ${NPM_PASSWORD}
 
 audit: clean install test
