@@ -16,7 +16,7 @@ build: ;@echo "Building ${PROJECT}..."; \
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
 	npm install ci-npm-publish
-	npm publish --npmuser ${NPMUSER} --npmemail ${NPMEMAIL} --npmpassword ${NPMPASSWORD}
+	npm publish --npmuser ${NPM_USER} --npmemail ${NPM_EMAIL} --npmpassword ${NPM_PASSWORD}
 
 audit: clean install test
 release: audit build publish
