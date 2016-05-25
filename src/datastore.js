@@ -26,7 +26,10 @@ const cacheEnabledSymbol = Symbol();
 const onlineSymbol = Symbol();
 
 /**
- * Enum for DataStore types.
+ * @typedef   {Object}    DataStoreType
+ * @property  {string}    Cache           Cache datastore type
+ * @property  {string}    Network         Network datastore type
+ * @property  {string}    Sync            Sync datastore type
  */
 const DataStoreType = {
   Cache: 'Cache',
@@ -37,7 +40,7 @@ Object.freeze(DataStoreType);
 export { DataStoreType };
 
 /**
- * The DataStore class is used to find, save, update, remove, count and group entities.
+ * The DataStore class is used to find, create, update, remove, count and group entities.
  */
 export class DataStore {
   constructor(collection) {
@@ -51,12 +54,12 @@ export class DataStore {
     this.collection = collection;
 
     /**
-     * @type {Number|undefined}
+     * @type {number|undefined}
      */
     this.ttl = undefined;
 
     /**
-     * @type {Boolean}
+     * @type {boolean}
      */
     this.useDeltaFetch = false;
 
@@ -67,20 +70,19 @@ export class DataStore {
     this.client = Client.sharedInstance();
 
     /**
+     * @private
      * @type {Sync}
      */
     this.sync = new Sync();
     this.sync.client = this.client;
 
-    // The store is online and has the cache enabled
-    // by default.
+    // The store is online and has the cache enabled by default.
     this.online();
     this.enableCache();
   }
 
   /**
    * The pathname for the store.
-   *
    * @return  {string}  Pathname
    */
   get pathname() {
@@ -98,9 +100,8 @@ export class DataStore {
   }
 
   /**
-   * Disable cache.
-   *
-   * @return {DataStore}  DataStore instance.
+   * Disable the cache for the data store.
+   * @return  {DataStore}  DataStore instance.
    */
   disableCache() {
     if (!this.isOnline()) {
@@ -113,9 +114,8 @@ export class DataStore {
   }
 
   /**
-   * Enable cache.
-   *
-   * @return {DataStore}  DataStore instance.
+   * Enable the cache for the data store.
+   * @return  {DataStore}  DataStore instance.
    */
   enableCache() {
     this[cacheEnabledSymbol] = true;
@@ -123,18 +123,16 @@ export class DataStore {
   }
 
   /**
-   * Check if cache is enabled.
-   *
-   * @return {Boolean}  True of false depending on if cache is enabled or disabled.
+   * Check if the cache is enabled or disabled for the data store.
+   * @return  {Boolean}  True or false depending on if the cache is enabled or disabled.
    */
   isCacheEnabled() {
     return this[cacheEnabledSymbol];
   }
 
   /**
-   * Make the store offline.
-   *
-   * @return {DataStore}  DataStore instance.
+   * Make the data store go offline.
+   * @return  {DataStore}  DataStore instance.
    */
   offline() {
     if (!this.isCacheEnabled()) {
@@ -147,9 +145,8 @@ export class DataStore {
   }
 
   /**
-   * Make the store online.
-   *
-   * @return {DataStore}  DataStore instance.
+   * Make the data store go online.
+   * @return  {DataStore}  DataStore instance.
    */
   online() {
     this[onlineSymbol] = true;
@@ -157,28 +154,26 @@ export class DataStore {
   }
 
   /**
-   * Check if the store is online.
-   *
-   * @return {Boolean}  True of false depending on if the store is online or offline.
+   * Check if the data store is online or offline.
+   * @return  {Boolean}  True or false depending on if the data store is online or offline.
    */
   isOnline() {
     return this[onlineSymbol];
   }
 
   /**
-   * Finds all entities in a collection. A query can be optionally provided to return
+   * Find all entities in the data store. A query can be optionally provided to return
    * a subset of all entities in a collection or omitted to return all entities in
    * a collection. The number of entities returned adheres to the limits specified
    * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
    *
-   * @param   {Query}                 [query]                                   Query used to filter result.
-   * @param   {Object}                [options]                                 Options
-   * @param   {Properties}            [options.properties]                      Custom properties to send with
-   *                                                                            the request.
-   * @param   {Number}                [options.timeout]                         Timeout for the request.\
-   * @param   {Boolean}               [options.useDeltaFetch]                   Turn on or off the use of delta fetch
-   *                                                                            for the find.
-   * @return  {Promise|Object}                                                  Promise or object.
+   * @param   {Query}                 [query]                             Query used to filter entities.
+   * @param   {Object}                [options]                           Options
+   * @param   {Properties}            [options.properties]                Custom properties to send with
+   *                                                                      the request.
+   * @param   {Number}                [options.timeout]                   Timeout for the request.
+   * @param   {Boolean}               [options.useDeltaFetch]             Turn on or off the use of delta fetch.
+   * @return  {Observable}                                                Observable.
    */
   find(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
@@ -294,6 +289,17 @@ export class DataStore {
     return stream;
   }
 
+  /**
+   * Find a single entity in the data store by id.
+   *
+   * @param   {string}                id                               Entity by id to find.
+   * @param   {Object}                [options]                        Options
+   * @param   {Properties}            [options.properties]             Custom properties to send with
+   *                                                                   the request.
+   * @param   {Number}                [options.timeout]                Timeout for the request.
+   * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
+   * @return  {Observable}                                             Observable.
+   */
   findById(id, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       if (!id) {
@@ -393,6 +399,19 @@ export class DataStore {
     return stream;
   }
 
+  /**
+   * Count all entities in the data store. A query can be optionally provided to return
+   * a subset of all entities in a collection or omitted to return all entities in
+   * a collection. The number of entities returned adheres to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+   *
+   * @param   {Query}                 [query]                          Query used to filter entities.
+   * @param   {Object}                [options]                        Options
+   * @param   {Properties}            [options.properties]             Custom properties to send with
+   *                                                                   the request.
+   * @param   {Number}                [options.timeout]                Timeout for the request.
+   * @return  {Observable}                                             Observable.
+   */
   count(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       if (query && !(query instanceof Query)) {
@@ -470,6 +489,16 @@ export class DataStore {
     return stream;
   }
 
+  /**
+   * Create a single or an array of entities on the data store.
+   *
+   * @param   {Object|Array}          data                              Data that you want to create on the data store.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
   create(data, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
@@ -547,6 +576,16 @@ export class DataStore {
     return stream.toPromise();
   }
 
+  /**
+   * Update a single or an array of entities on the data store.
+   *
+   * @param   {Object|Array}          data                              Data that you want to update on the data store.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
   update(data, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
@@ -625,6 +664,16 @@ export class DataStore {
     return stream.toPromise();
   }
 
+  /**
+   * Save a single or an array of entities on the data store.
+   *
+   * @param   {Object|Array}          data                              Data that you want to save on the data store.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
   save(data, options) {
     if (data[idAttribute]) {
       return this.update(data, options);
@@ -633,6 +682,19 @@ export class DataStore {
     return this.create(data, options);
   }
 
+  /**
+   * Remove all entities in the data store. A query can be optionally provided to remove
+   * a subset of all entities in a collection or omitted to remove all entities in
+   * a collection. The number of entities removed adheres to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+   *
+   * @param   {Query}                 [query]                           Query used to filter entities.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
   remove(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
@@ -708,6 +770,16 @@ export class DataStore {
     return stream.toPromise();
   }
 
+  /**
+   * Remove a single entity in the data store by id.
+   *
+   * @param   {string}                id                               Entity by id to remove.
+   * @param   {Object}                [options]                        Options
+   * @param   {Properties}            [options.properties]             Custom properties to send with
+   *                                                                   the request.
+   * @param   {Number}                [options.timeout]                Timeout for the request.
+   * @return  {Observable}                                             Observable.
+   */
   removeById(id, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
@@ -777,6 +849,16 @@ export class DataStore {
     return stream.toPromise();
   }
 
+  /**
+   * Remove all entities in the data store that are stored locally.
+   *
+   * @param   {Query}                 [query]                           Query used to filter entities.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
   clear(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       // Check that the query is valid
@@ -823,7 +905,7 @@ export class DataStore {
   }
 
   /**
-   * Push sync items for a collection to the network. A promise will be returned that will be
+   * Push sync items for the data store to the network. A promise will be returned that will be
    * resolved with the result of the push or rejected with an error.
    *
    * @param   {Query}                 [query]                                   Query to push a subset of items.
@@ -855,7 +937,7 @@ export class DataStore {
   }
 
   /**
-   * Pull items for a collection from the network to your local cache. A promise will be
+   * Pull items for the data store from the network to your local cache. A promise will be
    * returned that will be resolved with the result of the pull or rejected with an error.
    *
    * @param   {Query}                 [query]                                   Query to pull a subset of items.
@@ -889,7 +971,7 @@ export class DataStore {
   }
 
   /**
-   * Sync items for a collection. This will push pending sync items first and then
+   * Sync items for the data store. This will push pending sync items first and then
    * pull items from the network into your local cache. A promise will be
    * returned that will be resolved with the result of the pull or rejected with an error.
    *
