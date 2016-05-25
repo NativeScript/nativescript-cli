@@ -165,15 +165,7 @@ export class Headers {
       }
 
       const headers = this.headers || {};
-      const keys = Object.keys(headers);
-
-      for (let i = 0, len = keys.length; i < len; i++) {
-        const key = keys[i];
-
-        if (key.toLowerCase() === name.toLowerCase()) {
-          return headers[key];
-        }
-      }
+      return headers[name.toLowerCase()];
     }
 
     return undefined;
@@ -189,6 +181,7 @@ export class Headers {
     }
 
     const headers = this.headers || {};
+    name = name.toLowerCase();
 
     if (!isString(value)) {
       headers[name] = JSON.stringify(value);
@@ -197,6 +190,7 @@ export class Headers {
     }
 
     this.headers = headers;
+    return this;
   }
 
   has(name) {
@@ -213,11 +207,11 @@ export class Headers {
     }
 
     const names = Object.keys(headers);
-
     forEach(names, name => {
       const value = headers[name];
       this.set(name, value);
     });
+    return this;
   }
 
   remove(name) {
@@ -227,13 +221,16 @@ export class Headers {
       }
 
       const headers = this.headers || {};
-      delete headers[name];
+      delete headers[name.toLowerCase()];
       this.headers = headers;
     }
+
+    return this;
   }
 
   clear() {
     this.headers = {};
+    return this;
   }
 
   toJSON() {
@@ -267,9 +264,20 @@ export class Properties {
    * @return {RequestProperties} The request properties instance.
    */
   set(key, value) {
-    const properties = {};
-    properties[key] = value;
-    this.addProperties(properties);
+    if (!key || !value) {
+      throw new Error('A key and value must be provided to set a property.');
+    }
+
+    if (!isString(key)) {
+      key = String(key);
+    }
+
+    if (!isString(value)) {
+      this.properties[key] = JSON.stringify(value);
+    } else {
+      this.properties[key] = value;
+    }
+
     return this;
   }
 
@@ -279,6 +287,8 @@ export class Properties {
     if (key && properties.hasOwnProperty(key)) {
       delete properties[key];
     }
+
+    return this;
   }
 
   has(key) {
@@ -292,17 +302,19 @@ export class Properties {
 
     Object.keys(properties).forEach((key) => {
       const value = properties[key];
-
-      if (value) {
-        this.properties[key] = value;
-      } else {
-        delete this.properties[key];
-      }
+      this.set(key, value);
     });
+
+    return this;
   }
 
   clear() {
     this.properties = {};
+    return this;
+  }
+
+  toJSON() {
+    return this.properties;
   }
 
   toString() {
@@ -379,7 +391,7 @@ export class RequestConfig {
   get url() {
     // Unless `noCache` is true, add a cache busting query string.
     // This is useful for Android < 4.0 which caches all requests aggressively.
-    if (this.noCache) {
+    if (this.noCache === true) {
       return appendQuery(this.configUrl, qs.stringify({
         _: Math.random().toString(36).substr(2)
       }));
@@ -440,10 +452,8 @@ export class KinveyRequestConfig extends RequestConfig {
     options = assign({
       authType: AuthType.None,
       query: null,
-      online: true,
-      cacheEnabled: true,
       apiVersion: defaultApiVersion,
-      properties: {},
+      properties: new Properties(),
       skipBL: false,
       trace: false,
       client: Client.sharedInstance()
@@ -451,9 +461,6 @@ export class KinveyRequestConfig extends RequestConfig {
 
     this.authType = options.authType;
     this.query = options.query;
-    this.online = options.online;
-    this.cacheEnabled = options.cacheEnabled;
-    this.timeout = options.timeout;
     this.apiVersion = options.apiVersion;
     this.properties = options.properties;
     this.client = options.client;
@@ -585,27 +592,15 @@ export class KinveyRequestConfig extends RequestConfig {
     this.configApiVersion = isNumber(apiVersion) ? apiVersion : defaultApiVersion;
   }
 
-  get online() {
-    return this.configOnline;
-  }
-
-  set online(online) {
-    this.configOnline = !!online;
-  }
-
-  get cacheEnabled() {
-    return this.configCacheEnabled;
-  }
-
-  set cacheEnabled(cacheEnabled) {
-    this.configCacheEnabled = !!cacheEnabled;
-  }
-
   get properties() {
     return this.configProperties;
   }
 
   set properties(properties) {
+    if (!(properties instanceof Properties)) {
+      properties = new Properties(result(properties, 'toJSON', properties));
+    }
+
     this.configProperties = properties;
   }
 
@@ -641,24 +636,24 @@ export class KinveyRequestConfig extends RequestConfig {
    * @param  {Any} version App version.
    * @return {RequestProperties} The request properties instance.
    */
-  set appVersion(args) {
-    const version = Array.prototype.slice.call(args, 1);
-    const major = args[0];
-    const minor = version[1];
-    const patch = version[2];
-    let appVersion = '';
+  set appVersion(appVersion) {
+    // const version = Array.prototype.slice.call(args, 1);
+    // const major = args[0];
+    // const minor = version[1];
+    // const patch = version[2];
+    // let appVersion = '';
 
-    if (major) {
-      appVersion = `${major}`.trim();
-    }
+    // if (major) {
+    //   appVersion = `${major}`.trim();
+    // }
 
-    if (minor) {
-      appVersion = `.${minor}`.trim();
-    }
+    // if (minor) {
+    //   appVersion = `.${minor}`.trim();
+    // }
 
-    if (patch) {
-      appVersion = `.${patch}`.trim();
-    }
+    // if (patch) {
+    //   appVersion = `.${patch}`.trim();
+    // }
 
     this.configAppVersion = appVersion;
   }
