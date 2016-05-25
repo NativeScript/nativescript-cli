@@ -53,9 +53,9 @@ gulp.task('build', ['clean', 'lint'], () => {
   return stream;
 });
 
-gulp.task('bump', () => {
+gulp.task('bumpVersion', () => {
   if (!args.type && !args.version) {
-    throw new Error('Please provide a type or version to bump the package.');
+    args.type = 'patch';
   }
 
   const stream = gulp.src('./package.json')
@@ -65,7 +65,12 @@ gulp.task('bump', () => {
       version: args.version
     }))
     .pipe(gulp.dest(`${__dirname}/`))
-    .pipe(file('bump.txt', ''))
+    .on('error', errorHandler);
+  return stream;
+});
+
+gulp.task('bump', ['bumpVersion'], () => {
+  const stream = file('bump.txt', '', { src: true })
     .pipe(gulp.dest(`${__dirname}/tmp`))
     .on('error', errorHandler);
   return stream;
