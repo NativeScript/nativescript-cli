@@ -22,16 +22,20 @@ const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2
  * @private
  */
 function byteCount(str) {
-  let count = 0;
-  const stringLength = str.length;
-  str = String(str || '');
+  if (str) {
+    let count = 0;
+    const stringLength = str.length;
+    str = String(str || '');
 
-  for (let i = 0; i < stringLength; i++) {
-    const partCount = encodeURI(str[i]).split('%').length;
-    count += partCount === 1 ? 1 : partCount - 1;
+    for (let i = 0; i < stringLength; i++) {
+      const partCount = encodeURI(str[i]).split('%').length;
+      count += partCount === 1 ? 1 : partCount - 1;
+    }
+
+    return count;
   }
 
-  return count;
+  return 0;
 }
 
 /**
@@ -155,6 +159,7 @@ const Auth = {
 
 export class Headers {
   constructor(headers = {}) {
+    this.headers = {};
     this.addAll(headers);
   }
 
@@ -164,7 +169,7 @@ export class Headers {
         name = String(name);
       }
 
-      const headers = this.headers || {};
+      const headers = this.headers;
       return headers[name.toLowerCase()];
     }
 
@@ -180,7 +185,7 @@ export class Headers {
       name = String(name);
     }
 
-    const headers = this.headers || {};
+    const headers = this.headers;
     name = name.toLowerCase();
 
     if (!isString(value)) {
@@ -243,12 +248,12 @@ export class Headers {
 }
 
 export class Properties {
-  constructor() {
-    this.properties = {};
+  constructor(properties = {}) {
+    this.addAll(properties);
   }
 
   get(key) {
-    const properties = this.toJSON();
+    const properties = this.properties || {};
 
     if (key && properties.hasOwnProperty(key)) {
       return properties[key];
@@ -266,7 +271,9 @@ export class Properties {
       key = String(key);
     }
 
-    this.properties[key] = value;
+    const properties = this.properties || {};
+    properties[key] = value;
+    this.properties = properties;
     return this;
   }
 
@@ -293,7 +300,7 @@ export class Properties {
 
   remove(key) {
     if (key) {
-      const properties = this.properties;
+      const properties = this.properties || {};
       delete properties[key];
       this.properties = properties;
     }
@@ -482,7 +489,7 @@ export class KinveyRequestConfig extends RequestConfig {
       headers.set('X-Kinvey-Client-App-Version', this.appVersion);
     }
 
-    if (this.properties) {
+    if (this.properties && !isEmpty(this.properties)) {
       const customPropertiesHeader = this.properties.toString();
       const customPropertiesByteCount = byteCount(customPropertiesHeader);
 
@@ -586,7 +593,7 @@ export class KinveyRequestConfig extends RequestConfig {
   }
 
   set properties(properties) {
-    if (!(properties instanceof Properties)) {
+    if (properties && !(properties instanceof Properties)) {
       properties = new Properties(result(properties, 'toJSON', properties));
     }
 
