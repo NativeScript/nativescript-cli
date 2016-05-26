@@ -258,7 +258,8 @@ export class PlatformService implements IPlatformService {
 			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath, null, { includeEmptyDirectories: true });
 
 			if (this.$options.release) {
-				sourceFiles = sourceFiles.filter(source => source !== 'tests');
+				let testsFolderPath = path.join(appSourceDirectoryPath, 'tests');
+				sourceFiles = sourceFiles.filter(source => source.indexOf(testsFolderPath) === -1);
 			}
 
 			let hasTnsModulesInAppFolder = this.$fs.exists(path.join(appSourceDirectoryPath, constants.TNS_MODULES_FOLDER_NAME)).wait();
