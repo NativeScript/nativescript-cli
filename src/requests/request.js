@@ -463,10 +463,6 @@ export class KinveyRequestConfig extends RequestConfig {
       headers.set('X-Kinvey-Api-Version', this.apiVersion);
     }
 
-    // if (options.contentType) {
-    //   headers.set('X-Kinvey-Content-Type', options.contentType);
-    // }
-
     if (options.skipBL === true) {
       headers.set('X-Kinvey-Skip-Business-Logic', true);
     }

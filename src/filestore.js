@@ -1,14 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
-import { toPromise } from 'rxjs/operator/toPromise';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore } from './datastore';
 import url from 'url';
 import map from 'lodash/map';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-// const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-// const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
-// const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 
 /**
@@ -86,7 +82,7 @@ export class FileStore extends DataStore {
     options.ttl_in_seconds = options.ttl;
 
     const stream = super.find(query, options);
-    const files = await stream::toPromise();
+    const files = await stream.toPromise();
 
     if (options.download === true) {
       return Promise.all(map(files, file => this.downloadByUrl(file._downloadURL, options)));
@@ -130,7 +126,7 @@ export class FileStore extends DataStore {
     options.ttl_in_seconds = options.ttl;
 
     const stream = super.findById(name, options);
-    const file = await stream::toPromise();
+    const file = await stream.toPromise();
 
     if (options.stream === true) {
       return file;
@@ -140,14 +136,15 @@ export class FileStore extends DataStore {
   }
 
   async downloadByUrl(url, options = {}) {
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.GET,
       url: url,
       timeout: options.timeout
     });
-    request.setHeader('Accept', options.mimeType || 'application-octet-stream');
-    request.removeHeader('Content-Type');
-    request.removeHeader('X-Kinvey-Api-Version');
+    config.headers.set('Accept', options.mimeType || 'application-octet-stream');
+    config.headers.remove('Content-Type');
+    config.headers.remove('X-Kinvey-Api-Version');
+    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }
@@ -189,11 +186,8 @@ export class FileStore extends DataStore {
       metadata._public = true;
     }
 
-    const createRequest = new NetworkRequest({
+    const createConfig = new KinveyRequestConfig({
       method: RequestMethod.POST,
-      headers: {
-        'X-Kinvey-Content-Type': metadata.mimeType
-      },
       authType: AuthType.Default,
       url: url.format({
         protocol: this.client.protocol,
@@ -205,6 +199,8 @@ export class FileStore extends DataStore {
       data: metadata,
       client: this.client
     });
+    createConfig.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
+    const createRequest = new NetworkRequest(createConfig);
 
     if (metadata[idAttribute]) {
       createRequest.method = RequestMethod.PUT;
@@ -229,13 +225,14 @@ export class FileStore extends DataStore {
     delete data._uploadURL;
 
     // Upload the file
-    const uploadRequest = new NetworkRequest({
+    const uploadConfig = new KinveyRequestConfig({
       method: RequestMethod.PUT,
       url: uploadUrl,
       data: file
     });
-    uploadRequest.clearHeaders();
-    uploadRequest.addHeaders(headers);
+    uploadConfig.headers.clear();
+    uploadConfig.headers.add(headers);
+    const uploadRequest = new NetworkRequest(uploadConfig);
     await uploadRequest.execute();
 
     data._data = file;
