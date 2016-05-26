@@ -116,7 +116,7 @@ describe('Platform Service Tests', () => {
 
 				try {
 					platformService.addPlatforms(["android"]).wait();
-				} catch(err) {
+				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
 			});
@@ -135,7 +135,7 @@ describe('Platform Service Tests', () => {
 
 				try {
 					platformService.addPlatforms(["ios"]).wait();
-				} catch(err) {
+				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
 			});
@@ -154,7 +154,7 @@ describe('Platform Service Tests', () => {
 
 				try {
 					platformService.addPlatforms(["android"]).wait();
-				} catch(err) {
+				} catch (err) {
 					assert.equal(errorMessage, err.message);
 				}
 			});
@@ -196,6 +196,7 @@ describe('Platform Service Tests', () => {
 
 	describe("prepare platform unit tests", () => {
 		let fs: IFileSystem;
+
 		beforeEach(() => {
 			testInjector = createTestInjector();
 			testInjector.register("fs", fsLib.FileSystem);
@@ -208,6 +209,9 @@ describe('Platform Service Tests', () => {
 			let appFolderPath = path.join(tempFolder, "app");
 			fs.createDirectory(appFolderPath).wait();
 
+			let testsFolderPath = path.join(appFolderPath, "tests");
+			fs.createDirectory(testsFolderPath).wait();
+
 			let app1FolderPath = path.join(tempFolder, "app1");
 			fs.createDirectory(app1FolderPath).wait();
 
@@ -217,111 +221,85 @@ describe('Platform Service Tests', () => {
 			return { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath };
 		}
 
+		function testPreparePlatform(platformToTest: string, release?: boolean) {
+			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
+
+			// Add platform specific files to app and app1 folders
+			let platformSpecificFiles = [
+				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
+			];
+
+			let destinationDirectories = [appFolderPath, app1FolderPath];
+
+			_.each(destinationDirectories, directoryPath => {
+				_.each(platformSpecificFiles, filePath => {
+					let fileFullPath = path.join(directoryPath, filePath);
+					fs.writeFile(fileFullPath, "testData").wait();
+				});
+			});
+
+			let platformsData = testInjector.resolve("platformsData");
+			platformsData.platformsNames = ["ios", "android"];
+			platformsData.getPlatformData = (platform: string) => {
+				return {
+					appDestinationDirectoryPath: appDestFolderPath,
+					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
+					normalizedPlatformName: platformToTest,
+					platformProjectService: {
+						prepareProject: () => Future.fromResult(),
+						validate: () => Future.fromResult(),
+						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
+						interpolateData: (projectRoot: string) => Future.fromResult(),
+						afterCreateProject: (projectRoot: string) => Future.fromResult(),
+						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
+						processConfigurationFilesFromAppResources: () => Future.fromResult(),
+						ensureConfigurationFileInAppResources: () => Future.fromResult(),
+						interpolateConfigurationFile: () => Future.fromResult()
+					}
+				};
+			};
+
+			let projectData = testInjector.resolve("projectData");
+			projectData.projectDir = tempFolder;
+
+			platformService = testInjector.resolve("platformService");
+			let options : IOptions = testInjector.resolve("options");
+			options.release = release; 
+			platformService.preparePlatform(platformToTest).wait();
+			
+			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
+			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
+
+			// Asserts that the files in app folder are process as platform specific
+			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app", test1FileName)).wait());
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
+			
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", test2FileName)).wait());
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
+
+			// Asserts that the files in app1 folder aren't process as platform specific
+			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait(), "Asserts that the files in app1 folder aren't process as platform specific");
+
+			if (release) {
+				// Asserts that the files in tests folder aren't copied
+				assert.isFalse(fs.exists(path.join(appDestFolderPath, "tests")).wait(), "Asserts that the files in tests folder aren't copied");
+			}
+		}
+
 		it("should process only files in app folder when preparing for iOS platform", () => {
-			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
-
-			// Add platform specific files to app and app1 folders
-			let platformSpecificFiles = [
-				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
-			];
-
-			let destinationDirectories = [appFolderPath, app1FolderPath];
-
-			_.each(destinationDirectories, directoryPath => {
-				_.each(platformSpecificFiles, filePath => {
-					let fileFullPath = path.join(directoryPath, filePath);
-					fs.writeFile(fileFullPath, "testData").wait();
-				});
-			});
-
-			let platformsData = testInjector.resolve("platformsData");
-			platformsData.platformsNames = ["ios", "android"];
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: appDestFolderPath,
-					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
-					normalizedPlatformName: "iOS",
-					platformProjectService: {
-						prepareProject: () => Future.fromResult(),
-						validate: () => Future.fromResult(),
-						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
-						interpolateData: (projectRoot: string) => Future.fromResult(),
-						afterCreateProject: (projectRoot: string) => Future.fromResult(),
-						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-						processConfigurationFilesFromAppResources: () => Future.fromResult(),
-						ensureConfigurationFileInAppResources: () => Future.fromResult(),
-						interpolateConfigurationFile: () => Future.fromResult()
-					}
-				};
-			};
-
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = tempFolder;
-
-			platformService = testInjector.resolve("platformService");
-			platformService.preparePlatform("ios").wait();
-
-			// Asserts that the files in app folder are process as platform specific
-			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app" , "test1.js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2.js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
-
-			// Asserts that the files in app1 folder aren't process as platform specific
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait());
+			testPreparePlatform("iOS");
 		});
+
 		it("should process only files in app folder when preparing for Android platform", () => {
-			let { tempFolder, appFolderPath, app1FolderPath, appDestFolderPath, appResourcesFolderPath } = prepareDirStructure();
+			testPreparePlatform("Android");
+		});
+		
+		it("should process only files in app folder when preparing for iOS platform", () => {
+			testPreparePlatform("iOS", true);
+		});
 
-			// Add platform specific files to app and app1 folders
-			let platformSpecificFiles = [
-				"test1.ios.js", "test1-ios-js", "test2.android.js", "test2-android-js"
-			];
-
-			let destinationDirectories = [appFolderPath, app1FolderPath];
-
-			_.each(destinationDirectories, directoryPath => {
-				_.each(platformSpecificFiles, filePath => {
-					let fileFullPath = path.join(directoryPath, filePath);
-					fs.writeFile(fileFullPath, "testData").wait();
-				});
-			});
-
-			let platformsData = testInjector.resolve("platformsData");
-			platformsData.platformsNames = ["ios", "android"];
-			platformsData.getPlatformData = (platform: string) => {
-				return {
-					appDestinationDirectoryPath: appDestFolderPath,
-					appResourcesDestinationDirectoryPath: appResourcesFolderPath,
-					normalizedPlatformName: "Android",
-					platformProjectService: {
-						prepareProject: () => Future.fromResult(),
-						validate: () => Future.fromResult(),
-						createProject: (projectRoot: string, frameworkDir: string) => Future.fromResult(),
-						interpolateData: (projectRoot: string) => Future.fromResult(),
-						afterCreateProject: (projectRoot: string) => Future.fromResult(),
-						getAppResourcesDestinationDirectoryPath: () => Future.fromResult(""),
-						processConfigurationFilesFromAppResources: () => Future.fromResult(),
-						ensureConfigurationFileInAppResources: () => Future.fromResult(),
-						interpolateConfigurationFile: () => Future.fromResult()
-					}
-				};
-			};
-
-			let projectData = testInjector.resolve("projectData");
-			projectData.projectDir = tempFolder;
-
-			platformService = testInjector.resolve("platformService");
-			platformService.preparePlatform("android").wait();
-
-			// Asserts that the files in app folder are process as platform specific
-			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app" , "test2.js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1.js")).wait());
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
-
-			// Asserts that the files in app1 folder aren't process as platform specific
-			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app1")).wait());
+		it("should process only files in app folder when preparing for Android platform", () => {
+			testPreparePlatform("Android", true);
 		});
 
 		it("invalid xml is caught", () => {
