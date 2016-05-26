@@ -1,7 +1,7 @@
 import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
 import parseHeaders from 'parse-headers';
 
-export default class PhoneGapHttpMiddleware extends KinveyMiddleware {
+export class PhoneGapHttpMiddleware extends KinveyMiddleware {
   constructor(name = 'Kinvey PhoneGap Http Middleware') {
     super(name);
   }
@@ -9,15 +9,17 @@ export default class PhoneGapHttpMiddleware extends KinveyMiddleware {
   handle(request) {
     return super.handle(request).then(() => {
       const promise = new Promise((resolve, reject) => {
+        const { url, method, headers, body } = request;
+
         // Create request
         const xhr = new XMLHttpRequest();
-        xhr.open(request.method, request.url);
-        xhr.responseType = request.responseType;
+        xhr.open(method, url);
+        // xhr.responseType = request.responseType;
 
         // Append request headers
-        const names = Object.keys(request.headers);
+        const names = Object.keys(headers.toJSON());
         for (const name of names) {
-          xhr.setRequestHeader(name, request.headers[name]);
+          xhr.setRequestHeader(name, headers.get(name));
         }
 
         xhr.onload = xhr.ontimeout = xhr.onabort = xhr.onerror = () => {
@@ -47,7 +49,7 @@ export default class PhoneGapHttpMiddleware extends KinveyMiddleware {
         };
 
         // Send xhr
-        xhr.send(request.data);
+        xhr.send(body);
       });
       return promise;
     });

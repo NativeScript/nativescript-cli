@@ -1,4 +1,4 @@
-import Device from './device';
+import { PhoneGapDevice } from './device';
 import { KinveyError } from 'kinvey-javascript-sdk-core/es5/errors';
 import { EventEmitter } from 'events';
 import { RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/es5/requests/request';
@@ -14,14 +14,14 @@ const pushSettingsCollectionName = process.env.KINVEY_PUSH_COLLECTION_NAME || 'k
 const storage = global.localStorage;
 let notificationEventListener;
 
-export default class Push extends EventEmitter {
+export class PhoneGapPush extends EventEmitter {
   constructor() {
     super();
 
     this.client = Client.sharedInstance();
     notificationEventListener = bind(this.notificationListener, this);
 
-    if (Device.isPhoneGap()) {
+    if (PhoneGapDevice.isPhoneGap()) {
       this.deviceReady = new Promise(resolve => {
         const onDeviceReady = bind(() => {
           document.removeEventListener('deviceready', onDeviceReady);
@@ -54,7 +54,7 @@ export default class Push extends EventEmitter {
   }
 
   isSupported() {
-    return Device.isiOS() || Device.isAndroid();
+    return PhoneGapDevice.isiOS() || PhoneGapDevice.isAndroid();
   }
 
   onNotification(listener) {

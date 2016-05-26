@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
-import Device from './device';
+import { PhoneGapDevice } from './device';
 import bind from 'lodash/bind';
 
-class Popup extends EventEmitter {
+export class PhoneGapPopup extends EventEmitter {
   constructor() {
     super();
 
@@ -14,7 +14,7 @@ class Popup extends EventEmitter {
     };
 
     // Listen fro the deviceready event
-    if (Device.isPhoneGap()) {
+    if (PhoneGapDevice.isPhoneGap()) {
       this.deviceReady = new Promise(resolve => {
         const onDeviceReady = bind(() => {
           document.removeEventListener('deviceready', onDeviceReady);
@@ -32,7 +32,7 @@ class Popup extends EventEmitter {
     // Wait for the deivce to be ready
     await this.deviceReady;
 
-    if (Device.isPhoneGap()) {
+    if (PhoneGapDevice.isPhoneGap()) {
       // Check that the InAppBrowser plugin is installed
       if (global.cordova && !global.cordova.InAppBrowser) {
         throw new Error('PhoneGap InAppBrowser Plugin is not installed.',
@@ -66,9 +66,7 @@ class Popup extends EventEmitter {
                 url: this.popup.location.href
               });
             } catch (error) {
-              this.loadErrorCallback({
-                message: 'Unable to retrieve popup location due to Cross Origin Domain constraints.'
-              });
+              // Just catch the error
             }
           }
         }, 100);
@@ -83,7 +81,6 @@ class Popup extends EventEmitter {
   async close() {
     if (this.popup) {
       this.popup.close();
-      this.popup = null;
     }
 
     return this;
@@ -98,9 +95,9 @@ class Popup extends EventEmitter {
   }
 
   exitCallback() {
-    clearTimeout(this.interval);
+    clearInterval(this.interval);
 
-    if (Device.isPhoneGap()) {
+    if (PhoneGapDevice.isPhoneGap()) {
       this.popup.removeEventListener('loadstop', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loaderror', this.eventListeners.loadErrorCallback);
       this.popup.removeEventListener('exit', this.eventListeners.exitCallback);
@@ -109,6 +106,3 @@ class Popup extends EventEmitter {
     this.emit('closed');
   }
 }
-
-// Expose the popup class globally
-global.KinveyPopup = Popup;

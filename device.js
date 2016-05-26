@@ -9,7 +9,7 @@ global.document.addEventListener('offline', () => {
   online = false;
 }, false);
 
-export default class Device {
+export class PhoneGapDevice {
   static isOnline() {
     return online;
   }
@@ -35,7 +35,7 @@ export default class Device {
   }
 
   static toJSON() {
-    if (Device.isBrowser()) {
+    if (PhoneGapDevice.isBrowser()) {
       const userAgent = global.navigator.userAgent.toLowerCase();
       const rChrome = /(chrome)\/([\w]+)/;
       const rFirefox = /(firefox)\/([\w.]+)/;
@@ -86,6 +86,3 @@ export default class Device {
     };
   }
 }
-
-// Expose the device class globally
-global.KinveyDevice = Device;

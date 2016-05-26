@@ -1,9 +1,10 @@
 import Kinvey from 'kinvey-javascript-sdk-core';
 import { NetworkRack } from 'kinvey-javascript-sdk-core/es5/rack/rack';
 import { HttpMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware/http';
-import PhoneGapHttpMiddleware from './http';
-import Push from './push';
-import Device from './device';
+import { PhoneGapHttpMiddleware } from './http';
+import { PhoneGapPush } from './push';
+import { PhoneGapPopup } from './popup';
+import { PhoneGapDevice } from './device';
 
 // Add Http middleware
 const networkRack = NetworkRack.sharedInstance();
@@ -16,14 +17,18 @@ class PhoneGapKinvey extends Kinvey {
     const client = super.init(options);
 
     // Add Push module to Kinvey
-    if (Device.isiOS() || Device.isAndroid()) {
-      this.Push = new Push();
+    if (PhoneGapDevice.isiOS() || PhoneGapDevice.isAndroid()) {
+      this.Push = new PhoneGapPush();
     }
 
     // Return the client
     return client;
   }
 }
+
+// Expose some globals
+global.KinveyDevice = PhoneGapDevice;
+global.KinveyPopup = PhoneGapPopup;
 
 // Export
 module.exports = PhoneGapKinvey;
