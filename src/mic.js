@@ -1,6 +1,6 @@
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import Client from './client';
 import path from 'path';
 import url from 'url';
@@ -82,23 +82,22 @@ export class MobileIdentityConnect {
       pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
         pathname: path.join(pathname, authPathname)
       }),
       properties: options.properties,
-      data: {
+      body: {
         client_id: clientId,
         redirect_uri: redirectUri,
         response_type: 'code'
       }
     });
+    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+    const request = new NetworkRequest(config);
     return request.execute().then(response => response.data.temp_login_uri);
   }
 
@@ -166,14 +165,11 @@ export class MobileIdentityConnect {
 
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      const request = new NetworkRequest({
+      const config = new KinveyRequestConfig({
         method: RequestMethod.POST,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
         url: loginUrl,
         properties: options.properties,
-        data: {
+        body: {
           client_id: clientId,
           redirect_uri: redirectUri,
           response_type: 'code',
@@ -182,6 +178,8 @@ export class MobileIdentityConnect {
         },
         followRedirect: false
       });
+      config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+      const request = new NetworkRequest(config);
       return request.execute();
     }).then(response => {
       const location = response.getHeader('location');
@@ -198,11 +196,8 @@ export class MobileIdentityConnect {
   }
 
   requestToken(code, clientId, redirectUri, options = {}) {
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.protocol,
@@ -210,15 +205,16 @@ export class MobileIdentityConnect {
         pathname: tokenPathname
       }),
       properties: options.properties,
-      data: {
+      body: {
         grant_type: 'authorization_code',
         client_id: clientId,
         redirect_uri: redirectUri,
         code: code
       }
     });
+    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+    const request = new NetworkRequest(config);
     request.automaticallyRefreshAuthToken = false;
-
     const promise = request.execute().then(response => response.data);
     return promise;
   }

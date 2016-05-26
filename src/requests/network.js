@@ -1,4 +1,4 @@
-import { RequestMethod, AuthType, KinveyRequest } from './request';
+import { RequestMethod, AuthType, KinveyRequest, KinveyRequestConfig } from './request';
 import { NetworkRack } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
@@ -51,11 +51,8 @@ export class NetworkRequest extends KinveyRequest {
         if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
           // Refresh the token
           const token = activeSocialIdentity.token;
-          const refreshTokenRequest = new NetworkRequest({
+          const config = new KinveyRequestConfig({
             method: RequestMethod.POST,
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded'
-            },
             authType: AuthType.App,
             url: url.format({
               protocol: activeSocialIdentity.client.protocol,
@@ -63,13 +60,15 @@ export class NetworkRequest extends KinveyRequest {
               pathname: tokenPathname
             }),
             properties: this.properties,
-            data: {
+            body: {
               grant_type: 'refresh_token',
               client_id: token.audience,
               redirect_uri: activeSocialIdentity.redirectUri,
               refresh_token: token.refresh_token
             }
           });
+          config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+          const refreshTokenRequest = new NetworkRequest(config);
           refreshTokenRequest.automaticallyRefreshAuthToken = false;
           const newToken = await refreshTokenRequest.execute().then(response => response.data);
 
