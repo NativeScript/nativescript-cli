@@ -17,9 +17,7 @@ class PhoneGapKinvey extends Kinvey {
     const client = super.init(options);
 
     // Add Push module to Kinvey
-    if (PhoneGapDevice.isiOS() || PhoneGapDevice.isAndroid()) {
-      this.Push = new PhoneGapPush();
-    }
+    this.Push = new PhoneGapPush();
 
     // Return the client
     return client;
