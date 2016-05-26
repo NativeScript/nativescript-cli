@@ -1,14 +1,14 @@
-import PhoneGapDevice from 'kinvey-phonegap-sdk/es5/device';
+import { PhoneGapDevice } from 'kinvey-phonegap-sdk/es5/device';
 import packageJSON from '../package.json';
 
 /**
  * @private
  */
-export default class Device extends PhoneGapDevice {
+export class AngularDevice extends PhoneGapDevice {
   static toJSON() {
     const json = super.toJSON();
 
-    if (Device.isBrowser()) {
+    if (AngularDevice.isBrowser()) {
       json.platform.name = 'web browser';
     }
 
@@ -27,6 +27,3 @@ export default class Device extends PhoneGapDevice {
     return json;
   }
 }
-
-// Expose the device class globally
-global.KinveyDevice = Device;
