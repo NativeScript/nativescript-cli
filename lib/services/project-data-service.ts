@@ -9,6 +9,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	private projectFilePath: string;
 	private projectData: IDictionary<any>;
+	private projectFileIndent: string;
 
 	constructor(private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
@@ -17,7 +18,7 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	public initialize(projectDir: string): void {
-		if(!this.projectFilePath) {
+		if (!this.projectFilePath) {
 			this.projectFilePath = path.join(projectDir, this.$staticConfig.PROJECT_FILE_NAME);
 		}
 	}
@@ -32,19 +33,19 @@ export class ProjectDataService implements IProjectDataService {
 	public setValue(key: string, value: any): IFuture<void> {
 		return (() => {
 			this.loadProjectFile().wait();
-			if(!this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
+			if (!this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE]) {
 				this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE] = Object.create(null);
 			}
 			this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][key] = value;
-			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
+			this.$fs.writeJson(this.projectFilePath, this.projectData, this.projectFileIndent).wait();
 		}).future<void>()();
 	}
 
 	public removeProperty(propertyName: string): IFuture<void> {
 		return (() => {
 			this.loadProjectFile().wait();
-			delete  this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][propertyName];
-			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
+			delete this.projectData[this.$staticConfig.CLIENT_NAME_KEY_IN_PROJECT_FILE][propertyName];
+			this.$fs.writeJson(this.projectFilePath, this.projectData, this.projectFileIndent).wait();
 		}).future<void>()();
 	}
 
@@ -52,7 +53,7 @@ export class ProjectDataService implements IProjectDataService {
 		return (() => {
 			this.loadProjectFile().wait();
 			delete this.projectData[ProjectDataService.DEPENDENCIES_KEY_NAME][dependencyName];
-			this.$fs.writeJson(this.projectFilePath, this.projectData, "\t").wait();
+			this.$fs.writeJson(this.projectFilePath, this.projectData, this.projectFileIndent).wait();
 		}).future<void>()();
 	}
 
@@ -60,7 +61,7 @@ export class ProjectDataService implements IProjectDataService {
 		return (() => {
 			assert.ok(this.projectFilePath, "Initialize method of projectDataService is not called.");
 
-			if(!this.$fs.exists(this.projectFilePath).wait()) {
+			if (!this.$fs.exists(this.projectFilePath).wait()) {
 				this.$fs.writeJson(this.projectFilePath, {
 					"description": "NativeScript Application",
 					"license": "SEE LICENSE IN <your-license-filename>",
@@ -69,8 +70,22 @@ export class ProjectDataService implements IProjectDataService {
 				}).wait();
 			}
 
-			this.projectData = this.$fs.readJson(this.projectFilePath).wait() || Object.create(null);
+			// Detect indent and use it later to write JSON.
+			let projectFileContent = this.$fs.readText(this.projectFilePath).wait();
+
+			this.projectFileIndent = projectFileContent ? this.detectIndent(projectFileContent) : "\t";
+
+			this.projectData = projectFileContent ? JSON.parse(projectFileContent) : Object.create(null);
+
 		}).future<void>()();
+	}
+
+	private detectIndent(content: string): any {
+		const leadingSpace = content.match(/(^[ ]+)\S/m);
+		if (leadingSpace) {
+			return leadingSpace[1].length;
+		}
+		return "\t";
 	}
 }
 $injector.register("projectDataService", ProjectDataService);
