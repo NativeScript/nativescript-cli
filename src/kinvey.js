@@ -27,6 +27,10 @@ export default class Kinvey {
     return client;
   }
 
+  static get appVersion() {
+    return this.client.appVersion;
+  }
+
   static set appVersion(appVersion) {
     this.client.appVersion = appVersion;
   }

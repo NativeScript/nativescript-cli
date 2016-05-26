@@ -12,7 +12,8 @@ networkRack.swap(HttpMiddleware, new TestHttpMiddleware());
 
 const client = Kinvey.init({
   appKey: randomString(),
-  appSecret: randomString()
+  appSecret: randomString(),
+  appVersion: randomString()
 });
 
 before(function() {

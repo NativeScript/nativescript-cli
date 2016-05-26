@@ -99,7 +99,7 @@ export default class Client {
   }
 
   set appVersion(appVersion) {
-    if (!isString(appVersion)) {
+    if (appVersion && !isString(appVersion)) {
       appVersion = String(appVersion);
     }
 

@@ -9,6 +9,14 @@ const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('Kinvey', function () {
+  describe('appVersion', function() {
+    it('should set the appVersion', function() {
+      const appVersion = '1.0.0';
+      Kinvey.appVersion = appVersion;
+      expect(Kinvey.appVersion).to.equal(appVersion);
+    });
+  });
+
   describe('init()', function () {
     it('should respond', function () {
       expect(Kinvey).itself.to.respondTo('init');
