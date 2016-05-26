@@ -220,7 +220,7 @@ export class Headers {
         name = String(name);
       }
 
-      const headers = this.headers || {};
+      const headers = this.headers;
       delete headers[name.toLowerCase()];
       this.headers = headers;
     }
@@ -236,16 +236,17 @@ export class Headers {
   toJSON() {
     return this.headers;
   }
+
+  toString() {
+    return JSON.stringify(this.headers);
+  }
 }
 
 export class Properties {
-  /**
-   * Returns the request property for the key or `undefined` if
-   * it has not been set.
-   *
-   * @param  {String} key Request property key
-   * @return {*} Request property value
-   */
+  constructor() {
+    this.properties = {};
+  }
+
   get(key) {
     const properties = this.toJSON();
 
@@ -256,13 +257,6 @@ export class Properties {
     return undefined;
   }
 
-  /**
-   * Sets the request property key to the value.
-   *
-   * @param {String} key Request property key
-   * @param {*} value Request property value
-   * @return {RequestProperties} The request properties instance.
-   */
   set(key, value) {
     if (!key || !value) {
       throw new Error('A key and value must be provided to set a property.');
@@ -272,22 +266,7 @@ export class Properties {
       key = String(key);
     }
 
-    if (!isString(value)) {
-      this.properties[key] = JSON.stringify(value);
-    } else {
-      this.properties[key] = value;
-    }
-
-    return this;
-  }
-
-  remove(key) {
-    const properties = this.properties;
-
-    if (key && properties.hasOwnProperty(key)) {
-      delete properties[key];
-    }
-
+    this.properties[key] = value;
     return this;
   }
 
@@ -295,7 +274,11 @@ export class Properties {
     return !!this.get(key);
   }
 
-  addProperties(properties) {
+  add(property = {}) {
+    return this.set(property.name, property.value);
+  }
+
+  addAll(properties) {
     if (!isPlainObject(properties)) {
       throw new KinveyError('properties argument must be an object');
     }
@@ -304,6 +287,16 @@ export class Properties {
       const value = properties[key];
       this.set(key, value);
     });
+
+    return this;
+  }
+
+  remove(key) {
+    if (key) {
+      const properties = this.properties;
+      delete properties[key];
+      this.properties = properties;
+    }
 
     return this;
   }
