@@ -12,7 +12,6 @@ import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import isNumber from 'lodash/isNumber';
-const Device = global.KinveyDevice;
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
@@ -337,7 +336,7 @@ export class RequestConfig {
     this.method = options.method;
     this.headers = options.headers;
     this.url = options.url;
-    this.body = options.body;
+    this.body = options.body || options.data;
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
     this.noCache = options.noCache;
@@ -503,8 +502,8 @@ export class KinveyRequestConfig extends RequestConfig {
       headers.set('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
     }
 
-    if (Device) {
-      headers.set('X-Kinvey-Device-Information', JSON.stringify(Device.toJSON()));
+    if (global.KinveyDevice) {
+      headers.set('X-Kinvey-Device-Information', JSON.stringify(global.KinveyDevice.toJSON()));
     }
 
     if (this.authType) {
@@ -781,6 +780,14 @@ export class KinveyRequest extends Request {
 
   get entityId() {
     return this.config.entityId;
+  }
+
+  get client() {
+    return this.config.client;
+  }
+
+  set client(client) {
+    this.config.client = client;
   }
 
   toJSON() {

@@ -179,7 +179,7 @@ var Client = function () {
       return this.clientAppVersion;
     },
     set: function set(appVersion) {
-      if (!(0, _isString2.default)(appVersion)) {
+      if (appVersion && !(0, _isString2.default)(appVersion)) {
         appVersion = String(appVersion);
       }
 

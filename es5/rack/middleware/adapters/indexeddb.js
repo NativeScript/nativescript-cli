@@ -8,6 +8,8 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _errors = require('../../../errors');
 
+var _log = require('../../../log');
+
 var _forEach = require('lodash/forEach');
 
 var _forEach2 = _interopRequireDefault(_forEach);
@@ -217,8 +219,8 @@ var IndexedDB = function () {
                                 return resolve(entities);
                               };
 
-                              request.onerror = function () {
-                                // TODO: log error
+                              request.onerror = function (e) {
+                                _log.Log.error('An error occurred while trying to find entities for the ' + collection + ' collection' + (' on the ' + _this2.name + ' IndexedDB database. ' + e.targer.error.message + '.'));
                                 resolve([]);
                               };
 

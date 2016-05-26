@@ -33,7 +33,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Popup = global.KinveyPopup;
 var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
@@ -124,23 +123,22 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
         pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
       }
 
-      var request = new _network.NetworkRequest({
+      var config = new _request.KinveyRequestConfig({
         method: _request.RequestMethod.POST,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
         url: _url2.default.format({
           protocol: this.client.protocol,
           host: this.client.host,
           pathname: _path2.default.join(pathname, authPathname)
         }),
         properties: options.properties,
-        data: {
+        body: {
           client_id: clientId,
           redirect_uri: redirectUri,
           response_type: 'code'
         }
       });
+      config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+      var request = new _network.NetworkRequest(config);
       return request.execute().then(function (response) {
         return response.data.temp_login_uri;
       });
@@ -165,17 +163,21 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        var popup = new Popup();
-        return popup.open(_url2.default.format({
-          protocol: _this2.client.protocol,
-          host: _this2.client.host,
-          pathname: _path2.default.join(pathname, authPathname),
-          query: {
-            client_id: clientId,
-            redirect_uri: redirectUri,
-            response_type: 'code'
-          }
-        }));
+        if (global.KinveyPopup) {
+          var popup = new global.KinveyPopup();
+          return popup.open(_url2.default.format({
+            protocol: _this2.client.protocol,
+            host: _this2.client.host,
+            pathname: _path2.default.join(pathname, authPathname),
+            query: {
+              client_id: clientId,
+              redirect_uri: redirectUri,
+              response_type: 'code'
+            }
+          }));
+        }
+
+        throw new _errors.KinveyError('KinveyPopup is undefined.' + (' Unable to login authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
       }).then(function (popup) {
         var promise = new Promise(function (resolve, reject) {
           var redirected = false;
@@ -218,14 +220,11 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
       var promise = Promise.resolve().then(function () {
-        var request = new _network.NetworkRequest({
+        var config = new _request.KinveyRequestConfig({
           method: _request.RequestMethod.POST,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
           url: loginUrl,
           properties: options.properties,
-          data: {
+          body: {
             client_id: clientId,
             redirect_uri: redirectUri,
             response_type: 'code',
@@ -234,6 +233,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           },
           followRedirect: false
         });
+        config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+        var request = new _network.NetworkRequest(config);
         return request.execute();
       }).then(function (response) {
         var location = response.getHeader('location');
@@ -252,11 +253,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
     value: function requestToken(code, clientId, redirectUri) {
       var options = arguments.length <= 3 || arguments[3] === undefined ? {} : arguments[3];
 
-      var request = new _network.NetworkRequest({
+      var config = new _request.KinveyRequestConfig({
         method: _request.RequestMethod.POST,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
         authType: _request.AuthType.App,
         url: _url2.default.format({
           protocol: this.client.protocol,
@@ -264,15 +262,16 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function () {
           pathname: tokenPathname
         }),
         properties: options.properties,
-        data: {
+        body: {
           grant_type: 'authorization_code',
           client_id: clientId,
           redirect_uri: redirectUri,
           code: code
         }
       });
+      config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+      var request = new _network.NetworkRequest(config);
       request.automaticallyRefreshAuthToken = false;
-
       var promise = request.execute().then(function (response) {
         return response.data;
       });

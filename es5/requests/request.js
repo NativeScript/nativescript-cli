@@ -73,7 +73,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Device = global.KinveyDevice;
 var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 var defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
 var defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
@@ -83,16 +82,20 @@ var customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 200
  * @private
  */
 function byteCount(str) {
-  var count = 0;
-  var stringLength = str.length;
-  str = String(str || '');
+  if (str) {
+    var count = 0;
+    var stringLength = str.length;
+    str = String(str || '');
 
-  for (var i = 0; i < stringLength; i++) {
-    var partCount = encodeURI(str[i]).split('%').length;
-    count += partCount === 1 ? 1 : partCount - 1;
+    for (var i = 0; i < stringLength; i++) {
+      var partCount = encodeURI(str[i]).split('%').length;
+      count += partCount === 1 ? 1 : partCount - 1;
+    }
+
+    return count;
   }
 
-  return count;
+  return 0;
 }
 
 /**
@@ -228,6 +231,7 @@ var Headers = exports.Headers = function () {
 
     _classCallCheck(this, Headers);
 
+    this.headers = {};
     this.addAll(headers);
   }
 
@@ -239,16 +243,8 @@ var Headers = exports.Headers = function () {
           name = String(name);
         }
 
-        var headers = this.headers || {};
-        var keys = Object.keys(headers);
-
-        for (var i = 0, len = keys.length; i < len; i++) {
-          var key = keys[i];
-
-          if (key.toLowerCase() === name.toLowerCase()) {
-            return headers[key];
-          }
-        }
+        var headers = this.headers;
+        return headers[name.toLowerCase()];
       }
 
       return undefined;
@@ -264,7 +260,8 @@ var Headers = exports.Headers = function () {
         name = String(name);
       }
 
-      var headers = this.headers || {};
+      var headers = this.headers;
+      name = name.toLowerCase();
 
       if (!(0, _isString2.default)(value)) {
         headers[name] = JSON.stringify(value);
@@ -273,6 +270,7 @@ var Headers = exports.Headers = function () {
       }
 
       this.headers = headers;
+      return this;
     }
   }, {
     key: 'has',
@@ -296,11 +294,11 @@ var Headers = exports.Headers = function () {
       }
 
       var names = Object.keys(headers);
-
       (0, _forEach2.default)(names, function (name) {
         var value = headers[name];
         _this.set(name, value);
       });
+      return this;
     }
   }, {
     key: 'remove',
@@ -310,20 +308,28 @@ var Headers = exports.Headers = function () {
           name = String(name);
         }
 
-        var headers = this.headers || {};
-        delete headers[name];
+        var headers = this.headers;
+        delete headers[name.toLowerCase()];
         this.headers = headers;
       }
+
+      return this;
     }
   }, {
     key: 'clear',
     value: function clear() {
       this.headers = {};
+      return this;
     }
   }, {
     key: 'toJSON',
     value: function toJSON() {
       return this.headers;
+    }
+  }, {
+    key: 'toString',
+    value: function toString() {
+      return JSON.stringify(this.headers);
     }
   }]);
 
@@ -332,21 +338,17 @@ var Headers = exports.Headers = function () {
 
 var Properties = exports.Properties = function () {
   function Properties() {
+    var properties = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
     _classCallCheck(this, Properties);
+
+    this.addAll(properties);
   }
 
   _createClass(Properties, [{
     key: 'get',
-
-    /**
-     * Returns the request property for the key or `undefined` if
-     * it has not been set.
-     *
-     * @param  {String} key Request property key
-     * @return {*} Request property value
-     */
     value: function get(key) {
-      var properties = this.toJSON();
+      var properties = this.properties || {};
 
       if (key && properties.hasOwnProperty(key)) {
         return properties[key];
@@ -354,31 +356,21 @@ var Properties = exports.Properties = function () {
 
       return undefined;
     }
-
-    /**
-     * Sets the request property key to the value.
-     *
-     * @param {String} key Request property key
-     * @param {*} value Request property value
-     * @return {RequestProperties} The request properties instance.
-     */
-
   }, {
     key: 'set',
     value: function set(key, value) {
-      var properties = {};
-      properties[key] = value;
-      this.addProperties(properties);
-      return this;
-    }
-  }, {
-    key: 'remove',
-    value: function remove(key) {
-      var properties = this.properties;
-
-      if (key && properties.hasOwnProperty(key)) {
-        delete properties[key];
+      if (!key || !value) {
+        throw new Error('A key and value must be provided to set a property.');
       }
+
+      if (!(0, _isString2.default)(key)) {
+        key = String(key);
+      }
+
+      var properties = this.properties || {};
+      properties[key] = value;
+      this.properties = properties;
+      return this;
     }
   }, {
     key: 'has',
@@ -386,8 +378,15 @@ var Properties = exports.Properties = function () {
       return !!this.get(key);
     }
   }, {
-    key: 'addProperties',
-    value: function addProperties(properties) {
+    key: 'add',
+    value: function add() {
+      var property = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      return this.set(property.name, property.value);
+    }
+  }, {
+    key: 'addAll',
+    value: function addAll(properties) {
       var _this2 = this;
 
       if (!(0, _isPlainObject2.default)(properties)) {
@@ -396,18 +395,32 @@ var Properties = exports.Properties = function () {
 
       Object.keys(properties).forEach(function (key) {
         var value = properties[key];
-
-        if (value) {
-          _this2.properties[key] = value;
-        } else {
-          delete _this2.properties[key];
-        }
+        _this2.set(key, value);
       });
+
+      return this;
+    }
+  }, {
+    key: 'remove',
+    value: function remove(key) {
+      if (key) {
+        var properties = this.properties || {};
+        delete properties[key];
+        this.properties = properties;
+      }
+
+      return this;
     }
   }, {
     key: 'clear',
     value: function clear() {
       this.properties = {};
+      return this;
+    }
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return this.properties;
     }
   }, {
     key: 'toString',
@@ -438,7 +451,7 @@ var RequestConfig = exports.RequestConfig = function () {
     this.method = options.method;
     this.headers = options.headers;
     this.url = options.url;
-    this.body = options.body;
+    this.body = options.body || options.data;
     this.timeout = options.timeout;
     this.followRedirect = options.followRedirect;
     this.noCache = options.noCache;
@@ -494,7 +507,7 @@ var RequestConfig = exports.RequestConfig = function () {
     get: function get() {
       // Unless `noCache` is true, add a cache busting query string.
       // This is useful for Android < 4.0 which caches all requests aggressively.
-      if (this.noCache) {
+      if (this.noCache === true) {
         return (0, _appendQuery2.default)(this.configUrl, _qs2.default.stringify({
           _: Math.random().toString(36).substr(2)
         }));
@@ -563,10 +576,8 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
     options = (0, _assign2.default)({
       authType: AuthType.None,
       query: null,
-      online: true,
-      cacheEnabled: true,
       apiVersion: defaultApiVersion,
-      properties: {},
+      properties: new Properties(),
       skipBL: false,
       trace: false,
       client: _client2.default.sharedInstance()
@@ -574,9 +585,6 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
 
     _this3.authType = options.authType;
     _this3.query = options.query;
-    _this3.online = options.online;
-    _this3.cacheEnabled = options.cacheEnabled;
-    _this3.timeout = options.timeout;
     _this3.apiVersion = options.apiVersion;
     _this3.properties = options.properties;
     _this3.client = options.client;
@@ -585,10 +593,6 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
     if (!headers.has('X-Kinvey-Api-Version')) {
       headers.set('X-Kinvey-Api-Version', _this3.apiVersion);
     }
-
-    // if (options.contentType) {
-    //   headers.set('X-Kinvey-Content-Type', options.contentType);
-    // }
 
     if (options.skipBL === true) {
       headers.set('X-Kinvey-Skip-Business-Logic', true);
@@ -612,7 +616,7 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
         headers.set('X-Kinvey-Client-App-Version', this.appVersion);
       }
 
-      if (this.properties) {
+      if (this.properties && !(0, _isEmpty2.default)(this.properties)) {
         var customPropertiesHeader = this.properties.toString();
         var customPropertiesByteCount = byteCount(customPropertiesHeader);
 
@@ -623,8 +627,8 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
         headers.set('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
       }
 
-      if (Device) {
-        headers.set('X-Kinvey-Device-Information', JSON.stringify(Device.toJSON()));
+      if (global.KinveyDevice) {
+        headers.set('X-Kinvey-Device-Information', JSON.stringify(global.KinveyDevice.toJSON()));
       }
 
       if (this.authType) {
@@ -713,27 +717,15 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
       this.configApiVersion = (0, _isNumber2.default)(apiVersion) ? apiVersion : defaultApiVersion;
     }
   }, {
-    key: 'online',
-    get: function get() {
-      return this.configOnline;
-    },
-    set: function set(online) {
-      this.configOnline = !!online;
-    }
-  }, {
-    key: 'cacheEnabled',
-    get: function get() {
-      return this.configCacheEnabled;
-    },
-    set: function set(cacheEnabled) {
-      this.configCacheEnabled = !!cacheEnabled;
-    }
-  }, {
     key: 'properties',
     get: function get() {
       return this.configProperties;
     },
     set: function set(properties) {
+      if (properties && !(properties instanceof Properties)) {
+        properties = new Properties((0, _result2.default)(properties, 'toJSON', properties));
+      }
+
       this.configProperties = properties;
     }
   }, {
@@ -773,24 +765,24 @@ var KinveyRequestConfig = exports.KinveyRequestConfig = function (_RequestConfig
      * @return {RequestProperties} The request properties instance.
      */
     ,
-    set: function set(args) {
-      var version = Array.prototype.slice.call(args, 1);
-      var major = args[0];
-      var minor = version[1];
-      var patch = version[2];
-      var appVersion = '';
+    set: function set(appVersion) {
+      // const version = Array.prototype.slice.call(args, 1);
+      // const major = args[0];
+      // const minor = version[1];
+      // const patch = version[2];
+      // let appVersion = '';
 
-      if (major) {
-        appVersion = ('' + major).trim();
-      }
+      // if (major) {
+      //   appVersion = `${major}`.trim();
+      // }
 
-      if (minor) {
-        appVersion = ('.' + minor).trim();
-      }
+      // if (minor) {
+      //   appVersion = `.${minor}`.trim();
+      // }
 
-      if (patch) {
-        appVersion = ('.' + patch).trim();
-      }
+      // if (patch) {
+      //   appVersion = `.${patch}`.trim();
+      // }
 
       this.configAppVersion = appVersion;
     }
@@ -981,6 +973,14 @@ var KinveyRequest = exports.KinveyRequest = function (_Request) {
     key: 'entityId',
     get: function get() {
       return this.config.entityId;
+    }
+  }, {
+    key: 'client',
+    get: function get() {
+      return this.config.client;
+    },
+    set: function set(client) {
+      this.config.client = client;
     }
   }]);
 

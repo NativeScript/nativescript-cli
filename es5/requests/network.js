@@ -59,7 +59,7 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
     key: 'execute',
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
-        var response, activeSocialIdentity, token, refreshTokenRequest, newToken, activeUser, socialIdentity, loginRequest, user, _response;
+        var response, activeSocialIdentity, token, config, refreshTokenRequest, newToken, activeUser, socialIdentity, data, loginRequest, user, _response;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
@@ -110,27 +110,24 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                 _context.t0 = _context['catch'](0);
 
                 if (!(_context.t0 instanceof _errors.InvalidCredentialsError && this.automaticallyRefreshAuthToken)) {
-                  _context.next = 50;
+                  _context.next = 53;
                   break;
                 }
 
                 this.automaticallyRefreshAuthToken = false;
-                activeSocialIdentity = this.client.activeSocialIdentity;
+                activeSocialIdentity = this.client ? this.client.activeSocialIdentity : undefined;
 
                 // Refresh MIC Auth Token
 
                 if (!(activeSocialIdentity && activeSocialIdentity.identity === micIdentity)) {
-                  _context.next = 50;
+                  _context.next = 53;
                   break;
                 }
 
                 // Refresh the token
                 token = activeSocialIdentity.token;
-                refreshTokenRequest = new NetworkRequest({
+                config = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.POST,
-                  headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                  },
                   authType: _request.AuthType.App,
                   url: _url2.default.format({
                     protocol: activeSocialIdentity.client.protocol,
@@ -138,7 +135,7 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                     pathname: tokenPathname
                   }),
                   properties: this.properties,
-                  data: {
+                  body: {
                     grant_type: 'refresh_token',
                     client_id: token.audience,
                     redirect_uri: activeSocialIdentity.redirectUri,
@@ -146,13 +143,16 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                   }
                 });
 
+                config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
+                refreshTokenRequest = new NetworkRequest(config);
+
                 refreshTokenRequest.automaticallyRefreshAuthToken = false;
-                _context.next = 26;
+                _context.next = 28;
                 return refreshTokenRequest.execute().then(function (response) {
                   return response.data;
                 });
 
-              case 26:
+              case 28:
                 newToken = _context.sent;
 
 
@@ -161,7 +161,9 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                 socialIdentity = activeUser[socialIdentityAttribute];
 
                 socialIdentity[activeSocialIdentity.identity] = newToken;
-                activeUser[socialIdentityAttribute] = activeSocialIdentity;
+                data = {};
+
+                data[socialIdentityAttribute] = socialIdentity;
 
                 loginRequest = new NetworkRequest({
                   method: _request.RequestMethod.POST,
@@ -172,18 +174,18 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                     pathname: '/' + usersNamespace + '/' + this.client.appKey + '/login'
                   }),
                   properties: this.properties,
-                  data: activeUser,
+                  data: data,
                   timeout: this.timeout,
                   client: this.client
                 });
 
                 loginRequest.automaticallyRefreshAuthToken = false;
-                _context.next = 35;
+                _context.next = 38;
                 return loginRequest.execute().then(function (response) {
                   return response.data;
                 });
 
-              case 35:
+              case 38:
                 user = _context.sent;
 
 
@@ -196,32 +198,32 @@ var NetworkRequest = exports.NetworkRequest = function (_KinveyRequest) {
                   client: activeSocialIdentity.client
                 });
 
-                _context.prev = 38;
-                _context.next = 41;
+                _context.prev = 41;
+                _context.next = 44;
                 return this.execute();
 
-              case 41:
+              case 44:
                 _response = _context.sent;
 
                 this.automaticallyRefreshAuthToken = true;
                 return _context.abrupt('return', _response);
 
-              case 46:
-                _context.prev = 46;
-                _context.t1 = _context['catch'](38);
+              case 49:
+                _context.prev = 49;
+                _context.t1 = _context['catch'](41);
 
                 this.automaticallyRefreshAuthToken = true;
                 throw _context.t1;
 
-              case 50:
+              case 53:
                 throw _context.t0;
 
-              case 51:
+              case 54:
               case 'end':
                 return _context.stop();
             }
           }
-        }, _callee, this, [[0, 15], [38, 46]]);
+        }, _callee, this, [[0, 15], [41, 49]]);
       }));
 
       function execute() {

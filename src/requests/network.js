@@ -45,7 +45,7 @@ export class NetworkRequest extends KinveyRequest {
     } catch (error) {
       if (error instanceof InvalidCredentialsError && this.automaticallyRefreshAuthToken) {
         this.automaticallyRefreshAuthToken = false;
-        const activeSocialIdentity = this.client.activeSocialIdentity;
+        const activeSocialIdentity = this.client ? this.client.activeSocialIdentity : undefined;
 
         // Refresh MIC Auth Token
         if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
@@ -76,7 +76,8 @@ export class NetworkRequest extends KinveyRequest {
           const activeUser = this.client.activeUser;
           const socialIdentity = activeUser[socialIdentityAttribute];
           socialIdentity[activeSocialIdentity.identity] = newToken;
-          activeUser[socialIdentityAttribute] = activeSocialIdentity;
+          const data = {};
+          data[socialIdentityAttribute] = socialIdentity;
 
           const loginRequest = new NetworkRequest({
             method: RequestMethod.POST,
@@ -87,7 +88,7 @@ export class NetworkRequest extends KinveyRequest {
               pathname: `/${usersNamespace}/${this.client.appKey}/login`
             }),
             properties: this.properties,
-            data: activeUser,
+            data: data,
             timeout: this.timeout,
             client: this.client
           });

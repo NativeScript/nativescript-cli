@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.DataStore = exports.DataStoreType = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 /* eslint-disable no-underscore-dangle */
 
@@ -87,7 +89,10 @@ var cacheEnabledSymbol = (0, _es6Symbol2.default)();
 var onlineSymbol = (0, _es6Symbol2.default)();
 
 /**
- * Enum for DataStore types.
+ * @typedef   {Object}    DataStoreType
+ * @property  {string}    Cache           Cache datastore type
+ * @property  {string}    Network         Network datastore type
+ * @property  {string}    Sync            Sync datastore type
  */
 var DataStoreType = {
   Cache: 'Cache',
@@ -98,7 +103,7 @@ Object.freeze(DataStoreType);
 exports.DataStoreType = DataStoreType;
 
 /**
- * The DataStore class is used to find, save, update, remove, count and group entities.
+ * The DataStore class is used to find, create, update, remove, count and group entities.
  */
 
 var DataStore = function () {
@@ -115,12 +120,12 @@ var DataStore = function () {
     this.collection = collection;
 
     /**
-     * @type {Number|undefined}
+     * @type {number|undefined}
      */
     this.ttl = undefined;
 
     /**
-     * @type {Boolean}
+     * @type {boolean}
      */
     this.useDeltaFetch = false;
 
@@ -131,20 +136,19 @@ var DataStore = function () {
     this.client = _client2.default.sharedInstance();
 
     /**
+     * @private
      * @type {Sync}
      */
-    this.sync = new _sync2.default();
-    this.sync.client = this.client;
+    this.dataStoreSync = new _sync2.default();
+    this.dataStoreSync.client = this.client;
 
-    // The store is online and has the cache enabled
-    // by default.
+    // The store is online and has the cache enabled by default.
     this.online();
     this.enableCache();
   }
 
   /**
    * The pathname for the store.
-   *
    * @return  {string}  Pathname
    */
 
@@ -154,9 +158,8 @@ var DataStore = function () {
 
 
     /**
-     * Disable cache.
-     *
-     * @return {DataStore}  DataStore instance.
+     * Disable the cache for the data store.
+     * @return  {DataStore}  DataStore instance.
      */
     value: function disableCache() {
       if (!this.isOnline()) {
@@ -168,9 +171,8 @@ var DataStore = function () {
     }
 
     /**
-     * Enable cache.
-     *
-     * @return {DataStore}  DataStore instance.
+     * Enable the cache for the data store.
+     * @return  {DataStore}  DataStore instance.
      */
 
   }, {
@@ -181,9 +183,8 @@ var DataStore = function () {
     }
 
     /**
-     * Check if cache is enabled.
-     *
-     * @return {Boolean}  True of false depending on if cache is enabled or disabled.
+     * Check if the cache is enabled or disabled for the data store.
+     * @return  {Boolean}  True or false depending on if the cache is enabled or disabled.
      */
 
   }, {
@@ -193,9 +194,8 @@ var DataStore = function () {
     }
 
     /**
-     * Make the store offline.
-     *
-     * @return {DataStore}  DataStore instance.
+     * Make the data store go offline.
+     * @return  {DataStore}  DataStore instance.
      */
 
   }, {
@@ -210,9 +210,8 @@ var DataStore = function () {
     }
 
     /**
-     * Make the store online.
-     *
-     * @return {DataStore}  DataStore instance.
+     * Make the data store go online.
+     * @return  {DataStore}  DataStore instance.
      */
 
   }, {
@@ -223,9 +222,8 @@ var DataStore = function () {
     }
 
     /**
-     * Check if the store is online.
-     *
-     * @return {Boolean}  True of false depending on if the store is online or offline.
+     * Check if the data store is online or offline.
+     * @return  {Boolean}  True or false depending on if the data store is online or offline.
      */
 
   }, {
@@ -235,19 +233,18 @@ var DataStore = function () {
     }
 
     /**
-     * Finds all entities in a collection. A query can be optionally provided to return
+     * Find all entities in the data store. A query can be optionally provided to return
      * a subset of all entities in a collection or omitted to return all entities in
      * a collection. The number of entities returned adheres to the limits specified
      * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
      *
-     * @param   {Query}                 [query]                                   Query used to filter result.
-     * @param   {Object}                [options]                                 Options
-     * @param   {Properties}            [options.properties]                      Custom properties to send with
-     *                                                                            the request.
-     * @param   {Number}                [options.timeout]                         Timeout for the request.\
-     * @param   {Boolean}               [options.useDeltaFetch]                   Turn on or off the use of delta fetch
-     *                                                                            for the find.
-     * @return  {Promise|Object}                                                  Promise or object.
+     * @param   {Query}                 [query]                             Query used to filter entities.
+     * @param   {Object}                [options]                           Options
+     * @param   {Properties}            [options.properties]                Custom properties to send with
+     *                                                                      the request.
+     * @param   {Number}                [options.timeout]                   Timeout for the request.
+     * @param   {Boolean}               [options.useDeltaFetch]             Turn on or off the use of delta fetch.
+     * @return  {Observable}                                                Observable.
      */
 
   }, {
@@ -452,6 +449,19 @@ var DataStore = function () {
 
       return stream;
     }
+
+    /**
+     * Find a single entity in the data store by id.
+     *
+     * @param   {string}                id                               Entity by id to find.
+     * @param   {Object}                [options]                        Options
+     * @param   {Properties}            [options.properties]             Custom properties to send with
+     *                                                                   the request.
+     * @param   {Number}                [options.timeout]                Timeout for the request.
+     * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
+     * @return  {Observable}                                             Observable.
+     */
+
   }, {
     key: 'findById',
     value: function findById(id) {
@@ -639,6 +649,21 @@ var DataStore = function () {
 
       return stream;
     }
+
+    /**
+     * Count all entities in the data store. A query can be optionally provided to return
+     * a subset of all entities in a collection or omitted to return all entities in
+     * a collection. The number of entities returned adheres to the limits specified
+     * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+     *
+     * @param   {Query}                 [query]                          Query used to filter entities.
+     * @param   {Object}                [options]                        Options
+     * @param   {Properties}            [options.properties]             Custom properties to send with
+     *                                                                   the request.
+     * @param   {Number}                [options.timeout]                Timeout for the request.
+     * @return  {Observable}                                             Observable.
+     */
+
   }, {
     key: 'count',
     value: function count(query) {
@@ -795,6 +820,18 @@ var DataStore = function () {
 
       return stream;
     }
+
+    /**
+     * Create a single or an array of entities on the data store.
+     *
+     * @param   {Object|Array}          data                              Data that you want to create on the data store.
+     * @param   {Object}                [options]                         Options
+     * @param   {Properties}            [options.properties]              Custom properties to send with
+     *                                                                    the request.
+     * @param   {Number}                [options.timeout]                 Timeout for the request.
+     * @return  {Promise}                                                 Promise.
+     */
+
   }, {
     key: 'create',
     value: function create(data) {
@@ -861,7 +898,7 @@ var DataStore = function () {
                   }
 
                   _context4.next = 17;
-                  return _this4.sync.addCreateOperation(_this4.collection, data, options);
+                  return _this4.dataStoreSync.addCreateOperation(_this4.collection, data, options);
 
                 case 17:
                   if (!_this4.isOnline()) {
@@ -952,6 +989,18 @@ var DataStore = function () {
 
       return stream.toPromise();
     }
+
+    /**
+     * Update a single or an array of entities on the data store.
+     *
+     * @param   {Object|Array}          data                              Data that you want to update on the data store.
+     * @param   {Object}                [options]                         Options
+     * @param   {Properties}            [options.properties]              Custom properties to send with
+     *                                                                    the request.
+     * @param   {Number}                [options.timeout]                 Timeout for the request.
+     * @return  {Promise}                                                 Promise.
+     */
+
   }, {
     key: 'update',
     value: function update(data) {
@@ -1019,7 +1068,7 @@ var DataStore = function () {
                   }
 
                   _context5.next = 18;
-                  return _this5.sync.addUpdateOperation(_this5.collection, data, options);
+                  return _this5.dataStoreSync.addUpdateOperation(_this5.collection, data, options);
 
                 case 18:
                   if (!_this5.isOnline()) {
@@ -1110,6 +1159,18 @@ var DataStore = function () {
 
       return stream.toPromise();
     }
+
+    /**
+     * Save a single or an array of entities on the data store.
+     *
+     * @param   {Object|Array}          data                              Data that you want to save on the data store.
+     * @param   {Object}                [options]                         Options
+     * @param   {Properties}            [options.properties]              Custom properties to send with
+     *                                                                    the request.
+     * @param   {Number}                [options.timeout]                 Timeout for the request.
+     * @return  {Promise}                                                 Promise.
+     */
+
   }, {
     key: 'save',
     value: function save(data, options) {
@@ -1119,6 +1180,21 @@ var DataStore = function () {
 
       return this.create(data, options);
     }
+
+    /**
+     * Remove all entities in the data store. A query can be optionally provided to remove
+     * a subset of all entities in a collection or omitted to remove all entities in
+     * a collection. The number of entities removed adheres to the limits specified
+     * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+     *
+     * @param   {Query}                 [query]                           Query used to filter entities.
+     * @param   {Object}                [options]                         Options
+     * @param   {Properties}            [options.properties]              Custom properties to send with
+     *                                                                    the request.
+     * @param   {Number}                [options.timeout]                 Timeout for the request.
+     * @return  {Promise}                                                 Promise.
+     */
+
   }, {
     key: 'remove',
     value: function remove(query) {
@@ -1181,7 +1257,7 @@ var DataStore = function () {
                   });
                   _query = new _query4.Query().contains('entity._id', Object.keys((0, _keyBy2.default)(localData, idAttribute)));
                   _context6.next = 17;
-                  return _this6.sync.clear(_query, options);
+                  return _this6.dataStoreSync.clear(_query, options);
 
                 case 17:
 
@@ -1190,7 +1266,7 @@ var DataStore = function () {
                     return entity[idAttribute] === localEntity[idAttribute];
                   });
                   _context6.next = 20;
-                  return _this6.sync.addDeleteOperation(_this6.collection, syncData, options);
+                  return _this6.dataStoreSync.addDeleteOperation(_this6.collection, syncData, options);
 
                 case 20:
                   if (!_this6.isOnline()) {
@@ -1275,6 +1351,18 @@ var DataStore = function () {
 
       return stream.toPromise();
     }
+
+    /**
+     * Remove a single entity in the data store by id.
+     *
+     * @param   {string}                id                               Entity by id to remove.
+     * @param   {Object}                [options]                        Options
+     * @param   {Properties}            [options.properties]             Custom properties to send with
+     *                                                                   the request.
+     * @param   {Number}                [options.timeout]                Timeout for the request.
+     * @return  {Observable}                                             Observable.
+     */
+
   }, {
     key: 'removeById',
     value: function removeById(id) {
@@ -1343,7 +1431,7 @@ var DataStore = function () {
 
                   query.equalTo('entity._id', data[idAttribute]);
                   _context7.next = 19;
-                  return _this7.sync.clear(_this7.collection, query, options);
+                  return _this7.dataStoreSync.clear(_this7.collection, query, options);
 
                 case 19:
                   _context7.next = 23;
@@ -1351,7 +1439,7 @@ var DataStore = function () {
 
                 case 21:
                   _context7.next = 23;
-                  return _this7.sync.addDeleteOperation(_this7.collection, data, options);
+                  return _this7.dataStoreSync.addDeleteOperation(_this7.collection, data, options);
 
                 case 23:
                   if (!_this7.isOnline()) {
@@ -1426,6 +1514,18 @@ var DataStore = function () {
 
       return stream.toPromise();
     }
+
+    /**
+     * Remove all entities in the data store that are stored locally.
+     *
+     * @param   {Query}                 [query]                           Query used to filter entities.
+     * @param   {Object}                [options]                         Options
+     * @param   {Properties}            [options.properties]              Custom properties to send with
+     *                                                                    the request.
+     * @param   {Number}                [options.timeout]                 Timeout for the request.
+     * @return  {Promise}                                                 Promise.
+     */
+
   }, {
     key: 'clear',
     value: function clear(query) {
@@ -1483,7 +1583,7 @@ var DataStore = function () {
 
                   syncQuery = new _query4.Query().contains('entity._id', Object.keys((0, _keyBy2.default)(data, idAttribute)));
                   _context8.next = 14;
-                  return _this8.sync.clear(syncQuery, options);
+                  return _this8.dataStoreSync.clear(syncQuery, options);
 
                 case 14:
                   _context8.next = 20;
@@ -1497,7 +1597,7 @@ var DataStore = function () {
 
                   _syncQuery = new _query4.Query().equalTo('collection', _this8.collection);
                   _context8.next = 20;
-                  return _this8.sync.clear(_syncQuery, options);
+                  return _this8.dataStoreSync.clear(_syncQuery, options);
 
                 case 20:
 
@@ -1532,7 +1632,7 @@ var DataStore = function () {
     }
 
     /**
-     * Push sync items for a collection to the network. A promise will be returned that will be
+     * Push sync items for the data store to the network. A promise will be returned that will be
      * resolved with the result of the push or rejected with an error.
      *
      * @param   {Query}                 [query]                                   Query to push a subset of items.
@@ -1571,7 +1671,7 @@ var DataStore = function () {
                 }
 
                 query.equalTo('collection', this.collection);
-                return _context9.abrupt('return', this.sync.push(query, options));
+                return _context9.abrupt('return', this.dataStoreSync.push(query, options));
 
               case 4:
                 throw new _errors.KinveyError('Unable to push because the cache is disabled.');
@@ -1592,7 +1692,7 @@ var DataStore = function () {
     }()
 
     /**
-     * Pull items for a collection from the network to your local cache. A promise will be
+     * Pull items for the data store from the network to your local cache. A promise will be
      * returned that will be resolved with the result of the pull or rejected with an error.
      *
      * @param   {Query}                 [query]                                   Query to pull a subset of items.
@@ -1614,43 +1714,88 @@ var DataStore = function () {
   }, {
     key: 'pull',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(query) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
+        var _this9 = this;
+
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var count;
-        return regeneratorRuntime.wrap(function _callee10$(_context10) {
+
+        var _ret;
+
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context10.prev = _context10.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context10.next = 7;
+                  _context11.next = 5;
                   break;
                 }
 
-                _context10.next = 3;
-                return this.syncCount(null, options);
+                return _context11.delegateYield(regeneratorRuntime.mark(function _callee10() {
+                  var count, prevOnlineState;
+                  return regeneratorRuntime.wrap(function _callee10$(_context10) {
+                    while (1) {
+                      switch (_context10.prev = _context10.next) {
+                        case 0:
+                          _context10.next = 2;
+                          return _this9.syncCount(null, options);
 
-              case 3:
-                count = _context10.sent;
+                        case 2:
+                          count = _context10.sent;
 
-                if (!(count > 0)) {
-                  _context10.next = 6;
+                          if (!(count > 0)) {
+                            _context10.next = 5;
+                            break;
+                          }
+
+                          throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
+
+                        case 5:
+                          prevOnlineState = _this9.isOnline();
+
+                          _this9.online();
+                          return _context10.abrupt('return', {
+                            v: _this9.find(query, options).toPromise().then(function (data) {
+                              if (prevOnlineState === false) {
+                                _this9.offline();
+                              }
+
+                              return data;
+                            }).catch(function (error) {
+                              if (prevOnlineState === false) {
+                                _this9.offline();
+                              }
+
+                              throw error;
+                            })
+                          });
+
+                        case 8:
+                        case 'end':
+                          return _context10.stop();
+                      }
+                    }
+                  }, _callee10, _this9);
+                })(), 't0', 2);
+
+              case 2:
+                _ret = _context11.t0;
+
+                if (!((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object")) {
+                  _context11.next = 5;
                   break;
                 }
 
-                throw new _errors.KinveyError('Unable to pull data. You must push the pending sync items first.', 'Call store.push() to push the pending sync items before you pull new data.');
+                return _context11.abrupt('return', _ret.v);
 
-              case 6:
-                return _context10.abrupt('return', this.find(query, options).toPromise());
-
-              case 7:
+              case 5:
                 throw new _errors.KinveyError('Unable to pull because the cache is disabled.');
 
-              case 8:
+              case 6:
               case 'end':
-                return _context10.stop();
+                return _context11.stop();
             }
           }
-        }, _callee10, this);
+        }, _callee11, this);
       }));
 
       function pull(_x21, _x22) {
@@ -1661,7 +1806,7 @@ var DataStore = function () {
     }()
 
     /**
-     * Sync items for a collection. This will push pending sync items first and then
+     * Sync items for the data store. This will push pending sync items first and then
      * pull items from the network into your local cache. A promise will be
      * returned that will be resolved with the result of the pull or rejected with an error.
      *
@@ -1684,29 +1829,29 @@ var DataStore = function () {
   }, {
     key: 'sync',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee11(query) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var push, pull;
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context11.next = 8;
+                  _context12.next = 8;
                   break;
                 }
 
-                _context11.next = 3;
+                _context12.next = 3;
                 return this.push(null, options);
 
               case 3:
-                push = _context11.sent;
-                _context11.next = 6;
+                push = _context12.sent;
+                _context12.next = 6;
                 return this.pull(query, options);
 
               case 6:
-                pull = _context11.sent;
-                return _context11.abrupt('return', {
+                pull = _context12.sent;
+                return _context12.abrupt('return', {
                   push: push,
                   pull: pull
                 });
@@ -1716,10 +1861,10 @@ var DataStore = function () {
 
               case 9:
               case 'end':
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this);
+        }, _callee12, this);
       }));
 
       function sync(_x24, _x25) {
@@ -1754,15 +1899,15 @@ var DataStore = function () {
   }, {
     key: 'syncCount',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee12() {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13() {
         var query = arguments.length <= 0 || arguments[0] === undefined ? new _query4.Query() : arguments[0];
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        return regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context12.next = 4;
+                  _context13.next = 4;
                   break;
                 }
 
@@ -1771,17 +1916,17 @@ var DataStore = function () {
                 }
 
                 query.equalTo('collection', this.collection);
-                return _context12.abrupt('return', this.sync.count(query, options));
+                return _context13.abrupt('return', this.dataStoreSync.count(query, options));
 
               case 4:
                 throw new _errors.KinveyError('Unable to get the sync count because the cache is disabled.');
 
               case 5:
               case 'end':
-                return _context12.stop();
+                return _context13.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
 
       function syncCount(_x27, _x28) {
@@ -1806,15 +1951,15 @@ var DataStore = function () {
   }, {
     key: 'updateCache',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee13(entities) {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14(entities) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var config, request, response;
-        return regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
                 if (!this.isCacheEnabled()) {
-                  _context13.next = 7;
+                  _context14.next = 7;
                   break;
                 }
 
@@ -1831,22 +1976,22 @@ var DataStore = function () {
                   timeout: options.timeout
                 });
                 request = new _cache2.default(config);
-                _context13.next = 5;
+                _context14.next = 5;
                 return request.execute();
 
               case 5:
-                response = _context13.sent;
-                return _context13.abrupt('return', response.data);
+                response = _context14.sent;
+                return _context14.abrupt('return', response.data);
 
               case 7:
                 throw new _errors.KinveyError('Unable to update the cache because the cache is disabled.');
 
               case 8:
               case 'end':
-                return _context13.stop();
+                return _context14.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee14, this);
       }));
 
       function updateCache(_x31, _x32) {
@@ -1917,12 +2062,12 @@ var DataStore = function () {
   }, {
     key: 'clear',
     value: function () {
-      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee14() {
+      var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee15() {
         var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
         var client, pathname, config, request, response;
-        return regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
                 client = options.client || _client2.default.sharedInstance();
                 pathname = '/' + appdataNamespace + '/' + client.appKey;
@@ -1938,19 +2083,19 @@ var DataStore = function () {
                   timeout: options.timeout
                 });
                 request = new _cache2.default(config);
-                _context14.next = 6;
+                _context15.next = 6;
                 return request.execute();
 
               case 6:
-                response = _context14.sent;
-                return _context14.abrupt('return', response.data);
+                response = _context15.sent;
+                return _context15.abrupt('return', response.data);
 
               case 8:
               case 'end':
-                return _context14.stop();
+                return _context15.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee15, this);
       }));
 
       function clear(_x35) {

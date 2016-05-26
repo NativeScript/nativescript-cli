@@ -73,8 +73,8 @@ export class DataStore {
      * @private
      * @type {Sync}
      */
-    this.sync = new Sync();
-    this.sync.client = this.client;
+    this.dataStoreSync = new Sync();
+    this.dataStoreSync.client = this.client;
 
     // The store is online and has the cache enabled by default.
     this.online();
@@ -530,7 +530,7 @@ export class DataStore {
             data = response.data;
 
             if (data.length > 0) {
-              await this.sync.addCreateOperation(this.collection, data, options);
+              await this.dataStoreSync.addCreateOperation(this.collection, data, options);
 
               if (this.isOnline()) {
                 const ids = Object.keys(keyBy(data, idAttribute));
@@ -618,7 +618,7 @@ export class DataStore {
             data = response.data;
 
             if (data.length > 0) {
-              await this.sync.addUpdateOperation(this.collection, data, options);
+              await this.dataStoreSync.addUpdateOperation(this.collection, data, options);
 
               if (this.isOnline()) {
                 const ids = Object.keys(keyBy(data, idAttribute));
@@ -724,12 +724,12 @@ export class DataStore {
               return metadata.isLocal();
             });
             const query = new Query().contains('entity._id', Object.keys(keyBy(localData, idAttribute)));
-            await this.sync.clear(query, options);
+            await this.dataStoreSync.clear(query, options);
 
             // Create delete operations for non local data in the sync table
             const syncData = xorWith(data, localData,
               (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
-            await this.sync.addDeleteOperation(this.collection, syncData, options);
+            await this.dataStoreSync.addDeleteOperation(this.collection, syncData, options);
 
             if (this.isOnline()) {
               const ids = Object.keys(keyBy(syncData, idAttribute));
@@ -808,9 +808,9 @@ export class DataStore {
             if (metadata.isLocal()) {
               const query = new Query();
               query.equalTo('entity._id', data[idAttribute]);
-              await this.sync.clear(this.collection, query, options);
+              await this.dataStoreSync.clear(this.collection, query, options);
             } else {
-              await this.sync.addDeleteOperation(this.collection, data, options);
+              await this.dataStoreSync.addDeleteOperation(this.collection, data, options);
             }
 
             if (this.isOnline()) {
@@ -886,10 +886,10 @@ export class DataStore {
 
           if (data.length > 0) {
             const syncQuery = new Query().contains('entity._id', Object.keys(keyBy(data, idAttribute)));
-            await this.sync.clear(syncQuery, options);
+            await this.dataStoreSync.clear(syncQuery, options);
           } else if (!query) {
             const syncQuery = new Query().equalTo('collection', this.collection);
-            await this.sync.clear(syncQuery, options);
+            await this.dataStoreSync.clear(syncQuery, options);
           }
 
           observer.next(data);
@@ -930,7 +930,7 @@ export class DataStore {
       }
 
       query.equalTo('collection', this.collection);
-      return this.sync.push(query, options);
+      return this.dataStoreSync.push(query, options);
     }
 
     throw new KinveyError('Unable to push because the cache is disabled.');
@@ -964,7 +964,24 @@ export class DataStore {
           'Call store.push() to push the pending sync items before you pull new data.');
       }
 
-      return this.find(query, options).toPromise();
+      const prevOnlineState = this.isOnline();
+      this.online();
+      return this.find(query, options)
+        .toPromise()
+        .then(data => {
+          if (prevOnlineState === false) {
+            this.offline();
+          }
+
+          return data;
+        })
+        .catch(error => {
+          if (prevOnlineState === false) {
+            this.offline();
+          }
+
+          throw error;
+        });
     }
 
     throw new KinveyError('Unable to pull because the cache is disabled.');
@@ -1031,7 +1048,7 @@ export class DataStore {
       }
 
       query.equalTo('collection', this.collection);
-      return this.sync.count(query, options);
+      return this.dataStoreSync.count(query, options);
     }
 
     throw new KinveyError('Unable to get the sync count because the cache is disabled.');

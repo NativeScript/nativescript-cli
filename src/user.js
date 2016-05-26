@@ -5,7 +5,7 @@ import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect, SocialIdentity } from './mic';
-import { AuthType, RequestMethod } from './requests/request';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore, DataStoreType } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
@@ -283,7 +283,7 @@ export class User {
         'Please provide both a username and password to login.'));
     }
 
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -291,11 +291,12 @@ export class User {
         host: this.client.host,
         pathname: `${this.pathname}/login`
       }),
-      data: usernameOrData,
+      body: usernameOrData,
       properties: options.properties,
       timeout: options.timeout
     });
-
+    const request = new NetworkRequest(config);
+    request.automaticallyRefreshAuthToken = false;
     const promise = request.execute().then(response => {
       this.data = response.data;
       setActiveUser(this.client, this.data);
@@ -377,6 +378,7 @@ export class User {
       properties: options.properties,
       timeout: options.timeout
     });
+    request.automaticallyRefreshAuthToken = false;
 
     const promise = request.execute()
       .catch(() => null)

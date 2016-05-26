@@ -195,7 +195,7 @@ var User = exports.User = function () {
         return Promise.reject(new _errors.KinveyError('Username and/or password missing. ' + 'Please provide both a username and password to login.'));
       }
 
-      var request = new _network.NetworkRequest({
+      var config = new _request.KinveyRequestConfig({
         method: _request.RequestMethod.POST,
         authType: _request.AuthType.App,
         url: _url2.default.format({
@@ -203,11 +203,12 @@ var User = exports.User = function () {
           host: this.client.host,
           pathname: this.pathname + '/login'
         }),
-        data: usernameOrData,
+        body: usernameOrData,
         properties: options.properties,
         timeout: options.timeout
       });
-
+      var request = new _network.NetworkRequest(config);
+      request.automaticallyRefreshAuthToken = false;
       var promise = request.execute().then(function (response) {
         _this.data = response.data;
         (0, _storage.setActiveUser)(_this.client, _this.data);
@@ -299,6 +300,7 @@ var User = exports.User = function () {
         properties: options.properties,
         timeout: options.timeout
       });
+      request.automaticallyRefreshAuthToken = false;
 
       var promise = request.execute().catch(function () {
         return null;

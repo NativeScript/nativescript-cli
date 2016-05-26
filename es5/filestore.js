@@ -13,8 +13,6 @@ var _network = require('./requests/network');
 
 var _request = require('./requests/request');
 
-var _toPromise = require('rxjs/operator/toPromise');
-
 var _datastore = require('./datastore');
 
 var _url = require('url');
@@ -37,9 +35,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 var idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-// const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
-// const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
-// const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 var filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 
 /**
@@ -142,7 +137,7 @@ var FileStore = exports.FileStore = function (_DataStore) {
 
                 stream = _get(Object.getPrototypeOf(FileStore.prototype), 'find', this).call(this, query, options);
                 _context.next = 6;
-                return _toPromise.toPromise.call(stream);
+                return stream.toPromise();
 
               case 6:
                 files = _context.sent;
@@ -221,7 +216,7 @@ var FileStore = exports.FileStore = function (_DataStore) {
 
                 stream = _get(Object.getPrototypeOf(FileStore.prototype), 'findById', this).call(this, name, options);
                 _context2.next = 6;
-                return _toPromise.toPromise.call(stream);
+                return stream.toPromise();
 
               case 6:
                 file = _context2.sent;
@@ -255,28 +250,29 @@ var FileStore = exports.FileStore = function (_DataStore) {
     value: function () {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(url) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var request, response;
+        var config, request, response;
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                request = new _network.NetworkRequest({
+                config = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.GET,
                   url: url,
                   timeout: options.timeout
                 });
 
-                request.setHeader('Accept', options.mimeType || 'application-octet-stream');
-                request.removeHeader('Content-Type');
-                request.removeHeader('X-Kinvey-Api-Version');
-                _context3.next = 6;
+                config.headers.set('Accept', options.mimeType || 'application-octet-stream');
+                config.headers.remove('Content-Type');
+                config.headers.remove('X-Kinvey-Api-Version');
+                request = new _network.NetworkRequest(config);
+                _context3.next = 7;
                 return request.execute();
 
-              case 6:
+              case 7:
                 response = _context3.sent;
                 return _context3.abrupt('return', response.data);
 
-              case 8:
+              case 9:
               case 'end':
                 return _context3.stop();
             }
@@ -329,7 +325,7 @@ var FileStore = exports.FileStore = function (_DataStore) {
       var ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(file) {
         var metadata = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
-        var createRequest, createResponse, data, uploadUrl, headers, uploadRequest;
+        var createConfig, createRequest, createResponse, data, uploadUrl, headers, uploadConfig, uploadRequest;
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
@@ -342,11 +338,8 @@ var FileStore = exports.FileStore = function (_DataStore) {
                   metadata._public = true;
                 }
 
-                createRequest = new _network.NetworkRequest({
+                createConfig = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.POST,
-                  headers: {
-                    'X-Kinvey-Content-Type': metadata.mimeType
-                  },
                   authType: _request.AuthType.Default,
                   url: _url2.default.format({
                     protocol: this.client.protocol,
@@ -359,6 +352,9 @@ var FileStore = exports.FileStore = function (_DataStore) {
                   client: this.client
                 });
 
+                createConfig.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
+                createRequest = new _network.NetworkRequest(createConfig);
+
 
                 if (metadata[idAttribute]) {
                   createRequest.method = _request.RequestMethod.PUT;
@@ -370,10 +366,10 @@ var FileStore = exports.FileStore = function (_DataStore) {
                   });
                 }
 
-                _context4.next = 8;
+                _context4.next = 10;
                 return createRequest.execute();
 
-              case 8:
+              case 10:
                 createResponse = _context4.sent;
                 data = createResponse.data;
                 uploadUrl = data._uploadURL;
@@ -388,23 +384,24 @@ var FileStore = exports.FileStore = function (_DataStore) {
                 delete data._uploadURL;
 
                 // Upload the file
-                uploadRequest = new _network.NetworkRequest({
+                uploadConfig = new _request.KinveyRequestConfig({
                   method: _request.RequestMethod.PUT,
                   url: uploadUrl,
                   data: file
                 });
 
-                uploadRequest.clearHeaders();
-                uploadRequest.addHeaders(headers);
-                _context4.next = 22;
+                uploadConfig.headers.clear();
+                uploadConfig.headers.add(headers);
+                uploadRequest = new _network.NetworkRequest(uploadConfig);
+                _context4.next = 25;
                 return uploadRequest.execute();
 
-              case 22:
+              case 25:
 
                 data._data = file;
                 return _context4.abrupt('return', data);
 
-              case 24:
+              case 27:
               case 'end':
                 return _context4.stop();
             }

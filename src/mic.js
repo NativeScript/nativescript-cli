@@ -5,7 +5,6 @@ import Client from './client';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';
-const Popup = global.KinveyPopup;
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
@@ -115,17 +114,22 @@ export class MobileIdentityConnect {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      const popup = new Popup();
-      return popup.open(url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: path.join(pathname, authPathname),
-        query: {
-          client_id: clientId,
-          redirect_uri: redirectUri,
-          response_type: 'code'
-        }
-      }));
+      if (global.KinveyPopup) {
+        const popup = new global.KinveyPopup();
+        return popup.open(url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: path.join(pathname, authPathname),
+          query: {
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            response_type: 'code'
+          }
+        }));
+      }
+
+      throw new KinveyError('KinveyPopup is undefined.'
+        + ` Unable to login authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;

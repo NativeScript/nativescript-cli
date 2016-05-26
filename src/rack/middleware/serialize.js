@@ -19,9 +19,10 @@ export class SerializeMiddleware extends KinveyMiddleware {
           request.body = JSON.stringify(request.body);
         } else if (contentType.indexOf('application/x-www-form-urlencoded') === 0) {
           const body = request.body;
+          const keys = Object.keys(body);
           const str = [];
 
-          for (const [key] of body) {
+          for (const key of keys) {
             str.push(`${global.encodeURIComponent(key)}=${global.encodeURIComponent(body[key])}`);
           }
 
