@@ -1,4 +1,5 @@
 import { KinveyError, NotFoundError } from '../../../errors';
+import { Log } from '../../../log';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
@@ -172,8 +173,9 @@ export default class IndexedDB {
           return resolve(entities);
         };
 
-        request.onerror = () => {
-          // TODO: log error
+        request.onerror = e => {
+          Log.error(`An error occurred while trying to find entities for the ${collection} collection`
+            + ` on the ${this.name} IndexedDB database. ${e.targer.error.message}.`);
           resolve([]);
         };
       }, reject);
