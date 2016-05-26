@@ -1,6 +1,8 @@
 ## Changelog
 ### 3.0.0-beta.24 (2016-05-24)
-* Enhancement: Testing automated release
+* Bugfix: Fixed query syntax bug for filtering data.
+* Bugfix (MLIBZ-897): Added more information to MIC error to help debug.
+* Enhancement (MLBIZ-1076): Added the ability to set a global app version.
 
 ### 3.0.0-beta.21 (2016-05-20)
 * Bugfix: Change main file in package.json to ./es5/kinvey.js.
