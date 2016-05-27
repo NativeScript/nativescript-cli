@@ -268,11 +268,8 @@ export class PlatformService implements IPlatformService {
 				sourceFiles = sourceFiles.filter(source => !minimatch(source, `**/${constants.TNS_MODULES_FOLDER_NAME}/**`, { nocase: true }));
 			}
 
-			// Verify .xml files are well-formed. If not valid stop the transfer.
-			if(!this.$xmlValidator.validateXmlFiles(sourceFiles).wait()){
-				this.$errors.failWithoutHelp("Invalid or not well-formed XML files detected!");
-				return false;
-			}
+			// verify .xml files are well-formed
+			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 
 			// Remove .ts and .js.map files
 			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
