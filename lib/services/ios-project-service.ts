@@ -95,7 +95,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.$errors.fail("Xcode is not installed. Make sure you have Xcode installed and added to your PATH");
 			}
 
-			let xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
+			let xcodeBuildVersion = "";
+
+			try {
+				xcodeBuildVersion = this.$childProcess.exec("xcodebuild -version | head -n 1 | sed -e 's/Xcode //'").wait();
+			} catch (error) {
+				this.$errors.fail("xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.");
+			}
+
 			let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
 			if (splitedXcodeBuildVersion.length === 3) {
 				xcodeBuildVersion = util.format("%s.%s", splitedXcodeBuildVersion[0], splitedXcodeBuildVersion[1]);
