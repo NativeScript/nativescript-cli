@@ -14,7 +14,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 ### Options
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
-* `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used.
+* `--copy-to` - Specifies the file path where the built `.ipa` or `.app` will be copied. If it points to a non-existent directory, it will be created. If the specified value is directory, the original file name will be used. The build may produce `.ipa` or `.app` depending on if you have a device attached. To have a deterministic behavior provide `--for-device` or `--release` flags for `.ipa` file, and `--emulator` for `.app` file.
 <% } %>
 <% if(isHtml) { %>
 ### Command Limitations

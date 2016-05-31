@@ -368,15 +368,56 @@ export class PlatformService implements IPlatformService {
 				this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
 			}
 
-			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
-
-			if (this.$fs.exists(targetPath).wait() && this.$fs.getFsStats(targetPath).wait().isDirectory()) {
-				let sourceFileName = path.basename(packageFile);
-				this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
-				targetPath = path.join(targetPath, sourceFileName);
+			function ext(file: string): string {
+				return path.extname(file).toLowerCase();
 			}
-			this.$fs.copyFile(packageFile, targetPath).wait();
-			this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+			function targetExt(file: string): string {
+				let e = ext(file);
+				return (e === ".ipa" || e === ".app") ? e : ".";
+			}
+
+			switch(ext(packageFile) + "->" + targetExt(targetPath)) {
+				case ".ipa->.ipa":
+					this.$logger.trace(`Copying file '${packageFile}' to '${targetPath}'...`);
+					this.$fs.copyFile(packageFile, targetPath).wait();
+					this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+					break;
+
+				case ".app->.app":
+					this.$logger.trace(`Copying directory '${packageFile}' to '${targetPath}'...`);
+					shell.cp("-Rf", packageFile + "/*", targetPath);
+					this.$logger.info(`Copied directory '${packageFile}' to '${targetPath}'.`);
+					break;
+
+				case ".ipa->.":
+				case ".app->.":
+					this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
+					if (!this.$fs.exists(targetPath).wait() || !this.$fs.getFsStats(targetPath).wait().isDirectory()) {
+						this.$logger.trace(`Expected directory for --copy-to at ${targetPath}`);
+						break;
+					}
+
+					let sourceFileName = path.basename(packageFile);
+					this.$logger.trace(`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`);
+					targetPath = path.join(targetPath, sourceFileName);
+
+					this.$logger.trace(`Copying '${packageFile}' to '${targetPath}'...`);
+					shell.cp("-Rf", packageFile, targetPath);
+					this.$logger.info(`Copied '${packageFile}' to '${targetPath}'.`);
+					break;
+
+				case ".ipa->.app":
+					this.$logger.error(`Extension mismatch when --copy-to tries to copy '${packageFile}' into '${targetPath}'. To ensure the build produces an .app provide the --emulator flag.`);
+					break;
+
+				case ".app->.ipa":
+					this.$logger.error(`Extension mismatch when --copy-to tries to copy '${packageFile}' into '${targetPath}'. To ensure the build produces an .ipa provide the --for-device or --emulator flag.`);
+					break;
+
+				default:
+					this.$logger.error(`Unsupported package for --copy-to at '${packageFile}'.`);
+					break;
+			}
 		}).future<void>()();
 	}
 
