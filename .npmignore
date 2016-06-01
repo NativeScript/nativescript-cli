@@ -24,6 +24,7 @@ hints.md
 Makefile
 README.md
 src
+.npm_cache
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 *.iml
