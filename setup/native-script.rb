@@ -114,11 +114,30 @@ install("CocoaPods", "Installing CocoaPods... This might take some time, please,
 puts "Configuring your system for Android development... This might take some time, please, be patient."
 # Note that multiple license acceptances may be required, hence the multiple commands
 # the android tool will introduce a --accept-license option in subsequent releases
+error_msg = "There seem to be some problems with the Android configuration"
+
 android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
-execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", "There seem to be some problems with the Android configuration")
-execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", "There seem to be some problems with the Android configuration")
-execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", "There seem to be some problems with the Android configuration")
-execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.2 --all --no-ui", "There seem to be some problems with the Android configuration")
-execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", "There seem to be some problems with the Android configuration")
+execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.2 --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", error_msg)
+
+puts "Do you want to install Android emulator? (y/n)"
+if gets.chomp.downcase == "y"
+  puts "Do you want to install HAXM (Hardware accelerated Android emulator)? (y/n)"
+  if gets.chomp.downcase == "y"
+    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui", error_msg)
+
+    haxm_silent_installer = File.join(ENV["ANDROID_HOME"], "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.sh")
+    execute("#{haxm_silent_installer}", "There seem to be some problems with the Android configuration")
+
+    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-x86-android-23 --all --no-ui", error_msg)
+    execute("echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f", error_msg)
+  else
+    execute("echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui", error_msg)
+    execute("echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f", error_msg)
+  end
+end
 
 puts "The ANDROID_HOME and JAVA_HOME environment variables have been added to your .profile. Restart the terminal to use them."

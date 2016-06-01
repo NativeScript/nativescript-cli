@@ -105,6 +105,20 @@ echo y | cmd /c "$androidExecutable" update sdk --filter "android-23" --all --no
 echo y | cmd /c "$androidExecutable" update sdk --filter "build-tools-23.0.2" --all --no-ui
 echo y | cmd /c "$androidExecutable" update sdk --filter "extra-android-m2repository" --all --no-ui
 
+if ((Read-Host "Do you want to install Android emulator?") -eq 'y') {
+	if ((Read-Host "Do you want to install HAXM (Hardware accelerated Android emulator)?") -eq 'y') {
+		echo y | $ANDROID_HOME/tools/android update sdk --filter extra-intel-Hardware_Accelerated_Execution_Manager --all --no-ui
+
+		$haxmSilentInstaller = [io.path]::combine($env:ANDROID_HOME, "extras", "intel", "Hardware_Accelerated_Execution_Manager", "silent_install.bat")
+		cmd /c "$haxmSilentInstaller"
+
+		echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-x86-android-23 --all --no-ui
+		echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/x86 -c 12M -f
+	} else {
+		echo y | $ANDROID_HOME/tools/android update sdk --filter sys-img-armeabi-v7a-android-23 --all --no-ui
+		echo no | $ANDROID_HOME/tools/android create avd -n Emulator-Api23-Default -t android-23 --abi default/armeabi-v7a -c 12M -f
+	}
+}
 
 Write-Host -ForegroundColor Green "This script has modified your environment. You need to log off and log back on for the changes to take effect."
 Pause
