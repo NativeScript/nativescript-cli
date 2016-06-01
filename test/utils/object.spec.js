@@ -1,18 +1,22 @@
-import { nested, isDefined } from '../../src/utils/object';
+import { hasKey, nested, isDefined } from '../../src/utils/object';
 import chai from 'chai';
 const expect = chai.expect;
 
 describe('Object Utils', function() {
-  describe('nested()', function() {
-    before(function() {
-      this.obj = {
-        foo: 'bar',
-        baz: {
-          foos: 'bars'
-        }
-      };
-    });
+  before(function() {
+    this.obj = {
+      foo: 'bar',
+      baz: {
+        foos: 'bars'
+      }
+    };
+  });
 
+  after(function() {
+    delete this.obj;
+  });
+
+  describe('nested()', function() {
     it('should return undefined for a non existent property', function() {
       expect(nested(this.obj, 'property')).to.be.undefined;
     });

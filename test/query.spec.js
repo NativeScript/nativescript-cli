@@ -4,6 +4,30 @@ import chai from 'chai';
 const expect = chai.expect;
 
 describe('Query', function () {
+  describe('isSupportedLocal()', function() {
+    it('should be false when trying to filter geo queries', function() {
+      const query = new Query();
+      query.near('loc', [0, 0]);
+      expect(query.isSupportedLocal()).to.be.false;
+    });
+
+    it('should be true', function() {
+      const query = new Query();
+      query.equalTo('foo', 'bar');
+      expect(query.isSupportedLocal()).to.be.true;
+    });
+  });
+
+  describe('process()', function() {
+    it('throw an error when a query is not supported local', function() {
+      expect(function() {
+        const query = new Query();
+        query.near('loc', [0, 0]);
+        return query.process([]);
+      }).to.throw(/This query is not able to run locally./);
+    });
+  });
+
   describe('toQueryString()', function () {
     it('should have a query property', function () {
       const query = new Query();
