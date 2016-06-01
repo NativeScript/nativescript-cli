@@ -264,16 +264,16 @@ describe('Platform Service Tests', () => {
 
 			platformService = testInjector.resolve("platformService");
 			let options : IOptions = testInjector.resolve("options");
-			options.release = release; 
+			options.release = release;
 			platformService.preparePlatform(platformToTest).wait();
-			
+
 			let test1FileName = platformToTest.toLowerCase() === "ios" ? "test1.js" : "test2.js";
 			let test2FileName = platformToTest.toLowerCase() === "ios" ? "test2.js" : "test1.js";
 
 			// Asserts that the files in app folder are process as platform specific
 			assert.isTrue(fs.exists(path.join(appDestFolderPath, "app", test1FileName)).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test1-js")).wait());
-			
+
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", test2FileName)).wait());
 			assert.isFalse(fs.exists(path.join(appDestFolderPath, "app", "test2-js")).wait());
 
@@ -293,7 +293,7 @@ describe('Platform Service Tests', () => {
 		it("should process only files in app folder when preparing for Android platform", () => {
 			testPreparePlatform("Android");
 		});
-		
+
 		it("should process only files in app folder when preparing for iOS platform", () => {
 			testPreparePlatform("iOS", true);
 		});
