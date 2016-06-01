@@ -498,7 +498,7 @@ export class Query {
    * @throws  {Error}               `data` must be of type: `Array`.
    * @returns {Array}               The processed data.
    */
-  _process(data) {
+  process(data) {
     if (data) {
       // Validate arguments.
       if (!isArray(data)) {

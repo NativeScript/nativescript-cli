@@ -122,7 +122,7 @@ export class DB {
       }
 
       if (entities.length > 0 && query) {
-        entities = query._process(entities);
+        entities = query.process(entities);
       }
 
       return entities;
