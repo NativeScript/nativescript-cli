@@ -5,7 +5,6 @@ tmp
 .DS_Store
 dist
 coverage
-tmp
 npm-debug.log
 report.xml
 docs
