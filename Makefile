@@ -13,9 +13,7 @@ build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
-	npm install -g ci-npm-publish
-	npm publish --npmuser ${NPM_USER} --npmemail ${NPM_EMAIL} --npmpassword ${NPM_PASSWORD}
-	npm uninstall -g ci-npm-publish
+	npm publish . --tag beta
 
 audit: clean install test
 release: audit build publish
