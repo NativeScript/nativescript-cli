@@ -225,7 +225,7 @@ describe("Npm support tests", () => {
 		addDependencies(testInjector, projectFolder, {}).wait();
 		//create module dir, and add a package.json
 		shelljs.mkdir("-p", scopedModule);
-		fs.writeFile(scopedPackageJson, JSON.stringify({ name: scopedName })).wait();
+		fs.writeFile(scopedPackageJson, JSON.stringify({ name: scopedName, version: "1.0.0" })).wait();
 
 		// Act
 		preparePlatform(testInjector).wait();
