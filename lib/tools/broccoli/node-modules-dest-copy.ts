@@ -44,7 +44,7 @@ export class DestCopy implements IBroccoliPlugin {
 				_.each(packageJsonFiles, packageJsonFilePath => {
 					let fileContent = require(packageJsonFilePath);
 
-					if (!this.devDependencies[fileContent.name]) { // Don't flatten dev dependencies
+					if (!this.devDependencies[fileContent.name] && fileContent.name && fileContent.version) { // Don't flatten dev dependencies and flatten only dependencies with valid package.json
 						let currentDependency = {
 							name: fileContent.name,
 							version: fileContent.version,
