@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import KinveyProvider from './provider';
 import { NetworkRack } from 'kinvey-javascript-sdk-core/es5/rack/rack';
 import { HttpMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware/http';
