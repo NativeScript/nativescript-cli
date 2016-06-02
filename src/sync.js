@@ -1,11 +1,9 @@
 import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request';
-import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors';
-import { Metadata } from './metadata';
+import { InsufficientCredentialsError, SyncError } from './errors';
 import CacheRequest from './requests/cache';
 import { NetworkRequest } from './requests/network';
 import Client from './client';
 import { Query } from './query';
-import { getSyncKey, setSyncKey } from './utils/storage';
 import url from 'url';
 import map from 'lodash/map';
 import isArray from 'lodash/isArray';
@@ -14,7 +12,6 @@ import sortedUniqBy from 'lodash/sortedUniqBy';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
-const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
  * Enum for Sync Operations.
@@ -144,18 +141,12 @@ export default class Sync {
         timeout: options.timeout
       });
       const findRequest = new CacheRequest(findConfig);
-      let syncEntity = await findRequest.execute();
-
-      // If a sync entity was not found then
-      // create one
-      if (!syncEntity) {
-        syncEntity = {
-          collection: collection,
-          state: {}
-        };
-      }
+      const response = await findRequest.execute();
+      const syncEntities = response.data;
+      const syncEntity = syncEntities.length === 1 ? syncEntities[0] : { collection: collection, state: {} };
 
       // Update the state
+      syncEntity.state = syncEntity.state || {};
       syncEntity.state.method = operation;
 
       // Update the entity
@@ -244,7 +235,7 @@ export default class Sync {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `${this.pathname}/${originalId}`
+                  pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
                 }),
                 properties: options.properties,
                 timeout: options.timeout,
