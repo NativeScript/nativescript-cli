@@ -225,5 +225,68 @@ describe('Sync', function () {
       expect(result).to.have.length(0);
       expect(result).to.deep.equal([]);
     });
+
+    it('should succeed after a failed push attempt when creating an entity', async function() {
+      const store = new DataStore(collection);
+      store.offline();
+      let entity = {
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+
+      const query = new Query();
+      query.equalTo('collection', store.collection);
+      let result = await this.sync.push(query);
+
+      expect(result).to.be.an('array');
+      expect(result).to.have.length(1);
+      expect(result[0]).to.have.property('error');
+
+      nock(this.client.baseUrl)
+        .post(store.pathname, () => true)
+        .query(true)
+        .reply(200, entity, {
+          'content-type': 'application/json'
+        });
+
+      result = await this.sync.push(query);
+      expect(result).to.be.an('array');
+      expect(result).to.have.length(1);
+      expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
+      expect(result[0]).to.not.have.property('error');
+      expect(this.sync.count()).to.eventually.equal(0);
+    });
+
+    it('should succeed after a failed push attempt when updating an entity', async function() {
+      const store = new DataStore(collection);
+      store.offline();
+      let entity = {
+        _id: randomString(),
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+
+      const query = new Query();
+      query.equalTo('collection', store.collection);
+      let result = await this.sync.push(query);
+
+      expect(result).to.be.an('array');
+      expect(result).to.have.length(1);
+      expect(result[0]).to.have.property('error');
+
+      nock(this.client.baseUrl)
+        .put(`${store.pathname}/${entity._id}`, () => true)
+        .query(true)
+        .reply(200, entity, {
+          'content-type': 'application/json'
+        });
+
+      result = await this.sync.push(query);
+      expect(result).to.be.an('array');
+      expect(result).to.have.length(1);
+      expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
+      expect(result[0]).to.not.have.property('error');
+      expect(this.sync.count()).to.eventually.equal(0);
+    });
   });
 });
