@@ -9,6 +9,14 @@ const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('Kinvey', function () {
+  afterEach(function() {
+    // Reintialize with the previous client
+    Kinvey.init({
+      appKey: this.client.appKey,
+      appSecret: this.client.appSecret
+    });
+  });
+
   describe('appVersion', function() {
     it('should set the appVersion', function() {
       const appVersion = '1.0.0';
@@ -27,12 +35,26 @@ describe('Kinvey', function () {
         appKey: randomString(),
         appSecret: randomString()
       })).to.be.an.instanceof(Client);
+    });
 
-      // Reintialize with the previous client
+    it('should set additional modules after init', function() {
       Kinvey.init({
-        appKey: this.client.appKey,
-        appSecret: this.client.appSecret
+        appKey: randomString(),
+        appSecret: randomString()
       });
+      expect(Kinvey).to.have.property('Aggregation');
+      expect(Kinvey).to.have.property('AuthorizationGrant');
+      expect(Kinvey).to.have.property('CustomEndpoint');
+      expect(Kinvey).to.have.property('DataStore');
+      expect(Kinvey).to.have.property('DataStoreType');
+      expect(Kinvey).to.have.property('FileStore');
+      expect(Kinvey).to.have.property('Log');
+      expect(Kinvey).to.have.property('Metadata');
+      expect(Kinvey).to.have.property('Query');
+      expect(Kinvey).to.have.property('SocialIdentity');
+      expect(Kinvey).to.have.property('Sync');
+      expect(Kinvey).to.have.property('User');
+      expect(Kinvey).to.have.property('UserStore');
     });
   });
 

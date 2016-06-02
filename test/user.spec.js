@@ -1,5 +1,5 @@
 import './setup';
-import { User } from '../src/user';
+import { User, UserStore } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
@@ -490,5 +490,42 @@ describe('User', function () {
     //   const promise = User.connectWithIdentity(SocialIdentity.Facebook);
     //   return expect(promise).to.be.rejectedWith(KinveyError);
     // });
+  });
+});
+
+describe('UserStore', function() {
+  beforeEach(function() {
+    return loginUser.call(this);
+  });
+
+  afterEach(function() {
+    return logoutUser.call(this);
+  });
+
+  describe('constructor', function() {
+    it('should create a user store', function() {
+      const store = new UserStore();
+      expect(store).to.be.instanceof(UserStore);
+    });
+  });
+
+  describe('update()', function() {
+    it('should update a user', async function() {
+      const user = {
+        _id: randomString(),
+        prop: randomString()
+      };
+      const store = new UserStore();
+
+      nock(this.client.baseUrl)
+        .put(`${store.pathname}/${user._id}`, () => true)
+        .query(true)
+        .reply(200, user, {
+          'content-type': 'application/json'
+        });
+
+      const updatedUser = await store.update(user);
+      expect(updatedUser).to.deep.equal(user);
+    });
   });
 });
