@@ -259,7 +259,6 @@ describe("Npm support tests", () => {
 
 	it("Ensures that tns_modules absent when bundling", () => {
 		let fs = testInjector.resolve("fs");
-		let lockfile = testInjector.resolve("lockfile");
 		let options = testInjector.resolve("options");
 		let tnsModulesFolderPath = path.join(appDestinationFolderPath, "app", "tns_modules");
 

@@ -382,8 +382,7 @@ describe("Project Service Tests", () => {
 					return (() => {
 						if (incorrectInputsCount < incorrectInputsLimit) {
 							incorrectInputsCount++;
-						}
-						else {
+						} else {
 							hasPromptedForString = true;
 
 							return validProjectName;
