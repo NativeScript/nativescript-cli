@@ -1,9 +1,10 @@
-import { RequestMethod, AuthType } from './requests/request';
+import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request';
 import { InsufficientCredentialsError, NotFoundError, SyncError } from './errors';
 import { Metadata } from './metadata';
 import CacheRequest from './requests/cache';
 import { NetworkRequest } from './requests/network';
 import Client from './client';
+import { Query } from './query';
 import { getSyncKey, setSyncKey } from './utils/storage';
 import url from 'url';
 import map from 'lodash/map';
@@ -14,6 +15,17 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
+
+/**
+ * Enum for Sync Operations.
+ */
+const SyncOperation = {
+  Create: RequestMethod.POST,
+  Update: RequestMethod.PUT,
+  Delete: RequestMethod.DELETE
+};
+Object.freeze(SyncOperation);
+export { SyncOperation };
 
 export default class Sync {
   constructor() {
@@ -77,187 +89,19 @@ export default class Sync {
     return syncEntities.length;
   }
 
-  /**
-   * Save a sync entity to the sync table with a POST method.
-   *
-   * @param   {String}        collection                  Collection name for the entity.
-   * @param   {Object|Array}  entity                      Entity to add to the sync table.
-   * @param   {Object}        [options={}]                Options
-   * @param   {Number}        [options.timeout]           Timeout for the request.
-   * @return  {Promise}                                   Promise
-   *
-   * @example
-   * var entity = {
-   *   _id: '1',
-   *   prop: 'value'
-   * };
-   * var sync = new Sync();
-   * var promise = sync.save('collectionName', entities).then(function(entity) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
   async addCreateOperation(collection, entities, options = {}) {
-    let singular = false;
-
-    // Check that a name was provided
-    if (!collection) {
-      throw new SyncError('A name for a collection must be provided to add entities to the sync table.');
-    }
-
-    // Cast the entities to an array
-    if (!isArray(entities)) {
-      singular = true;
-      entities = [entities];
-    }
-
-    // Process the array of entities
-    await Promise.all(map(entities, async entity => {
-      // Just return null if nothing was provided
-      // to be added to the sync table
-      if (!entity) {
-        return null;
-      }
-
-      // Validate that the entity has an id
-      const id = entity[idAttribute];
-      if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
-      }
-
-      // Get the sync key, increment it by 1 and save
-      let key = getSyncKey(this.client) || 0;
-      key += 1;
-      setSyncKey(this.client, key);
-
-      // Create the sync entity
-      const syncEntity = {
-        key: key,
-        collection: collection,
-        state: {
-          method: RequestMethod.POST
-        },
-        entity: entity
-      };
-
-      // Validate that the entity has an id
-      if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
-      }
-
-      // Send a request to save the sync entity
-      const request = new CacheRequest({
-        method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        body: syncEntity,
-        timeout: options.timeout
-      });
-      return request.execute();
-    }));
-
-    // Return the entity
-    return singular ? entities[0] : entities;
+    return this.addOperation(SyncOperation.Create, collection, entities, options);
   }
 
   async addUpdateOperation(collection, entities, options = {}) {
-    let singular = false;
-
-    // Check that a name was provided
-    if (!collection) {
-      throw new SyncError('A name for a collection must be provided to add entities to the sync table.');
-    }
-
-    // Cast the entities to an array
-    if (!isArray(entities)) {
-      singular = true;
-      entities = [entities];
-    }
-
-    // Process the array of entities
-    await Promise.all(map(entities, async entity => {
-      // Just return null if nothing was provided
-      // to be added to the sync table
-      if (!entity) {
-        return null;
-      }
-
-      // Validate that the entity has an id
-      const id = entity[idAttribute];
-      if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
-      }
-
-      // Get the sync key, increment it by 1 and save
-      let key = getSyncKey(this.client) || 0;
-      key += 1;
-      setSyncKey(this.client, key);
-
-      // Create the sync entity
-      const syncEntity = {
-        key: key,
-        collection: collection,
-        state: {
-          method: RequestMethod.PUT
-        },
-        entity: entity
-      };
-
-      // Validate that the entity has an id
-      if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
-      }
-
-      // Send a request to save the sync entity
-      const request = new CacheRequest({
-        method: RequestMethod.POST,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        body: syncEntity,
-        timeout: options.timeout
-      });
-      return request.execute();
-    }));
-
-    // Return the entity
-    return singular ? entities[0] : entities;
+    return this.addOperation(SyncOperation.Update, collection, entities, options);
   }
 
-  /**
-   * Save a sync entity to the sync table with a DELETE method.
-   *
-   * @param   {String}        collection                  Collection name for the entity.
-   * @param   {Object|Array}  entity                      Entity to add to the sync table.
-   * @param   {Object}        [options={}]                Options
-   * @param   {Number}        [options.timeout]           Timeout for the request.
-   * @return  {Promise}                                   Promise
-   *
-   * @example
-   * var entity = {
-   *   _id: '1',
-   *   prop: 'value'
-   * };
-   * var sync = new Sync();
-   * var promise = sync.remove('collectionName', entities).then(function(entity) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
   async addDeleteOperation(collection, entities, options = {}) {
+    return this.addOperation(SyncOperation.Delete, collection, entities, options);
+  }
+
+  async addOperation(operation = SyncOperation.Create, collection, entities, options = {}) {
     let singular = false;
 
     // Check that a name was provided
@@ -286,30 +130,40 @@ export default class Sync {
           'added to the sync table.', entity);
       }
 
-      // Get the sync key, increment it by 1 and save
-      let key = getSyncKey(this.client) || 0;
-      key += 1;
-      setSyncKey(this.client, key);
+      // Find an existing sync operation for the entity
+      const query = new Query().equalTo('entity._id', id);
+      const findConfig = new KinveyRequestConfig({
+        method: RequestMethod.GET,
+        url: url.format({
+          protocol: this.client.protocol,
+          host: this.client.host,
+          pathname: this.pathname
+        }),
+        properties: options.properties,
+        query: query,
+        timeout: options.timeout
+      });
+      const findRequest = new CacheRequest(findConfig);
+      let syncEntity = await findRequest.execute();
 
-      // Create the sync entity
-      const syncEntity = {
-        key: key,
-        collection: collection,
-        state: {
-          method: RequestMethod.DELETE
-        },
-        entity: entity
-      };
-
-      // Validate that the entity has an id
-      if (!id) {
-        throw new SyncError('An entity is missing an _id. All entities must have an _id in order to be ' +
-          'added to the sync table.', entity);
+      // If a sync entity was not found then
+      // create one
+      if (!syncEntity) {
+        syncEntity = {
+          collection: collection,
+          state: {}
+        };
       }
+
+      // Update the state
+      syncEntity.state.method = operation;
+
+      // Update the entity
+      syncEntity.entity = entity;
 
       // Send a request to save the sync entity
       const request = new CacheRequest({
-        method: RequestMethod.POST,
+        method: RequestMethod.PUT,
         url: url.format({
           protocol: this.client.protocol,
           host: this.client.host,
@@ -326,7 +180,7 @@ export default class Sync {
     return singular ? entities[0] : entities;
   }
 
-  /**
+  /*
    * Sync entities with the network. A query can be provided to
    * sync a subset of entities.
    *
