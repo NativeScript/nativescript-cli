@@ -233,10 +233,7 @@ describe('Sync', function () {
         prop: randomString()
       };
       entity = await store.save(entity);
-
-      const query = new Query();
-      query.equalTo('collection', store.collection);
-      let result = await this.sync.push(query);
+      let result = await store.push();
 
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
@@ -249,12 +246,12 @@ describe('Sync', function () {
           'content-type': 'application/json'
         });
 
-      result = await this.sync.push(query);
+      result = await store.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
       expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
       expect(result[0]).to.not.have.property('error');
-      expect(this.sync.count()).to.eventually.equal(0);
+      expect(store.syncCount()).to.eventually.equal(0);
     });
 
     it('should succeed after a failed push attempt when updating an entity', async function() {
@@ -265,10 +262,7 @@ describe('Sync', function () {
         prop: randomString()
       };
       entity = await store.save(entity);
-
-      const query = new Query();
-      query.equalTo('collection', store.collection);
-      let result = await this.sync.push(query);
+      let result = await store.push();
 
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
@@ -281,12 +275,12 @@ describe('Sync', function () {
           'content-type': 'application/json'
         });
 
-      result = await this.sync.push(query);
+      result = await store.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
       expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
       expect(result[0]).to.not.have.property('error');
-      expect(this.sync.count()).to.eventually.equal(0);
+      expect(store.syncCount()).to.eventually.equal(0);
     });
   });
 });
