@@ -180,7 +180,7 @@ describe('DataStore', function() {
       const store = new DataStore(collection);
 
       nock(this.client.baseUrl)
-        .post(`${store.pathname}/${entity._id}`, () => true)
+        .post(store.pathname, () => true)
         .query(true)
         .reply(200, entity, {
           'content-type': 'application/json'
