@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 export class MobilePlatformsCapabilities implements Mobile.IPlatformsCapabilities {
 	private platformCapabilities: IDictionary<Mobile.IPlatformCapabilities>;
 

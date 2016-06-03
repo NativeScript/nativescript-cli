@@ -1,6 +1,3 @@
-/// <reference path=".d.ts" />
-"use strict";
-
 import * as ProjectPropertiesParserLib from "../lib/common/properties-parser";
 import * as FsLib from "../lib/common/file-system";
 import * as ProjectPropertiesManagerLib from "../lib/services/android-project-properties-manager";

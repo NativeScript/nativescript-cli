@@ -108,5 +108,5 @@ $injector.require("iOSNotificationService", "./services/ios-notification-service
 $injector.require("socketProxyFactory", "./device-sockets/ios/socket-proxy-factory");
 $injector.require("iOSNotification", "./device-sockets/ios/notification");
 $injector.require("iOSSocketRequestExecutor", "./device-sockets/ios/socket-request-executor");
-$injector.require("messages", "./messages");
+$injector.require("messages", "./common/messages/messages");
 $injector.require("xmlValidator", "./xml-validator");

@@ -12,6 +12,9 @@ Lists all application records in iTunes Connect. The list contains name, version
 <% if(isHtml) { %>
 `<Apple ID>` and `<Password>` are your credentials for logging in iTunes Connect. If you do not provide them when running the command, the NativeScript CLI will prompt you to provide them.
 
+### Options
+* `--team-id` - Specified the team id for which Xcode will try to find distribution certificate and provisioning profile when exporting for AppStore submission.
+
 ### Command Limitations
 
 * You can run `$ tns appstore upload` only on OS X systems.

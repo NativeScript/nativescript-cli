@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 let node = require("../package.json").engines.node;
 // this call must be first to avoid requiring c++ dependencies
 require("./common/verify-node-version").verifyNodeVersion(node, "NativeScript", "2.2.0");

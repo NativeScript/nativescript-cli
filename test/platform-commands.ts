@@ -1,6 +1,3 @@
-/// <reference path=".d.ts" />
-"use strict";
-
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
 import * as PlatformAddCommandLib from "../lib/commands/add-platform";

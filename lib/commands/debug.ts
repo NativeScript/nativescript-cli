@@ -1,7 +1,4 @@
-﻿///<reference path="../.d.ts"/>
-"use strict";
-
-export class DebugPlatformCommand implements ICommand {
+﻿export class DebugPlatformCommand implements ICommand {
 	constructor(private debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $errors: IErrors,

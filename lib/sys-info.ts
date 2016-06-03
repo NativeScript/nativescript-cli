@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 import {SysInfoBase} from "./common/sys-info-base";
 import * as path from "path";
 

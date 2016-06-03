@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import {TreeDiffer} from './tree-differ';
 
 export class BroccoliPluginWrapper implements BroccoliTree {

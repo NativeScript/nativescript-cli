@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import { PacketStream } from "./packet-stream";
 import * as net from "net";
 import * as semver from "semver";

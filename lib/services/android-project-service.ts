@@ -1,5 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
 import * as path from "path";
 import * as shell from "shelljs";
 import Future = require("fibers/future");

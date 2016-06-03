@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class GenerateHelpCommand implements ICommand {
 	constructor(private $htmlHelpService: IHtmlHelpService) {
 	}

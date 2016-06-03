@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class PlatformProjectServiceBase implements IPlatformProjectServiceBase {
 	constructor(protected $fs: IFileSystem,
 		    protected $projectData: IProjectData,

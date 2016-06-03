@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import * as helpers from "../common/helpers";
 
 export class ListPlatformsCommand implements ICommand {

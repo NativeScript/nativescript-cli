@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 export class RemovePluginCommand implements ICommand {
 	constructor(private $pluginsService: IPluginsService,
 		private $errors: IErrors,

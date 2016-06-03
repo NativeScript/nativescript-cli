@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class InfoService implements IInfoService {
 	constructor(private $versionsService: IVersionsService,
 		private $logger: ILogger) { }

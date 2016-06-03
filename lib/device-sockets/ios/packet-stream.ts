@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import * as stream from "stream";
 
 export class PacketStream extends stream.Transform {

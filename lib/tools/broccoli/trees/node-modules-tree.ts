@@ -1,6 +1,3 @@
-///<reference path="../../../.d.ts"/>
-"use strict";
-
 let Funnel = require("broccoli-funnel");
 import destCopy from "../node-modules-dest-copy";
 

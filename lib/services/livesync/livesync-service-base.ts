@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 export abstract class LiveSyncServiceBase<T extends Mobile.IDevice> {
 	protected get device(): T {
 		return <T>(this._device);

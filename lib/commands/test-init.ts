@@ -1,7 +1,3 @@
-///<reference path="../.d.ts"/>
-
-"use strict";
-
 import * as path from 'path';
 import * as util from 'util';
 import {TESTING_FRAMEWORKS} from '../constants';

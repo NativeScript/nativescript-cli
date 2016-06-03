@@ -39,17 +39,17 @@ module.exports = function(grunt) {
 			},
 
 			devlib: {
-				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
+				src: ["lib/**/*.ts", "!lib/common/node_modules/**/*.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			devall: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/common/test/.d.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "lib/common/test/unit-tests/**/*.ts", "definitions/**/*.ts", "!lib/common/test/.d.ts"],
 				reference: "lib/.d.ts"
 			},
 
 			release_build: {
-				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts", "!lib/common/messages/**/*.ts"],
+				src: ["lib/**/*.ts", "test/**/*.ts", "!lib/common/node_modules/**/*.ts"],
 				reference: "lib/.d.ts",
 				options: {
 					sourceMap: false,

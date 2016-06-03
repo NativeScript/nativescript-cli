@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import {DeviceAndroidDebugBridge} from "../../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
 import Future = require("fibers/future");

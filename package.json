@@ -10,9 +10,12 @@
   },
   "main": "./lib/nativescript-cli.js",
   "scripts": {
-    "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha -- --ui mocha-fibers --recursive --reporter spec --require test/test-bootstrap.js --timeout 150000 test/ lib/common/test/unit-tests",
+    "test": "node_modules/.bin/istanbul cover node_modules/mocha/bin/_mocha",
     "postinstall": "node postinstall.js",
-    "preuninstall": "node preuninstall.js"
+    "preuninstall": "node preuninstall.js",
+    "mocha": "mocha",
+    "tsc": "tsc",
+    "test-watch": "node ./dev/tsc-to-mocha-watch.js"
   },
   "repository": {
     "type": "git",
@@ -88,8 +91,9 @@
     "grunt-ts": "4.2.0",
     "grunt-tslint": "3.0.1",
     "istanbul": "0.3.19",
-    "mocha": "2.2.5",
-    "mocha-fibers": "https://github.com/Icenium/mocha-fibers/tarball/master",
+    "mocha": "2.5.3",
+    "mocha-fibers": "1.1.1",
+    "mocha-typescript": "1.0.3",
     "should": "7.0.2",
     "tslint": "3.2.1",
     "typescript": "^1.8.10"

@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import Future = require("fibers/future");
 
 export class IOSNotificationService implements IiOSNotificationService {

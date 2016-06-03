@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 import * as path from "path";
 import * as semver from "semver";
 import * as npm from "npm";

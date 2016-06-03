@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class BuildCommandBase {
 	constructor(protected $options: IOptions,
 		private $platformService: IPlatformService) { }

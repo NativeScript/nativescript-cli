@@ -1,5 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
 import * as deviceAppDataBaseLib from "../common/mobile/device-app-data/device-app-data-base";
 import Future = require("fibers/future");
 import * as path from "path";

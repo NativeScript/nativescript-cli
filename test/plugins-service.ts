@@ -1,6 +1,3 @@
-/// <reference path=".d.ts" />
-"use strict";
-
 import {Yok} from '../lib/common/yok';
 import future = require("fibers/future");
 import * as stubs from './stubs';

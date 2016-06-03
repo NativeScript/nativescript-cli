@@ -1,7 +1,3 @@
-///<reference path="../.d.ts"/>
-
-"use strict";
-
 function RunTestCommandFactory(platform: string) {
 	return function RunTestCommand($testExecutionService: ITestExecutionService) {
 		this.execute = (args: string[]): IFuture<void> => $testExecutionService.startTestRunner(platform);
