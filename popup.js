@@ -87,11 +87,11 @@ export class PhoneGapPopup extends EventEmitter {
   }
 
   loadStopCallback(event) {
-    this.emit('loaded', event.url);
+    this.emit('loaded', event);
   }
 
   loadErrorCallback(event) {
-    this.emit('error', event.message);
+    this.emit('error', event);
   }
 
   exitCallback() {
