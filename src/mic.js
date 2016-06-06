@@ -135,7 +135,7 @@ export class MobileIdentityConnect {
         let redirected = false;
 
         function loadCallback(event) {
-          if (event.url.indexOf(redirectUri) === 0) {
+          if (event.url.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
@@ -144,16 +144,17 @@ export class MobileIdentityConnect {
         }
 
         function errorCallback(event) {
-          popup.removeAllListeners();
-          popup.close();
-          reject(new Error(event.message));
+          if (redirected === false) {
+            popup.removeAllListeners();
+            popup.close();
+            reject(new KinveyError(event.message, '', event.code));
+          }
         }
 
         function closedCallback() {
-          popup.removeAllListeners();
-
-          if (!redirected) {
-            reject(new Error('Login has been cancelled.'));
+          if (redirected === false) {
+            popup.removeAllListeners();
+            reject(new KinveyError('Login has been cancelled.'));
           }
         }
 
