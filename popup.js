@@ -104,6 +104,7 @@ export class PhoneGapPopup extends EventEmitter {
     clearInterval(this.interval);
 
     if (PhoneGapDevice.isPhoneGap()) {
+      this.popup.removeEventListener('loadstart', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loadstop', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loaderror', this.eventListeners.loadErrorCallback);
       this.popup.removeEventListener('exit', this.eventListeners.exitCallback);
