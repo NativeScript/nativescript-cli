@@ -7,6 +7,8 @@ import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
+import chaiAsPromised from 'chai-as-promised';
+chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
 const collection = 'tests';
@@ -180,7 +182,7 @@ describe('DataStore', function() {
       const store = new DataStore(collection);
 
       nock(this.client.baseUrl)
-        .post(`${store.pathname}/${entity._id}`, () => true)
+        .post(store.pathname, () => true)
         .query(true)
         .reply(200, entity, {
           'content-type': 'application/json'
@@ -390,6 +392,88 @@ describe('DataStore', function() {
           expect(data[1].prop).to.equal(entity2.prop);
         });
       });
+    });
+  });
+
+  describe('sync()', function() {
+    it('should fail when not all items are pushed', function() {
+      const entity = {
+        prop: randomString()
+      };
+      const store = DataStore.collection(collection, DataStoreType.Sync);
+
+      nock(this.client.baseUrl)
+        .post(store.pathname)
+        .query(true)
+        .reply(504, 'Time out', {
+          'content-type': 'application/json'
+        });
+
+      const promise = store.create(entity).then(data => {
+        expect(data).to.have.property('_id');
+        expect(data.prop).to.be.equal(entity.prop);
+        return store.sync();
+      });
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should succeed when all items are pushed', function() {
+      const store = DataStore.collection(collection, DataStoreType.Sync);
+      const _id = randomString();
+      const prop = randomString();
+      let localId;
+
+      nock(this.client.baseUrl)
+        .post(store.pathname)
+        .query(true)
+        .reply(201, {
+          _id: _id,
+          prop: prop
+        }, {
+          'content-type': 'application/json'
+        });
+
+      nock(this.client.baseUrl)
+        .get(store.pathname)
+        .query(true)
+        .reply(200, [{
+          _id: _id,
+          prop: prop
+        }], {
+          'content-type': 'application/json'
+        });
+
+      const promise = store.create({ prop: prop }).then(data => {
+        expect(data).to.have.property('_id');
+        expect(data.prop).to.be.equal(prop);
+        localId = data._id;
+        return store.sync();
+      }).then(result => {
+        expect(result).to.have.property('push');
+        expect(result).to.have.property('pull');
+
+        const push = result.push;
+        const pull = result.pull;
+        expect(push).to.be.an('array');
+        expect(push.length).to.equal(1);
+        expect(push).to.deep.equal([{
+          _id: localId,
+          entity: {
+            _id: _id,
+            _kmd: {},
+            prop: prop
+          }
+        }]);
+        expect(pull).to.be.an('array');
+        expect(pull.length).to.equal(1);
+        expect(pull).to.deep.equal([{
+          _id: _id,
+          _kmd: {},
+          prop: prop
+        }]);
+      });
+
+      return expect(promise).to.be.fulfilled;
     });
   });
 

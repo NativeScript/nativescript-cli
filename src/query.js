@@ -8,6 +8,8 @@ import isObject from 'lodash/isObject';
 import isRegExp from 'lodash/isRegExp';
 import isEmpty from 'lodash/isEmpty';
 import forEach from 'lodash/forEach';
+import findKey from 'lodash/findKey';
+const unsupportedFilters = ['$nearSphere'];
 
 export class Query {
   constructor(options) {
@@ -143,6 +145,17 @@ export class Query {
     } else {
       this.querySkip = skip;
     }
+  }
+
+  isSupportedLocal() {
+    let supported = true;
+
+    forEach(unsupportedFilters, filter => {
+      supported = !findKey(this.filter, filter);
+      return supported;
+    });
+
+    return supported;
   }
 
   /**
@@ -336,12 +349,9 @@ export class Query {
   }
 
   near(field, coord, maxDistance) {
-    if (!isArray(coord) || !coord[0] || !coord[1]) {
+    if (!isArray(coord) || !isNumber(coord[0]) || !isNumber(coord[1])) {
       throw new Error('coord must be a [number, number]');
     }
-
-    coord[0] = parseFloat(coord[0]);
-    coord[1] = parseFloat(coord[1]);
 
     const result = this.addFilter(field, '$nearSphere', [coord[0], coord[1]]);
 
@@ -498,7 +508,18 @@ export class Query {
    * @throws  {Error}               `data` must be of type: `Array`.
    * @returns {Array}               The processed data.
    */
-  _process(data) {
+  process(data) {
+    if (!this.isSupportedLocal()) {
+      let message = 'This query is not able to run locally. The following filters are not supported'
+        + ' locally:';
+
+      forEach(unsupportedFilters, filter => {
+        message = `${message} ${filter}`;
+      });
+
+      throw new Error(message);
+    }
+
     if (data) {
       // Validate arguments.
       if (!isArray(data)) {

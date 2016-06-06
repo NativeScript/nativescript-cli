@@ -960,8 +960,9 @@ export class DataStore {
       const count = await this.syncCount(null, options);
 
       if (count > 0) {
-        throw new KinveyError('Unable to pull data. You must push the pending sync items first.',
-          'Call store.push() to push the pending sync items before you pull new data.');
+        throw new KinveyError(`${count} items could not be pushed to the backend.`
+          + ' You must push all pending sync items before new data is pulled.',
+          'Call push() on the data store instance to push the remaining sync items.');
       }
 
       const prevOnlineState = this.isOnline();
