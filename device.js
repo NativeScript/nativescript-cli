@@ -18,6 +18,18 @@ export class PhoneGapDevice {
   }
 
   static toJSON() {
+    const json = {
+      device: {},
+      platform: {
+        name: 'phonegap'
+      },
+      os: {},
+      kinveySDK: {
+        name: packageJSON.name,
+        version: packageJSON.version
+      }
+    };
+
     if (PhoneGapDevice.isBrowser()) {
       const userAgent = global.navigator.userAgent.toLowerCase();
       const rChrome = /(chrome)\/([\w]+)/;
@@ -32,40 +44,18 @@ export class PhoneGapDevice {
                       rSafari.exec(userAgent) ||
                       [];
 
-      return {
-        device: {
-          model: global.navigator.userAgent
-        },
-        platform: {
-          name: 'phonegap',
-        },
-        os: {
-          name: browser[1],
-          version: browser[2]
-        },
-        kinveySDK: {
-          name: packageJSON.name,
-          version: packageJSON.version
-        }
-      };
+      json.device.model = global.navigator.userAgent;
+      json.os.name = browser[1];
+      json.os.version = browser[2];
+    } else {
+      if (typeof global.device !== 'undefined') {
+        json.device.model = global.device.model;
+        json.platform.version = global.device.cordova;
+        json.os.name = global.device.platform;
+        json.os.version = global.device.version;
+      }
     }
 
-    return {
-      device: {
-        model: global.device.model
-      },
-      platform: {
-        name: 'phonegap',
-        version: global.device.cordova
-      },
-      os: {
-        name: global.device.platform,
-        version: global.device.version
-      },
-      kinveySDK: {
-        name: packageJSON.name,
-        version: packageJSON.version
-      }
-    };
+    return json;
   }
 }
