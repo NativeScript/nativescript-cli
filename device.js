@@ -37,11 +37,13 @@ export class PhoneGapDevice {
       const rIE = /(msie) ([\w.]+)/i;
       const rOpera = /(opera)(?:.*version)?[ \/]([\w.]+)/;
       const rSafari = /(safari)\/([\w.]+)/;
+      const rAppleWebkit = /(applewebkit)\/([\w.]+)/;
       const browser = rChrome.exec(userAgent) ||
                       rFirefox.exec(userAgent) ||
                       rIE.exec(userAgent) ||
                       rOpera.exec(userAgent) ||
                       rSafari.exec(userAgent) ||
+                      rAppleWebkit.exec(userAgent) ||
                       [];
 
       json.device.model = global.navigator.userAgent;
