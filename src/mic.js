@@ -134,19 +134,19 @@ export class MobileIdentityConnect {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        function loadedCallback(loadedUrl) {
-          if (loadedUrl.indexOf(redirectUri) === 0) {
+        function loadCallback(event) {
+          if (event.url.indexOf(redirectUri) === 0) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
-            resolve(url.parse(loadedUrl, true).query.code);
+            resolve(url.parse(event.url, true).query.code);
           }
         }
 
-        function errorCallback(message) {
+        function errorCallback(event) {
           popup.removeAllListeners();
           popup.close();
-          reject(new Error(message));
+          reject(new Error(event.message));
         }
 
         function closedCallback() {
@@ -157,7 +157,8 @@ export class MobileIdentityConnect {
           }
         }
 
-        popup.on('loaded', loadedCallback);
+        popup.on('loadstart', loadCallback);
+        popup.on('loadstop', loadCallback);
         popup.on('error', errorCallback);
         popup.on('closed', closedCallback);
       });
