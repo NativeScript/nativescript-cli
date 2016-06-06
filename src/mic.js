@@ -144,7 +144,12 @@ export class MobileIdentityConnect {
         }
 
         function errorCallback(event) {
-          if (redirected === false) {
+          if (event.url.indexOf(redirectUri) === 0 && redirected === false) {
+            redirected = true;
+            popup.removeAllListeners();
+            popup.close();
+            resolve(url.parse(event.url, true).query.code);
+          } else if (redirected === false) {
             popup.removeAllListeners();
             popup.close();
             reject(new KinveyError(event.message, '', event.code));
