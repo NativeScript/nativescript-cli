@@ -6,6 +6,7 @@ All you need to do to start debugging your app is to execute `tns debug android`
 
 Usage | Synopsis
 ---|---
+Deploy on device, run the app and attach the debugger | `$ tns debug android`
 Deploy on device, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Deploy in the native emulator, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
 Deploy in Genymotion, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --geny <Geny Name> [--timeout <timeout>]`
