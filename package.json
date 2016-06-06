@@ -92,7 +92,7 @@
     "mocha-fibers": "https://github.com/Icenium/mocha-fibers/tarball/master",
     "should": "7.0.2",
     "tslint": "3.2.1",
-    "typescript": "1.7.5"
+    "typescript": "^1.8.10"
   },
   "license": "Apache-2.0",
   "engines": {
