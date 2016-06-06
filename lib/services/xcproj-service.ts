@@ -39,7 +39,7 @@ class XcprojService implements IXcprojService {
 				let cocoapodVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
 					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
 
-				if(!semver.valid(cocoapodVer)) {
+				if(cocoapodVer && !semver.valid(cocoapodVer)) {
 					// Cocoapods betas have names like 1.0.0.beta.8
 					// These 1.0.0 betas are not valid semver versions, but they are working fine with XCode 7.3
 					// So get only the major.minor.patch version and consider them as 1.0.0
@@ -50,7 +50,7 @@ class XcprojService implements IXcprojService {
 				// CocoaPods with version lower than 1.0.0 don't support Xcode 7.3 yet
 				// https://github.com/CocoaPods/CocoaPods/issues/2530#issuecomment-210470123
 				// as a result of this all .pbxprojects touched by CocoaPods get converted to XML plist format
-				let shouldUseXcproj = !!(semver.lt(cocoapodVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0")),
+				let shouldUseXcproj = cocoapodVer && !!(semver.lt(cocoapodVer, "1.0.0") && ~helpers.versionCompare(xcodeVersion, "7.3.0")),
 					xcprojAvailable: boolean;
 
 				if (shouldUseXcproj) {
