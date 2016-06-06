@@ -1,23 +1,6 @@
 import packageJSON from '../package.json';
-let online = global.navigator.onLine;
-
-global.document.addEventListener('online', () => {
-  online = true;
-}, false);
-
-global.document.addEventListener('offline', () => {
-  online = false;
-}, false);
 
 export class PhoneGapDevice {
-  static isOnline() {
-    return online;
-  }
-
-  static networkState() {
-    return undefined;
-  }
-
   static isPhoneGap() {
     return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
   }
