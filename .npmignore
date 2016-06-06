@@ -23,6 +23,7 @@ gulpfile.babel.js
 hints.md
 Makefile
 README.md
+bower.json
 src
 .npm_cache
 
