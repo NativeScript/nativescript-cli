@@ -1,4 +1,14 @@
 ## Changelog
+### 3.0.0-beta.25 (2016-06-06)
+* Bugfix (MLIBZ-1100): Improve error message when a sync failure occurs.
+* Bugfix (MLIBZ-1082): Check that a query is able to be run loccaly before it is processed.
+* Bugfix (MLIBZ-1114): Do not remove entity data when a sync failure occurs.
+* Bugfix (MLIBZ-1117): Add `isEmailVerified()` to the `User` class.
+
+* Bugfix: Fixed query syntax bug for filtering data.
+* Bugfix (MLIBZ-897): Added more information to MIC error to help debug.
+* Enhancement (MLBIZ-1076): Added the ability to set a global app version.
+
 ### 3.0.0-beta.24 (2016-05-24)
 * Bugfix: Fixed query syntax bug for filtering data.
 * Bugfix (MLIBZ-897): Added more information to MIC error to help debug.
