@@ -8,7 +8,6 @@ export class PhoneGapPopup extends EventEmitter {
 
     // Create some event listeners
     this.eventListeners = {
-      loadStartCallback: bind(this.loadStartCallback, this),
       loadStopCallback: bind(this.loadStopCallback, this),
       loadErrorCallback: bind(this.loadErrorCallback, this),
       exitCallback: bind(this.exitCallback, this)
@@ -46,7 +45,6 @@ export class PhoneGapPopup extends EventEmitter {
 
       // Listen for popup events
       if (this.popup) {
-        this.popup.addEventListener('loadstart', this.eventListeners.loadStartCallback);
         this.popup.addEventListener('loadstop', this.eventListeners.loadStopCallback);
         this.popup.addEventListener('loaderror', this.eventListeners.loadErrorCallback);
         this.popup.addEventListener('exit', this.eventListeners.exitCallback);
@@ -88,23 +86,18 @@ export class PhoneGapPopup extends EventEmitter {
     return this;
   }
 
-  loadStartCallback(event) {
-    this.emit('loadstart', event);
-  }
-
   loadStopCallback(event) {
-    this.emit('loadstop', event);
+    this.emit('loaded', event.url);
   }
 
   loadErrorCallback(event) {
-    this.emit('error', event);
+    this.emit('error', event.message);
   }
 
   exitCallback() {
     clearInterval(this.interval);
 
     if (PhoneGapDevice.isPhoneGap()) {
-      this.popup.removeEventListener('loadstart', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loadstop', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loaderror', this.eventListeners.loadErrorCallback);
       this.popup.removeEventListener('exit', this.eventListeners.exitCallback);
