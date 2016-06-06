@@ -1,10 +1,11 @@
 debug ios
 ==========
-All you need to do to start debugging your app is to execute `tns debug ios`. The NativeScript CLI will build, deploy, start your app, start Chrome DevTools and attach the debugger.
+All you need to do to start debugging your app is to execute `tns debug ios`. The NativeScript CLI will build, deploy, start your app, start Safari Web Inspector and attach the debugger.
 * You cannot debug if there are multiple devices available (emulators and/or real devices). You need to have started only one device or emulator.
 
 Usage | Synopsis
 ---|---
+Deploy on device, run the app and attach the debugger | `$ tns debug ios`
 Deploy on device, run the app and stop at the first breakpoint | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
 Deploy in the iOS Simulator, run the app and stop at the first breakpoint | `$ tns debug ios --debug-brk --emulator [<Emulator Options>] [--no-client]`
 Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--no-client]`
