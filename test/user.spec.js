@@ -190,6 +190,32 @@ describe('User', function () {
     });
   });
 
+  describe('isEmailVerified', function() {
+    it('should return false if the users email is not verified', function() {
+      const user = new User({
+        _kmd: {
+          emailVerification: {
+            status: 'sent'
+          }
+        }
+      });
+      const status = user.isEmailVerified();
+      return expect(status).to.to.be.false;
+    });
+
+    it('should return true if the users email is verified', function() {
+      const user = new User({
+        _kmd: {
+          emailVerification: {
+            status: 'confirmed'
+          }
+        }
+      });
+      const status = user.isEmailVerified();
+      expect(status).to.to.be.true;
+    });
+  });
+
   describe('login()', function() {
     afterEach(function() {
       return logoutUser.call(this);
