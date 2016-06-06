@@ -752,6 +752,11 @@ export class User {
     return promise;
   }
 
+  isEmailVerified() {
+    const status = this.metadata.emailVerification;
+    return status === 'confirmed';
+  }
+
   verifyEmail(options = {}) {
     const request = new NetworkRequest({
       method: RequestMethod.POST,
