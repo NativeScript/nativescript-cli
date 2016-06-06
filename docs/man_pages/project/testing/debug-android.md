@@ -1,6 +1,9 @@
 debug android
 ==========
 
+All you need to do to start debugging your app is to execute `tns debug android`. The NativeScript CLI will build, deploy, start your app, start Chrome DevTools and attach the debugger.
+* You cannot debug if there are multiple devices available (emulators and/or real devices). You need to have started only one device or emulator.
+
 Usage | Synopsis
 ---|---
 Deploy on device, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`

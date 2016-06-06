@@ -43,21 +43,23 @@ class IOSDebugService implements IDebugService {
             this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
         }
 
-        if(!this.$options.debugBrk && !this.$options.start) {
-            this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");
-            this.$options.debugBrk = true;
-        }
-
         if (this.$options.emulator) {
             if (this.$options.debugBrk) {
-                return this.emulatorDebugBrk();
+                return this.emulatorDebugBrk(true);
             } else if (this.$options.start) {
                 return this.emulatorStart();
+            } else {
+                return this.emulatorDebugBrk();
             }
         } else {
             if (this.$options.debugBrk) {
-                return this.deviceDebugBrk();
+                return this.deviceDebugBrk(true);
             } else if (this.$options.start) {
+                return this.deviceStart();
+            } else {
+                let deploy = this.$platformService.deployOnDevice(this.platform);
+                deploy.wait();
+
                 return this.deviceStart();
             }
         }
@@ -72,14 +74,15 @@ class IOSDebugService implements IDebugService {
         }).future<void>()();
     }
 
-    private emulatorDebugBrk(): IFuture<void> {
+    private emulatorDebugBrk(shouldBreak? : boolean): IFuture<void> {
         return (() => {
             let platformData = this.$platformsData.getPlatformData(this.platform);
             this.$platformService.buildPlatform(this.platform).wait();
             let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
+            let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
             let child_process = this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, { waitForDebugger: true, captureStdin: true,
-                args: "--nativescript-debug-brk", appId: this.$projectData.projectId }).wait();
+                args: args, appId: this.$projectData.projectId }).wait();
             let lineStream = byline(child_process.stdout);
 
             lineStream.on('data', (line: NodeBuffer) => {
@@ -108,12 +111,12 @@ class IOSDebugService implements IDebugService {
         }).future<void>()();
     }
 
-    private deviceDebugBrk(): IFuture<void> {
+    private deviceDebugBrk(shouldBreak? : boolean): IFuture<void> {
         return (() => {
             this.$devicesService.initialize({ platform: this.platform, deviceId: this.$options.device }).wait();
             this.$devicesService.execute((device: iOSDevice.IOSDevice) => (() => {
                 if(device.isEmulator) {
-                    return this.emulatorDebugBrk().wait();
+                    return this.emulatorDebugBrk(shouldBreak).wait();
                 }
                 // we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
                 let deploy = this.$platformService.deployOnDevice(this.platform);

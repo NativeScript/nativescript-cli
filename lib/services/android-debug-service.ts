@@ -106,12 +106,7 @@ class AndroidDebugService implements IDebugService {
 		return (() => {
 			let packageFile = "";
 
-			if (!this.$options.debugBrk && !this.$options.start && !this.$options.getPort && !this.$options.stop) {
-				this.$logger.warn("Neither --debug-brk nor --start option was specified. Defaulting to --debug-brk.");
-				this.$options.debugBrk = true;
-			}
-
-			if (this.$options.debugBrk && !this.$options.emulator) {
+			if (!this.$options.start && !this.$options.emulator) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
 				this.$platformService.buildPlatform(this.platform).wait();
@@ -141,6 +136,11 @@ class AndroidDebugService implements IDebugService {
 				this.detachDebugger(packageName).wait();
 			} else if (this.$options.debugBrk) {
 				this.startAppWithDebugger(packageFile, packageName).wait();
+			} else {
+				this.startAppWithDebugger(packageFile, packageName).wait();
+				//TODO: Find different way to make sure that the app is started.
+				sleep(500);
+				this.attachDebugger(device.deviceInfo.identifier, packageName).wait();
 			}
 		}).future<void>()();
 	}
@@ -197,33 +197,38 @@ class AndroidDebugService implements IDebugService {
 			// Arguments passed to executeShellCommand must be in array ([]), but it turned out adb shell "arg with intervals" still works correctly.
 			// As we need to redirect output of a command on the device, keep using only one argument.
 			// We could rewrite this with two calls - touch and rm -f , but -f flag is not available on old Android, so rm call will fail when file does not exist.
-			this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${packageName}-debugbreak`]).wait();
+
+			if(this.$options.debugBrk) {
+				this.device.adb.executeShellCommand([`cat /dev/null > /data/local/tmp/${packageName}-debugbreak`]).wait();
+			}
 
 			this.device.applicationManager.stopApplication(packageName).wait();
 			this.device.applicationManager.startApplication(packageName).wait();
 
-			let waitText: string = `0 /data/local/tmp/${packageName}-debugbreak`;
-			let maxWait = 12;
-			let debugerStarted: boolean = false;
-			while (maxWait > 0 && !debugerStarted) {
-				let forwardsResult = this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugbreak`]).wait();
-				maxWait--;
-				debugerStarted = forwardsResult.indexOf(waitText) === -1;
-				if (!debugerStarted) {
-					sleep(500);
+			if(this.$options.debugBrk) {
+				let waitText: string = `0 /data/local/tmp/${packageName}-debugbreak`;
+				let maxWait = 12;
+				let debugerStarted: boolean = false;
+				while (maxWait > 0 && !debugerStarted) {
+					let forwardsResult = this.device.adb.executeShellCommand(["ls", "-s", `/data/local/tmp/${packageName}-debugbreak`]).wait();
+					maxWait--;
+					debugerStarted = forwardsResult.indexOf(waitText) === -1;
+					if (!debugerStarted) {
+						sleep(500);
+					}
 				}
-			}
 
-			if (debugerStarted) {
-				this.$logger.info("# NativeScript Debugger started #");
-			} else {
-				this.$logger.warn("# NativeScript Debugger did not start in time #");
-			}
+				if (debugerStarted) {
+					this.$logger.info("# NativeScript Debugger started #");
+				} else {
+					this.$logger.warn("# NativeScript Debugger did not start in time #");
+				}
 
-			if (this.$options.client) {
-				let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
-				this.startDebuggerClient(localDebugPort).wait();
-				this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
+				if (this.$options.client) {
+					let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
+					this.startDebuggerClient(localDebugPort).wait();
+					this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
+				}
 			}
 		}).future<void>()();
 	}
