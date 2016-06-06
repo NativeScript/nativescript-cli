@@ -63,8 +63,6 @@ class IOSDebugService implements IDebugService {
                 return this.deviceStart();
             }
         }
-
-        this.$errors.failWithoutHelp("Failed to select device or emulator to debug on.");
     }
 
     public debugStart(): IFuture<void> {
