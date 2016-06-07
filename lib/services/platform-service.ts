@@ -482,28 +482,8 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		return (() => {
-			let packageFile: string, logFilePath: string;
-			this.ensurePlatformInstalled(platform).wait();
-			platform = platform.toLowerCase();
-
-			let platformData = this.$platformsData.getPlatformData(platform);
-			let emulatorServices = platformData.emulatorServices;
-
-			emulatorServices.checkAvailability().wait();
-			emulatorServices.checkDependencies().wait();
-
-			if (!this.$options.availableDevices) {
-				this.buildPlatform(platform, buildConfig).wait();
-
-				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
-				this.$logger.out("Using ", packageFile);
-
-				logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
-			}
-
-			emulatorServices.runApplicationOnEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
-		}).future<void>()();
+		this.$options.emulator = true;
+		return this.deployOnDevice(platform, buildConfig);
 	}
 
 	public validatePlatform(platform: string): void {
