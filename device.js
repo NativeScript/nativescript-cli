@@ -49,13 +49,11 @@ export class PhoneGapDevice {
       json.device.model = global.navigator.userAgent;
       json.os.name = browser[1];
       json.os.version = browser[2];
-    } else {
-      if (typeof global.device !== 'undefined') {
-        json.device.model = global.device.model;
-        json.platform.version = global.device.cordova;
-        json.os.name = global.device.platform;
-        json.os.version = global.device.version;
-      }
+    } else if (typeof global.device !== 'undefined') {
+      json.device.model = global.device.model;
+      json.platform.version = global.device.cordova;
+      json.os.name = global.device.platform;
+      json.os.version = global.device.version;
     }
 
     return json;

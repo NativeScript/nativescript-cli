@@ -18,7 +18,7 @@ class PhoneGapKinvey extends Kinvey {
       const onDeviceReady = () => {
         document.removeEventListener('deviceready', onDeviceReady);
 
-        if (!global.device) {
+        if (typeof global.device === 'undefined') {
           throw new KinveyError('Cordova Device Plugin is not installed.',
             'Please refer to http://devcenter.kinvey.com/phonegap-v3.0/guides/push#ProjectSetUp for help with'
             + ' setting up your project.');

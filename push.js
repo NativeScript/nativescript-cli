@@ -76,7 +76,7 @@ export class PhoneGapPush extends EventEmitter {
           'push notifications on iOS and Android platforms.'));
       }
 
-      if (!global.PushNotification) {
+      if (typeof global.PushNotification === 'undefined') {
         throw new KinveyError('PhoneGap Push Notification Plugin is not installed.',
           'Please refer to http://devcenter.kinvey.com/phonegap-v3.0/guides/push#ProjectSetUp for help with ' +
           'setting up your project.');
