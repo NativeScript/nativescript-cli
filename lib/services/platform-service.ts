@@ -1,7 +1,6 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
-import * as child_process from "child_process";
 import * as path from "path";
 import * as shell from "shelljs";
 import * as constants from "../constants";
@@ -35,7 +34,8 @@ export class PlatformService implements IPlatformService {
 		private $xmlValidator: IXmlValidator,
 		private $npm: INodePackageManager,
 		private $sysInfo: ISysInfo,
-		private $staticConfig: Config.IStaticConfig) { }
+		private $staticConfig: Config.IStaticConfig,
+		private $childProcess: IChildProcess) { }
 
 	public addPlatforms(platforms: string[]): IFuture<void> {
 		return (() => {
@@ -485,20 +485,47 @@ export class PlatformService implements IPlatformService {
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		platform = platform.toLowerCase();
 
-		if (this.$options.availableDevices) {
+		if (this.$options.avd) {
+			this.$logger.warn(`Option --avd is no longer supported. Please use --device isntead!`);
+		}
+
+		if (this.$options.availableDevices || this.$options.device || this.$options.avd) {
 			return (() => {
-				let callback = (error: Error, stdout: Buffer, stderr: Buffer) => {
-					if (error !== null) {
-						this.$errors.fail(error);
-					} else {
-						this.$logger.info(stdout);
-					}
-				};
+				let devices: string;
 
 				if (this.$mobileHelper.isiOSPlatform(platform)) {
-					child_process.exec("instruments -s devices", callback);
+					devices = this.$childProcess.exec("instruments -s devices").wait();
 				} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
-					child_process.exec("android list avd", callback);
+					let androidPath = path.join(process.env.ANDROID_HOME, "tools", "android");
+					devices = this.$childProcess.exec(`${androidPath} list avd`).wait();
+				}
+
+				if(this.$options.availableDevices) {
+					this.$logger.info(devices);
+				}
+
+				if(this.$options.device || this.$options.avd) {
+					let deviceName = this.$options.device || this.$options.avd;
+
+					if(devices.indexOf(deviceName) !== -1) {
+						let packageFile: string, logFilePath: string;
+						let platformData = this.$platformsData.getPlatformData(platform);
+						let emulatorServices = platformData.emulatorServices;
+
+						emulatorServices.checkAvailability().wait();
+						emulatorServices.checkDependencies().wait();
+
+						this.buildPlatform(platform, buildConfig).wait();
+
+						packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+						this.$logger.out("Using ", packageFile);
+
+						logFilePath = path.join(platformData.projectRoot, this.$projectData.projectName, "emulator.log");
+
+						emulatorServices.runApplicationOnEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
+					} else {
+						this.$errors.fail(`Cannot find device with name: ${this.$options.device}.`);
+					}
 				}
 			}).future<void>()();
 		} else {

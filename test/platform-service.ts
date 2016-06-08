@@ -20,6 +20,7 @@ import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
 import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
 import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
+import * as ChildProcessLib from "../lib/common/child-process";
 
 require("should");
 let temp = require("temp");
@@ -73,6 +74,7 @@ function createTestInjector() {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});
+	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 
 	return testInjector;
 }
