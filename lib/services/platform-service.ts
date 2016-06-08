@@ -1,6 +1,7 @@
 ///<reference path="../.d.ts"/>
 "use strict";
 
+import * as child_process from "child_process";
 import * as path from "path";
 import * as shell from "shelljs";
 import * as constants from "../constants";
@@ -482,8 +483,28 @@ export class PlatformService implements IPlatformService {
 	}
 
 	public deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
-		this.$options.emulator = true;
-		return this.deployOnDevice(platform, buildConfig);
+		platform = platform.toLowerCase();
+
+		if (this.$options.availableDevices) {
+			return (() => {
+				let callback = (error: Error, stdout: Buffer, stderr: Buffer) => {
+					if (error !== null) {
+						this.$errors.fail(error);
+					} else {
+						this.$logger.info(stdout);
+					}
+				};
+
+				if (this.$mobileHelper.isiOSPlatform(platform)) {
+					child_process.exec("instruments -s devices", callback);
+				} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
+					child_process.exec("android list avd", callback);
+				}
+			}).future<void>()();
+		} else {
+			this.$options.emulator = true;
+			return this.deployOnDevice(platform, buildConfig);
+		}
 	}
 
 	public validatePlatform(platform: string): void {
