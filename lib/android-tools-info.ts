@@ -159,6 +159,13 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 
 	public validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean> {
 		return ((): boolean => {
+			// Check for min supported Java version
+			let minJavaVersion = "1.8";
+			if (parseInt(installedJavaVersion.substr(0, 3).replace(".", "")) < parseInt(minJavaVersion.replace(".", ""))) {
+				this.printMessage(`Java version ${installedJavaVersion} is not supported. You have to install at least ${minJavaVersion}.`);
+				return false;
+			}
+
 			let hasProblemWithJavaVersion = false;
 			if (options) {
 				this.showWarningsAsErrors = options.showWarningsAsErrors;
@@ -170,7 +177,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if (matchingVersion && matchingVersion[1]) {
 				if (semver.lt(matchingVersion[1], AndroidToolsInfo.MIN_JAVA_VERSION)) {
 					hasProblemWithJavaVersion = true;
-					this.printMessage(`Javac version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
+					this.printMessage(`Java version ${installedJavaVersion} is not supported. You have to install at least ${AndroidToolsInfo.MIN_JAVA_VERSION}.`, additionalMessage);
 				}
 			} else {
 				hasProblemWithJavaVersion = true;
