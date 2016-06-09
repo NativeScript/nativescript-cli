@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import liveSyncServiceBaseLib = require("./livesync-service-base");
 import * as helpers from "../../common/helpers";
 import * as net from "net";

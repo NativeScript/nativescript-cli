@@ -1,6 +1,3 @@
-/// <reference path="../../.d.ts" />
-
-
 interface BroccoliTree {
   /**
    * Contains the fs path for the input tree when the plugin takes only one input tree.

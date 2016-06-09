@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";

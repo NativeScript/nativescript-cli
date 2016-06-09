@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 import * as commonOptionsLibPath from "./common/options";
 import * as osenv from "osenv";
 import * as path from "path";
@@ -37,7 +34,8 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			platformTemplate: { type: OptionType.String },
 			ng: {type: OptionType.Boolean },
 			bundle: {type: OptionType.Boolean },
-			all: {type: OptionType.Boolean }
+			all: {type: OptionType.Boolean },
+			teamId: { type: OptionType.String }
 		},
 		path.join($hostInfo.isWindows ? process.env.AppData : path.join(osenv.home(), ".local/share"), ".nativescript-cli"),
 			$errors, $staticConfig);

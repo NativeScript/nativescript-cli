@@ -1,5 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
 import { createTable } from "../../common/helpers";
 
 export class ListPluginsCommand implements ICommand {

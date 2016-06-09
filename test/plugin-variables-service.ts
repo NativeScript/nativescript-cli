@@ -1,6 +1,3 @@
-/// <reference path=".d.ts" />
-"use strict";
-
 import {assert} from "chai";
 import {Errors} from "../lib/common/errors";
 import {FileSystem} from "../lib/common/file-system";

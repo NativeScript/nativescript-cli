@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class InitCommand implements ICommand {
 	constructor(private $initService: IInitService) { }
 

@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 export let APP_FOLDER_NAME = "app";
 export let APP_RESOURCES_FOLDER_NAME = "App_Resources";
 export let PROJECT_FRAMEWORK_FOLDER_NAME = "framework";

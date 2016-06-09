@@ -1,7 +1,3 @@
-///<reference path="../.d.ts"/>
-
-"use strict";
-
 import * as path from "path";
 
 process.on("message", (data: any) => {

@@ -1,6 +1,3 @@
-/// <reference path=".d.ts" />
-"use strict";
-
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";

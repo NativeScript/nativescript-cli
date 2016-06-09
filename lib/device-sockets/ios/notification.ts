@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 export class IOSNotification implements IiOSNotification {
 	private static WAIT_FOR_DEBUG_NOTIFICATION_NAME = "WaitForDebugger";
 	private static ATTACH_REQUEST_NOTIFICATION_NAME = "AttachRequest";

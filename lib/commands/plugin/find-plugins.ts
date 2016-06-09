@@ -1,5 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
 import { createTable, isInteractive } from "../../common/helpers";
 import { NATIVESCRIPT_KEY_NAME } from "../../constants";
 import Future = require("fibers/future");

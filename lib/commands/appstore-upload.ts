@@ -1,8 +1,6 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import {StringCommandParameter} from "../common/command-params";
 import * as path from "path";
+import {IOSProjectService} from "../services/ios-project-service";
 
 export class PublishIOS implements ICommand {
 	constructor(private $errors: IErrors,
@@ -13,10 +11,21 @@ export class PublishIOS implements ICommand {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $prompter: IPrompter,
-		private $stringParameterBuilder: IStringParameterBuilder) { }
+		private $stringParameterBuilder: IStringParameterBuilder,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	public allowedParameters: ICommandParameter[] = [new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector),
 			new StringCommandParameter(this.$injector), new StringCommandParameter(this.$injector)];
+
+	private get $platformsData(): IPlatformsData {
+		return this.$injector.resolve("platformsData");
+	}
+
+	// This property was introduced due to the fact that the $platformService dependency
+	// ultimately tries to resolve the current project's dir and fails if not executed from within a project
+	private get $platformService(): IPlatformService {
+		return this.$injector.resolve("platformService");
+	}
 
 	public execute(args: string[]): IFuture<void> {
 		return (() => {
@@ -24,6 +33,7 @@ export class PublishIOS implements ICommand {
 				password = args[1],
 				mobileProvisionIdentifier = args[2],
 				codeSignIdentity = args[3],
+				teamID = this.$options.teamId,
 				ipaFilePath = this.$options.ipa ? path.resolve(this.$options.ipa) : null;
 
 			if(!username) {
@@ -42,12 +52,42 @@ export class PublishIOS implements ICommand {
 				this.$logger.warn("No code sign identity set. A default code sign identity will be used. You can set one in app/App_Resources/iOS/build.xcconfig");
 			}
 
+			if (!ipaFilePath) {
+				let platform = this.$devicePlatformsConstants.iOS;
+				// No .ipa path provided, build .ipa on out own.
+				if (mobileProvisionIdentifier || codeSignIdentity) {
+					let iOSBuildConfig: IiOSBuildConfig = {
+						buildForDevice: true,
+						mobileProvisionIdentifier,
+						codeSignIdentity
+					};
+					this.$logger.info("Building .ipa with the selected mobile provision and/or certificate.");
+					// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
+					this.$platformService.buildPlatform(platform, iOSBuildConfig).wait();
+					ipaFilePath = this.$platformService.lastOutputPath(platform, { isForDevice: iOSBuildConfig.buildForDevice });
+				} else {
+					this.$logger.info("No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.");
+					if (!this.$platformService.preparePlatform(platform).wait()) {
+						this.$errors.failWithoutHelp("Failed to prepare project.");
+					}
+
+					let platformData = this.$platformsData.getPlatformData(platform);
+					let iOSProjectService = <IOSProjectService>platformData.platformProjectService;
+
+					let archivePath = iOSProjectService.archive(platformData.projectRoot).wait();
+					this.$logger.info("Archive at: " + archivePath);
+
+					let exportPath = iOSProjectService.exportArchive({ archivePath, teamID }).wait();
+					this.$logger.info("Export at: " + exportPath);
+
+					ipaFilePath = exportPath;
+				}
+			}
+
 			this.$options.release = true;
 			this.$itmsTransporterService.upload({
 				username,
 				password,
-				mobileProvisionIdentifier,
-				codeSignIdentity,
 				ipaFilePath,
 				verboseLogging: this.$logger.getLevel() === "TRACE"
 			}).wait();

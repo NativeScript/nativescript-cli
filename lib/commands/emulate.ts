@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class EmulateCommandBase {
 	constructor(private $platformService: IPlatformService) { }
 

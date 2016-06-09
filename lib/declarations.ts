@@ -89,6 +89,7 @@ interface IOptions extends ICommonOptions {
 	sdk: string;
 	symlink: boolean;
 	tnsModulesVersion: string;
+	teamId: string;
 }
 
 interface IInitService {
@@ -112,20 +113,10 @@ interface ICredentials {
  */
 interface IITMSData extends ICredentials {
 	/**
-	 * The identifier of the mobile provision used for building. Note that this will override the same option set through .xcconfig files.
+	 * Path to a .ipa file which will be uploaded.
 	 * @type {string}
 	 */
-	mobileProvisionIdentifier?: string;
-	/**
-	 * The Code Sign Identity used for building. Note that this will override the same option set through .xcconfig files.
-	 * @type {string}
-	 */
-	codeSignIdentity?: string;
-	/**
-	 * Path to a .ipa file which will be uploaded. If set that .ipa will be used and no build will be issued.
-	 * @type {string}
-	 */
-	ipaFilePath?: string;
+	ipaFilePath: string;
 	/**
 	 * Specifies whether the logging level of the itmstransporter command-line tool should be set to verbose.
 	 * @type {string}

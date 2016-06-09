@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import * as path from "path";
 import * as shell from "shelljs";
 import * as util from "util";
@@ -13,9 +10,11 @@ import * as projectServiceBaseLib from "./platform-project-service-base";
 import Future = require("fibers/future");
 import { PlistSession } from "plist-merge-patch";
 import {EOL} from "os";
+import * as temp from "temp";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
+	private static XCODE_SCHEME_EXT_NAME = ".xcscheme";
 	private static XCODEBUILD_MIN_VERSION = "6.0";
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
@@ -153,10 +152,26 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				this.replaceFileName("-Info.plist", projectRootFilePath).wait();
 			}
 			this.replaceFileName("-Prefix.pch", projectRootFilePath).wait();
+
+			let xcschemeDirPath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_PROJECT_EXT_NAME, "xcshareddata/xcschemes");
+			let xcschemeFilePath = path.join(xcschemeDirPath, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER + IOSProjectService.XCODE_SCHEME_EXT_NAME);
+
+			if (this.$fs.exists(xcschemeFilePath).wait()) {
+				this.$logger.debug("Found shared scheme at xcschemeFilePath, renaming to match project name.");
+				this.$logger.debug("Checkpoint 0");
+				this.replaceFileContent(xcschemeFilePath).wait();
+				this.$logger.debug("Checkpoint 1");
+				this.replaceFileName(IOSProjectService.XCODE_SCHEME_EXT_NAME, xcschemeDirPath).wait();
+				this.$logger.debug("Checkpoint 2");
+			} else {
+				this.$logger.debug("Copying xcscheme from template not found at " + xcschemeFilePath);
+			}
+
 			this.replaceFileName(IOSProjectService.XCODE_PROJECT_EXT_NAME, this.platformData.projectRoot).wait();
 
 			let pbxprojFilePath = this.pbxProjPath;
 			this.replaceFileContent(pbxprojFilePath).wait();
+
 		}).future<void>()();
 	}
 
@@ -173,6 +188,78 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	/**
+	 * Archive the Xcode project to .xcarchive.
+	 * Returns the path to the .xcarchive.
+	 */
+	public archive(options?: { archivePath?: string }): IFuture<string> {
+		return (() => {
+			let projectRoot = this.platformData.projectRoot;
+			let archivePath = options && options.archivePath ? path.resolve(options.archivePath) : path.join(projectRoot, "/build/archive/", this.$projectData.projectName + ".xcarchive");
+			let args = ["archive", "-archivePath", archivePath]
+				.concat(this.xcbuildProjectArgs(projectRoot, "scheme"));
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+			return archivePath;
+		}).future<string>()();
+	}
+
+	/**
+	 * Exports .xcarchive for AppStore distribution.
+	 */
+	public exportArchive(options: { archivePath: string, exportDir?: string, teamID?: string }): IFuture<string> {
+		return (() => {
+			let projectRoot = this.platformData.projectRoot;
+			let archivePath = options.archivePath;
+			// The xcodebuild exportPath expects directory and writes the <project-name>.ipa at that directory.
+			let exportPath = path.resolve(options.exportDir || path.join(projectRoot, "/build/archive"));
+			let exportFile = path.join(exportPath, this.$projectData.projectName + ".ipa");
+
+			// These are the options that you can set in the Xcode UI when exporting for AppStore deployment.
+			let plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+`;
+			if (options && options.teamID) {
+				plistTemplate += `    <key>teamID</key>
+    <string>${options.teamID}</string>
+`;
+			}
+			plistTemplate += `    <key>method</key>
+    <string>app-store</string>
+    <key>uploadBitcode</key>
+    <false/>
+    <key>uploadSymbols</key>
+    <false/>
+</dict>
+</plist>`;
+
+			// Save the options...
+			temp.track();
+			let exportOptionsPlist = temp.path({ prefix: "export-", suffix: ".plist" });
+			this.$fs.writeFile(exportOptionsPlist, plistTemplate).wait();
+
+			let args = ["-exportArchive",
+				"-archivePath", archivePath,
+				"-exportPath", exportPath,
+				"-exportOptionsPlist", exportOptionsPlist
+			];
+			this.$childProcess.spawnFromEvent("xcodebuild", args, "exit", { cwd: this.$options, stdio: 'inherit' }).wait();
+
+			return exportFile;
+		}).future<string>()();
+	}
+
+	private xcbuildProjectArgs(projectRoot: string, product?: "scheme" | "target"): string[] {
+		let xcworkspacePath = path.join(projectRoot, this.$projectData.projectName + ".xcworkspace");
+		if (this.$fs.exists(xcworkspacePath).wait()) {
+			return ["-workspace", xcworkspacePath, product ? "-" + product : "-scheme", this.$projectData.projectName];
+		} else {
+			let xcodeprojPath = path.join(projectRoot, this.$projectData.projectName + ".xcodeproj");
+			return ["-project", xcodeprojPath, product ? "-" + product : "-target", this.$projectData.projectName];
+		}
+	}
+
 	public buildProject(projectRoot: string, buildConfig?: IiOSBuildConfig): IFuture<void> {
 		return (() => {
 			let basicArgs = [
@@ -181,14 +268,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				'SHARED_PRECOMPS_DIR=' + path.join(projectRoot, 'build', 'sharedpch')
 			];
 
-			let xcworkspacePath = path.join(projectRoot, this.$projectData.projectName + ".xcworkspace");
-			if (this.$fs.exists(xcworkspacePath).wait()) {
-				basicArgs.push("-workspace", xcworkspacePath);
-				basicArgs.push("-scheme", this.$projectData.projectName);
-			} else {
-				basicArgs.push("-project", path.join(projectRoot, this.$projectData.projectName + ".xcodeproj"));
-				basicArgs.push("-target", this.$projectData.projectName);
-			}
+			basicArgs = basicArgs.concat(this.xcbuildProjectArgs(projectRoot));
 
 			// Starting from tns-ios 1.4 the xcconfig file is referenced in the project template
 			let frameworkVersion = this.getFrameworkVersion(this.platformData.frameworkPackageName).wait();
@@ -586,7 +666,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				}
 
 				let xcuserDataPath = path.join(this.xcodeprojPath, "xcuserdata");
-				if (!this.$fs.exists(xcuserDataPath).wait()) {
+				let sharedDataPath = path.join(this.xcodeprojPath, "xcshareddata");
+
+				if (!this.$fs.exists(xcuserDataPath).wait() && !this.$fs.exists(sharedDataPath).wait()) {
 					this.$logger.info("Creating project scheme...");
 
 					this.checkIfXcodeprojIsRequired().wait();

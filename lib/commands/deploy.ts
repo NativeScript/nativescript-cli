@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class DeployOnDeviceCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,
 		private $platformCommandParameter: ICommandParameter,

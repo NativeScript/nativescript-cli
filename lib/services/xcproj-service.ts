@@ -1,5 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
 import * as semver from "semver";
 import * as helpers from "../common/helpers";
 import {EOL} from "os";

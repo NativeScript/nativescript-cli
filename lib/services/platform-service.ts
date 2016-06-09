@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import * as path from "path";
 import * as shell from "shelljs";
 import * as constants from "../constants";
@@ -354,20 +351,26 @@ export class PlatformService implements IPlatformService {
 		}).future<void>()();
 	}
 
+	public lastOutputPath(platform: string, settings: { isForDevice: boolean }): string {
+		let packageFile: string;
+		let platformData = this.$platformsData.getPlatformData(platform);
+		if (settings.isForDevice) {
+			packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
+		} else {
+			packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
+		}
+		if (!packageFile || !this.$fs.exists(packageFile).wait()) {
+			this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
+		}
+		return packageFile;
+	}
+
 	public copyLastOutput(platform: string, targetPath: string, settings: { isForDevice: boolean }): IFuture<void> {
 		return (() => {
-			let packageFile: string;
 			platform = platform.toLowerCase();
 			targetPath = path.resolve(targetPath);
-			let platformData = this.$platformsData.getPlatformData(platform);
-			if (settings.isForDevice) {
-				packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
-			} else {
-				packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
-			}
-			if (!packageFile || !this.$fs.exists(packageFile).wait()) {
-				this.$errors.failWithoutHelp("Unable to find built application. Try 'tns build %s'.", platform);
-			}
+
+			let packageFile = this.lastOutputPath(platform, settings);
 
 			this.$fs.ensureDirectoryExists(path.dirname(targetPath)).wait();
 

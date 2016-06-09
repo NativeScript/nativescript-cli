@@ -1,6 +1,3 @@
-///<reference path="../../.d.ts"/>
-"use strict";
-
 import * as broccoliPluginWrapperLib from "./broccoli-plugin-wrapper";
 
 /**

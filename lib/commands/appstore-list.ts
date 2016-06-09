@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 import { createTable } from "../common/helpers";
 import {StringCommandParameter} from "../common/command-params";
 

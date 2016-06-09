@@ -1,9 +1,9 @@
-///<reference path=".d.ts"/>
 /* tslint:disable:no-empty */
-"use strict";
 
 import Future = require("fibers/future");
 import * as util from "util";
+
+import * as chai from "chai";
 
 export class LoggerStub implements ILogger {
 	setLevel(level: string): void { }
@@ -414,4 +414,64 @@ export class LockFile {
 	unlock(): IFuture<void> {
 	 	return (() => {}).future<void>()();
 	}
+}
+
+export class PrompterStub implements IPrompter {
+	private strings: IDictionary<string> = {};
+	private passwords: IDictionary<string> = {};
+
+	expect(options?: { strings: IDictionary<string>, passwords: IDictionary<string> } ) {
+		if (options) {
+			this.strings = options.strings || this.strings;
+			this.passwords = options.passwords || this.passwords;
+		}
+	}
+
+	get(schemas: IPromptSchema[]): IFuture<any> {
+		throw unreachable();
+	}
+	getPassword(prompt: string, options?: IAllowEmpty): IFuture<string> {
+		chai.assert.ok(prompt in this.passwords, `PrompterStub didn't expect to give password for: ${prompt}`);
+		let result = this.passwords[prompt];
+		delete this.passwords[prompt];
+		return (() => {
+			return result;
+		}).future<string>()();
+	}
+	getString(prompt: string, options?: IPrompterOptions): IFuture<string> {
+		chai.assert.ok(prompt in this.strings, `PrompterStub didn't expect to be asked for: ${prompt}`);
+		let result = this.strings[prompt];
+		delete this.strings[prompt];
+		return (() => {
+			return result;
+		}).future<string>()();
+	}
+	promptForChoice(promptMessage: string, choices: any[]): IFuture<string> {
+		throw unreachable();
+	}
+	confirm(prompt: string, defaultAction?: () => boolean): IFuture<boolean> {
+		throw unreachable();
+	}
+	dispose(): void {
+		throw unreachable();
+	}
+
+	assert() {
+		for (let key in this.strings) {
+			throw unexpected(`PrompterStub was instructed to reply with "${this.strings[key]}" to a "${key}" question, but was never asked!`);
+		}
+		for (let key in this.passwords) {
+			throw unexpected(`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`);
+		}
+	}
+}
+
+function unreachable(): Error {
+	return unexpected("Test case should not reach this point.");
+}
+
+function unexpected(msg: string): Error {
+	let err = new chai.AssertionError(msg);
+	err.showDiff = false;
+	return err;
 }

@@ -1,5 +1,3 @@
-"use strict";
-
 import { isInteractive } from "../common/helpers";
 
 export class ProjectNameService implements IProjectNameService {

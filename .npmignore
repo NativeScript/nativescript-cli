@@ -28,3 +28,4 @@ scratch/
 *.suo
 .travis.yml
 docs/html/
+dev/

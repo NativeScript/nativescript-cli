@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class AddPlatformCommand implements ICommand {
 	constructor(private $platformService: IPlatformService,
 		private $errors: IErrors) { }

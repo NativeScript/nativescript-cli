@@ -1,11 +1,16 @@
 {
 	"compilerOptions": {
-		"target": "ES5",
+		"target": "es5",
 		"module": "commonjs",
-		"sourceMap": true
+		"sourceMap": true,
+		"declaration": false,
+		"removeComments": false,
+		"noImplicitAny": true,
+		"experimentalDecorators": true
 	},
 	"exclude": [
 		"node_modules",
+		"lib/common/node_modules",
 		"scratch",
 		"coverage"
 	]

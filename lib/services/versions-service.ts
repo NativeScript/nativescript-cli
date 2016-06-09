@@ -1,5 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
 import * as constants from "../constants";
 import * as semver from "semver";
 import * as path from "path";

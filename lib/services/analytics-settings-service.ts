@@ -1,5 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
 import { createGUID } from "../common/helpers";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {

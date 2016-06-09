@@ -13,6 +13,7 @@ Uploads project to iTunes Connect. The command either issues a production build 
 
 ### Options
 * `--ipa` - If set, will use provided .ipa file instead of building the project.
+* `--team-id` - Specified the team id for which Xcode will try to find distribution certificate and provisioning profile when exporting for AppStore submission.
 
 ### Attributes
 * `<Apple ID>` and `<Password>` are your credentials for logging into iTunes Connect.

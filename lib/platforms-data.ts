@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 export class PlatformsData implements IPlatformsData {
 	private platformsData : { [index: string]: any } = {};
 

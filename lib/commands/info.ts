@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class InfoCommand implements ICommand {
 	constructor(private $infoService: IInfoService) { }
 

@@ -1,6 +1,3 @@
-///<reference path="../.d.ts"/>
-"use strict";
-
 export class LivesyncCommand implements ICommand {
 	constructor(private $logger: ILogger,
 		private $usbLiveSyncService: ILiveSyncService,

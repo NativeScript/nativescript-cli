@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 import Future = require("fibers/future");
 import * as lockfile from "lockfile";
 import * as path from "path";

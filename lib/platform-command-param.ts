@@ -1,6 +1,3 @@
-///<reference path=".d.ts"/>
-"use strict";
-
 export class PlatformCommandParameter implements ICommandParameter {
 	constructor(private $platformService: IPlatformService) { }
 	mandatory = true;
