@@ -135,7 +135,7 @@ export class MobileIdentityConnect {
         let redirected = false;
 
         function loadCallback(event) {
-          if (event.url.indexOf(redirectUri) === 0 && redirected === false) {
+          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
@@ -144,7 +144,7 @@ export class MobileIdentityConnect {
         }
 
         function errorCallback(event) {
-          if (event.url.indexOf(redirectUri) === 0 && redirected === false) {
+          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
