@@ -369,10 +369,13 @@ export class DataStore {
             const response = await request.execute();
             const data = response.data;
             observer.next(data);
-            await this.updateCache(data);
+
+            if (this.isCacheEnabled()) {
+              await this.updateCache(data);
+            }
           }
         } catch (error) {
-          if (error instanceof NotFoundError) {
+          if (error instanceof NotFoundError && this.isCacheEnabled()) {
             const config = new KinveyRequestConfig({
               method: RequestMethod.DELETE,
               authType: AuthType.Default,
