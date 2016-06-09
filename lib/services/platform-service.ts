@@ -508,12 +508,11 @@ export class PlatformService implements IPlatformService {
 				}
 
 				if (this.$options.device || this.$options.avd) {
-					if (this.$options.avd) {
-						this.$options.device = this.$options.avd;
-						this.$options.avd = undefined;
+					if (this.$options.device) {
+						this.$options.avd = this.$options.device;
 					}
 
-					if (devices.indexOf(this.$options.device) !== -1) {
+					if (devices.indexOf(this.$options.device) !== -1 || devices.indexOf(this.$options.avd) !== -1) {
 						this.ensurePlatformInstalled(platform).wait();
 
 						let packageFile: string, logFilePath: string;
@@ -532,7 +531,7 @@ export class PlatformService implements IPlatformService {
 
 						emulatorServices.runApplicationOnEmulator(packageFile, { stderrFilePath: logFilePath, stdoutFilePath: logFilePath, appId: this.$projectData.projectId }).wait();
 					} else {
-						this.$errors.fail(`Cannot find device with name: ${this.$options.device}.`);
+						this.$errors.fail(`Cannot find device with name: ${this.$options.device || this.$options.avd}.`);
 					}
 				}
 			}).future<void>()();
