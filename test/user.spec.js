@@ -520,6 +520,14 @@ describe('User', function () {
   });
 
   describe('resetPassword', function() {
+    it('should throw an error if a username is not provided', function() {
+      expect(User.resetPassword()).to.be.rejected;
+    });
+
+    it('should throw an error if the provided username is not a string', function() {
+      expect(User.resetPassword({})).to.be.rejected;
+    });
+
     it('should reset the password for a user', function() {
       const username = 'test';
       nock(this.client.baseUrl)
