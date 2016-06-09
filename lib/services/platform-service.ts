@@ -503,14 +503,17 @@ export class PlatformService implements IPlatformService {
 					devices = this.$childProcess.exec(`${androidPath} list avd`).wait();
 				}
 
-				if(this.$options.availableDevices) {
+				if (this.$options.availableDevices) {
 					this.$logger.info(devices);
 				}
 
-				if(this.$options.device || this.$options.avd) {
-					let deviceName = this.$options.device || this.$options.avd;
+				if (this.$options.device || this.$options.avd) {
+					if (this.$options.avd) {
+						this.$options.device = this.$options.avd;
+						this.$options.avd = undefined;
+					}
 
-					if(devices.indexOf(deviceName) !== -1) {
+					if (devices.indexOf(this.$options.device) !== -1) {
 						let packageFile: string, logFilePath: string;
 						let platformData = this.$platformsData.getPlatformData(platform);
 						let emulatorServices = platformData.emulatorServices;
