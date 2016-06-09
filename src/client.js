@@ -34,13 +34,21 @@ export default class Client {
   constructor(options = {}) {
     options = assign({
       protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
-      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com'
+      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com',
+      micProtocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
+      micHost: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
     }, options);
 
     if (options.hostname && isString(options.hostname)) {
       const hostnameParsed = url.parse(options.hostname);
       options.protocol = hostnameParsed.protocol;
       options.host = hostnameParsed.host;
+    }
+
+    if (options.micHostname && isString(options.micHostname)) {
+      const micHostnameParsed = url.parse(options.micHostname);
+      options.micProtocol = micHostnameParsed.protocol;
+      options.micHost = micHostnameParsed.host;
     }
 
     /**
@@ -52,6 +60,16 @@ export default class Client {
      * @type {string}
      */
     this.host = options.host;
+
+    /**
+     * @type {string}
+     */
+    this.micProtocol = options.micProtocol;
+
+    /**
+     * @type {string}
+     */
+    this.micHost = options.micHost;
 
     /**
      * @type {string}
@@ -115,6 +133,8 @@ export default class Client {
     const json = {
       protocol: this.protocol,
       host: this.host,
+      micProtocol: this.micProtocol,
+      micHost: this.micHost,
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
