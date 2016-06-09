@@ -316,7 +316,9 @@ export class User {
   }
 
   static loginWithMIC(redirectUri, authorizationGrant, options) {
+    const client = options.client || Client.sharedInstance();
     const user = new User();
+    user.client = client;
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
@@ -340,7 +342,8 @@ export class User {
    */
   /* eslint-enable max-len */
   loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const mic = new MobileIdentityConnect(this.client);
+    const mic = new MobileIdentityConnect();
+    mic.client = this.client;
     return mic.login(redirectUri, authorizationGrant, options).then(token => {
       options.redirectUri = redirectUri;
       options.micClient = result(mic.client, 'toJSON', mic.client);
