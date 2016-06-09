@@ -68,7 +68,10 @@ export class PhoneGapPopup extends EventEmitter {
                 url: this.popup.location.href
               });
             } catch (error) {
-              // Just catch the error
+              this.loadErrorCallback({
+                message: error.message,
+                url: undefined
+              });
             }
           }
         }, 100);
