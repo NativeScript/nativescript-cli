@@ -33,15 +33,8 @@ export { SocialIdentity };
  * @private
  */
 export class MobileIdentityConnect {
-  constructor(client = Client.sharedInstance()) {
-    this.client = new Client({
-      protocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
-      host: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
-      appKey: client.appKey,
-      appSecret: client.appSecret,
-      masterSecret: client.masterSecret,
-      encryptionKey: client.encryptionKey
-    });
+  constructor() {
+    this.client = Client.sharedInstance();
   }
 
   static get identity() {
