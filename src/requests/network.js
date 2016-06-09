@@ -55,8 +55,8 @@ export class NetworkRequest extends KinveyRequest {
             method: RequestMethod.POST,
             authType: AuthType.App,
             url: url.format({
-              protocol: activeSocialIdentity.client.protocol,
-              host: activeSocialIdentity.client.host,
+              protocol: activeSocialIdentity.client.micProtocol,
+              host: activeSocialIdentity.client.micHost,
               pathname: tokenPathname
             }),
             properties: this.properties,
