@@ -7,6 +7,8 @@ import nock from 'nock';
 import chai from 'chai';
 const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const defaultMicProtocol = process.env.KINVEY_MIC_PROTOCOL || 'https:';
+const defaultMicHost = process.env.KINVEY_MIC_HOST || 'auth.kinvey.com';
 
 describe('Kinvey', function () {
   afterEach(function() {
@@ -53,7 +55,16 @@ describe('Kinvey', function () {
       })).to.be.an.instanceof(Client);
     });
 
-    it('should allow a custom micHostname to be set', function() {
+    it('should set default MIC host name when a custom one is not provided', function() {
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString()
+      });
+      expect(client).to.have.property('micProtocol', defaultMicProtocol);
+      expect(client).to.have.property('micHost', defaultMicHost);
+    });
+
+    it('should set a custom MIC host name when one is provided', function() {
       const micHostname = 'https://auth.example.com';
       const client = Kinvey.init({
         appKey: randomString(),
