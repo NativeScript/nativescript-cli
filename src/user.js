@@ -14,6 +14,7 @@ import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
@@ -794,24 +795,6 @@ export class User {
     return promise;
   }
 
-  resetPassword(options = {}) {
-    const request = new NetworkRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`
-      }),
-      properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
-    });
-
-    const promise = request.execute().then(response => response.data);
-    return promise;
-  }
-
   // refreshAuthToken(options = {}) {
   //   const socialIdentity = this.data[socialIdentityAttribute];
   //   const identity = socialIdentity.activeIdentity;
@@ -835,6 +818,33 @@ export class User {
 
   toJSON() {
     return this.data;
+  }
+
+  static async resetPassword(username, options = {}) {
+    if (!username) {
+      throw new KinveyError('A username was not provided.',
+       'Please provide a username for the user that you would like to reset their password.');
+    }
+
+    if (!isString(username)) {
+      throw new KinveyError('The provided username is not a string.');
+    }
+
+    const client = options.client || Client.sharedInstance();
+    const request = new NetworkRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-password-reset-initiate`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: client
+    });
+    const response = await request.execute();
+    return response.data;
   }
 }
 

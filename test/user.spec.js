@@ -14,6 +14,7 @@ chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('User', function () {
   it('should create a new user', function() {
@@ -516,6 +517,28 @@ describe('User', function () {
     //   const promise = User.connectWithIdentity(SocialIdentity.Facebook);
     //   return expect(promise).to.be.rejectedWith(KinveyError);
     // });
+  });
+
+  describe('resetPassword', function() {
+    it('should throw an error if a username is not provided', function() {
+      expect(User.resetPassword()).to.be.rejected;
+    });
+
+    it('should throw an error if the provided username is not a string', function() {
+      expect(User.resetPassword({})).to.be.rejected;
+    });
+
+    it('should reset the password for a user', function() {
+      const username = 'test';
+      nock(this.client.baseUrl)
+        .put(`/${rpcNamespace}/${this.client.appKey}/${username}/user-password-reset-initiate`, () => true)
+        .query(true)
+        .reply(204, null, {
+          'content-type': 'application/json'
+        });
+
+      expect(User.resetPassword(username)).to.be.fulfilled;
+    });
   });
 });
 
