@@ -794,24 +794,6 @@ export class User {
     return promise;
   }
 
-  resetPassword(options = {}) {
-    const request = new NetworkRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/${this.username}/user-password-reset-initiate`
-      }),
-      properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
-    });
-
-    const promise = request.execute().then(response => response.data);
-    return promise;
-  }
-
   // refreshAuthToken(options = {}) {
   //   const socialIdentity = this.data[socialIdentityAttribute];
   //   const identity = socialIdentity.activeIdentity;
@@ -835,6 +817,23 @@ export class User {
 
   toJSON() {
     return this.data;
+  }
+
+  static resetPassword(username, options = {}) {
+    const client = options.client || Client.sharedInstance();
+    const request = new NetworkRequest({
+      method: RequestMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: `/${rpcNamespace}/${client.appKey}/${username}/user-password-reset-initiate`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: client
+    });
+    return request.execute().then(response => response.data);
   }
 }
 
