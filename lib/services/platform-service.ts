@@ -514,6 +514,8 @@ export class PlatformService implements IPlatformService {
 					}
 
 					if (devices.indexOf(this.$options.device) !== -1) {
+						this.ensurePlatformInstalled(platform).wait();
+
 						let packageFile: string, logFilePath: string;
 						let platformData = this.$platformsData.getPlatformData(platform);
 						let emulatorServices = platformData.emulatorServices;
