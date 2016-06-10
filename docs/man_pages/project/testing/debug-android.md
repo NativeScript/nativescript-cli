@@ -1,15 +1,12 @@
 debug android
 ==========
 
-All you need to do to start debugging your app is to execute `tns debug android`. The NativeScript CLI will build, deploy, start your app, start Chrome DevTools and attach the debugger.
-* You cannot debug if there are multiple devices available (emulators and/or real devices). You need to have started only one device or emulator.
-
 Usage | Synopsis
 ---|---
-Deploy on device, run the app and attach the debugger | `$ tns debug android`
-Deploy on device, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
-Deploy in the native emulator, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
-Deploy in Genymotion, run the app and stop at the first breakpoint | `$ tns debug android --debug-brk --geny <Geny Name> [--timeout <timeout>]`
+Deploy on device, run the app start Chrome DevTools, and attach the debugger | `$ tns debug android`
+Deploy on device, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
+Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
+Deploy in Genymotion, run the app and stop at the first code statement | `$ tns debug android --debug-brk --geny <Geny Name> [--timeout <timeout>]`
 Attach the debug tools to a running app on device | `$ tns debug android --start [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>] [--timeout <timeout>]`
 Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output] [--timeout <timeout>]`
@@ -22,7 +19,7 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `--device` - Specifies a connected device on which to debug the app.
 * `--emulator` - Specifies that you want to debug the app in the native Android emulator from the Android SDK.
 * `--geny` - Specifies a Genymotion emulator on which you want to debug your app.
-* `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser.
+* `--debug-brk` - Prepares, builds and deploys the application package on a device or in an emulator, launches the Chrome DevTools of your Chrome browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app.
 * `--stop` - Detaches the debug tools.
 * `--get-port` - Retrieves the port on which you are debugging your application.
