@@ -256,6 +256,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
+		let platformRemoveMessage = "Run `tns platform remove android && tns platform add android` and try again.";
 		return (() => {
 			if (this.canUseGradle().wait()) {
 				this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
@@ -287,10 +288,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				if (this.$hostInfo.isWindows) {
 					gradleBin += ".bat"; // cmd command line parsing rules are weird. Avoid issues with quotes. See https://github.com/apache/cordova-android/blob/master/bin/templates/cordova/lib/builders/GradleBuilder.js for another approach
 				}
-				this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+
+				try {
+					this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+				} catch (ex) {
+					this.$errors.failWithoutHelp("Gradle build failed." + EOL + platformRemoveMessage);
+				}
 			} else {
-				this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL +
-					"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
+				this.$errors.failWithoutHelp("Cannot complete build because this project is ANT-based." + EOL + platformRemoveMessage);
 			}
 		}).future<void>()();
 	}
