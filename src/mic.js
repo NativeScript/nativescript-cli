@@ -127,30 +127,37 @@ export class MobileIdentityConnect {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
 
-        function loadedCallback(loadedUrl) {
-          if (loadedUrl.indexOf(redirectUri) === 0) {
+        function loadCallback(event) {
+          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
-            resolve(url.parse(loadedUrl, true).query.code);
+            resolve(url.parse(event.url, true).query.code);
           }
         }
 
-        function errorCallback(message) {
-          popup.removeAllListeners();
-          popup.close();
-          reject(new Error(message));
+        function errorCallback(event) {
+          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
+            redirected = true;
+            popup.removeAllListeners();
+            popup.close();
+            resolve(url.parse(event.url, true).query.code);
+          } else if (redirected === false) {
+            popup.removeAllListeners();
+            popup.close();
+            reject(new KinveyError(event.message, '', event.code));
+          }
         }
 
         function closedCallback() {
-          popup.removeAllListeners();
-
-          if (!redirected) {
-            reject(new Error('Login has been cancelled.'));
+          if (redirected === false) {
+            popup.removeAllListeners();
+            reject(new KinveyError('Login has been cancelled.'));
           }
         }
 
-        popup.on('loaded', loadedCallback);
+        popup.on('loadstart', loadCallback);
+        popup.on('loadstop', loadCallback);
         popup.on('error', errorCallback);
         popup.on('closed', closedCallback);
       });
