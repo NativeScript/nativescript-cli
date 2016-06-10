@@ -33,8 +33,8 @@ export { SocialIdentity };
  * @private
  */
 export class MobileIdentityConnect {
-  constructor() {
-    this.client = Client.sharedInstance();
+  constructor(client = Client.sharedInstance()) {
+    this.client = client;
   }
 
   static get identity() {
