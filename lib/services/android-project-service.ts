@@ -258,6 +258,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public buildProject(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			if (this.canUseGradle().wait()) {
+				// Validate App_Resources drawable resources accoring to the official docs: https://developer.android.com/guide/topics/resources/providing-resources.html
+				let drawableFilePrefix = "drawable-";
+				let allowedDrawables = ["ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "nodpi", "tvdpi"];
+				let appSourceDirectoryPath = path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME);
+				let sourceAppResourcesDirectoryPath = path.join(appSourceDirectoryPath, constants.APP_RESOURCES_FOLDER_NAME, this.$devicePlatformsConstants.Android);
+
+				if (this.$fs.exists(sourceAppResourcesDirectoryPath).wait()) {
+					this.$fs.enumerateFilesInDirectorySync(sourceAppResourcesDirectoryPath, (file: string, stat: IFsStats) => {
+						if (stat.isDirectory() && file.indexOf(drawableFilePrefix) !== -1 &&
+							allowedDrawables.indexOf(path.basename(file).replace(drawableFilePrefix, "")) === -1) {
+							this.$errors.failWithoutHelp(`Invalid Android drawable resource folder detected: ${file}. Please check your ${constants.APP_RESOURCES_FOLDER_NAME} folder.`);
+							return false;
+						}
+						return true;
+					});
+				}
+
 				this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
 				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
 				let compileSdk = androidToolsInfo.compileSdkVersion;
