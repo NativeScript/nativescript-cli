@@ -315,8 +315,10 @@ export class User {
     return this.login(data, options);
   }
 
-  static loginWithMIC(redirectUri, authorizationGrant, options) {
+  static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    const client = options.client || Client.sharedInstance();
     const user = new User();
+    user.client = client;
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 

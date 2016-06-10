@@ -7,6 +7,8 @@ import nock from 'nock';
 import chai from 'chai';
 const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
+const defaultMicProtocol = process.env.KINVEY_MIC_PROTOCOL || 'https:';
+const defaultMicHost = process.env.KINVEY_MIC_HOST || 'auth.kinvey.com';
 
 describe('Kinvey', function () {
   afterEach(function() {
@@ -30,11 +32,47 @@ describe('Kinvey', function () {
       expect(Kinvey).itself.to.respondTo('init');
     });
 
+    it('should throw an error if an appKey is not provided', function() {
+      expect(function() {
+        Kinvey.init({
+          appSecret: randomString()
+        });
+      }).to.throw();
+    });
+
+    it('should throw an error if an appSecret or masterSecret is not provided', function() {
+      expect(function() {
+        Kinvey.init({
+          appKey: randomString()
+        });
+      }).to.throw();
+    });
+
     it('should return a client', function() {
       expect(Kinvey.init({
         appKey: randomString(),
         appSecret: randomString()
       })).to.be.an.instanceof(Client);
+    });
+
+    it('should set default MIC host name when a custom one is not provided', function() {
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString()
+      });
+      expect(client).to.have.property('micProtocol', defaultMicProtocol);
+      expect(client).to.have.property('micHost', defaultMicHost);
+    });
+
+    it('should set a custom MIC host name when one is provided', function() {
+      const micHostname = 'https://auth.example.com';
+      const client = Kinvey.init({
+        appKey: randomString(),
+        appSecret: randomString(),
+        micHostname: micHostname
+      });
+      expect(client).to.have.property('micProtocol', 'https:');
+      expect(client).to.have.property('micHost', 'auth.example.com');
     });
 
     it('should set additional modules after init', function() {

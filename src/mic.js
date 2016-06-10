@@ -34,14 +34,7 @@ export { SocialIdentity };
  */
 export class MobileIdentityConnect {
   constructor(client = Client.sharedInstance()) {
-    this.client = new Client({
-      protocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
-      host: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
-      appKey: client.appKey,
-      appSecret: client.appSecret,
-      masterSecret: client.masterSecret,
-      encryptionKey: client.encryptionKey
-    });
+    this.client = client;
   }
 
   static get identity() {
@@ -84,8 +77,8 @@ export class MobileIdentityConnect {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.micProtocol,
+        host: this.client.micHost,
         pathname: path.join(pathname, authPathname)
       }),
       properties: options.properties,
@@ -117,8 +110,8 @@ export class MobileIdentityConnect {
       if (global.KinveyPopup) {
         const popup = new global.KinveyPopup();
         return popup.open(url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
+          protocol: this.client.micProtocol,
+          host: this.client.micHost,
           pathname: path.join(pathname, authPathname),
           query: {
             client_id: clientId,
@@ -204,8 +197,8 @@ export class MobileIdentityConnect {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.micProtocol,
+        host: this.client.micHost,
         pathname: tokenPathname
       }),
       properties: options.properties,
