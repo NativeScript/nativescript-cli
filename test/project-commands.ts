@@ -65,6 +65,14 @@ describe("Project commands tests", () => {
 			assert.isTrue(isProjectCreated);
 		});
 
+		it("should not fail when using only --tsc.", () => {
+			options.tsc = true;
+
+			createProjectCommand.execute(dummyArgs).wait();
+
+			assert.isTrue(isProjectCreated);
+		});
+
 		it("should not fail when using only --template.", () => {
 			options.template = "ng";
 
@@ -81,8 +89,24 @@ describe("Project commands tests", () => {
 			assert.deepEqual(selectedTemplateName, constants.ANGULAR_NAME);
 		});
 
+		it("should set the template name correctly when used --tsc.", () => {
+			options.tsc = true;
+
+			createProjectCommand.execute(dummyArgs).wait();
+
+			assert.deepEqual(selectedTemplateName, constants.TYPESCRIPT_NAME);
+		});
+
 		it("should not set the template name when --ng is not used.", () => {
 			options.ng = false;
+
+			createProjectCommand.execute(dummyArgs).wait();
+
+			assert.isUndefined(selectedTemplateName);
+		});
+
+		it("should not set the template name when --tsc is not used.", () => {
+			options.tsc = false;
 
 			createProjectCommand.execute(dummyArgs).wait();
 
@@ -92,6 +116,15 @@ describe("Project commands tests", () => {
 		it("should fail when --ng and --template are used simultaneously.", () => {
 			options.ng = true;
 			options.template = "ng";
+
+			assert.throws(() => {
+				createProjectCommand.execute(dummyArgs).wait();
+			});
+		});
+
+		it("should fail when --tsc and --template are used simultaneously.", () => {
+			options.tsc = true;
+			options.template = "tsc";
 
 			assert.throws(() => {
 				createProjectCommand.execute(dummyArgs).wait();

@@ -4,7 +4,7 @@ create
 Usage | Synopsis
 ---|---
 Create from default JavaScript template | `$ tns create <App Name> [--path <Directory>] [--appid <App ID>]`
-Create from default TypeScript template | `$ tns create <App Name> --template typescript [--path <Directory>] [--appid <App ID>]` OR `$ tns create <App Name> --template tsc [--path <Directory>] [--appid <App ID>]`
+Create from default TypeScript template | `$ tns create <App Name> --template typescript [--path <Directory>] [--appid <App ID>]` OR `$ tns create <App Name> --tsc [--path <Directory>] [--appid <App ID>]` OR `$ tns create <App Name> --template tsc [--path <Directory>] [--appid <App ID>]`
 Create from default Angular template | `$ tns create <App Name> --template angular [--path <Directory>] [--appid <App ID>]` OR `$ tns create <App Name> --template ng [--path <Directory>] [--appid <App ID>]` OR `$ tns create <App Name> --ng [--path <Directory>] [--appid <App ID>]`
 Copy from existing project | `$ tns create <App Name> [--path <Directory>] [--appid <App ID>] --copy-from <Directory>`
 Create from custom template | `$ tns create <App Name> [--path <Directory>] [--appid <App ID>] --template <Template>`
@@ -17,6 +17,7 @@ Creates a new project for native development with NativeScript.
 * `--copy-from` - Specifies a directory which contains an existing NativeScript project. If `--copy-from` and `--template` are not set, the NativeScript CLI creates the project from the default JavaScript hello-world template.
 * `--template` - Specifies a valid npm package which you want to use to create your project. If `--copy-from` and `--template` are not set, the NativeScript CLI creates the project from the default JavaScript hello-world template.<% if(isHtml) { %> If one or more application assets are missing from the `App_Resources` directory in the package, the CLI adds them using the assets available in the default hello-world template.<% } %>
 * `--ng` - Sets the template for your project to the Angular template.
+* `--tsc` - Sets the template for your project to the TypeScript template.
 
 ### Attributes
 * `<App Name>` is the name of project. The specified name must meet the requirements of all platforms that you want to target. <% if(isConsole) { %>For more information about the `<App Name>` requirements, run `$ tns help create`<% } %><% if(isHtml) { %>For projects that target Android, you can use uppercase or lowercase letters, numbers, and underscores. The name must start with a letter.

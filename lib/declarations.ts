@@ -82,6 +82,7 @@ interface IOptions extends ICommonOptions {
 	keyStorePath: string;
 	linkTo: string;
 	ng: boolean;
+	tsc: boolean;
 	bundle: boolean;
 	platformTemplate: string;
 	port: Number;
