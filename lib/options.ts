@@ -33,6 +33,7 @@ export class Options extends commonOptionsLibPath.OptionsBase {
 			baseConfig: { type: OptionType.String },
 			platformTemplate: { type: OptionType.String },
 			ng: {type: OptionType.Boolean },
+			tsc: {type: OptionType.Boolean },
 			bundle: {type: OptionType.Boolean },
 			all: {type: OptionType.Boolean },
 			teamId: { type: OptionType.String }

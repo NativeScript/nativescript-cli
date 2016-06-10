@@ -44,3 +44,4 @@ class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationTyp
 export let ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
 
 export let ANGULAR_NAME = "angular";
+export let TYPESCRIPT_NAME = "TypeScript";
