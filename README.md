@@ -90,7 +90,7 @@ start-process -FilePath PowerShell.exe -Verb Runas -Wait -ArgumentList "-NoProfi
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
-* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
+* [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
 
 If you have installed Chocolatey, you can complete these steps to set up JDK, and Android SDK.
@@ -129,7 +129,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 	```
 1. Select all packages for the Android 22 SDK and any other SDKs that you want to install, click **Install** and wait for the installation to complete.
 1. Select Android SDK Build-tools 22.0.0 or later stable version, click **Install** and wait for the installation to complete.
-1. Select Extras/Local Maven repository for Support Libraries, click **Install** and wait for the installation to complete.
+1. Select Extras/Android Support Repository, click **Install** and wait for the installation to complete.
 
 > NOTE: You can install required Android Tools with the following command:
 ```Shell
@@ -160,7 +160,7 @@ sudo ruby -e "$(curl -fsSL https://www.nativescript.org/setup/mac)"
 	* [JDK 8][JDK 8] or a later stable official release
 	* [Android SDK 22][Android SDK 22] or a later stable official release
 	* [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
-	* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
+	* [Android Support Repository][Android Support Repository]
 	* (Optional) [Genymotion][Genymotion]
 
 If not present, create the following environment variables.
@@ -208,7 +208,7 @@ echo yes | android update sdk --filter tools,platform-tools,android-23,build-too
 * [JDK 8][JDK 8] or a later stable official release
 * [Android SDK 22][Android SDK 22] or a later stable official release
 * [Android SDK Build-tools 23.0.0][Android SDK Build-tools 23.0.0] or a later stable official release
-* [Local Maven repository for Support Libraries][Local Maven repository for Support Libraries]
+* [Android Support Repository][Android Support Repository]
 * (Optional) [Genymotion][Genymotion]
 
 If not present, create the following environment variables.
@@ -611,5 +611,5 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [CocoaPods]: https://guides.cocoapods.org/using/getting-started.html#getting-started
 [xcproj]: https://github.com/0xced/xcproj#installation
 [Android SDK Build-tools 23.0.0]: http://developer.android.com/sdk/index.html
-[Local Maven repository for Support Libraries]: http://developer.android.com/sdk/index.html
+[Android Support Repository]: http://developer.android.com/sdk/index.html
 ![](https://ga-beacon.appspot.com/UA-111455-24/nativescript/nativescript-cli?pixel)
