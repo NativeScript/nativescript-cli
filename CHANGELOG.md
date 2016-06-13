@@ -1,4 +1,10 @@
 ## Changelog
+### 3.0.0-beta.26 (2016-06-13)
+* Bugfix (MLIBZ-1133): Listen to `loadstart` event on popups to capture redirect when using MIC login for url that results in a 404.
+* Bugfix (MLIBZ-1148): Provide a way to change the MIC hostname.
+* Bugfix (MLIBZ-1075): Fix issues when downloading files.
+* Bugfix (MLIBZ-1146): Make `resetPassword()` on the `User` class a static function.
+
 ### 3.0.0-beta.25 (2016-06-06)
 * Bugfix (MLIBZ-1100): Improve error message when a sync failure occurs.
 * Bugfix (MLIBZ-1082): Check that a query is able to be run loccaly before it is processed.
