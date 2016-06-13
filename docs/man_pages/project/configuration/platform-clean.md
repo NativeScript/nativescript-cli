@@ -16,7 +16,8 @@ Removes and adds the selected platform to the project currently targets. <% if(i
 <% if(isHtml) { %>
 ### Command Limitations
 
-* You can run `$ tns platform remove ios` only on OS X systems.
+* You can run `$ tns platform clean ios` only on OS X systems.
+* Clean command will not preserve your current installed platform version but will download and install latest platform version.  
 
 ### Related Commands
 
