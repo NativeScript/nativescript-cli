@@ -8,7 +8,7 @@ The simplest way to build the sdk is by running `gulp`. More advanced tasks are 
 * `gulp bump`: bump the pacakge version
 * `gulp build`: build the sdk
 * `gulp clean`: remove files created by the build process
-* `gulp release`: release a new version of the sdk
+* `gulp lint`: lint src files
 
 ### Flags
 The following flags are available when running `gulp bump`:
@@ -25,14 +25,15 @@ The workflow for releasing a new version of the sdk is as follows:
 
 1. Commit all changes on the develop branch.
 2. Checkout the master branch and merge the develop branch.
-4. Update the [Changelog](CHANGELOG.md).
-5. Run `gulp bump --type <type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
-6. Make sure all changes are committed on the master branch and push.
+3. Update the [Changelog](CHANGELOG.md).
+4. Run `gulp bump --type <type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
+5. Make sure all changes are committed on the master branch and push.
+7. __Optional:__ Update Dev Center and Sample apps.
 
 ### Version Management
 Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):
 
-* Major (x.0.0): when making incompatible API changes.
+* Major (x.0.0): when making an incompatible API changes.
 * Minor (3.x.0): when adding functionality in a backwards-compatible manner.
 * Patch (3.0.x): when making backwards-compatible bug fixes or enhancements.
 
