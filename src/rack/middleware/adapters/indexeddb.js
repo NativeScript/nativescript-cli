@@ -5,11 +5,6 @@ import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 let dbCache = {};
-
-// if (typeof window !== 'undefined') {
-//   require('indexeddbshim'); // eslint-disable-line global-require
-// }
-
 const indexedDB = global.indexedDB
                   || global.webkitIndexedDB
                   || global.mozIndexedDB
