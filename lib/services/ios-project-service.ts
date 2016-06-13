@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as shell from "shelljs";
-import * as util from "util";
 import * as os from "os";
 import * as semver from "semver";
 import * as xcode from "xcode";
@@ -104,7 +103,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			let splitedXcodeBuildVersion = xcodeBuildVersion.split(".");
 			if (splitedXcodeBuildVersion.length === 3) {
-				xcodeBuildVersion = util.format("%s.%s", splitedXcodeBuildVersion[0], splitedXcodeBuildVersion[1]);
+				xcodeBuildVersion = `${splitedXcodeBuildVersion[0]}.${splitedXcodeBuildVersion[1]}`;
 			}
 
 			if (helpers.versionCompare(xcodeBuildVersion, IOSProjectService.XCODEBUILD_MIN_VERSION) < 0) {
@@ -124,7 +123,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					.forEach(dirName => shell.cp("-R", path.join(frameworkDir, dirName), this.platformData.projectRoot));
 				shell.cp("-rf", path.join(pathToTemplate, "*"), this.platformData.projectRoot);
 			} else if (this.$options.symlink) {
-				let xcodeProjectName = util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
+				let xcodeProjectName = `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`;
 
 				shell.cp("-R", path.join(frameworkDir, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "*"), path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
 				shell.cp("-R", path.join(frameworkDir, xcodeProjectName), this.platformData.projectRoot);
@@ -142,7 +141,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	public interpolateData(): IFuture<void> {
 		return (() => {
-			let infoPlistFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, util.format("%s-%s", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, "Info.plist"));
+			let infoPlistFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}-Info.plist`);
 			this.interpolateConfigurationFile(infoPlistFilePath).wait();
 
 			let projectRootFilePath = path.join(this.platformData.projectRoot, IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER);
@@ -439,7 +438,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					this.$fs.deleteDirectory(sourceDir).wait();
 
 					// Copy xcodeProject file
-					let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER));
+					let cachedPackagePath = path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, newVersion), constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`);
 					shell.cp("-R", path.join(cachedPackagePath, "*"), sourceDir);
 					this.$logger.info(`Copied from ${cachedPackagePath} at ${this.platformData.projectRoot}.`);
 
@@ -688,7 +687,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	};
 
 	private buildPathToXcodeProjectFile(version: string): string {
-		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, util.format("%s.xcodeproj", IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER), "project.pbxproj");
+		return path.join(this.$npmInstallationManager.getCachedPackagePath(this.platformData.frameworkPackageName, version), constants.PROJECT_FRAMEWORK_FOLDER_NAME, `${IOSProjectService.IOS_PROJECT_NAME_PLACEHOLDER}.xcodeproj`, "project.pbxproj");
 	}
 
 	private validateFramework(libraryPath: string): IFuture<void> {
