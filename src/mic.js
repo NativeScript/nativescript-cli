@@ -128,24 +128,32 @@ export class MobileIdentityConnect {
         let redirected = false;
 
         function loadCallback(event) {
-          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
-            redirected = true;
-            popup.removeAllListeners();
-            popup.close();
-            resolve(url.parse(event.url, true).query.code);
+          try {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
+              redirected = true;
+              popup.removeAllListeners();
+              popup.close();
+              resolve(url.parse(event.url, true).query.code);
+            }
+          } catch (error) {
+            // Just catch the error
           }
         }
 
         function errorCallback(event) {
-          if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
-            redirected = true;
-            popup.removeAllListeners();
-            popup.close();
-            resolve(url.parse(event.url, true).query.code);
-          } else if (redirected === false) {
-            popup.removeAllListeners();
-            popup.close();
-            reject(new KinveyError(event.message, '', event.code));
+          try {
+            if (event.url && event.url.indexOf(redirectUri) === 0 && redirected === false) {
+              redirected = true;
+              popup.removeAllListeners();
+              popup.close();
+              resolve(url.parse(event.url, true).query.code);
+            } else if (redirected === false) {
+              popup.removeAllListeners();
+              popup.close();
+              reject(new KinveyError(event.message, '', event.code));
+            }
+          } catch (error) {
+            // Just catch the error
           }
         }
 
