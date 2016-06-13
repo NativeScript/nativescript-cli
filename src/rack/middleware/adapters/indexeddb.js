@@ -6,15 +6,14 @@ import isArray from 'lodash/isArray';
 import isFunction from 'lodash/isFunction';
 let dbCache = {};
 
-if (typeof window !== 'undefined') {
-  require('indexeddbshim'); // eslint-disable-line global-require
-}
+// if (typeof window !== 'undefined') {
+//   require('indexeddbshim'); // eslint-disable-line global-require
+// }
 
-const indexedDB = global.shimIndexedDB
-                    || global.indexedDB
-                    || global.webkitIndexedDB
-                    || global.mozIndexedDB
-                    || global.msIndexedDB;
+const indexedDB = global.indexedDB
+                  || global.webkitIndexedDB
+                  || global.mozIndexedDB
+                  || global.msIndexedDB;
 
 const TransactionMode = {
   ReadWrite: 'readwrite',
