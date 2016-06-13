@@ -5,6 +5,7 @@ import del from 'del';
 import env from 'gulp-env';
 import bump from 'gulp-bump';
 import util from 'gulp-util';
+import tag from 'gulp-tag-version';
 import { argv as args } from 'yargs';
 
 function errorHandler(err) {
@@ -64,6 +65,7 @@ gulp.task('bump', () => {
       version: args.version
     }))
     .pipe(gulp.dest(`${__dirname}/`))
+    .pipe(tag({ prefex: '' }))
     .on('error', errorHandler);
   return stream;
 });
