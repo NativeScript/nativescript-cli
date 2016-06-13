@@ -4,7 +4,6 @@ import babel from 'gulp-babel';
 import del from 'del';
 import env from 'gulp-env';
 import bump from 'gulp-bump';
-import file from 'gulp-file';
 import util from 'gulp-util';
 import { argv as args } from 'yargs';
 
@@ -53,7 +52,7 @@ gulp.task('build', ['clean', 'lint'], () => {
   return stream;
 });
 
-gulp.task('bumpVersion', () => {
+gulp.task('bump', () => {
   if (!args.type && !args.version) {
     args.type = 'patch';
   }
@@ -65,13 +64,6 @@ gulp.task('bumpVersion', () => {
       version: args.version
     }))
     .pipe(gulp.dest(`${__dirname}/`))
-    .on('error', errorHandler);
-  return stream;
-});
-
-gulp.task('bump', ['bumpVersion'], () => {
-  const stream = file('bump.txt', '', { src: true })
-    .pipe(gulp.dest(`${__dirname}/tmp`))
     .on('error', errorHandler);
   return stream;
 });
