@@ -92,7 +92,7 @@
     "grunt-tslint": "3.0.1",
     "istanbul": "0.3.19",
     "mocha": "2.5.3",
-    "mocha-fibers": "1.1.1",
+    "mocha-fibers": "git+https://github.com/NativeScript/mocha-fibers.git",
     "mocha-typescript": "1.0.3",
     "should": "7.0.2",
     "tslint": "3.2.1",

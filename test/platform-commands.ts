@@ -19,6 +19,8 @@ import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities"
 import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
+import Future = require("fibers/future");
+import {CleanCommand} from "../lib/commands/platform-clean";
 
 let isCommandExecuted = true;
 
@@ -416,6 +418,35 @@ describe('Platform Service Tests', () => {
 
 				commandsService.tryExecuteCommand("platform|clean", ["ios", "invalid"]).wait();
 				assert.isFalse(isCommandExecuted);
+			});
+
+			it("will call removePlatform and addPlatform on the platformService passing the provided platforms", () => {
+				
+				let platformActions: { action: string, platforms: string[] }[] = [];
+				testInjector.registerCommand("platform|clean", CleanCommand);
+				let cleanCommand = testInjector.resolveCommand("platform|clean");
+				
+				platformService.removePlatforms = (platforms: string[]) => {
+					return (() => {
+						platformActions.push({ action: "removePlatforms", platforms });
+					}).future<void>()();
+				};
+				platformService.addPlatforms = (platforms: string[]) => {
+					return (() => {
+						platformActions.push({ action: "addPlatforms", platforms });
+					}).future<void>()();
+				}
+
+				cleanCommand.execute(["ios"]).wait();
+
+				let expectedPlatformActions = [
+					{ action: "removePlatforms", platforms: ["ios"] },
+					{ action: "addPlatforms", platforms: ["ios"] },
+				]
+
+				assert.deepEqual(platformActions, expectedPlatformActions, "Expected `remove ios`, `add ios` calls to the platformService.");
+
+				assert.isTrue(isCommandExecuted);
 			});
 		});
 
