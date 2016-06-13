@@ -1,22 +1,41 @@
 import { PhoneGapDevice } from 'kinvey-phonegap-sdk/es5/device';
+import { Html5Device } from 'kinvey-html5-sdk/es5/device';
 import packageJSON from '../package.json';
 
 /**
  * @private
  */
-export class AngularDevice extends PhoneGapDevice {
-  static toJSON() {
-    const json = super.toJSON();
+export class AngularDevice {
+  static isPhoneGap() {
+    return PhoneGapDevice.isPhoneGap();
+  }
 
-    if (AngularDevice.isBrowser()) {
-      json.platform.name = 'web browser';
+  static isBrowser() {
+    return PhoneGapDevice.isBrowser();
+  }
+
+  static isiOS() {
+    return PhoneGapDevice.isiOS();
+  }
+
+  static isAndroid() {
+    return PhoneGapDevice.isAndroid();
+  }
+  static toJSON() {
+    let json;
+
+    // Get the correct device information
+    if (PhoneGapDevice.isPhoneGap()) {
+      json = PhoneGapDevice.toJSON();
+    } else {
+      json = Html5Device.toJSON();
     }
 
     // Add angular information
-    json.library = {
-      name: 'angular',
-      version: global.angular.version.full
-    };
+    if (json.platform) {
+      json.platform.name = 'angular';
+      json.platform.version = global.angular.version.full;
+    }
 
     // Add sdk information
     json.kinveySDK = {
