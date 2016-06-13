@@ -309,6 +309,116 @@ describe('Platform Service Tests', () => {
 			});
 		});
 
+		describe("#CleanPlatformCommand", () => {
+			it("is not executed when platform is not passed", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|clean", []).wait();
+				assert.isFalse(isCommandExecuted);
+			});
+
+			it("is not executed when platform is not valid", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|clean", ["invalidPlatform"]).wait();
+				assert.isFalse(isCommandExecuted);
+			});
+
+			it("is executed when platform is valid", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|add", ["android"]).wait();
+				commandsService.tryExecuteCommand("platform|clean", ["android"]).wait();
+				assert.isTrue(isCommandExecuted);
+			});
+
+			it("is not executed when platform is not added", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|clean", ["android"]).wait();
+				assert.isFalse(isCommandExecuted);
+			});
+
+			it("is executed when all platforms are valid", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|add", ["android"]).wait();
+				commandsService.tryExecuteCommand("platform|add", ["ios"]).wait();
+				commandsService.tryExecuteCommand("platform|clean", ["android", "ios"]).wait();
+				assert.isTrue(isCommandExecuted);
+			});
+
+			it("is not executed when at least on platform is not added", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|clean", ["android", "ios"]).wait();
+				assert.isFalse(isCommandExecuted);
+			});
+
+			it("is not executed when at least one platform is not valid", () => {
+				isCommandExecuted = false;
+				commandsService.executeCommandUnchecked = (commandName: string): IFuture<boolean> => {
+					return (() => {
+						if (commandName !== "help") {
+							isCommandExecuted = true;
+						}
+						return false;
+					}).future<boolean>()();
+				};
+
+				commandsService.tryExecuteCommand("platform|clean", ["ios", "invalid"]).wait();
+				assert.isFalse(isCommandExecuted);
+			});
+		});
+
 		describe("#UpdatePlatformCommand", () => {
 			it("is not executed when platform is not passed", () => {
 				isCommandExecuted = false;
