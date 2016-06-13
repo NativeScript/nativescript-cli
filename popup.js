@@ -35,9 +35,9 @@ export class PhoneGapPopup extends EventEmitter {
 
     // Check that the InAppBrowser plugin is installed
     if (global.cordova && !global.cordova.InAppBrowser) {
-      throw new Error('PhoneGap InAppBrowser Plugin is not installed.',
-          'Please refer to http://http://devcenter.kinvey.com/phonegap/guides/getting-started for help with ' +
-          'setting up your project.');
+      throw new Error('PhoneGap InAppBrowser Plugin is not installed.'
+          + ' Please refer to http://http://devcenter.kinvey.com/phonegap/guides/getting-started for help with'
+          + ' setting up your project.');
     }
 
     // Open the popup
