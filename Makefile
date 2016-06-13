@@ -13,7 +13,7 @@ build: ;@echo "Building ${PROJECT}..."; \
 	./node_modules/.bin/gulp default
 
 publish: ;@echo "Publishing ${PROJECT}..."; \
-	npm publish . --tag beta
+	npm publish .
 
 audit: clean install test
 release: audit build publish
