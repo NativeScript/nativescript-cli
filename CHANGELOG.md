@@ -1,4 +1,8 @@
 ## Changelog
+### 3.0.0-beta.27 (2016-06-13)
+* Bugfix: Add `try/catch` block to MIC to catch errors when trying to access popup urls that are cross domain.
+
+
 ### 3.0.0-beta.26 (2016-06-13)
 * Bugfix (MLIBZ-1133): Listen to `loadstart` event on popups to capture redirect when using MIC login for url that results in a 404.
 * Bugfix (MLIBZ-1148): Provide a way to change the MIC hostname.
