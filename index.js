@@ -17,8 +17,8 @@ if (AngularDevice.isPhoneGap()) {
     document.removeEventListener('deviceready', onDeviceReady);
 
     if (typeof global.device === 'undefined') {
-      throw new KinveyError('Cordova Device Plugin is not installed.',
-        'Please refer to http://devcenter.kinvey.com/phonegap-v3.0/guides/push#ProjectSetUp for help with'
+      throw new KinveyError('Cordova Device Plugin is not installed.'
+        + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
         + ' setting up your project.');
     }
   };
