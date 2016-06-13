@@ -28,6 +28,7 @@ The workflow for releasing a new version of the sdk is as follows:
 3. Update the [Changelog](CHANGELOG.md).
 4. Run `gulp bump --type <type>` replacing `<type>` with major, minor, patch, or prerelease. See [Flags](#Flags) above.
 5. Make sure all changes are committed on the master branch and push.
+6. Checkout the develop branch and merge the master branch.
 
 ### Version Management
 Updating the sdk version should follow [Semantic Version 2.0.0](http://semver.org/):
