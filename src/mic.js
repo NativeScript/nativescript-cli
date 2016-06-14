@@ -122,7 +122,7 @@ export class MobileIdentityConnect {
       }
 
       throw new KinveyError('KinveyPopup is undefined.'
-        + ` Unable to login authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
+        + ` Unable to login using authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {
         let redirected = false;
