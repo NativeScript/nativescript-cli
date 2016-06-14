@@ -423,6 +423,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public afterPrepareAllPlugins(): IFuture<void> {
+
+		let projectRoot = this.platformData.projectRoot;
+
+		let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+		if (this.$hostInfo.isWindows) {
+			gradleBin += ".bat";
+		}
+		this.spawn(gradleBin, ["clean"], { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+
 		return Future.fromResult();
 	}
 
