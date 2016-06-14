@@ -269,8 +269,11 @@ export class PlatformService implements IPlatformService {
 			// verify .xml files are well-formed
 			this.$xmlValidator.validateXmlFiles(sourceFiles).wait();
 
-			// Remove .ts and .js.map files
-			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
+			// Remove .ts and .js.map files in release
+			if (this.$options.release) {
+				constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => sourceFiles = sourceFiles.filter(file => !minimatch(file, pattern, { nocase: true })));
+			}
+
 			let copyFileFutures = sourceFiles.map(source => {
 				let destinationPath = path.join(appDestinationDirectoryPath, path.relative(appSourceDirectoryPath, source));
 				if (this.$fs.getFsStats(source).wait().isDirectory()) {
