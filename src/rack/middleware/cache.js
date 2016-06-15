@@ -1,12 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import { Query } from '../../query';
 import { Aggregation } from '../../aggregation';
-import IndexedDB from './adapters/indexeddb';
-import { LocalStorage } from './adapters/localstorage';
 import { Memory } from './adapters/memory';
-import { WebSQL } from './adapters/websql';
 import { KinveyError, NotFoundError } from '../../errors';
-import { Log } from '../../log';
 import { KinveyMiddleware } from '../middleware';
 import { RequestMethod } from '../../requests/request';
 import { StatusCode } from '../../requests/response';
@@ -14,86 +10,28 @@ import Queue from 'promise-queue';
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
-import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
-
-/**
- * @private
- * Enum for DB Adapters.
- */
-const DBAdapter = {
-  IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage',
-  Memory: 'Memory',
-  WebSQL: 'WebSQL'
-};
-Object.freeze(DBAdapter);
-export { DBAdapter };
+const dbCache = {};
 
 /**
  * @private
  */
 export class DB {
-  constructor(name, adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
-    if (!isArray(adapters)) {
-      adapters = [adapters];
+  constructor(name) {
+    if (!name) {
+      throw new KinveyError('Unable to create a DB instance without a name.');
     }
 
-    forEach(adapters, adapter => {
-      switch (adapter) {
-        case DBAdapter.IndexedDB:
-          if (IndexedDB.isSupported()) {
-            this.adapter = new IndexedDB(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.LocalStorage:
-          if (LocalStorage.isSupported()) {
-            this.adapter = new LocalStorage(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.Memory:
-          if (Memory.isSupported()) {
-            this.adapter = new Memory(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.WebSQL:
-          if (WebSQL.isSupported()) {
-            this.adapter = new WebSQL(name);
-            return false;
-          }
-
-          break;
-        default:
-          Log.warn(`The ${adapter} adapter is is not recognized.`);
-      }
-
-      return true;
-    });
-
-    if (!this.adapter) {
-      if (Memory.isSupported()) {
-        Log.error('Provided adapters are unsupported on this platform. ' +
-          'Defaulting to the Memory adapter.', adapters);
-        this.adapter = new Memory(name);
-      } else {
-        Log.error('Provided adapters are unsupported on this platform.', adapters);
-      }
+    if (!isString(name)) {
+      throw new KinveyError('The name is not a string. A name must be a string to create a DB instance.');
     }
-  }
 
-  get objectIdPrefix() {
-    return '';
+    this.adapter = new Memory(name);
   }
 
   generateObjectId(length = 24) {
@@ -105,7 +43,6 @@ export class DB {
       objectId += chars.substring(pos, pos + 1);
     }
 
-    objectId = `${this.objectIdPrefix}${objectId}`;
     return objectId;
   }
 
@@ -250,15 +187,28 @@ export class DB {
  * @private
  */
 export class CacheMiddleware extends KinveyMiddleware {
-  constructor(adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
+  constructor() {
     super('Kinvey Cache Middleware');
-    this.adapters = adapters;
+  }
+
+  openDatabase(name) {
+    if (!name) {
+      throw new KinveyError('A name is required to open a database.');
+    }
+
+    let db = dbCache[name];
+
+    if (!db) {
+      db = new DB(name);
+    }
+
+    return db;
   }
 
   async handle(request) {
     request = await super.handle(request);
     const { method, query, body, appKey, collection, entityId } = request;
-    const db = new DB(appKey, this.adapters);
+    const db = this.openDatabase(appKey);
     let data;
 
     if (method === RequestMethod.GET) {
