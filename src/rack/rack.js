@@ -5,9 +5,8 @@ import { SerializeMiddleware } from './middleware/serialize';
 import { HttpMiddleware } from './middleware/http';
 import findIndex from 'lodash/findIndex';
 import reduce from 'lodash/reduce';
-import Symbol from 'es6-symbol';
-const sharedCacheRackInstance = Symbol();
-const sharedNetworkRackInstance = Symbol();
+const sharedCacheRackInstance;
+const sharedNetworkRackInstance;
 
 /**
  * @private
@@ -159,14 +158,11 @@ export class CacheRack extends KinveyRack {
   }
 
   static sharedInstance() {
-    let instance = this[sharedCacheRackInstance];
-
-    if (!instance) {
-      instance = new CacheRack();
-      this[sharedCacheRackInstance] = instance;
+    if (!sharedCacheRackInstance) {
+      sharedCacheRackInstance = new CacheRack();
     }
 
-    return instance;
+    return sharedCacheRackInstance;
   }
 }
 
@@ -182,13 +178,10 @@ export class NetworkRack extends KinveyRack {
   }
 
   static sharedInstance() {
-    let instance = this[sharedNetworkRackInstance];
-
-    if (!instance) {
-      instance = new NetworkRack();
-      this[sharedNetworkRackInstance] = instance;
+    if (!sharedNetworkRackInstance) {
+      sharedNetworkRackInstance = new NetworkRack();
     }
 
-    return instance;
+    return sharedNetworkRackInstance;
   }
 }
