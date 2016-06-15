@@ -1,6 +1,6 @@
-import { PhoneGapPush } from 'kinvey-phonegap-sdk/es5/push';
+import { Push as PhoneGapPush } from 'kinvey-phonegap-sdk/dist/push';
 
 /**
  * @private
  */
-export class AngularPush extends PhoneGapPush {}
+export class Push extends PhoneGapPush {}

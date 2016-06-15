@@ -1,5 +1,5 @@
-import { PhoneGapDevice } from 'kinvey-phonegap-sdk/es5/device';
-import { Html5Device } from 'kinvey-html5-sdk/es5/device';
+import { PhoneGapDevice } from 'kinvey-phonegap-sdk/dist/device';
+import { Html5Device } from 'kinvey-html5-sdk/dist/device';
 import packageJSON from '../package.json';
 
 /**

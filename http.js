@@ -1,41 +1,40 @@
-import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware';
+import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware';
 const $injector = angular.injector(['ng']);
 
-export class AngularHttpMiddleware extends KinveyMiddleware {
+export class HttpMiddleware extends KinveyMiddleware {
   constructor() {
     super('Kinvey Angular Http Middleware');
     this.$http = $injector.get('$http');
   }
 
-  handle(request) {
-    const promise = super.handle(request);
+  async handle(request) {
+    await super.handle(request);
     const { url, method, headers, body } = request;
 
-    return promise.then(() => {
+    try {
       // Send the request with $http
-      const promise = this.$http({
+      const response = await this.$http({
         url: url,
         method: method,
         headers: headers.toJSON(),
         data: body
-      }).then(response => {
-        request.response = {
-          statusCode: response.status,
-          headers: response.headers(),
-          data: response.data
-        };
-
-        return request;
-      }).catch(response => {
-        request.response = {
-          statusCode: response.status,
-          headers: response.headers(),
-          data: response.data
-        };
-
-        return request;
       });
-      return promise;
-    });
+
+      request.response = {
+        statusCode: response.status,
+        headers: response.headers(),
+        data: response.data
+      };
+
+      return request;
+    } catch (responseError) {
+      request.response = {
+        statusCode: responseError.status,
+        headers: responseError.headers(),
+        data: responseError.data
+      };
+
+      return request;
+    }
   }
 }

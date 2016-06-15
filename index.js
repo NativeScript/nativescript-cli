@@ -1,18 +1,24 @@
 import 'regenerator-runtime/runtime';
 import KinveyProvider from './provider';
-import { KinveyError } from 'kinvey-javascript-sdk-core/es5/errors';
-import { NetworkRack } from 'kinvey-javascript-sdk-core/es5/rack/rack';
-import { HttpMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware/http';
-import { AngularHttpMiddleware } from './http';
-import { AngularDevice } from './device';
-import { AngularPopup } from './popup';
+import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
+import { CacheRack, NetworkRack } from 'kinvey-javascript-sdk-core/dist/rack/rack';
+import { CacheMiddleware as CoreCacheMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware/cache';
+import { CacheMiddleware } from './cache';
+import { HttpMiddleware as CoreHttpMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware/http';
+import { HttpMiddleware } from './http';
+import { Device } from './device';
+import { Popup } from './popup';
+
+// Swap Cache Middelware
+const cacheRack = CacheRack.sharedInstance();
+cacheRack.swap(CoreCacheMiddleware, new CacheMiddleware());
 
 // Add the Http Middleware to the network rack
 const networkRack = NetworkRack.sharedInstance();
-networkRack.swap(HttpMiddleware, new AngularHttpMiddleware());
+networkRack.swap(CoreHttpMiddleware, new HttpMiddleware());
 
 // Check that the device plugin is installed
-if (AngularDevice.isPhoneGap()) {
+if (Device.isPhoneGap()) {
   const onDeviceReady = () => {
     document.removeEventListener('deviceready', onDeviceReady);
 
@@ -27,8 +33,8 @@ if (AngularDevice.isPhoneGap()) {
 }
 
 // Expose globals
-global.KinveyDevice = AngularDevice;
-global.KinveyPopup = AngularPopup;
+global.KinveyDevice = Device;
+global.KinveyPopup = Popup;
 
 // Register the SDK as a provider
 const ngKinvey = angular.module('kinvey', []);
