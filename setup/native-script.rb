@@ -120,7 +120,7 @@ android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
 execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", error_msg)
-execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.2 --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.3 --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
