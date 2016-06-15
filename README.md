@@ -133,7 +133,7 @@ If you have installed Chocolatey, you can complete these steps to set up JDK, an
 
 > NOTE: You can install required Android Tools with the following command:
 ```Shell
-android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.3,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## OS X
@@ -182,7 +182,7 @@ For example: ANDROID_HOME=/usr/local/Cellar/android-sdk/24/
 You can install the required Android tools with the following command:
 
 ```Shell
-echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.3,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 ## Linux
@@ -230,7 +230,7 @@ For example: ANDROID_HOME=/home/user/android-sdk
 You can install required Android Tools with the following command.
 
 ```Shell
-echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.2,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
+echo yes | android update sdk --filter tools,platform-tools,android-23,build-tools-23.0.3,sys-img-x86-android-22,extra-android-m2repository,extra-google-m2repository,extra-android-support --all --no-ui
 ```
 
 [Back to Top][1]
