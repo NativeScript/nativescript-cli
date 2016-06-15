@@ -5,8 +5,8 @@ import { SerializeMiddleware } from './middleware/serialize';
 import { HttpMiddleware } from './middleware/http';
 import findIndex from 'lodash/findIndex';
 import reduce from 'lodash/reduce';
-const sharedCacheRackInstance;
-const sharedNetworkRackInstance;
+let sharedCacheRackInstance;
+let sharedNetworkRackInstance;
 
 /**
  * @private
