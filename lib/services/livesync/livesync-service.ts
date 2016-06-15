@@ -15,7 +15,8 @@ class LiveSyncService implements ILiveSyncService {
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
-		private $injector: IInjector) { }
+		private $injector: IInjector,
+		private $options: IOptions) { }
 
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
@@ -64,7 +65,7 @@ class LiveSyncService implements ILiveSyncService {
 				appIdentifier: this.$projectData.projectId,
 				projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				excludedProjectDirsAndFiles: constants.LIVESYNC_EXCLUDED_FILE_PATTERNS,
+				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : [],
 				forceExecuteFullSync: this.forceExecuteFullSync
 			};
 			this.$liveSyncServiceBase.sync(liveSyncData).wait();
