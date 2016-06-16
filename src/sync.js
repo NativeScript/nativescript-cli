@@ -75,9 +75,13 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  async count(query, options = {}) {
+  async count(query = new Query(), options = {}) {
     let syncEntities = [];
-    query = new Query(result(query, 'toJSON', query));
+
+    if (!(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
     query.equalTo('collection', this.collection);
 
     // Get all sync entities
