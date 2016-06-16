@@ -1,8 +1,8 @@
 import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request';
 import { InsufficientCredentialsError, SyncError } from './errors';
-import CacheRequest from './requests/cache';
+import { CacheRequest } from './requests/cache';
 import { NetworkRequest } from './requests/network';
-import Client from './client';
+import { Client } from './client';
 import { Query } from './query';
 import url from 'url';
 import map from 'lodash/map';
@@ -24,7 +24,7 @@ const SyncOperation = {
 Object.freeze(SyncOperation);
 export { SyncOperation };
 
-export default class Sync {
+export class Sync {
   constructor() {
     /**
      * @private

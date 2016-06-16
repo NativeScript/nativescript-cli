@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import Client from './client';
+import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';
 import { Metadata } from './metadata';

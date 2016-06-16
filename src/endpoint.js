@@ -1,4 +1,4 @@
-import Client from './client';
+import { Client } from './client';
 import { RequestMethod, AuthType } from './requests/request';
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
@@ -10,7 +10,7 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 /**
  * Executes a custom command.
  */
-export default class CustomEndpoint {
+export class CustomEndpoint {
   /**
    * Execute a custom endpoint. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.

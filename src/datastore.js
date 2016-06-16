@@ -1,16 +1,16 @@
 
 /* eslint-disable no-underscore-dangle */
 import { KinveyError, NotFoundError } from './errors';
-import CacheRequest from './requests/cache';
+import { CacheRequest } from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { Query } from './query';
 import { KinveyObservable } from './utils/observable';
 import { Metadata } from './metadata';
-import Client from './client';
+import { Client } from './client';
 import Symbol from 'es6-symbol';
-import Sync from './sync';
+import { Sync } from './sync';
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
 import isString from 'lodash/isString';
