@@ -2,11 +2,14 @@ import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request
 import { InsufficientCredentialsError, SyncError } from './errors';
 import { CacheRequest } from './requests/cache';
 import { NetworkRequest } from './requests/network';
+import { DeltaFetchRequest } from './requests/deltafetch';
 import { Client } from './client';
 import { Query } from './query';
 import url from 'url';
 import map from 'lodash/map';
+import result from 'lodash/result';
 import isArray from 'lodash/isArray';
+import isString from 'lodash/isString';
 import orderBy from 'lodash/orderBy';
 import sortedUniqBy from 'lodash/sortedUniqBy';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -24,13 +27,25 @@ const SyncOperation = {
 Object.freeze(SyncOperation);
 export { SyncOperation };
 
-export class Sync {
-  constructor() {
+export class SyncManager {
+  constructor(collection, client = Client.sharedInstance()) {
+    if (!collection) {
+      throw new SyncError('A collection is required.');
+    }
+
+    if (!isString(collection)) {
+      throw new SyncError('Collection must be a string.');
+    }
+
     /**
-     * @private
+     * @type {string}
+     */
+    this.collection = collection;
+
+    /**
      * @type {Client}
      */
-    this.client = Client.sharedInstance();
+    this.client = client;
   }
 
   /**
@@ -43,6 +58,15 @@ export class Sync {
   }
 
   /**
+   * Pathname used to send backend requests.
+   *
+   * @return {String} sync pathname
+   */
+  get backendPathname() {
+    return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
+  }
+
+  /**
    * Count the number of entities that are waiting to be synced. A query can be
    * provided to only count a subset of entities.
    *
@@ -50,17 +74,11 @@ export class Sync {
    * @param   {Object}        [options={}]                Options
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
-   *
-   * @example
-   * var sync = new Sync();
-   * var promise = sync.count().then(function(count) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
    */
   async count(query, options = {}) {
     let syncEntities = [];
+    query = new Query(result(query, 'toJSON', query));
+    query.equalTo('collection', this.collection);
 
     // Get all sync entities
     const request = new CacheRequest({
@@ -86,25 +104,20 @@ export class Sync {
     return syncEntities.length;
   }
 
-  async addCreateOperation(collection, entities, options = {}) {
-    return this.addOperation(SyncOperation.Create, collection, entities, options);
+  async addCreateOperation(entities, options = {}) {
+    return this.addOperation(SyncOperation.Create, entities, options);
   }
 
-  async addUpdateOperation(collection, entities, options = {}) {
-    return this.addOperation(SyncOperation.Update, collection, entities, options);
+  async addUpdateOperation(entities, options = {}) {
+    return this.addOperation(SyncOperation.Update, entities, options);
   }
 
-  async addDeleteOperation(collection, entities, options = {}) {
-    return this.addOperation(SyncOperation.Delete, collection, entities, options);
+  async addDeleteOperation(entities, options = {}) {
+    return this.addOperation(SyncOperation.Delete, entities, options);
   }
 
-  async addOperation(operation = SyncOperation.Create, collection, entities, options = {}) {
+  async addOperation(operation = SyncOperation.Create, entities, options = {}) {
     let singular = false;
-
-    // Check that a name was provided
-    if (!collection) {
-      throw new SyncError('A name for a collection must be provided to add entities to the sync table.');
-    }
 
     // Cast the entities to an array
     if (!isArray(entities)) {
@@ -143,7 +156,7 @@ export class Sync {
       const findRequest = new CacheRequest(findConfig);
       const response = await findRequest.execute();
       const syncEntities = response.data;
-      const syncEntity = syncEntities.length === 1 ? syncEntities[0] : { collection: collection, state: {} };
+      const syncEntity = syncEntities.length === 1 ? syncEntities[0] : { collection: this.collection, state: {} };
 
       // Update the state
       syncEntity.state = syncEntity.state || {};
@@ -171,6 +184,53 @@ export class Sync {
     return singular ? entities[0] : entities;
   }
 
+  async pull(query, options = {}) {
+    // Check that the query is valid
+    if (query && !(query instanceof Query)) {
+      throw new SyncError('Invalid query. It must be an instance of the Query class.');
+    }
+
+    let count = await this.count();
+
+    // Attempt to push any pending sync data before fetching from the network.
+    if (count > 0) {
+      await this.push();
+      count = await this.count();
+    }
+
+    // Throw an error if there are still items that need to be synced
+    if (count > 0) {
+      throw new SyncError('Unable to pull data from the network.'
+        + ` There are ${count} entities that need`
+        + ' to be synced before data is loaded from the network.');
+    }
+
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.GET,
+      authType: AuthType.Default,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname,
+        query: options.query
+      }),
+      properties: options.properties,
+      query: query,
+      timeout: options.timeout,
+      client: this.client
+    });
+    let request = new NetworkRequest(config);
+
+    // Should we use delta fetch?
+    if (options.useDeltaFetch === true) {
+      request = new DeltaFetchRequest(config);
+    }
+
+    // Execute the request
+    const response = await request.execute();
+    return response.data;
+  }
+
   /*
    * Sync entities with the network. A query can be provided to
    * sync a subset of entities.
@@ -179,14 +239,6 @@ export class Sync {
    * @param   {Object}        [options={}]                Options
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
-   *
-   * @example
-   * var sync = new Sync();
-   * var promise = sync.push().then(function(response) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
    */
   async push(query, options = {}) {
     const batchSize = 100;
@@ -464,6 +516,15 @@ export class Sync {
     return [];
   }
 
+  async sync(query, options = {}) {
+    const push = await this.push(null, options);
+    const pull = await this.pull(query, options);
+    return {
+      push: push,
+      pull: pull
+    };
+  }
+
   /**
    * Clear the sync table. A query can be provided to
    * only clear a subet of the sync table.
@@ -472,14 +533,6 @@ export class Sync {
    * @param   {Object}        [options={}]                Options
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
-   *
-   * @example
-   * var sync = new Sync();
-   * var promise = sync.clear().then(function(response) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
    */
   clear(query, options = {}) {
     const request = new CacheRequest({
