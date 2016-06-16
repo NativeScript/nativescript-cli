@@ -1,5 +1,5 @@
 import { RequestMethod, AuthType, KinveyRequest, KinveyRequestConfig } from './request';
-import { NetworkRack } from '../rack/rack';
+import { KinveyRackManager } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
@@ -15,7 +15,7 @@ const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 export class NetworkRequest extends KinveyRequest {
   constructor(options) {
     super(options);
-    this.rack = NetworkRack.sharedInstance();
+    this.rack = KinveyRackManager.networkRack;
     this.automaticallyRefreshAuthToken = true;
   }
 

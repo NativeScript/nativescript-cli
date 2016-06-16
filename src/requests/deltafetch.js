@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { KinveyRequest, RequestMethod } from './request';
-import CacheRequest from './cache';
+import { CacheRequest } from './cache';
 import { NetworkRequest } from './network';
 import { KinveyResponse, KinveyResponseConfig, StatusCode } from './response';
 import { NotFoundError } from '../errors';

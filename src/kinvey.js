@@ -12,6 +12,7 @@ import { User, UserStore } from './user';
 import { AuthorizationGrant, SocialIdentity } from './mic';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
+import { KinveyRackManager } from './rack/rack';
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 let client = null;
@@ -77,6 +78,7 @@ export default class Kinvey {
     this.DataStore = DataStore;
     this.DataStoreType = DataStoreType;
     this.FileStore = FileStore;
+    this.KinveyRackManager = KinveyRackManager;
     this.Log = Log;
     this.Metadata = Metadata;
     this.Query = Query;

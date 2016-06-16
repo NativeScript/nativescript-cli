@@ -48,7 +48,7 @@ gulp.task('build', ['clean', 'lint'], () => {
     .pipe(envs)
     .pipe(babel())
     .pipe(envs.reset)
-    .pipe(gulp.dest('./es5'))
+    .pipe(gulp.dest('./dist'))
     .on('error', errorHandler);
   return stream;
 });
