@@ -1,11 +1,13 @@
 import * as path from "path";
+import * as temp from "temp";
 
 export class LiveSyncProvider implements ILiveSyncProvider {
 	constructor(private $androidLiveSyncServiceLocator: {factory: Function},
 		private $iosLiveSyncServiceLocator: {factory: Function},
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $logger: ILogger) { }
+		private $logger: ILogger,
+		private $childProcess: IChildProcess) { }
 
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml"];
 
@@ -53,6 +55,26 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		let platformData = this.$platformsData.getPlatformData(platform);
 		let fastSyncFileExtensions = LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
 		return _.contains(fastSyncFileExtensions, path.extname(filePath));
+	}
+
+	public transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): IFuture<void> {
+		return (() => {
+			if (deviceAppData.platform.toLowerCase() === "android" || !deviceAppData.deviceSyncZipPath || !isFullSync) {
+				deviceAppData.device.fileSystem.transferFiles(deviceAppData, localToDevicePaths).wait();
+			} else {
+				temp.track();
+				let tempZip = temp.path({prefix: "sync", suffix: ".zip"});
+				this.$logger.trace("Creating zip file: " + tempZip);
+				this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
+
+				deviceAppData.device.fileSystem.transferFiles(deviceAppData, [{
+					getLocalPath: () => tempZip,
+					getDevicePath: () => deviceAppData.deviceSyncZipPath,
+					getRelativeToProjectBasePath: () => "../sync.zip",
+					deviceProjectRootPath: deviceAppData.deviceProjectRootPath
+				}]).wait();
+			}
+		}).future<void>()();
 	}
 }
 $injector.register("liveSyncProvider", LiveSyncProvider);

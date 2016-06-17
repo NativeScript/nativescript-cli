@@ -31,6 +31,14 @@ export class IOSAppIdentifier extends deviceAppDataBaseLib.DeviceAppDataBase imp
 		return this.getDeviceProjectRootPath(this._deviceProjectRootPath);
 	}
 
+	public get deviceSyncZipPath(): string {
+		if (this.device.isEmulator) {
+			return undefined;
+		} else {
+			return "Library/Application Support/LiveSync/sync.zip";
+		}
+	}
+
 	public isLiveSyncSupported(): IFuture<boolean> {
 		return Future.fromResult(true);
 	}
