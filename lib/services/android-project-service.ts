@@ -23,10 +23,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		{ name: "lazy", version: "^1.0.11" }
 	];
 
-	private get sysInfoData(): ISysInfoData {
-		return this.$sysInfo.getSysInfo(path.join(__dirname, "..", "..", "package.json")).wait();
-	}
-
 	private _androidProjectPropertiesManagers: IDictionary<IAndroidProjectPropertiesManager>;
 
 	constructor(private $androidEmulatorServices: Mobile.IEmulatorPlatformServices,
@@ -99,7 +95,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			// this call will fail in case `android` is not set correctly.
 			this.$androidToolsInfo.getPathToAndroidExecutable({ showWarningsAsErrors: true }).wait();
-			this.$androidToolsInfo.validateJavacVersion(this.sysInfoData.javacVersion, { showWarningsAsErrors: true }).wait();
+			let javaCompilerVersion = this.$sysInfo.getJavaCompilerVersion().wait();
+			this.$androidToolsInfo.validateJavacVersion(javaCompilerVersion, { showWarningsAsErrors: true }).wait();
 		}).future<void>()();
 	}
 
@@ -167,14 +164,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					}
 				});
 			} else {
-				this.$logger.printMarkdown(` As you are using Node.js \`${this.sysInfoData.nodeVer}\` Static Binding Generator will be turned off.` +
+				this.$logger.printMarkdown(` As you are using Node.js \`${process.version}\` Static Binding Generator will be turned off.` +
 					`Upgrade your Node.js to ${AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS} or later, so you can use this feature.`);
 			}
 		}).future<any>()();
 	}
 
 	private canUseStaticBindingGenerator(): boolean {
-		return semver.gte(this.sysInfoData.nodeVer, AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS);
+		return semver.gte(process.version, AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS);
 	}
 
 	private useGradleWrapper(frameworkDir: string): boolean {
