@@ -34,7 +34,7 @@ class XcprojService implements IXcprojService {
 	public getXcprojInfo(): IFuture<IXcprojInfo> {
 		return ((): IXcprojInfo => {
 			if (!this.xcprojInfoCache) {
-				let cocoapodVer = this.$sysInfo.getSysInfo(this.$staticConfig.pathToPackageJson).wait().cocoapodVer,
+				let cocoapodVer = this.$sysInfo.getCocoapodVersion().wait(),
 					xcodeVersion = this.$xcodeSelectService.getXcodeVersion().wait();
 
 				if(cocoapodVer && !semver.valid(cocoapodVer)) {
