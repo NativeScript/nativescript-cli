@@ -276,7 +276,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 
 				let buildOptions = this.getBuildOptions();
-				buildOptions.unshift("buildapk")
+				buildOptions.unshift("buildapk");
 
 				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
 				if (this.$hostInfo.isWindows) {
@@ -431,8 +431,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public afterPrepareAllPlugins(): IFuture<void> {
 		let buildOptions = this.getBuildOptions();
-		buildOptions.unshift("clean")
-		
+		buildOptions.unshift("clean");
+
 		let projectRoot = this.platformData.projectRoot;
 		let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
 		if (this.$hostInfo.isWindows) {
