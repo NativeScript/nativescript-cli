@@ -1,7 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { DataStore } from './datastore';
+import { NetworkStore } from './datastore';
 import url from 'url';
 import map from 'lodash/map';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -10,7 +10,7 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
-export class FileStore extends DataStore {
+export class FileStore extends NetworkStore {
   constructor() {
     super();
     this.disableCache();

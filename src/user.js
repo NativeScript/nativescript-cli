@@ -6,7 +6,7 @@ import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect, SocialIdentity } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { DataStore, DataStoreType } from './datastore';
+import { NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import url from 'url';
@@ -28,6 +28,114 @@ let hello;
 
 if (typeof window !== 'undefined') {
   hello = require('hellojs'); // eslint-disable-line global-require
+}
+
+/**
+ * The UserStore class is used to find, save, update, remove, count and group users.
+ */
+export class UserStore extends NetworkStore {
+  constructor() {
+    super();
+    this.disableCache();
+  }
+
+  /**
+   * Enable cache.
+   *
+   * @return {DataStore}  DataStore instance.
+   */
+  enableCache() {
+    // Log a warning
+    // throw new KinveyError('Unable to enable cache for the file store.');
+  }
+
+  /**
+   * Make the store offline.
+   *
+   * @return {DataStore}  DataStore instance.
+   */
+  offline() {
+    // Log a warning
+    // throw new KinveyError('Unable to go offline for the file store.');
+  }
+
+  /**
+   * The pathname for the store.
+   *
+   * @return  {string}   Pathname
+   */
+  get pathname() {
+    return `/${usersNamespace}/${this.client.appKey}`;
+  }
+
+  async create() {
+    throw new KinveyError('Please use `User.signup()` to create a user.');
+  }
+
+  async update(user, options = {}) {
+    if (!user) {
+      throw new KinveyError('No user was provided to be updated.');
+    }
+
+    if (isArray(user)) {
+      throw new KinveyError('Only one user can be updated at one time.', user);
+    }
+
+    if (!user[idAttribute]) {
+      throw new KinveyError('User must have an _id.');
+    }
+
+    if (options._identity) {
+      const socialIdentity = user[socialIdentityAttribute];
+      if (socialIdentity) {
+        for (const [key] of socialIdentity) {
+          if (socialIdentity[key] && options._identity !== key) {
+            delete socialIdentity[key];
+          }
+        }
+      }
+    }
+
+    return super.update(user, options);
+  }
+
+  async exists(username, options) {
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${rpcNamespace}/${this.client.appKey}/check-username-exists`
+      }),
+      properties: options.properties,
+      data: { username: username },
+      timeout: options.timeout,
+      client: this.client
+    });
+    const request = new NetworkRequest(config);
+    const response = await request.execute();
+    const data = response.data || {};
+    return !!data.usernameExists;
+  }
+
+  async restore(id, options = {}) {
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.POST,
+      authType: AuthType.Master,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `${this.pathname}/${id}`
+      }),
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+    const request = new NetworkRequest(config);
+    const response = await request.execute();
+    return response.data;
+  }
 }
 
 /**
@@ -712,7 +820,7 @@ export class User {
   }
 
   update(data, options) {
-    const userStore = DataStore.getInstance(null, DataStoreType.User);
+    const userStore = new UserStore();
     return userStore.save(data, options).then(data => {
       this.data = data;
 
@@ -845,114 +953,6 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const response = await request.execute();
-    return response.data;
-  }
-}
-
-/**
- * The UserStore class is used to find, save, update, remove, count and group users.
- */
-export class UserStore extends DataStore {
-  constructor() {
-    super();
-    this.disableCache();
-  }
-
-  /**
-   * Enable cache.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  enableCache() {
-    // Log a warning
-    // throw new KinveyError('Unable to enable cache for the file store.');
-  }
-
-  /**
-   * Make the store offline.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  offline() {
-    // Log a warning
-    // throw new KinveyError('Unable to go offline for the file store.');
-  }
-
-  /**
-   * The pathname for the store.
-   *
-   * @return  {string}   Pathname
-   */
-  get pathname() {
-    return `/${usersNamespace}/${this.client.appKey}`;
-  }
-
-  async create() {
-    throw new KinveyError('Please use `User.signup()` to create a user.');
-  }
-
-  async update(user, options = {}) {
-    if (!user) {
-      throw new KinveyError('No user was provided to be updated.');
-    }
-
-    if (isArray(user)) {
-      throw new KinveyError('Only one user can be updated at one time.', user);
-    }
-
-    if (!user[idAttribute]) {
-      throw new KinveyError('User must have an _id.');
-    }
-
-    if (options._identity) {
-      const socialIdentity = user[socialIdentityAttribute];
-      if (socialIdentity) {
-        for (const [key] of socialIdentity) {
-          if (socialIdentity[key] && options._identity !== key) {
-            delete socialIdentity[key];
-          }
-        }
-      }
-    }
-
-    return super.update(user, options);
-  }
-
-  async exists(username, options) {
-    const config = new KinveyRequestConfig({
-      method: RequestMethod.POST,
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${rpcNamespace}/${this.client.appKey}/check-username-exists`
-      }),
-      properties: options.properties,
-      data: { username: username },
-      timeout: options.timeout,
-      client: this.client
-    });
-    const request = new NetworkRequest(config);
-    const response = await request.execute();
-    const data = response.data || {};
-    return !!data.usernameExists;
-  }
-
-  async restore(id, options = {}) {
-    const config = new KinveyRequestConfig({
-      method: RequestMethod.POST,
-      authType: AuthType.Master,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `${this.pathname}/${id}`
-      }),
-      properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
-    });
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }

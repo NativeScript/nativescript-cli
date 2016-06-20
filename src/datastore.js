@@ -1,4 +1,3 @@
-
 /* eslint-disable no-underscore-dangle */
 import { KinveyError, NotFoundError } from './errors';
 import { CacheRequest } from './requests/cache';
