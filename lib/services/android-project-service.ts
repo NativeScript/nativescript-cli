@@ -275,30 +275,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					});
 				}
 
-				this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
-				let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
-				let compileSdk = androidToolsInfo.compileSdkVersion;
-				let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
-				let buildToolsVersion = androidToolsInfo.buildToolsVersion;
-				let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
-				let buildOptions = ["buildapk",
-					`-PcompileSdk=android-${compileSdk}`,
-					`-PtargetSdk=${targetSdk}`,
-					`-PbuildToolsVersion=${buildToolsVersion}`,
-					`-PsupportVersion=${appCompatVersion}`,
-				];
-
-				if (this.$options.release) {
-					buildOptions.push("-Prelease");
-					buildOptions.push(`-PksPath=${path.resolve(this.$options.keyStorePath)}`);
-					buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
-					buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
-					buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
-				}
-
-				if (!this.canUseStaticBindingGenerator()) {
-					buildOptions.push("-PdontRunSbg");
-				}
+				let buildOptions = this.getBuildOptions();
+				buildOptions.unshift("buildapk");
 
 				let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
 				if (this.$hostInfo.isWindows) {
@@ -310,6 +288,35 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					"Run `tns platform remove android && tns platform add android` to switch to Gradle and try again.");
 			}
 		}).future<void>()();
+	}
+
+	public getBuildOptions(): Array<string> {
+		this.$androidToolsInfo.validateInfo({ showWarningsAsErrors: true, validateTargetSdk: true }).wait();
+		let androidToolsInfo = this.$androidToolsInfo.getToolsInfo().wait();
+		let compileSdk = androidToolsInfo.compileSdkVersion;
+		let targetSdk = this.getTargetFromAndroidManifest().wait() || compileSdk;
+		let buildToolsVersion = androidToolsInfo.buildToolsVersion;
+		let appCompatVersion = androidToolsInfo.supportRepositoryVersion;
+		let buildOptions = [
+			`-PcompileSdk=android-${compileSdk}`,
+			`-PtargetSdk=${targetSdk}`,
+			`-PbuildToolsVersion=${buildToolsVersion}`,
+			`-PsupportVersion=${appCompatVersion}`,
+		];
+
+		if (this.$options.release) {
+			buildOptions.push("-Prelease");
+			buildOptions.push(`-PksPath=${path.resolve(this.$options.keyStorePath)}`);
+			buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
+			buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
+			buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
+		}
+
+		if (!this.canUseStaticBindingGenerator()) {
+			buildOptions.push("-PdontRunSbg");
+		}
+
+		return buildOptions;
 	}
 
 	public buildForDeploy(projectRoot: string, buildConfig?: IBuildConfig): IFuture<void> {
@@ -423,14 +430,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public afterPrepareAllPlugins(): IFuture<void> {
+		let buildOptions = this.getBuildOptions();
+		buildOptions.unshift("clean");
 
 		let projectRoot = this.platformData.projectRoot;
-
 		let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
 		if (this.$hostInfo.isWindows) {
 			gradleBin += ".bat";
 		}
-		this.spawn(gradleBin, ["clean"], { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
+		this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 
 		return Future.fromResult();
 	}
