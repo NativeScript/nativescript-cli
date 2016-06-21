@@ -1,4 +1,4 @@
-import { Rack } from 'kinvey-rack/src/rack';
+import { Rack } from 'kinvey-rack/dist/rack';
 import { CacheMiddleware } from './cache';
 import { ParseMiddleware } from './parse';
 import { SerializeMiddleware } from './serialize';

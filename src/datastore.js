@@ -34,7 +34,7 @@ Object.freeze(DataStoreType);
 export { DataStoreType };
 
 export class DataStore {
-  constructor(collection, options) {
+  constructor(collection, options = {}) {
     if (!collection) {
       throw new KinveyError('A collection is required.');
     }
@@ -59,17 +59,23 @@ export class DataStore {
    * @return  {string}  Pathname
    */
   get pathname() {
-    let pathname = `/${appdataNamespace}`;
+    return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
+  }
 
-    if (this.client) {
-      pathname = `${pathname}/${this.client.appKey}`;
-    }
+  async find() {
+    throw new KinveyError('A subclass of DataStore must override the find function.');
+  }
 
-    if (this.collection) {
-      pathname = `${pathname}/${this.collection}`;
-    }
+  async findById() {
+    throw new KinveyError('A subclass of DataStore must override the findById function.');
+  }
 
-    return pathname;
+  async create() {
+    throw new KinveyError('A subclass of DataStore must override the create function.');
+  }
+
+  async update() {
+    throw new KinveyError('A subclass of DataStore must override the update function.');
   }
 
   /**
@@ -83,42 +89,24 @@ export class DataStore {
    * @return  {Promise}                                                 Promise.
    */
   save(data, options) {
-    if (data[idAttribute] && isFunction(this.update)) {
+    if (data[idAttribute]) {
       return this.update(data, options);
     }
 
-    if (isFunction(this.create)) {
-      return this.create(data, options);
-    }
-
-    return data;
+    return this.create(data, options);
   }
 
-  /**
-   * Deletes the database.
-   */
-  static async clear(options = {}) {
-    const client = options.client || Client.sharedInstance();
-    const pathname = `/${appdataNamespace}/${client.appKey}`;
-    const config = new KinveyRequestConfig({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: client.protocol,
-        host: client.host,
-        pathname: pathname,
-        query: options.query
-      }),
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    const request = new CacheRequest(config);
-    const response = await request.execute();
-    return response.data;
+  async remove() {
+    throw new KinveyError('A subclass of DataStore must override the remove function.');
+  }
+
+  async removeById() {
+    throw new KinveyError('A subclass of DataStore must override the removeById function.');
   }
 }
 
 export class NetworkStore extends DataStore {
-  constructor(collection, options) {
+  constructor(collection, options = {}) {
     super(collection, options);
 
     /**
@@ -492,7 +480,7 @@ export class NetworkStore extends DataStore {
 }
 
 export class CacheStore extends NetworkStore {
-  constructor(collection, options) {
+  constructor(collection, options = {}) {
     super(collection, options);
 
     /**
