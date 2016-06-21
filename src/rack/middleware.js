@@ -1,4 +1,4 @@
-import { AsciiTree } from './asciiTree';
+import { AsciiTree } from 'kinvey-rack/src/asciiTree';
 
 /**
  * @private

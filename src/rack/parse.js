@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from '../middleware';
+import { KinveyMiddleware } from './middleware';
 
 /**
  * @private

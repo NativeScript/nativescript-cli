@@ -232,7 +232,26 @@ export class SyncManager {
 
     // Execute the request
     const response = await request.execute();
-    return response.data;
+    const networkEntities = response.data;
+
+    // Save network entities to cache
+    const saveConfig = new KinveyRequestConfig({
+      method: RequestMethod.PUT,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname,
+        query: options.query
+      }),
+      properties: options.properties,
+      body: networkEntities,
+      timeout: options.timeout
+    });
+    const saveRequest = new CacheRequest(saveConfig);
+    await saveRequest.execute();
+
+    // Return the network entities
+    return networkEntities;
   }
 
   /*

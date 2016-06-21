@@ -1,8 +1,8 @@
 import { Rack } from 'kinvey-rack/src/rack';
-import { CacheMiddleware } from './middleware/cache';
-import { ParseMiddleware } from './middleware/parse';
-import { SerializeMiddleware } from './middleware/serialize';
-import { HttpMiddleware } from './middleware/http';
+import { CacheMiddleware } from './cache';
+import { ParseMiddleware } from './parse';
+import { SerializeMiddleware } from './serialize';
+import { HttpMiddleware } from './http';
 
 /**
  * @private

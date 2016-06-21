@@ -34,31 +34,6 @@ if (typeof window !== 'undefined') {
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
 export class UserStore extends NetworkStore {
-  constructor() {
-    super();
-    this.disableCache();
-  }
-
-  /**
-   * Enable cache.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  enableCache() {
-    // Log a warning
-    // throw new KinveyError('Unable to enable cache for the file store.');
-  }
-
-  /**
-   * Make the store offline.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  offline() {
-    // Log a warning
-    // throw new KinveyError('Unable to go offline for the file store.');
-  }
-
   /**
    * The pathname for the store.
    *
@@ -502,7 +477,7 @@ export class User {
 
         return null;
       })
-      .then(() => DataStore.clear({ client: this.client }))
+      // .then(() => DataStore.clear({ client: this.client }))
       .then(() => this);
 
     return promise;
