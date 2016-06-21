@@ -122,7 +122,7 @@ export class Response {
   }
 
   isSuccess() {
-    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === 302;
+    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === StatusCode.RedirectPermanetly;
   }
 }
 
@@ -176,7 +176,7 @@ export class KinveyResponse extends Response {
         || name === 'UserNotFound'
         || name === 'BlobNotFound'
         || name === 'DocumentNotFound'
-        || code === 404) {
+        || code === StatusCode.NotFound) {
       return new NotFoundError(message, debug, code);
     } else if (name === 'ParameterValueOutOfRangeError') {
       return new ParameterValueOutOfRangeError(message, debug, code);
