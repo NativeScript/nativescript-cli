@@ -8,14 +8,15 @@ import { Query } from './query';
 import { KinveyObservable } from './utils/observable';
 import { Client } from './client';
 import { SyncManager } from './sync';
+import { Metadata } from './metadata';
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
 import isString from 'lodash/isString';
 import url from 'url';
 import filter from 'lodash/filter';
 import map from 'lodash/map';
+import xorWith from 'lodash/xorWith';
 import isArray from 'lodash/isArray';
-import isFunction from 'lodash/isFunction';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
@@ -768,7 +769,6 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   create(data, options = {}) {
-    const syncAutomatically = options.syncAutomatically || this.syncAutomatically;
     const stream = KinveyObservable.create(async observer => {
       try {
         if (!data) {
@@ -801,11 +801,11 @@ export class CacheStore extends NetworkStore {
           const response = await request.execute();
           data = response.data;
 
-          if (syncAutomatically === true) {
-            // Add a create operation to sync
-            await this.syncManager.addCreateOperation(this.collection, data, options);
+          // Add a create operation to sync
+          await this.syncManager.addCreateOperation(data, options);
 
-            // Push the data
+          // Push the data
+          if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entity._id', ids);
             let push = await this.push(query, options);
@@ -837,7 +837,6 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   update(data, options = {}) {
-    const syncAutomatically = options.syncAutomatically || this.syncAutomatically;
     const stream = KinveyObservable.create(async observer => {
       try {
         if (!data) {
@@ -870,11 +869,11 @@ export class CacheStore extends NetworkStore {
           const response = await request.execute();
           data = response.data;
 
-          if (syncAutomatically === true) {
-            // Add an update operation to sync
-            await this.syncManager.addUpdateOperation(this.collection, data, options);
+          // Add an update operation to sync
+          await this.syncManager.addUpdateOperation(data, options);
 
-            // Push the data
+          // Push the data
+          if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entity._id', ids);
             let push = await this.push(query, options);
@@ -909,7 +908,6 @@ export class CacheStore extends NetworkStore {
    * @return  {Promise}                                                 Promise.
    */
   remove(query, options = {}) {
-    const syncAutomatically = options.syncAutomatically || this.syncAutomatically;
     const stream = KinveyObservable.create(async observer => {
       try {
         if (query && !(query instanceof Query)) {
@@ -933,22 +931,34 @@ export class CacheStore extends NetworkStore {
 
         // Execute the request
         const response = await request.execute();
-        let data = response.data;
+        let entities = response.data;
 
-        if (syncAutomatically === true) {
-          // Add a delete operation to sync
-          await this.syncManager.addDeleteOperation(this.collection, data, options);
+        if (entities && entities.length > 0) {
+          // Clear local entities from the sync table
+          const localEntities = filter(entities, entity => {
+            const metadata = new Metadata(entity);
+            return metadata.isLocal();
+          });
+          const query = new Query().contains('entity._id', Object.keys(keyBy(localEntities, idAttribute)));
+          await this.clearSync(query, options);
 
-          // Push the data
-          const ids = Object.keys(keyBy(data, idAttribute));
+          // Create delete operations for non local data in the sync table
+          const syncData = xorWith(entities, localEntities,
+            (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
+          await this.syncManager.addDeleteOperation(syncData, options);
+        }
+
+        // Push the data
+        if (this.syncAutomatically === true) {
+          const ids = Object.keys(keyBy(entities, idAttribute));
           const query = new Query().contains('entity._id', ids);
           let push = await this.push(query, options);
           push = filter(push, result => !result.error);
-          data = map(push, result => result.entity);
+          entities = map(push, result => result.entity);
         }
 
         // Emit the data
-        observer.next(data);
+        observer.next(entities);
       } catch (error) {
         return observer.error(error);
       }
@@ -970,45 +980,56 @@ export class CacheStore extends NetworkStore {
    * @return  {Observable}                                             Observable.
    */
   removeById(id, options = {}) {
-    const syncAutomatically = options.syncAutomatically || this.syncAutomatically;
     const stream = KinveyObservable.create(async observer => {
       try {
         if (!id) {
-          observer.next(null);
-        }
+          observer.next(undefined);
+        } else {
+          // Remove from cache
+          const config = new KinveyRequestConfig({
+            method: RequestMethod.DELETE,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${id}`,
+              query: options.query
+            }),
+            properties: options.properties,
+            authType: AuthType.Default,
+            timeout: options.timeout
+          });
+          const request = new CacheRequest(config);
 
-        // Remove from cache
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.DELETE,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/${id}`,
-            query: options.query
-          }),
-          properties: options.properties,
-          authType: AuthType.Default,
-          timeout: options.timeout
-        });
-        const request = new CacheRequest(config);
+          // Execute the request
+          const response = await request.execute();
+          let entity = response.data;
 
-        // Execute the request
-        const response = await request.execute();
-        let data = response.data;
+          if (entity) {
+            const metadata = new Metadata(entity);
 
-        if (syncAutomatically === true) {
-          // Add a delete operation to sync
-          await this.syncManager.addDeleteOperation(this.collection, data, options);
+            // Clear any pending sync items if the entity
+            // was created locally
+            if (metadata.isLocal()) {
+              const query = new Query();
+              query.equalTo('entity._id', entity[idAttribute]);
+              await this.clearSync(query, options);
+            } else {
+              // Add a delete operation to sync
+              await this.syncManager.addDeleteOperation(entity, options);
+            }
+          }
 
           // Push the data
-          const query = new Query().equalTo('entity._id', data[idAttribute]);
-          let push = await this.push(query, options);
-          push = filter(push, result => !result.error);
-          data = map(push, result => result.entity);
-        }
+          if (this.syncAutomatically === true) {
+            const query = new Query().equalTo('entity._id', entity[idAttribute]);
+            let push = await this.push(query, options);
+            push = filter(push, result => !result.error);
+            entity = map(push, result => result.entity);
+          }
 
-        // Emit the data
-        observer.next(data);
+          // Emit the data
+          observer.next(entity);
+        }
       } catch (error) {
         return observer.error(error);
       }
@@ -1090,6 +1111,10 @@ export class CacheStore extends NetworkStore {
    */
   syncCount(query, options) {
     return this.syncManager.count(query, options);
+  }
+
+  pendingSyncItems(query, options) {
+    return this.syncManager.find(query, options);
   }
 
   /**

@@ -97,7 +97,13 @@ describe('SyncStore', function() {
   });
 
   after(function() {
-    return this.syncStore.clear();
+    return this.syncStore.clear().then(() => this.syncStore.clearSync());
+  });
+
+  after(function() {
+    return this.syncStore.syncCount().then(count => {
+      expect(count).to.equal(0);
+    });
   });
 
   after(function() {
@@ -147,7 +153,7 @@ describe('SyncStore', function() {
       });
     });
 
-    it('should return a subset of entities when a query is provided', function() {
+    it('should return a subset of entities that match the provided query', function() {
       const query = new Query().equalTo('_id', this.entity._id);
       const promise = this.syncStore.find(query).toPromise();
       return promise.then(entities => {
@@ -161,9 +167,7 @@ describe('SyncStore', function() {
   describe('findById()', function() {
     it('should return undefined when an id is not provided', function() {
       const promise = this.syncStore.findById().toPromise();
-      return promise.then(entity => {
-        expect(entity).to.be.undefined;
-      });
+      return expect(promise).to.eventually.be.undefined;
     });
 
     it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
@@ -173,13 +177,179 @@ describe('SyncStore', function() {
 
     it('should return the entity that matches the id', function() {
       const promise = this.syncStore.findById(this.entity._id).toPromise();
-      return promise.then(entity => {
-        expect(entity).to.deep.equal(this.entity);
-      });
+      return expect(promise).to.eventually.deep.equal(this.entity);
     });
   });
 
   describe('count()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.syncStore.count({}).toPromise();
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
 
+    it('should return the count of all entities when a query is not provided', function() {
+      const promise = this.syncStore.count().toPromise();
+      return expect(promise).to.eventually.equal(2);
+    });
+
+    it('should return the count of entities that match the provided query', function() {
+      const query = new Query().equalTo('_id', this.entity._id);
+      const promise = this.syncStore.count(query).toPromise();
+      return expect(promise).to.eventually.equal(1);
+    });
+  });
+
+  describe('create()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.syncStore.create();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should create the data in the cache and add a create operation to the sync table', function() {
+      const data = { prop: randomString() };
+      const promise = this.syncStore.create(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+        const query = new Query().equalTo('entity._id', entity._id);
+        return this.syncStore.syncCount(query);
+      }).then(syncCount => {
+        expect(syncCount).to.equal(1);
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { prop: randomString() };
+      const promise = this.syncStore.create([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+        const query = new Query().equalTo('entity._id', entities[0]._id);
+        return this.syncStore.syncCount(query);
+      }).then(syncCount => {
+        expect(syncCount).to.equal(1);
+      });
+    });
+  });
+
+  describe('update()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.syncStore.update();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should update the data in the cache and add a update operation to the sync table', function() {
+      const data = { _id: randomString(), prop: randomString() };
+      const promise = this.syncStore.update(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+
+        const query = new Query().equalTo('entity._id', entity._id);
+        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('entity').that.deep.equals(entity);
+        });
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { _id: randomString(), prop: randomString() };
+      const promise = this.syncStore.update([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entity._id', entities[0]._id);
+        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('entity').that.deep.equals(entity);
+        });
+      });
+    });
+  });
+
+  describe('remove()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.syncStore.remove({});
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should remove the data in the cache and add a delete operation to the sync table', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+      data = await this.syncStore.update(data);
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.syncStore.remove(query);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]')
+          .that.deep.equals(data);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entity._id', entity._id);
+        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('state')
+            .that.deep.equals({ method: 'DELETE' });
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('entity')
+            .that.deep.equals(entity);
+        });
+      });
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.syncStore.removeById();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const promise = this.syncStore.removeById(randomString());
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should remove the entity that matches the id and add a delete operation to the sync table', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+      data = await this.syncStore.update(data);
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.syncStore.removeById(data._id);
+      return promise.then(entity => {
+        expect(entity).to.deep.equal(data);
+
+        const query = new Query().equalTo('entity._id', entity._id);
+        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('state')
+            .that.deep.equals({ method: 'DELETE' });
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('entity')
+            .that.deep.equals(entity);
+        });
+      });
+    });
   });
 });

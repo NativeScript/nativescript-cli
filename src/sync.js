@@ -28,7 +28,7 @@ Object.freeze(SyncOperation);
 export { SyncOperation };
 
 export class SyncManager {
-  constructor(collection, client = Client.sharedInstance()) {
+  constructor(collection, options = {}) {
     if (!collection) {
       throw new SyncError('A collection is required.');
     }
@@ -45,7 +45,7 @@ export class SyncManager {
     /**
      * @type {Client}
      */
-    this.client = client;
+    this.client = options.client || Client.sharedInstance();
   }
 
   /**
@@ -66,16 +66,7 @@ export class SyncManager {
     return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
   }
 
-  /**
-   * Count the number of entities that are waiting to be synced. A query can be
-   * provided to only count a subset of entities.
-   *
-   * @param   {Query}         [query]                     Query
-   * @param   {Object}        [options={}]                Options
-   * @param   {Number}        [options.timeout]           Timeout for the request.
-   * @return  {Promise}                                   Promise
-   */
-  async count(query = new Query(), options = {}) {
+  async find(query = new Query(), options = {}) {
     let syncEntities = [];
 
     if (!(query instanceof Query)) {
@@ -103,6 +94,22 @@ export class SyncManager {
     // one sync operation per unique entity.
     syncEntities = orderBy(syncEntities, 'key', ['desc']);
     syncEntities = sortedUniqBy(syncEntities, syncEntity => syncEntity.entity[idAttribute]);
+
+    // Return the length of sync entities
+    return syncEntities;
+  }
+
+  /**
+   * Count the number of entities that are waiting to be synced. A query can be
+   * provided to only count a subset of entities.
+   *
+   * @param   {Query}         [query]                     Query
+   * @param   {Object}        [options={}]                Options
+   * @param   {Number}        [options.timeout]           Timeout for the request.
+   * @return  {Promise}                                   Promise
+   */
+  async count(query = new Query(), options = {}) {
+    const syncEntities = await this.find(query, options);
 
     // Return the length of sync entities
     return syncEntities.length;
