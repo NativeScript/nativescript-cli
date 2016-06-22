@@ -1,7 +1,6 @@
 import './setup';
-import CustomEndpoint from '../src/endpoint';
+import { CustomEndpoint } from '../src/endpoint';
 import { KinveyError } from '../src/errors';
-import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
@@ -13,11 +12,11 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 describe('CustomEndpoint', function () {
   describe('execute()', function () {
     beforeEach(function() {
-      return loginUser.call(this);
+      return this.login();
     });
 
     afterEach(function() {
-      return logoutUser.call(this);
+      return this.logout();
     });
 
     it('should respond', function () {

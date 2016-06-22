@@ -4,8 +4,8 @@
   "description": "Kinvey JavaScript SDK Core",
   "main": "./dist/kinvey.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --compilers js:babel-core/register -r babel-polyfill -s 100 ./test/datastore.spec.js",
-    "test:watch": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 ./test/datastore.spec.js",
+    "test": "./node_modules/mocha/bin/mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
+    "test:watch": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
     "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover",
     "build": "./node_modules/.bin/gulp build",
     "lint": "./node_modules/.bin/gulp lint"

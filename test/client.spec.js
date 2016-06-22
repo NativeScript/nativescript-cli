@@ -1,5 +1,5 @@
 import './setup';
-import Client from '../src/client';
+import { Client } from '../src/client';
 import chai from 'chai';
 const expect = chai.expect;
 

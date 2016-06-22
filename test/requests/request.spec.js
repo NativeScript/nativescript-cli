@@ -1,5 +1,5 @@
 import '../setup';
-import Client from '../../src/client';
+import { Client } from '../../src/client';
 import { Properties, KinveyRequest, KinveyRequestConfig } from '../../src/requests/request';
 import chai from 'chai';
 const expect = chai.expect;

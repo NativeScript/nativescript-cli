@@ -1,11 +1,10 @@
 import './setup';
-import { User, UserStore } from '../src/user';
+import { User } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
 import { MobileIdentityConnect, SocialIdentity, AuthorizationGrant } from '../src/mic';
 import { randomString } from '../src/utils/string';
-import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -136,7 +135,7 @@ describe('User', function () {
 
   describe('getActiveUser', function() {
     after(function() {
-      return logoutUser.call(this);
+      return this.logout();
     });
 
     it('should be a static method', function() {
@@ -170,7 +169,7 @@ describe('User', function () {
 
   describe('isActive', function() {
     after(function() {
-      return logoutUser.call(this);
+      return this.logout();
     });
 
     it('should be a method', function() {
@@ -184,7 +183,7 @@ describe('User', function () {
     });
 
     it('should return true if the user is the active user', function() {
-      return loginUser.call(this).then(user => {
+      return this.login().then(user => {
         const isActive = user.isActive();
         expect(isActive).to.be.true;
       });
@@ -219,7 +218,7 @@ describe('User', function () {
 
   describe('login()', function() {
     afterEach(function() {
-      return logoutUser.call(this);
+      return this.logout();
     });
 
     it('should be a static method', function() {
@@ -243,7 +242,7 @@ describe('User', function () {
     });
 
     it('should throw an error if the user is already active', function() {
-      return loginUser.call(this).then(user => {
+      return this.login().then(user => {
         const promise = user.login({
           username: randomString(),
           password: randomString()
@@ -253,7 +252,7 @@ describe('User', function () {
     });
 
     it('should throw an error if an active user already exists', function() {
-      return loginUser.call(this).then(() => {
+      return this.login().then(() => {
         const promise = User.login({
           username: randomString(),
           password: randomString()
@@ -328,7 +327,7 @@ describe('User', function () {
 
   describe('loginWithMIC', function() {
     afterEach(function() {
-      return logoutUser.call(this);
+      return this.logout();
     });
 
     it('should be a static method', function() {
@@ -364,13 +363,13 @@ describe('User', function () {
 
   describe('logout', function() {
     beforeEach(function() {
-      return loginUser.call(this).then(user => {
+      return this.login().then(user => {
         this.user = user;
       });
     });
 
     afterEach(function() {
-      return logoutUser.call(this).then(() => {
+      return this.logout().then(() => {
         delete this.user;
       });
     });
@@ -380,7 +379,7 @@ describe('User', function () {
     });
 
     it('should logout a user when the user is not the active user', function() {
-      return logoutUser.call(this).then(() => {
+      return this.logout().then(() => {
         const promise = this.user.logout();
         return expect(promise).to.be.fulfilled;
       });
@@ -544,37 +543,18 @@ describe('User', function () {
 
 describe('UserStore', function() {
   beforeEach(function() {
-    return loginUser.call(this);
+    return this.login();
   });
 
   afterEach(function() {
-    return logoutUser.call(this);
+    return this.logout();
   });
 
   describe('constructor', function() {
-    it('should create a user store', function() {
-      const store = new UserStore();
-      expect(store).to.be.instanceof(UserStore);
-    });
+    it('should create a user store');
   });
 
   describe('update()', function() {
-    it('should update a user', async function() {
-      const user = {
-        _id: randomString(),
-        prop: randomString()
-      };
-      const store = new UserStore();
-
-      nock(this.client.baseUrl)
-        .put(`${store.pathname}/${user._id}`, () => true)
-        .query(true)
-        .reply(200, user, {
-          'content-type': 'application/json'
-        });
-
-      const updatedUser = await store.update(user);
-      expect(updatedUser).to.deep.equal(user);
-    });
+    it('should update a user');
   });
 });

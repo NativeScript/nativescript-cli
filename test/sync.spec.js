@@ -1,8 +1,8 @@
 import './setup';
-import Sync from '../src/sync';
+import { SyncManager } from '../src/sync';
 import { Query } from '../src/query';
 import { SyncError } from '../src/errors';
-import { DataStore } from '../src/datastore';
+import { SyncStore } from '../src/datastore';
 import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
@@ -24,8 +24,9 @@ describe('Sync', function () {
   });
 
   beforeEach(function() {
-    this.sync = new Sync();
-    this.sync.client = this.client;
+    this.sync = new SyncManager(collection, {
+      client: this.client
+    });
   });
 
   afterEach(function() {
@@ -38,13 +39,13 @@ describe('Sync', function () {
 
   describe('count', function() {
     beforeEach(function() {
-      return this.sync.addUpdateOperation(collection, {
+      return this.sync.addUpdateOperation({
         _id: randomString()
       });
     });
 
     beforeEach(function() {
-      return this.sync.addUpdateOperation(randomString(), {
+      return this.sync.addUpdateOperation({
         _id: randomString()
       });
     });
@@ -55,25 +56,10 @@ describe('Sync', function () {
       });
     });
 
-    it('should return the count that matches the query', function() {
-      const query = new Query();
-      query.equalTo('collection', collection);
-      return this.sync.count(query).then(count => {
-        expect(count).to.equal(1);
-      });
-    });
+    it('should return the count that matches the query');
   });
 
   describe('addCreateOperation', function() {
-    it('should respond', function() {
-      expect(Sync).to.respondTo('addCreateOperation');
-    });
-
-    it('should reject the promise when a name is not provided', function() {
-      const promise = this.sync.addCreateOperation();
-      return expect(promise).to.be.rejectedWith(SyncError);
-    });
-
     it('should reject the promise when an entity does not contain and _id', function() {
       const promise = this.sync.addCreateOperation(collection, {
         prop: randomString()
@@ -85,7 +71,7 @@ describe('Sync', function () {
       const entity = {
         _id: randomString()
       };
-      const promise = this.sync.addCreateOperation(collection, entity);
+      const promise = this.sync.addCreateOperation(entity);
       return expect(promise).to.eventually.deep.equal(entity);
     });
 
@@ -93,7 +79,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      const promise = this.sync.addCreateOperation(collection, entities);
+      const promise = this.sync.addCreateOperation(entities);
       return expect(promise).to.eventually.deep.equal(entities);
     });
 
@@ -101,28 +87,17 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      return this.sync.addCreateOperation(collection, entities).then(() => {
-        const query = new Query();
-        query.equalTo('collection', collection);
-        return this.sync.count(query);
-      }).then(count => {
-        expect(count).to.equal(entities.length);
-      });
+      return this.sync.addCreateOperation(entities)
+        .then(() => this.sync.count())
+        .then(count => {
+          expect(count).to.equal(entities.length);
+        });
     });
   });
 
   describe('addDeleteOperation', function() {
-    it('should respond', function() {
-      expect(Sync).to.respondTo('addDeleteOperation');
-    });
-
-    it('should reject the promise when a name is not provided', function() {
-      const promise = this.sync.addDeleteOperation();
-      return expect(promise).to.be.rejectedWith(SyncError);
-    });
-
     it('should reject the promise when an entity does not contain and _id', function() {
-      const promise = this.sync.addDeleteOperation(collection, {
+      const promise = this.sync.addDeleteOperation({
         prop: randomString()
       });
       return expect(promise).to.be.rejectedWith(SyncError);
@@ -132,7 +107,7 @@ describe('Sync', function () {
       const entity = {
         _id: randomString()
       };
-      const promise = this.sync.addDeleteOperation(collection, entity);
+      const promise = this.sync.addDeleteOperation(entity);
       return expect(promise).to.eventually.deep.equal(entity);
     });
 
@@ -140,7 +115,7 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      const promise = this.sync.addDeleteOperation(collection, entities);
+      const promise = this.sync.addDeleteOperation(entities);
       return expect(promise).to.eventually.deep.equal(entities);
     });
 
@@ -148,24 +123,17 @@ describe('Sync', function () {
       const entities = [{
         _id: randomString()
       }];
-      return this.sync.addDeleteOperation(collection, entities).then(() => {
-        const query = new Query();
-        query.equalTo('collection', collection);
-        return this.sync.count(query);
-      }).then(count => {
-        expect(count).to.equal(entities.length);
-      });
+      return this.sync.addDeleteOperation(entities)
+        .then(() => this.sync.count())
+        .then(count => {
+          expect(count).to.equal(entities.length);
+        });
     });
   });
 
   describe('push', function() {
-    it('should respond', function() {
-      expect(Sync).to.respondTo('push');
-    });
-
     it('should save an entity to the network', async function() {
-      const store = new DataStore(collection);
-      store.offline();
+      const store = new SyncStore(collection);
       let entity = {
         prop: randomString()
       };
@@ -178,9 +146,7 @@ describe('Sync', function () {
           'content-type': 'application/json'
         });
 
-      const query = new Query();
-      query.equalTo('collection', store.collection);
-      const result = await this.sync.push(query);
+      const result = await this.sync.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
       expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
@@ -188,8 +154,7 @@ describe('Sync', function () {
     });
 
     it('should delete an entity from the network', async function() {
-      const store = new DataStore(collection);
-      store.offline();
+      const store = new SyncStore(collection);
       let entity = {
         _id: randomString(),
         prop: randomString()
@@ -202,33 +167,27 @@ describe('Sync', function () {
         .query(true)
         .reply(204);
 
-      const query = new Query();
-      query.equalTo('collection', store.collection);
-      const result = await this.sync.push(query);
+      const result = await this.sync.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
       expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
     });
 
     it('should not delete an entity on the network if it was created locally', async function() {
-      const store = new DataStore(collection);
-      store.offline();
+      const store = new SyncStore(collection);
       let entity = {
         prop: randomString()
       };
       entity = await store.save(entity);
       await store.removeById(entity._id);
-      const query = new Query();
-      query.equalTo('collection', store.collection);
-      const result = await this.sync.push(query);
+      const result = await this.sync.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(0);
       expect(result).to.deep.equal([]);
     });
 
     it('should succeed after a failed push attempt when creating an entity', async function() {
-      const store = new DataStore(collection);
-      store.offline();
+      const store = new SyncStore(collection);
       let entity = {
         prop: randomString()
       };
@@ -255,8 +214,7 @@ describe('Sync', function () {
     });
 
     it('should succeed after a failed push attempt when updating an entity', async function() {
-      const store = new DataStore(collection);
-      store.offline();
+      const store = new SyncStore(collection);
       let entity = {
         _id: randomString(),
         prop: randomString()
