@@ -134,6 +134,10 @@ describe('User', function () {
   });
 
   describe('getActiveUser', function() {
+    before(function() {
+      return this.login();
+    });
+
     after(function() {
       return this.logout();
     });
@@ -142,7 +146,8 @@ describe('User', function () {
       expect(User).itself.to.respondTo('getActiveUser');
     });
 
-    it('should return null when there is not an active user', function() {
+    it('should return null when there is not an active user', async function() {
+      await this.logout();
       const user = User.getActiveUser();
       expect(user).to.be.null;
     });

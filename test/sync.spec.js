@@ -1,9 +1,7 @@
 import './setup';
 import { SyncManager } from '../src/sync';
-import { Query } from '../src/query';
 import { SyncError } from '../src/errors';
 import { SyncStore } from '../src/datastore';
-import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
@@ -15,14 +13,6 @@ const expect = chai.expect;
 const collection = 'test';
 
 describe('Sync', function () {
-  beforeEach(function() {
-    return loginUser.call(this);
-  });
-
-  afterEach(function() {
-    return logoutUser.call(this);
-  });
-
   beforeEach(function() {
     this.sync = new SyncManager(collection, {
       client: this.client

@@ -21,7 +21,13 @@ const client = Kinvey.init({
 
 // Login
 function login() {
-  const user = new User();
+  let user = User.getActiveUser(this.client);
+
+  if (user) {
+    return user;
+  }
+
+  user = new User();
   user.client = this.client;
   nock(this.client.baseUrl)
     .post(`${user.pathname}/login`, () => true)
@@ -58,6 +64,14 @@ before(function() {
   this.client = client;
   this.login = bind(login, this);
   this.logout = bind(logout, this);
+});
+
+before(function() {
+  return this.login();
+});
+
+after(function() {
+  return this.logout();
 });
 
 after(function() {

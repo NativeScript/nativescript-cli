@@ -667,13 +667,12 @@ export class CacheStore extends NetworkStore {
           observer.next(networkEntity);
         }
       } catch (error) {
-        // Set useSync option to false
-        options.useSync = false;
-
         // If the entity was not found then just remove it
         // from the cache
         if (error instanceof NotFoundError) {
-          await this.removeById(id, options);
+          const query = new Query();
+          query.equalTo('_id', id);
+          await this.clear(id, options);
         }
 
         // Emit the error
@@ -808,9 +807,7 @@ export class CacheStore extends NetworkStore {
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entity._id', ids);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            await this.push(query, options);
           }
 
           // Emit the data
@@ -876,9 +873,7 @@ export class CacheStore extends NetworkStore {
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entity._id', ids);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            data = map(push, result => result.entity);
+            await this.push(query, options);
           }
 
           // Emit the data
@@ -931,7 +926,7 @@ export class CacheStore extends NetworkStore {
 
         // Execute the request
         const response = await request.execute();
-        let entities = response.data;
+        const entities = response.data;
 
         if (entities && entities.length > 0) {
           // Clear local entities from the sync table
@@ -952,9 +947,7 @@ export class CacheStore extends NetworkStore {
         if (this.syncAutomatically === true) {
           const ids = Object.keys(keyBy(entities, idAttribute));
           const query = new Query().contains('entity._id', ids);
-          let push = await this.push(query, options);
-          push = filter(push, result => !result.error);
-          entities = map(push, result => result.entity);
+          await this.push(query, options);
         }
 
         // Emit the data
@@ -1002,7 +995,7 @@ export class CacheStore extends NetworkStore {
 
           // Execute the request
           const response = await request.execute();
-          let entity = response.data;
+          const entity = response.data;
 
           if (entity) {
             const metadata = new Metadata(entity);
@@ -1022,9 +1015,7 @@ export class CacheStore extends NetworkStore {
           // Push the data
           if (this.syncAutomatically === true) {
             const query = new Query().equalTo('entity._id', entity[idAttribute]);
-            let push = await this.push(query, options);
-            push = filter(push, result => !result.error);
-            entity = map(push, result => result.entity);
+            await this.push(query, options);
           }
 
           // Emit the data
@@ -1077,7 +1068,7 @@ export class CacheStore extends NetworkStore {
           const data = response.data;
 
           // Remove the data from sync
-          if (data.length > 0) {
+          if (data && data.length > 0) {
             const syncQuery = new Query().contains('entity._id', Object.keys(keyBy(data, idAttribute)));
             await this.clearSync(syncQuery, options);
           } else if (!query) {

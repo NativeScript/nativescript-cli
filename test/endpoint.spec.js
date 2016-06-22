@@ -11,14 +11,6 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 describe('CustomEndpoint', function () {
   describe('execute()', function () {
-    beforeEach(function() {
-      return this.login();
-    });
-
-    afterEach(function() {
-      return this.logout();
-    });
-
     it('should respond', function () {
       expect(CustomEndpoint).itself.to.respondTo('execute');
     });
