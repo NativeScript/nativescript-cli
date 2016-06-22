@@ -40,6 +40,10 @@ class IOSDebugService implements IDebugService {
             this.$errors.failWithoutHelp("Expected exactly one of the --debug-brk or --start options.");
         }
 
+        if (this.$devicesService.isOnlyiOSSimultorRunning() || this.$devicesService.deviceCount === 0) {
+            this.$options.emulator = true;
+        }
+
         if (this.$options.emulator) {
             if (this.$options.debugBrk) {
                 return this.emulatorDebugBrk(true);

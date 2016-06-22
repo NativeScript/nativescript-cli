@@ -1,7 +1,7 @@
 ﻿export class DebugPlatformCommand implements ICommand {
 	constructor(private debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
+		private $logger: ILogger,
 		protected $options: IOptions) { }
 
 	execute(args: string[]): IFuture<void> {
@@ -13,14 +13,16 @@
 	canExecute(args: string[]): IFuture<boolean> {
 		return ((): boolean => {
 			this.$devicesService.initialize({ platform: this.debugService.platform, deviceId: this.$options.device }).wait();
-			if(this.$options.emulator) {
+			// Start emulator if --emulator is selected or no devices found.
+			if(this.$options.emulator || this.$devicesService.deviceCount === 0) {
 				return true;
 			}
 
-			if(this.$devicesService.deviceCount === 0) {
-				this.$errors.failWithoutHelp("No devices detected. Connect a device and try again.");
-			} else if (this.$devicesService.deviceCount > 1) {
-				this.$errors.fail("Cannot debug on multiple devices. Select device with --device option.");
+			if (this.$devicesService.deviceCount > 1) {
+				// Starting debugger on emulator.
+				this.$options.emulator = true;
+
+				this.$logger.warn("Multiple devices found! Starting debugger on emulator. If you want to debug on specific device please select device with --device option.".yellow.bold);
 			}
 
 			return true;
@@ -31,9 +33,9 @@
 export class DebugIOSCommand extends DebugPlatformCommand {
 	constructor($iOSDebugService: IDebugService,
 		$devicesService: Mobile.IDevicesService,
-		$errors: IErrors,
+		$logger: ILogger,
 		$options: IOptions) {
-		super($iOSDebugService, $devicesService, $errors, $options);
+		super($iOSDebugService, $devicesService, $logger, $options);
 	}
 }
 $injector.registerCommand("debug|ios", DebugIOSCommand);
@@ -41,9 +43,9 @@ $injector.registerCommand("debug|ios", DebugIOSCommand);
 export class DebugAndroidCommand extends DebugPlatformCommand {
 	constructor($androidDebugService: IDebugService,
 		$devicesService: Mobile.IDevicesService,
-		$errors: IErrors,
+		$logger: ILogger,
 		$options: IOptions) {
-		super($androidDebugService, $devicesService, $errors, $options);
+		super($androidDebugService, $devicesService, $logger, $options);
 	}
 }
 $injector.registerCommand("debug|android", DebugAndroidCommand);
