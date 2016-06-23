@@ -9,7 +9,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		private $logger: ILogger,
 		private $childProcess: IChildProcess) { }
 
-	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml"];
+	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml" ,".html"];
 
 	private platformSpecificLiveSyncServicesCache: IDictionary<any> = {};
 	public get platformSpecificLiveSyncServices(): IDictionary<any> {
