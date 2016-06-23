@@ -365,7 +365,7 @@ export class NetworkStore extends DataStore {
               url: url.format({
                 protocol: this.client.protocol,
                 host: this.client.host,
-                pathname: this.pathname,
+                pathname: `${this.pathname}/${entity[idAttribute]}`,
                 query: options.query
               }),
               properties: options.properties,
@@ -451,24 +451,24 @@ export class NetworkStore extends DataStore {
     const stream = KinveyObservable.create(async observer => {
       try {
         if (!id) {
-          observer.next(null);
+          observer.next(undefined);
+        } else {
+          const config = new KinveyRequestConfig({
+            method: RequestMethod.DELETE,
+            authType: AuthType.Default,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/${id}`,
+              query: options.query
+            }),
+            properties: options.properties,
+            timeout: options.timeout
+          });
+          const request = new NetworkRequest(config);
+          const response = await request.execute();
+          observer.next(response.data);
         }
-
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.DELETE,
-          authType: AuthType.Default,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/${id}`,
-            query: options.query
-          }),
-          properties: options.properties,
-          timeout: options.timeout
-        });
-        const request = new NetworkRequest(config);
-        const response = request.execute();
-        observer.next(response.data);
       } catch (error) {
         return observer.error(error);
       }
@@ -612,7 +612,7 @@ export class CacheStore extends NetworkStore {
    * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
    * @return  {Observable}                                             Observable.
    */
-  findById(id, options) {
+  findById(id, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
         if (!id) {
@@ -679,13 +679,12 @@ export class CacheStore extends NetworkStore {
           observer.next(networkEntity);
         }
       } catch (error) {
-        // If the entity was not found then just remove it
-        // from the cache
-        if (error instanceof NotFoundError) {
-          const query = new Query();
-          query.equalTo('_id', id);
-          await this.clear(id, options);
-        }
+        // // Remove the entity from cache if it was not found
+        // if (error instanceof NotFoundError) {
+        //   const query = new Query();
+        //   query.equalTo('_id', id);
+        //   await this.clear(id, options);
+        // }
 
         // Emit the error
         return observer.error(error);
@@ -760,7 +759,7 @@ export class CacheStore extends NetworkStore {
         }
 
         // Get the count from the network
-        const networkCount = super.count(query, options);
+        const networkCount = await super.count(query, options).toPromise();
 
         // Emit the network count
         observer.next(networkCount);
