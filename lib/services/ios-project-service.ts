@@ -10,6 +10,7 @@ import Future = require("fibers/future");
 import { PlistSession } from "plist-merge-patch";
 import {EOL} from "os";
 import * as temp from "temp";
+import * as plist from "plist";
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase implements IPlatformProjectService {
 	private static XCODE_PROJECT_EXT_NAME = ".xcodeproj";
@@ -453,9 +454,93 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<boolean>()();
 	}
 
+	/**
+	 * Patch **LaunchScreen.xib** so we can be backward compatible for eternity.
+	 * The **xcodeproj** template proior v**2.1.0** had blank white screen launch screen.
+	 * We extended that by adding **app/AppResources/iOS/LaunchScreen.storyboard**
+	 * However for projects created prior **2.1.0** to keep working without the obsolete **LaunchScreen.xib**
+	 * we must still provide it on prepare.
+	 * Here we check if **UILaunchStoryboardName** is set to **LaunchScreen** in the **platform/ios/<proj>/<proj>-Info.plist**.
+	 * If it is, and no **LaunchScreen.storyboard** nor **.xib** is found in the project, we will create one.
+	 */
+	private provideLaunchScreenIfMissing(): void {
+		try {
+			this.$logger.trace("Checking if we need to provide compatability LaunchScreen.xib");
+			let platformData = this.platformData;
+			let projectPath = path.join(platformData.projectRoot, this.$projectData.projectName);
+			let projectPlist = this.getInfoPlistPath();
+			let plistContent = plist.parse(this.$fs.readText(projectPlist).wait());
+			let storyName = plistContent["UILaunchStoryboardName"];
+			this.$logger.trace(`Examining ${projectPlist} UILaunchStoryboardName: "${storyName}".`);
+			if (storyName !== "LaunchScreen") {
+				this.$logger.trace("The project has its UILaunchStoryboardName set to " + storyName + " which is not the pre v2.1.0 default LaunchScreen, probably the project is migrated so we are good to go.");
+				return;
+			}
+
+			let expectedStoryPath = path.join(projectPath, "Resources", "LaunchScreen.storyboard");
+			if (this.$fs.exists(expectedStoryPath).wait()) {
+				// Found a LaunchScreen on expected path
+				this.$logger.trace("LaunchScreen.storyboard was found. Project is up to date.");
+				return;
+			}
+			this.$logger.trace("LaunchScreen file not found at: " + expectedStoryPath);
+
+			let expectedXibPath = path.join(projectPath, "en.lproj", "LaunchScreen.xib");
+			if (this.$fs.exists(expectedXibPath).wait()) {
+				this.$logger.trace("Obsolete LaunchScreen.xib was found. It'k OK, we are probably running with iOS runtime from pre v2.1.0.");
+				return;
+			}
+			this.$logger.trace("LaunchScreen file not found at: " + expectedXibPath);
+
+			let isTheLaunchScreenFile = (fileName: string) => fileName === "LaunchScreen.xib" || fileName === "LaunchScreen.storyboard";
+			let matches = this.$fs.enumerateFilesInDirectorySync(projectPath, isTheLaunchScreenFile, { enumerateDirectories: false });
+			if (matches.length > 0) {
+				this.$logger.trace("Found LaunchScreen by slowly traversing all files here: " + matches + "\nConsider moving the LaunchScreen so it could be found at: " + expectedStoryPath);
+				return;
+			}
+
+			let compatabilityXibPath = path.join(projectPath, "Resources", "LaunchScreen.xib");
+			this.$logger.warn(`Failed to find LaunchScreen.storyboard but it was specified in the Info.plist.
+Consider updating the resources in app/App_Resources/iOS/.
+A good starting point would be to create a new project and diff the changes with your current one.
+Also the following repo may be helpful: https://github.com/NativeScript/template-hello-world/tree/master/App_Resources/iOS
+We will now place an empty obsolete compatability white screen LauncScreen.xib for you in ${path.relative(this.$projectData.projectDir, compatabilityXibPath)} so your app may appear as it did in pre v2.1.0 versions of the ios runtime.`);
+
+			let content = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6751" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6736"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="480" height="480"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <nil key="simulatedStatusBarMetrics"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="548" y="455"/>
+        </view>
+    </objects>
+</document>`;
+			try {
+				this.$fs.createDirectory(path.dirname(compatabilityXibPath)).wait();
+				this.$fs.writeFile(compatabilityXibPath, content).wait();
+			} catch(e) {
+				this.$logger.warn("We have failed to add compatability LaunchScreen.xib due to: " + e);
+			}
+		} catch(e) {
+			this.$logger.warn("We have failed to check if we need to add a compatability LaunchScreen.xib due to: " + e);
+		}
+	}
+
 	public prepareProject(): IFuture<void> {
 		return (() => {
 			let project = this.createPbxProj();
+
+			this.provideLaunchScreenIfMissing();
+
 			let resources = project.pbxGroupByName("Resources");
 
 			if (resources) {
@@ -504,11 +589,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}).future<void>()();
 	}
 
+	private getInfoPlistPath(): string {
+		return this.$options.baseConfig ||
+			path.join(
+				this.$projectData.projectDir,
+				constants.APP_FOLDER_NAME,
+				constants.APP_RESOURCES_FOLDER_NAME,
+				this.platformData.normalizedPlatformName,
+				this.platformData.configurationFileName
+			);
+	}
 	public ensureConfigurationFileInAppResources(): IFuture<void> {
 		return (() => {
-			let projectDir = this.$projectData.projectDir;
-			let infoPlistPath = this.$options.baseConfig || path.join(projectDir, constants.APP_FOLDER_NAME, constants.APP_RESOURCES_FOLDER_NAME, this.platformData.normalizedPlatformName, this.platformData.configurationFileName);
-
+			let infoPlistPath = this.getInfoPlistPath();
 			if (!this.$fs.exists(infoPlistPath).wait()) {
 				// The project is missing Info.plist, try to populate it from the project template.
 				let projectTemplateService: IProjectTemplatesService = this.$injector.resolve("projectTemplatesService");
