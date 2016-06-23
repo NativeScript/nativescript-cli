@@ -11,31 +11,6 @@ const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
  * The FileStore class is used to find, save, update, remove, count and group files.
  */
 export class FileStore extends NetworkStore {
-  constructor() {
-    super();
-    this.disableCache();
-  }
-
-  /**
-   * Enable cache.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  enableCache() {
-    // Log a warning
-    // throw new KinveyError('Unable to enable cache for the file store.');
-  }
-
-  /**
-   * Make the store offline.
-   *
-   * @return {DataStore}  DataStore instance.
-   */
-  offline() {
-    // Log a warning
-    // throw new KinveyError('Unable to go offline for the file store.');
-  }
-
   /**
    * The pathname for the store.
    *
