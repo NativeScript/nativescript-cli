@@ -535,27 +535,34 @@ export class CacheStore extends NetworkStore {
             + ' to be synced before data is loaded from the network.');
         }
 
-        // Fetch the cache entities
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout
-        });
-        const request = new CacheRequest(config);
+        let cacheEntities = [];
 
-        // Execute the request
-        const response = await request.execute();
-        const cacheEntities = response.data;
+        try {
+          // Fetch the cache entities
+          const config = new KinveyRequestConfig({
+            method: RequestMethod.GET,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: this.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            query: query,
+            timeout: options.timeout
+          });
+          const request = new CacheRequest(config);
 
-        // Emit the cache entities
-        observer.next(cacheEntities);
+          // Execute the request
+          const response = await request.execute();
+          cacheEntities = response.data;
+
+          // Emit the cache entities
+          observer.next(cacheEntities);
+        } catch (error) {
+          // Swalllow the error and emit an empty array
+          observer.next(cacheEntities);
+        }
 
         // Fetch the network entities
         const networkEntities = await super.find(query, options).toPromise();
@@ -625,24 +632,29 @@ export class CacheStore extends NetworkStore {
               + ' to be synced before data is loaded from the network.');
           }
 
-          // Fetch from the cache
-          const config = new KinveyRequestConfig({
-            method: RequestMethod.GET,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            timeout: options.timeout
-          });
-          const request = new CacheRequest(config);
-          const response = await request.execute();
-          const cacheEntity = response.data;
+          try {
+            // Fetch from the cache
+            const config = new KinveyRequestConfig({
+              method: RequestMethod.GET,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: `${this.pathname}/${id}`,
+                query: options.query
+              }),
+              properties: options.properties,
+              timeout: options.timeout
+            });
+            const request = new CacheRequest(config);
+            const response = await request.execute();
+            const cacheEntity = response.data;
 
-          // Emit the cache entity
-          observer.next(cacheEntity);
+            // Emit the cache entity
+            observer.next(cacheEntity);
+          } catch (error) {
+            // Swallow the error and emit undefined
+            observer.next(undefined);
+          }
 
           // Fetch from the network
           const networkEntity = await super.findById(id, options).toPromise();
@@ -720,27 +732,32 @@ export class CacheStore extends NetworkStore {
             + ' to be synced before data is loaded from the network.');
         }
 
-        // Count the entities in the cache
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/_count`,
-            query: options.query
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout
-        });
-        const request = new CacheRequest(config);
+        try {
+          // Count the entities in the cache
+          const config = new KinveyRequestConfig({
+            method: RequestMethod.GET,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: `${this.pathname}/_count`,
+              query: options.query
+            }),
+            properties: options.properties,
+            query: query,
+            timeout: options.timeout
+          });
+          const request = new CacheRequest(config);
 
-        // Execute the request
-        const response = await request.execute();
-        const data = response.data;
+          // Execute the request
+          const response = await request.execute();
+          const data = response.data;
 
-        // Emit the cache count
-        observer.next(data ? data.count : 0);
+          // Emit the cache count
+          observer.next(data ? data.count : 0);
+        } catch (error) {
+          // Swallow the error and emit 0
+          observer.next(0);
+        }
 
         // Get the count from the network
         const networkCount = super.count(query, options);
