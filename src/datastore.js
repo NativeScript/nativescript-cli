@@ -1363,6 +1363,6 @@ export class DataStoreManager {
   }
 
   static getInstance(collection, type, options) {
-    return DataStore.collection(collection, type, options);
+    return this.collection(collection, type, options);
   }
 }
