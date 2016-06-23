@@ -166,6 +166,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			let gradleSettingsFilePath = path.join(this.platformData.projectRoot, "settings.gradle");
 			shell.sed('-i', /__PROJECT_NAME__/, this.getProjectNameFromId(), gradleSettingsFilePath);
+
+			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
+			let userAppGradleFilePath = path.join(this.$projectData.appResourcesDirectoryPath, this.$devicePlatformsConstants.Android, "app.gradle");
+			shell.sed('-i', /__PACKAGE__/, this.$projectData.projectId, userAppGradleFilePath);
 		}).future<void>()();
 	}
 
