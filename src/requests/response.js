@@ -26,7 +26,8 @@ const StatusCode = {
   Created: 201,
   Empty: 204,
   RedirectTemporarily: 301,
-  RedirectPermanetly: 302,
+  RedirectPermanently: 302,
+  NotModified: 304,
   NotFound: 404,
   ServerError: 500
 };
@@ -122,7 +123,9 @@ export class Response {
   }
 
   isSuccess() {
-    return (this.statusCode >= 200 && this.statusCode < 300) || this.statusCode === StatusCode.RedirectPermanetly;
+    return (this.statusCode >= 200 && this.statusCode < 300)
+      || this.statusCode === StatusCode.RedirectPermanently
+      || this.statusCode === StatusCode.NotModified;
   }
 }
 

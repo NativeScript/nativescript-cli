@@ -37,11 +37,7 @@ export { DataStoreType };
 
 export class DataStore {
   constructor(collection, options = {}) {
-    if (!collection) {
-      throw new KinveyError('A collection is required.');
-    }
-
-    if (!isString(collection)) {
+    if (collection && !isString(collection)) {
       throw new KinveyError('Collection must be a string.');
     }
 
@@ -61,7 +57,13 @@ export class DataStore {
    * @return  {string}  Pathname
    */
   get pathname() {
-    return `/${appdataNamespace}/${this.client.appKey}/${this.collection}`;
+    let pathname = `/${appdataNamespace}/${this.client.appKey}`;
+
+    if (this.collection) {
+      pathname = `${pathname}/${this.collection}`;
+    }
+
+    return pathname;
   }
 
   async find() {

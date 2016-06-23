@@ -223,7 +223,7 @@ export class SyncManager {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: this.pathname,
+        pathname: this.backendPathname,
         query: options.query
       }),
       properties: options.properties,
@@ -275,20 +275,8 @@ export class SyncManager {
     const batchSize = 100;
     let i = 0;
 
-    // Make a request for the pending sync entities
-    const getRequest = new CacheRequest({
-      method: RequestMethod.GET,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.pathname
-      }),
-      properties: options.properties,
-      query: query,
-      timeout: options.timeout
-    });
-    const response = await getRequest.execute();
-    let syncEntities = response.data;
+    // Get the pending sync items
+    let syncEntities = await this.find(query);
 
     if (syncEntities.length > 0) {
       // Filter the sync entities so that we only perform
@@ -305,7 +293,6 @@ export class SyncManager {
 
           // Get the results of syncing all of the entities
           const results = await Promise.all(map(batch, syncEntity => {
-            const collection = syncEntity.collection;
             const entity = syncEntity.entity;
             const originalId = entity[idAttribute];
             const method = syncEntity.state.method;
@@ -318,7 +305,7 @@ export class SyncManager {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                  pathname: `${this.backendPathname}/${originalId}`
                 }),
                 properties: options.properties,
                 timeout: options.timeout,
@@ -349,32 +336,47 @@ export class SyncManager {
                   // not authorized to run the operation
                   if (error instanceof InsufficientCredentialsError) {
                     try {
-                      // Try and reset the state of the entity
+                      // Get the original entity
                       const getNetworkRequest = new NetworkRequest({
                         method: RequestMethod.GET,
                         authType: AuthType.Default,
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                          pathname: `${this.backendPathname}/${originalId}`
                         }),
                         properties: options.properties,
                         timeout: options.timeout,
                         client: this.client
                       });
                       const originalEntity = await getNetworkRequest.execute().then(response => response.data);
+
+                      // Update the cache with the original entity
                       const putCacheRequest = new CacheRequest({
                         method: RequestMethod.PUT,
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                          pathname: `${this.backendPathname}/${originalId}`
                         }),
                         properties: options.properties,
                         timeout: options.timeout,
                         body: originalEntity
                       });
                       await putCacheRequest.execute();
+
+                      // Clear the item from the sync table
+                      const deleteSyncRequest = new CacheRequest({
+                        method: RequestMethod.DELETE,
+                        url: url.format({
+                          protocol: this.client.protocol,
+                          host: this.client.host,
+                          pathname: `${this.pathname}/${syncEntity[idAttribute]}`
+                        }),
+                        properties: options.properties,
+                        timeout: options.timeout
+                      });
+                      await deleteSyncRequest.execute();
                     } catch (error) {
                       // Throw away the error
                     }
@@ -395,7 +397,7 @@ export class SyncManager {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                  pathname: `${this.backendPathname}/${originalId}`
                 }),
                 properties: options.properties,
                 timeout: options.timeout,
@@ -411,7 +413,7 @@ export class SyncManager {
                 request.url = url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}`
+                  pathname: this.backendPathname
                 });
                 request.body = entity;
               }
@@ -439,7 +441,7 @@ export class SyncManager {
                     url: url.format({
                       protocol: this.client.protocol,
                       host: this.client.host,
-                      pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${entity[idAttribute]}`
+                      pathname: `${this.backendPathname}/${entity[idAttribute]}`
                     }),
                     properties: options.properties,
                     timeout: options.timeout,
@@ -455,7 +457,7 @@ export class SyncManager {
                       url: url.format({
                         protocol: this.client.protocol,
                         host: this.client.host,
-                        pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                        pathname: `${this.backendPathname}/${originalId}`
                       }),
                       properties: options.properties,
                       timeout: options.timeout
@@ -478,31 +480,47 @@ export class SyncManager {
                       // Try and reset the state of the entity if the entity
                       // is not local
                       if (method !== RequestMethod.POST) {
+                        // Get the original entity
                         const getNetworkRequest = new NetworkRequest({
                           method: RequestMethod.GET,
                           authType: AuthType.Default,
                           url: url.format({
                             protocol: this.client.protocol,
                             host: this.client.host,
-                            pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                            pathname: `${this.backendPathname}/${originalId}`
                           }),
                           properties: options.properties,
                           timeout: options.timeout,
                           client: this.client
                         });
                         const originalEntity = await getNetworkRequest.execute().then(response => response.data);
+
+                        // Update the cache with the original entity
                         const putCacheRequest = new CacheRequest({
                           method: RequestMethod.PUT,
                           url: url.format({
                             protocol: this.client.protocol,
                             host: this.client.host,
-                            pathname: `/${appdataNamespace}/${this.client.appKey}/${collection}/${originalId}`
+                            pathname: `${this.backendPathname}/${originalId}`
                           }),
                           properties: options.properties,
                           timeout: options.timeout,
                           body: originalEntity
                         });
                         await putCacheRequest.execute();
+
+                        // Clear the item from the sync table
+                        const deleteSyncRequest = new CacheRequest({
+                          method: RequestMethod.DELETE,
+                          url: url.format({
+                            protocol: this.client.protocol,
+                            host: this.client.host,
+                            pathname: `${this.pathname}/${syncEntity[idAttribute]}`
+                          }),
+                          properties: options.properties,
+                          timeout: options.timeout
+                        });
+                        await deleteSyncRequest.execute();
                       }
                     } catch (error) {
                       // Throw away the error
@@ -565,7 +583,12 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  clear(query, options = {}) {
+  clear(query = new Query(), options = {}) {
+    if (!(query instanceof Query)) {
+      query = new Query(result(query, 'toJSON', query));
+    }
+
+    query.equalTo('collection', this.collection);
     const request = new CacheRequest({
       method: RequestMethod.DELETE,
       url: url.format({
