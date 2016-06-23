@@ -3,7 +3,7 @@ import { toPromise } from 'rxjs/operator/toPromise';
 
 export class KinveyObservable extends Observable {
   toPromise() {
-    return this::toPromise();
+    return toPromise.bind(this);
   }
 
   static create(subscriber) {

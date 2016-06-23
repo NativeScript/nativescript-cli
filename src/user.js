@@ -9,6 +9,7 @@ import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request
 import { NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';

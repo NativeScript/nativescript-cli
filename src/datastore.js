@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { KinveyError, NotFoundError } from './errors';
+import { KinveyError } from './errors';
 import { CacheRequest } from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { NetworkRequest } from './requests/network';
@@ -9,6 +9,7 @@ import { KinveyObservable } from './utils/observable';
 import { Client } from './client';
 import { SyncManager } from './sync';
 import { Metadata } from './metadata';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
 import isString from 'lodash/isString';

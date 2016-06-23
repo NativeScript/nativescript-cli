@@ -36,6 +36,11 @@
     "uid": "0.0.2",
     "url-pattern": "^1.0.0"
   },
+  "peerDependencies": {
+    "es6-error": "^3.0.0",
+    "es6-promise": "^3.2.1",
+    "regenerator-runtime": "^0.9.5"
+  },
   "devDependencies": {
     "babel-core": "^6.9.1",
     "babel-eslint": "^6.0.4",

@@ -3,6 +3,7 @@ import { KinveyRackManager } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';

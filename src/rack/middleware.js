@@ -1,4 +1,5 @@
 import { Middleware } from 'kinvey-rack/dist/middleware';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private

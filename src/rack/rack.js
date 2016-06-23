@@ -3,6 +3,7 @@ import { CacheMiddleware } from './cache';
 import { ParseMiddleware } from './parse';
 import { SerializeMiddleware } from './serialize';
 import { HttpMiddleware } from './http';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private

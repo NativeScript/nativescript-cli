@@ -8,6 +8,7 @@ import { StatusCode } from '../requests/response';
 import { Promise } from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
@@ -290,8 +291,8 @@ export class DB {
  * @private
  */
 export class CacheMiddleware extends KinveyMiddleware {
-  constructor() {
-    super('Kinvey Cache Middleware');
+  constructor(name = 'Kinvey Cache Middleware') {
+    super(name);
   }
 
   openDatabase(name) {

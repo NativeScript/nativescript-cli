@@ -13,6 +13,7 @@ import { AuthorizationGrant, SocialIdentity } from './mic';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
 import { KinveyRackManager } from './rack/rack';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 let client = null;
