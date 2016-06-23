@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import './setup';
-import { DataStore, CacheStore, NetworkStore, SyncStore } from '../src/datastore';
+import { DataStoreManager, DataStoreType, DataStore, CacheStore, NetworkStore, SyncStore } from '../src/datastore';
 import { Client } from '../src/client';
 import { KinveyError, NotFoundError } from '../src/errors';
 import { Query } from '../src/query';
@@ -17,12 +17,6 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('DataStore', function() {
   describe('constructor', function() {
-    it('should throw an error if a collection name is not provided', function() {
-      expect(function() {
-        new DataStore(); // eslint-disable-line no-new
-      }).to.throw(KinveyError, /A collection is required./);
-    });
-
     it('should throw an error if the collection name is not a string', function() {
       expect(function() {
         new DataStore({}); // eslint-disable-line no-new
@@ -391,7 +385,7 @@ describe('NetworkStore', function() {
 
 describe('CacheStore', function() {
   before(function() {
-    this.store = new CacheStore(collection);
+    this.store = DataStoreManager.collection(collection, DataStoreType.Cache);
   });
 
   before(function() {
@@ -487,7 +481,7 @@ describe('CacheStore', function() {
 
     it('should throw an error if it is tried to be set to a different value', function() {
       expect(function() {
-        this.store.syncAutomatically = true;
+        this.store.syncAutomatically = false;
       }).to.throw(Error);
     });
   });
@@ -705,7 +699,7 @@ describe('CacheStore', function() {
       return expect(promise).to.eventually.be.null;
     });
 
-    it('should update the data in the cache and add a update operation to the sync table', function() {
+    it('should update the data in the cache and update the data on the backend', function() {
       const data = { _id: randomString(), prop: randomString() };
 
       nock(this.client.baseUrl)
@@ -717,11 +711,11 @@ describe('CacheStore', function() {
 
       const promise = this.store.update(data);
       return promise.then(entity => {
-        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('_id', data._id);
         expect(entity).to.have.property('prop', data.prop);
 
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.store.pendingSyncItems(query).then(syncItems => {
+        return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
         });
@@ -746,7 +740,7 @@ describe('CacheStore', function() {
         expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
 
         const query = new Query().equalTo('entity._id', entities[0]._id);
-        return this.store.pendingSyncItems(query).then(syncItems => {
+        return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
         });
@@ -790,7 +784,7 @@ describe('CacheStore', function() {
 
         const entity = entities[0];
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.store.pendingSyncItems(query).then(syncItems => {
+        return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
         });
@@ -835,7 +829,7 @@ describe('CacheStore', function() {
         expect(entity).to.deep.equal(data);
 
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.store.pendingSyncItems(query).then(syncItems => {
+        return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
         });
@@ -1019,7 +1013,7 @@ describe('SyncStore', function() {
         expect(entity).to.have.property('prop', data.prop);
 
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
@@ -1040,7 +1034,7 @@ describe('SyncStore', function() {
 
         const entity = entities[0];
         const query = new Query().equalTo('entity._id', entities[0]._id);
-        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
@@ -1071,7 +1065,7 @@ describe('SyncStore', function() {
 
         const entity = entities[0];
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]')
@@ -1108,7 +1102,7 @@ describe('SyncStore', function() {
         expect(entity).to.deep.equal(data);
 
         const query = new Query().equalTo('entity._id', entity._id);
-        return this.syncStore.pendingSyncItems(query).then(syncItems => {
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]')
@@ -1121,6 +1115,24 @@ describe('SyncStore', function() {
             .that.deep.equals(entity);
         });
       });
+    });
+  });
+});
+
+describe('DataStoreManager', function() {
+  describe('constructor', function() {
+    it('should throw an error', function() {
+      expect(function() {
+        new DataStoreManager(); // eslint-disable-line no-new
+      }).to.throw(KinveyError);
+    });
+  });
+
+  describe('collection()', function() {
+    it('should throw an error if a collection name is not provided', function() {
+      expect(function() {
+        DataStoreManager.collection(); // eslint-disable-line no-new
+      }).to.throw(KinveyError, /A collection is required./);
     });
   });
 });

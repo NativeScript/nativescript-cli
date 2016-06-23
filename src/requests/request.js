@@ -89,7 +89,8 @@ const Auth = {
    */
   app(client) {
     if (!client.appKey || !client.appSecret) {
-      throw new Error('Missing client credentials');
+      throw new Error('Missing client appKey and/or appSecret.'
+        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
     }
 
     return {
@@ -119,7 +120,8 @@ const Auth = {
    */
   master(client) {
     if (!client.appKey || !client.masterSecret) {
-      throw new Error('Missing client credentials');
+      throw new Error('Missing client appKey and/or appSecret.'
+        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
     }
 
     return {

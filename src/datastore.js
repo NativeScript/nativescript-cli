@@ -954,7 +954,7 @@ export class CacheStore extends NetworkStore {
             return metadata.isLocal();
           });
           const query = new Query().contains('entity._id', Object.keys(keyBy(localEntities, idAttribute)));
-          await this.clearSync(query, options);
+          await this.purge(query, options);
 
           // Create delete operations for non local data in the sync table
           const syncData = xorWith(entities, localEntities,
@@ -1024,7 +1024,7 @@ export class CacheStore extends NetworkStore {
             if (metadata.isLocal()) {
               const query = new Query();
               query.equalTo('entity._id', entity[idAttribute]);
-              await this.clearSync(query, options);
+              await this.purge(query, options);
             } else {
               // Add a delete operation to sync
               await this.syncManager.addDeleteOperation(entity, options);
@@ -1089,9 +1089,9 @@ export class CacheStore extends NetworkStore {
           // Remove the data from sync
           if (data && data.length > 0) {
             const syncQuery = new Query().contains('entity._id', Object.keys(keyBy(data, idAttribute)));
-            await this.clearSync(syncQuery, options);
+            await this.purge(syncQuery, options);
           } else if (!query) {
-            await this.clearSync(null, options);
+            await this.purge(null, options);
           }
 
           observer.next(data);
@@ -1177,7 +1177,7 @@ export class CacheStore extends NetworkStore {
     return this.syncManager.sync(query, options);
   }
 
-  clearSync(query, options) {
+  purge(query, options) {
     return this.syncManager.clear(query, options);
   }
 }
@@ -1342,6 +1342,11 @@ export class SyncStore extends CacheStore {
  * The DataStore class is used to find, create, update, remove, count and group entities.
  */
 export class DataStoreManager {
+  constructor() {
+    throw new KinveyError('Not allowed to construct a DataStore instance.'
+      + ' Please use the collection() function to retrieve an instance of a DataStore instance.');
+  }
+
   /**
    * Returns an instance of the Store class based on the type provided.
    *
@@ -1351,6 +1356,10 @@ export class DataStoreManager {
    */
   static collection(collection, type = DataStoreType.Cache, options) {
     let store;
+
+    if (!collection) {
+      throw new KinveyError('A collection is required.');
+    }
 
     switch (type) {
       case DataStoreType.Network:
@@ -1370,5 +1379,24 @@ export class DataStoreManager {
 
   static getInstance(collection, type, options) {
     return this.collection(collection, type, options);
+  }
+
+  static async clearCache(options = {}) {
+    const client = options.client || Client.sharedInstance();
+    const pathname = `/${appdataNamespace}/${client.appKey}`;
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: client.protocol,
+        host: client.host,
+        pathname: pathname,
+        query: options.query
+      }),
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    const request = new CacheRequest(config);
+    const response = await request.execute();
+    return response.data;
   }
 }

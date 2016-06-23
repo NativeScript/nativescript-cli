@@ -6,7 +6,7 @@ import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect, SocialIdentity } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { NetworkStore } from './datastore';
+import { DataStoreManager, NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -478,7 +478,7 @@ export class User {
 
         return null;
       })
-      // .then(() => DataStore.clear({ client: this.client }))
+      .then(() => DataStoreManager.clearCache({ client: this.client }))
       .then(() => this);
 
     return promise;
