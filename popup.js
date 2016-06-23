@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { PhoneGapDevice } from './device';
+import { Device } from './device';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import bind from 'lodash/bind';
 
 export class PhoneGapPopup extends EventEmitter {
@@ -13,25 +14,11 @@ export class PhoneGapPopup extends EventEmitter {
       loadErrorCallback: bind(this.loadErrorCallback, this),
       exitCallback: bind(this.exitCallback, this)
     };
-
-    // Listen fro the deviceready event
-    if (PhoneGapDevice.isPhoneGap()) {
-      this.deviceReady = new Promise(resolve => {
-        const onDeviceReady = bind(() => {
-          document.removeEventListener('deviceready', onDeviceReady);
-          resolve();
-        }, this);
-
-        document.addEventListener('deviceready', onDeviceReady, false);
-      });
-    } else {
-      this.deviceReady = Promise.resolve();
-    }
   }
 
   async open(url = '/') {
     // Wait for the deivce to be ready
-    await this.deviceReady;
+    await Device.ready();
 
     // Check that the InAppBrowser plugin is installed
     if (global.cordova && !global.cordova.InAppBrowser) {
@@ -79,7 +66,7 @@ export class PhoneGapPopup extends EventEmitter {
   exitCallback() {
     clearInterval(this.interval);
 
-    if (PhoneGapDevice.isPhoneGap()) {
+    if (Device.isPhoneGap()) {
       this.popup.removeEventListener('loadstart', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loadstop', this.eventListeners.loadStopCallback);
       this.popup.removeEventListener('loaderror', this.eventListeners.loadErrorCallback);

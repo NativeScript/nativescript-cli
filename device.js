@@ -1,6 +1,27 @@
+import { Promise } from 'es6-promise';
 import packageJSON from '../package.json';
+let deviceReady;
 
-export class PhoneGapDevice {
+export class Device {
+  static ready() {
+    if (!deviceReady) {
+      if (Device.isPhoneGap()) {
+        deviceReady = new Promise(resolve => {
+          const onDeviceReady = () => {
+            document.removeEventListener('deviceready', onDeviceReady);
+            resolve();
+          };
+
+          document.addEventListener('deviceready', onDeviceReady, false);
+        });
+      } else {
+        deviceReady = Promise.resolve();
+      }
+    }
+
+    return deviceReady;
+  }
+
   static isPhoneGap() {
     return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
   }

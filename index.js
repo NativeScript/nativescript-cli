@@ -1,48 +1,34 @@
-import Kinvey from 'kinvey-javascript-sdk-core';
-import { KinveyError } from 'kinvey-javascript-sdk-core/es5/errors';
-import { NetworkRack } from 'kinvey-javascript-sdk-core/es5/rack/rack';
-import { HttpMiddleware } from 'kinvey-javascript-sdk-core/es5/rack/middleware/http';
-import { PhoneGapHttpMiddleware } from './http';
-import { PhoneGapPush } from './push';
-import { PhoneGapPopup } from './popup';
-import { PhoneGapDevice } from './device';
+import 'regenerator-runtime';
+import { Kinvey } from './kinvey';
+import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
+import { KinveyRackManager } from 'kinvey-javascript-sdk-core/dist/rack/rack';
+import { CacheMiddleware as CoreCacheMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/cache';
+import { CacheMiddleware } from './cache';
+import { HttpMiddleware as CoreHttpMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/http';
+import { HttpMiddleware } from 'kinvey-html5-sdk/dist/http';
+import { Popup } from './popup';
+import { Device } from './device';
 
-// Add Http middleware
-const networkRack = NetworkRack.sharedInstance();
-networkRack.swap(HttpMiddleware, new PhoneGapHttpMiddleware());
+// Swap Cache Middelware
+const cacheRack = KinveyRackManager.cacheRack;
+cacheRack.swap(CoreCacheMiddleware, new CacheMiddleware());
+
+// Swap Http middleware
+const networkRack = KinveyRackManager.networkRack;
+networkRack.swap(CoreHttpMiddleware, new HttpMiddleware());
 
 // Check that the cordova device plugin is installed
-if (PhoneGapDevice.isPhoneGap()) {
-  const onDeviceReady = () => {
-    document.removeEventListener('deviceready', onDeviceReady);
-
-    if (typeof global.device === 'undefined') {
-      throw new KinveyError('Cordova Device Plugin is not installed.'
-        + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
-        + ' setting up your project.');
-    }
-  };
-
-  document.addEventListener('deviceready', onDeviceReady, false);
-}
-
-// Extend the Kinvey class
-class PhoneGapKinvey extends Kinvey {
-  static init(options) {
-    // Initialize Kinvey
-    const client = super.init(options);
-
-    // Add Push module to Kinvey
-    this.Push = new PhoneGapPush();
-
-    // Return the client
-    return client;
+Device.ready().then(() => {
+  if (typeof global.device === 'undefined') {
+    throw new KinveyError('Cordova Device Plugin is not installed.'
+      + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
+      + ' setting up your project.');
   }
-}
+});
 
 // Expose some globals
-global.KinveyDevice = PhoneGapDevice;
-global.KinveyPopup = PhoneGapPopup;
+global.KinveyDevice = Device;
+global.KinveyPopup = Popup;
 
 // Export
-module.exports = PhoneGapKinvey;
+module.exports = Kinvey;
