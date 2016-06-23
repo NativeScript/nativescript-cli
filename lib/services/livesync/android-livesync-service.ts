@@ -14,8 +14,9 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $options: IOptions,
 		private $injector: IInjector,
-		private $projectData: IProjectData) {
-		super(_device);
+		private $projectData: IProjectData,
+		$liveSyncProvider: ILiveSyncProvider) {
+		super(_device, $liveSyncProvider);
 	}
 
 	public restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {

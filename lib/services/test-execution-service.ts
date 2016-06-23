@@ -64,14 +64,7 @@ class TestExecutionService implements ITestExecutionService {
 						}
 						this.detourEntryPoint(projectFilesPath).wait();
 
-						let liveSyncData = {
-							platform: platform,
-							appIdentifier: this.$projectData.projectId,
-							projectFilesPath: projectFilesPath,
-							syncWorkingDirectory: path.join(projectDir, constants.APP_FOLDER_NAME)
-						};
-
-						this.$liveSyncServiceBase.sync(liveSyncData).wait();
+						this.liveSyncProject(platform);
 
 						if (this.$options.debugBrk) {
 							this.$logger.info('Starting debugger...');
@@ -233,8 +226,8 @@ class TestExecutionService implements ITestExecutionService {
 				platform: platform,
 				appIdentifier: this.$projectData.projectId,
 				projectFilesPath: projectFilesPath,
+				forceExecuteFullSync: true, // Always restart the application when change is detected, so tests will be rerun.
 				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				canExecuteFastSync: false, // Always restart the application when change is detected, so tests will be rerun.
 				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
 			};
 

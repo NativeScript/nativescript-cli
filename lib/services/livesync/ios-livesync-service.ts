@@ -14,9 +14,10 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $options: IOptions) {
-			super(_device);
-		}
+		private $options: IOptions,
+		$liveSyncProvider: ILiveSyncProvider) {
+		super(_device, $liveSyncProvider);
+	}
 
 	public removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
