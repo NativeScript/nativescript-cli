@@ -525,10 +525,10 @@ export class CacheStore extends NetworkStore {
         }
 
         // Attempt to push any pending sync data before fetching from the network.
-        let syncCount = await this.syncCount(null, options);
+        let syncCount = await this.pendingSyncCount(null, options);
         if (syncCount > 0) {
           await this.push(null, options);
-          syncCount = await this.syncCount(null, options);
+          syncCount = await this.pendingSyncCount(null, options);
         }
 
         // Throw an error if there are still items that need to be synced
@@ -622,10 +622,10 @@ export class CacheStore extends NetworkStore {
           observer.next(undefined);
         } else {
           // Attempt to push any pending sync data before fetching from the network.
-          let syncCount = await this.syncCount(null, options);
+          let syncCount = await this.pendingSyncCount(null, options);
           if (syncCount > 0) {
             await this.push(null, options);
-            syncCount = await this.syncCount(null, options);
+            syncCount = await this.pendingSyncCount(null, options);
           }
 
           // Throw an error if there are still items that need to be synced
@@ -721,10 +721,10 @@ export class CacheStore extends NetworkStore {
         }
 
         // Attempt to push any pending sync data before fetching from the network.
-        let syncCount = await this.syncCount(null, options);
+        let syncCount = await this.pendingSyncCount(null, options);
         if (syncCount > 0) {
           await this.push(null, options);
-          syncCount = await this.syncCount(null, options);
+          syncCount = await this.pendingSyncCount(null, options);
         }
 
         // Throw an error if there are still items that need to be synced
@@ -1119,11 +1119,15 @@ export class CacheStore extends NetworkStore {
    *                                                                            from the local cache.
    * @return  {Promise}                                                         Promise
    */
-  syncCount(query, options) {
+  pendingSyncCount(query, options) {
     return this.syncManager.count(query, options);
   }
 
-  pendingSyncItems(query, options) {
+  syncCount(query, options) {
+    return this.pendingSyncCount(query, options);
+  }
+
+  pendingSyncEntities(query, options) {
     return this.syncManager.find(query, options);
   }
 
