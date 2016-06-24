@@ -469,17 +469,20 @@ export class PlatformService implements IPlatformService {
 	}
 
 	private getCanExecuteAction(platform: string): any {
-		let canExecute = (device: Mobile.IDevice): boolean => {
-			if (this.$options.device) {
-				return device.deviceInfo.identifier === this.$devicesService.getDeviceByDeviceOption().deviceInfo.identifier;
+		let canExecute = (currentDevice: Mobile.IDevice): boolean => {
+			if (this.$options.device && currentDevice && currentDevice.deviceInfo) {
+				let device = this.$devicesService.getDeviceByDeviceOption();
+				if (device && device.deviceInfo) {
+					return currentDevice.deviceInfo.identifier === device.deviceInfo.identifier;
+				}
 			}
 
 			if (this.$mobileHelper.isiOSPlatform(platform) && this.$hostInfo.isDarwin) {
-				if (this.$devicesService.isOnlyiOSSimultorRunning()) {
+				if (this.$devicesService.isOnlyiOSSimultorRunning() || this.$options.emulator || this.$devicesService.isiOSSimulator(currentDevice)) {
 					return true;
 				}
 
-				return this.$options.emulator ? this.$devicesService.isiOSSimulator(device) : this.$devicesService.isiOSDevice(device);
+				return this.$devicesService.isiOSDevice(currentDevice);
 			}
 
 			return true;
