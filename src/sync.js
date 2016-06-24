@@ -11,8 +11,6 @@ import map from 'lodash/map';
 import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
-import orderBy from 'lodash/orderBy';
-import sortedUniqBy from 'lodash/sortedUniqBy';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sync';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -90,11 +88,6 @@ export class SyncManager {
       client: this.client
     });
     syncEntities = await request.execute().then(response => response.data);
-
-    // Filter the sync entities so that we only perform
-    // one sync operation per unique entity.
-    // syncEntities = orderBy(syncEntities, 'key', ['desc']);
-    // syncEntities = sortedUniqBy(syncEntities, syncEntity => syncEntity.entity[idAttribute]);
 
     // Return the length of sync entities
     return syncEntities;
