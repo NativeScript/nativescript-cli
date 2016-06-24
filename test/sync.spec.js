@@ -160,7 +160,7 @@ describe('Sync', function () {
       const result = await this.sync.push();
       expect(result).to.be.an('array');
       expect(result).to.have.length(1);
-      expect(result).to.deep.equal([{ _id: entity._id, entity: entity }]);
+      expect(result).to.deep.equal([{ _id: entity._id }]);
     });
 
     it('should not delete an entity on the network if it was created locally', async function() {

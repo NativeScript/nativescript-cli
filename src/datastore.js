@@ -539,7 +539,6 @@ export class CacheStore extends NetworkStore {
         }
 
         let cacheEntities = [];
-
         try {
           // Fetch the cache entities
           const config = new KinveyRequestConfig({
@@ -563,8 +562,7 @@ export class CacheStore extends NetworkStore {
           // Emit the cache entities
           observer.next(cacheEntities);
         } catch (error) {
-          // Swalllow the error and emit an empty array
-          observer.next(cacheEntities);
+          // Just catch the error
         }
 
         // Fetch the network entities
@@ -655,8 +653,7 @@ export class CacheStore extends NetworkStore {
             // Emit the cache entity
             observer.next(cacheEntity);
           } catch (error) {
-            // Swallow the error and emit undefined
-            observer.next(undefined);
+            // Just catch the error
           }
 
           // Fetch from the network
@@ -682,13 +679,6 @@ export class CacheStore extends NetworkStore {
           observer.next(networkEntity);
         }
       } catch (error) {
-        // // Remove the entity from cache if it was not found
-        // if (error instanceof NotFoundError) {
-        //   const query = new Query();
-        //   query.equalTo('_id', id);
-        //   await this.clear(id, options);
-        // }
-
         // Emit the error
         return observer.error(error);
       }
@@ -757,8 +747,7 @@ export class CacheStore extends NetworkStore {
           // Emit the cache count
           observer.next(data ? data.count : 0);
         } catch (error) {
-          // Swallow the error and emit 0
-          observer.next(0);
+          // Just catch the error
         }
 
         // Get the count from the network
@@ -825,7 +814,7 @@ export class CacheStore extends NetworkStore {
           // Push the data
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
-            const query = new Query().contains('entity._id', ids);
+            const query = new Query().contains('entityId', ids);
             await this.push(query, options);
           }
 
@@ -891,7 +880,7 @@ export class CacheStore extends NetworkStore {
           // Push the data
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
-            const query = new Query().contains('entity._id', ids);
+            const query = new Query().contains('entityId', ids);
             await this.push(query, options);
           }
 
@@ -953,8 +942,8 @@ export class CacheStore extends NetworkStore {
             const metadata = new Metadata(entity);
             return metadata.isLocal();
           });
-          const query = new Query().contains('entity._id', Object.keys(keyBy(localEntities, idAttribute)));
-          await this.purge(query, options);
+          const query = new Query().contains('entityId', Object.keys(keyBy(localEntities, idAttribute)));
+          await this.clearSync(query, options);
 
           // Create delete operations for non local data in the sync table
           const syncData = xorWith(entities, localEntities,
@@ -965,7 +954,7 @@ export class CacheStore extends NetworkStore {
         // Push the data
         if (this.syncAutomatically === true) {
           const ids = Object.keys(keyBy(entities, idAttribute));
-          const query = new Query().contains('entity._id', ids);
+          const query = new Query().contains('entityId', ids);
           await this.push(query, options);
         }
 
@@ -1023,8 +1012,8 @@ export class CacheStore extends NetworkStore {
             // was created locally
             if (metadata.isLocal()) {
               const query = new Query();
-              query.equalTo('entity._id', entity[idAttribute]);
-              await this.purge(query, options);
+              query.equalTo('entityId', entity[idAttribute]);
+              await this.clearSync(query, options);
             } else {
               // Add a delete operation to sync
               await this.syncManager.addDeleteOperation(entity, options);
@@ -1033,7 +1022,7 @@ export class CacheStore extends NetworkStore {
 
           // Push the data
           if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('entity._id', entity[idAttribute]);
+            const query = new Query().equalTo('entityId', entity[idAttribute]);
             await this.push(query, options);
           }
 
@@ -1088,10 +1077,10 @@ export class CacheStore extends NetworkStore {
 
           // Remove the data from sync
           if (data && data.length > 0) {
-            const syncQuery = new Query().contains('entity._id', Object.keys(keyBy(data, idAttribute)));
-            await this.purge(syncQuery, options);
+            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(data, idAttribute)));
+            await this.clearSync(syncQuery, options);
           } else if (!query) {
-            await this.purge(null, options);
+            await this.clearSync(null, options);
           }
 
           observer.next(data);
@@ -1177,8 +1166,12 @@ export class CacheStore extends NetworkStore {
     return this.syncManager.sync(query, options);
   }
 
-  purge(query, options) {
+  clearSync(query, options) {
     return this.syncManager.clear(query, options);
+  }
+
+  purge(query, options) {
+    return this.clearSync(query, options);
   }
 }
 

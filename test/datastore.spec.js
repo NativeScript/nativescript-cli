@@ -565,8 +565,7 @@ describe('CacheStore', function() {
       const notifySpy = this.sandbox.spy();
       const stream = this.store.findById(id);
       stream.subscribe(notifySpy, error => {
-        expect(notifySpy).to.have.been.calledOnce;
-        expect(notifySpy).to.be.calledWithExactly(undefined);
+        expect(notifySpy).to.have.callCount(0);
         expect(error).to.be.instanceof(NotFoundError);
         done();
       }, done);
@@ -659,7 +658,7 @@ describe('CacheStore', function() {
       return promise.then(entity => {
         expect(entity).to.have.property('_id');
         expect(entity).to.have.property('prop', data.prop);
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.store.syncCount(query);
       }).then(syncCount => {
         expect(syncCount).to.equal(0);
@@ -685,10 +684,12 @@ describe('CacheStore', function() {
         expect(entities.length).to.equal(1);
         expect(entities).to.have.deep.property('[0]').to.have.property('_id');
         expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
-        const query = new Query().equalTo('entity._id', entities[0]._id);
-        return this.store.syncCount(query);
-      }).then(syncCount => {
-        expect(syncCount).to.equal(0);
+
+        const query = new Query().equalTo('entityId', entities[0]._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
       });
     });
   });
@@ -714,7 +715,7 @@ describe('CacheStore', function() {
         expect(entity).to.have.property('_id', data._id);
         expect(entity).to.have.property('prop', data.prop);
 
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
@@ -739,7 +740,7 @@ describe('CacheStore', function() {
         expect(entities).to.have.deep.property('[0]').to.have.property('_id');
         expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
 
-        const query = new Query().equalTo('entity._id', entities[0]._id);
+        const query = new Query().equalTo('entityId', entities[0]._id);
         return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
@@ -783,7 +784,7 @@ describe('CacheStore', function() {
           .that.deep.equals(data);
 
         const entity = entities[0];
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
@@ -828,7 +829,7 @@ describe('CacheStore', function() {
       return promise.then(entity => {
         expect(entity).to.deep.equal(data);
 
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.store.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(0);
@@ -976,10 +977,14 @@ describe('SyncStore', function() {
       return promise.then(entity => {
         expect(entity).to.have.property('_id');
         expect(entity).to.have.property('prop', data.prop);
-        const query = new Query().equalTo('entity._id', entity._id);
-        return this.syncStore.syncCount(query);
-      }).then(syncCount => {
-        expect(syncCount).to.equal(1);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'POST' });
+        });
       });
     });
 
@@ -991,10 +996,15 @@ describe('SyncStore', function() {
         expect(entities.length).to.equal(1);
         expect(entities).to.have.deep.property('[0]').to.have.property('_id');
         expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
-        const query = new Query().equalTo('entity._id', entities[0]._id);
-        return this.syncStore.syncCount(query);
-      }).then(syncCount => {
-        expect(syncCount).to.equal(1);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'POST' });
+        });
       });
     });
   });
@@ -1012,13 +1022,12 @@ describe('SyncStore', function() {
         expect(entity).to.have.property('_id');
         expect(entity).to.have.property('prop', data.prop);
 
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
-          expect(syncItems).to.have.deep.property('[0]').to.have.property('entity').that.deep.equals(entity);
         });
       });
     });
@@ -1033,13 +1042,12 @@ describe('SyncStore', function() {
         expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
 
         const entity = entities[0];
-        const query = new Query().equalTo('entity._id', entities[0]._id);
+        const query = new Query().equalTo('entityId', entities[0]._id);
         return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
           expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
-          expect(syncItems).to.have.deep.property('[0]').to.have.property('entity').that.deep.equals(entity);
         });
       });
     });
@@ -1064,7 +1072,7 @@ describe('SyncStore', function() {
           .that.deep.equals(data);
 
         const entity = entities[0];
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
@@ -1073,9 +1081,6 @@ describe('SyncStore', function() {
           expect(syncItems).to.have.deep.property('[0]')
             .to.have.property('state')
             .that.deep.equals({ method: 'DELETE' });
-          expect(syncItems).to.have.deep.property('[0]')
-            .to.have.property('entity')
-            .that.deep.equals(entity);
         });
       });
     });
@@ -1101,7 +1106,7 @@ describe('SyncStore', function() {
       return promise.then(entity => {
         expect(entity).to.deep.equal(data);
 
-        const query = new Query().equalTo('entity._id', entity._id);
+        const query = new Query().equalTo('entityId', entity._id);
         return this.syncStore.pendingSyncEntities(query).then(syncItems => {
           expect(syncItems).to.be.instanceof(Array);
           expect(syncItems.length).to.equal(1);
@@ -1110,9 +1115,6 @@ describe('SyncStore', function() {
           expect(syncItems).to.have.deep.property('[0]')
             .to.have.property('state')
             .that.deep.equals({ method: 'DELETE' });
-          expect(syncItems).to.have.deep.property('[0]')
-            .to.have.property('entity')
-            .that.deep.equals(entity);
         });
       });
     });
