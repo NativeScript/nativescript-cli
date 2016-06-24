@@ -137,7 +137,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 			if (options && options.validateTargetSdk) {
 				let targetSdk = toolsInfoData.targetSdkVersion;
 				let newTarget = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${targetSdk}`;
-				if (!_.contains(AndroidToolsInfo.SUPPORTED_TARGETS, newTarget)) {
+				if (!_.includes(AndroidToolsInfo.SUPPORTED_TARGETS, newTarget)) {
 					let supportedVersions = AndroidToolsInfo.SUPPORTED_TARGETS.sort();
 					let minSupportedVersion = this.parseAndroidSdkString(_.first(supportedVersions));
 
@@ -224,7 +224,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 				if (userSpecifiedCompileSdk) {
 					let installedTargets = this.getInstalledTargets().wait();
 					let androidCompileSdk = `${AndroidToolsInfo.ANDROID_TARGET_PREFIX}-${userSpecifiedCompileSdk}`;
-					if (!_.contains(installedTargets, androidCompileSdk)) {
+					if (!_.includes(installedTargets, androidCompileSdk)) {
 						this.$errors.failWithoutHelp(`You have specified '${userSpecifiedCompileSdk}' for compile sdk, but it is not installed on your system.`);
 					}
 
@@ -327,7 +327,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 	private getLatestValidAndroidTarget(): IFuture<string> {
 		return (() => {
 			let installedTargets = this.getInstalledTargets().wait();
-			return _.findLast(AndroidToolsInfo.SUPPORTED_TARGETS.sort(), supportedTarget => _.contains(installedTargets, supportedTarget));
+			return _.findLast(AndroidToolsInfo.SUPPORTED_TARGETS.sort(), supportedTarget => _.includes(installedTargets, supportedTarget));
 		}).future<string>()();
 	}
 
@@ -370,7 +370,7 @@ export class AndroidToolsInfo implements IAndroidToolsInfo {
 					this.printMessage("The ANDROID_HOME environment variable is not set or it points to a non-existent directory. You will not be able to perform any build-related operations for Android.",
 						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory.");
 					this._cachedAndroidHomeValidationResult = false;
-				} else if (!_.any(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir)).wait()))) {
+				} else if (!_.some(expectedDirectoriesInAndroidHome.map(dir => this.$fs.exists(path.join(androidHomeEnvVar, dir)).wait()))) {
 					this.printMessage("The ANDROID_HOME environment variable points to incorrect directory. You will not be able to perform any build-related operations for Android.",
 						"To be able to perform Android build-related operations, set the `ANDROID_HOME` variable to point to the root of your Android SDK installation directory, " +
 						"where you will find `tools` and `platform-tools` directories.");

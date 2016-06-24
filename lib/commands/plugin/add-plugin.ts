@@ -14,7 +14,7 @@ export class AddPluginCommand implements ICommand {
 
 			let installedPlugins = this.$pluginsService.getAllInstalledPlugins().wait();
 			let pluginName = args[0].toLowerCase();
-			if(_.any(installedPlugins, (plugin: IPluginData) => plugin.name.toLowerCase() === pluginName)) {
+			if(_.some(installedPlugins, (plugin: IPluginData) => plugin.name.toLowerCase() === pluginName)) {
 				this.$errors.failWithoutHelp(`Plugin "${pluginName}" is already installed.`);
 			}
 

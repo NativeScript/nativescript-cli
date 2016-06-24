@@ -74,7 +74,7 @@ class ErrorsNoFailStub implements IErrors {
 class PlatformsData implements IPlatformsData {
 	platformsNames = ["android", "ios"];
 	getPlatformData(platform: string): IPlatformData {
-		if(_.contains(this.platformsNames, platform)) {
+		if(_.includes(this.platformsNames, platform)) {
 			return new PlatformData();
 		}
 

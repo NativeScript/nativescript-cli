@@ -8,7 +8,7 @@ export abstract class LiveSyncServiceBase<T extends Mobile.IDevice> {
 
 	public refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): IFuture<void> {
 		let canExecuteFastSync = !forceExecuteFullSync && localToDevicePaths &&
-			_.all(localToDevicePaths, localToDevicePath => this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
+			_.each(localToDevicePaths, localToDevicePath => this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
 		if (canExecuteFastSync) {
 			return this.reloadPage(deviceAppData);
 		}

@@ -41,7 +41,7 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 				matchingFile = (listResult || "").match(regex);
 
 			// Check if there is already a file with deviceRootBasename. If so, delete it as it breaks LiveSyncing.
-			if(matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')){
+			if (matchingFile && matchingFile[0] && _.startsWith(matchingFile[0], '-')) {
 				this.device.adb.executeShellCommand(["rm", "-f", deviceRootPath]).wait();
 			}
 
@@ -62,7 +62,7 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 		return (() => {
 			let deviceRootPath = this.getDeviceRootPath(appIdentifier);
 			_.each(localToDevicePaths, localToDevicePathData => {
-				let relativeUnixPath = _.trimLeft(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
+				let relativeUnixPath = _.trimStart(helpers.fromWindowsRelativePathToUnix(localToDevicePathData.getRelativeToProjectBasePath()), "/");
 				let deviceFilePath = this.$mobileHelper.buildDevicePath(deviceRootPath, "removedsync", relativeUnixPath);
 				this.device.adb.executeShellCommand(["mkdir", "-p", path.dirname(deviceFilePath), "&&", "touch", deviceFilePath]).wait();
 			});
@@ -86,8 +86,8 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 		socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
 			try {
 				socket.write(new Buffer([0, 0, 0, 1, 1]));
- 				future.return();
-			} catch(e) {
+				future.return();
+			} catch (e) {
 				future.throw(e);
 			} finally {
 				socket.destroy();
@@ -107,4 +107,4 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 		return this._deviceHashService;
 	}
 }
-$injector.register("androidLiveSyncServiceLocator", {factory: AndroidLiveSyncService});
+$injector.register("androidLiveSyncServiceLocator", { factory: AndroidLiveSyncService });
