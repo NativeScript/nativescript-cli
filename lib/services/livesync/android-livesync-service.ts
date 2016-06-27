@@ -73,8 +73,8 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 
 	public afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<boolean> {
 		return (() => {
-			this.deviceHashService.uploadHashFileToDevice(localToDevicePaths).wait();
-			return false;
+			 this.deviceHashService.uploadHashFileToDevice(localToDevicePaths).wait();
+			 return false;
 		}).future<boolean>()();
 	}
 
