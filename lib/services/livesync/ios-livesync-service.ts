@@ -19,6 +19,12 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 		super(_device, $liveSyncProvider);
 	}
 
+	public afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<boolean> {
+		return (() => {
+			return this.$options.watch;
+		}).future<boolean>()();
+	}
+	
 	public removeFiles(appIdentifier: string, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
 			_.each(localToDevicePaths, localToDevicePathData => this.device.fileSystem.deleteFile(localToDevicePathData.getDevicePath(), appIdentifier));
