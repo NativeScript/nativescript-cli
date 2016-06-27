@@ -8,7 +8,7 @@ export class EmulatorSettingsService implements Mobile.IEmulatorSettingsService 
 			let platformService = this.$injector.resolve("platformService"); // this should be resolved here due to cyclic dependency
 
 			let installedPlatforms = platformService.getInstalledPlatforms().wait();
-			return _.contains(installedPlatforms, platform.toLowerCase());
+			return _.includes(installedPlatforms, platform.toLowerCase());
 		}).future<boolean>()();
 	}
 

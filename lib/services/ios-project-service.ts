@@ -372,7 +372,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			let project = this.createPbxProj();
 			let frameworkName = path.basename(frameworkPath, path.extname(frameworkPath));
 			let frameworkBinaryPath = path.join(frameworkPath, frameworkName);
-			let isDynamic = _.contains(this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close").wait().stdout, " DYLIB ");
+			let isDynamic = _.includes(this.$childProcess.spawnFromEvent("otool", ["-Vh", frameworkBinaryPath], "close").wait().stdout, " DYLIB ");
 
 			let frameworkAddOptions: xcode.Options = { customFramework: true };
 

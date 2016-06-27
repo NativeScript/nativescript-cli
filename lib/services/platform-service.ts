@@ -249,8 +249,7 @@ export class PlatformService implements IPlatformService {
 
 			_(contents)
 				.filter(directoryName => directoryName !== constants.TNS_MODULES_FOLDER_NAME)
-				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait())
-				.value();
+				.each(directoryName => this.$fs.deleteDirectory(path.join(appDestinationDirectoryPath, directoryName)).wait());
 
 			// Copy all files from app dir, but make sure to exclude tns_modules
 			let sourceFiles = this.$fs.enumerateFilesInDirectorySync(appSourceDirectoryPath, null, { includeEmptyDirectories: true });
@@ -603,7 +602,7 @@ export class PlatformService implements IPlatformService {
 			// Get latest package that is produced from build
 			let candidates = this.$fs.readDirectory(buildOutputPath).wait();
 			let packages = _.filter(candidates, candidate => {
-				return _.contains(validPackageNames, candidate);
+				return _.includes(validPackageNames, candidate);
 			}).map(currentPackage => {
 				currentPackage = path.join(buildOutputPath, currentPackage);
 
@@ -725,10 +724,10 @@ export class PlatformService implements IPlatformService {
 			let cachedPackagePath = this.$npmInstallationManager.getCachedPackagePath(platformData.frameworkPackageName, version);
 
 			let allFiles = this.$fs.enumerateFilesInDirectorySync(cachedPackagePath);
-			let filteredFiles = _.filter(allFiles, file => _.contains(platformData.frameworkFilesExtensions, path.extname(file)));
+			let filteredFiles = _.filter(allFiles, file => _.includes(platformData.frameworkFilesExtensions, path.extname(file)));
 
 			let allFrameworkDirectories = _.map(this.$fs.readDirectory(path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME)).wait(), dir => path.join(cachedPackagePath, constants.PROJECT_FRAMEWORK_FOLDER_NAME, dir));
-			let filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.contains(platformData.frameworkFilesExtensions, path.extname(dir)) || _.contains(platformData.frameworkDirectoriesNames, path.basename(dir))));
+			let filteredFrameworkDirectories = _.filter(allFrameworkDirectories, dir => this.$fs.getFsStats(dir).wait().isDirectory() && (_.includes(platformData.frameworkFilesExtensions, path.extname(dir)) || _.includes(platformData.frameworkDirectoriesNames, path.basename(dir))));
 
 			return {
 				frameworkFiles: this.mapFrameworkFiles(cachedPackagePath, filteredFiles),

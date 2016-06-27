@@ -54,7 +54,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 	public canExecuteFastSync(filePath: string, platform: string): boolean {
 		let platformData = this.$platformsData.getPlatformData(platform);
 		let fastSyncFileExtensions = LiveSyncProvider.FAST_SYNC_FILE_EXTENSIONS.concat(platformData.fastLivesyncFileExtensions);
-		return _.contains(fastSyncFileExtensions, path.extname(filePath));
+		return _.includes(fastSyncFileExtensions, path.extname(filePath));
 	}
 
 	public transferFiles(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], projectFilesPath: string, isFullSync: boolean): IFuture<void> {
