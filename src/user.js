@@ -8,6 +8,7 @@ import { MobileIdentityConnect, SocialIdentity } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStoreManager, NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
+import { Promise } from 'es6-promise';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

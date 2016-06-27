@@ -2,6 +2,7 @@
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { NetworkStore } from './datastore';
+import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';

@@ -1,4 +1,11 @@
 ## Changelog
+### 3.0.0-beta.29 (2016-06-13)
+* Bugfix (MLIBZ-1151): Prevent error from always being thrown when using `store.find(query)` on a `CacheStore`.
+* Bugfix (MLIBZ-1154): Fix error with `window.openDatabase` not working on user logout.
+* Bugfix (MLIBZ-1030): Don't send back an empty array on a successful sync.
+* Enhancement (MLIBZ-1155): Use `es6-promise` to polyfill browsers that don't contain native promise support.
+* Enhancement (MLIBZ-1159): Refactore `DataStore`
+
 ### 3.0.0-beta.28 (2016-06-13)
 * Bugfix: Don't use `indexeddbshim` as not all browsers support WebSQL (e.g., Firefox)
 

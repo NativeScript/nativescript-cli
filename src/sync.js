@@ -5,6 +5,7 @@ import { NetworkRequest } from './requests/network';
 import { DeltaFetchRequest } from './requests/deltafetch';
 import { Client } from './client';
 import { Query } from './query';
+import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';

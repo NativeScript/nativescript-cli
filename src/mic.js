@@ -2,6 +2,7 @@ import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { Client } from './client';
+import { Promise } from 'es6-promise';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';

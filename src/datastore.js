@@ -9,6 +9,7 @@ import { KinveyObservable } from './utils/observable';
 import { Client } from './client';
 import { SyncManager } from './sync';
 import { Metadata } from './metadata';
+import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
