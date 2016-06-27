@@ -107,6 +107,7 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobi
 
 		process.on("SIGINT", () => {
 			this.destroySocket();
+			return process.exit();
 		});
 	}
 
