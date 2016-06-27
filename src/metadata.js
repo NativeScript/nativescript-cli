@@ -29,6 +29,10 @@ export class Metadata {
     return undefined;
   }
 
+  get ect() {
+    return this.createdAt;
+  }
+
   get emailVerification() {
     return this.kmd.emailVerification.status;
   }

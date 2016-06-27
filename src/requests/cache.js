@@ -1,15 +1,16 @@
 import { KinveyRequest } from './request';
-import { CacheRack } from '../rack/rack';
+import { KinveyRackManager } from '../rack/rack';
 import { NoResponseError } from '../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private
  */
-export default class CacheRequest extends KinveyRequest {
+export class CacheRequest extends KinveyRequest {
   constructor(options) {
     super(options);
-    this.rack = CacheRack.sharedInstance();
+    this.rack = KinveyRackManager.cacheRack;
   }
 
   async execute() {

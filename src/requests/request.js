@@ -1,7 +1,8 @@
 import { KinveyRack } from '../rack/rack';
-import Client from '../client';
+import { Client } from '../client';
 import { KinveyError, NoActiveUserError } from '../errors';
 import UrlPattern from 'url-pattern';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import qs from 'qs';
 import url from 'url';
 import appendQuery from 'append-query';
@@ -88,7 +89,8 @@ const Auth = {
    */
   app(client) {
     if (!client.appKey || !client.appSecret) {
-      throw new Error('Missing client credentials');
+      throw new Error('Missing client appKey and/or appSecret.'
+        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
     }
 
     return {
@@ -118,7 +120,8 @@ const Auth = {
    */
   master(client) {
     if (!client.appKey || !client.masterSecret) {
-      throw new Error('Missing client credentials');
+      throw new Error('Missing client appKey and/or appSecret.'
+        + ' Use Kinvey.init() to set the appKey and appSecret for the client.');
     }
 
     return {

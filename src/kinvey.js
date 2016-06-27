@@ -1,22 +1,24 @@
 import { KinveyError } from './errors';
 import { Aggregation } from './aggregation';
-import Client from './client';
-import CustomEndpoint from './endpoint';
+import { Client } from './client';
+import { CustomEndpoint } from './endpoint';
 import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
-import { DataStore, DataStoreType } from './datastore';
+import { DataStoreManager, DataStoreType } from './datastore';
 import { FileStore } from './filestore';
-import Sync from './sync';
+import { Sync } from './sync';
 import { User, UserStore } from './user';
 import { AuthorizationGrant, SocialIdentity } from './mic';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
+import { KinveyRackManager } from './rack/rack';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 let client = null;
 
-export default class Kinvey {
+export class Kinvey {
   static get client() {
     if (!client) {
       throw new KinveyError('You have not initialized the library. ' +
@@ -32,6 +34,14 @@ export default class Kinvey {
 
   static set appVersion(appVersion) {
     this.client.appVersion = appVersion;
+  }
+
+  static get RackManager() {
+    return KinveyRackManager;
+  }
+
+  static get Log() {
+    return Log;
   }
 
   /**
@@ -74,10 +84,9 @@ export default class Kinvey {
     this.Aggregation = Aggregation;
     this.AuthorizationGrant = AuthorizationGrant;
     this.CustomEndpoint = CustomEndpoint;
-    this.DataStore = DataStore;
+    this.DataStore = DataStoreManager;
     this.DataStoreType = DataStoreType;
     this.FileStore = FileStore;
-    this.Log = Log;
     this.Metadata = Metadata;
     this.Query = Query;
     this.SocialIdentity = SocialIdentity;

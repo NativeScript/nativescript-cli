@@ -1,14 +1,9 @@
-import '../../setup';
-import { DB, DBAdapter } from '../../../src/rack/middleware/cache';
-import { Memory } from '../../../src/rack/middleware/adapters/memory';
-import IndexedDB from '../../../src/rack/middleware/adapters/indexeddb';
-import { WebSQL } from '../../../src/rack/middleware/adapters/websql';
-import { LocalStorage } from '../../../src/rack/middleware/adapters/localstorage';
-import { KinveyError, NotFoundError } from '../../../src/errors';
-import { randomString } from '../../../src/utils/string';
+import '../setup';
+import { Memory } from '../../src/rack/cache';
+import { KinveyError, NotFoundError } from '../../src/errors';
+import { randomString } from '../../src/utils/string';
 import keyBy from 'lodash/keyBy';
 import map from 'lodash/map';
-import forEach from 'lodash/forEach';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import sinonChai from 'sinon-chai';
@@ -18,9 +13,9 @@ const expect = chai.expect;
 const databaseName = 'testDatabase';
 const collectionName = 'testCollection';
 
-describe('DB', function() {
+describe('Memory', function() {
   before(function() {
-    this.db = new DB(databaseName);
+    this.db = new Memory(databaseName);
     return this.db.clear();
   });
 
@@ -34,60 +29,22 @@ describe('DB', function() {
 
   it('should throw an error if no name is provided', function() {
     expect(function() {
-      const db = new DB();
-      return db;
+      const memory = new Memory();
+      return memory;
     }).to.throw(KinveyError);
   });
 
   it('should throw an error if name is not a string', function() {
     expect(function() {
-      const db = new DB({});
-      return db;
+      const memory = new Memory({});
+      return memory;
     }).to.throw(KinveyError);
   });
 
-  it('should allow to specify a single adapter', function() {
-    const db = new DB(databaseName, DBAdapter.Memory);
-    expect(db.adapter).to.be.instanceof(Memory);
-  });
-
-  it('should allow to specify an array of adapters', function() {
-    const adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory];
-    const db = new DB(databaseName, adapters);
-    let adapterInstance = Memory;
-
-    forEach(adapters, adapter => {
-      switch (adapter) {
-        case DBAdapter.IndexedDB:
-          if (IndexedDB.isSupported()) {
-            adapterInstance = IndexedDB;
-            return false;
-          }
-          break;
-        case DBAdapter.LocalStorage:
-          if (LocalStorage.isSupported()) {
-            adapterInstance = LocalStorage;
-            return false;
-          }
-          break;
-        case DBAdapter.Memory:
-          if (Memory.isSupported()) {
-            adapterInstance = Memory;
-            return false;
-          }
-          break;
-        case DBAdapter.WebSQL:
-          if (WebSQL.isSupported()) {
-            adapterInstance = WebSQL;
-            return false;
-          }
-          break;
-        default:
-          console.log(`The ${adapter} adapter is is not recognized.`);
-      }
-    });
-
-    expect(db.adapter).to.be.instanceof(adapterInstance);
+  it('should set name with constructor', function() {
+    const name = 'foo';
+    const memory = new Memory(name);
+    expect(memory.name).to.equal(name);
   });
 
   describe('find()', function() {
@@ -122,7 +79,7 @@ describe('DB', function() {
     });
 
     it('should be a function', function() {
-      expect(DB).to.respondTo('find');
+      expect(Memory).to.respondTo('find');
     });
 
     it('should return an empty array if a collection does not contain eny entities', function() {
@@ -172,7 +129,7 @@ describe('DB', function() {
     });
 
     it('should be a function', function() {
-      expect(DB).to.respondTo('findById');
+      expect(Memory).to.respondTo('findById');
     });
 
     it('should throw a NotFoundError for an entity that does not exist', function() {
@@ -189,8 +146,6 @@ describe('DB', function() {
         attribute: randomString()
       };
       return this.db.save(collectionName, entity).then(savedEntity => {
-        return this.db.findById(collectionName, savedEntity._id);
-      }).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
         return this.db.removeById(collectionName, savedEntity._id);
       });
@@ -199,7 +154,7 @@ describe('DB', function() {
 
   describe('save()', function() {
     it('should be a function', function() {
-      expect(DB).to.respondTo('save');
+      expect(Memory).to.respondTo('save');
     });
 
     it('should save one entity', function() {
@@ -209,15 +164,12 @@ describe('DB', function() {
       };
       return this.db.save(collectionName, entity).then(savedEntity => {
         expect(savedEntity).to.deep.equal(entity);
-        return this.db.findById(collectionName, savedEntity._id);
-      }).then(savedEntity => {
-        expect(savedEntity).to.deep.equal(entity);
         return this.db.removeById(collectionName, savedEntity._id);
       });
     });
 
     it('should save an array of entities', function() {
-      let entities = [
+      const entities = [
         {
           _id: randomString(),
           attribute: randomString()
@@ -228,27 +180,23 @@ describe('DB', function() {
         }
       ];
       return this.db.save(collectionName, entities).then(savedEntities => {
-        expect(savedEntities).to.deep.equal(entities);
-        return this.db.find(collectionName);
-      }).then(savedEntities => {
         expect(savedEntities).to.be.an('array');
         expect(savedEntities.length).to.equal(2);
-
-        entities = keyBy(entities, '_id');
-        savedEntities = keyBy(savedEntities, '_id');
-
-        for (const id in savedEntities) {
-          if (savedEntities.hasOwnProperty(id)) {
-            expect(savedEntities[id]).to.deep.equal(entities[id]);
-          }
-        }
-
-        const promises = map(Object.keys(savedEntities), id => {
-          return this.db.removeById(collectionName, id);
-        });
-
+        expect(savedEntities).to.deep.equal(entities);
+        const savedEntityIds = Object.keys(keyBy(savedEntities, '_id'));
+        const promises = map(savedEntityIds, id => this.db.removeById(collectionName, id));
         return Promise.all(promises);
       });
+    });
+  });
+
+  describe('isSupported()', function() {
+    it('should be a static function', function() {
+      expect(Memory).itself.to.respondTo('isSupported');
+    });
+
+    it('should return true', function() {
+      expect(Memory.isSupported()).to.be.true;
     });
   });
 });

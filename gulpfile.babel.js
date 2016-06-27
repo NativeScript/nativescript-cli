@@ -21,7 +21,13 @@ gulp.task('lint', () => {
   return stream;
 });
 
-gulp.task('clean', done => del(['es5', 'tmp'], done));
+gulp.task('clean', done => del([
+  'es5',
+  'tmp',
+  'dist',
+  'coverage',
+  'test.tap'
+], done));
 
 gulp.task('build', ['clean', 'lint'], () => {
   const envs = env.set({
@@ -48,7 +54,7 @@ gulp.task('build', ['clean', 'lint'], () => {
     .pipe(envs)
     .pipe(babel())
     .pipe(envs.reset)
-    .pipe(gulp.dest('./es5'))
+    .pipe(gulp.dest('./dist'))
     .on('error', errorHandler);
   return stream;
 });

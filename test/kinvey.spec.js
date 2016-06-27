@@ -1,6 +1,6 @@
 import './setup';
-import Kinvey from '../src/kinvey';
-import Client from '../src/client';
+import { Kinvey } from '../src/kinvey';
+import { Client } from '../src/client';
 import { loginUser, logoutUser } from './utils/user';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
@@ -97,10 +97,6 @@ describe('Kinvey', function () {
   });
 
   describe('ping()', function() {
-    after(function() {
-      return logoutUser.call(this);
-    });
-
     it('should respond', function() {
       expect(Kinvey).itself.to.respondTo('ping');
     });
@@ -138,7 +134,7 @@ describe('Kinvey', function () {
           'content-type': 'application/json'
         });
 
-      return loginUser.call(this).then(() => Kinvey.ping()).then(response => {
+      return Kinvey.ping().then(response => {
         expect(response).to.deep.equal(reply);
       });
     });

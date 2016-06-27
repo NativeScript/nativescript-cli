@@ -1,10 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 import { KinveyRequest, RequestMethod } from './request';
-import CacheRequest from './cache';
+import { CacheRequest } from './cache';
 import { NetworkRequest } from './network';
 import { KinveyResponse, KinveyResponseConfig, StatusCode } from './response';
 import { NotFoundError } from '../errors';
 import { Query } from '../query';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import keyBy from 'lodash/keyBy';
 import reduce from 'lodash/reduce';
 import result from 'lodash/result';

@@ -1,9 +1,10 @@
 /* eslint-disable no-underscore-dangle */
 import './setup';
-import { DataStore, DataStoreType } from '../src/datastore';
-import { KinveyError } from '../src/errors';
+import { DataStoreManager, DataStoreType, DataStore, CacheStore, NetworkStore, SyncStore } from '../src/datastore';
+import { Client } from '../src/client';
+import { KinveyError, NotFoundError } from '../src/errors';
+import { Query } from '../src/query';
 import { randomString } from '../src/utils/string';
-import { loginUser, logoutUser } from './utils/user';
 import nock from 'nock';
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
@@ -12,497 +13,1128 @@ chai.use(chaiAsPromised);
 chai.use(sinonChai);
 const expect = chai.expect;
 const collection = 'tests';
+const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 describe('DataStore', function() {
-  beforeEach(function() {
-    return loginUser.call(this);
-  });
-
-  afterEach(function() {
-    const store = new DataStore(collection);
-
-    nock(this.client.baseUrl)
-      .get(`${store.pathname}/_count`)
-      .query(true)
-      .reply(200, { count: 0 }, {
-        'content-type': 'application/json'
-      });
-
-    return store.clear().then(() => {
-      const promise = new Promise((resolve, reject) => {
-        const stream = store.count();
-        stream.subscribe(count => {
-          expect(count).to.equal(0);
-        }, reject, resolve);
-      });
-      return promise;
-    });
-  });
-
-  afterEach(function() {
-    return logoutUser.call(this);
-  });
-
   describe('constructor', function() {
-    it('should not require a name to be provided', function() {
-      const store = new DataStore();
-      expect(store.name).to.be.undefined;
-    });
-
-    it('should throw an error if name is not a string', function() {
+    it('should throw an error if the collection name is not a string', function() {
       expect(function() {
-        const store = new DataStore({}); // eslint-disable-line no-unused-vars
-      }).to.throw(/Collection must be a string./);
+        new DataStore({}); // eslint-disable-line no-new
+      }).to.throw(KinveyError, /Collection must be a string./);
     });
 
-    it('should accept a string for a name', function() {
-      const store = new DataStore(collection);
-      expect(store.collection).to.equal(collection);
+    it('should set the collection name', function() {
+      const datastore = new DataStore(collection);
+      expect(datastore.collection).to.equal(collection);
     });
 
-    it('should set ttl to undefined as the default', function() {
-      const store = new DataStore();
-      expect(store.ttl).to.be.undefined;
-    });
-
-    it('should set useDeltaFetch to false as the default', function() {
-      const store = new DataStore();
-      expect(store.useDeltaFetch).to.be.false;
-    });
-
-    it('should have the cache enabled as the default', function() {
-      const store = new DataStore();
-      expect(store.isCacheEnabled()).to.be.true;
-    });
-
-    it('should have the store online as the default', function() {
-      const store = new DataStore();
-      expect(store.isOnline()).to.be.true;
+    it('should set a client', function() {
+      const datastore = new DataStore(collection);
+      expect(datastore.client).to.not.be.undefined;
+      expect(datastore.client).to.be.instanceof(Client);
     });
   });
 
   describe('pathname', function() {
-    it('should return /appdata/<appKey>', function() {
-      const store = new DataStore();
-      expect(store.pathname).to.equal(`/appdata/${this.client.appKey}`);
+    const datastore = new DataStore(collection);
+    expect(datastore.pathname).to.equal(`/${appdataNamespace}/${datastore.client.appKey}/${collection}`);
+  });
+
+  describe('save()', function() {
+    it('should call create() if the data does not have id', async function() {
+      const datastore = new DataStore(collection);
+      const stub = this.sandbox.stub(datastore, 'create');
+      const data = { prop: randomString() };
+      await datastore.save(data);
+      expect(stub).to.have.been.calledOnce;
     });
 
-    it('should return /appdata/<appKey>/<collection>', function() {
-      const store = new DataStore(collection);
-      expect(store.pathname).to.equal(`/appdata/${this.client.appKey}/${collection}`);
+    it('should call update() if the data has an id', async function() {
+      const datastore = new DataStore(collection);
+      const stub = this.sandbox.stub(datastore, 'update');
+      const data = { _id: randomString(), prop: randomString() };
+      await datastore.save(data);
+      expect(stub).to.have.been.calledOnce;
+    });
+  });
+});
+
+describe('NetworkStore', function() {
+  before(function() {
+    this.store = new NetworkStore(collection);
+  });
+
+  before(function() {
+    const data = { prop: randomString() };
+
+    nock(this.client.baseUrl)
+      .post(this.store.pathname, () => true)
+      .query(true)
+      .reply(200, {
+        _id: randomString(),
+        prop: data.prop
+      }, {
+        'content-type': 'application/json'
+      });
+
+    return this.store.save(data).then(entity => {
+      this.entity = entity;
     });
   });
 
-  describe('disableCache()', function() {
-    it('should disable the cache', function() {
-      const store = new DataStore();
-      store.disableCache();
-      expect(store.isCacheEnabled()).to.be.false;
-    });
+  before(function() {
+    const data = { prop: randomString() };
 
-    it('should not allow the cache to be disabled if the store is offline', function() {
-      const store = new DataStore();
-      store.offline();
-      expect(function() {
-        store.disableCache();
-      }).to.throw(/Unable to disable the cache when the store is offline./);
-    });
-  });
+    nock(this.client.baseUrl)
+      .post(this.store.pathname, () => true)
+      .query(true)
+      .reply(200, {
+        _id: randomString(),
+        prop: data.prop
+      }, {
+        'content-type': 'application/json'
+      });
 
-  describe('enableCache()', function() {
-    it('should enable the cache', function() {
-      const store = new DataStore();
-      store.enableCache();
-      expect(store.isCacheEnabled()).to.be.true;
+    return this.store.save(data).then(entity => {
+      this.entity2 = entity;
     });
   });
 
-  describe('isCacheEnabled()', function() {
-    it('should return false if the cache is disabled', function() {
-      const store = new DataStore();
-      store.disableCache();
-      expect(store.isCacheEnabled()).to.be.false;
-    });
-
-    it('should return true if the cache is enabled', function() {
-      const store = new DataStore();
-      store.enableCache();
-      expect(store.isCacheEnabled()).to.be.true;
-    });
+  after(function() {
+    delete this.entity;
+    delete this.entity2;
+    delete this.store;
   });
 
-  describe('offline()', function() {
-    it('should make the store go offline', function() {
-      const store = new DataStore();
-      store.offline();
-      expect(store.isOnline()).to.be.false;
+  describe('constructor', function() {
+    it('it to be an instance of CacheStore', function() {
+      const store = new NetworkStore(collection);
+      expect(store).to.be.instanceof(NetworkStore);
     });
 
-    it('should not the store to go offline if the cache is disabled', function() {
-      const store = new DataStore();
-      store.disableCache();
-      expect(function() {
-        store.offline();
-      }).to.throw(/Unable to go offline when the cache for the store is disabled./);
-    });
-  });
-
-  describe('online()', function() {
-    it('should make the store go online', function() {
-      const store = new DataStore();
-      store.online();
-      expect(store.isOnline()).to.be.true;
-    });
-  });
-
-  describe('isOnline()', function() {
-    it('should return a false if the store is offline', function() {
-      const store = new DataStore();
-      store.offline();
-      expect(store.isOnline()).to.be.false;
-    });
-
-    it('should return a true if the store is online', function() {
-      const store = new DataStore();
-      store.online();
-      expect(store.isOnline()).to.be.true;
+    it('it to be a subclass of DataStore', function() {
+      const store = new NetworkStore(collection);
+      expect(store).to.be.instanceof(DataStore);
     });
   });
 
   describe('find()', function() {
-    beforeEach(function() {
-      const entity = {
-        _id: randomString(),
-        _kmd: {
-          lmt: new Date().toUTCString()
-        },
-        _acl: {},
-        prop: randomString()
-      };
-      const store = new DataStore(collection);
+    it('should throw an error for an invalid query', function() {
+      const promise = this.store.find({}).toPromise();
+      return expect(promise).to.be.rejected;
+    });
 
+    it('should return all entities when a query is not provided', function(done) {
       nock(this.client.baseUrl)
-        .post(store.pathname, () => true)
+        .get(this.store.pathname, () => true)
         .query(true)
-        .reply(200, entity, {
+        .reply(200, [this.entity, this.entity2], {
           'content-type': 'application/json'
         });
 
-      return store.create(entity).then(entity => {
-        this.entity = entity;
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.find();
+      stream.subscribe(notifySpy, done, () => {
+        expect(notifySpy).to.have.been.calledOnce;
+        expect(notifySpy).to.be.calledWithExactly([this.entity, this.entity2]);
+        done();
       });
     });
 
-    it('should throw an error if a query is provided that is not an instance of the Query class', function(done) {
-      const store = new DataStore(collection);
-      store.find({}).subscribe(null, error => {
+    it('should return a subset of entities that match the provided query', function(done) {
+      nock(this.client.baseUrl)
+        .get(this.store.pathname, () => true)
+        .query(true)
+        .reply(200, [this.entity], {
+          'content-type': 'application/json'
+        });
+
+      const notifySpy = this.sandbox.spy();
+      const query = new Query().equalTo('_id', this.entity._id);
+      const stream = this.store.find(query);
+      stream.subscribe(notifySpy, done, () => {
+        expect(notifySpy).to.have.been.calledOnce;
+        expect(notifySpy).to.be.calledWithExactly([this.entity]);
+        done();
+      });
+    });
+  });
+
+  describe('findById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.store.findById().toPromise();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const id = randomString();
+
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/${id}`, () => true)
+        .query(true)
+        .reply(404, { name: 'EntityNotFound' }, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.findById(id).toPromise();
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should return the entity that matches the id', function() {
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/${this.entity._id}`, () => true)
+        .query(true)
+        .reply(200, this.entity, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.findById(this.entity._id).toPromise();
+      return expect(promise).to.eventually.deep.equal(this.entity);
+    });
+  });
+
+  describe('count()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.store.count({}).toPromise();
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should return the count of all entities when a query is not provided', function() {
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/_count`, () => true)
+        .query(true)
+        .reply(200, { count: 2 }, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.count().toPromise();
+      return expect(promise).to.eventually.equal(2);
+    });
+
+    it('should return the count of entities that match the provided query', function() {
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/_count`, () => true)
+        .query(true)
+        .reply(200, { count: 1 }, {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query().equalTo('_id', this.entity._id);
+      const promise = this.store.count(query).toPromise();
+      return expect(promise).to.eventually.equal(1);
+    });
+  });
+
+  describe('create()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.store.create();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should create the data on the network', function() {
+      const data = { prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .post(this.store.pathname, () => true)
+        .query(true)
+        .reply(201, {
+          _id: randomString(),
+          prop: data.prop
+        }, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.create(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .post(this.store.pathname, () => true)
+        .query(true)
+        .reply(201, {
+          _id: randomString(),
+          prop: data.prop
+        }, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.create([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+      });
+    });
+  });
+
+  describe('update()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.store.update();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should update the data on the network', function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.update(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.update([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+      });
+    });
+  });
+
+  describe('remove()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.store.remove({});
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should remove the data on the network', async function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .delete(this.store.pathname, () => true)
+        .query(true)
+        .reply(200, [data], {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.store.remove(query);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]')
+          .that.deep.equals(data);
+      });
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.store.removeById();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const id = randomString();
+
+      nock(this.client.baseUrl)
+        .delete(`${this.store.pathname}/${id}`, () => true)
+        .query(true)
+        .reply(404, { name: 'EntityNotFound' }, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.removeById(id);
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should remove the entity that matches the id from the network', async function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .delete(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.removeById(data._id);
+      return promise.then(entity => {
+        expect(entity).to.deep.equal(data);
+      });
+    });
+  });
+});
+
+describe('CacheStore', function() {
+  before(function() {
+    this.store = DataStoreManager.collection(collection, DataStoreType.Cache);
+  });
+
+  before(function() {
+    const data = { prop: randomString() };
+
+    nock(this.client.baseUrl)
+      .post(this.store.pathname, () => true)
+      .query(true)
+      .reply(200, {
+        _id: randomString(),
+        prop: data.prop
+      }, {
+        'content-type': 'application/json'
+      });
+
+    return this.store.save(data).then(entity => {
+      this.entity = entity;
+    });
+  });
+
+  before(function() {
+    const data = { prop: randomString() };
+
+    nock(this.client.baseUrl)
+      .post(this.store.pathname, () => true)
+      .query(true)
+      .reply(200, {
+        _id: randomString(),
+        prop: data.prop
+      }, {
+        'content-type': 'application/json'
+      });
+
+    return this.store.save(data).then(entity => {
+      this.entity2 = entity;
+    });
+  });
+
+  after(function() {
+    nock(this.client.baseUrl)
+      .delete(`${this.store.pathname}/${this.entity._id}`, () => true)
+      .query(true)
+      .reply(204, null, {
+        'content-type': 'application/json'
+      });
+
+    return this.store.removeById(this.entity._id);
+  });
+
+  after(function() {
+    nock(this.client.baseUrl)
+      .delete(`${this.store.pathname}/${this.entity._id}`, () => true)
+      .query(true)
+      .reply(204, null, {
+        'content-type': 'application/json'
+      });
+
+    return this.store.removeById(this.entity2._id);
+  });
+
+  after(function() {
+    return this.store.clear().then(() => this.store.clearSync());
+  });
+
+  after(function() {
+    return this.store.syncCount().then(count => {
+      expect(count).to.equal(0);
+    });
+  });
+
+  after(function() {
+    delete this.entity;
+    delete this.entity2;
+    delete this.store;
+  });
+
+  describe('constructor', function() {
+    it('it to be an instance of CacheStore', function() {
+      const store = new CacheStore(collection);
+      expect(store).to.be.instanceof(CacheStore);
+    });
+
+    it('it to be a subclass of DataStore', function() {
+      const store = new CacheStore(collection);
+      expect(store).to.be.instanceof(DataStore);
+    });
+  });
+
+  describe('syncAutomatically', function() {
+    it('should be true', function() {
+      expect(this.store.syncAutomatically).to.be.true;
+    });
+
+    it('should throw an error if it is tried to be set to a different value', function() {
+      expect(function() {
+        this.store.syncAutomatically = false;
+      }).to.throw(Error);
+    });
+  });
+
+  describe('find()', function() {
+    it('should throw an error for an invalid query', function(done) {
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.find({});
+      stream.subscribe(notifySpy, error => {
+        expect(notifySpy).to.have.callCount(0);
         expect(error).to.be.instanceof(KinveyError);
-        expect(error.message).to.equal('Invalid query. It must be an instance of the Query class.');
+        done();
+      }, () => {
+        done();
+      });
+    });
+
+    it('should return all entities when a query is not provided', function(done) {
+      nock(this.client.baseUrl)
+        .get(this.store.pathname, () => true)
+        .query(true)
+        .reply(200, [this.entity, this.entity2], {
+          'content-type': 'application/json'
+        });
+
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.find();
+      stream.subscribe(notifySpy, error => {
+        done(error);
+      }, () => {
+        expect(notifySpy).to.have.been.calledTwice;
+        expect(notifySpy).to.be.calledWithExactly([this.entity, this.entity2]);
+        done();
+      });
+    });
+
+    it('should return a subset of entities that match the provided query', function(done) {
+      nock(this.client.baseUrl)
+        .get(this.store.pathname, () => true)
+        .query(true)
+        .reply(200, [this.entity], {
+          'content-type': 'application/json'
+        });
+
+      const notifySpy = this.sandbox.spy();
+      const query = new Query().equalTo('_id', this.entity._id);
+      const stream = this.store.find(query);
+      stream.subscribe(notifySpy, error => {
+        done(error);
+      }, () => {
+        expect(notifySpy).to.have.been.calledTwice;
+        expect(notifySpy).to.be.calledWithExactly([this.entity]);
+        done();
+      });
+    });
+  });
+
+  describe('findById()', function() {
+    it('should return undefined when an id is not provided', function(done) {
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.findById();
+      stream.subscribe(notifySpy, error => {
+        done(error);
+      }, () => {
+        expect(notifySpy).to.have.been.calledOnce;
+        expect(notifySpy).to.be.calledWithExactly(undefined);
+        done();
+      });
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function(done) {
+      const id = randomString();
+
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/${id}`, () => true)
+        .query(true)
+        .reply(404, { name: 'EntityNotFound' }, {
+          'content-type': 'application/json'
+        });
+
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.findById(id);
+      stream.subscribe(notifySpy, error => {
+        expect(notifySpy).to.have.callCount(0);
+        expect(error).to.be.instanceof(NotFoundError);
         done();
       }, done);
     });
 
-    it('should find all the data in a collection', function(done) {
-      const store = new DataStore(collection);
-      const entity2 = {
-        _id: randomString(),
-        _kmd: {
-          lmt: new Date().toUTCString()
-        },
-        _acl: {},
-        prop: randomString()
-      };
-
-      // Delta GET response
+    it('should return the entity that matches the id', function(done) {
       nock(this.client.baseUrl)
-        .get(store.pathname)
+        .get(`${this.store.pathname}/${this.entity._id}`, () => true)
         .query(true)
-        .reply(200, [
-          {
-            _id: this.entity._id,
-            _kmd: this.entity._kmd
-          },
-          {
-            _id: entity2._id,
-            _kmd: entity2._kmd
-          }
-        ], {
+        .reply(200, this.entity, {
           'content-type': 'application/json'
         });
 
-      // GET response
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.findById(this.entity._id);
+      stream.subscribe(notifySpy, done, () => {
+        expect(notifySpy).to.have.been.calledTwice;
+        expect(notifySpy).to.be.calledWithExactly(this.entity);
+        done();
+      });
+    });
+  });
+
+  describe('count()', function() {
+    it('should throw an error for an invalid query', function(done) {
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.count({});
+      stream.subscribe(notifySpy, error => {
+        expect(notifySpy).to.have.callCount(0);
+        expect(error).to.be.instanceof(KinveyError);
+        done();
+      }, done);
+    });
+
+    it('should return the count of all entities when a query is not provided', function(done) {
       nock(this.client.baseUrl)
-        .get(store.pathname)
+        .get(`${this.store.pathname}/_count`, () => true)
         .query(true)
-        .reply(200, [entity2], {
+        .reply(200, { count: 2 }, {
           'content-type': 'application/json'
         });
 
-      const spy = this.sandbox.spy();
-      store.find().subscribe(spy, done, () => {
-        expect(spy).to.have.been.called.twice;
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.count();
+      stream.subscribe(notifySpy, done, () => {
+        expect(notifySpy).to.have.been.calledTwice;
+        expect(notifySpy).to.be.calledWithExactly(2);
+        done();
+      });
+    });
+
+    it('should return the count of entities that match the provided query', function(done) {
+      nock(this.client.baseUrl)
+        .get(`${this.store.pathname}/_count`, () => true)
+        .query(true)
+        .reply(200, { count: 1 }, {
+          'content-type': 'application/json'
+        });
+
+      const notifySpy = this.sandbox.spy();
+      const stream = this.store.count();
+      stream.subscribe(notifySpy, done, () => {
+        expect(notifySpy).to.have.been.calledTwice;
+        expect(notifySpy).to.be.calledWithExactly(1);
         done();
       });
     });
   });
 
   describe('create()', function() {
-    describe('cacheEnabled/online', function() {
-      it('should create a single entity', function() {
-        const entity = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity, {
-            'content-type': 'application/json'
-          });
-
-        return store.create(entity).then(data => {
-          expect(data).to.have.property('_id');
-          expect(data.prop).to.be.equal(entity.prop);
-        });
-      });
-
-      it('should create an array of entities', function() {
-        const entity1 = {
-          prop: randomString()
-        };
-        const entity2 = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity1, {
-            'content-type': 'application/json'
-          });
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity2, {
-            'content-type': 'application/json'
-          });
-
-        return store.create([entity1, entity2]).then(data => {
-          expect(data).to.be.an('Array');
-          expect(data.length).to.equal(2);
-          expect(data[0].prop).to.equal(entity1.prop);
-          expect(data[1].prop).to.equal(entity2.prop);
-        });
-      });
+    it('should return null when data is not provided', function() {
+      const promise = this.store.create();
+      return expect(promise).to.eventually.be.null;
     });
 
-    describe('cacheEnabled/offline', function() {
-      it('should create a single entity', function() {
-        const entity = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity, {
-            'content-type': 'application/json'
-          });
-
-        return store.create(entity).then(data => {
-          expect(data).to.have.property('_id');
-          expect(data.prop).to.be.equal(entity.prop);
-        });
-      });
-
-      it('should create an array of entities', function() {
-        const entity1 = {
-          prop: randomString()
-        };
-        const entity2 = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-        store.offline();
-
-        return store.create([entity1, entity2]).then(data => {
-          expect(data).to.be.an('Array');
-          expect(data.length).to.equal(2);
-          expect(data[0].prop).to.equal(entity1.prop);
-          expect(data[1].prop).to.equal(entity2.prop);
-          return store.syncCount();
-        }).then(count => {
-          expect(count).to.equal(2);
-        });
-      });
-    });
-
-    describe('cacheDisabled/online', function() {
-      it('should create a single entity', function() {
-        const entity = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-        store.disableCache();
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity, {
-            'content-type': 'application/json'
-          });
-
-        return store.create(entity).then(data => {
-          expect(data.prop).to.be.equal(entity.prop);
-        });
-      });
-
-      it('should create an array of entities', function() {
-        const entity1 = {
-          prop: randomString()
-        };
-        const entity2 = {
-          prop: randomString()
-        };
-        const store = new DataStore(collection);
-        store.disableCache();
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity1, {
-            'content-type': 'application/json'
-          });
-
-        nock(this.client.baseUrl)
-          .post(store.pathname)
-          .query(true)
-          .reply(200, entity2, {
-            'content-type': 'application/json'
-          });
-
-        return store.create([entity1, entity2]).then(data => {
-          expect(data).to.be.an('Array');
-          expect(data.length).to.equal(2);
-          expect(data[0].prop).to.equal(entity1.prop);
-          expect(data[1].prop).to.equal(entity2.prop);
-        });
-      });
-    });
-  });
-
-  describe('sync()', function() {
-    it('should fail when not all items are pushed', function() {
-      const entity = {
-        prop: randomString()
-      };
-      const store = DataStore.collection(collection, DataStoreType.Sync);
+    it('should create the data in the cache and sync the data with the network', function() {
+      const data = { prop: randomString() };
 
       nock(this.client.baseUrl)
-        .post(store.pathname)
-        .query(true)
-        .reply(504, 'Time out', {
-          'content-type': 'application/json'
-        });
-
-      const promise = store.create(entity).then(data => {
-        expect(data).to.have.property('_id');
-        expect(data.prop).to.be.equal(entity.prop);
-        return store.sync();
-      });
-      return expect(promise).to.be.rejected;
-    });
-
-    it('should succeed when all items are pushed', function() {
-      const store = DataStore.collection(collection, DataStoreType.Sync);
-      const _id = randomString();
-      const prop = randomString();
-      let localId;
-
-      nock(this.client.baseUrl)
-        .post(store.pathname)
+        .post(this.store.pathname, () => true)
         .query(true)
         .reply(201, {
-          _id: _id,
-          prop: prop
+          _id: randomString(),
+          prop: data.prop
         }, {
           'content-type': 'application/json'
         });
 
+      const promise = this.store.create(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.store.syncCount(query);
+      }).then(syncCount => {
+        expect(syncCount).to.equal(0);
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { prop: randomString() };
+
       nock(this.client.baseUrl)
-        .get(store.pathname)
+        .post(this.store.pathname, () => true)
         .query(true)
-        .reply(200, [{
-          _id: _id,
-          prop: prop
-        }], {
+        .reply(201, {
+          _id: randomString(),
+          prop: data.prop
+        }, {
           'content-type': 'application/json'
         });
 
-      const promise = store.create({ prop: prop }).then(data => {
-        expect(data).to.have.property('_id');
-        expect(data.prop).to.be.equal(prop);
-        localId = data._id;
-        return store.sync();
-      }).then(result => {
-        expect(result).to.have.property('push');
-        expect(result).to.have.property('pull');
+      const promise = this.store.create([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
 
-        const push = result.push;
-        const pull = result.pull;
-        expect(push).to.be.an('array');
-        expect(push.length).to.equal(1);
-        expect(push).to.deep.equal([{
-          _id: localId,
-          entity: {
-            _id: _id,
-            _kmd: {},
-            prop: prop
-          }
-        }]);
-        expect(pull).to.be.an('array');
-        expect(pull.length).to.equal(1);
-        expect(pull).to.deep.equal([{
-          _id: _id,
-          _kmd: {},
-          prop: prop
-        }]);
+        const query = new Query().equalTo('entityId', entities[0]._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
       });
+    });
+  });
 
-      return expect(promise).to.be.fulfilled;
+  describe('update()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.store.update();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should update the data in the cache and update the data on the backend', function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.update(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id', data._id);
+        expect(entity).to.have.property('prop', data.prop);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const promise = this.store.update([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+
+        const query = new Query().equalTo('entityId', entities[0]._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
+      });
+    });
+  });
+
+  describe('remove()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.store.remove({});
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should remove the data in the cache and sync with the backend', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      data = await this.store.update(data);
+
+      nock(this.client.baseUrl)
+        .delete(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.store.remove(query);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]')
+          .that.deep.equals(data);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
+      });
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.store.removeById();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const promise = this.store.removeById(randomString());
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should remove the entity that matches the id and sync with the backend', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+
+      nock(this.client.baseUrl)
+        .put(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      data = await this.store.update(data);
+
+      nock(this.client.baseUrl)
+        .delete(`${this.store.pathname}/${data._id}`, () => true)
+        .query(true)
+        .reply(200, data, {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.store.removeById(data._id);
+      return promise.then(entity => {
+        expect(entity).to.deep.equal(data);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.store.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(0);
+        });
+      });
+    });
+  });
+});
+
+describe('SyncStore', function() {
+  before(function() {
+    this.syncStore = new SyncStore(collection);
+  });
+
+  before(function() {
+    const data = { prop: randomString() };
+    return this.syncStore.save(data).then(entity => {
+      this.entity = entity;
+    });
+  });
+
+  before(function() {
+    const data = { prop: randomString() };
+    return this.syncStore.save(data).then(entity => {
+      this.entity2 = entity;
+    });
+  });
+
+  after(function() {
+    return this.syncStore.removeById(this.entity._id);
+  });
+
+  after(function() {
+    return this.syncStore.removeById(this.entity2._id);
+  });
+
+  after(function() {
+    return this.syncStore.clear().then(() => this.syncStore.clearSync());
+  });
+
+  after(function() {
+    return this.syncStore.syncCount().then(count => {
+      expect(count).to.equal(0);
+    });
+  });
+
+  after(function() {
+    delete this.entity;
+    delete this.entity2;
+    delete this.syncStore;
+  });
+
+  describe('constructor', function() {
+    it('it to be a subclass of CacheStore', function() {
+      const syncStore = new SyncStore(collection);
+      expect(syncStore).to.be.instanceof(CacheStore);
+    });
+  });
+
+  describe('syncAutomatically', function() {
+    it('should be false', function() {
+      const syncStore = new SyncStore(collection);
+      expect(syncStore.syncAutomatically).to.be.false;
+    });
+
+    it('should throw an error if it is tried to be set to a different value', function() {
+      expect(function() {
+        const syncStore = new SyncStore(collection);
+        syncStore.syncAutomatically = true;
+      }).to.throw(Error);
+    });
+  });
+
+  describe('find()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.syncStore.find({}).toPromise();
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should return all entities when a query is not provided', function() {
+      const promise = this.syncStore.find().toPromise();
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(2);
+        expect(entities).to.have.deep.property('[0]').that.deep.equals(this.entity);
+        expect(entities).to.have.deep.property('[1]').that.deep.equals(this.entity2);
+      });
+    });
+
+    it('should return a subset of entities that match the provided query', function() {
+      const query = new Query().equalTo('_id', this.entity._id);
+      const promise = this.syncStore.find(query).toPromise();
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').that.deep.equals(this.entity);
+      });
+    });
+  });
+
+  describe('findById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.syncStore.findById().toPromise();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const promise = this.syncStore.findById(randomString()).toPromise();
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should return the entity that matches the id', function() {
+      const promise = this.syncStore.findById(this.entity._id).toPromise();
+      return expect(promise).to.eventually.deep.equal(this.entity);
+    });
+  });
+
+  describe('count()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.syncStore.count({}).toPromise();
+      return expect(promise).to.be.rejectedWith(KinveyError);
+    });
+
+    it('should return the count of all entities when a query is not provided', function() {
+      const promise = this.syncStore.count().toPromise();
+      return expect(promise).to.eventually.equal(2);
+    });
+
+    it('should return the count of entities that match the provided query', function() {
+      const query = new Query().equalTo('_id', this.entity._id);
+      const promise = this.syncStore.count(query).toPromise();
+      return expect(promise).to.eventually.equal(1);
+    });
+  });
+
+  describe('create()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.syncStore.create();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should create the data in the cache and add a create operation to the sync table', function() {
+      const data = { prop: randomString() };
+      const promise = this.syncStore.create(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'POST' });
+        });
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { prop: randomString() };
+      const promise = this.syncStore.create([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'POST' });
+        });
+      });
+    });
+  });
+
+  describe('update()', function() {
+    it('should return null when data is not provided', function() {
+      const promise = this.syncStore.update();
+      return expect(promise).to.eventually.be.null;
+    });
+
+    it('should update the data in the cache and add a update operation to the sync table', function() {
+      const data = { _id: randomString(), prop: randomString() };
+      const promise = this.syncStore.update(data);
+      return promise.then(entity => {
+        expect(entity).to.have.property('_id');
+        expect(entity).to.have.property('prop', data.prop);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
+        });
+      });
+    });
+
+    it('should accept an array of data', function() {
+      const data = { _id: randomString(), prop: randomString() };
+      const promise = this.syncStore.update([data]);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]').to.have.property('_id');
+        expect(entities).to.have.deep.property('[0]').to.have.property('prop', data.prop);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entityId', entities[0]._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]').to.have.property('state').that.deep.equals({ method: 'PUT' });
+        });
+      });
+    });
+  });
+
+  describe('remove()', function() {
+    it('should throw an error for an invalid query', function() {
+      const promise = this.syncStore.remove({});
+      return expect(promise).to.be.rejected;
+    });
+
+    it('should remove the data in the cache and add a delete operation to the sync table', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+      data = await this.syncStore.update(data);
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.syncStore.remove(query);
+      return promise.then(entities => {
+        expect(entities).to.be.instanceof(Array);
+        expect(entities.length).to.equal(1);
+        expect(entities).to.have.deep.property('[0]')
+          .that.deep.equals(data);
+
+        const entity = entities[0];
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('state')
+            .that.deep.equals({ method: 'DELETE' });
+        });
+      });
+    });
+  });
+
+  describe('removeById()', function() {
+    it('should return undefined when an id is not provided', function() {
+      const promise = this.syncStore.removeById();
+      return expect(promise).to.eventually.be.undefined;
+    });
+
+    it('should throw a NotFoundError if an entity does not exist that matches the id', function() {
+      const promise = this.syncStore.removeById(randomString());
+      return expect(promise).to.be.rejectedWith(NotFoundError);
+    });
+
+    it('should remove the entity that matches the id and add a delete operation to the sync table', async function() {
+      let data = { _id: randomString(), prop: randomString() };
+      data = await this.syncStore.update(data);
+      const query = new Query();
+      query.equalTo('_id', data._id);
+      const promise = this.syncStore.removeById(data._id);
+      return promise.then(entity => {
+        expect(entity).to.deep.equal(data);
+
+        const query = new Query().equalTo('entityId', entity._id);
+        return this.syncStore.pendingSyncEntities(query).then(syncItems => {
+          expect(syncItems).to.be.instanceof(Array);
+          expect(syncItems.length).to.equal(1);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('collection', this.syncStore.collection);
+          expect(syncItems).to.have.deep.property('[0]')
+            .to.have.property('state')
+            .that.deep.equals({ method: 'DELETE' });
+        });
+      });
+    });
+  });
+});
+
+describe('DataStoreManager', function() {
+  describe('constructor', function() {
+    it('should throw an error', function() {
+      expect(function() {
+        new DataStoreManager(); // eslint-disable-line no-new
+      }).to.throw(KinveyError);
     });
   });
 
   describe('collection()', function() {
-    it('should be a static function', function() {
-      expect(DataStore).itself.to.respondTo('collection');
-    });
-
-    it('should return a DataStore that is online and has cache enabled by default', function() {
-      const store = DataStore.collection();
-      expect(store.isOnline()).to.be.true;
-      expect(store.isCacheEnabled()).to.be.true;
-    });
-
-    it('should return a DataStore that is offline and has cache enabled for DataStoreType.Sync', function() {
-      const store = DataStore.collection(null, DataStoreType.Sync);
-      expect(store.isOnline()).to.be.false;
-      expect(store.isCacheEnabled()).to.be.true;
-    });
-
-    it('should return a DataStore that is online and has cache disabled for DataStoreType.Network', function() {
-      const store = DataStore.collection(null, DataStoreType.Network);
-      expect(store.isOnline()).to.be.true;
-      expect(store.isCacheEnabled()).to.be.false;
-    });
-
-    it('should accept a name as an argument', function() {
-      const store = DataStore.collection(collection);
-      expect(store.collection).to.equal(collection);
+    it('should throw an error if a collection name is not provided', function() {
+      expect(function() {
+        DataStoreManager.collection(); // eslint-disable-line no-new
+      }).to.throw(KinveyError, /A collection is required./);
     });
   });
 });

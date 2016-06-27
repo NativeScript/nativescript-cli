@@ -1,7 +1,7 @@
 import { KinveyError } from './errors';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import Client from './client';
+import { Client } from './client';
 import path from 'path';
 import url from 'url';
 import isString from 'lodash/isString';

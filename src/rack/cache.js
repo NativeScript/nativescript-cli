@@ -1,99 +1,141 @@
 /* eslint-disable no-underscore-dangle */
-import { Query } from '../../query';
-import { Aggregation } from '../../aggregation';
-import IndexedDB from './adapters/indexeddb';
-import { LocalStorage } from './adapters/localstorage';
-import { Memory } from './adapters/memory';
-import { WebSQL } from './adapters/websql';
-import { KinveyError, NotFoundError } from '../../errors';
-import { Log } from '../../log';
-import { KinveyMiddleware } from '../middleware';
-import { RequestMethod } from '../../requests/request';
-import { StatusCode } from '../../requests/response';
+import { Query } from '../query';
+import { Aggregation } from '../aggregation';
+import { KinveyError, NotFoundError } from '../errors';
+import { KinveyMiddleware } from './middleware';
+import { RequestMethod } from '../requests/request';
+import { StatusCode } from '../requests/response';
+import { Promise } from 'es6-promise';
+import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import map from 'lodash/map';
 import result from 'lodash/result';
 import reduce from 'lodash/reduce';
+import keyBy from 'lodash/keyBy';
 import forEach from 'lodash/forEach';
+import values from 'lodash/values';
+import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 Queue.configure(Promise);
 const queue = new Queue(1, Infinity);
+const dbCache = {};
+const caches = [];
 
 /**
  * @private
- * Enum for DB Adapters.
  */
-const DBAdapter = {
-  IndexedDB: 'IndexedDB',
-  LocalStorage: 'LocalStorage',
-  Memory: 'Memory',
-  WebSQL: 'WebSQL'
-};
-Object.freeze(DBAdapter);
-export { DBAdapter };
+export class Memory {
+  constructor(name) {
+    if (!name) {
+      throw new KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
+    }
+
+    if (!isString(name)) {
+      throw new KinveyError('The name of the collection must be a string to use the memory persistence adapter', name);
+    }
+
+    this.name = name;
+    this.cache = caches[name];
+
+    if (!this.cache) {
+      this.cache = new MemoryCache();
+      caches[name] = this.cache;
+    }
+  }
+
+  async find(collection) {
+    const entities = this.cache.get(collection);
+
+    if (entities) {
+      return JSON.parse(entities);
+    }
+
+    return [];
+  }
+
+  async findById(collection, id) {
+    const entities = await this.find(collection);
+    const entity = find(entities, entity => entity[idAttribute] === id);
+
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} memory database.`);
+    }
+
+    return entity;
+  }
+
+  async save(collection, entities) {
+    let singular = false;
+
+    if (!isArray(entities)) {
+      entities = [entities];
+      singular = true;
+    }
+
+    if (entities.length === 0) {
+      return entities;
+    }
+
+    let existingEntities = await this.find(collection);
+    existingEntities = keyBy(existingEntities, idAttribute);
+    entities = keyBy(entities, idAttribute);
+    const entityIds = Object.keys(entities);
+
+    forEach(entityIds, id => {
+      existingEntities[id] = entities[id];
+    });
+
+    this.cache.set(collection, JSON.stringify(values(existingEntities)));
+
+    entities = values(entities);
+    return singular ? entities[0] : entities;
+  }
+
+  async removeById(collection, id) {
+    let entities = await this.find(collection);
+    entities = keyBy(entities, idAttribute);
+    const entity = entities[id];
+
+    if (!entity) {
+      throw new NotFoundError(`An entity with _id = ${id} was not found in the ${collection}`
+        + ` collection on the ${this.name} memory database.`);
+    }
+
+    delete entities[id];
+    this.cache.set(collection, JSON.stringify(values(entities)));
+
+    return entity;
+  }
+
+  async clear() {
+    this.cache.clear();
+    return null;
+  }
+
+  static isSupported() {
+    return true;
+  }
+}
 
 /**
  * @private
  */
 export class DB {
-  constructor(name, adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
-    if (!isArray(adapters)) {
-      adapters = [adapters];
+  constructor(name) {
+    if (!name) {
+      throw new KinveyError('Unable to create a DB instance without a name.');
     }
 
-    forEach(adapters, adapter => {
-      switch (adapter) {
-        case DBAdapter.IndexedDB:
-          if (IndexedDB.isSupported()) {
-            this.adapter = new IndexedDB(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.LocalStorage:
-          if (LocalStorage.isSupported()) {
-            this.adapter = new LocalStorage(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.Memory:
-          if (Memory.isSupported()) {
-            this.adapter = new Memory(name);
-            return false;
-          }
-
-          break;
-        case DBAdapter.WebSQL:
-          if (WebSQL.isSupported()) {
-            this.adapter = new WebSQL(name);
-            return false;
-          }
-
-          break;
-        default:
-          Log.warn(`The ${adapter} adapter is is not recognized.`);
-      }
-
-      return true;
-    });
-
-    if (!this.adapter) {
-      if (Memory.isSupported()) {
-        Log.error('Provided adapters are unsupported on this platform. ' +
-          'Defaulting to the Memory adapter.', adapters);
-        this.adapter = new Memory(name);
-      } else {
-        Log.error('Provided adapters are unsupported on this platform.', adapters);
-      }
+    if (!isString(name)) {
+      throw new KinveyError('The name is not a string. A name must be a string to create a DB instance.');
     }
-  }
 
-  get objectIdPrefix() {
-    return '';
+    this.adapter = new Memory(name);
   }
 
   generateObjectId(length = 24) {
@@ -105,7 +147,6 @@ export class DB {
       objectId += chars.substring(pos, pos + 1);
     }
 
-    objectId = `${this.objectIdPrefix}${objectId}`;
     return objectId;
   }
 
@@ -250,15 +291,28 @@ export class DB {
  * @private
  */
 export class CacheMiddleware extends KinveyMiddleware {
-  constructor(adapters = [DBAdapter.IndexedDB, DBAdapter.WebSQL, DBAdapter.LocalStorage, DBAdapter.Memory]) {
-    super('Kinvey Cache Middleware');
-    this.adapters = adapters;
+  constructor(name = 'Kinvey Cache Middleware') {
+    super(name);
+  }
+
+  openDatabase(name) {
+    if (!name) {
+      throw new KinveyError('A name is required to open a database.');
+    }
+
+    let db = dbCache[name];
+
+    if (!db) {
+      db = new DB(name);
+    }
+
+    return db;
   }
 
   async handle(request) {
     request = await super.handle(request);
     const { method, query, body, appKey, collection, entityId } = request;
-    const db = new DB(appKey, this.adapters);
+    const db = this.openDatabase(appKey);
     let data;
 
     if (method === RequestMethod.GET) {
