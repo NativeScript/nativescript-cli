@@ -14,12 +14,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private static VALUES_VERSION_DIRNAME_PREFIX = AndroidProjectService.VALUES_DIRNAME + "-v";
 	private static ANDROID_PLATFORM_NAME = "android";
 	private static MIN_RUNTIME_VERSION_WITH_GRADLE = "1.3.0";
-	private static MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS = "4.2.1";
 	private static REQUIRED_DEV_DEPENDENCIES = [
 		{ name: "babel-traverse", version: "^6.4.5" },
 		{ name: "babel-types", version: "^6.4.5" },
 		{ name: "babylon", version: "^6.4.5" },
-		{ name: "filewalker", version: "^0.1.2" },
 		{ name: "lazy", version: "^1.0.11" }
 	];
 
@@ -133,45 +131,38 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 
 			this.cleanResValues(targetSdkVersion, frameworkVersion).wait();
-			if (this.canUseStaticBindingGenerator()) {
-				let npmConfig = {
-					"save": true,
-					"save-dev": true,
-					"save-exact": true,
-					"silent": true
-				};
 
-				let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath).wait();
+			let npmConfig = {
+				"save": true,
+				"save-dev": true,
+				"save-exact": true,
+				"silent": true
+			};
 
-				_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
-					let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
-						(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
+			let projectPackageJson: any = this.$fs.readJson(this.$projectData.projectFilePath).wait();
 
-					if (!dependencyVersionInProject) {
-						this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait();
-					} else {
-						let cleanedVerson = semver.clean(dependencyVersionInProject);
+			_.each(AndroidProjectService.REQUIRED_DEV_DEPENDENCIES, (dependency: any) => {
+				let dependencyVersionInProject = (projectPackageJson.dependencies && projectPackageJson.dependencies[dependency.name]) ||
+					(projectPackageJson.devDependencies && projectPackageJson.devDependencies[dependency.name]);
 
-						// The plugin version is not valid. Check node_modules for the valid version.
-						if (!cleanedVerson) {
-							let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
-							dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson).wait() && this.$fs.readJson(pathToPluginPackageJson).wait().version;
-						}
+				if (!dependencyVersionInProject) {
+					this.$npm.install(`${dependency.name}@${dependency.version}`, this.$projectData.projectDir, npmConfig).wait();
+				} else {
+					let cleanedVerson = semver.clean(dependencyVersionInProject);
 
-						if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
-							this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
-						}
+					// The plugin version is not valid. Check node_modules for the valid version.
+					if (!cleanedVerson) {
+						let pathToPluginPackageJson = path.join(this.$projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME, dependency.name, constants.PACKAGE_JSON_FILE_NAME);
+						dependencyVersionInProject = this.$fs.exists(pathToPluginPackageJson).wait() && this.$fs.readJson(pathToPluginPackageJson).wait().version;
 					}
-				});
-			} else {
-				this.$logger.printMarkdown(` As you are using Node.js \`${process.version}\` Static Binding Generator will be turned off.` +
-					`Upgrade your Node.js to ${AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS} or later, so you can use this feature.`);
-			}
-		}).future<any>()();
-	}
 
-	private canUseStaticBindingGenerator(): boolean {
-		return semver.gte(process.version, AndroidProjectService.MIN_REQUIRED_NODEJS_VERSION_FOR_STATIC_BINDINGS);
+					if (!semver.satisfies(dependencyVersionInProject || cleanedVerson, dependency.version)) {
+						this.$errors.failWithoutHelp(`Your project have installed ${dependency.name} version ${cleanedVerson} but Android platform requires version ${dependency.version}.`);
+					}
+				}
+			});
+
+		}).future<any>()();
 	}
 
 	private useGradleWrapper(frameworkDir: string): boolean {
@@ -294,10 +285,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			buildOptions.push(`-Palias=${this.$options.keyStoreAlias}`);
 			buildOptions.push(`-Ppassword=${this.$options.keyStoreAliasPassword}`);
 			buildOptions.push(`-PksPassword=${this.$options.keyStorePassword}`);
-		}
-
-		if (!this.canUseStaticBindingGenerator()) {
-			buildOptions.push("-PdontRunSbg");
 		}
 
 		return buildOptions;
