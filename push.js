@@ -5,6 +5,7 @@ import { RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/dist/request
 import { User } from 'kinvey-javascript-sdk-core/dist/user';
 import { NetworkRequest } from 'kinvey-javascript-sdk-core/dist/requests/network';
 import { Client } from 'kinvey-javascript-sdk-core/dist/client';
+import { Promise } from 'es6-promise';
 import url from 'url';
 import bind from 'lodash/bind';
 const pushNamespace = process.env.KINVEY_PUSH_NAMESPACE || 'push';

@@ -3,7 +3,7 @@ import { Device } from './device';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import bind from 'lodash/bind';
 
-export class PhoneGapPopup extends EventEmitter {
+export class Popup extends EventEmitter {
   constructor() {
     super();
 
