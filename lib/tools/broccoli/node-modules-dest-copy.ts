@@ -69,8 +69,9 @@ export class DestCopy implements IBroccoliPlugin {
 				});
 			}
 		});
-
-		this.$pluginsService.beforePrepareAllPlugins().wait();
+		if (!_.isEmpty(this.dependencies)) {
+			this.$pluginsService.beforePrepareAllPlugins().wait();
+		}
 
 		_.each(this.dependencies, dependency => {
 			this.copyDependencyDir(dependency);
