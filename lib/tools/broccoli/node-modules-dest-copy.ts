@@ -70,7 +70,7 @@ export class DestCopy implements IBroccoliPlugin {
 			}
 		});
 		if (!_.isEmpty(this.dependencies)) {
-			this.$pluginsService.beforePrepareAllPlugins().wait();
+			this.$platformsData.getPlatformData(platform).platformProjectService.beforePrepareAllPlugins().wait();
 		}
 
 		_.each(this.dependencies, dependency => {
