@@ -31,6 +31,7 @@ export class DestCopy implements IBroccoliPlugin {
 	}
 
 	public rebuildChangedDirectories(changedDirectories: string[], platform: string): void {
+
 		_.each(changedDirectories, changedDirectoryAbsolutePath => {
 			if (!this.devDependencies[path.basename(changedDirectoryAbsolutePath)]) {
 				let pathToPackageJson = path.join(changedDirectoryAbsolutePath, constants.PACKAGE_JSON_FILE_NAME);
@@ -68,6 +69,9 @@ export class DestCopy implements IBroccoliPlugin {
 				});
 			}
 		});
+		if (!_.isEmpty(this.dependencies)) {
+			this.$pluginsService.beforePrepareAllPlugins().wait();
+		}
 
 		_.each(this.dependencies, dependency => {
 			this.copyDependencyDir(dependency);
