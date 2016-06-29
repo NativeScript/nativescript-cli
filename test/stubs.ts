@@ -342,6 +342,9 @@ export class PlatformProjectServiceStub implements IPlatformProjectService {
 	afterPrepareAllPlugins(): IFuture<void> {
 		return Future.fromResult();
 	}
+	beforePrepareAllPlugins(): IFuture<void> {
+		return Future.fromResult();
+	}
 	deploy(deviceIdentifier: string): IFuture<void> {
 		return Future.fromResult();
 	}
