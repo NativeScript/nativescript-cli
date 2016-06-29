@@ -6,6 +6,7 @@ interface IPluginsService {
 	getAllInstalledPlugins(): IFuture<IPluginData[]>;
 	ensureAllDependenciesAreInstalled(): IFuture<void>;
 	afterPrepareAllPlugins(): IFuture<void>;
+	beforePrepareAllPlugins(): IFuture<void>;
 	getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult>
 }
 
