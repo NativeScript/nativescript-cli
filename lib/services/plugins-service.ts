@@ -164,6 +164,14 @@ export class PluginsService implements IPluginsService {
 		return this.executeForAllInstalledPlatforms(action);
 	}
 
+	public beforePrepareAllPlugins(): IFuture<void> {
+		let action = (pluginDestinationPath: string, platform: string, platformData: IPlatformData) => {
+			return platformData.platformProjectService.beforePrepareAllPlugins();
+		};
+
+		return this.executeForAllInstalledPlatforms(action);
+	}
+
 	public getDependenciesFromPackageJson(): IFuture<IPackageJsonDepedenciesResult> {
 		return (() => {
 			let packageJson = this.$fs.readJson(this.getPackageJsonFilePath()).wait();

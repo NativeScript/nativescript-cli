@@ -401,6 +401,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public afterPrepareAllPlugins(): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public beforePrepareAllPlugins(): IFuture<void> {
 		let buildOptions = this.getBuildOptions();
 		buildOptions.unshift("clean");
 
