@@ -293,7 +293,8 @@ describe("Cocoapods support", () => {
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
-					updateBuildProperty: () => { return {}; }
+					updateBuildProperty: () => { return {}; },
+					pbxXCBuildConfigurationSection: () => { return {}; },
 				};
 			};
 			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();
@@ -362,7 +363,8 @@ describe("Cocoapods support", () => {
 			};
 			iOSProjectService.createPbxProj = () => {
 				return {
-					updateBuildProperty: () => { return {}; }
+					updateBuildProperty: () => { return {}; },
+					pbxXCBuildConfigurationSection: () => { return {}; },
 				};
 			};
 			iOSProjectService.savePbxProj = (): IFuture<void> => Future.fromResult();

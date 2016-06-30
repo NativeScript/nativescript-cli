@@ -360,6 +360,34 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return Future.fromResult();
 	}
 
+	private getDeploymentTarget(project: xcode.project): string {
+		let configurations = project.pbxXCBuildConfigurationSection();
+
+		for (let configName in configurations) {
+			if (!Object.prototype.hasOwnProperty.call(configurations, configName)) {
+				continue;
+			}
+
+			let configuration = configurations[configName];
+			if (typeof configuration !== "object") {
+				continue;
+			}
+
+			let buildSettings = configuration.buildSettings;
+			if (buildSettings["IPHONEOS_DEPLOYMENT_TARGET"]) {
+				return buildSettings["IPHONEOS_DEPLOYMENT_TARGET"];
+			}
+		}
+	}
+
+	private ensureIos8DeploymentTarget(project: xcode.project) {
+		// tns-ios@2.1.0+ has a default deployment target of 8.0 so this is not needed there
+		if (this.getDeploymentTarget(project) === "7.0") {
+			project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
+			this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
+		}
+	}
+
 	private addDynamicFramework(frameworkPath: string): IFuture<void> {
 		return (() => {
 			this.validateFramework(frameworkPath).wait();
@@ -378,8 +406,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			if (isDynamic) {
 				frameworkAddOptions["embed"] = true;
-				project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-				this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks.");
+				this.ensureIos8DeploymentTarget(project);
 			}
 
 			let frameworkRelativePath = this.getLibSubpathRelativeToProjectPath(path.basename(frameworkPath));
@@ -906,8 +933,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 					this.$fs.writeFile(this.projectPodFilePath, contentToWrite).wait();
 
 					let project = this.createPbxProj();
-					project.updateBuildProperty("IPHONEOS_DEPLOYMENT_TARGET", "8.0");
-					this.$logger.info("The iOS Deployment Target is now 8.0 in order to support Cocoa Touch Frameworks in CocoaPods.");
+					this.ensureIos8DeploymentTarget(project);
 					this.savePbxProj(project).wait();
 				}
 			}
