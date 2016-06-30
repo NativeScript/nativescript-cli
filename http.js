@@ -1,12 +1,8 @@
 import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware';
-import { Injectable } from '@angular/core';
 import { Headers, Http, RequestOptions } from '@angular/http';
 import parseHeaders from 'parse-headers';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
-/* eslint-disable */
-@Injectable()
-/* eslint-enable */
 export class HttpMiddleware extends KinveyMiddleware {
   // Angular2 DI
   static get parameters() {

@@ -1,3 +1,3 @@
-import { Kinvey as AngularKinvey } from 'kinvey-angular-sdk/dist/kinvey';
+import { Kinvey as PhoneGapKinvey } from 'kinvey-phonegap-sdk/dist/kinvey';
 
-export class Kinvey extends AngularKinvey {}
+export class Kinvey extends PhoneGapKinvey {}

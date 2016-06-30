@@ -6,7 +6,7 @@ import { CacheMiddleware } from 'kinvey-phonegap-sdk/dist/cache';
 import { HttpMiddleware as CoreHttpMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/http';
 import { HttpMiddleware } from './http';
 import { Device } from './device';
-import { Popup } from 'kinvey-angular-sdk/dist/popup';
+import { Popup } from './popup';
 
 // Swap Cache Middelware
 const cacheRack = KinveyRackManager.cacheRack;
