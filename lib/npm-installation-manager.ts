@@ -106,6 +106,11 @@ export class NpmInstallationManager implements INpmInstallationManager {
 
 	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
 		return (() => {
+
+			while (this.$lockfile.check().wait()) {
+				;
+			}
+
 			this.$lockfile.lock().wait();
 
 			try {

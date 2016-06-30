@@ -34,6 +34,11 @@ export class Builder implements IBroccoliBuilder {
 					stat: true
 				}, (er: Error, files: string[]) => {
 					fiberBootstrap.run(() => {
+
+						while (this.$lockfile.check().wait()) {
+							;
+						}
+
 						this.$lockfile.lock().wait();
 						if (er) {
 							if (!future.isResolved()) {
