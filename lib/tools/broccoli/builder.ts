@@ -5,6 +5,7 @@ import * as shelljs from "shelljs";
 import Future = require("fibers/future");
 import * as destCopyLib from "./node-modules-dest-copy";
 import * as fiberBootstrap from "../../common/fiber-bootstrap";
+import {sleep} from "../../../lib/common/helpers";
 
 let glob = require("glob");
 
@@ -35,8 +36,8 @@ export class Builder implements IBroccoliBuilder {
 				}, (er: Error, files: string[]) => {
 					fiberBootstrap.run(() => {
 
-						while (this.$lockfile.check().wait()) {
-							;
+						while(this.$lockfile.check().wait()) {
+							sleep(10);
 						}
 
 						this.$lockfile.lock().wait();

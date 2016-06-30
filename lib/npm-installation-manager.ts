@@ -2,6 +2,7 @@ import * as path from "path";
 import * as semver from "semver";
 import * as npm from "npm";
 import * as constants from "./constants";
+import {sleep} from "../lib/common/helpers";
 
 export class NpmInstallationManager implements INpmInstallationManager {
 	private static NPM_LOAD_FAILED = "Failed to retrieve data from npm. Please try again a little bit later.";
@@ -107,8 +108,8 @@ export class NpmInstallationManager implements INpmInstallationManager {
 	public install(packageName: string, opts?: INpmInstallOptions): IFuture<string> {
 		return (() => {
 
-			while (this.$lockfile.check().wait()) {
-				;
+			while(this.$lockfile.check().wait()) {
+				sleep(10);
 			}
 
 			this.$lockfile.lock().wait();
