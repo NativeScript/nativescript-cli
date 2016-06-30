@@ -1,5 +1,5 @@
 import './setup';
-import { User } from '../src/user';
+import { User, UserStore } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
@@ -14,6 +14,73 @@ chai.use(sinonChai);
 const expect = chai.expect;
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
+
+describe('UserStore', function() {
+  before(function() {
+    this.store = new UserStore();
+  });
+
+  after(function() {
+    delete this.store;
+  });
+
+  beforeEach(function() {
+    return this.login();
+  });
+
+  afterEach(function() {
+    return this.logout();
+  });
+
+  describe('constructor', function() {
+    it('should create a user store');
+  });
+
+  describe('update()', function() {
+    it('should update a user');
+  });
+
+  describe('exists()', function() {
+    it('should return true that the username exists', function() {
+      nock(this.client.baseUrl)
+        .post(`/${rpcNamespace}/${this.store.client.appKey}/check-username-exists`)
+        .query(true)
+        .reply(200, { usernameExists: true }, {
+          'content-type': 'application/json'
+        });
+
+      return this.store.exists('admin').then(exists => {
+        expect(exists).to.be.true;
+      });
+    });
+
+    it('should return false that the username exists', function() {
+      nock(this.client.baseUrl)
+        .post(`/${rpcNamespace}/${this.store.client.appKey}/check-username-exists`)
+        .query(true)
+        .reply(200, { usernameExists: false }, {
+          'content-type': 'application/json'
+        });
+
+      return this.store.exists('admin').then(exists => {
+        expect(exists).to.be.false;
+      });
+    });
+
+    it('should return false that the username exists', function() {
+      nock(this.client.baseUrl)
+        .post(`/${rpcNamespace}/${this.store.client.appKey}/check-username-exists`)
+        .query(true)
+        .reply(200, { usernameExists: 'yes' }, {
+          'content-type': 'application/json'
+        });
+
+      return this.store.exists('admin').then(exists => {
+        expect(exists).to.be.false;
+      });
+    });
+  });
+});
 
 describe('User', function () {
   it('should create a new user', function() {
@@ -543,23 +610,5 @@ describe('User', function () {
 
       expect(User.resetPassword(username)).to.be.fulfilled;
     });
-  });
-});
-
-describe('UserStore', function() {
-  beforeEach(function() {
-    return this.login();
-  });
-
-  afterEach(function() {
-    return this.logout();
-  });
-
-  describe('constructor', function() {
-    it('should create a user store');
-  });
-
-  describe('update()', function() {
-    it('should update a user');
   });
 });

@@ -76,7 +76,7 @@ export class UserStore extends NetworkStore {
     return super.update(user, options);
   }
 
-  async exists(username, options) {
+  async exists(username, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
@@ -93,7 +93,7 @@ export class UserStore extends NetworkStore {
     const request = new NetworkRequest(config);
     const response = await request.execute();
     const data = response.data || {};
-    return !!data.usernameExists;
+    return data.usernameExists === true;
   }
 
   async restore(id, options = {}) {
