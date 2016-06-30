@@ -1,0 +1,29 @@
+import { Device as PhoneGapDevice } from 'kinvey-phonegap-sdk/dist/device';
+import { Device as Html5Device } from 'kinvey-html5-sdk/dist/device';
+import packageJSON from '../package.json';
+
+export class Device extends PhoneGapDevice {
+  static toJSON() {
+    let json;
+
+    // Get the correct device information
+    if (Device.isPhoneGap()) {
+      json = PhoneGapDevice.toJSON();
+    } else {
+      json = Html5Device.toJSON();
+    }
+
+    // Add angular information
+    if (json.platform) {
+      json.platform.name = 'angular2';
+    }
+
+    // Add sdk information
+    json.kinveySDK = {
+      name: packageJSON.name,
+      version: packageJSON.version
+    };
+
+    return json;
+  }
+}
