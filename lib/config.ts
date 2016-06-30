@@ -1,7 +1,7 @@
 import * as path from "path";
 import {StaticConfigBase} from "./common/static-config-base";
 import {ConfigBase} from "./common/config-base";
-import { startPackageActivityNames } from "./common/mobile/constants";
+import { startPackageActivityNames } from "./common/constants";
 
 export class Configuration extends ConfigBase implements IConfiguration { // User specific config
 	CI_LOGGER = false;
