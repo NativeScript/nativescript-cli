@@ -76,7 +76,7 @@ export class UserStore extends NetworkStore {
     return super.update(user, options);
   }
 
-  async exists(username, options) {
+  async exists(username, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
