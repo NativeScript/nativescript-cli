@@ -93,7 +93,7 @@ export class UserStore extends NetworkStore {
     const request = new NetworkRequest(config);
     const response = await request.execute();
     const data = response.data || {};
-    return !!data.usernameExists;
+    return data.usernameExists === true;
   }
 
   async restore(id, options = {}) {
