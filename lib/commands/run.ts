@@ -1,15 +1,23 @@
 export class RunCommandBase {
-	constructor(private $platformService: IPlatformService) { }
+	constructor(private $platformService: IPlatformService,
+		private $usbLiveSyncService: ILiveSyncService,
+		protected $options: IOptions) { }
 
 	public executeCore(args: string[], buildConfig?: IBuildConfig): IFuture<void> {
-		return this.$platformService.runPlatform(args[0], buildConfig);
+		if (this.$options.watch) {
+			return this.$usbLiveSyncService.liveSync(args[0]);
+		} else {
+			return this.$platformService.runPlatform(args[0], buildConfig);
+		}
 	}
 }
 
 export class RunIosCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
-		private $platformsData: IPlatformsData) {
-		super($platformService);
+		private $platformsData: IPlatformsData,
+		$usbLiveSyncService: ILiveSyncService,
+		$options: IOptions) {
+		super($platformService, $usbLiveSyncService, $options);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -23,9 +31,10 @@ $injector.registerCommand("run|ios", RunIosCommand);
 export class RunAndroidCommand extends RunCommandBase implements ICommand {
 	constructor($platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-				private $options: IOptions,
-				private $errors: IErrors) {
-			super($platformService);
+		$usbLiveSyncService: ILiveSyncService,
+		$options: IOptions,
+		private $errors: IErrors) {
+		super($platformService, $usbLiveSyncService, $options);
 	}
 
 	public allowedParameters: ICommandParameter[] = [];

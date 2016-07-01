@@ -10,6 +10,7 @@ Start an emulator and run the app inside it | `$ tns run android --emulator [<Em
 Runs your project on a connected Android device or in a native Android emulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console.
 
 ### Options
+* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
 * `--device` - Specifies a connected device on which to run the app.
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate android`.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
