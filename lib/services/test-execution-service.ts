@@ -231,7 +231,7 @@ class TestExecutionService implements ITestExecutionService {
 				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
 			};
 
-			this.$liveSyncServiceBase.sync(liveSyncData).wait();
+			this.$liveSyncServiceBase.sync([liveSyncData]).wait();
 		}).future<void>()();
 	}
 }
