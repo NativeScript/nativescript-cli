@@ -14,6 +14,7 @@ Runs your project on a connected iOS device or in the iOS Simulator, if configur
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your OS X system. <% if(isHtml) { %>For more information, see [Obtaining Signing Identities and Downloading Provisioning Profiles](https://developer.apple.com/library/mac/recipes/xcode_help-accounts_preferences/articles/obtain_certificates_and_provisioning_profiles.html).<% } %>
 
 ### Options
+* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device.
 * `--device` - Specifies a connected device on which to run the app.
 * `--emulator` - If set, runs the app in a native emulator for the target platform, if configured. When set, you can also set any other valid combination of emulator options as listed by `$ tns help emulate ios`. You cannot use `--device` and `--emulator` simultaneously.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
