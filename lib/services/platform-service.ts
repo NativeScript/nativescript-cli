@@ -322,7 +322,7 @@ export class PlatformService implements IPlatformService {
 			// Replace placeholders in configuration files
 			platformData.platformProjectService.interpolateConfigurationFile().wait();
 
-			this.$logger.out("Project successfully prepared");
+			this.$logger.out("Project successfully prepared ("+platform+")");
 			return true;
 		}).future<boolean>()();
 	}

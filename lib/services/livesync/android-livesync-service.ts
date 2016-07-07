@@ -7,7 +7,7 @@ import * as path from "path";
 import * as net from "net";
 
 class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<Mobile.IAndroidDevice> implements IPlatformLiveSyncService {
-	private static BACKEND_PORT = 18181;
+	private static BACKEND_PORT = 18182;
 
 	constructor(_device: Mobile.IDevice,
 		private $fs: IFileSystem,

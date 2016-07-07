@@ -16,6 +16,8 @@ class LiveSyncService implements ILiveSyncService {
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $injector: IInjector,
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $devicesService: Mobile.IDevicesService,
 		private $options: IOptions) { }
 
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
@@ -42,32 +44,50 @@ class LiveSyncService implements ILiveSyncService {
 
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
-			platform = this.$liveSyncServiceBase.getPlatform(platform).wait();
-			let platformLowerCase = platform.toLowerCase();
-
-			if (!this.$platformService.preparePlatform(platformLowerCase).wait()) {
-				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+			let liveSyncData: ILiveSyncData[] = [];
+			this.$devicesService.initialize({ skipInferPlatform: true }).wait();
+			if (platform) {
+				liveSyncData.push(this.prepareLiveSyncData(platform));
+			} else if (this.$options.device) {
+				platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
+				liveSyncData.push(this.prepareLiveSyncData(platform));
+			} else {
+				for(let installedPlatform of this.$platformService.getInstalledPlatforms().wait()) {
+					liveSyncData.push(this.prepareLiveSyncData(installedPlatform));
+				}
 			}
 
 			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
-			this.liveSyncCore(platform).wait();
+			this.liveSyncCore(liveSyncData).wait();
 		}).future<void>()();
 	}
 
-	@helpers.hook('livesync')
-	private liveSyncCore(platform: string): IFuture<void> {
-		return (() => {
-			let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+	private prepareLiveSyncData(platform: string): ILiveSyncData {
+		platform = this.$liveSyncServiceBase.getPlatform(platform).wait();
+		if (!this.$platformService.preparePlatform(platform.toLowerCase()).wait()) {
+			this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+		}
+
+		let platformData = this.$platformsData.getPlatformData(platform.toLowerCase());
+		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			this.ensureAndroidFrameworkVersion(platformData).wait();
-			let liveSyncData: ILiveSyncData = {
-				platform: platform,
-				appIdentifier: this.$projectData.projectId,
-				projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
-				syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
-				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : [],
-				forceExecuteFullSync: this.forceExecuteFullSync
-			};
+		}
+		let liveSyncData: ILiveSyncData = {
+			platform: platform,
+			appIdentifier: this.$projectData.projectId,
+			projectFilesPath: path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME),
+			syncWorkingDirectory: path.join(this.$projectData.projectDir, constants.APP_FOLDER_NAME),
+			excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : [],
+			forceExecuteFullSync: this.forceExecuteFullSync
+		};
+
+		return liveSyncData;
+	}
+
+	@helpers.hook('livesync')
+	private liveSyncCore(liveSyncData: ILiveSyncData[]): IFuture<void> {
+		return (() => {
 			this.$liveSyncServiceBase.sync(liveSyncData).wait();
 		}).future<void>()();
 	}

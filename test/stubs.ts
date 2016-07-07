@@ -410,6 +410,11 @@ export class HooksServiceStub implements IHooksService {
 }
 
 export class LockFile {
+
+	check(): IFuture<boolean> {
+		return (() => { return false; }).future<boolean>()();
+	}
+
 	lock(): IFuture<void> {
 		return (() => {}).future<void>()();
 	}
