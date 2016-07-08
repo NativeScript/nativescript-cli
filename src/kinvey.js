@@ -10,8 +10,7 @@ import { FileStore } from './filestore';
 import { Sync } from './sync';
 import { User, UserStore } from './user';
 import { AuthorizationGrant, SocialIdentity } from './mic';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod } from './requests/request';
+import { NetworkRequest, AuthType, RequestMethod } from './request';
 import { KinveyRackManager } from './rack/rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

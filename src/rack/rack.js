@@ -10,7 +10,7 @@ import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-
  */
 export class KinveyRack extends Rack {
   async execute(request) {
-    request = await super.execute(request);
+    request = await super.execute(request.toJSON());
     return request.response;
   }
 }

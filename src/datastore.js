@@ -1,9 +1,13 @@
 /* eslint-disable no-underscore-dangle */
 import { KinveyError } from './errors';
-import { CacheRequest } from './requests/cache';
-import { DeltaFetchRequest } from './requests/deltafetch';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
+import {
+  CacheRequest,
+  DeltaFetchRequest,
+  NetworkRequest,
+  AuthType,
+  RequestMethod,
+  KinveyRequestConfig
+} from './request';
 import { Query } from './query';
 import { KinveyObservable } from './utils/observable';
 import { Client } from './client';

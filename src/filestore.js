@@ -1,6 +1,5 @@
 /* eslint-disable no-underscore-dangle */
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
+import { NetworkRequest, AuthType, RequestMethod, KinveyRequestConfig } from './request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars

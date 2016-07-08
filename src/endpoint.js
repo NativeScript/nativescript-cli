@@ -1,7 +1,6 @@
 import { Client } from './client';
-import { RequestMethod, AuthType } from './requests/request';
+import { NetworkRequest, RequestMethod, AuthType } from './request';
 import { KinveyError } from './errors';
-import { NetworkRequest } from './requests/network';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';

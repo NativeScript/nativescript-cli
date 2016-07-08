@@ -1,6 +1,6 @@
-import { KinveyRack } from '../rack/rack';
-import { Client } from '../client';
-import { KinveyError, NoActiveUserError } from '../errors';
+import { KinveyRack } from '../../rack/rack';
+import { Client } from '../../client';
+import { KinveyError, NoActiveUserError } from '../../errors';
 import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import qs from 'qs';
@@ -8,11 +8,14 @@ import url from 'url';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
+import head from 'lodash/head';
 import forEach from 'lodash/forEach';
 import isString from 'lodash/isString';
 import isPlainObject from 'lodash/isPlainObject';
 import isEmpty from 'lodash/isEmpty';
 import isNumber from 'lodash/isNumber';
+import isArray from 'lodash/isArray';
+import { isBlank } from '../../utils/lang';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
@@ -160,92 +163,129 @@ const Auth = {
 };
 
 export class Headers {
-  constructor(headers = {}) {
-    this.headers = {};
-    this.addAll(headers);
-  }
+  constructor(headers) {
+    if (headers instanceof Headers) {
+      this.headersMap = headers.headersMap;
+      return;
+    }
 
-  get(name) {
-    if (name) {
-      if (!isString(name)) {
-        name = String(name);
+    this.headersMap = new Map();
+
+    if (isBlank(headers)) {
+      return;
+    }
+
+    const headerNames = Object.keys(headers);
+    for (const header of headerNames) {
+      if (headers.hasOwnProperty(header)) {
+        this.set(header, headers[header]);
       }
-
-      const headers = this.headers;
-      return headers[name.toLowerCase()];
     }
-
-    return undefined;
   }
 
-  set(name, value) {
-    if (!name || !value) {
-      throw new Error('A name and value must be provided to set a header.');
+  /**
+   * Returns first header that matches given name.
+   */
+  get(header) {
+    return head(this.getAll(header));
+  }
+
+  /**
+   * Returns list of header values for a given name.
+   */
+  getAll(header) {
+    if (isString(header)) {
+      header = header.toLowerCase();
     }
 
-    if (!isString(name)) {
-      name = String(name);
-    }
+    const headers = this.headersMap.get(header);
+    return isArray(headers) ? headers : [];
+  }
 
-    const headers = this.headers;
-    name = name.toLowerCase();
+  /**
+   * Appends a header to existing list of header values for a given header name.
+   */
+  append(header, value) {
+    const list = this.getAll(header);
+    list.push(value);
+    this.set(header, list);
+    return this;
+  }
 
-    if (!isString(value)) {
-      headers[name] = JSON.stringify(value);
+  /**
+   * Sets or overrides header value for given name.
+   */
+  set(header, value) {
+    const list = [];
+
+    if (isArray(value)) {
+      const pushValue = value.join(',');
+      list.push(pushValue);
     } else {
-      headers[name] = value;
+      list.push(value);
     }
 
-    this.headers = headers;
+    if (!isString(header)) {
+      header = String(header);
+    }
+
+    this.headersMap.set(header.toLowerCase(), list);
     return this;
   }
 
-  has(name) {
-    return !!this.get(name);
+  /**
+   * Check for existence of header by given name.
+   */
+  has(header) {
+    return this.headersMap.has(header);
   }
 
-  add(header = {}) {
-    return this.set(header.name, header.value);
-  }
-
-  addAll(headers) {
-    if (!isPlainObject(headers)) {
-      throw new Error('Headers argument must be an object.');
-    }
-
-    const names = Object.keys(headers);
-    forEach(names, name => {
-      const value = headers[name];
-      this.set(name, value);
-    });
+  /**
+   * Deletes all header values for the given name.
+   */
+  delete(name) {
+    this.headersMap.delete(name);
     return this;
   }
 
-  remove(name) {
-    if (name) {
-      if (!isString(name)) {
-        name = String(name);
-      }
-
-      const headers = this.headers;
-      delete headers[name.toLowerCase()];
-      this.headers = headers;
-    }
-
+  /**
+   * Deletes all header values.
+   */
+  deleteAll() {
+    this.headersMap = new Map();
     return this;
   }
 
-  clear() {
-    this.headers = {};
+  forEach(fn) {
+    this.headersMap.forEach(fn);
     return this;
   }
 
   toJSON() {
-    return this.headers;
+    const serializableHeaders = {};
+
+    this.forEach((values, header) => {
+      let list = [];
+
+      forEach(values, val => {
+        list = list.concat(val.split(','));
+      });
+
+      serializableHeaders[header] = list;
+    });
+
+    return serializableHeaders;
   }
 
-  toString() {
-    return JSON.stringify(this.headers);
+  /**
+   * Returns a new Headers instance from the given DOMString of Response Headers
+   */
+  static fromResponseHeaderString(headersString) {
+    return headersString.trim()
+      .split('\n')
+      .map(val => val.split(':'))
+      .map(([key, ...parts]) => ([key.trim(), parts.join(':').trim()]))
+      .reduce((headers, [key, value]) => !headers.set(key, value) && headers, new Headers());
   }
 }
 
@@ -329,7 +369,7 @@ export class RequestConfig {
     options = assign({
       method: RequestMethod.GET,
       headers: new Headers(),
-      url: '',
+      url: undefined,
       body: null,
       timeout: defaultTimeout,
       followRedirect: true,
@@ -384,7 +424,7 @@ export class RequestConfig {
 
   set headers(headers) {
     if (!(headers instanceof Headers)) {
-      headers = new Headers(result(headers, 'toJSON', headers));
+      headers = new Headers(headers);
     }
 
     this.configHeaders = headers;
@@ -453,16 +493,16 @@ export class KinveyRequestConfig extends RequestConfig {
 
     options = assign({
       authType: AuthType.None,
-      query: null,
+      kinveyQuery: null,
       apiVersion: defaultApiVersion,
       properties: new Properties(),
       skipBL: false,
       trace: false,
-      client: Client.sharedInstance()
+      client: new Client()
     }, options);
 
     this.authType = options.authType;
-    this.query = options.query;
+    this.kinveyQuery = options.kinveyQuery;
     this.apiVersion = options.apiVersion;
     this.properties = options.properties;
     this.client = options.client;
@@ -563,7 +603,7 @@ export class KinveyRequestConfig extends RequestConfig {
 
   get url() {
     const urlString = super.url;
-    const queryString = this.query ? this.query.toQueryString() : {};
+    const queryString = this.kinveyQuery ? this.kinveyQuery.toQueryString() : {};
 
     if (isEmpty(queryString)) {
       return urlString;
@@ -574,12 +614,19 @@ export class KinveyRequestConfig extends RequestConfig {
 
   set url(urlString) {
     super.url = urlString;
-    const pathname = global.escape(url.parse(urlString).pathname);
-    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
-    const { appKey, collection, entityId } = pattern.match(pathname) || {};
-    this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-    this.collection = !!collection ? global.unescape(collection) : collection;
-    this.entityId = !!entityId ? global.unescape(entityId) : entityId;
+
+    if (urlString) {
+      const pathname = global.escape(url.parse(urlString).pathname);
+      const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
+      const { appKey, collection, entityId } = pattern.match(pathname) || {};
+      this.appKey = !!appKey ? global.unescape(appKey) : appKey;
+      this.collection = !!collection ? global.unescape(collection) : collection;
+      this.entityId = !!entityId ? global.unescape(entityId) : entityId;
+    } else {
+      this.appKey = undefined;
+      this.collection = undefined;
+      this.entityId = undefined;
+    }
   }
 
   get apiVersion() {
@@ -596,7 +643,7 @@ export class KinveyRequestConfig extends RequestConfig {
 
   set properties(properties) {
     if (properties && !(properties instanceof Properties)) {
-      properties = new Properties(result(properties, 'toJSON', properties));
+      properties = new Properties(properties);
     }
 
     this.configProperties = properties;
@@ -635,24 +682,6 @@ export class KinveyRequestConfig extends RequestConfig {
    * @return {RequestProperties} The request properties instance.
    */
   set appVersion(appVersion) {
-    // const version = Array.prototype.slice.call(args, 1);
-    // const major = args[0];
-    // const minor = version[1];
-    // const patch = version[2];
-    // let appVersion = '';
-
-    // if (major) {
-    //   appVersion = `${major}`.trim();
-    // }
-
-    // if (minor) {
-    //   appVersion = `.${minor}`.trim();
-    // }
-
-    // if (patch) {
-    //   appVersion = `.${patch}`.trim();
-    // }
-
     this.configAppVersion = appVersion;
   }
 }
@@ -732,9 +761,14 @@ export class Request {
   }
 
   toJSON() {
+    const headers = {};
+    this.headers.forEach((values, header) => {
+      headers[header] = values.join(',');
+    });
+
     const json = {
       method: this.method,
-      headers: this.headers.toJSON(),
+      headers: headers,
       url: this.url,
       body: this.body,
       data: this.body
@@ -765,12 +799,12 @@ export class KinveyRequest extends Request {
     super.config = config;
   }
 
-  get query() {
-    return this.config.query;
+  get kinveyQuery() {
+    return this.config.kinveyQuery;
   }
 
-  set query(query) {
-    this.config.query = query;
+  set kinveyQuery(query) {
+    this.config.kinveyQuery = query;
   }
 
   get appKey() {
@@ -795,7 +829,7 @@ export class KinveyRequest extends Request {
 
   toJSON() {
     const json = super.toJSON();
-    json.query = this.query;
+    json.kinveyQuery = this.kinveyQuery;
     return json;
   }
 }

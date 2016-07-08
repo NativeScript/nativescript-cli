@@ -12,7 +12,7 @@ import {
   MissingRequestParameterError,
   NotFoundError,
   ParameterValueOutOfRangeError
-} from '../errors';
+} from '../../errors';
 import { Headers } from './request';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
@@ -53,7 +53,7 @@ export class ResponseConfig {
 
   set headers(headers) {
     if (!(headers instanceof Headers)) {
-      headers = new Headers(result(headers, 'toJSON', headers));
+      headers = new Headers(headers);
     }
 
     this.configHeaders = headers;
