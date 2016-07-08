@@ -10,6 +10,10 @@ test.before(() => {
   KinveyRackManager.networkRack.swap(HttpMiddleware, new TestHttpMiddleware());
 });
 
+test.after(() => {
+  KinveyRackManager.networkRack.swap(TestHttpMiddleware, new HttpMiddleware());
+});
+
 test('rack is set to the network rack', t => {
   const request = new NetworkRequest();
   t.deepEqual(request.rack, KinveyRackManager.networkRack);
