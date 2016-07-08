@@ -45,14 +45,19 @@ class LiveSyncService implements ILiveSyncService {
 	public liveSync(platform: string): IFuture<void> {
 		return (() => {
 			let liveSyncData: ILiveSyncData[] = [];
-			this.$devicesService.initialize({ skipInferPlatform: true }).wait();
 			if (platform) {
+				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device  }).wait();
 				liveSyncData.push(this.prepareLiveSyncData(platform));
 			} else if (this.$options.device) {
+				this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 				platform = this.$devicesService.getDeviceByIdentifier(this.$options.device).deviceInfo.platform;
 				liveSyncData.push(this.prepareLiveSyncData(platform));
 			} else {
+				this.$devicesService.initialize({ skipInferPlatform: true }).wait();
 				for(let installedPlatform of this.$platformService.getInstalledPlatforms().wait()) {
+					if (this.$devicesService.getDevicesForPlatform(installedPlatform).length === 0) {
+						this.$devicesService.startEmulator(installedPlatform).wait();
+					}
 					liveSyncData.push(this.prepareLiveSyncData(installedPlatform));
 				}
 			}
