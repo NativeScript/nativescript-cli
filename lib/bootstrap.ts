@@ -25,6 +25,7 @@ $injector.require("androidDebugService", "./services/android-debug-service");
 
 $injector.require("userSettingsService", "./services/user-settings-service");
 $injector.require("analyticsSettingsService", "./services/analytics-settings-service");
+$injector.require("analyticsService", "./services/analytics-service");
 
 $injector.require("emulatorSettingsService", "./services/emulator-settings-service");
 
