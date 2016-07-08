@@ -25,6 +25,7 @@ gulp.task('clean', done => del([
   'tmp',
   'dist',
   'coverage',
+  '.nyc_output',
   'test.tap'
 ], done));
 

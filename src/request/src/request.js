@@ -1,4 +1,4 @@
-import { KinveyRack } from '../../rack/rack';
+import { KinveyRack } from '../../rack';
 import { Client } from '../../client';
 import { KinveyError, NoActiveUserError } from '../../errors';
 import UrlPattern from 'url-pattern';

@@ -1,7 +1,6 @@
-import { KinveyRackManager } from '../../rack/rack';
-import { HttpMiddleware } from '../../rack/http';
-import { TestHttpMiddleware } from '../../rack/test/http';
-import { StatusCode } from './request';
+import { KinveyRackManager, HttpMiddleware } from '../../rack';
+import { TestHttpMiddleware } from '../../rack/src/http.mock';
+import { StatusCode } from './response';
 import { NetworkRequest } from './network';
 import { NotFoundError } from '../../errors';
 import test from 'ava';
@@ -12,9 +11,9 @@ test.before(() => {
   KinveyRackManager.networkRack.swap(HttpMiddleware, new TestHttpMiddleware());
 });
 
-// test.after(() => {
-//   KinveyRackManager.networkRack.swap(TestHttpMiddleware, new HttpMiddleware());
-// });
+test.after(() => {
+  KinveyRackManager.networkRack.swap(TestHttpMiddleware, new HttpMiddleware());
+});
 
 test('rack is set to the network rack', t => {
   const request = new NetworkRequest();

@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from '../middleware';
+import { KinveyMiddleware } from './middleware';
 import http from 'request';
 
 export class TestHttpMiddleware extends KinveyMiddleware {

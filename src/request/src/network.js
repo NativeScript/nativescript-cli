@@ -1,5 +1,5 @@
 import { RequestMethod, AuthType, KinveyRequest, KinveyRequestConfig } from './request';
-import { KinveyRackManager } from '../../rack/rack';
+import { KinveyRackManager } from '../../rack';
 import { NoResponseError, InvalidCredentialsError } from '../../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
 import { setActiveUser, setActiveSocialIdentity } from '../../utils/storage';
