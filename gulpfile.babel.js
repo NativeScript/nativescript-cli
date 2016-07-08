@@ -22,14 +22,13 @@ gulp.task('lint', () => {
 });
 
 gulp.task('clean', done => del([
-  'es5',
   'tmp',
   'dist',
   'coverage',
   'test.tap'
 ], done));
 
-gulp.task('build', ['clean', 'lint'], () => {
+gulp.task('build', ['lint', 'clean'], () => {
   const envs = env.set({
     KINVEY_ACL_ATTRIBUTE: '_acl',
     KINVEY_DATASTORE_NAMESPACE: 'appdata',

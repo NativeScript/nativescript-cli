@@ -4,10 +4,12 @@
   "description": "Kinvey JavaScript SDK Core",
   "main": "./dist/kinvey.js",
   "scripts": {
-    "test": "./node_modules/.bin/ava",
+    "test": "./node_modules/mocha/bin/mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
+    "test:ava": "./node_modules/.bin/ava",
+    "test:coverage": "./node_modules/.bin/nyc ./node_modules/.bin/ava && ./node_modules/.bin/nyc report --reporter=html",
     "test:watch": "./node_modules/mocha/bin/mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
     "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover",
-    "build": "./node_modules/.bin/gulp build",
+    "build": "BABEL_ENV=production ./node_modules/.bin/gulp build",
     "lint": "./node_modules/.bin/gulp lint"
   },
   "repository": {
@@ -67,6 +69,7 @@
     "istanbul": "^1.0.0-alpha.2",
     "mocha": "^2.4.5",
     "nock": "^8.0.0",
+    "nyc": "^6.6.1",
     "request": "^2.72.0",
     "semver": "^5.1.0",
     "sinon": "^1.17.4",
@@ -76,7 +79,7 @@
   },
   "ava": {
     "files": [
-      "src/**/*.spec.js"
+      "src/**/*.test.js"
     ],
     "source": [
       "src/**/*.js"
@@ -87,6 +90,30 @@
     "require": [
       "babel-register"
     ],
-    "babel": "inherit"
+    "babel": {
+      "presets": [
+        "es2015",
+        "stage-2"
+      ],
+      "env": {
+        "development": {
+          "sourceMaps": "inline"
+        }
+      }
+    }
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-2"
+    ],
+    "ignore": [
+      "src/**/*.test.js"
+    ],
+    "env": {
+      "development": {
+        "sourceMaps": "inline"
+      }
+    }
   }
 }
