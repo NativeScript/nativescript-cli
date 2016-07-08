@@ -228,37 +228,40 @@ export class FileStore extends NetworkStore {
 
     // If the upload was not completed then try uploading the
     // remaining portion of the file
-    if (response.isSuccess() === false
-      && (response.statusCode === StatusCode.ResumeIncomplete
-      || (response.statusCode >= 500 && response.statusCode < 600))) {
-      const rangeHeader = response.headers.get('range');
-      const startRange = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
-      headers.set('range', `${startRange}-${metadata.size - 1}/${metadata.size}`);
+    if (response.isSuccess() === false) {
+      if (response.statusCode === StatusCode.ResumeIncomplete
+        || (response.statusCode >= 500 && response.statusCode < 600)) {
+        const rangeHeader = response.headers.get('range');
+        const startRange = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
+        headers.set('content-range', `${startRange}-${metadata.size - 1}/${metadata.size}`);
 
-      if (response.statusCode === StatusCode.ResumeIncomplete) {
-        return this.uploadToGCS(uploadUrl, headers, file, metadata, count);
+        if (response.statusCode === StatusCode.ResumeIncomplete) {
+          return this.uploadToGCS(uploadUrl, headers, file, metadata, count);
+        }
+
+        // Calculate the exponential backoff
+        const randomMilliseconds = randomInt(1000, 1);
+        const backoff = Math.min(Math.pow(2, count + 1) + randomMilliseconds, MAX_BACKOFF);
+
+        // Throw the error if we have excedded the max backoff
+        if (backoff >= MAX_BACKOFF) {
+          throw response.error;
+        }
+
+        // Call upload file after the backoff time has passed
+        return new Promise((resolve, reject) => {
+          setTimeout(async () => {
+            try {
+              const response = await this.uploadToGCS(uploadUrl, headers, file, metadata, count + 1);
+              resolve(response);
+            } catch (error) {
+              reject(error);
+            }
+          }, backoff);
+        });
       }
 
-      // Calculate the exponential backoff
-      const randomMilliseconds = randomInt(1000, 1);
-      const backoff = Math.min(Math.pow(2, count + 1) + randomMilliseconds, MAX_BACKOFF);
-
-      // Throw the error if we have excedded the max backoff
-      if (backoff >= MAX_BACKOFF) {
-        throw response.error;
-      }
-
-      // Call upload file after the backoff time has passed
-      return new Promise((resolve, reject) => {
-        setTimeout(async () => {
-          try {
-            const response = await this.uploadToGCS(uploadUrl, headers, file, metadata, count + 1);
-            resolve(response);
-          } catch (error) {
-            reject(error);
-          }
-        }, backoff);
-      });
+      throw response.error;
     }
 
     // Return the response
