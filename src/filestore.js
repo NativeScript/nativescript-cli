@@ -1,6 +1,7 @@
 /* eslint-disable no-underscore-dangle */
 import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
+import { StatusCode } from './requests/response';
+import { AuthType, RequestMethod, KinveyRequestConfig, Headers } from './requests/request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -8,6 +9,11 @@ import url from 'url';
 import map from 'lodash/map';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
+const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
+
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 
 /**
  * The FileStore class is used to find, save, update, remove, count and group files.
@@ -163,7 +169,7 @@ export class FileStore extends NetworkStore {
       metadata._public = true;
     }
 
-    const createConfig = new KinveyRequestConfig({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
@@ -176,12 +182,12 @@ export class FileStore extends NetworkStore {
       data: metadata,
       client: this.client
     });
-    createConfig.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
-    const createRequest = new NetworkRequest(createConfig);
+    config.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
+    const request = new NetworkRequest(config);
 
     if (metadata[idAttribute]) {
-      createRequest.method = RequestMethod.PUT;
-      createRequest.url = url.format({
+      request.method = RequestMethod.PUT;
+      request.url = url.format({
         protocol: this.client.protocol,
         host: this.client.host,
         pathname: `${this.pathname}/${metadata._id}`,
@@ -189,12 +195,12 @@ export class FileStore extends NetworkStore {
       });
     }
 
-    const createResponse = await createRequest.execute();
-    const data = createResponse.data;
+    const response = await request.execute();
+    const data = response.data;
     const uploadUrl = data._uploadURL;
-    const headers = data._requiredHeaders || {};
-    headers['Content-Type'] = metadata.mimeType;
-    headers['Content-Length'] = metadata.size;
+    const headers = new Headers(data._requiredHeaders);
+    headers.set('content-type', metadata.mimeType);
+    headers.set('content-length', metadata.size);
 
     // Delete fields from the response
     delete data._expiresAt;
@@ -202,18 +208,61 @@ export class FileStore extends NetworkStore {
     delete data._uploadURL;
 
     // Upload the file
-    const uploadConfig = new KinveyRequestConfig({
-      method: RequestMethod.PUT,
-      url: uploadUrl,
-      data: file
-    });
-    uploadConfig.headers.clear();
-    uploadConfig.headers.add(headers);
-    const uploadRequest = new NetworkRequest(uploadConfig);
-    await uploadRequest.execute();
+    await this.uploadToGCS(uploadUrl, headers, file, metadata);
 
     data._data = file;
     return data;
+  }
+
+  async uploadToGCS(uploadUrl, headers, file, metadata, count = 0) {
+    // Upload the file
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.PUT,
+      url: uploadUrl,
+      body: file
+    });
+    config.headers.clear();
+    config.headers.addAll(headers.toJSON());
+    const request = new NetworkRequest(config);
+    const response = await request.execute(true);
+
+    // If the upload was not completed then try uploading the
+    // remaining portion of the file
+    if (response.isSuccess() === false
+      && (response.statusCode === StatusCode.ResumeIncomplete
+      || (response.statusCode >= 500 && response.statusCode < 600))) {
+      const rangeHeader = response.headers.get('range');
+      const startRange = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
+      headers.set('range', `${startRange}-${metadata.size - 1}/${metadata.size}`);
+
+      if (response.statusCode === StatusCode.ResumeIncomplete) {
+        return this.uploadToGCS(uploadUrl, headers, file, metadata, count);
+      }
+
+      // Calculate the exponential backoff
+      const randomMilliseconds = randomInt(1000, 1);
+      const backoff = Math.min(Math.pow(2, count + 1) + randomMilliseconds, MAX_BACKOFF);
+
+      // Throw the error if we have excedded the max backoff
+      if (backoff >= MAX_BACKOFF) {
+        throw response.error;
+      }
+
+      // Call upload file after the backoff time has passed
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const response = await this.uploadToGCS(uploadUrl, headers, file, metadata, count + 1);
+            resolve(response);
+          } catch (error) {
+            reject(error);
+          }
+        }, backoff);
+      });
+    }
+
+    // Return the response
+    return response;
   }
 
   create(file, metadata, options) {

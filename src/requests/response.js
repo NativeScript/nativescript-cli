@@ -28,6 +28,7 @@ const StatusCode = {
   RedirectTemporarily: 301,
   RedirectPermanently: 302,
   NotModified: 304,
+  ResumeIncomplete: 308,
   NotFound: 404,
   ServerError: 500
 };

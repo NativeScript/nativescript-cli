@@ -85,7 +85,7 @@ describe('Kinvey', function () {
       expect(Kinvey).to.have.property('CustomEndpoint');
       expect(Kinvey).to.have.property('DataStore');
       expect(Kinvey).to.have.property('DataStoreType');
-      expect(Kinvey).to.have.property('FileStore');
+      expect(Kinvey).to.have.property('Files');
       expect(Kinvey).to.have.property('Log');
       expect(Kinvey).to.have.property('Metadata');
       expect(Kinvey).to.have.property('Query');
