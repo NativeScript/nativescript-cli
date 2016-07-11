@@ -283,8 +283,6 @@ export class FileStore extends NetworkStore {
     // then check if we should try uploading the remaining
     // portion of the file
     if (response.isSuccess() === false) {
-
-
       if (response.statusCode === StatusCode.ResumeIncomplete) {
         Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
 
