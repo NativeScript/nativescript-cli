@@ -23,5 +23,7 @@ declare module "xcode" {
         addToHeaderSearchPaths(options?: Options): void;
         removeFromHeaderSearchPaths(options?: Options): void;
         updateBuildProperty(key: string, value: any): void;
+
+        pbxXCBuildConfigurationSection(): any;
     }
 }
