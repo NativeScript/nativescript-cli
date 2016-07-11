@@ -4,9 +4,11 @@ import { StatusCode } from './requests/response';
 import { AuthType, RequestMethod, KinveyRequestConfig, Headers } from './requests/request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
+import { Log } from './log';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';
+import isFunction from 'lodash/isFunction';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
@@ -214,58 +216,103 @@ export class FileStore extends NetworkStore {
     return data;
   }
 
-  async uploadToGCS(uploadUrl, headers, file, metadata, count = 0) {
-    // Upload the file
-    const config = new KinveyRequestConfig({
+  async uploadToGCS(uploadUrl, headers, file, metadata, count = 1) {
+    Log.trace('Start file upload');
+    Log.trace('File upload upload url', uploadUrl);
+    Log.trace('File upload headers', headers.toJSON());
+    Log.trace('File upload file', file);
+    Log.trace('File upload metadata', metadata);
+
+    // Create status check request config
+    const statusCheckConfig = new KinveyRequestConfig({
       method: RequestMethod.PUT,
-      url: uploadUrl,
-      body: file
+      url: uploadUrl
     });
-    config.headers.clear();
-    config.headers.addAll(headers.toJSON());
-    const request = new NetworkRequest(config);
-    const response = await request.execute(true);
+    statusCheckConfig.headers.clear();
+    statusCheckConfig.headers.addAll(headers.toJSON());
+    statusCheckConfig.headers.set('content-length', '0');
+    statusCheckConfig.headers.set('content-range', `bytes */${metadata.size}`);
+
+    Log.trace('File upload status check request config', statusCheckConfig);
+    Log.trace('Execute file upload status check request');
+
+    // Execute the status check request
+    const statusCheckRequest = new NetworkRequest(statusCheckConfig);
+    const statusCheckResponse = await statusCheckRequest.execute(true);
+
+    Log.trace('File upload status check response', statusCheckResponse);
 
     // If the upload was not completed then try uploading the
     // remaining portion of the file
-    if (response.isSuccess() === false) {
-      if (response.statusCode === StatusCode.ResumeIncomplete
-        || (response.statusCode >= 500 && response.statusCode < 600)) {
-        const rangeHeader = response.headers.get('range');
-        const startRange = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
-        headers.set('content-range', `${startRange}-${metadata.size - 1}/${metadata.size}`);
+    if (statusCheckResponse.isSuccess() === false) {
+      if (statusCheckResponse.statusCode === StatusCode.ResumeIncomplete) {
+        // Get the range header
+        const rangeHeader = statusCheckResponse.headers.get('range');
 
-        if (response.statusCode === StatusCode.ResumeIncomplete) {
-          return this.uploadToGCS(uploadUrl, headers, file, metadata, count);
-        }
+        Log.trace('File upload range header', rangeHeader);
 
-        // Calculate the exponential backoff
-        const randomMilliseconds = randomInt(1000, 1);
-        const backoff = Math.min(Math.pow(2, count + 1) + randomMilliseconds, MAX_BACKOFF);
+        // Calculate where we should start the file upload
+        let start = rangeHeader ? parseInt(rangeHeader.split('-')[1], 10) + 1 : 0;
+        start = start >= metadata.size ? metadata.size - 1 : start;
 
-        // Throw the error if we have excedded the max backoff
-        if (backoff >= MAX_BACKOFF) {
+        Log.trace('File upload start position', start);
+
+        // Create upload file request config
+        const config = new KinveyRequestConfig({
+          method: RequestMethod.PUT,
+          url: uploadUrl,
+          body: isFunction(file.slice) ? file.slice(start, metadata.size) : file
+        });
+        config.headers.clear();
+        config.headers.addAll(headers.toJSON());
+        config.headers.set('content-length', metadata.size);
+        config.headers.set('content-range', `bytes ${start}-${metadata.size - 1}/${metadata.size}`);
+
+        Log.trace('File upload request config', statusCheckConfig);
+        Log.trace('Execute file upload request');
+
+        // Execute the file upload request
+        const request = new NetworkRequest(config);
+        const response = await request.execute(true);
+
+        // If the request was not successful uploading the file
+        // then check if we should try uploading the remaining
+        // portion of the file
+        if (response.isSuccess() === false) {
+          if (response.statusCode === StatusCode.ResumeIncomplete) {
+            return this.uploadToGCS(uploadUrl, headers, file, metadata, count);
+          } else if (response.statusCode >= 500 && response.statusCode < 600) {
+            // Calculate the exponential backoff
+            const randomMilliseconds = randomInt(1000, 1);
+            const backoff = Math.min(Math.pow(2, count) + randomMilliseconds, MAX_BACKOFF);
+
+            // Throw the error if we have excedded the max backoff
+            if (backoff >= MAX_BACKOFF) {
+              throw response.error;
+            }
+
+            // Upload the remaining protion of the file after the backoff time has passed
+            return new Promise(resolve => {
+              setTimeout(() => {
+                resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, count + 1));
+              }, backoff);
+            });
+          }
+
+          // Throw the error because we do not know how to handle it
           throw response.error;
         }
 
-        // Call upload file after the backoff time has passed
-        return new Promise((resolve, reject) => {
-          setTimeout(async () => {
-            try {
-              const response = await this.uploadToGCS(uploadUrl, headers, file, metadata, count + 1);
-              resolve(response);
-            } catch (error) {
-              reject(error);
-            }
-          }, backoff);
-        });
+        // Return the response because we are all done
+        return response;
       }
 
-      throw response.error;
+      // Throw the error because we do not know how to handle it
+      throw statusCheckResponse.error;
     }
 
-    // Return the response
-    return response;
+    // Return the response because we are all done
+    return statusCheckResponse;
   }
 
   create(file, metadata, options) {
