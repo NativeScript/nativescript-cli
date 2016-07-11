@@ -179,7 +179,11 @@ export class Headers {
   }
 
   set(name, value) {
-    if (!name || !value) {
+    // console.log(name, value);
+    // console.log(name === undefined || name === null || value === undefined || value === null);
+    // console.log();
+
+    if (name === undefined || name === null || value === undefined || value === null) {
       throw new Error('A name and value must be provided to set a header.');
     }
 

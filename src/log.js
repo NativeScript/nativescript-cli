@@ -4,8 +4,14 @@ const originalFactory = Log.methodFactory;
 Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   const rawMethod = originalFactory(methodName, logLevel, loggerName);
 
-  return function log(message) {
-    rawMethod(`Kinvey: ${message}`);
+  return function log(message, ...theArgs) {
+    message = `Kinvey: ${message}`;
+
+    if (theArgs.length > 0) {
+      rawMethod(message, theArgs);
+    } else {
+      rawMethod(message);
+    }
   };
 };
 

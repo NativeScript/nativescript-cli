@@ -54,7 +54,7 @@ export class ResponseConfig {
 
   set headers(headers) {
     if (!(headers instanceof Headers)) {
-      headers = new Headers(result(headers, 'toJSON', headers));
+      headers = new Headers(headers);
     }
 
     this.configHeaders = headers;
