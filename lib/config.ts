@@ -25,7 +25,6 @@ export class StaticConfig extends StaticConfigBase implements IStaticConfig {
 	public CLIENT_NAME = "tns";
 	public CLIENT_NAME_ALIAS = "NativeScript";
 	public ANALYTICS_API_KEY = "5752dabccfc54c4ab82aea9626b7338e";
-	public ANALYTICS_FEATURE_USAGE_TRACKING_API_KEY = "9912cff308334c6d9ad9c33f76a983e3";
 	public TRACK_FEATURE_USAGE_SETTING_NAME = "TrackFeatureUsage";
 	public ERROR_REPORT_SETTING_NAME = "TrackExceptions";
 	public ANALYTICS_INSTALLATION_ID_SETTING_NAME = "AnalyticsInstallationID";
