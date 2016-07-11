@@ -28,6 +28,7 @@ const StatusCode = {
   RedirectTemporarily: 301,
   RedirectPermanently: 302,
   NotModified: 304,
+  ResumeIncomplete: 308,
   NotFound: 404,
   ServerError: 500
 };
@@ -53,7 +54,7 @@ export class ResponseConfig {
 
   set headers(headers) {
     if (!(headers instanceof Headers)) {
-      headers = new Headers(result(headers, 'toJSON', headers));
+      headers = new Headers(headers);
     }
 
     this.configHeaders = headers;

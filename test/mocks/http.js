@@ -12,7 +12,7 @@ export class TestHttpMiddleware extends KinveyMiddleware {
         http({
           url: request.url,
           method: request.method,
-          headers: request.headers,
+          headers: request.headers.toJSON(),
           body: request.data,
           followRedirect: request.followRedirect
         }, (error, response, body) => {

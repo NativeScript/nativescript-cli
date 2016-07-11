@@ -86,7 +86,7 @@ export class Kinvey {
     this.CustomEndpoint = CustomEndpoint;
     this.DataStore = DataStoreManager;
     this.DataStoreType = DataStoreType;
-    this.FileStore = FileStore;
+    this.Files = new FileStore();
     this.Metadata = Metadata;
     this.Query = Query;
     this.SocialIdentity = SocialIdentity;

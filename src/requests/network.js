@@ -20,7 +20,7 @@ export class NetworkRequest extends KinveyRequest {
     this.automaticallyRefreshAuthToken = true;
   }
 
-  async execute() {
+  async execute(rawResponse = false) {
     try {
       await super.execute();
       let response = await this.rack.execute(this);
@@ -38,7 +38,7 @@ export class NetworkRequest extends KinveyRequest {
         }));
       }
 
-      if (!response.isSuccess()) {
+      if (rawResponse === false && response.isSuccess() === false) {
         throw response.error;
       }
 
