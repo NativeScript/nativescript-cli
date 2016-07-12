@@ -105,6 +105,12 @@ export class ParameterValueOutOfRangeError extends KinveyError {
   }
 }
 
+export class ServerError extends KinveyError {
+  constructor(message = 'An error occurred on the server', debug) {
+    super(message, debug);
+  }
+}
+
 export class SyncError extends KinveyError {
   constructor(message = 'An error occurred during sync', debug) {
     super(message, debug);

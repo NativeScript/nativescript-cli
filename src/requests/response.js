@@ -11,11 +11,11 @@ import {
   MissingRequestHeaderError,
   MissingRequestParameterError,
   NotFoundError,
-  ParameterValueOutOfRangeError
+  ParameterValueOutOfRangeError,
+  ServerError
 } from '../errors';
 import { Headers } from './request';
 import assign from 'lodash/assign';
-import result from 'lodash/result';
 
 /**
  * @provate
@@ -184,6 +184,9 @@ export class KinveyResponse extends Response {
       return new NotFoundError(message, debug, code);
     } else if (name === 'ParameterValueOutOfRangeError') {
       return new ParameterValueOutOfRangeError(message, debug, code);
+    } else if (name === 'ServerError'
+      || code === StatusCode.ServerError) {
+      return new ServerError(message, debug, code);
     }
 
     return new KinveyError(message, debug, code);

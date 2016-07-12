@@ -8,6 +8,7 @@ import { Log } from './log';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';
+import assign from 'lodash/assign';
 import isFunction from 'lodash/isFunction';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
@@ -169,14 +170,19 @@ export class FileStore extends NetworkStore {
   }
 
   async upload(file, metadata = {}, options = {}) {
-    metadata._filename = metadata._filename || file._filename || file.name;
-    metadata.size = metadata.size || file.size || file.length;
-    metadata.mimeType = metadata.mimeType || file.mimeType || file.type || 'application/octet-stream';
+    // Set defaults for metadata
+    metadata = assign({
+      filename: file._filename || file.name,
+      public: false,
+      size: file.size || file.length,
+      mimeType: file.mimeType || file.type || 'application/octet-stream'
+    }, metadata);
+    metadata._filename = metadata.filename;
+    delete metadata.filename;
+    metadata._public = metadata.public;
+    delete metadata.public;
 
-    if (options.public === true) {
-      metadata._public = true;
-    }
-
+    // Create the file on Kinvey
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.Default,
@@ -193,6 +199,8 @@ export class FileStore extends NetworkStore {
     config.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
     const request = new NetworkRequest(config);
 
+    // If the file metadata contains an _id then
+    // update the file
     if (metadata[idAttribute]) {
       request.method = RequestMethod.PUT;
       request.url = url.format({
@@ -203,12 +211,12 @@ export class FileStore extends NetworkStore {
       });
     }
 
+    // Execute the request
     const response = await request.execute();
     const data = response.data;
     const uploadUrl = data._uploadURL;
     const headers = new Headers(data._requiredHeaders);
     headers.set('content-type', metadata.mimeType);
-    headers.set('content-length', metadata.size);
 
     // Delete fields from the response
     delete data._expiresAt;
@@ -218,7 +226,8 @@ export class FileStore extends NetworkStore {
     // Create status check request config
     const statusCheckConfig = new KinveyRequestConfig({
       method: RequestMethod.PUT,
-      url: uploadUrl
+      url: uploadUrl,
+      timeout: options.timeout
     });
     statusCheckConfig.headers.clear();
     statusCheckConfig.headers.addAll(headers.toJSON());
@@ -237,8 +246,8 @@ export class FileStore extends NetworkStore {
     // Upload the file
     if (statusCheckResponse.isSuccess() === false) {
       if (statusCheckResponse.statusCode === StatusCode.ResumeIncomplete) {
-        const start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
-        await this.uploadToGCS(uploadUrl, headers, file, metadata, start);
+        options.start = getStartIndex(statusCheckResponse.headers.get('range'), metadata.size);
+        await this.uploadToGCS(uploadUrl, headers, file, metadata, options);
       } else {
         throw statusCheckResponse.error;
       }
@@ -248,27 +257,36 @@ export class FileStore extends NetworkStore {
     return data;
   }
 
-  async uploadToGCS(uploadUrl, headers, file, metadata, start, count = 1) {
+  async uploadToGCS(uploadUrl, headers, file, metadata, options = {}) {
+    // Set default options
+    options = assign({
+      count: 0,
+      start: 0,
+      maxBackoff: MAX_BACKOFF
+    }, options);
+
     Log.debug('Start file upload');
     Log.debug('File upload upload url', uploadUrl);
     Log.debug('File upload headers', headers.toJSON());
     Log.debug('File upload file', file);
     Log.debug('File upload metadata', metadata);
+    Log.debug('File upload options', options);
 
     // Get slice of file to upload
-    const fileSlice = isFunction(file.slice) ? file.slice(start) : file;
+    const fileSlice = isFunction(file.slice) ? file.slice(options.start) : file;
     const fileSliceSize = fileSlice.size || fileSlice.length;
 
     // Create upload file request config
     const config = new KinveyRequestConfig({
       method: RequestMethod.PUT,
       url: uploadUrl,
-      body: fileSlice
+      body: fileSlice,
+      timeout: options.timeout
     });
     config.headers.clear();
     config.headers.addAll(headers.toJSON());
     config.headers.set('content-length', fileSliceSize);
-    config.headers.set('content-range', `bytes ${start}-${metadata.size - 1}/${metadata.size}`);
+    config.headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
 
     Log.debug('File upload request config', config);
     Log.debug('Execute file upload request');
@@ -286,26 +304,27 @@ export class FileStore extends NetworkStore {
       if (response.statusCode === StatusCode.ResumeIncomplete) {
         Log.debug('File upload was incomplete. Trying to upload the remaining protion of the file.');
 
-        const nextStart = getStartIndex(response.headers.get('range'), metadata.size);
-        return this.uploadToGCS(uploadUrl, headers, file, metadata, nextStart, count);
+        options.start = getStartIndex(response.headers.get('range'), metadata.size);
+        return this.uploadToGCS(uploadUrl, headers, file, metadata, options);
       } else if (response.statusCode >= 500 && response.statusCode < 600) {
         Log.debug('File upload error.', response.statusCode);
 
         // Calculate the exponential backoff
-        const randomMilliseconds = randomInt(1000, 1);
-        const backoff = Math.min(Math.pow(2, count) + randomMilliseconds, MAX_BACKOFF);
+        const backoff = Math.pow(2, options.count) + randomInt(1000, 1);
 
         // Throw the error if we have excedded the max backoff
-        if (backoff >= MAX_BACKOFF) {
+        if (backoff >= options.maxBackoff) {
           throw response.error;
         }
 
         Log.debug(`File upload will try again in ${backoff} seconds.`);
 
+
         // Upload the remaining protion of the file after the backoff time has passed
         return new Promise(resolve => {
           setTimeout(() => {
-            resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, start, count + 1));
+            options.count = options.count + 1;
+            resolve(this.uploadToGCS(uploadUrl, headers, file, metadata, options));
           }, backoff);
         });
       }
