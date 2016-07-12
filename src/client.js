@@ -6,30 +6,31 @@ import isString from 'lodash/isString';
 let sharedInstance = null;
 
 /**
- * The Client class stores information regarding your application. You can create mutiple clients
+ * The Client class stores information about your application on the Kinvey platform. You can create mutiple clients
  * to send requests to different environments on the Kinvey platform.
- *
- * @example
- * var client = new Kinvey.Client({
- *   appKey: '<appKey>',
- *   appSecret: '<appSecret>'
- * });
  */
 export class Client {
   /**
-   * Creates a new instance of the Client class. An `options.appKey` must be provided along with
-   * either and `options.appSecret` or `options.masterSecret`.
+   * Creates a new instance of the Client class.
    *
    * @param {Object}    options                             Options
-   * @param {string}    [options.protocol='https']          Protocl used for requests
-   * @param {string}    [options.host='baas.kinvey.com']    Host used for requests
-   * @param {string}    options.appKey                      App Key
+   * @param {string}    [options.protocol='https']          Protocol used for Kinvey API requests
+   * @param {string}    [options.host='baas.kinvey.com']    Host used for Kinvey API requests
+   * @param {string}    [options.hostname]                  Host name used for Kinvey API requests
+   * @param {string}    [options.micProtocol='https']       Protocol used for Kinvey MIC requests
+   * @param {string}    [options.micHost='auth.kinvey.com'] Host used for Kinvey MIC requests
+   * @param {string}    [options.micHostname]               Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                    App Key
    * @param {string}    [options.appSecret]                 App Secret
    * @param {string}    [options.masterSecret]              App Master Secret
    * @param {string}    [options.encryptionKey]             App Encryption Key
+   * @param {string}    [options.appVersion]                App version
    *
-   * @throws {KinveyError}  If an `options.appKey` is not provided.
-   * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
+   * @example
+   * var client = new Kinvey.Client({
+   *   appKey: '<appKey>',
+   *   appSecret: '<appSecret>'
+   * });
    */
   constructor(options = {}) {
     options = assign({
@@ -72,7 +73,7 @@ export class Client {
     this.micHost = options.micHost;
 
     /**
-     * @type {string}
+     * @type {string|undefined}
      */
     this.appKey = options.appKey || options.appId;
 
@@ -92,7 +93,7 @@ export class Client {
     this.encryptionKey = options.encryptionKey;
 
     /**
-     * @type {string}
+     * @type {string|undefined}
      */
     this.appVersion = options.appVersion;
   }
