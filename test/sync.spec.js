@@ -121,6 +121,30 @@ describe('Sync', function () {
     });
   });
 
+  describe('pull', function() {
+    it('should save entities to cache', async function() {
+      const store = new SyncStore(collection);
+      const entity = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities = await store.find().toPromise();
+      expect(entities).to.be.an('array');
+      expect(entities).to.have.length(1);
+      expect(entities).to.deep.equal([entity]);
+    });
+  });
+
   describe('push', function() {
     it('should save an entity to the network', async function() {
       const store = new SyncStore(collection);
