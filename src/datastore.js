@@ -816,11 +816,15 @@ export class CacheStore extends NetworkStore {
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entityId', ids);
-            await this.push(query, options);
-          }
+            const results = await this.push(query, options);
+            const entities = map(results, result => result.entity);
 
-          // Emit the data
-          observer.next(singular ? data[0] : data);
+            // Emit the data
+            observer.next(singular ? entities[0] : entities);
+          } else {
+            // Emit the data
+            observer.next(singular ? data[0] : data);
+          }
         }
       } catch (error) {
         return observer.error(error);
@@ -882,11 +886,15 @@ export class CacheStore extends NetworkStore {
           if (this.syncAutomatically === true) {
             const ids = Object.keys(keyBy(data, idAttribute));
             const query = new Query().contains('entityId', ids);
-            await this.push(query, options);
-          }
+            const results = await this.push(query, options);
+            const entities = map(results, result => result.entity);
 
-          // Emit the data
-          observer.next(singular ? data[0] : data);
+            // Emit the data
+            observer.next(singular ? entities[0] : entities);
+          } else {
+            // Emit the data
+            observer.next(singular ? data[0] : data);
+          }
         }
       } catch (error) {
         return observer.error(error);

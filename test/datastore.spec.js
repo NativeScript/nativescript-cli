@@ -641,28 +641,27 @@ describe('CacheStore', function() {
       return expect(promise).to.eventually.be.null;
     });
 
-    it('should create the data in the cache and sync the data with the network', function() {
+    it('should create the data in the cache and sync the data with the network', async function() {
       const data = { prop: randomString() };
+      const serverId = randomString();
 
       nock(this.client.baseUrl)
         .post(this.store.pathname, () => true)
         .query(true)
         .reply(201, {
-          _id: randomString(),
+          _id: serverId,
           prop: data.prop
         }, {
           'content-type': 'application/json'
         });
 
-      const promise = this.store.create(data);
-      return promise.then(entity => {
-        expect(entity).to.have.property('_id');
-        expect(entity).to.have.property('prop', data.prop);
-        const query = new Query().equalTo('entityId', entity._id);
-        return this.store.syncCount(query);
-      }).then(syncCount => {
-        expect(syncCount).to.equal(0);
-      });
+      const entity = await this.store.create(data);
+      expect(entity).to.have.property('_id', serverId);
+      expect(entity).to.have.property('prop', data.prop);
+
+      const query = new Query().equalTo('entityId', entity._id);
+      const syncCount = await this.store.syncCount(query);
+      expect(syncCount).to.equal(0);
     });
 
     it('should accept an array of data', function() {
