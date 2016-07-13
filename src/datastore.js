@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import { KinveyError } from './errors';
 import { CacheRequest } from './requests/cache';
 import { DeltaFetchRequest } from './requests/deltafetch';

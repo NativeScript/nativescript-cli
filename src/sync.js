@@ -17,6 +17,7 @@ const syncCollectionName = process.env.KINVEY_SYNC_COLLECTION_NAME || 'kinvey_sy
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
+ * @private
  * Enum for Sync Operations.
  */
 const SyncOperation = {

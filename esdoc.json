@@ -1,13 +1,13 @@
 {
-  "title": "Kinvey JavaScript SDK",
-  "source": "./src",
   "destination": "./docs",
-  "test": {
-    "type": "mocha",
-    "source": "./test/specs"
-  },
+  "lint": true,
   "manual": {
-    "overview": ["./manual/overview.md"]
+    "overview": ["./manual/overview.md"],
+    "installation": ["./manual/installation.md"]
   },
-  "lint": true
+  "plugins": [
+    { "name": "esdoc-es7-plugin" }
+  ],
+  "source": "./src",
+  "title": "Kinvey JavaScript SDK"
 }

@@ -16,30 +16,73 @@ import { KinveyRackManager } from './rack/rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-let client = null;
 
+/**
+ * The Kinvey class is used as the entry point for the Kinvey JavaScript SDk.
+ */
 export class Kinvey {
+  /**
+   * Returns the shared instance of the Client class used by the SDK.
+   *
+   * @throws {KinveyError} If a shared instance does not exist.
+   *
+   * @return {Client} The shared instance.
+   *
+   * @example
+   * var client = Kinvey.client;
+   */
   static get client() {
-    if (!client) {
-      throw new KinveyError('You have not initialized the library. ' +
-        'Please call Kinvey.init() to initialize the library.');
-    }
-
-    return client;
+    return Client.sharedInstance();
   }
 
+  /**
+   * The version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
+   *
+   * @return {String} The version of your app.
+   *
+   * @example
+   * var appVersion = Kinvey.appVersion;
+   */
   static get appVersion() {
     return this.client.appVersion;
   }
 
+  /**
+   * Set the version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
+   *
+   * @param  {String} appVersion  App version.
+   *
+   * @example
+   * Kinvey.appVersion = '1.0.0';
+   * // or
+   * Kinvey.appVersion = 'v1';
+   */
   static set appVersion(appVersion) {
     this.client.appVersion = appVersion;
   }
 
+  /**
+   * Get the rack manager module.
+   *
+   * @return {KinveyRackManager} The KinveyRackManager module.
+   *
+   * @example
+   * var RackManager = Kinvey.RackManager;
+   */
   static get RackManager() {
     return KinveyRackManager;
   }
 
+  /**
+   * Get the logging module.
+   *
+   * @return {Log}  The log module.
+   *
+   * @example
+   * var Log = Kinvey.Log;
+   */
   static get Log() {
     return Log;
   }
@@ -47,13 +90,15 @@ export class Kinvey {
   /**
    * Initializes the library with your app's information.
    *
-   * @param   {Object}        options                         Options
-   * @param   {string}        options.appKey                Kinvey App Key
-   * @param   {string}        [options.appSecret]             Kinvey App Secret
-   * @param   {string}        [options.masterSecret]          Kinvey Master Secret
-   * @param   {string}        [options.encryptionKey]         Your applications encryption key
-   * @param   {string}        [options.hostname]              Custom Kinvey API Hostname
-   * @return  {Client}                                        An instance of Client.
+   * @param {Object}    options                                            Options
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                                   App Key
+   * @param {string}    [options.appSecret]                                App Secret
+   * @param {string}    [options.masterSecret]                             App Master Secret
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.appVersion]                               App Version
+   * @return {Client}                                                      A client instance.
    *
    * @throws  {KinveyError}  If an `options.appKey` is not provided.
    * @throws  {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
@@ -66,7 +111,7 @@ export class Kinvey {
    */
   static init(options) {
     // Check that an appKey or appId was provided
-    if (!options.appKey && !options.appId) {
+    if (!options.appKey) {
       throw new KinveyError('No App Key was provided. ' +
         'Unable to create a new Client without an App Key.');
     }
@@ -78,7 +123,7 @@ export class Kinvey {
     }
 
     // Initialize the client
-    client = Client.init(options);
+    const client = Client.init(options);
 
     // Add all the modules to the Kinvey namespace
     this.Aggregation = Aggregation;
@@ -99,9 +144,16 @@ export class Kinvey {
   }
 
   /**
-   * Pings the Kinvey service.
+   * Pings the Kinvey API service.
    *
-   * @returns {Promise} The response.
+   * @returns {Promise<Object>} The response from the ping request.
+   *
+   * @example
+   * var promise = Kinvey.ping().then(function(response) {
+   *   console.log('Kinvey Ping Success. Kinvey Service is alive, version: ' + response.version + ', response: ' + response.kinvey);
+   * }).catch(function(error) {
+   *   console.log('Kinvey Ping Failed. Response: ' + error.description);
+   * });
    */
   static async ping(client = Client.sharedInstance()) {
     const request = new NetworkRequest({

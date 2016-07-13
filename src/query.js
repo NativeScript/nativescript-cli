@@ -1,3 +1,4 @@
+import { QueryError } from './errors';
 import { nested } from './utils/object';
 import sift from 'sift';
 import assign from 'lodash/assign';
@@ -11,7 +12,26 @@ import forEach from 'lodash/forEach';
 import findKey from 'lodash/findKey';
 const unsupportedFilters = ['$nearSphere'];
 
+/**
+ * The Query class is used to query for a subset of
+ * entities using the Kinvey API.
+ *
+ * @example
+ * var query = new Kinvey.Query();
+ * query.equalTo('name', 'Kinvey');
+ */
 export class Query {
+  /**
+   * Create an instance of the Query class.
+   *
+   * @param {Object} options Options
+   * @param {string[]} [options.fields=[]] Fields to select.
+   * @param {Object} [options.filter={}] MongoDB query.
+   * @param {Object} [options.sort={}] The sorting order.
+   * @param {?number} [options.limit=null] Number of entities to select.
+   * @param {number} [options.skip=0] Number of entities to skip from the start.
+   * @return {Query} The query.
+   */
   constructor(options) {
     options = assign({
       fields: [],
@@ -24,7 +44,7 @@ export class Query {
     /**
      * Fields to select.
      *
-     * @type {Array}
+     * @type {string[]}
      */
     this.fields = options.fields;
 
@@ -43,16 +63,16 @@ export class Query {
     this.sort = options.sort;
 
     /**
-     * Number of documents to select.
+     * Number of entities to select.
      *
-     * @type {?Number}
+     * @type {?number}
      */
     this.limit = options.limit;
 
     /**
-     * Number of documents to skip from the start.
+     * Number of entities to skip from the start.
      *
-     * @type {Number}
+     * @type {number}
      */
     this.skip = options.skip;
 
@@ -60,94 +80,128 @@ export class Query {
      * Maintain reference to the parent query in case the query is part of a
      * join.
      *
-     * @type {?PrivateQuery}
+     * @type {?Query}
      */
-    this.parent = null;
+    this._parent = null;
   }
 
+  /**
+   * @type {string[]}
+   */
   get fields() {
-    return this.queryFields;
+    return this._fields;
   }
 
+  /**
+   * @type {string[]}
+   */
   set fields(fields) {
     fields = fields || [];
 
     if (!isArray(fields)) {
-      throw new Error('fields must be an Array');
+      throw new QueryError('fields must be an Array');
     }
 
-    if (this.parent) {
-      this.parent.fields = fields;
+    if (this._parent) {
+      this._parent.fields = fields;
     } else {
-      this.queryFields = fields;
+      this._fields = fields;
     }
   }
 
+  /**
+   * @type {Object}
+   */
   get filter() {
-    return this.queryFilter;
+    return this._filter;
   }
 
+  /**
+   * @type {Object}
+   */
   set filter(filter) {
-    this.queryFilter = filter;
+    this._filter = filter;
   }
 
+  /**
+   * @type {Object}
+   */
   get sort() {
-    return this.querySort;
+    return this._sort;
   }
 
+  /**
+   * @type {Object}
+   */
   set sort(sort) {
     if (sort && !isObject(sort)) {
-      throw new Error('sort must an Object');
+      throw new QueryError('sort must an Object');
     }
 
-    if (this.parent) {
-      this.parent.sort(sort);
+    if (this._parent) {
+      this._parent.sort(sort);
     } else {
-      this.querySort = sort || {};
+      this._sort = sort || {};
     }
   }
 
+  /**
+   * @type {?number}
+   */
   get limit() {
-    return this.queryLimit;
+    return this._limit;
   }
 
+  /**
+   * @type {?number}
+   */
   set limit(limit) {
     if (isString(limit)) {
       limit = parseFloat(limit);
     }
 
     if (limit && !isNumber(limit)) {
-      throw new Error('limit must be a number');
+      throw new QueryError('limit must be a number');
     }
 
-    if (this.parent) {
-      this.parent.limit = limit;
+    if (this._parent) {
+      this._parent.limit = limit;
     } else {
-      this.queryLimit = limit;
+      this._limit = limit;
     }
   }
 
+  /**
+   * @type {number}
+   */
   get skip() {
-    return this.querySkip;
+    return this._skip;
   }
 
-  set skip(skip) {
+  /**
+   * @type {number}
+   */
+  set skip(skip = 0) {
     if (isString(skip)) {
       skip = parseFloat(skip);
     }
 
     if (!isNumber(skip)) {
-      throw new Error('skip must be a number');
+      throw new QueryError('skip must be a number');
     }
 
-    if (this.parent) {
-      this.parent.skip(skip);
+    if (this._parent) {
+      this._parent.skip(skip);
     } else {
-      this.querySkip = skip;
+      this._skip = skip;
     }
   }
 
-  isSupportedLocal() {
+  /**
+   * Checks if the query is able to be run offline on the local cache.
+   * @return {Boolean} True if it is able to be run offline otherwise false.
+   */
+  isSupportedOffline() {
     let supported = true;
 
     forEach(unsupportedFilters, filter => {
@@ -161,11 +215,11 @@ export class Query {
   /**
    * Adds an equal to filter to the query. Requires `field` to equal `value`.
    * Any existing filters on `field` will be discarded.
-   * http://docs.mongodb.org/manual/reference/operators/#comparison
+   * @see https://docs.mongodb.com/manual/reference/operator/query/#comparison
    *
-   * @param   {String}        field     Field.
-   * @param   {*}             value     Value.
-   * @returns {Query}                   The query.
+   * @param {string} field Field
+   * @param {*} value Value
+   * @returns {Query} The query.
    */
   equalTo(field, value) {
     this.filter[field] = value;
@@ -175,12 +229,12 @@ export class Query {
   /**
    * Adds a contains filter to the query. Requires `field` to contain at least
    * one of the members of `list`.
-   * http://docs.mongodb.org/manual/reference/operator/in/
+   * @see https://docs.mongodb.com/manual/reference/operator/query/in
    *
-   * @param   {String}        field     Field.
-   * @param   {Array}         values    List of values.
-   * @throws  {Error}                   `values` must be of type: `Array`.
-   * @returns {Query}                   The query.
+   * @param {string} field Field
+   * @param {array} values List of values.
+   * @throws {QueryError} `values` must be of type `Array`.
+   * @returns {Query} The query.
    */
   contains(field, values) {
     if (!isArray(values)) {
@@ -193,12 +247,12 @@ export class Query {
   /**
    * Adds a contains all filter to the query. Requires `field` to contain all
    * members of `list`.
-   * http://docs.mongodb.org/manual/reference/operator/all/
+   * @see https://docs.mongodb.com/manual/reference/operator/query/all
    *
-   * @param   {String}  field     Field.
-   * @param   {Array}   values    List of values.
-   * @throws  {Error}             `values` must be of type: `Array`.
-   * @returns {Query}             The query.
+   * @param {string} field Field
+   * @param {Array} values List of values.
+   * @throws {QueryError} `values` must be of type `Array`.
+   * @returns {Query} The query.
    */
   containsAll(field, values) {
     if (!isArray(values)) {
@@ -211,49 +265,98 @@ export class Query {
   /**
    * Adds a greater than filter to the query. Requires `field` to be greater
    * than `value`.
-   * http://docs.mongodb.org/manual/reference/operator/gt/
+   * @see https://docs.mongodb.com/manual/reference/operator/query/gt
    *
-   * @param   {String}          field     Field.
-   * @param   {Number|String}   value     Value.
-   * @throws  {Error}                     `value` must be of type: `number` or `string`.
-   * @returns {Query}                     The query.
+   * @param {string} field Field
+   * @param {number|string} value Value
+   * @throws {QueryError} `value` must be of type `number` or `string`.
+   * @returns {Query} The query.
    */
   greaterThan(field, value) {
     if (!isNumber(value) && !isString(value)) {
-      throw new Error('You must supply a number or string.');
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$gt', value);
   }
 
+  /**
+   * Adds a greater than or equal to filter to the query. Requires `field` to
+   * be greater than or equal to `value`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/gte
+   *
+   * @param {string} field Field.
+   * @param {number|string} value Value.
+   * @throws {QueryError} `value` must be of type `number` or `string`.
+   * @returns {Query} The query.
+   */
   greaterThanOrEqualTo(field, value) {
     if (!isNumber(value) && !isString(value)) {
-      throw new Error('You must supply a number or string.');
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$gte', value);
   }
 
+  /**
+   * Adds a less than filter to the query. Requires `field` to be less than
+   * `value`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/lt
+   *
+   * @param {string} field Field
+   * @param {number|string} value Value
+   * @throws {QueryError} `value` must be of type `number` or `string`.
+   * @returns {Query} The query.
+   */
   lessThan(field, value) {
     if (!isNumber(value) && !isString(value)) {
-      throw new Error('You must supply a number or string.');
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$lt', value);
   }
 
+  /**
+   * Adds a less than or equal to filter to the query. Requires `field` to be
+   * less than or equal to `value`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/lte
+   *
+   * @param {string} field Field
+   * @param {number|string} value Value
+   * @throws {QueryError} `value` must be of type `number` or `string`.
+   * @returns {Query} The query.
+   */
   lessThanOrEqualTo(field, value) {
     if (!isNumber(value) && !isString(value)) {
-      throw new Error('You must supply a number or string.');
+      throw new QueryError('You must supply a number or string.');
     }
 
     return this.addFilter(field, '$lte', value);
   }
 
+  /**
+   * Adds a not equal to filter to the query. Requires `field` not to equal
+   * `value`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/ne
+   *
+   * @param {string} field Field
+   * @param {*} value Value
+   * @returns {Query} The query.
+   */
   notEqualTo(field, value) {
     return this.addFilter(field, '$ne', value);
   }
 
+  /**
+   * Adds a not contained in filter to the query. Requires `field` not to
+   * contain any of the members of `list`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/nin
+   *
+   * @param {string} field Field
+   * @param {Array} values List of values.
+   * @throws {QueryError} `values` must be of type `Array`.
+   * @returns {Query} The query.
+   */
   notContainedIn(field, values) {
     if (!isArray(values)) {
       values = [values];
@@ -262,34 +365,84 @@ export class Query {
     return this.addFilter(field, '$nin', values);
   }
 
+  /**
+   * Performs a logical AND operation on the query and the provided queries.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/and
+   *
+   * @param {...Query|...Object} args Queries
+   * @throws {QueryError} `query` must be of type `Array<Query>` or `Array<Object>`.
+   * @returns {Query} The query.
+   */
   and(...args) {
-    return this.join('$and', Array.prototype.slice.call(args));
+    // AND has highest precedence. Therefore, even if this query is part of a
+    // JOIN already, apply it on this query.
+    return this.join('$and', args);
   }
 
+  /**
+   * Performs a logical NOR operation on the query and the provided queries.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/nor
+   *
+   * @param {...Query|...Object} args Queries
+   * @throws {QueryError} `query` must be of type `Array<Query>` or `Array<Object>`.
+   * @returns {Query} The query.
+   */
   nor(...args) {
-    if (this.parent && this.parent.filter.$and) {
-      return this.parent.nor.apply(this.parent, args);
+    // NOR is preceded by AND. Therefore, if this query is part of an AND-join,
+    // apply the NOR onto the parent to make sure AND indeed precedes NOR.
+    if (this._parent && this._parent.filter.$and) {
+      return this._parent.nor.apply(this._parent, args);
     }
 
-    return this.join('$nor', Array.prototype.slice.call(args));
+    return this.join('$nor', args);
   }
 
+  /**
+   * Performs a logical OR operation on the query and the provided queries.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/or
+   *
+   * @param {...Query|...Object} args Queries.
+   * @throws {QueryError} `query` must be of type `Array<Query>` or `Array<Object>`.
+   * @returns {Query} The query.
+   */
   or(...args) {
-    if (this.parent) {
-      return this.parent.or.apply(this.parent, args);
+    // OR has lowest precedence. Therefore, if this query is part of any join,
+    // apply the OR onto the parent to make sure OR has indeed the lowest
+    // precedence.
+    if (this._parent) {
+      return this._parent.or.apply(this._parent, args);
     }
 
-    return this.join('$or', Array.prototype.slice.call(args));
+    return this.join('$or', args);
   }
 
+  /**
+   * Adds an exists filter to the query. Requires `field` to exist if `flag` is
+   * `true`, or not to exist if `flag` is `false`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/exists
+   *
+   * @param {string} field Field
+   * @param {boolean} [flag=true] The exists flag.
+   * @returns {Query} The query.
+   */
   exists(field, flag) {
     flag = typeof flag === 'undefined' ? true : flag || false;
     return this.addFilter(field, '$exists', flag);
   }
 
-  mod(field, divisor, remainder) {
-    remainder = remainder || 0;
-
+  /**
+   * Adds a modulus filter to the query. Requires `field` modulo `divisor` to
+   * have remainder `remainder`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/mod
+   *
+   * @param {string} field Field
+   * @param {number} divisor Divisor
+   * @param {number} [remainder=0] Remainder
+   * @throws {QueryError} `divisor` must be of type: `number`.
+   * @throws {QueryError} `remainder` must be of type: `number`.
+   * @returns {Query} The query.
+   */
+  mod(field, divisor, remainder = 0) {
     if (isString(divisor)) {
       divisor = parseFloat(divisor);
     }
@@ -299,29 +452,40 @@ export class Query {
     }
 
     if (!isNumber(divisor)) {
-      throw new Error('divisor must be a number');
+      throw new QueryError('divisor must be a number');
     }
 
     if (!isNumber(remainder)) {
-      throw new Error('remainder must be a number');
+      throw new QueryError('remainder must be a number');
     }
 
     return this.addFilter(field, '$mod', [divisor, remainder]);
   }
 
-  matches(field, regExp, options) {
-    options = options || {};
-
+  /**
+   * Adds a match filter to the query. Requires `field` to match `regExp`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/regex
+   *
+   * @param {string} field Field
+   * @param {RegExp|string} regExp Regular expression.
+   * @param {Object} [options] Options
+   * @param {boolean} [options.ignoreCase=inherit] Toggles case-insensitivity.
+   * @param {boolean} [options.multiline=inherit] Toggles multiline matching.
+   * @param {boolean} [options.extended=false] Toggles extended capability.
+   * @param {boolean} [options.dotMatchesAll=false] Toggles dot matches all.
+   * @returns {Query} The query.
+   */
+  matches(field, regExp, options = {}) {
     if (!isRegExp(regExp)) {
       regExp = new RegExp(regExp);
     }
 
     if ((regExp.ignoreCase || options.ignoreCase) && options.ignoreCase !== false) {
-      throw new Error('ignoreCase glag is not supported.');
+      throw new QueryError('ignoreCase glag is not supported.');
     }
 
     if (regExp.source.indexOf('^') !== 0) {
-      throw new Error('regExp must have `^` at the beginning of the expression ' +
+      throw new QueryError('regExp must have `^` at the beginning of the expression ' +
         'to make it an anchored expression.');
     }
 
@@ -348,9 +512,20 @@ export class Query {
     return result;
   }
 
+  /**
+   * Adds a near filter to the query. Requires `field` to be a coordinate
+   * within `maxDistance` of `coord`. Sorts documents from nearest to farthest.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/near
+   *
+   * @param {string} field The field.
+   * @param {Array<number, number>} coord The coordinate (longitude, latitude).
+   * @param {number} [maxDistance] The maximum distance (miles).
+   * @throws {QueryError} `coord` must be of type `Array<number, number>`.
+   * @returns {Query} The query.
+   */
   near(field, coord, maxDistance) {
     if (!isArray(coord) || !isNumber(coord[0]) || !isNumber(coord[1])) {
-      throw new Error('coord must be a [number, number]');
+      throw new QueryError('coord must be a [number, number]');
     }
 
     const result = this.addFilter(field, '$nearSphere', [coord[0], coord[1]]);
@@ -362,13 +537,26 @@ export class Query {
     return result;
   }
 
+  /**
+   * Adds a within box filter to the query. Requires `field` to be a coordinate
+   * within the bounds of the rectangle defined by `bottomLeftCoord`,
+   * `bottomRightCoord`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/box
+   *
+   * @param {string} field The field.
+   * @param {Array<number, number>} bottomLeftCoord The bottom left coordinate (longitude, latitude).
+   * @param {Array<number, number>} upperRightCoord The bottom right coordinate (longitude, latitude).
+   * @throws {QueryError} `bottomLeftCoord` must be of type `Array<number, number>`.
+   * @throws {QueryError} `bottomRightCoord` must be of type `Array<number, number>`.
+   * @returns {Query} The query.
+   */
   withinBox(field, bottomLeftCoord, upperRightCoord) {
     if (!isArray(bottomLeftCoord) || !bottomLeftCoord[0] || !bottomLeftCoord[1]) {
-      throw new Error('bottomLeftCoord must be a [number, number]');
+      throw new QueryError('bottomLeftCoord must be a [number, number]');
     }
 
     if (!isArray(upperRightCoord) || !upperRightCoord[0] || !upperRightCoord[1]) {
-      throw new Error('upperRightCoord must be a [number, number]');
+      throw new QueryError('upperRightCoord must be a [number, number]');
     }
 
     bottomLeftCoord[0] = parseFloat(bottomLeftCoord[0]);
@@ -383,14 +571,24 @@ export class Query {
     return this.addFilter(field, '$within', { $box: coords });
   }
 
+  /**
+   * Adds a within polygon filter to the query. Requires `field` to be a
+   * coordinate within the bounds of the polygon defined by `coords`.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/polygon
+   *
+   * @param {string} field The field.
+   * @param {Array<Array<number, number>>} coords List of coordinates.
+   * @throws {QueryError} `coords` must be of type `Array<Array<number, number>>`.
+   * @returns {Query} The query.
+   */
   withinPolygon(field, coords) {
     if (!isArray(coords) || coords.length > 3) {
-      throw new Error('coords must be [[number, number]]');
+      throw new QueryError('coords must be [[number, number]]');
     }
 
     coords = coords.map(coord => {
       if (!coord[0] || !coord[1]) {
-        throw new Error('coords argument must be [number, number]');
+        throw new QueryError('coords argument must be [number, number]');
       }
 
       return [parseFloat(coord[0]), parseFloat(coord[1])];
@@ -399,21 +597,37 @@ export class Query {
     return this.addFilter(field, '$within', { $polygon: coords });
   }
 
+  /**
+   * Adds a size filter to the query. Requires `field` to be an `Array` with
+   * exactly `size` members.
+   * @see https://docs.mongodb.com/manual/reference/operator/query/size
+   *
+   * @param {string} field Field
+   * @param {number} size Size
+   * @throws {QueryError} `size` must be of type: `number`.
+   * @returns {Query} The query.
+   */
   size(field, size) {
     if (isString(size)) {
       size = parseFloat(size);
     }
 
     if (!isNumber(size)) {
-      throw new Error('size must be a number');
+      throw new QueryError('size must be a number');
     }
 
     return this.addFilter(field, '$size', size);
   }
 
+  /**
+   * Adds an ascending sort modifier to the query. Sorts by `field`, ascending.
+   *
+   * @param {string} field Field
+   * @returns {Query} The query.
+   */
   ascending(field) {
-    if (this.parent) {
-      this.parent.ascending(field);
+    if (this._parent) {
+      this._parent.ascending(field);
     } else {
       this.sort[field] = 1;
     }
@@ -421,9 +635,16 @@ export class Query {
     return this;
   }
 
+  /**
+   * Adds an descending sort modifier to the query. Sorts by `field`,
+   * descending.
+   *
+   * @param {string} field Field
+   * @returns {Query} The query.
+   */
   descending(field) {
-    if (this.parent) {
-      this.parent.descending(field);
+    if (this._parent) {
+      this._parent.descending(field);
     } else {
       this.sort[field] = -1;
     }
@@ -434,10 +655,10 @@ export class Query {
   /**
    * Adds a filter to the query.
    *
-   * @param   {String}          field       Field.
-   * @param   {String}          condition   Condition.
-   * @param   {*}               value       Value.
-   * @returns {PrivateQuery}                The query.
+   * @param {string} field Field
+   * @param {string} condition Condition
+   * @param {*} values Values
+   * @returns {Query} The query.
    */
   addFilter(field, condition, values) {
     if (!isObject(this.filter[field])) {
@@ -449,12 +670,13 @@ export class Query {
   }
 
   /**
+   * @private
    * Joins the current query with another query using an operator.
    *
-   * @param   {String}                    operator    Operator.
-   * @param   {PrivateQuery[]|Object[]}   queries     Queries.
-   * @throws  {Error}                                `query` must be of type: `Kinvey.Query[]` or `Object[]`.
-   * @returns {PrivateQuery}                          The query.
+   * @param {string} operator Operator
+   * @param {Query[]|Object[]} queries Queries
+   * @throws {QueryError} `query` must be of type `Query[]` or `Object[]`.
+   * @returns {Query} The query.
    */
   join(operator, queries) {
     let that = this;
@@ -468,7 +690,7 @@ export class Query {
         if (isObject(query)) {
           query = new Query(query);
         } else {
-          throw new Error('query argument must be of type: Kinvey.Query[] or Object[].');
+          throw new QueryError('query argument must be of type: Kinvey.Query[] or Object[].');
         }
       }
 
@@ -502,14 +724,15 @@ export class Query {
   }
 
   /**
+   * @private
    * Processes the data by applying fields, sort, limit, and skip.
    *
-   * @param   {Array}   data    The raw data.
-   * @throws  {Error}               `data` must be of type: `Array`.
-   * @returns {Array}               The processed data.
+   * @param {Array} data The raw data.
+   * @throws {QueryError} `data` must be of type `Array`.
+   * @returns {Array} The processed data.
    */
   process(data) {
-    if (!this.isSupportedLocal()) {
+    if (!this.isSupportedOffline()) {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
 
@@ -517,13 +740,13 @@ export class Query {
         message = `${message} ${filter}`;
       });
 
-      throw new Error(message);
+      throw new QueryError(message);
     }
 
     if (data) {
       // Validate arguments.
       if (!isArray(data)) {
-        throw new Error('data argument must be of type: Array.');
+        throw new QueryError('data argument must be of type: Array.');
       }
 
       // Apply the query
@@ -593,8 +816,8 @@ export class Query {
    * @returns {Object} JSON object-literal.
    */
   toJSON() {
-    if (this.parent) {
-      return this.parent.toJSON();
+    if (this._parent) {
+      return this._parent.toJSON();
     }
 
     // Return set of parameters.
@@ -610,10 +833,9 @@ export class Query {
   }
 
   /**
-   * Returns serialized representation that can be appended
-   * to network paths as a query parameter.
+   * Returns query string representation of the query.
    *
-   * @returns {Object} Query string object
+   * @returns {Object} Query string object.
    */
   toQueryString() {
     const queryString = {};
@@ -646,6 +868,11 @@ export class Query {
     return queryString;
   }
 
+  /**
+   * Returns query string representation of the query.
+   *
+   * @return {string} Query string string.
+   */
   toString() {
     return JSON.stringify(this.toQueryString());
   }

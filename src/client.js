@@ -13,18 +13,15 @@ export class Client {
   /**
    * Creates a new instance of the Client class.
    *
-   * @param {Object}    options                             Options
-   * @param {string}    [options.protocol='https']          Protocol used for Kinvey API requests
-   * @param {string}    [options.host='baas.kinvey.com']    Host used for Kinvey API requests
-   * @param {string}    [options.hostname]                  Host name used for Kinvey API requests
-   * @param {string}    [options.micProtocol='https']       Protocol used for Kinvey MIC requests
-   * @param {string}    [options.micHost='auth.kinvey.com'] Host used for Kinvey MIC requests
-   * @param {string}    [options.micHostname]               Host name used for Kinvey MIC requests
-   * @param {string}    [options.appKey]                    App Key
-   * @param {string}    [options.appSecret]                 App Secret
-   * @param {string}    [options.masterSecret]              App Master Secret
-   * @param {string}    [options.encryptionKey]             App Encryption Key
-   * @param {string}    [options.appVersion]                App version
+   * @param {Object}    options                                            Options
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                                   App Key
+   * @param {string}    [options.appSecret]                                App Secret
+   * @param {string}    [options.masterSecret]                             App Master Secret
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.appVersion]                               App Version
+   * @return {Client}                                                      An instance of the Client class.
    *
    * @example
    * var client = new Kinvey.Client({
@@ -34,16 +31,14 @@ export class Client {
    */
   constructor(options = {}) {
     options = assign({
-      protocol: process.env.KINVEY_API_PROTOCOL || 'https:',
-      host: process.env.KINVEY_API_HOST || 'baas.kinvey.com',
-      micProtocol: process.env.KINVEY_MIC_PROTOCOL || 'https:',
-      micHost: process.env.KINVEY_MIC_HOST || 'auth.kinvey.com',
+      apiHostname: 'https://baas.kinvey.com',
+      micHostname: 'https://auth.kinvey.com',
     }, options);
 
-    if (options.hostname && isString(options.hostname)) {
-      const hostnameParsed = url.parse(options.hostname);
-      options.protocol = hostnameParsed.protocol;
-      options.host = hostnameParsed.host;
+    if (options.apiHostname && isString(options.apiHostname)) {
+      const apiHostnameParsed = url.parse(options.apiHostname);
+      options.apiProtocol = apiHostnameParsed.protocol;
+      options.apiHost = apiHostnameParsed.host;
     }
 
     if (options.micHostname && isString(options.micHostname)) {
@@ -55,12 +50,12 @@ export class Client {
     /**
      * @type {string}
      */
-    this.protocol = options.protocol;
+    this.apiProtocol = options.apiProtocol;
 
     /**
      * @type {string}
      */
-    this.host = options.host;
+    this.apiHost = options.apiHost;
 
     /**
      * @type {string}
@@ -75,7 +70,7 @@ export class Client {
     /**
      * @type {string|undefined}
      */
-    this.appKey = options.appKey || options.appId;
+    this.appKey = options.appKey;
 
     /**
      * @type {string|undefined}
@@ -98,31 +93,82 @@ export class Client {
     this.appVersion = options.appVersion;
   }
 
-  get baseUrl() {
+  /**
+   * API host name used for Kinvey API requests.
+   */
+  get apiHostname() {
     return url.format({
-      protocol: this.protocol,
-      host: this.host
+      protocol: this.apiProtocol,
+      host: this.apiHost
     });
   }
 
+  /**
+   * @deprecated Use apiHostname instead of this.
+   */
+  get baseUrl() {
+    return this.apiHostname;
+  }
+
+  /**
+   * @deprecated Use apiProtocol instead of this.
+   */
+  get protocol() {
+    return this.apiProtocol;
+  }
+
+  /**
+   * @deprecated Use apiHost instead of this.
+   */
+  get host() {
+    return this.apiHost;
+  }
+
+  /**
+   * Mobile Identity Connect host name used for MIC requests.
+   */
+  get micHostname() {
+    return url.format({
+      protocol: this.micProtocol,
+      host: this.micHost
+    });
+  }
+
+  /**
+   * Active user for your app.
+   */
   get activeUser() {
     return getActiveUser(this);
   }
 
+  /**
+   * Active social identity being used to authorize a user for your
+   * app.
+   */
   get activeSocialIdentity() {
     return getActiveSocialIdentity(this);
   }
 
+  /**
+   * The version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
+   */
   get appVersion() {
-    return this.clientAppVersion;
+    return this._appVersion;
   }
 
+  /**
+   * Set the version of your app. It will sent with Kinvey API requests
+   * using the X-Kinvey-Api-Version header.
+   *
+   * @param  {String} appVersion  App version.
+   */
   set appVersion(appVersion) {
     if (appVersion && !isString(appVersion)) {
       appVersion = String(appVersion);
     }
 
-    this.clientAppVersion = appVersion;
+    this._appVersion = appVersion;
   }
 
   /**
@@ -131,9 +177,11 @@ export class Client {
    * @return {Object} JSON
    */
   toJSON() {
-    const json = {
-      protocol: this.protocol,
-      host: this.host,
+    return {
+      apiHostname: this.apiHostname,
+      apiProtocol: this.apiProtocol,
+      apiHost: this.apiHost,
+      micHostname: this.micHostname,
       micProtocol: this.micProtocol,
       micHost: this.micHost,
       appKey: this.appKey,
@@ -142,32 +190,28 @@ export class Client {
       encryptionKey: this.encryptionKey,
       appVersion: this.appVersion
     };
-
-    return json;
   }
 
   /**
-   * Initializes the library by creating a new instance of the
+   * Initializes the Client class by creating a new instance of the
    * Client class and storing it as a shared instance.
    *
-   * @param {Object}    options                             Options
-   * @param {string}    [options.protocol='https']          Protocl used for requests
-   * @param {string}    [options.host='baas.kinvey.com']    Host used for requests
-   * @param {string}    options.appKey                      App Key
-   * @param {string}    [options.appSecret]                 App Secret
-   * @param {string}    [options.masterSecret]              App Master Secret
-   * @param {string}    [options.encryptionKey]             App Encryption Key
-   *
-   * @throws {KinveyError}  If an `options.appKey` is not provided.
-   * @throws {KinveyError}  If neither an `options.appSecret` or `options.masterSecret` is provided.
-   *
-   * @return {Client}  An instance of Client.
+   * @param {Object}    options                                            Options
+   * @param {string}    [options.apiHostname='https://baas.kinvey.com']    Host name used for Kinvey API requests
+   * @param {string}    [options.micHostname='https://auth.kinvey.com']    Host name used for Kinvey MIC requests
+   * @param {string}    [options.appKey]                                   App Key
+   * @param {string}    [options.appSecret]                                App Secret
+   * @param {string}    [options.masterSecret]                             App Master Secret
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.appVersion]                               App Version
+   * @return {Client}                                                      An instance of Client.
    *
    * @example
    * var client = Kinvey.Client.init({
    *   appKey: '<appKey>',
    *   appSecret: '<appSecret>'
    * });
+   * Kinvey.Client.sharedInstance() === client; // true
    */
   static init(options) {
     const client = new Client(options);
@@ -176,11 +220,14 @@ export class Client {
   }
 
   /**
-   * Returns the shared client instance used by the library.
+   * Returns the shared instance of the Client class used by the SDK.
    *
-   * @throws {KinveyError} If `Kinvey.init()` has not been called.
+   * @throws {KinveyError} If a shared instance does not exist.
    *
    * @return {Client} The shared instance.
+   *
+   * @example
+   * var client = Kinvey.Client.sharedInstance();
    */
   static sharedInstance() {
     if (!sharedInstance) {

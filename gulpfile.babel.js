@@ -13,22 +13,6 @@ function errorHandler(err) {
   this.emit('end');
 }
 
-gulp.task('lint', () => {
-  const stream = gulp.src('src/**/*.js')
-    .pipe(eslint())
-    .pipe(eslint.format())
-    .pipe(eslint.failAfterError());
-  return stream;
-});
-
-gulp.task('clean', done => del([
-  'es5',
-  'tmp',
-  'dist',
-  'coverage',
-  'test.tap'
-], done));
-
 gulp.task('build', ['clean', 'lint'], () => {
   const envs = env.set({
     KINVEY_ACL_ATTRIBUTE: '_acl',
@@ -73,6 +57,22 @@ gulp.task('bump', () => {
     .pipe(gulp.dest(`${__dirname}/`))
     .pipe(tag())
     .on('error', errorHandler);
+  return stream;
+});
+
+gulp.task('clean', done => del([
+  'es5',
+  'tmp',
+  'dist',
+  'coverage',
+  'test.tap'
+], done));
+
+gulp.task('lint', () => {
+  const stream = gulp.src('src/**/*.js')
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
   return stream;
 });
 

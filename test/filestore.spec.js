@@ -220,7 +220,7 @@ describe('FileStore', function() {
       .reply(500);
 
     const promise = this.store.upload(file, null, {
-      maxBackoff: 1000
+      maxBackoff: 250
     });
     return expect(promise).to.be.rejectedWith(ServerError);
   });

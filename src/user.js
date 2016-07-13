@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import { Client } from './client';
 import { Query } from './query';
 import { Acl } from './acl';
@@ -374,8 +373,8 @@ export class User {
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
         pathname: `${this.pathname}/login`
       }),
       body: usernameOrData,
