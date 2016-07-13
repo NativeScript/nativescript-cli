@@ -26,6 +26,7 @@ The NativeScript CLI lets you create, build, and deploy NativeScript-based proje
 * [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
 * [How to Contribute](#how-to-contribute)
+* [How to Build](#how-to-build)
 * [License](#license)
 
 What is NativeScript
@@ -582,6 +583,21 @@ To learn how to log a bug that you just discovered, click [here](https://github.
 To learn how to suggest a new feature or improvement, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#request-a-feature).
 
 To learn how to contribute to the code base, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#contribute-to-the-code-base).
+
+[Back to Top][1]
+
+How to Build
+===
+```
+git clone https://github.com/NativeScript/nativescript-cli
+cd nativescript-cli
+git submodule update --init
+npm install
+grunt
+```
+
+To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/nativescript`. For example:
+`PATH_TO_CLI_FOLDER/bin/nativescript run ios|android`
 
 [Back to Top][1]
 
