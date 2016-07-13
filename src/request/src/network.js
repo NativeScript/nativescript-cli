@@ -1,8 +1,8 @@
 import { RequestMethod, AuthType, KinveyRequest, KinveyRequestConfig } from './request';
-import { KinveyRackManager } from '../rack/rack';
-import { NoResponseError, InvalidCredentialsError } from '../errors';
+import { KinveyRackManager } from '../../rack';
+import { NoResponseError, InvalidCredentialsError } from '../../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
-import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
+import { setActiveUser, setActiveSocialIdentity } from '../../utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
@@ -17,7 +17,7 @@ export class NetworkRequest extends KinveyRequest {
   constructor(options) {
     super(options);
     this.rack = KinveyRackManager.networkRack;
-    this.automaticallyRefreshAuthToken = true;
+    this.refreshAuthToken = true;
   }
 
   async execute(rawResponse = false) {
@@ -44,8 +44,8 @@ export class NetworkRequest extends KinveyRequest {
 
       return response;
     } catch (error) {
-      if (error instanceof InvalidCredentialsError && this.automaticallyRefreshAuthToken) {
-        this.automaticallyRefreshAuthToken = false;
+      if (error instanceof InvalidCredentialsError && this.refreshAuthToken) {
+        this.refreshAuthToken = false;
         const activeSocialIdentity = this.client ? this.client.activeSocialIdentity : undefined;
 
         // Refresh MIC Auth Token
@@ -70,7 +70,7 @@ export class NetworkRequest extends KinveyRequest {
           });
           config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
           const refreshTokenRequest = new NetworkRequest(config);
-          refreshTokenRequest.automaticallyRefreshAuthToken = false;
+          refreshTokenRequest.refreshAuthToken = false;
           const newToken = await refreshTokenRequest.execute().then(response => response.data);
 
           // Login the user with the new token
@@ -93,7 +93,7 @@ export class NetworkRequest extends KinveyRequest {
             timeout: this.timeout,
             client: this.client
           });
-          loginRequest.automaticallyRefreshAuthToken = false;
+          loginRequest.refreshAuthToken = false;
           const user = await loginRequest.execute().then(response => response.data);
 
           // Store the new data
@@ -108,10 +108,10 @@ export class NetworkRequest extends KinveyRequest {
           try {
             // Execute the original request
             const response = await this.execute();
-            this.automaticallyRefreshAuthToken = true;
+            this.refreshAuthToken = true;
             return response;
           } catch (error) {
-            this.automaticallyRefreshAuthToken = true;
+            this.refreshAuthToken = true;
             throw error;
           }
         }

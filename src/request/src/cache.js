@@ -1,6 +1,6 @@
 import { KinveyRequest } from './request';
-import { KinveyRackManager } from '../rack/rack';
-import { NoResponseError } from '../errors';
+import { KinveyRackManager } from '../../rack';
+import { NoResponseError } from '../../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
