@@ -5,7 +5,7 @@ import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect, SocialIdentity } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { DataStoreManager, NetworkStore } from './datastore';
+import { DataStore, NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { Promise } from 'es6-promise';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
@@ -478,7 +478,7 @@ export class User {
 
         return null;
       })
-      .then(() => DataStoreManager.clearCache({ client: this.client }))
+      .then(() => DataStore.clearCache({ client: this.client }))
       .then(() => this);
 
     return promise;

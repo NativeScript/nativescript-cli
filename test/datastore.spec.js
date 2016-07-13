@@ -1,6 +1,5 @@
-/* eslint-disable no-underscore-dangle */
 import './setup';
-import { DataStoreManager, DataStoreType, DataStore, CacheStore, NetworkStore, SyncStore } from '../src/datastore';
+import { DataStoreType, DataStore, CacheStore, NetworkStore, SyncStore } from '../src/datastore';
 import { Client } from '../src/client';
 import { KinveyError, NotFoundError } from '../src/errors';
 import { Query } from '../src/query';
@@ -14,50 +13,6 @@ chai.use(sinonChai);
 const expect = chai.expect;
 const collection = 'tests';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
-
-describe('DataStore', function() {
-  describe('constructor', function() {
-    it('should throw an error if the collection name is not a string', function() {
-      expect(function() {
-        new DataStore({}); // eslint-disable-line no-new
-      }).to.throw(KinveyError, /Collection must be a string./);
-    });
-
-    it('should set the collection name', function() {
-      const datastore = new DataStore(collection);
-      expect(datastore.collection).to.equal(collection);
-    });
-
-    it('should set a client', function() {
-      const datastore = new DataStore(collection);
-      expect(datastore.client).to.not.be.undefined;
-      expect(datastore.client).to.be.instanceof(Client);
-    });
-  });
-
-  describe('pathname', function() {
-    const datastore = new DataStore(collection);
-    expect(datastore.pathname).to.equal(`/${appdataNamespace}/${datastore.client.appKey}/${collection}`);
-  });
-
-  describe('save()', function() {
-    it('should call create() if the data does not have id', async function() {
-      const datastore = new DataStore(collection);
-      const stub = this.sandbox.stub(datastore, 'create');
-      const data = { prop: randomString() };
-      await datastore.save(data);
-      expect(stub).to.have.been.calledOnce;
-    });
-
-    it('should call update() if the data has an id', async function() {
-      const datastore = new DataStore(collection);
-      const stub = this.sandbox.stub(datastore, 'update');
-      const data = { _id: randomString(), prop: randomString() };
-      await datastore.save(data);
-      expect(stub).to.have.been.calledOnce;
-    });
-  });
-});
 
 describe('NetworkStore', function() {
   before(function() {
@@ -107,15 +62,32 @@ describe('NetworkStore', function() {
   });
 
   describe('constructor', function() {
-    it('it to be an instance of CacheStore', function() {
+    it('should throw an error if the collection name is not a string', function() {
+      expect(function() {
+        new NetworkStore({}); // eslint-disable-line no-new
+      }).to.throw(KinveyError, /Collection must be a string./);
+    });
+
+    it('should set the collection name', function() {
+      const store = new NetworkStore(collection);
+      expect(store.collection).to.equal(collection);
+    });
+
+    it('should set a client', function() {
+      const store = new NetworkStore(collection);
+      expect(store.client).to.not.be.undefined;
+      expect(store.client).to.be.instanceof(Client);
+    });
+
+    it('it to be an instance of NetworkStore', function() {
       const store = new NetworkStore(collection);
       expect(store).to.be.instanceof(NetworkStore);
     });
+  });
 
-    it('it to be a subclass of DataStore', function() {
-      const store = new NetworkStore(collection);
-      expect(store).to.be.instanceof(DataStore);
-    });
+  describe('pathname', function() {
+    const store = new NetworkStore(collection);
+    expect(store.pathname).to.equal(`/${appdataNamespace}/${store.client.appKey}/${collection}`);
   });
 
   describe('find()', function() {
@@ -317,6 +289,24 @@ describe('NetworkStore', function() {
     });
   });
 
+  describe('save()', function() {
+    it('should call create() if the data does not have id', async function() {
+      const store = new NetworkStore(collection);
+      const stub = this.sandbox.stub(store, 'create');
+      const data = { prop: randomString() };
+      await store.save(data);
+      expect(stub).to.have.been.calledOnce;
+    });
+
+    it('should call update() if the data has an id', async function() {
+      const store = new NetworkStore(collection);
+      const stub = this.sandbox.stub(store, 'update');
+      const data = { _id: randomString(), prop: randomString() };
+      await store.save(data);
+      expect(stub).to.have.been.calledOnce;
+    });
+  });
+
   describe('remove()', function() {
     it('should throw an error for an invalid query', function() {
       const promise = this.store.remove({});
@@ -385,7 +375,7 @@ describe('NetworkStore', function() {
 
 describe('CacheStore', function() {
   before(function() {
-    this.store = DataStoreManager.collection(collection, DataStoreType.Cache);
+    this.store = DataStore.collection(collection, DataStoreType.Cache);
   });
 
   before(function() {
@@ -468,9 +458,9 @@ describe('CacheStore', function() {
       expect(store).to.be.instanceof(CacheStore);
     });
 
-    it('it to be a subclass of DataStore', function() {
+    it('it to be a subclass of NetworkStore', function() {
       const store = new CacheStore(collection);
-      expect(store).to.be.instanceof(DataStore);
+      expect(store).to.be.instanceof(NetworkStore);
     });
   });
 
@@ -1120,11 +1110,11 @@ describe('SyncStore', function() {
   });
 });
 
-describe('DataStoreManager', function() {
+describe('DataStore', function() {
   describe('constructor', function() {
     it('should throw an error', function() {
       expect(function() {
-        new DataStoreManager(); // eslint-disable-line no-new
+        new DataStore(); // eslint-disable-line no-new
       }).to.throw(KinveyError);
     });
   });
@@ -1132,7 +1122,7 @@ describe('DataStoreManager', function() {
   describe('collection()', function() {
     it('should throw an error if a collection name is not provided', function() {
       expect(function() {
-        DataStoreManager.collection(); // eslint-disable-line no-new
+        DataStore.collection(); // eslint-disable-line no-new
       }).to.throw(KinveyError, /A collection is required./);
     });
   });

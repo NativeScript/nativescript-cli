@@ -5,7 +5,7 @@ import { CustomEndpoint } from './endpoint';
 import { Log } from './log';
 import { Metadata } from './metadata';
 import { Query } from './query';
-import { DataStoreManager, DataStoreType } from './datastore';
+import { DataStore, DataStoreType } from './datastore';
 import { FileStore } from './filestore';
 import { Sync } from './sync';
 import { User, UserStore } from './user';
@@ -129,7 +129,7 @@ export class Kinvey {
     this.Aggregation = Aggregation;
     this.AuthorizationGrant = AuthorizationGrant;
     this.CustomEndpoint = CustomEndpoint;
-    this.DataStore = DataStoreManager;
+    this.DataStore = DataStore;
     this.DataStoreType = DataStoreType;
     this.Files = new FileStore();
     this.Metadata = Metadata;

@@ -35,7 +35,10 @@ const DataStoreType = {
 Object.freeze(DataStoreType);
 export { DataStoreType };
 
-export class DataStore {
+/**
+ * @private
+ */
+export class NetworkStore {
   constructor(collection, options = {}) {
     if (collection && !isString(collection)) {
       throw new KinveyError('Collection must be a string.');
@@ -50,6 +53,11 @@ export class DataStore {
      * @type {Client}
      */
     this.client = options.client || Client.sharedInstance();
+
+    /**
+     * @type {boolean}
+     */
+    this.useDeltaFetch = !!options.useDeltaFetch || false;
   }
 
   /**
@@ -66,58 +74,6 @@ export class DataStore {
     return pathname;
   }
 
-  async find() {
-    throw new KinveyError('A subclass of DataStore must override the find function.');
-  }
-
-  async findById() {
-    throw new KinveyError('A subclass of DataStore must override the findById function.');
-  }
-
-  async create() {
-    throw new KinveyError('A subclass of DataStore must override the create function.');
-  }
-
-  async update() {
-    throw new KinveyError('A subclass of DataStore must override the update function.');
-  }
-
-  /**
-   * Save a single or an array of entities on the data store.
-   *
-   * @param   {Object|Array}          data                              Data that you want to save on the data store.
-   * @param   {Object}                [options]                         Options
-   * @param   {Properties}            [options.properties]              Custom properties to send with
-   *                                                                    the request.
-   * @param   {Number}                [options.timeout]                 Timeout for the request.
-   * @return  {Promise}                                                 Promise.
-   */
-  save(data, options) {
-    if (data[idAttribute]) {
-      return this.update(data, options);
-    }
-
-    return this.create(data, options);
-  }
-
-  async remove() {
-    throw new KinveyError('A subclass of DataStore must override the remove function.');
-  }
-
-  async removeById() {
-    throw new KinveyError('A subclass of DataStore must override the removeById function.');
-  }
-}
-
-export class NetworkStore extends DataStore {
-  constructor(collection, options = {}) {
-    super(collection, options);
-
-    /**
-     * @type {boolean}
-     */
-    this.useDeltaFetch = !!options.useDeltaFetch || false;
-  }
   /**
    * Find all entities in the data store. A query can be optionally provided to return
    * a subset of all entities in a collection or omitted to return all entities in
@@ -394,6 +350,24 @@ export class NetworkStore extends DataStore {
   }
 
   /**
+   * Save a single or an array of entities on the data store.
+   *
+   * @param   {Object|Array}          data                              Data that you want to save on the data store.
+   * @param   {Object}                [options]                         Options
+   * @param   {Properties}            [options.properties]              Custom properties to send with
+   *                                                                    the request.
+   * @param   {Number}                [options.timeout]                 Timeout for the request.
+   * @return  {Promise}                                                 Promise.
+   */
+  save(data, options) {
+    if (data[idAttribute]) {
+      return this.update(data, options);
+    }
+
+    return this.create(data, options);
+  }
+
+  /**
    * Remove all entities in the data store. A query can be optionally provided to remove
    * a subset of all entities in a collection or omitted to remove all entities in
    * a collection. The number of entities removed adheres to the limits specified
@@ -483,6 +457,9 @@ export class NetworkStore extends DataStore {
   }
 }
 
+/**
+ * @private
+ */
 export class CacheStore extends NetworkStore {
   constructor(collection, options = {}) {
     super(collection, options);
@@ -1183,6 +1160,9 @@ export class CacheStore extends NetworkStore {
   }
 }
 
+/**
+ * @private
+ */
 export class SyncStore extends CacheStore {
   get syncAutomatically() {
     return false;
@@ -1342,7 +1322,7 @@ export class SyncStore extends CacheStore {
 /**
  * The DataStore class is used to find, create, update, remove, count and group entities.
  */
-export class DataStoreManager {
+export class DataStore {
   constructor() {
     throw new KinveyError('Not allowed to construct a DataStore instance.'
       + ' Please use the collection() function to retrieve an instance of a DataStore instance.');
