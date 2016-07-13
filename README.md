@@ -596,8 +596,8 @@ npm install
 grunt
 ```
 
-To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/nativescript`. For example:
-`PATH_TO_CLI_FOLDER/bin/nativescript run ios|android`
+To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:
+`PATH_TO_CLI_FOLDER/bin/tns run ios|android`
 
 [Back to Top][1]
 
