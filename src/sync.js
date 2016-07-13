@@ -1,12 +1,8 @@
-import {
-  KinveyRequestConfig,
-  RequestMethod,
-  AuthType,
-  CacheRequest,
-  NetworkRequest,
-  DeltaFetchRequest
-} from './request';
+import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request';
 import { InsufficientCredentialsError, SyncError } from './errors';
+import { CacheRequest } from './requests/cache';
+import { NetworkRequest } from './requests/network';
+import { DeltaFetchRequest } from './requests/deltafetch';
 import { Client } from './client';
 import { Query } from './query';
 import { Promise } from 'es6-promise';

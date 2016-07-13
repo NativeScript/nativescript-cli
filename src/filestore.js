@@ -1,5 +1,7 @@
 /* eslint-disable no-underscore-dangle */
-import { NetworkRequest, AuthType, RequestMethod, KinveyRequestConfig } from './request';
+import { NetworkRequest } from './requests/network';
+import { StatusCode } from './requests/response';
+import { AuthType, RequestMethod, KinveyRequestConfig, Headers } from './requests/request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import { Log } from './log';

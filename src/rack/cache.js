@@ -1,9 +1,10 @@
 /* eslint-disable no-underscore-dangle */
-import { Query } from '../../query';
-import { Aggregation } from '../../aggregation';
-import { KinveyError, NotFoundError } from '../../errors';
+import { Query } from '../query';
+import { Aggregation } from '../aggregation';
+import { KinveyError, NotFoundError } from '../errors';
 import { KinveyMiddleware } from './middleware';
-import { RequestMethod, StatusCode } from '../../request';
+import { RequestMethod } from '../requests/request';
+import { StatusCode } from '../requests/response';
 import { Promise } from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';

@@ -1,5 +1,6 @@
 import { KinveyError } from './errors';
-import { NetworkRequest, AuthType, RequestMethod, KinveyRequestConfig } from './request';
+import { NetworkRequest } from './requests/network';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { Client } from './client';
 import { Promise } from 'es6-promise';
 import path from 'path';

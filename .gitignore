@@ -4,13 +4,13 @@ node_modules
 tmp
 .DS_Store
 dist
+coverage
 npm-debug.log
 report.xml
 docs
 sandbox
 *.tap
-coverage
-.nyc_output
+es5
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 *.iml

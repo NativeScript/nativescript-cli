@@ -4,8 +4,9 @@ import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
 import { MobileIdentityConnect, SocialIdentity } from './mic';
-import { AuthType, RequestMethod, KinveyRequestConfig, NetworkRequest } from './request';
+import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore, NetworkStore } from './datastore';
+import { NetworkRequest } from './requests/network';
 import { Promise } from 'es6-promise';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars

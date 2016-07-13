@@ -3,8 +3,8 @@ import { KinveyRequest, RequestMethod } from './request';
 import { CacheRequest } from './cache';
 import { NetworkRequest } from './network';
 import { KinveyResponse, KinveyResponseConfig, StatusCode } from './response';
-import { NotFoundError } from '../../errors';
-import { Query } from '../../query';
+import { NotFoundError } from '../errors';
+import { Query } from '../query';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import keyBy from 'lodash/keyBy';

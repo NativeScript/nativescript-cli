@@ -13,7 +13,7 @@ import {
   NotFoundError,
   ParameterValueOutOfRangeError,
   ServerError
-} from '../../errors';
+} from '../errors';
 import { Headers } from './request';
 import assign from 'lodash/assign';
 
@@ -149,7 +149,9 @@ export class KinveyResponse extends Response {
     }
 
     const data = this.data || {};
-    const { name, message, debug } = data;
+    const name = data.name || data.error;
+    const message = data.message || data.description;
+    const debug = data.debug;
     const code = this.statusCode;
 
     if (name === 'FeatureUnavailableError') {

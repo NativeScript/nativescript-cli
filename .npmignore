@@ -3,6 +3,7 @@ node_modules
 .tmp
 tmp
 .DS_Store
+coverage
 npm-debug.log
 report.xml
 docs
@@ -24,8 +25,6 @@ README.md
 bower.json
 src
 .npm_cache
-coverage
-.nyc_output
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 *.iml
