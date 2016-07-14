@@ -482,6 +482,46 @@ describe('User', function () {
     });
   });
 
+  describe('update()', function() {
+    beforeEach(function() {
+      return this.login().then(user => {
+        this.user = user;
+      });
+    });
+
+    afterEach(function() {
+      return this.logout().then(() => {
+        delete this.user;
+      });
+    });
+
+    it('should update a user', function() {
+      const age = 1;
+
+      // Kinvey API response
+      nock(this.client.apiHostname)
+        .put(`${this.user.pathname}/${this.user._id}`, {
+          _id: this.user._id,
+          _kmd: this.user.data._kmd,
+          age: age
+        })
+        .query(true)
+        .reply(200, {
+          _id: this.user._id,
+          _kmd: this.user.data._kmd,
+          age: age
+        }, {
+          'content-type': 'application/json'
+        });
+
+      return this.user.update({
+        age: age
+      }).then(user => {
+        expect(user.data).to.have.property('age', age);
+      });
+    });
+  });
+
   describe('isIdentitySupported', function() {
     it('should be a static method', function() {
       expect(User).itself.to.respondTo('isIdentitySupported');

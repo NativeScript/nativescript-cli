@@ -798,7 +798,7 @@ export class User {
   update(data, options) {
     data = assign(this.data, data);
     const userStore = new UserStore();
-    return userStore.save(data, options).then(data => {
+    return userStore.update(data, options).then(data => {
       this.data = data;
 
       if (this.isActive()) {
