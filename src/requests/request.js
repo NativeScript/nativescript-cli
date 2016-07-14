@@ -373,17 +373,7 @@ export class RequestConfig {
   }
 
   get headers() {
-    const headers = this.configHeaders;
-
-    if (!headers.has('accept')) {
-      headers.set('accept', 'application/json; charset=utf-8');
-    }
-
-    if (!headers.has('content-type')) {
-      headers.set('content-type', 'application/json; charset=utf-8');
-    }
-
-    return headers;
+    return this.configHeaders;
   }
 
   set headers(headers) {
@@ -472,6 +462,14 @@ export class KinveyRequestConfig extends RequestConfig {
     this.client = options.client;
     const headers = this.headers;
 
+    if (!headers.has('accept')) {
+      headers.set('accept', 'application/json; charset=utf-8');
+    }
+
+    if (!headers.has('content-type')) {
+      headers.set('content-type', 'application/json; charset=utf-8');
+    }
+
     if (!headers.has('X-Kinvey-Api-Version')) {
       headers.set('X-Kinvey-Api-Version', this.apiVersion);
     }
@@ -493,6 +491,8 @@ export class KinveyRequestConfig extends RequestConfig {
 
     if (this.appVersion) {
       headers.set('X-Kinvey-Client-App-Version', this.appVersion);
+    } else {
+      headers.remove('X-Kinvey-Client-App-Version');
     }
 
     if (this.properties && !isEmpty(this.properties)) {
@@ -507,10 +507,14 @@ export class KinveyRequestConfig extends RequestConfig {
       }
 
       headers.set('X-Kinvey-Custom-Request-Properties', customPropertiesHeader);
+    } else {
+      headers.remove('X-Kinvey-Custom-Request-Properties');
     }
 
     if (global.KinveyDevice) {
       headers.set('X-Kinvey-Device-Information', JSON.stringify(global.KinveyDevice.toJSON()));
+    } else {
+      headers.remove('X-Kinvey-Device-Information');
     }
 
     if (this.authType) {
@@ -554,8 +558,10 @@ export class KinveyRequestConfig extends RequestConfig {
           credentials = new Buffer(`${authInfo.username}:${authInfo.password}`).toString('base64');
         }
 
-        headers.set('authorization', `${authInfo.scheme} ${credentials}`);
+        headers.set('Authorization', `${authInfo.scheme} ${credentials}`);
       }
+    } else {
+      headers.remove('Authorization');
     }
 
     return headers;

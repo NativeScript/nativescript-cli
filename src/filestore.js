@@ -5,11 +5,13 @@ import { AuthType, RequestMethod, KinveyRequestConfig, Headers } from './request
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import { Log } from './log';
+import { KinveyError } from './errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';
 import assign from 'lodash/assign';
 import isFunction from 'lodash/isFunction';
+import isNumber from 'lodash/isNumber';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const filesNamespace = process.env.KINVEY_FILES_NAMESPACE || 'blob';
 const MAX_BACKOFF = process.env.KINVEY_MAX_BACKOFF || 32 * 1000;
@@ -71,7 +73,10 @@ export class FileStore extends NetworkStore {
   async find(query, options = {}) {
     options.query = options.query || {};
     options.query.tls = options.tls === true;
-    options.ttl_in_seconds = options.ttl;
+
+    if (isNumber(options.ttl)) {
+      options.query.ttl_in_seconds = options.ttl;
+    }
 
     const stream = super.find(query, options);
     const files = await stream.toPromise();
@@ -96,7 +101,7 @@ export class FileStore extends NetworkStore {
    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
    * @param   {Boolean}       [options.stream]                              Stream the file
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]    Data policy
+   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]  Data policy
    * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
    * @return  {Promise}                                                     Promise
    *
@@ -115,15 +120,18 @@ export class FileStore extends NetworkStore {
   async download(name, options = {}) {
     options.query = options.query || {};
     options.query.tls = options.tls === true;
-    options.ttl_in_seconds = options.ttl;
 
-    const stream = super.findById(name, options);
-    const file = await stream.toPromise();
+    if (isNumber(options.ttl)) {
+      options.query.ttl_in_seconds = options.ttl;
+    }
+
+    const file = await super.findById(name, options).toPromise();
 
     if (options.stream === true) {
       return file;
     }
 
+    options.mimeType = file.mimeType;
     return this.downloadByUrl(file._downloadURL, options);
   }
 
@@ -133,9 +141,7 @@ export class FileStore extends NetworkStore {
       url: url,
       timeout: options.timeout
     });
-    config.headers.set('Accept', options.mimeType || 'application-octet-stream');
-    config.headers.remove('Content-Type');
-    config.headers.remove('X-Kinvey-Api-Version');
+    config.headers.clear();
     const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
@@ -343,5 +349,9 @@ export class FileStore extends NetworkStore {
 
   update(file, metadata, options) {
     return this.upload(file, metadata, options);
+  }
+
+  remove() {
+    throw new KinveyError('Please use removeById() to remove files one by one.');
   }
 }
