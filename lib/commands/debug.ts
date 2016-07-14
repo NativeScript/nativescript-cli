@@ -1,10 +1,15 @@
 ﻿export class DebugPlatformCommand implements ICommand {
 	constructor(private debugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
+		private $usbLiveSyncService: ILiveSyncService,
 		private $logger: ILogger,
 		protected $options: IOptions) { }
 
 	execute(args: string[]): IFuture<void> {
+		if (!this.$options.rebuild) {
+			this.$options.debug = true;
+			return this.$usbLiveSyncService.liveSync(this.$devicesService.platform);
+		}
 		return this.debugService.debug();
 	}
 
@@ -33,9 +38,10 @@
 export class DebugIOSCommand extends DebugPlatformCommand {
 	constructor($iOSDebugService: IDebugService,
 		$devicesService: Mobile.IDevicesService,
+		$usbLiveSyncService: ILiveSyncService,
 		$logger: ILogger,
 		$options: IOptions) {
-		super($iOSDebugService, $devicesService, $logger, $options);
+		super($iOSDebugService, $devicesService, $usbLiveSyncService, $logger, $options);
 	}
 }
 $injector.registerCommand("debug|ios", DebugIOSCommand);
@@ -43,9 +49,10 @@ $injector.registerCommand("debug|ios", DebugIOSCommand);
 export class DebugAndroidCommand extends DebugPlatformCommand {
 	constructor($androidDebugService: IDebugService,
 		$devicesService: Mobile.IDevicesService,
+		$usbLiveSyncService: ILiveSyncService,
 		$logger: ILogger,
 		$options: IOptions) {
-		super($androidDebugService, $devicesService, $logger, $options);
+		super($androidDebugService, $devicesService, $usbLiveSyncService, $logger, $options);
 	}
 }
 $injector.registerCommand("debug|android", DebugAndroidCommand);

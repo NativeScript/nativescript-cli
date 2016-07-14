@@ -107,7 +107,9 @@ class AndroidDebugService implements IDebugService {
 			if (!this.$options.start && !this.$options.emulator && !this.$options.getPort) {
 				let cachedDeviceOption = this.$options.forDevice;
 				this.$options.forDevice = true;
-				this.$platformService.buildPlatform(this.platform).wait();
+				if (this.$options.rebuild) {
+					this.$platformService.buildPlatform(this.platform).wait();
+				}
 				this.$options.forDevice = !!cachedDeviceOption;
 
 				let platformData = this.$platformsData.getPlatformData(this.platform);
