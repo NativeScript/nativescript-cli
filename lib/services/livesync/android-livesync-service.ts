@@ -84,19 +84,14 @@ class AndroidLiveSyncService extends liveSyncServiceBaseLib.LiveSyncServiceBase<
 
 	private sendPageReloadMessage(): IFuture<void> {
 		let future = new Future<void>();
-
 		let socket = new net.Socket();
 		socket.connect(AndroidLiveSyncService.BACKEND_PORT, '127.0.0.1', () => {
-			try {
-				socket.write(new Buffer([0, 0, 0, 1, 1]));
-				future.return();
-			} catch (e) {
-				future.throw(e);
-			} finally {
-				socket.destroy();
-			}
+			socket.write(new Buffer([0, 0, 0, 1, 1]));
 		});
-
+		socket.on("data", (data: any) => {
+			socket.destroy();
+			future.return();
+		});
 		return future;
 	}
 
