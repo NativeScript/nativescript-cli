@@ -3,7 +3,7 @@ import { Client } from '../client';
 import { KinveyError, NoActiveUserError } from '../errors';
 import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
-import qs from 'qs/dist/qs';
+import qs from 'qs';
 import url from 'url';
 import appendQuery from 'append-query';
 import assign from 'lodash/assign';
