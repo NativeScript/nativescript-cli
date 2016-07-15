@@ -234,7 +234,7 @@ interface IiOSNotificationService {
 }
 
 interface IiOSSocketRequestExecutor {
-	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number): IFuture<void>;
+	executeLaunchRequest(device: Mobile.IiOSDevice, timeout: number, readyForAttachTimeout: number, shouldBreak?: boolean): IFuture<void>;
 	executeAttachRequest(device: Mobile.IiOSDevice, timeout: number): IFuture<void>;
 }
 
