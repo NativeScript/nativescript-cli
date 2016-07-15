@@ -1,4 +1,3 @@
-import 'regenerator-runtime';
 import { Kinvey } from './kinvey';
 import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
 import { KinveyRackManager } from 'kinvey-javascript-sdk-core/dist/rack/rack';

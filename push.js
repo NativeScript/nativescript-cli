@@ -41,6 +41,18 @@ export class Push extends EventEmitter {
     return `/${pushNamespace}/${this.client.appKey}`;
   }
 
+  get client() {
+    return this.pushClient;
+  }
+
+  set client(client) {
+    if (!client) {
+      throw new KinveyError('Kinvey.Push much have a client defined.');
+    }
+
+    this.pushClient = client;
+  }
+
   isSupported() {
     return Device.isiOS() || Device.isAndroid();
   }

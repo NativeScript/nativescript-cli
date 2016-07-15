@@ -1,8 +1,7 @@
-import { Kinvey as CoreKinvey } from 'kinvey-javascript-sdk-core';
+import { Kinvey as Html5Kinvey } from 'kinvey-html5-sdk/dist/kinvey';
 import { Push } from './push';
 
-// Extend the CoreKinvey class
-export class Kinvey extends CoreKinvey {
+export class Kinvey extends Html5Kinvey {
   static init(options) {
     // Initialize Kinvey
     const client = super.init(options);
