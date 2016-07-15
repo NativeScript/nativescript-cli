@@ -1,4 +1,9 @@
 ## Changelog
+### 3.0.0-beta.30 (2016-07-15)
+* Bugfix (MLIBZ-1228): Store results from a pull in the cache.
+* Bugfix (MLIBZ-1230): Return server generated `_id` when creating entities.
+* Enhancement (MLIBZ-1026): Make file uploads resumable.
+
 ### 3.0.0-beta.29 (2016-06-13)
 * Bugfix (MLIBZ-1151): Prevent error from always being thrown when using `store.find(query)` on a `CacheStore`.
 * Bugfix (MLIBZ-1154): Fix error with `window.openDatabase` not working on user logout.
