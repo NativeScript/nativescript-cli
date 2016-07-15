@@ -1,5 +1,6 @@
 import { Device as PhoneGapDevice } from 'kinvey-phonegap-sdk/dist/device';
 import { Device as Html5Device } from 'kinvey-html5-sdk/dist/device';
+import angular from 'angular'; // eslint-disable-line import/no-unresolved
 import packageJSON from '../package.json';
 
 /**
@@ -19,7 +20,7 @@ export class Device extends PhoneGapDevice {
     // Add angular information
     if (json.platform) {
       json.platform.name = 'angular';
-      json.platform.version = global.angular.version.full;
+      json.platform.version = angular.version.full;
     }
 
     // Add sdk information

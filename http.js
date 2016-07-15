@@ -1,5 +1,6 @@
 import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import angular from 'angular'; // eslint-disable-line import/no-unresolved
 const $injector = angular.injector(['ng']);
 
 export class HttpMiddleware extends KinveyMiddleware {

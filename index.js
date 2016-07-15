@@ -1,4 +1,3 @@
-import 'regenerator-runtime';
 import { KinveyProvider } from './provider';
 import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
 import { KinveyRackManager } from 'kinvey-javascript-sdk-core/dist/rack/rack';
@@ -8,6 +7,7 @@ import { HttpMiddleware as CoreHttpMiddleware } from 'kinvey-javascript-sdk-core
 import { HttpMiddleware } from './http';
 import { Device } from './device';
 import { Popup } from './popup';
+import angular from 'angular'; // eslint-disable-line import/no-unresolved
 
 // Swap Cache Middelware
 const cacheRack = KinveyRackManager.cacheRack;
