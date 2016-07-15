@@ -60,7 +60,6 @@ class IOSDebugService implements IDebugService {
 			} else {
 				let deploy = this.$platformService.deployOnDevice(this.platform);
 				deploy.wait();
-
 				return this.deviceStart();
 			}
 		}
@@ -76,7 +75,9 @@ class IOSDebugService implements IDebugService {
 	private emulatorDebugBrk(shouldBreak?: boolean): IFuture<void> {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(this.platform);
-			this.$platformService.buildPlatform(this.platform).wait();
+			if (!this.$options.debug) {
+				this.$platformService.buildPlatform(this.platform).wait();
+			}
 			let emulatorPackage = this.$platformService.getLatestApplicationPackageForEmulator(platformData).wait();
 
 			let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";

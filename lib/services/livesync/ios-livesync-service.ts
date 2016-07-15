@@ -15,6 +15,7 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.PlatformLiveSyncServiceB
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $options: IOptions,
+		private $iOSDebugService: IDebugService,
 		$liveSyncProvider: ILiveSyncProvider) {
 		super(_device, $liveSyncProvider);
 	}
@@ -32,8 +33,12 @@ class IOSLiveSyncService extends liveSyncServiceBaseLib.PlatformLiveSyncServiceB
 	}
 
 	protected restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		let projectData: IProjectData = this.$injector.resolve("projectData");
-		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
+		if (this.$options.debug) {
+			return this.$iOSDebugService.debug();
+		} else {
+			let projectData: IProjectData = this.$injector.resolve("projectData");
+			return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
+		}
 	}
 
 	protected reloadPage(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
