@@ -882,27 +882,6 @@ export class User {
     return promise;
   }
 
-  // refreshAuthToken(options = {}) {
-  //   const socialIdentity = this.data[socialIdentityAttribute];
-  //   const identity = socialIdentity.activeIdentity;
-  //   const token = socialIdentity[identity];
-  //   let promise;
-
-  //   switch (identity) {
-  //     case MobileIdentityConnect.identity:
-  //       const mic = new MobileIdentityConnect(this.client);
-  //       promise = mic.refresh(token, options);
-  //       break;
-  //     default:
-  //       promise = Promise.reject(new KinveyError(`Unable to refresh the auth token because ` +
-  //         `the ${identity} identity is not supported.`));
-  //   }
-
-  //   return promise.then(token => {
-  //     return this.connect(identity, token, options);
-  //   });
-  // }
-
   toJSON() {
     return this.data;
   }
