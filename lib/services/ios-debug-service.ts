@@ -58,10 +58,7 @@ class IOSDebugService implements IDebugService {
 			} else if (this.$options.start) {
 				return this.deviceStart();
 			} else {
-				let deploy = this.$platformService.deployOnDevice(this.platform);
-				deploy.wait();
-
-				return this.deviceStart();
+				return this.deviceDebugBrk(false);
 			}
 		}
 	}
@@ -121,18 +118,18 @@ class IOSDebugService implements IDebugService {
 				}
 				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
 				let deploy = this.$platformService.deployOnDevice(this.platform);
-				this.debugBrkCore(device).wait();
+				this.debugBrkCore(device, shouldBreak).wait();
 				deploy.wait();
 			}).future<void>()()).wait();
 		}).future<void>()();
 	}
 
-	private debugBrkCore(device: Mobile.IiOSDevice): IFuture<void> {
+	private debugBrkCore(device: Mobile.IiOSDevice, shouldBreak?: boolean): IFuture<void> {
 		return (() => {
 			let timeout = this.$utils.getMilliSecondsTimeout(TIMEOUT_SECONDS);
 			let readyForAttachTimeout = this.getReadyForAttachTimeout(timeout);
 
-			this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, readyForAttachTimeout).wait();
+			this.$iOSSocketRequestExecutor.executeLaunchRequest(device, timeout, readyForAttachTimeout, shouldBreak).wait();
 			this.wireDebuggerClient(() => device.connectToPort(inspectorBackendPort)).wait();
 		}).future<void>()();
 	}
