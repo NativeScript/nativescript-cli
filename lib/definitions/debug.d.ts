@@ -1,5 +1,5 @@
 interface IDebugService {
-	debug(): IFuture<void>;
+	debug(shouldBreak?: boolean): IFuture<void>;
 	debugStart(): IFuture<void>;
 	platform: string;
 }

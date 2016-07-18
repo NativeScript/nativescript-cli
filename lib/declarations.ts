@@ -91,6 +91,7 @@ interface IOptions extends ICommonOptions {
 	symlink: boolean;
 	tnsModulesVersion: string;
 	teamId: string;
+	rebuild: boolean;
 }
 
 interface IInitService {
