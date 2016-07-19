@@ -1,16 +1,11 @@
 import { Client } from '../../client';
 import localStorage from 'local-storage';
-import assign from 'lodash/assign';
 
 export class Social {
   constructor(appId, options = {}) {
-    options = assign({
-      client: Client.sharedInstance()
-    }, options);
-
     this.appId = appId;
     this.loggedIn = false;
-    this.client = options.client;
+    this.client = options.client || Client.sharedInstance();
   }
 
   get identity() {

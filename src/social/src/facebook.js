@@ -3,6 +3,7 @@ import { Social } from './social';
 import { Promise } from 'es6-promise';
 import { KinveyError } from '../../errors';
 import { randomString } from '../../utils/string';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import querystring from 'querystring';
 import assign from 'lodash/assign';
 import url from 'url';
