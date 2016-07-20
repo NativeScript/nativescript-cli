@@ -1,7 +1,8 @@
-import { KinveyError } from './errors';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { Client } from './client';
+import { Social, SocialIdentity } from './social';
+import { KinveyError } from '../../errors';
+import { NetworkRequest } from '../../requests/network';
+import { AuthType, RequestMethod, KinveyRequestConfig } from '../../requests/request';
+import { Client } from '../../client';
 import { Promise } from 'es6-promise';
 import path from 'path';
 import url from 'url';
@@ -20,26 +21,11 @@ Object.freeze(AuthorizationGrant);
 export { AuthorizationGrant };
 
 /**
- * Enum for Social Identities.
- */
-const SocialIdentity = {
-  Facebook: 'facebook',
-  Google: 'google',
-  LinkedIn: 'linkedin'
-};
-Object.freeze(SocialIdentity);
-export { SocialIdentity };
-
-/**
  * @private
  */
-export class MobileIdentityConnect {
-  constructor(client = Client.sharedInstance()) {
-    this.client = client;
-  }
-
+export class MobileIdentityConnect extends Social {
   static get identity() {
-    return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+    return SocialIdentity.MobileIdentityConnect;
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
