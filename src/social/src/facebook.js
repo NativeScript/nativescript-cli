@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
-import { Social, SocialIdentity } from './social';
+import { Social } from './social';
+import { SocialIdentity } from './enums';
 import { Promise } from 'es6-promise';
 import { KinveyError } from '../../errors';
 import { randomString } from '../../utils/string';

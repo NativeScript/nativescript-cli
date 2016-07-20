@@ -9,18 +9,18 @@ import { Promise } from 'es6-promise';
 import {
   Facebook,
   Google,
-  Kinvey,
   LinkedIn,
   MobileIdentityConnect,
   Windows
 } from './social';
-import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
+import { setActiveUser } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
+import isObject from 'lodash/isObject';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -71,16 +71,16 @@ export class UserStore extends NetworkStore {
       throw new KinveyError('User must have an _id.');
     }
 
-    if (options._identity) {
-      const socialIdentity = data[socialIdentityAttribute];
-      if (socialIdentity) {
-        for (const [key] of socialIdentity) {
-          if (socialIdentity[key] && options._identity !== key) {
-            delete socialIdentity[key];
-          }
-        }
-      }
-    }
+    // if (options._identity) {
+    //   const socialIdentity = data[socialIdentityAttribute];
+    //   if (socialIdentity) {
+    //     for (const [key] of socialIdentity) {
+    //       if (socialIdentity[key] && options._identity !== key) {
+    //         delete socialIdentity[key];
+    //       }
+    //     }
+    //   }
+    // }
 
     return super.update(data, options);
   }
@@ -339,9 +339,49 @@ export class User {
         'Please logout the active user before you login.'));
     }
 
-    this.data = await Kinvey.login(username, password, options);
+    let credentials = username;
+    if (!isObject(credentials)) {
+      credentials = {
+        username: username,
+        password: password
+      };
+    }
+
+    if (!credentials[socialIdentityAttribute]) {
+      if (credentials.username) {
+        credentials.username = String(credentials.username).trim();
+      }
+
+      if (credentials.password) {
+        credentials.password = String(credentials.password).trim();
+      }
+    }
+
+    if ((!credentials.username || credentials.username === '' || !credentials.password || credentials.password === '')
+      && !credentials[socialIdentityAttribute]) {
+      return Promise.reject(new KinveyError('Username and/or password missing. ' +
+        'Please provide both a username and password to login.'));
+    }
+
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.apiProtocol,
+        host: this.client.apiHost,
+        pathname: `/${usersNamespace}/${this.client.appKey}`
+      }),
+      body: credentials,
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+    const request = new NetworkRequest(config);
+    request.automaticallyRefreshAuthToken = false;
+    const response = await request.execute();
+    this.data = response.data;
     setActiveUser(this.client, this.data);
-    return User.getActiveUser(this.client);
+    return this;
   }
 
   /**
@@ -352,9 +392,9 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static login(usernameOrData, password, options) {
+  static login(username, password, options) {
     const user = new User();
-    return user.login(usernameOrData, password, options);
+    return user.login(username, password, options);
   }
 
   /**
@@ -380,11 +420,23 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async loginWithMIC(redirectUri, authorizationGrant, options) {
+  async loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    const isActiveUser = this.isActive();
+    if (isActiveUser) {
+      return Promise.reject(new ActiveUserError('This user is already the active user.'));
+    }
+
+    const activeUser = User.getActiveUser(this.client);
+    if (activeUser) {
+      return Promise.reject(new ActiveUserError('An active user already exists. ' +
+        'Please logout the active user before you login.'));
+    }
+
     const mic = new MobileIdentityConnect({ client: this.client });
     const session = await mic.login(redirectUri, authorizationGrant, options);
-    options.redirectUri = redirectUri;
-    options.micClient = result(mic.client, 'toJSON', mic.client);
+    session.redirect_uri = redirectUri;
+    session.protocol = mic.client.micProtocol;
+    session.host = mic.client.micHost;
     return this.connect(MobileIdentityConnect.identity, session, options);
   }
 
@@ -413,6 +465,12 @@ export class User {
     return this.connect(Facebook.identity, session, options);
   }
 
+  /**
+   * Login using Facebook.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
   static loginWithFacebook(options = {}) {
     const user = new User({});
     return user.loginWithFacebook(options);
@@ -429,6 +487,12 @@ export class User {
     return this.connect(Google.identity, session, options);
   }
 
+  /**
+   * Login using Google.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
   static loginWithGoogle(options = {}) {
     const user = new User({});
     return user.loginWithGoogle(options);
@@ -445,6 +509,12 @@ export class User {
     return this.connect(LinkedIn.identity, session, options);
   }
 
+  /**
+   * Login using LinkedIn.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
   static loginWithLinkedIn(options = {}) {
     const user = new User({});
     return user.loginWithLinkedIn(options);
@@ -461,6 +531,12 @@ export class User {
     return this.connect(Windows.identity, session, options);
   }
 
+  /**
+   * Login using Windows.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
   static loginWithWindows(options = {}) {
     const user = new User({});
     return user.loginWithWindows(options);
@@ -486,19 +562,10 @@ export class User {
       const isActive = this.isActive();
 
       if (isActive) {
-        options._identity = identity;
         return this.update(data, options);
       }
 
       await this.login(data, null, options);
-
-      setActiveSocialIdentity(this.client, {
-        identity: identity,
-        token: this[socialIdentityAttribute][identity],
-        redirectUri: options.redirectUri,
-        client: options.micClient
-      });
-
       return this;
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -515,10 +582,26 @@ export class User {
    * Disconnects the user from an identity.
    *
    * @param {SocialIdentity|string} identity Identity used to connect the user.
-   * @param  {Object} [options={}] Options
+   * @param  {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async disconnect(identity, options = {}) {
+  async disconnect(identity, options) {
+    try {
+      if (identity === Facebook.identity) {
+        await Facebook.logout();
+      } else if (identity === Google.identity) {
+        await Google.logout();
+      } else if (identity === LinkedIn.identity) {
+        await LinkedIn.logout();
+      } else if (identity === MobileIdentityConnect.identity) {
+        await MobileIdentityConnect.logout();
+      } else if (identity === Windows.identity) {
+        await Windows.logout();
+      }
+    } catch (error) {
+      // Just catch the error
+    }
+
     const data = this.data;
     const socialIdentity = data[socialIdentityAttribute] || {};
     delete socialIdentity[identity];
@@ -530,12 +613,6 @@ export class User {
     }
 
     await this.update(data, options);
-    const activeSocialIdentity = this.client.activeSocialIdentity;
-
-    if (activeSocialIdentity.identity === identity) {
-      setActiveSocialIdentity(this.client, null);
-    }
-
     return this;
   }
 
@@ -545,9 +622,29 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  async logout() {
+  async logout(options = {}) {
     try {
-      // TODO: lookup social identity used to login and logout
+      // Disconnect from connected identities
+      const identities = Object.keys(this.socialIdentity);
+      const promises = identities.map(identity => this.disconnect(identity, options));
+      await Promise.all(promises);
+
+      // Logout from Kinvey
+      const config = new KinveyRequestConfig({
+        method: RequestMethod.POST,
+        authType: AuthType.Session,
+        url: url.format({
+          protocol: this.client.apiProtocol,
+          host: this.client.apiHost,
+          pathname: `/${usersNamespace}/${this.client.appKey}/_logout`
+        }),
+        properties: options.properties,
+        timeout: options.timeout,
+        client: this.client,
+        automaticallyRefreshAuthToken: false
+      });
+      const request = new NetworkRequest(config);
+      await request.execute();
     } catch (error) {
       // Just catch the error
     }
@@ -583,10 +680,27 @@ export class User {
       data = data.data;
     }
 
-    this.data = await Kinvey.signup(data, options);
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.POST,
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: `/${usersNamespace}/${this.client.appKey}`
+      }),
+      body: data,
+      properties: options.properties,
+      timeout: options.timeout,
+      client: this.client
+    });
+    const request = new NetworkRequest(config);
+    const response = await request.execute();
+    this.data = response.data;
+
     if (options.state === true) {
       setActiveUser(this.client, this.data);
     }
+
     return this;
   }
 

@@ -1,4 +1,4 @@
-export { SocialIdentity } from './src/social';
+export * from './src/enums';
 export * from './src/facebook';
 export * from './src/google';
 export * from './src/kinvey';

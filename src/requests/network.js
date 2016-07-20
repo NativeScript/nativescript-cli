@@ -2,22 +2,23 @@ import { RequestMethod, AuthType, KinveyRequest, KinveyRequestConfig } from './r
 import { KinveyRackManager } from '../rack/rack';
 import { NoResponseError, InvalidCredentialsError } from '../errors';
 import { KinveyResponse, KinveyResponseConfig } from './response';
-import { setActiveUser, setActiveSocialIdentity } from '../utils/storage';
+import { SocialIdentity } from '../social/src/enums';
+import { setActiveUser } from '../utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
-const micIdentity = process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
+const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 
 /**
  * @private
  */
 export class NetworkRequest extends KinveyRequest {
-  constructor(options) {
+  constructor(options = {}) {
     super(options);
     this.rack = KinveyRackManager.networkRack;
-    this.automaticallyRefreshAuthToken = true;
+    this.automaticallyRefreshAuthToken = options.automaticallyRefreshAuthToken === true;
   }
 
   async execute(rawResponse = false) {
@@ -46,64 +47,57 @@ export class NetworkRequest extends KinveyRequest {
     } catch (error) {
       if (error instanceof InvalidCredentialsError && this.automaticallyRefreshAuthToken) {
         this.automaticallyRefreshAuthToken = false;
-        const activeSocialIdentity = this.client ? this.client.activeSocialIdentity : undefined;
+        let activeUser = this.client.activeUser;
+        const identities = activeUser ? Object.keys(activeUser[socialIdentityAttribute]) : [];
+        const micIdentityIndex = identities.indexOf(SocialIdentity.MobileIdentityConnect);
+        let micSession = micIdentityIndex >= 0 ? identities[micIdentityIndex] : undefined;
 
-        // Refresh MIC Auth Token
-        if (activeSocialIdentity && activeSocialIdentity.identity === micIdentity) {
-          // Refresh the token
-          const token = activeSocialIdentity.token;
+        if (micSession) {
+          // Refresh MIC Auth Token
           const config = new KinveyRequestConfig({
             method: RequestMethod.POST,
             authType: AuthType.App,
             url: url.format({
-              protocol: activeSocialIdentity.client.micProtocol,
-              host: activeSocialIdentity.client.micHost,
+              protocol: micSession.protocol,
+              host: micSession.host,
               pathname: tokenPathname
             }),
-            properties: this.properties,
             body: {
               grant_type: 'refresh_token',
-              client_id: token.audience,
-              redirect_uri: activeSocialIdentity.redirectUri,
-              refresh_token: token.refresh_token
-            }
+              client_id: micSession.audience,
+              redirect_uri: micSession.redirect_uri,
+              refresh_token: micSession.refresh_token
+            },
+            timeout: this.timeout,
+            properties: this.properties,
+            automaticallyRefreshAuthToken: false
           });
           config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
           const refreshTokenRequest = new NetworkRequest(config);
-          refreshTokenRequest.automaticallyRefreshAuthToken = false;
-          const newToken = await refreshTokenRequest.execute().then(response => response.data);
+          micSession = await refreshTokenRequest.execute().then(response => response.data);
 
-          // Login the user with the new token
-          const activeUser = this.client.activeUser;
-          const socialIdentity = activeUser[socialIdentityAttribute];
-          socialIdentity[activeSocialIdentity.identity] = newToken;
-          const data = {};
-          data[socialIdentityAttribute] = socialIdentity;
-
-          const loginRequest = new NetworkRequest({
-            method: RequestMethod.POST,
-            authType: AuthType.App,
+          // Update the active user with the new mic session
+          identities[SocialIdentity.MobileIdentityConnect] = micSession;
+          activeUser[socialIdentityAttribute] = identities;
+          const loginRequestConfig = new KinveyRequestConfig({
+            method: RequestMethod.PUT,
+            authType: AuthType.Default,
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `/${usersNamespace}/${this.client.appKey}/login`
+              pathname: `/${usersNamespace}/${this.client.appKey}/${activeUser[idAttribute]}`
             }),
             properties: this.properties,
-            data: data,
+            body: activeUser,
             timeout: this.timeout,
-            client: this.client
+            client: this.client,
+            automaticallyRefreshAuthToken: false
           });
-          loginRequest.automaticallyRefreshAuthToken = false;
-          const user = await loginRequest.execute().then(response => response.data);
+          const loginRequest = new NetworkRequest(loginRequestConfig);
+          activeUser = await loginRequest.execute().then(response => response.data);
 
-          // Store the new data
-          setActiveUser(this.client, user);
-          setActiveSocialIdentity(this.client, {
-            identity: activeSocialIdentity.identity,
-            redirectUri: activeSocialIdentity.redirectUri,
-            token: user[socialIdentityAttribute][activeSocialIdentity.identity],
-            client: activeSocialIdentity.client
-          });
+          // Store the updated active user
+          setActiveUser(this.client, activeUser);
 
           try {
             // Execute the original request
