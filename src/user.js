@@ -1,22 +1,20 @@
 import { Client } from './client';
-import { Query } from './query';
 import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
-import { MobileIdentityConnect, SocialIdentity } from './mic';
+import { MobileIdentityConnect } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore, NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { Promise } from 'es6-promise';
+import { Facebook, Google, Kinvey, LinkedIn, Windows } from './social';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
 import result from 'lodash/result';
-import isObject from 'lodash/isObject';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -24,14 +22,9 @@ const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
-const supportedIdentities = ['facebook', 'google', 'linkedIn'];
-let hello;
-
-if (typeof window !== 'undefined') {
-  hello = require('hellojs'); // eslint-disable-line global-require
-}
 
 /**
+ * @private
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
 export class UserStore extends NetworkStore {
@@ -44,25 +37,36 @@ export class UserStore extends NetworkStore {
     return `/${usersNamespace}/${this.client.appKey}`;
   }
 
+  /**
+   * @private
+   * @throws {KinveyError} Method is unsupported. Instead use User.signup() to create a user.
+   */
   async create() {
     throw new KinveyError('Please use `User.signup()` to create a user.');
   }
 
-  async update(user, options = {}) {
-    if (!user) {
+  /**
+   * Update a user.
+   *
+   * @param {Object} data Data for user to update.
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The updated user data.
+   */
+  async update(data, options = {}) {
+    if (!data) {
       throw new KinveyError('No user was provided to be updated.');
     }
 
-    if (isArray(user)) {
-      throw new KinveyError('Only one user can be updated at one time.', user);
+    if (isArray(data)) {
+      throw new KinveyError('Only one user can be updated at one time.', data);
     }
 
-    if (!user[idAttribute]) {
+    if (!data[idAttribute]) {
       throw new KinveyError('User must have an _id.');
     }
 
     if (options._identity) {
-      const socialIdentity = user[socialIdentityAttribute];
+      const socialIdentity = data[socialIdentityAttribute];
       if (socialIdentity) {
         for (const [key] of socialIdentity) {
           if (socialIdentity[key] && options._identity !== key) {
@@ -72,9 +76,16 @@ export class UserStore extends NetworkStore {
       }
     }
 
-    return super.update(user, options);
+    return super.update(data, options);
   }
 
+  /**
+   * Check if a username already exists.
+   *
+   * @param {string} username Username
+   * @param {Object} [options={}] Options
+   * @return {boolean} True if the username already exists otherwise false.
+   */
   async exists(username, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
@@ -95,6 +106,13 @@ export class UserStore extends NetworkStore {
     return data.usernameExists === true;
   }
 
+  /**
+   * Restore a user that has been suspended.
+   *
+   * @param {string} id Id of the user to restore.
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
   async restore(id, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
@@ -122,13 +140,11 @@ export class User {
   /**
    * Create a new instance of a User.
    *
-   * @param  {Object}   [data={}]    Data for the user.
-   * @return {User}                  User
-   *
-   * @example
-   * var user = new User();
+   * @param {Object} [data={}] Data for the user.
+   * @param {Object} [options={}] Options.
+   * @return {User} User
    */
-  constructor(data = {}) {
+  constructor(data = {}, options = {}) {
     /**
      * The users data.
      *
@@ -142,16 +158,13 @@ export class User {
      *
      * @type {Client}
      */
-    this.client = Client.sharedInstance();
+    this.client = options.client || Client.sharedInstance();
   }
 
   /**
    * The _id for the user.
    *
    * @return {?string} _id
-   *
-   * @example
-   * var _id = user._id;
    */
   get _id() {
     return this.data[idAttribute];
@@ -161,9 +174,6 @@ export class User {
    * The _acl for the user.
    *
    * @return {Acl} _acl
-   *
-   * @example
-   * var _acl = user._acl;
    */
   get _acl() {
     return new Acl(this.data);
@@ -173,14 +183,16 @@ export class User {
    * The metadata for the user.
    *
    * @return {Metadata} metadata
-   *
-   * @example
-   * var metadata = user.metadata;
    */
   get metadata() {
     return new Metadata(this.data);
   }
 
+  /**
+   * Set the metadata for the user.
+   *
+   * @param {Metadata|Object} metadata The metadata.
+   */
   set metadata(metadata) {
     this.data[kmdAttribute] = result(metadata, 'toJSON', metadata);
   }
@@ -189,18 +201,25 @@ export class User {
    * The _kmd for the user.
    *
    * @return {Metadata} _kmd
-   *
-   * @example
-   * var _kmd = user._kmd;
    */
   get _kmd() {
     return this.metadata;
   }
 
+  /**
+   * Set the _kmd for the user.
+   *
+   * @param {Metadata|Object} metadata The metadata.
+   */
   set _kmd(kmd) {
     this.metadata = kmd;
   }
 
+  /**
+   * The _socialIdentity for the user.
+   *
+   * @return {Object} _socialIdentity
+   */
   get _socialIdentity() {
     return this.data[socialIdentityAttribute];
   }
@@ -209,9 +228,6 @@ export class User {
    * The auth token for the user.
    *
    * @return {?string} Auth token
-   *
-   * @example
-   * var authtoken = user.authtoken;
    */
   get authtoken() {
     return this.metadata.authtoken;
@@ -221,9 +237,6 @@ export class User {
    * Set the auth token for the user.
    *
    * @param  {?string} authtoken Auth token
-   *
-   * @example
-   * user.authtoken = 'authtoken';
    */
   set authtoken(authtoken) {
     const metadata = this.metadata;
@@ -235,9 +248,6 @@ export class User {
    * The username for the user.
    *
    * @return {?string} Username
-   *
-   * @example
-   * var username = user.username;
    */
   get username() {
     return this.data[usernameAttribute];
@@ -247,29 +257,49 @@ export class User {
    * The email for the user.
    *
    * @return {?string} Email
-   *
-   * @example
-   * var email = user.email;
    */
   get email() {
     return this.data[emailAttribute];
   }
 
+  /**
+   * @private
+   */
   get pathname() {
     return `/${usersNamespace}/${this.client.appKey}`;
+  }
+
+  /**
+   * Checks if the user is the active user.
+   *
+   * @return {boolean} True the user is the active user otherwise false.
+   */
+  isActive() {
+    const activeUser = User.getActiveUser(this.client);
+
+    if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if the users email is verfified.
+   *
+   * @return {boolean} True if the users email is verified otherwise false.
+   */
+  isEmailVerified() {
+    const status = this.metadata.emailVerification;
+    return status === 'confirmed';
   }
 
   /**
    * Gets the active user. You can optionally provide a client
    * to use to lookup the active user.
    *
-   * @param  {Client}           [client=Client.sharedInstance()]   Client to use to set the active user.
-   * @return {Promise<User>}                                       The active user on the client. The
-   *                                                               active user could be null if one does
-   *                                                               not exist.
-   *
-   * @example
-   * var _id = user._id;
+   * @param {Client} [client=Client.sharedInstance()] Client to use to lookup active user.
+   * @return {?User} The active user.
    */
   static getActiveUser(client = Client.sharedInstance()) {
     const data = client.activeUser;
@@ -284,73 +314,14 @@ export class User {
   }
 
   /**
-   * Checks if this user is the active user.
-   *
-   * @return {Promise<Boolean>} True or false if this user is the active user.
-   *
-   * @example
-   * var promise = user.isActiveUser();
-   * promise.then(function(isActiveUser) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  isActive() {
-    const activeUser = User.getActiveUser(this.client);
-
-    if (activeUser && activeUser[idAttribute] === this[idAttribute]) {
-      return true;
-    }
-
-    return false;
-  }
-
-  static login(usernameOrData, password, options) {
-    const user = new User();
-    return user.login(usernameOrData, password, options);
-  }
-
-  static loginWithIdentity(identity, tokens, options) {
-    const user = new User();
-    return user.loginWithIdentity(identity, tokens, options);
-  }
-
-  /**
    * Login using a username or password.
    *
-   * @param  {string|Object}      usernameOrData    Username or an object with username
-   *                                                and password properties.
-   * @param  {string}             [password]        Users password.
-   * @param  {Object}             [options={}]      Options
-   * @return {Promise<User>}                        The logged in user.
-   *
-   * @example
-   * var promise = user.login('username', 'password');
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param {string|Object} username Username or an object with username and password as properties.
+   * @param {string} [password] Password
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
    */
-  login(usernameOrData, password, options = {}) {
-    if (!isObject(usernameOrData)) {
-      usernameOrData = {
-        username: usernameOrData,
-        password: password
-      };
-    }
-
-    if (!usernameOrData[socialIdentityAttribute]) {
-      if (usernameOrData.username) {
-        usernameOrData.username = String(usernameOrData.username).trim();
-      }
-
-      if (usernameOrData.password) {
-        usernameOrData.password = String(usernameOrData.password).trim();
-      }
-    }
-
+  async login(username, password, options = {}) {
     const isActiveUser = this.isActive();
     if (isActiveUser) {
       return Promise.reject(new ActiveUserError('This user is already the active user.'));
@@ -362,70 +333,48 @@ export class User {
         'Please logout the active user before you login.'));
     }
 
-    if ((!usernameOrData.username || usernameOrData.username === ''
-      || !usernameOrData.password || usernameOrData.password === '')
-      && !usernameOrData[socialIdentityAttribute]) {
-      return Promise.reject(new KinveyError('Username and/or password missing. ' +
-        'Please provide both a username and password to login.'));
-    }
-
-    const config = new KinveyRequestConfig({
-      method: RequestMethod.POST,
-      authType: AuthType.App,
-      url: url.format({
-        protocol: this.client.apiProtocol,
-        host: this.client.apiHost,
-        pathname: `${this.pathname}/login`
-      }),
-      body: usernameOrData,
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    const request = new NetworkRequest(config);
-    request.automaticallyRefreshAuthToken = false;
-    const promise = request.execute().then(response => {
-      this.data = response.data;
-      setActiveUser(this.client, this.data);
-      return User.getActiveUser(this.client);
-    });
-
-    return promise;
+    this.data = await Kinvey.login(username, password, options);
+    setActiveUser(this.client, this.data);
+    return User.getActiveUser(this.client);
   }
 
-  loginWithIdentity(identity, token, options) {
+  /**
+   * Login using a username or password.
+   *
+   * @param {string|Object} username Username or an object with username and password as properties.
+   * @param {string} [password] Password
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  static login(usernameOrData, password, options) {
+    const user = new User();
+    return user.login(usernameOrData, password, options);
+  }
+
+  /**
+   * Login using a social identity.
+   *
+   * @param {string} identity Social identity.
+   * @param {Object} session Social identity session.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  loginWithIdentity(identity, session, options) {
     const data = {};
     data[socialIdentityAttribute] = {};
-    data[socialIdentityAttribute][identity] = token;
+    data[socialIdentityAttribute][identity] = session;
     return this.login(data, options);
   }
 
-  static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const client = options.client || Client.sharedInstance();
-    const user = new User();
-    user.client = client;
-    return user.loginWithMIC(redirectUri, authorizationGrant, options);
-  }
-
-  /* eslint-disable max-len */
   /**
    * Login using Mobile Identity Connect.
    *
-   * @param  {string}                 redirectUri                                                         The redirect uri used
-   *                                                                                                      for MIC logins.
-   * @param  {AuthorizationGrant}     [authorizationGrant=AuthoizationGrant.AuthorizationCodeLoginPage]   MIC authorization grant to use.
-   * @param  {Object}                 [options={}]                                                        Options
-   * @return {Promise<User>}                                                                              The logged in user.
-   *
-   * @example
-   * var promise = user.loginWithMIC('http://example.com');
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param {string} redirectUri The redirect uri.
+   * @param {AuthorizationGrant} [authorizationGrant=AuthoizationGrant.AuthorizationCodeLoginPage] MIC authorization grant to use.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
    */
-  /* eslint-enable max-len */
-  loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+  loginWithMIC(redirectUri, authorizationGrant, options) {
     const mic = new MobileIdentityConnect(this.client);
     return mic.login(redirectUri, authorizationGrant, options).then(token => {
       options.redirectUri = redirectUri;
@@ -435,382 +384,282 @@ export class User {
   }
 
   /**
-   * Logout the user. If the user was the active user then the active user will be set to null.
+   * Login using Mobile Identity Connect.
    *
-   * @param  {Object}         [options={}]    Options
-   * @return {Promise<User>}                  The logged out user.
-   *
-   * @example
-   * var promise = user.logout();
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param {string} redirectUri The redirect uri.
+   * @param {AuthorizationGrant} [authorizationGrant=AuthoizationGrant.AuthorizationCodeLoginPage] MIC authorization grant to use.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
    */
-  logout(options = {}) {
-    const isActive = this.isActive();
-
-    if (!isActive) {
-      return Promise.resolve();
-    }
-
-    const request = new NetworkRequest({
-      method: RequestMethod.POST,
-      authType: AuthType.Session,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${usersNamespace}/${this.client.appKey}/_logout`
-      }),
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    request.automaticallyRefreshAuthToken = false;
-
-    const promise = request.execute()
-      .catch(() => null)
-      .then(() => {
-        const isActive = this.isActive();
-        if (isActive) {
-          setActiveUser(this.client, null);
-        }
-
-        return null;
-      })
-      .then(() => DataStore.clearCache({ client: this.client }))
-      .then(() => this);
-
-    return promise;
-  }
-
-  /**
-   * @private
-   * Returns true or false if identity connect is supported.
-   *
-   * @return {Boolean}  True or false if identity connect is supported.
-   *
-   * @example
-   * var isIdentitySupported = user.isIdentitySupported('identity');
-   */
-  static isIdentitySupported(identity) {
-    return typeof hello !== 'undefined' && supportedIdentities.indexOf(identity) !== -1;
-  }
-
-  /**
-   * Connect using Facebook.
-   *
-   * @param  {Object}         [options={}]  Options
-   * @return {Promise<User>}                The connected user.
-   *
-   * @example
-   * var promise = user.connectWithFacebook();
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  static connectWithFacebook(options = {}) {
-    return User.connectWithIdentity(SocialIdentity.Facebook, options);
-  }
-
-  /**
-   * Connect using Google.
-   *
-   * @param  {Object}         [options={}]  Options
-   * @return {Promise<User>}                The connected user.
-   *
-   * @example
-   * var promise = user.connectWithGoogle();
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  static connectWithGoogle(options = {}) {
-    return User.connectWithIdentity(SocialIdentity.Google, options);
-  }
-
-  /**
-   * Connect using LinkedIn.
-   *
-   * @param  {Object}         [options={}]  Options
-   * @return {Promise<User>}                The connected user.
-   *
-   * @example
-   * var promise = user.connectWithLinkedIn();
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
-   */
-  static connectWithLinkedIn(options = {}) {
-    return User.connectWithIdentity(SocialIdentity.LinkedIn, options);
-  }
-
-  static connectWithIdentity(identity, options) {
+  static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
+    const client = options.client || Client.sharedInstance();
     const user = new User();
-    return user.connectWithIdentity(identity, options);
+    user.client = client;
+    return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
-  /* eslint-disable max-len */
   /**
-   * Connect using an identity (Facebook, Google, LinkedIn etc.).
+   * Login using Facebook.
    *
-   * @param  {SocialIdentity|string}         identity                                Identity used to connect the user.
-   * @param  {Object}                        [options={}]                            Options
-   * @param  {string}                        [options.collectionName='Identities']   Collection name to use to lookup credentials
-   *                                                                                 for the identity.
-   * @return {Promise<User>}                                                         The connected user.
-   *
-   * @example
-   * var promise = user.connectWithIdentity(SocialIdentity.Facebook);
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
    */
-  /* eslint-enable max-len */
-  connectWithIdentity(identity, options = {}) {
-    options = assign({
-      collectionName: 'identities'
-    }, options);
+  async loginWithFacebook(options = {}) {
+    const session = await Facebook.login(options);
+    return this.connect(Facebook.identity, session, options);
+  }
 
-    let promise = Promise.resolve().then(() => {
-      if (!identity) {
-        throw new KinveyError('An identity is required to connect the user.');
-      }
+  static loginWithFacebook(options = {}) {
+    const user = new User({});
+    return user.loginWithFacebook(options);
+  }
 
-      if (!User.isIdentitySupported(identity)) {
-        throw new KinveyError(`Identity ${identity} is not supported on this platform.`);
-      }
+  /**
+   * Login using Google.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
+  async loginWithGoogle(options = {}) {
+    const session = await Google.login(options);
+    return this.connect(Google.identity, session, options);
+  }
 
-      const query = new Query().equalTo('identity', identity);
-      const request = new NetworkRequest({
-        method: RequestMethod.GET,
-        authType: AuthType.None,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`
-        }),
-        query: query,
-        properties: options.properties,
-        timeout: options.timeout
-      });
-      return request.execute();
-    });
+  static loginWithGoogle(options = {}) {
+    const user = new User({});
+    return user.loginWithGoogle(options);
+  }
 
-    promise = promise
-      .then(response => {
-        if (response.data.length === 1) {
-          const helloSettings = {};
-          helloSettings[identity] = response.data[0].key || response.data[0].appId || response.data[0].clientId;
-          hello.init(helloSettings);
-          return hello(identity).login();
-        }
+  /**
+   * Login using LinkedIn.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
+  async loginWithLinkedIn(options = {}) {
+    const session = await LinkedIn.login(options);
+    return this.connect(LinkedIn.identity, session, options);
+  }
 
-        throw new KinveyError('Unsupported identity.');
-      })
-      .then(() => {
-        const authResponse = hello(identity).getAuthResponse();
-        return this.connect(identity, authResponse, options);
-      });
+  static loginWithLinkedIn(options = {}) {
+    const user = new User({});
+    return user.loginWithLinkedIn(options);
+  }
 
-    return promise;
+  /**
+   * Login using Windows.
+   *
+   * @param  {Object}         [options={}]  Options
+   * @return {Promise<User>}                The connected user.
+   */
+  async loginWithWindows(options = {}) {
+    const session = await Windows.login(options);
+    return this.connect(Windows.identity, session, options);
+  }
+
+  static loginWithWindows(options = {}) {
+    const user = new User({});
+    return user.loginWithWindows(options);
   }
 
   /**
    * @private
+   * Connects the user with an identity.
    *
-   * Connects with the provided accessToken and identity.
-   *
-   * @param  {SocialIdentity|string}         identity      Identity used to connect the user.
-   * @param  {string}                        accessToken   Access token for the identity.
-   * @param  {number}                        [expiresIn]   Time in seconds for how long the access token is valid.
-   * @param  {Object}                        [options={}]  Options
-   * @return {Promise<User>}                               The connected user.
-   *
-   * @example
-   * var token = {
-   *   access_token: 'access_token',
-   *   refresh_token: 'refresh_token',
-   *   expires_in: 3600
-   * };
-   * var promise = user.connect(SocialIdentity.Facebook, token);
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param {SocialIdentity|string} identity Identity to connect the user.
+   * @param {string} session Identity session.
+   * @param  {Object} [options={}] Options
+   * @return {Promise<User>} The user.
    */
-  connect(identity, token, options = {}) {
+  async connect(identity, session, options = {}) {
     const data = this.data;
     const socialIdentity = data[socialIdentityAttribute] || {};
-    socialIdentity[identity] = token;
+    socialIdentity[identity] = session;
     data[socialIdentityAttribute] = socialIdentity;
     this.data = data;
 
-    const promise = Promise.resolve()
-      .then(() => {
-        const isActive = this.isActive();
+    try {
+      const isActive = this.isActive();
 
-        if (isActive) {
-          options._identity = identity;
-          return this.update(data, options);
-        }
+      if (isActive) {
+        options._identity = identity;
+        return this.update(data, options);
+      }
 
-        return this.login(data, null, options);
-      })
-      .catch(err => {
-        if (err instanceof NotFoundError) {
-          return this.signup(data, options).then(() => this.connect(identity, token, options));
-        }
+      await this.login(data, null, options);
 
-        throw err;
-      })
-      .then(() => {
-        setActiveSocialIdentity(this.client, {
-          identity: identity,
-          token: this[socialIdentityAttribute][identity],
-          redirectUri: options.redirectUri,
-          client: options.micClient
-        });
-        return this;
+      setActiveSocialIdentity(this.client, {
+        identity: identity,
+        token: this[socialIdentityAttribute][identity],
+        redirectUri: options.redirectUri,
+        client: options.micClient
       });
 
-    return promise;
+      return this;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        await this.signup(data, options);
+        return this.connect(identity, session, options);
+      }
+
+      throw error;
+    }
   }
 
-  disconnect(identity, options = {}) {
+  /**
+   * @private
+   * Disconnects the user from an identity.
+   *
+   * @param {SocialIdentity|string} identity Identity used to connect the user.
+   * @param  {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  async disconnect(identity, options = {}) {
     const data = this.data;
     const socialIdentity = data[socialIdentityAttribute] || {};
     delete socialIdentity[identity];
     data[socialIdentityAttribute] = socialIdentity;
     this.data = data;
 
-    const promise = Promise.resolve().then(() => {
-      if (!this[idAttribute]) {
-        return this;
-      }
-
-      return this.update(data, options);
-    }).then(() => {
-      const activeSocialIdentity = this.client.activeSocialIdentity;
-
-      if (activeSocialIdentity.identity === identity) {
-        setActiveSocialIdentity(this.client, null);
-      }
-
+    if (!this[idAttribute]) {
       return this;
-    });
+    }
 
-    return promise;
+    await this.update(data, options);
+    const activeSocialIdentity = this.client.activeSocialIdentity;
+
+    if (activeSocialIdentity.identity === identity) {
+      setActiveSocialIdentity(this.client, null);
+    }
+
+    return this;
   }
 
+  /**
+   * Logout the active user.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  async logout() {
+    try {
+      // TODO: lookup social identity used to login and logout
+    } catch (error) {
+      // Just catch the error
+    }
+
+    setActiveUser(this.client, null);
+    await DataStore.clearCache({ client: this.client });
+    return this;
+  }
+
+  /**
+   * Sign up a user with Kinvey.
+   *
+   * @param {User|Object} data Users data.
+   * @param {Object} [options] Options
+   * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
+   *                                       being signed up.
+   * @return {Promise<User>} The user.
+   */
+  async signup(data, options = {}) {
+    options = assign({
+      state: true
+    }, options);
+
+    if (options.state === true) {
+      const activeUser = User.getActiveUser(this.client);
+      if (activeUser) {
+        throw new ActiveUserError('An active user already exists.'
+          + ' Please logout the active user before you login.');
+      }
+    }
+
+    if (data instanceof User) {
+      data = data.data;
+    }
+
+    this.data = await Kinvey.signup(data, options);
+    if (options.state === true) {
+      setActiveUser(this.client, this.data);
+    }
+    return this;
+  }
+
+  /**
+   * Sign up a user with Kinvey.
+   *
+   * @param {User|Object} data Users data.
+   * @param {Object} [options] Options
+   * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
+   *                                       being signed up.
+   * @return {Promise<User>} The user.
+   */
   static signup(data, options) {
     const user = new User();
     return user.signup(data, options);
   }
 
-  static signupWithIdentity(identity, tokens, options) {
-    const user = new User();
-    return user.signupWithIdentity(identity, tokens, options);
-  }
-
   /**
-   * Sign up. If options.state is set to true then the user
-   * will be set as the active user after succesfully signing up the
-   * user.
+   * Sign up a user with Kinvey using an identity.
    *
-   * @param  {User|Object}    data                    Users data.
-   * @param  {Object}         [options={}]            Options
-   * @param  {Boolean}        [options.state=true]    If set to true, the user will be
-   *                                                  set as the active user after successfully
-   *                                                  being signed up.
-   * @return {Promise<User>}                          The signed up user.
-   *
-   * @example
-   * var promise = user.signup({
-   *   username: 'admin',
-   *   password: 'admin'
-   * });
-   * promise.then(function(user) {
-   *   ...
-   * }).catch(function(error) {
-   *   ...
-   * });
+   * @param {SocialIdentity|string} identity The identity.
+   * @param {Object} session Identity session
+   * @param {Object} [options] Options
+   * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
+   *                                       being signed up.
+   * @return {Promise<User>} The user.
    */
-  signup(data, options = {}) {
-    options = assign({
-      state: true
-    }, options);
-
-    const promise = Promise.resolve()
-      .then(() => {
-        if (options.state === true) {
-          const activeUser = User.getActiveUser(this.client);
-          if (activeUser) {
-            throw new ActiveUserError('An active user already exists. ' +
-              'Please logout the active user before you login.');
-          }
-        }
-      })
-      .then(() => {
-        const request = new NetworkRequest({
-          method: RequestMethod.POST,
-          authType: AuthType.App,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `/${usersNamespace}/${this.client.appKey}`
-          }),
-          data: result(data, 'toJSON', data),
-          properties: options.properties,
-          timeout: options.timeout
-        });
-        return request.execute();
-      })
-      .then(response => {
-        this.data = response.data;
-
-        if (options.state === true) {
-          setActiveUser(this.client, this.data);
-        }
-
-        return this;
-      });
-
-    return promise;
-  }
-
-  signupWithIdentity(identity, tokens, options) {
+  signupWithIdentity(identity, session, options) {
     const data = {};
     data[socialIdentityAttribute] = {};
-    data[socialIdentityAttribute][identity] = tokens;
+    data[socialIdentityAttribute][identity] = session;
     return this.signup(data, options);
   }
 
-  update(data, options) {
-    data = assign(this.data, data);
-    const userStore = new UserStore();
-    return userStore.update(data, options).then(data => {
-      this.data = data;
-
-      if (this.isActive()) {
-        setActiveUser(this.client, this.data);
-      }
-
-      return this;
-    });
+  /**
+   * Sign up a user with Kinvey using an identity.
+   *
+   * @param {SocialIdentity|string} identity The identity.
+   * @param {Object} session Identity session
+   * @param {Object} [options] Options
+   * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
+   *                                       being signed up.
+   * @return {Promise<User>} The user.
+   */
+  static signupWithIdentity(identity, session, options) {
+    const user = new User();
+    return user.signupWithIdentity(identity, session, options);
   }
 
-  me(options = {}) {
-    const request = new NetworkRequest({
+  /**
+   * Update the users data.
+   *
+   * @param {Object} data Data.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  async update(data, options) {
+    data = assign(this.data, data);
+    const userStore = new UserStore();
+    data = await userStore.update(data, options);
+    this.data = data;
+
+    if (this.isActive()) {
+      setActiveUser(this.client, this.data);
+    }
+
+    return this;
+  }
+
+  /**
+   * Retfresh the users data.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  async me(options = {}) {
+    const config = new KinveyRequestConfig({
       method: RequestMethod.GET,
       authType: AuthType.Session,
       url: url.format({
@@ -821,32 +670,30 @@ export class User {
       properties: options.properties,
       timeout: options.timeout
     });
+    const request = new NetworkRequest(config);
+    const response = await request.execute();
+    this.data = response.data;
 
-    const promise = request.execute().then(response => {
-      this.data = response.data;
+    if (!this.authtoken) {
+      const activeUser = User.getActiveUser(this.client);
 
-      if (!this.authtoken) {
-        const activeUser = User.getActiveUser(this.client);
-
-        if (activeUser) {
-          this.authtoken = activeUser.authtoken;
-        }
+      if (activeUser) {
+        this.authtoken = activeUser.authtoken;
       }
+    }
 
-      setActiveUser(this.client, this.data);
-      return this;
-    });
-
-    return promise;
+    setActiveUser(this.client, this.data);
+    return this;
   }
 
-  isEmailVerified() {
-    const status = this.metadata.emailVerification;
-    return status === 'confirmed';
-  }
-
-  verifyEmail(options = {}) {
-    const request = new NetworkRequest({
+  /**
+   * Request an email to be sent to verify the users email.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
+  async verifyEmail(options = {}) {
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -858,13 +705,19 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-
-    const promise = request.execute().then(response => response.data);
-    return promise;
+    const request = new NetworkRequest(config);
+    const { data } = await request.execute();
+    return data;
   }
 
-  forgotUsername(options = {}) {
-    const request = new NetworkRequest({
+  /**
+   * Request an email to be sent to recover a forgot username.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
+  async forgotUsername(options = {}) {
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -877,15 +730,29 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-
-    const promise = request.execute().then(response => response.data);
-    return promise;
+    const request = new NetworkRequest(config);
+    const { data } = await request.execute();
+    return data;
   }
 
-  toJSON() {
-    return this.data;
+  /**
+   * Request an email to be sent to reset the users password.
+   *
+   * @param {Object} [options = {}] Options
+   * @return {Promise<Object>} The response.
+   */
+  resetPassword(options = {}) {
+    options.client = this.client;
+    return User.resetPassword(this.username, options);
   }
 
+  /**
+   * Request an email to be sent to reset a users password.
+   *
+   * @param {string} username Username
+   * @param {Object} [options={}] Options
+   * @return {Promise<Object>} The response.
+   */
   static async resetPassword(username, options = {}) {
     if (!username) {
       throw new KinveyError('A username was not provided.',
@@ -897,7 +764,7 @@ export class User {
     }
 
     const client = options.client || Client.sharedInstance();
-    const request = new NetworkRequest({
+    const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -909,7 +776,32 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const response = await request.execute();
-    return response.data;
+    const request = new NetworkRequest(config);
+    const { data } = await request.execute();
+    return data;
+  }
+
+  /**
+   * Check if a username already exists.
+   *
+   * @param {string} username Username
+   * @param {Object} [options] Options
+   * @return {boolean} True if the username already exists otherwise false.
+   */
+  static exists(username, options) {
+    const store = new UserStore();
+    return store.exists(username, options);
+  }
+
+  /**
+   * Restore a user that has been suspended.
+   *
+   * @param {string} id Id of the user to restore.
+   * @param {Object} [options] Options
+   * @return {Promise<Object>} The response.
+   */
+  static restore(id, options) {
+    const store = new UserStore();
+    return store.restore(id, options);
   }
 }

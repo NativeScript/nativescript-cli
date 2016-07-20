@@ -18,7 +18,7 @@ import { Headers } from './request';
 import assign from 'lodash/assign';
 
 /**
- * @provate
+ * @private
  * Enum for Status Codes.
  */
 const StatusCode = {

@@ -8,7 +8,7 @@ import { Query } from './query';
 import { DataStore, DataStoreType } from './datastore';
 import { FileStore } from './filestore';
 import { Sync } from './sync';
-import { User, UserStore } from './user';
+import { User } from './user';
 import { AuthorizationGrant, SocialIdentity } from './mic';
 import { NetworkRequest } from './requests/network';
 import { AuthType, RequestMethod } from './requests/request';
@@ -137,7 +137,6 @@ export class Kinvey {
     this.SocialIdentity = SocialIdentity;
     this.Sync = Sync;
     this.User = User;
-    this.UserStore = UserStore;
 
     // Return the client
     return client;
