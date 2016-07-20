@@ -1,10 +1,10 @@
-import {PlatformLiveSyncServiceBase} from "./platform-livesync-service-base";
+import {DeviceLiveSyncServiceBase} from "./device-livesync-service-base";
 import * as helpers from "../../common/helpers";
 import * as net from "net";
 
 let currentPageReloadId = 0;
 
-class IOSLiveSyncService extends PlatformLiveSyncServiceBase<Mobile.IiOSDevice> implements IPlatformLiveSyncService {
+class IOSLiveSyncService extends DeviceLiveSyncServiceBase<Mobile.IiOSDevice> implements IDeviceLiveSyncService {
 	private static BACKEND_PORT = 18181;
 	private socket: net.Socket;
 

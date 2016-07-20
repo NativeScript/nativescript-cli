@@ -12,7 +12,6 @@ $injector.require("androidProjectService", "./services/android-project-service")
 $injector.require("iOSProjectService", "./services/ios-project-service");
 
 $injector.require("cocoapodsService", "./services/cocoapods-service");
-$injector.require("liveSyncServiceBase", "./services/livesync/livesync-service-base");
 
 $injector.require("projectTemplatesService", "./services/project-templates-service");
 $injector.require("projectNameService", "./services/project-name-service");
@@ -105,8 +104,10 @@ $injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 $injector.requireCommand("livesync", "./commands/livesync");
 $injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
-$injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-livesync-service");
-$injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-livesync-service");
+$injector.require("iosPlatformLiveSyncServiceLocator", "./services/livesync/ios-platform-livesync-service");
+$injector.require("iosLiveSyncServiceLocator", "./services/livesync/ios-device-livesync-service");
+$injector.require("androidPlatformLiveSyncServiceLocator", "./services/livesync/android-platform-livesync-service");
+$injector.require("androidLiveSyncServiceLocator", "./services/livesync/android-device-livesync-service");
 
 $injector.require("sysInfo", "./sys-info");
 

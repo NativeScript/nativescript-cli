@@ -1,12 +1,12 @@
 import {DeviceAndroidDebugBridge} from "../../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
-import {PlatformLiveSyncServiceBase} from "./platform-livesync-service-base";
+import {DeviceLiveSyncServiceBase} from "./device-livesync-service-base";
 import Future = require("fibers/future");
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as net from "net";
 
-class AndroidLiveSyncService extends PlatformLiveSyncServiceBase<Mobile.IAndroidDevice> implements IPlatformLiveSyncService {
+class AndroidLiveSyncService extends DeviceLiveSyncServiceBase<Mobile.IAndroidDevice> implements IDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
 
 	constructor(_device: Mobile.IDevice,

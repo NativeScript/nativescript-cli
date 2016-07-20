@@ -61,6 +61,11 @@ interface ILiveSyncService {
 	forceExecuteFullSync: boolean;
 }
 
+interface IPlatformLiveSyncService {
+	fullSync(): IFuture<void>;
+	partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher): void;
+}
+
 interface IOptions extends ICommonOptions {
 	all: boolean;
 	baseConfig: string;
