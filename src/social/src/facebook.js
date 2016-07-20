@@ -9,7 +9,7 @@ import assign from 'lodash/assign';
 import url from 'url';
 
 export class Facebook extends Social {
-  get identity() {
+  static get identity() {
     return SocialIdentity.Facebook;
   }
 

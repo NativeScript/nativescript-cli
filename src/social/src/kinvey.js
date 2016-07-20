@@ -9,7 +9,7 @@ const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const socialIdentityAttribute = process.env.KINVEY_SOCIAL_IDENTITY_ATTRIBUTE || '_socialIdentity';
 
 export class Kinvey extends Social {
-  get identity() {
+  static get identity() {
     return SocialIdentity.Kinvey;
   }
 

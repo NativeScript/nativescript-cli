@@ -21,8 +21,9 @@ if (typeof window !== 'undefined') {
 const SocialIdentity = {
   Facebook: 'facebook',
   Google: 'google',
-  Kinvey: 'kinvey',
+  Kinvey: process.env.KINVEY_IDENTITY || 'kinvey',
   LinkedIn: 'linkedin',
+  MobileIdentityConnect: process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth',
   Windows: 'windows'
 };
 Object.freeze(SocialIdentity);
@@ -33,7 +34,7 @@ export class Social {
     this.client = options.client || Client.sharedInstance();
   }
 
-  get identity() {
+  static get identity() {
     throw new KinveyError('A subclass must override this property.');
   }
 
