@@ -21,8 +21,8 @@ networkRack.swap(CoreHttpMiddleware, new HttpMiddleware());
 Device.ready().then(() => {
   if (Device.isPhoneGap() && typeof global.device === 'undefined') {
     throw new KinveyError('Cordova Device Plugin is not installed.'
-      + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
-      + ' setting up your project.');
+    + ' Please refer to devcenter.kinvey.com/phonegap-v3.0/guides/getting-started for help with'
+    + ' setting up your project.');
   }
 });
 
@@ -31,5 +31,22 @@ global.KinveyDevice = Device;
 global.KinveyPopup = Popup;
 
 // Register the SDK as a provider
-const ngKinvey = angular.module('kinvey', []);
-ngKinvey.provider('$kinvey', KinveyProvider);
+function getKinveyModule() {
+  return angular
+  .module('kinvey', [])
+  .provider('$kinvey', KinveyProvider);
+}
+
+// @see http://addyosmani.com/writing-modular-js/
+
+if (typeof window.define === 'function' && window.define.amd !== undefined) {
+  // AMD suppport
+  window.define('kinvey', [], getKinveyModule());
+} else if (typeof module !== 'undefined' && module.exports !== undefined) {
+  // CommonJS suppport
+  module.exports = getKinveyModule();
+} else {
+  // Default
+  // make kinvey available globally
+  getKinveyModule();
+}
