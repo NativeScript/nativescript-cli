@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Social } from './social';
+import { Social, SocialIdentity } from './social';
 import { Promise } from 'es6-promise';
 import { KinveyError } from '../../errors';
 import { randomString } from '../../utils/string';
@@ -10,37 +10,42 @@ import url from 'url';
 
 export class Facebook extends Social {
   get identity() {
-    return 'Facebook';
+    return SocialIdentity.Facebook;
   }
 
-  async login(redirectUrl, options = {}) {
+  isSupported() {
+    return !!global.KinveyPopup;
+  }
+
+  async login(options = {}) {
     options = assign({
       rerequest: false,
       scope: 'public_profile'
     }, options);
 
-    // If the app is already logged in and has a token
-    // then just return the token.
-    if (this.loggedIn) {
-      const token = this.token;
-
-      if (token) {
-        return token;
-      }
+    if (!this.isSupported()) {
+      throw new KinveyError(`Unable to login with ${this.identity}. It is not supported on this platform.`);
     }
 
-    // Throw an error if we do not have a way to present the popup.
-    if (!global.KinveyPopup) {
-      throw new KinveyError('KinveyPopup is undefined. Unable to login with Facebook.');
+    const session = this.session;
+    if (session && this.isOnline(session)) {
+      return session;
+    }
+
+    const clientId = await this.findClientId(options);
+    if (!clientId) {
+      throw new KinveyError(`Unable to login with ${this.identity}. `
+        + ' No client id was provided. Please make sure you have setup your backend correctly.');
     }
 
     const promise = new Promise((resolve, reject) => {
+      const redirectUri = '';
       const popup = new global.KinveyPopup();
       let redirected = false;
       const query = {
         client_id: this.appId,
-        redirect_uri: redirectUrl,
-        response_type: 'token',
+        redirect_uri: redirectUri,
+        response_type: 'code',
         scope: options.scope,
         state: randomString()
       };
@@ -55,6 +60,8 @@ export class Facebook extends Social {
       function oauthCallback(urlString) {
         const {
           access_token,
+          token_type,
+          expires_in,
           error,
           error_description,
           error_reason,
@@ -63,22 +70,27 @@ export class Facebook extends Social {
 
         if (state === query.state) {
           if (access_token) {
-            const token = { accessToken: access_token };
+            const session = {
+              access_token: access_token,
+              type: token_type,
+              expires_in: expires_in,
+              clientId: clientId
+            };
             this.loggedIn = true;
-            this.token = token;
-            resolve(token);
+            this.session = session;
+            resolve(session);
           } else if (error) {
             this.loggedIn = false;
-            this.token = null;
+            this.session = null;
             reject({ reason: error_reason, error: error, description: error_description });
           } else {
             this.loggedIn = false;
-            this.token = null;
+            this.session = null;
             reject({ reason: 'not_authorized', error: 'access_denied', description: 'Your app is not authorized.' });
           }
         } else {
           this.loggedIn = false;
-          this.token = null;
+          this.session = null;
           reject({ reason: 'state_mismatch', error: 'access_denied', description: 'The state did not match.' });
         }
       }
@@ -87,7 +99,7 @@ export class Facebook extends Social {
         const urlString = event.url;
 
         try {
-          if (urlString && urlString.indexOf(redirectUrl) === 0 && redirected === false) {
+          if (urlString && urlString.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
@@ -102,7 +114,7 @@ export class Facebook extends Social {
         const urlString = event.url;
 
         try {
-          if (urlString && urlString.indexOf(redirectUrl) === 0 && redirected === false) {
+          if (urlString && urlString.indexOf(redirectUri) === 0 && redirected === false) {
             redirected = true;
             popup.removeAllListeners();
             popup.close();
@@ -137,6 +149,18 @@ export class Facebook extends Social {
     });
 
     return promise;
+  }
+
+  async logout() {
+    const session = this.session;
+
+    // If nobody has logged in then just return because we are logged out
+    if (!session) {
+      return;
+    }
+
+    // Logout
+    this.session = null;
   }
 }
 
