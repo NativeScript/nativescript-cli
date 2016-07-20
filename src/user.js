@@ -2,12 +2,18 @@ import { Client } from './client';
 import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
-import { MobileIdentityConnect } from './mic';
 import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
 import { DataStore, NetworkStore } from './datastore';
 import { NetworkRequest } from './requests/network';
 import { Promise } from 'es6-promise';
-import { Facebook, Google, Kinvey, LinkedIn, Windows } from './social';
+import {
+  Facebook,
+  Google,
+  Kinvey,
+  LinkedIn,
+  MobileIdentityConnect,
+  Windows
+} from './social';
 import { setActiveUser, setActiveSocialIdentity } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
@@ -374,13 +380,12 @@ export class User {
    * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  loginWithMIC(redirectUri, authorizationGrant, options) {
-    const mic = new MobileIdentityConnect(this.client);
-    return mic.login(redirectUri, authorizationGrant, options).then(token => {
-      options.redirectUri = redirectUri;
-      options.micClient = result(mic.client, 'toJSON', mic.client);
-      return this.connect(MobileIdentityConnect.identity, token, options);
-    });
+  async loginWithMIC(redirectUri, authorizationGrant, options) {
+    const mic = new MobileIdentityConnect({ client: this.client });
+    const session = await mic.login(redirectUri, authorizationGrant, options);
+    options.redirectUri = redirectUri;
+    options.micClient = result(mic.client, 'toJSON', mic.client);
+    return this.connect(MobileIdentityConnect.identity, session, options);
   }
 
   /**
@@ -392,9 +397,8 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const client = options.client || Client.sharedInstance();
     const user = new User();
-    user.client = client;
+    user.client = options.client || Client.sharedInstance();
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
