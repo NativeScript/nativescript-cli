@@ -7,6 +7,9 @@ import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
 import isFunction from 'lodash/isFunction';
 
+/**
+ * @private
+ */
 export class Aggregation {
   constructor(options) {
     options = assign({

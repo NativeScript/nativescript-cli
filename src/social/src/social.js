@@ -9,6 +9,9 @@ if (typeof window !== 'undefined') {
   hello = require('hellojs'); // eslint-disable-line global-require
 }
 
+/**
+ * @private
+ */
 export class Social {
   constructor(options = {}) {
     this.client = options.client || Client.sharedInstance();

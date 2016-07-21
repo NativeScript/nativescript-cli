@@ -35,6 +35,9 @@ const StatusCode = {
 Object.freeze(StatusCode);
 export { StatusCode };
 
+/**
+ * @private
+ */
 export class ResponseConfig {
   constructor(options = {}) {
     options = assign({
@@ -69,6 +72,9 @@ export class ResponseConfig {
   }
 }
 
+/**
+ * @private
+ */
 export class KinveyResponseConfig extends ResponseConfig {}
 
 /**
@@ -130,6 +136,9 @@ export class Response {
   }
 }
 
+/**
+ * @private
+ */
 export class KinveyResponse extends Response {
   get config() {
     return super.config;

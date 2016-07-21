@@ -12,6 +12,8 @@ const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
+ * @property  {string}    AuthorizationCodeLoginPage   AuthorizationCodeLoginPage grant
+ * @property  {string}    AuthorizationCodeAPI         AuthorizationCodeAPI grant
  */
 const AuthorizationGrant = {
   AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',

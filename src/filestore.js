@@ -31,6 +31,7 @@ function getStartIndex(rangeHeader, max) {
  */
 export class FileStore extends NetworkStore {
   /**
+   * @private
    * The pathname for the store.
    *
    * @return  {string}  Pathname
@@ -93,21 +94,18 @@ export class FileStore extends NetworkStore {
   }
 
   /**
-   * Download a file. A promise will be returned that will be resolved with the file or rejected with
-   * an error.
+   * Download a file.
    *
    * @param   {string}        name                                          Name
    * @param   {Object}        [options]                                     Options
    * @param   {Boolean}       [options.tls]                                 Use Transport Layer Security
    * @param   {Number}        [options.ttl]                                 Time To Live (in seconds)
-   * @param   {Boolean}       [options.stream]                              Stream the file
-   * @param   {DataPolicy}    [options.dataPolicy=DataPolicy.NetworkFirst]  Data policy
-   * @param   {AuthType}      [options.authType=AuthType.Default]           Auth type
-   * @return  {Promise}                                                     Promise
+   * @param   {Boolean}       [options.stream=false]                        Stream the file
+   * @return  {Promise<string>}                                             File content
    *
    * @example
    * var files = new Kinvey.Files();
-   * files.download('BostonTeaParty.png', {
+   * files.download('Kinvey.png', {
    *   tls: true, // Use transport layer security
    *   ttl: 60 * 60 * 24, // 1 day in seconds
    *   stream: true // stream the file
@@ -135,6 +133,13 @@ export class FileStore extends NetworkStore {
     return this.downloadByUrl(file._downloadURL, options);
   }
 
+  /**
+   * Download a file using a url.
+   *
+   * @param   {string}        url                                           File download url
+   * @param   {Object}        [options]                                     Options
+   * @return  {Promise<string>}                                             File content.
+  */
   async downloadByUrl(url, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.GET,
@@ -175,6 +180,14 @@ export class FileStore extends NetworkStore {
     return this.download(name, options);
   }
 
+  /**
+   * Upload a file.
+   *
+   * @param {Blob|string} file  File content
+   * @param {Object} [metadata={}] File metadata
+   * @param {Object} [options={}] Options
+   * @return {Promise<File>} A file entity.
+   */
   async upload(file, metadata = {}, options = {}) {
     // Set defaults for metadata
     metadata = assign({
@@ -263,6 +276,9 @@ export class FileStore extends NetworkStore {
     return data;
   }
 
+  /**
+   * @private
+   */
   async uploadToGCS(uploadUrl, headers, file, metadata, options = {}) {
     // Set default options
     options = assign({
@@ -343,14 +359,23 @@ export class FileStore extends NetworkStore {
     return response;
   }
 
+  /**
+   * @private
+   */
   create(file, metadata, options) {
     return this.upload(file, metadata, options);
   }
 
+  /**
+   * @private
+   */
   update(file, metadata, options) {
     return this.upload(file, metadata, options);
   }
 
+  /**
+   * @private
+   */
   remove() {
     throw new KinveyError('Please use removeById() to remove files one by one.');
   }

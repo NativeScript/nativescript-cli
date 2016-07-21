@@ -18,7 +18,7 @@ import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 
 /**
- * The Kinvey class is used as the entry point for the Kinvey JavaScript SDk.
+ * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
  */
 export class Kinvey {
   /**

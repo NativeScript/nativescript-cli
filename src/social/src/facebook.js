@@ -9,6 +9,9 @@ import assign from 'lodash/assign';
 import querystring from 'querystring';
 import url from 'url';
 
+/**
+ * @private
+ */
 export class Facebook extends Social {
   get identity() {
     return SocialIdentity.Facebook;

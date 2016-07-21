@@ -1,12 +1,16 @@
 import localStorage from 'local-storage';
 const userCollectionName = process.env.KINVEY_USER_COLLECTION_NAME || 'kinvey_user';
 
-// Get the active user
+/**
+ * @private
+ */
 export function getActiveUser(client) {
   return localStorage.get(`${client.appKey}${userCollectionName}`);
 }
 
-// Set the active user
+/**
+ * @private
+ */
 export function setActiveUser(client, data) {
   if (data) {
     try {
@@ -19,12 +23,16 @@ export function setActiveUser(client, data) {
   return localStorage.remove(`${client.appKey}${userCollectionName}`);
 }
 
-// Get identity session
+/**
+ * @private
+ */
 export function getIdentitySession(client, identity) {
   return localStorage.get(`${client.appKey}${identity}`);
 }
 
-// Set identity session
+/**
+ * @private
+ */
 export function setIdentitySession(client, identity, session) {
   if (session) {
     try {
