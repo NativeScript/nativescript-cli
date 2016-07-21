@@ -1,4 +1,4 @@
-PLUGINS
+Plugins
 =========
 
 Starting with NativeScript CLI 1.1.0, you can develop or use plugins in your NativeScript projects.
@@ -31,7 +31,7 @@ A NativeScript plugin is any npm package, published or not, that exposes a nativ
 
 The plugin must have the directory structure, described in the [Directory Structure](#directory-structure) section.
 
-# Where Can You Find NativeScript Plugins
+## Where Can You Find NativeScript Plugins
 
 You can find a list of Telerik-verified NativeScript plugins on the [Telerik Verified Plugin Marketplace](http://plugins.telerik.com/nativescript), and a list of community-written NativeScript plugins by [searching for “nativescript” on npm](https://www.npmjs.com/search?q=nativescript).
 
