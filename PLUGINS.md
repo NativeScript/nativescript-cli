@@ -4,6 +4,7 @@ PLUGINS
 Starting with NativeScript CLI 1.1.0, you can develop or use plugins in your NativeScript projects.
 
 * [What Are NativeScript Plugins](#what-are-nativescript-plugins)
+* [Where Can You Find NativeScript Plugins](#where-can-you-find-nativescript-plugins)
 * [Create a Plugin](#create-a-plugin)
   * [Directory Structure](#directory-structure)
   * [`package.json` Specification](#packagejson-specification)
@@ -29,6 +30,10 @@ A NativeScript plugin is any npm package, published or not, that exposes a nativ
 * (Optional) Native iOS libraries and the native `build.xcconfig` configuration file which describes the native dependencies. For more information, see the [`build.xcconfig` Specification](#buildxcconfig-specification) section.
 
 The plugin must have the directory structure, described in the [Directory Structure](#directory-structure) section.
+
+# Where Can You Find NativeScript Plugins
+
+You can find a list of Telerik-verified NativeScript plugins on the [Telerik Verified Plugin Marketplace](http://plugins.telerik.com/nativescript), and a list of community-written NativeScript plugins by [searching for “nativescript” on npm](https://www.npmjs.com/search?q=nativescript).
 
 ## Create a Plugin
 
