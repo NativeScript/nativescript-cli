@@ -46,7 +46,7 @@
     "glob": "^7.0.3",
     "iconv-lite": "0.4.11",
     "inquirer": "0.9.0",
-    "ios-sim-portable": "~1.1.0",
+    "ios-sim-portable": "~1.2.0",
     "lockfile": "1.0.1",
     "lodash": "4.13.1",
     "log4js": "0.6.26",

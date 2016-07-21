@@ -10,6 +10,7 @@ export class Configuration extends ConfigBase implements IConfiguration { // Use
 	USE_PROXY = false;
 	ANDROID_DEBUG_UI: string = null;
 	USE_POD_SANDBOX: boolean = true;
+	debugLivesync: boolean = false;
 
 	/*don't require logger and everything that has logger as dependency in config.js due to cyclic dependency*/
 	constructor(protected $fs: IFileSystem) {

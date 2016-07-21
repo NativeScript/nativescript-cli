@@ -11,6 +11,7 @@ interface IPlatformService {
 	buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	installOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
+	startOnDevice(platform: string): IFuture<void>;
 	deployOnEmulator(platform: string, buildConfig?: IBuildConfig): IFuture<void>;
 	validatePlatformInstalled(platform: string): void;
 	validatePlatform(platform: string): void;

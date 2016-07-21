@@ -20,10 +20,11 @@ class AndroidLiveSyncService extends PlatformLiveSyncServiceBase<Mobile.IAndroid
 		super(_device, $liveSyncProvider);
 	}
 
+	public get debugService(): IDebugService {
+		return this.$androidDebugService;
+	}
+
 	public restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		if (this.$options.debug) {
-			return this.$androidDebugService.debug();
-		}
 		return (() => {
 			this.device.adb.executeShellCommand(["chmod", "777", deviceAppData.deviceProjectRootPath, `/data/local/tmp/${deviceAppData.appIdentifier}`]).wait();
 

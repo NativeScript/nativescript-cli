@@ -2,6 +2,7 @@ import * as iOSDevice from "../common/mobile/ios/device/ios-device";
 import * as net from "net";
 import * as path from "path";
 import * as semver from "semver";
+import {ChildProcess} from "child_process";
 import byline = require("byline");
 
 const inspectorBackendPort = 18181;
@@ -13,6 +14,7 @@ const TIMEOUT_SECONDS = 90;
 
 class IOSDebugService implements IDebugService {
 	constructor(
+		private $config: IConfiguration,
 		private $platformService: IPlatformService,
 		private $iOSEmulatorServices: Mobile.IEmulatorPlatformServices,
 		private $devicesService: Mobile.IDevicesService,
@@ -30,6 +32,8 @@ class IOSDebugService implements IDebugService {
 		private $iOSNotification: IiOSNotification,
 		private $iOSSocketRequestExecutor: IiOSSocketRequestExecutor,
 		private $socketProxyFactory: ISocketProxyFactory) { }
+
+	private _lldbProcess: ChildProcess;
 
 	public get platform(): string {
 		return "ios";
@@ -70,6 +74,16 @@ class IOSDebugService implements IDebugService {
 		}).future<void>()();
 	}
 
+	public debugStop(): IFuture<void> {
+		return (() => {
+			if (this._lldbProcess) {
+				this._lldbProcess.stdin.write("process detach\n");
+				this._lldbProcess.kill();
+				this._lldbProcess = undefined;
+			}
+		}).future<void>()();
+	}
+
 	private emulatorDebugBrk(shouldBreak?: boolean): IFuture<void> {
 		return (() => {
 			let platformData = this.$platformsData.getPlatformData(this.platform);
@@ -81,7 +95,8 @@ class IOSDebugService implements IDebugService {
 			let args = shouldBreak ? "--nativescript-debug-brk" : "--nativescript-debug-start";
 			let child_process = this.$iOSEmulatorServices.runApplicationOnEmulator(emulatorPackage.packageName, {
 				waitForDebugger: true, captureStdin: true,
-				args: args, appId: this.$projectData.projectId
+				args: args, appId: this.$projectData.projectId,
+				skipInstall: this.$config.debugLivesync
 			}).wait();
 			let lineStream = byline(child_process.stdout);
 
@@ -89,8 +104,8 @@ class IOSDebugService implements IDebugService {
 				let lineText = line.toString();
 				if (lineText && _.startsWith(lineText, this.$projectData.projectId)) {
 					let pid = _.trimStart(lineText, this.$projectData.projectId + ": ");
-
-					this.$childProcess.exec(`lldb -p ${pid} -o "process continue"`);
+					this._lldbProcess = this.$childProcess.spawn("lldb", [ "-p", pid]);
+					this._lldbProcess.stdin.write("process continue\n");
 				} else {
 					process.stdout.write(line + "\n");
 				}
@@ -119,9 +134,14 @@ class IOSDebugService implements IDebugService {
 					return this.emulatorDebugBrk(shouldBreak).wait();
 				}
 				// we intentionally do not wait on this here, because if we did, we'd miss the AppLaunching notification
-				let deploy = this.$platformService.deployOnDevice(this.platform);
+				let action: IFuture<void>;
+				if (this.$config.debugLivesync) {
+					action = this.$platformService.startOnDevice(this.platform);
+				} else {
+					action = this.$platformService.deployOnDevice(this.platform);
+				}
 				this.debugBrkCore(device, shouldBreak).wait();
-				deploy.wait();
+				action.wait();
 			}).future<void>()()).wait();
 		}).future<void>()();
 	}
