@@ -18,3 +18,21 @@ export function setActiveUser(client, data) {
 
   return localStorage.remove(`${client.appKey}${userCollectionName}`);
 }
+
+// Get identity session
+export function getIdentitySession(client, identity) {
+  return localStorage.get(`${client.appKey}${identity}`);
+}
+
+// Set identity session
+export function setIdentitySession(client, identity, session) {
+  if (session) {
+    try {
+      return localStorage.set(`${client.appKey}${identity}`, session);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return localStorage.remove(`${client.appKey}${identity}`);
+}

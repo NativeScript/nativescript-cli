@@ -1,13 +1,8 @@
 import { Client } from '../../client';
 import { KinveyError } from '../../errors';
-import { NetworkRequest } from '../../requests/network';
-import { AuthType, RequestMethod } from '../../requests/request';
-import { Query } from '../../query';
 import localStorage from 'local-storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
-import url from 'url';
 import assign from 'lodash/assign';
-const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 let hello;
 
 if (typeof window !== 'undefined') {
@@ -19,21 +14,21 @@ export class Social {
     this.client = options.client || Client.sharedInstance();
   }
 
+  get identity() {
+    throw new KinveyError('A subclass must override this property.');
+  }
+
   static get identity() {
     throw new KinveyError('A subclass must override this property.');
   }
 
   get session() {
-    try {
-      return JSON.parse(localStorage.get(`${this.client.appKey}${this.identity}`));
-    } catch (error) {
-      return null;
-    }
+    return localStorage.get(`${this.client.appKey}${this.identity}`);
   }
 
   set session(session) {
     if (session) {
-      localStorage.set(`${this.client.appKey}${this.identity}`, JSON.stringify(session));
+      localStorage.set(`${this.client.appKey}${this.identity}`, session);
     } else {
       localStorage.remove(`${this.client.appKey}${this.identity}`);
     }
@@ -48,83 +43,55 @@ export class Social {
     return session && session.access_token && session.expires > currentTime;
   }
 
-  async findClientId(options = {}) {
+  async login(clientId, options = {}) {
     options = assign({
-      collectionName: 'SocialIdentities'
+      redirectUri: global.location.href,
+      scope: null,
+      force: null
     }, options);
-
-    const query = new Query().equalTo('identity', this.identity);
-    const request = new NetworkRequest({
-      method: RequestMethod.GET,
-      authType: AuthType.None,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: `/${appdataNamespace}/${this.client.appKey}/${options.collectionName}`
-      }),
-      query: query,
-      properties: options.properties,
-      timeout: options.timeout,
-      client: this.client
-    });
-    const { data } = await request.execute();
-
-    if (data.length === 1) {
-      const identityInfo = data[0];
-      return identityInfo.clientId || identityInfo.appId;
-    }
-
-    throw new KinveyError(`To many identities match the ${this.identity} identity`
-      + ` on the backend in the ${options.collectionName} collection.`);
-  }
-
-  async login(options = {}) {
-    let session = this.session;
 
     if (!this.isSupported()) {
       throw new KinveyError(`Unable to login with ${this.identity}. It is not supported on this platform.`);
     }
 
+    let session = this.session;
     if (session && this.isOnline(session)) {
       return session;
     }
 
-    const clientId = await this.findClientId(options);
     if (!clientId) {
       throw new KinveyError(`Unable to login with ${this.identity}. `
-        + ' No client id was provided. Please make sure you have setup your backend correctly.');
+        + ' No client id was provided.');
     }
 
     const helloSettings = {};
     helloSettings[this.identity] = clientId;
     hello.init(helloSettings);
-    await hello(this.identity).login();
+    await hello(this.identity).login({
+      redirect_uri: options.redirectUri,
+      scope: options.scope,
+      force: options.force
+    });
     session = hello(this.identity).getAuthResponse();
     session.clientId = clientId;
     this.session = session;
     return session;
   }
 
-  static login(options) {
-    const social = new this();
-    return social.login(options);
+  static login(clientId, options) {
+    const social = new this(options);
+    return social.login(clientId, options);
   }
 
   async logout() {
-    const session = this.session;
-
-    // If nobody has logged in then just return because we are logged out
-    if (!session) {
-      return;
-    }
-
     if (this.isSupported()) {
       const helloSettings = {};
-      helloSettings[this.identity] = session.clientId;
+      helloSettings[this.identity] = this.session.clientId;
       hello.init(helloSettings);
       await hello(this.identity).logout();
-      this.session = null;
     }
+
+    this.session = null;
   }
 
   static logout() {

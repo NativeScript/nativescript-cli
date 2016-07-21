@@ -24,6 +24,10 @@ export { AuthorizationGrant };
  * @private
  */
 export class MobileIdentityConnect extends Social {
+  get identity() {
+    return SocialIdentity.MobileIdentityConnect;
+  }
+
   static get identity() {
     return SocialIdentity.MobileIdentityConnect;
   }
@@ -31,19 +35,28 @@ export class MobileIdentityConnect extends Social {
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
 
-    const promise = Promise.resolve().then(() => {
-      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-        // Step 1: Request a code
-        return this.requestCodeWithPopup(clientId, redirectUri, options);
-      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-        // Step 1a: Request a temp login url
-        return this.requestTempLoginUrl(clientId, redirectUri, options)
-          .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
-      }
+    const promise = Promise.resolve()
+      .then(() => {
+        if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
+          // Step 1: Request a code
+          return this.requestCodeWithPopup(clientId, redirectUri, options);
+        } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
+          // Step 1a: Request a temp login url
+          return this.requestTempLoginUrl(clientId, redirectUri, options)
+            .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
+        }
 
-      throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
-        'Please use a supported authorization grant.');
-    }).then(code => this.requestToken(code, clientId, redirectUri, options)); // Step 3: Request a token
+        throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
+          'Please use a supported authorization grant.');
+      })
+      .then(code => this.requestToken(code, clientId, redirectUri, options)) // Step 3: Request a token
+      .then(session => {
+        session.client_id = clientId;
+        session.redirect_uri = redirectUri;
+        session.protocol = this.client.micProtocol;
+        session.host = this.client.micHost;
+        return session;
+      });
 
     return promise;
   }
@@ -63,6 +76,9 @@ export class MobileIdentityConnect extends Social {
 
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
@@ -75,7 +91,6 @@ export class MobileIdentityConnect extends Social {
         response_type: 'code'
       }
     });
-    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
     const request = new NetworkRequest(config);
     return request.execute().then(response => response.data.temp_login_uri);
   }
@@ -166,6 +181,9 @@ export class MobileIdentityConnect extends Social {
     const promise = Promise.resolve().then(() => {
       const config = new KinveyRequestConfig({
         method: RequestMethod.POST,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         url: loginUrl,
         properties: options.properties,
         body: {
@@ -177,7 +195,6 @@ export class MobileIdentityConnect extends Social {
         },
         followRedirect: false
       });
-      config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
       const request = new NetworkRequest(config);
       return request.execute();
     }).then(response => {
@@ -197,6 +214,9 @@ export class MobileIdentityConnect extends Social {
   requestToken(code, clientId, redirectUri, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.micProtocol,
@@ -211,9 +231,7 @@ export class MobileIdentityConnect extends Social {
         code: code
       }
     });
-    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
     const request = new NetworkRequest(config);
-    request.automaticallyRefreshAuthToken = false;
     const promise = request.execute().then(response => response.data);
     return promise;
   }

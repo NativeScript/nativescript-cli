@@ -10,10 +10,9 @@ import {
   Facebook,
   Google,
   LinkedIn,
-  MobileIdentityConnect,
-  Windows
+  MobileIdentityConnect
 } from './social';
-import { setActiveUser } from './utils/storage';
+import { setActiveUser, setIdentitySession } from './utils/storage';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -369,7 +368,7 @@ export class User {
       url: url.format({
         protocol: this.client.apiProtocol,
         host: this.client.apiHost,
-        pathname: `/${usersNamespace}/${this.client.appKey}`
+        pathname: `${this.pathname}/login`
       }),
       body: credentials,
       properties: options.properties,
@@ -377,9 +376,8 @@ export class User {
       client: this.client
     });
     const request = new NetworkRequest(config);
-    request.automaticallyRefreshAuthToken = false;
-    const response = await request.execute();
-    this.data = response.data;
+    const { data } = await request.execute();
+    this.data = data;
     setActiveUser(this.client, this.data);
     return this;
   }
@@ -434,9 +432,6 @@ export class User {
 
     const mic = new MobileIdentityConnect({ client: this.client });
     const session = await mic.login(redirectUri, authorizationGrant, options);
-    session.redirect_uri = redirectUri;
-    session.protocol = mic.client.micProtocol;
-    session.host = mic.client.micHost;
     return this.connect(MobileIdentityConnect.identity, session, options);
   }
 
@@ -457,89 +452,70 @@ export class User {
   /**
    * Login using Facebook.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  async loginWithFacebook(options = {}) {
-    const session = await Facebook.login(options);
+  async loginWithFacebook(clientId, options) {
+    const facebook = new Facebook({ client: this.client });
+    const session = await facebook.login(clientId, options);
     return this.connect(Facebook.identity, session, options);
   }
 
   /**
    * Login using Facebook.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  static loginWithFacebook(options = {}) {
+  static loginWithFacebook(clientId, options) {
     const user = new User({});
-    return user.loginWithFacebook(options);
+    return user.loginWithFacebook(clientId, options);
   }
 
   /**
    * Login using Google.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  async loginWithGoogle(options = {}) {
-    const session = await Google.login(options);
+  async loginWithGoogle(clientId, options) {
+    const google = new Google({ client: this.client });
+    const session = await google.login(clientId, options);
     return this.connect(Google.identity, session, options);
   }
 
   /**
    * Login using Google.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  static loginWithGoogle(options = {}) {
+  static loginWithGoogle(clientId, options) {
     const user = new User({});
-    return user.loginWithGoogle(options);
+    return user.loginWithGoogle(clientId, options);
   }
 
   /**
    * Login using LinkedIn.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  async loginWithLinkedIn(options = {}) {
-    const session = await LinkedIn.login(options);
+  async loginWithLinkedIn(clientId, options) {
+    const linkedIn = new LinkedIn({ client: this.client });
+    const session = await linkedIn.login(clientId, options);
     return this.connect(LinkedIn.identity, session, options);
   }
 
   /**
    * Login using LinkedIn.
    *
-   * @param  {Object}         [options={}]  Options
+   * @param  {Object}         [options]     Options
    * @return {Promise<User>}                The connected user.
    */
-  static loginWithLinkedIn(options = {}) {
+  static loginWithLinkedIn(clientId, options) {
     const user = new User({});
-    return user.loginWithLinkedIn(options);
-  }
-
-  /**
-   * Login using Windows.
-   *
-   * @param  {Object}         [options={}]  Options
-   * @return {Promise<User>}                The connected user.
-   */
-  async loginWithWindows(options = {}) {
-    const session = await Windows.login(options);
-    return this.connect(Windows.identity, session, options);
-  }
-
-  /**
-   * Login using Windows.
-   *
-   * @param  {Object}         [options={}]  Options
-   * @return {Promise<User>}                The connected user.
-   */
-  static loginWithWindows(options = {}) {
-    const user = new User({});
-    return user.loginWithWindows(options);
+    return user.loginWithLinkedIn(clientId, options);
   }
 
   /**
@@ -566,6 +542,7 @@ export class User {
       }
 
       await this.login(data, null, options);
+      setIdentitySession(this.client, identity, session);
       return this;
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -595,9 +572,9 @@ export class User {
         await LinkedIn.logout();
       } else if (identity === MobileIdentityConnect.identity) {
         await MobileIdentityConnect.logout();
-      } else if (identity === Windows.identity) {
-        await Windows.logout();
       }
+
+      setIdentitySession(this.client, identity, null);
     } catch (error) {
       // Just catch the error
     }
@@ -624,11 +601,6 @@ export class User {
    */
   async logout(options = {}) {
     try {
-      // Disconnect from connected identities
-      const identities = Object.keys(this.socialIdentity);
-      const promises = identities.map(identity => this.disconnect(identity, options));
-      await Promise.all(promises);
-
       // Logout from Kinvey
       const config = new KinveyRequestConfig({
         method: RequestMethod.POST,
@@ -636,15 +608,19 @@ export class User {
         url: url.format({
           protocol: this.client.apiProtocol,
           host: this.client.apiHost,
-          pathname: `/${usersNamespace}/${this.client.appKey}/_logout`
+          pathname: `${this.pathname}/_logout`
         }),
         properties: options.properties,
         timeout: options.timeout,
-        client: this.client,
-        automaticallyRefreshAuthToken: false
+        client: this.client
       });
       const request = new NetworkRequest(config);
       await request.execute();
+
+      // Disconnect from connected identities
+      const identities = Object.keys(this._socialIdentity);
+      const promises = identities.map(identity => this.disconnect(identity, options));
+      await Promise.all(promises);
     } catch (error) {
       // Just catch the error
     }
@@ -686,7 +662,7 @@ export class User {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `/${usersNamespace}/${this.client.appKey}`
+        pathname: this.pathname
       }),
       body: data,
       properties: options.properties,
@@ -760,8 +736,7 @@ export class User {
   async update(data, options) {
     data = assign(this.data, data);
     const userStore = new UserStore();
-    data = await userStore.update(data, options);
-    this.data = data;
+    await userStore.update(data, options);
 
     if (this.isActive()) {
       setActiveUser(this.client, this.data);
@@ -783,14 +758,14 @@ export class User {
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
-        pathname: `/${usersNamespace}/${this.client.appKey}/_me`
+        pathname: `${this.pathname}/_me`
       }),
       properties: options.properties,
       timeout: options.timeout
     });
     const request = new NetworkRequest(config);
-    const response = await request.execute();
-    this.data = response.data;
+    const { data } = await request.execute();
+    this.data = data;
 
     if (!this.authtoken) {
       const activeUser = User.getActiveUser(this.client);
