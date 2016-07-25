@@ -28,6 +28,9 @@ const SyncOperation = {
 Object.freeze(SyncOperation);
 export { SyncOperation };
 
+/**
+ * @private
+ */
 export class SyncManager {
   constructor(collection, options = {}) {
     if (!collection) {
@@ -282,8 +285,8 @@ export class SyncManager {
 
           // Get the results of syncing all of the entities
           const results = await Promise.all(map(batch, syncEntity => {
-            const originalId = syncEntity.entityId;
-            const method = syncEntity.state.method;
+            const { entityId, state } = syncEntity.entityId;
+            const { method } = state;
 
             if (method === RequestMethod.DELETE) {
               // Remove the entity from the network.
@@ -293,7 +296,7 @@ export class SyncManager {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `${this.backendPathname}/${originalId}`
+                  pathname: `${this.backendPathname}/${entityId}`
                 }),
                 properties: options.properties,
                 timeout: options.timeout,
@@ -301,7 +304,7 @@ export class SyncManager {
               });
               return request.execute()
                 .then(() => {
-                  // Remove the sync entity
+                  // Remove the sync entity from the cache
                   const config = new KinveyRequestConfig({
                     method: RequestMethod.DELETE,
                     url: url.format({
@@ -317,7 +320,7 @@ export class SyncManager {
                 })
                 .then(() => {
                   // Return the result
-                  const result = { _id: originalId };
+                  const result = { _id: entityId };
                   return result;
                 })
                 .catch(async error => {
@@ -332,7 +335,7 @@ export class SyncManager {
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `${this.backendPathname}/${originalId}`
+                          pathname: `${this.backendPathname}/${entityId}`
                         }),
                         properties: options.properties,
                         timeout: options.timeout,
@@ -346,7 +349,7 @@ export class SyncManager {
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `${this.backendPathname}/${originalId}`
+                          pathname: `${this.backendPathname}/${entityId}`
                         }),
                         properties: options.properties,
                         timeout: options.timeout,
@@ -373,7 +376,7 @@ export class SyncManager {
 
                   // Return the result of the sync operation.
                   return {
-                    _id: originalId,
+                    _id: entityId,
                     error: error
                   };
                 });
@@ -384,7 +387,7 @@ export class SyncManager {
                 url: url.format({
                   protocol: this.client.protocol,
                   host: this.client.host,
-                  pathname: `${this.backendPathname}/${originalId}`
+                  pathname: `${this.backendPathname}/${entityId}`
                 }),
                 properties: options.properties,
                 timeout: options.timeout
@@ -393,14 +396,14 @@ export class SyncManager {
               return request.execute().then(response => {
                 const entity = response.data;
 
-                // Save the entity to the network.
+                // Save the entity to the backend.
                 const request = new NetworkRequest({
                   method: method,
                   authType: AuthType.Default,
                   url: url.format({
                     protocol: this.client.protocol,
                     host: this.client.host,
-                    pathname: `${this.backendPathname}/${originalId}`
+                    pathname: `${this.backendPathname}/${entityId}`
                   }),
                   properties: options.properties,
                   timeout: options.timeout,
@@ -452,15 +455,14 @@ export class SyncManager {
                     });
                     entity = await putCacheRequest.execute().then(response => response.data);
 
-                    // Remove the original entity if it was created on the device
-                    // using the SDK.
+                    // Remove the original entity if it was created locally
                     if (method === RequestMethod.POST) {
                       const deleteCacheRequest = new CacheRequest({
                         method: RequestMethod.DELETE,
                         url: url.format({
                           protocol: this.client.protocol,
                           host: this.client.host,
-                          pathname: `${this.backendPathname}/${originalId}`
+                          pathname: `${this.backendPathname}/${entityId}`
                         }),
                         properties: options.properties,
                         timeout: options.timeout
@@ -470,7 +472,7 @@ export class SyncManager {
 
                     // Return the result of the sync operation.
                     return {
-                      _id: originalId,
+                      _id: entityId,
                       entity: entity
                     };
                   })
@@ -490,7 +492,7 @@ export class SyncManager {
                             url: url.format({
                               protocol: this.client.protocol,
                               host: this.client.host,
-                              pathname: `${this.backendPathname}/${originalId}`
+                              pathname: `${this.backendPathname}/${entityId}`
                             }),
                             properties: options.properties,
                             timeout: options.timeout,
@@ -504,7 +506,7 @@ export class SyncManager {
                             url: url.format({
                               protocol: this.client.protocol,
                               host: this.client.host,
-                              pathname: `${this.backendPathname}/${originalId}`
+                              pathname: `${this.backendPathname}/${entityId}`
                             }),
                             properties: options.properties,
                             timeout: options.timeout,
@@ -532,7 +534,7 @@ export class SyncManager {
 
                     // Return the result of the sync operation.
                     return {
-                      _id: originalId,
+                      _id: entityId,
                       entity: entity,
                       error: error
                     };
@@ -541,7 +543,7 @@ export class SyncManager {
             }
 
             return {
-              _id: originalId,
+              _id: entityId,
               entity: undefined,
               error: new SyncError('Unable to sync the entity since the method was not recognized.', syncEntity)
             };
