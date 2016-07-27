@@ -10,6 +10,11 @@ Deploy in Genymotion, run the app and stop at the first code statement | `$ tns 
 Attach the debug tools to a running app on device | `$ tns debug android --start [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [<Emulator Options>] [--timeout <timeout>]`
 Attach the debug tools to a running app in Genymotion | `$ tns debug android --start --geny <Geny Name> [--print-app-output] [--timeout <timeout>]`
+Livesync on device, run the app start Chrome DevTools, and attach the debugger | `$ tns debug android --no-rebuild`
+Livesync on device, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
+Livesync in the native emulator, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
+Livesync in Genymotion, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --geny <Geny Name> [--timeout <timeout>]`
+Livesync on device/emulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug android --no-rebuild --watch [--debug-brk]`
 Retrieve the device port on which you are debugging | `$ tns debug android [--device <Device ID>] --get-port`
 Detach the debug tools | `$ tns debug android --stop`
 
@@ -25,6 +30,8 @@ Debugs your project on a connected device, in a native emulator or in Genymotion
 * `--get-port` - Retrieves the port on which you are debugging your application.
 * `--debug-port` - Sets a new port on which to attach the debug tools.
 * `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
+* `--no-rebuild` - Livesyncs to device/emulator when possible. Otherwise builds and deploys the application.
+* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and the debugger is restarted. This option is available only when using `--no-rebuild`.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`
