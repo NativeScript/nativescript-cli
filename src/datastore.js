@@ -455,6 +455,35 @@ export class NetworkStore {
 
     return stream.toPromise();
   }
+
+  subscribe() {
+    if (this.source){
+      this.unsubscribe();
+    }
+
+    if(typeof(EventSource) !== "undefined") {
+      // Subscribe to KLS
+      this.source = new EventSource(url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname,
+      }));
+    } else {
+      throw new KinveyError("Your environment does not support server-sent events.");
+    }
+
+    return this.source;
+  }
+
+  unsubscribe() {
+    // Close the subscription
+    if (this.source) {
+      this.source.close();
+    }
+
+    this.source = null;
+  }
+
 }
 
 /**
@@ -1317,6 +1346,7 @@ export class SyncStore extends CacheStore {
 
     return stream;
   }
+
 }
 
 /**
