@@ -6,32 +6,26 @@
 		private $childProcess: IChildProcess,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $config: IConfiguration,
+		private $usbLiveSyncService: ILiveSyncService,
 		protected $options: IOptions) { }
 
 	execute(args: string[]): IFuture<void> {
 		if (!this.$options.rebuild && !this.$options.start) {
 			this.$config.debugLivesync = true;
-			let usbLiveSyncService: ILiveSyncService = this.$injector.resolve("usbLiveSyncService");
-			let liveSyncServiceBase: any = this.$injector.resolve("liveSyncServiceBase");
-			let liveSyncProvider: ILiveSyncProvider = this.$injector.resolve("liveSyncProvider");
+			let applicationReloadAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
+				return (() => {
+					let projectData: IProjectData = this.$injector.resolve("projectData");
 
-			liveSyncServiceBase.on("sync", (device: Mobile.IDevice, data: ILiveSyncData) => {
-				let platformLiveSyncService: IPlatformLiveSyncService = this.$injector.resolve(liveSyncProvider.platformSpecificLiveSyncServices[data.platform.toLowerCase()], { _device: device });
-				let projectData: IProjectData = this.$injector.resolve("projectData");
-				let appId = device.isEmulator ? projectData.projectName : data.appIdentifier;
-				if (data.platform === this.$devicePlatformsConstants.iOS) {
-					platformLiveSyncService.debugService.debugStop().wait();
-				}
-				device.applicationManager.stopApplication(appId).wait();
-				platformLiveSyncService.debugService.debug().wait();
-			});
+					this.debugService.debugStop().wait();
 
-			liveSyncServiceBase.on("syncAfterInstall", (device: Mobile.IDevice, data: ILiveSyncData) => {
-				let platformLiveSyncService: IPlatformLiveSyncService = this.$injector.resolve(liveSyncProvider.platformSpecificLiveSyncServices[data.platform.toLowerCase()], { _device: device });
-				platformLiveSyncService.debugService.debug().wait();
-			});
+					let applicationId = deviceAppData.device.isEmulator ? projectData.projectName : deviceAppData.appIdentifier;
+					deviceAppData.device.applicationManager.stopApplication(applicationId).wait();
 
-			return usbLiveSyncService.liveSync(this.$devicesService.platform);
+					this.debugService.debug().wait();
+				}).future<void>()();
+			};
+
+			return this.$usbLiveSyncService.liveSync(this.$devicesService.platform, applicationReloadAction);
 		}
 		return this.debugService.debug();
 	}
@@ -66,8 +60,9 @@ export class DebugIOSCommand extends DebugPlatformCommand {
 		$childProcess: IChildProcess,
 		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
+		$usbLiveSyncService: ILiveSyncService,
 		$options: IOptions) {
-		super($iOSDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $options);
+		super($iOSDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $options);
 	}
 }
 $injector.registerCommand("debug|ios", DebugIOSCommand);
@@ -78,10 +73,11 @@ export class DebugAndroidCommand extends DebugPlatformCommand {
 		$injector: IInjector,
 		$logger: ILogger,
 		$childProcess: IChildProcess,
-	    $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		$config: IConfiguration,
+		$usbLiveSyncService: ILiveSyncService,
 		$options: IOptions) {
-		super($androidDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $options);
+		super($androidDebugService, $devicesService, $injector, $logger, $childProcess, $devicePlatformsConstants, $config, $usbLiveSyncService, $options);
 	}
 }
 $injector.registerCommand("debug|android", DebugAndroidCommand);

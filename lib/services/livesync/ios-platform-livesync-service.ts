@@ -15,7 +15,7 @@ class IOSPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 		super(_liveSyncData, $devicesService, $mobileHelper, $logger, $options, $deviceAppDataFactory, $fs, $injector, $projectFilesManager, $projectFilesProvider, $liveSyncProvider);
 	}
 
-	public fullSync(): IFuture<void> {
+	public fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
 		return (() => {
 			let appIdentifier = this.liveSyncData.appIdentifier;
 			let platform = this.liveSyncData.platform;
@@ -26,14 +26,21 @@ class IOSPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 				return (() => {
 					let deviceAppData = this.$deviceAppDataFactory.create(appIdentifier, this.$mobileHelper.normalizePlatformName(platform), device);
 					let installed = this.tryInstallApplication(device, deviceAppData).wait();
+					let localToDevicePaths = this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, this.liveSyncData.excludedProjectDirsAndFiles);
+					let afterSyncAction: () => IFuture<void>;
 
 					if(installed) {
-						device.applicationManager.tryStartApplication(deviceAppData.appIdentifier).wait();
+						afterSyncAction = () => device.applicationManager.tryStartApplication(deviceAppData.appIdentifier);
 					} else {
-						let localToDevicePaths = this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, projectFilesPath, null, this.liveSyncData.excludedProjectDirsAndFiles);
 						this.transferFiles(deviceAppData, localToDevicePaths, this.liveSyncData.projectFilesPath, true).wait();
-						this.refreshApplication(deviceAppData, localToDevicePaths, this.liveSyncData.forceExecuteFullSync).wait();
+						afterSyncAction = () => this.refreshApplication(deviceAppData, localToDevicePaths);
 					}
+
+					if (postAction) {
+						return postAction(deviceAppData, localToDevicePaths);
+					}
+
+					return afterSyncAction();
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, canExecute).wait();
