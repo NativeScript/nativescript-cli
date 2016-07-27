@@ -62,7 +62,9 @@ class LiveSyncService implements ILiveSyncService {
 					liveSyncData.push(this.prepareLiveSyncData(installedPlatform));
 				}
 			}
-
+            if (liveSyncData.length === 0) {
+				this.$errors.fail("There are no platforms installed in this project. Please specify platform or install one by using `tns platform add` command!");
+            }
 			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
 			this.liveSyncCore(liveSyncData).wait();
