@@ -19,7 +19,7 @@ export class Client {
    * @param {string}    [options.appKey]                                   App Key
    * @param {string}    [options.appSecret]                                App Secret
    * @param {string}    [options.masterSecret]                             App Master Secret
-   * @param {string}    [options.encryptionKey]                            App Encryption Key
+   * @param {string}    [options.key]                                      App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
    * @return {Client}                                                      An instance of the Client class.
    *
@@ -68,27 +68,27 @@ export class Client {
     this.micHost = options.micHost;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appKey = options.appKey;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appSecret = options.appSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.masterSecret = options.masterSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
-    this.encryptionKey = options.encryptionKey;
+    this.key = options.key;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appVersion = options.appVersion;
   }
@@ -187,7 +187,7 @@ export class Client {
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
-      encryptionKey: this.encryptionKey,
+      key: this.key,
       appVersion: this.appVersion
     };
   }
