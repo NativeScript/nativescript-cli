@@ -7,6 +7,7 @@ import * as helpers from "../../common/helpers";
 
 export class SocketProxyFactory implements ISocketProxyFactory {
 	constructor(private $logger: ILogger,
+		private $config: IConfiguration,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $options: IOptions) { }
@@ -98,7 +99,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 			frontendSocket.on("end", () => {
 				this.$logger.info('Frontend socket closed!');
-				process.exit(0);
+				if (!(this.$config.debugLivesync && this.$options.watch)) {
+					process.exit(0);
+				}
 			});
 
 			socketFactory((backendSocket: net.Socket) => {
@@ -106,7 +109,9 @@ export class SocketProxyFactory implements ISocketProxyFactory {
 
 				backendSocket.on("end", () => {
 					this.$logger.info("Backend socket closed!");
-					process.exit(0);
+					if (!(this.$config.debugLivesync && this.$options.watch)) {
+						process.exit(0);
+					}
 				});
 
 				backendSocket.pipe(frontendSocket);

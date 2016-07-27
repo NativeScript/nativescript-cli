@@ -16,8 +16,13 @@ class IOSLiveSyncService extends PlatformLiveSyncServiceBase<Mobile.IiOSDevice> 
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $iOSDebugService: IDebugService,
+		private $childProcess: IChildProcess,
 		$liveSyncProvider: ILiveSyncProvider) {
 		super(_device, $liveSyncProvider);
+	}
+
+	public get debugService(): IDebugService {
+		return this.$iOSDebugService;
 	}
 
 	public afterInstallApplicationAction(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<boolean> {
@@ -33,12 +38,8 @@ class IOSLiveSyncService extends PlatformLiveSyncServiceBase<Mobile.IiOSDevice> 
 	}
 
 	protected restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
-		if (this.$options.debug) {
-			return this.$iOSDebugService.debug();
-		} else {
-			let projectData: IProjectData = this.$injector.resolve("projectData");
-			return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
-		}
+		let projectData: IProjectData = this.$injector.resolve("projectData");
+		return this.device.applicationManager.restartApplication(deviceAppData.appIdentifier, projectData.projectName);
 	}
 
 	protected reloadPage(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {

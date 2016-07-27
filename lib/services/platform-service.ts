@@ -462,6 +462,12 @@ export class PlatformService implements IPlatformService {
 	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			this.installOnDevice(platform, buildConfig).wait();
+			this.startOnDevice(platform).wait();
+		}).future<void>()();
+	}
+
+	public startOnDevice(platform: string): IFuture<void> {
+		return (() => {
 			let action = (device: Mobile.IDevice) => device.applicationManager.startApplication(this.$projectData.projectId);
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();

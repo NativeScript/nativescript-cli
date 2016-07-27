@@ -6,10 +6,11 @@ import * as temp from "temp";
 import * as minimatch from "minimatch";
 import * as constants from "../../common/constants";
 import * as util from "util";
+import { EventEmitter } from "events";
 
 let gaze = require("gaze");
 
-class LiveSyncServiceBase implements ILiveSyncServiceBase {
+class LiveSyncServiceBase extends EventEmitter implements ILiveSyncServiceBase {
 	private showFullLiveSyncInformation: boolean = false;
 	private fileHashes: IDictionary<string>;
 
@@ -25,7 +26,9 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 		private $projectFilesProvider: IProjectFilesProvider,
 		private $liveSyncProvider: ILiveSyncProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $iOSDebugService: IDebugService,
 		private $dispatcher: IFutureDispatcher) {
+		super();
 		this.fileHashes = Object.create(null);
 	}
 
@@ -196,7 +199,9 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 					shouldRefreshApplication = platformLiveSyncService.afterInstallApplicationAction(deviceAppData, localToDevicePaths).wait();
 
 					if (device.applicationManager.canStartApplication() && !shouldRefreshApplication) {
-						device.applicationManager.startApplication(appIdentifier).wait();
+						if (!this.emit("syncAfterInstall", device, data)) {
+							device.applicationManager.startApplication(appIdentifier).wait();
+						}
 					}
 					wasInstalled = false;
 				}
@@ -212,9 +217,12 @@ class LiveSyncServiceBase implements ILiveSyncServiceBase {
 					}
 
 					this.$logger.info("Applying changes...");
-					platformLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, data.forceExecuteFullSync || !wasInstalled).wait();
+					if (!this.emit("sync", device, data)) {
+						platformLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, data.forceExecuteFullSync || !wasInstalled).wait();
+					}
 					this.$logger.info(`Successfully synced application ${data.appIdentifier} on device ${device.deviceInfo.identifier}.`);
 				}
+
 			}).future<void>()();
 		};
 
