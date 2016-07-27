@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- '0.10'
+- '4'
 before_install:
 - sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
 - git submodule update --init --recursive
