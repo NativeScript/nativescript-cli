@@ -8,6 +8,10 @@ Deploy on device, run the app and stop at the first code statement | `$ tns debu
 Deploy in the iOS Simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk --emulator [<Emulator Options>] [--no-client]`
 Attach the debug tools to a running app on device | `$ tns debug ios --start [--device <Device ID>] [--no-client]`
 Attach the debug tools to a running app in the iOS Simulator | `$ tns debug ios --start --emulator [<Emulator Options>] [--no-client]`
+Livesync on device, run the app, start Safari Web Inspector and attach the debugger | `$ tns debug ios --no-rebuild`
+Livesync on device, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk [--device <Device ID>] [--no-client]`
+Livesync in the iOS Simulator, run the app and stop at the first code statement | `$ tns debug ios --no-rebuild --debug-brk --emulator [<Emulator Options>] [--no-client]`
+Livesync on device/simulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug ios --no-rebuild --watch [--debug-brk]`
 
 Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml) { %>Any debugging traffic is forwarded on port 8080 from the device to the local machine.<% } %>
 
@@ -22,6 +26,8 @@ Debugs your project on a connected device or in the iOS Simulator. <% if(isHtml)
 * `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--no-client` - If set, the NativeScript CLI attaches the debug tools but does not launch the developer tools in Safari.
 * `--timeout` - Sets the number of seconds that NativeScript CLI will wait for the debugger to boot. If not set, the default timeout is 90 seconds.
+* `--no-rebuild` - Livesyncs to device/emulator when possible. Otherwise builds and deploys the application.
+* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and the debugger is restarted. This option is available only when using `--no-rebuild`.
 
 ### Attributes
 * `<Device ID>` is the index or name of the target device as listed by `$ tns device`
