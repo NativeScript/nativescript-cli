@@ -9,6 +9,7 @@ import { Client } from './client';
 import { SyncManager } from './sync';
 import { Metadata } from './metadata';
 import { Promise } from 'es6-promise';
+import { Log } from './log';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import differenceBy from 'lodash/differenceBy';
 import keyBy from 'lodash/keyBy';
@@ -456,7 +457,12 @@ export class NetworkStore {
     return stream.toPromise();
   }
 
-  subscribe() {
+
+  /**
+   * Subscribes an observer to a live stream
+   */
+
+  subscribe(onNext, onError, onComplete) {
     if (this.source){
       this.unsubscribe();
     }
@@ -464,15 +470,38 @@ export class NetworkStore {
     if(typeof(EventSource) !== "undefined") {
       // Subscribe to KLS
       this.source = new EventSource(url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
+        protocol: this.client.liveServiceProtocol,
+        host: this.client.liveServiceHost,
         pathname: this.pathname,
-      }));
+      }));   
     } else {
       throw new KinveyError("Your environment does not support server-sent events.");
     }
 
-    return this.source;
+    const stream = KinveyObservable.create(observer => {
+      this.observer = observer;
+
+      this.source.onopen = (data) => {
+        Log.info("Subscription to Kinvey live service is now open.")
+      };
+
+      this.source.onmessage = (data) => {
+        try {
+          observer.next(JSON.parse(message.data));
+        } catch (error) {
+          observer.error(error);
+          this.unsubscribe();
+        }
+      };
+
+      this.source.onerror = (error) => {
+        observer.error(error);
+        this.unsubscribe();
+      };
+    });
+
+    return stream.subscribe(onNext, onError, onComplete); 
+  
   }
 
   unsubscribe() {
@@ -481,7 +510,13 @@ export class NetworkStore {
       this.source.close();
     }
 
-    this.source = null;
+    // Complete the stream
+    if (this.observer) {
+      this.observer.complete();
+    }
+
+    this.observer = null;
+    this.source = null;    
   }
 
 }
