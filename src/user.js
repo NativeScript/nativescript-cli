@@ -13,6 +13,7 @@ import {
   MobileIdentityConnect
 } from './social';
 import { setActiveUser, setIdentitySession } from './utils/storage';
+import { Log } from './log';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -29,7 +30,6 @@ const usernameAttribute = process.env.KINVEY_USERNAME_ATTRIBUTE || 'username';
 const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
 
 /**
- * @private
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
 export class UserStore extends NetworkStore {
@@ -52,6 +52,8 @@ export class UserStore extends NetworkStore {
 
   /**
    * Update a user.
+   *
+   * @deprecated Use the `update` function for a user instance.
    *
    * @param {Object} data Data for user to update.
    * @param {Object} [options={}] Options
@@ -87,6 +89,8 @@ export class UserStore extends NetworkStore {
   /**
    * Check if a username already exists.
    *
+   * @deprecated Use the `exists` function on the `User` class.
+   *
    * @param {string} username Username
    * @param {Object} [options={}] Options
    * @return {boolean} True if the username already exists otherwise false.
@@ -113,6 +117,8 @@ export class UserStore extends NetworkStore {
 
   /**
    * Restore a user that has been suspended.
+   *
+   * @deprecated Use the `restore` function on the `User` class.
    *
    * @param {string} id Id of the user to restore.
    * @param {Object} [options={}] Options
@@ -600,8 +606,8 @@ export class User {
    * @return {Promise<User>} The user.
    */
   async logout(options = {}) {
+    // Logout from Kinvey
     try {
-      // Logout from Kinvey
       const config = new KinveyRequestConfig({
         method: RequestMethod.POST,
         authType: AuthType.Session,
@@ -616,13 +622,17 @@ export class User {
       });
       const request = new NetworkRequest(config);
       await request.execute();
+    } catch (error) {
+      Log.error(error);
+    }
 
-      // Disconnect from connected identities
+    // Disconnect from connected identities
+    try {
       const identities = Object.keys(this._socialIdentity);
       const promises = identities.map(identity => this.disconnect(identity, options));
       await Promise.all(promises);
     } catch (error) {
-      // Just catch the error
+      Log.error(error);
     }
 
     setActiveUser(this.client, null);
