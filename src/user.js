@@ -417,6 +417,20 @@ export class User {
   }
 
   /**
+   * Login using a social identity.
+   *
+   * @deprecated Use `loginWithIdentity()`.
+   *
+   * @param {string} identity Social identity.
+   * @param {Object} session Social identity session.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  connectWithIdentity(identity, session, options) {
+    return this.loginWithIdentity(identity, session, options);
+  }
+
+  /**
    * Login using Mobile Identity Connect.
    *
    * @param {string} redirectUri The redirect uri.
