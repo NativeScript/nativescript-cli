@@ -462,63 +462,55 @@ export class NetworkStore {
    * Subscribes an observer to a live stream
    */
 
-  subscribe(onNext, onError, onComplete) {
-    if (this.source){
-      this.unsubscribe();
-    }
-
-    if(typeof(EventSource) !== "undefined") {
-      // Subscribe to KLS
+//  subscribe(onNext, onError, onComplete) {
+  subscribe(subscriber) {
+    // Subscribe to KLS
+    if (typeof(EventSource) !== 'undefined') {
       this.source = new EventSource(url.format({
         protocol: this.client.liveServiceProtocol,
         host: this.client.liveServiceHost,
         pathname: this.pathname,
-      }));   
-    } else {
-      throw new KinveyError("Your environment does not support server-sent events.");
-    }
-
-    const stream = KinveyObservable.create(observer => {
-      this.observer = observer;
+      }));
 
       this.source.onopen = (data) => {
-        Log.info("Subscription to Kinvey live service is now open.")
+        Log.info('Subscription to Kinvey live service is now open.');
+        Log.info(data);
       };
 
-      this.source.onmessage = (data) => {
+      this.source.onmessage = (message) => {
         try {
-          observer.next(JSON.parse(message.data));
+          subscriber.onNext(JSON.parse(message.data));
         } catch (error) {
-          observer.error(error);
-          this.unsubscribe();
+          subscriber.onError(error);
+          this.unsubscribe(subscriber);
         }
       };
 
       this.source.onerror = (error) => {
-        observer.error(error);
-        this.unsubscribe();
+        subscriber.onError(error);
+        this.unsubscribe(subscriber);
       };
-    });
+    } else {
+      throw new KinveyError('Your environment does not support server-sent events.');
+    }
 
-    return stream.subscribe(onNext, onError, onComplete); 
-  
+    return () => {
+      this.unsubscribe(subscriber);
+    };
   }
 
-  unsubscribe() {
+  unsubscribe(subscriber) {
+    if (subscriber) {
+      subscriber.complete();
+    }
+
     // Close the subscription
     if (this.source) {
       this.source.close();
     }
 
-    // Complete the stream
-    if (this.observer) {
-      this.observer.complete();
-    }
-
-    this.observer = null;
-    this.source = null;    
+    this.source = null;
   }
-
 }
 
 /**
