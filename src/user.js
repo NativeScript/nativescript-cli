@@ -649,7 +649,7 @@ export class User {
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  async signup(data, options = {}) {
+  async signup(user, options = {}) {
     options = assign({
       state: true
     }, options);
@@ -662,8 +662,8 @@ export class User {
       }
     }
 
-    if (data instanceof User) {
-      data = data.data;
+    if (user instanceof User) {
+      user = user.data;
     }
 
     const config = new KinveyRequestConfig({
@@ -674,7 +674,7 @@ export class User {
         host: this.client.host,
         pathname: this.pathname
       }),
-      body: data,
+      body: user,
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
