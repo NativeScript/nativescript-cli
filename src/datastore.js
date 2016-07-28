@@ -461,8 +461,6 @@ export class NetworkStore {
   /**
    * Subscribes an observer to a live stream
    */
-
-//  subscribe(onNext, onError, onComplete) {
   subscribe(subscriber) {
     // Subscribe to KLS
     if (typeof(EventSource) !== 'undefined') {
