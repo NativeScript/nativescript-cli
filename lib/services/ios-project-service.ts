@@ -293,8 +293,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			} else {
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
-					"-arch", "i386",
-					'VALID_ARCHS="i386"',
+					"-arch", "x86_64",
+					"VALID_ARCHS=i386 x86_64",
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
@@ -834,7 +834,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
 			}
 
-			let expectedArchs = ["armv7", "arm64", "i386"];
+			let expectedArchs = ["armv7", "arm64", "i386", "x86_64"];
 			let archsInTheFatFile = this.$childProcess.exec("lipo -i " + libraryPath).wait();
 
 			expectedArchs.forEach(expectedArch => {
