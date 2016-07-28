@@ -33,6 +33,7 @@ export class Client {
     options = assign({
       apiHostname: 'https://baas.kinvey.com',
       micHostname: 'https://auth.kinvey.com',
+      liveServiceHostname: 'https://kls.kinvey.com'
     }, options);
 
     if (options.apiHostname && isString(options.apiHostname)) {
@@ -45,6 +46,12 @@ export class Client {
       const micHostnameParsed = url.parse(options.micHostname);
       options.micProtocol = micHostnameParsed.protocol;
       options.micHost = micHostnameParsed.host;
+    }
+
+    if (options.liveServiceHostname && isString(options.liveServiceHostname)) {
+      const liveServiceHostnameParsed = url.parse(options.liveServiceHostname);
+      options.liveServiceProtocol = liveServiceHostnameParsed.protocol;
+      options.liveServiceHost = liveServiceHostnameParsed.host;
     }
 
     /**
@@ -66,6 +73,18 @@ export class Client {
      * @type {string}
      */
     this.micHost = options.micHost;
+
+
+    /**
+     * @type {string}
+     */
+    this.liveServiceProtocol = options.liveServiceProtocol;
+
+    /**
+     * @type {string}
+     */
+    this.liveServiceHost = options.liveServiceHost;
+
 
     /**
      * @type {?string}
@@ -134,6 +153,18 @@ export class Client {
     });
   }
 
+
+  /**
+   * Live Service host name used for streaming data.
+   */
+  get liveServiceHostname() {
+    return url.format({
+      protocol: this.liveServiceProtocol,
+      host: this.liveServiceHost
+    });
+  }
+
+
   /**
    * Active user for your app.
    */
@@ -176,6 +207,9 @@ export class Client {
       micHostname: this.micHostname,
       micProtocol: this.micProtocol,
       micHost: this.micHost,
+      liveServiceHostname: this.liveServiceHostname,
+      liveServiceHost: this.liveServiceHost,
+      liveServiceProtocol: this.liveServiceProtocol,
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
