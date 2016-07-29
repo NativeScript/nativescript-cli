@@ -293,8 +293,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			} else {
 				args = basicArgs.concat([
 					"-sdk", "iphonesimulator",
-					"-arch", "x86_64",
+					"ARCHS=i386 x86_64",
 					"VALID_ARCHS=i386 x86_64",
+					"ONLY_ACTIVE_ARCH=NO",
 					"CONFIGURATION_BUILD_DIR=" + path.join(projectRoot, "build", "emulator"),
 					"CODE_SIGN_IDENTITY="
 				]);
