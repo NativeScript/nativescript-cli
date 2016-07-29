@@ -19,7 +19,7 @@ export class Client {
    * @param {string}    [options.appKey]                                   App Key
    * @param {string}    [options.appSecret]                                App Secret
    * @param {string}    [options.masterSecret]                             App Master Secret
-   * @param {string}    [options.key]                                      App Encryption Key
+   * @param {string}    [options.encryptionKey]                            App Encryption Key
    * @param {string}    [options.appVersion]                               App Version
    * @return {Client}                                                      An instance of the Client class.
    *
@@ -85,7 +85,7 @@ export class Client {
     /**
      * @type {?string}
      */
-    this.key = options.key;
+    this.encryptionKey = options.encryptionKey;
 
     /**
      * @type {?string}
@@ -187,7 +187,7 @@ export class Client {
       appKey: this.appKey,
       appSecret: this.appSecret,
       masterSecret: this.masterSecret,
-      key: this.key,
+      encryptionKey: this.encryptionKey,
       appVersion: this.appVersion
     };
   }
