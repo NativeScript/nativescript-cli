@@ -423,12 +423,12 @@ describe('User', function () {
       const stub = this.sandbox.stub(MobileIdentityConnect.prototype, 'login', function() {
         return Promise.resolve({});
       });
-      const connectStub = this.sandbox.stub(User.prototype, 'connect', function() {
+      const connectIdentityStub = this.sandbox.stub(User.prototype, 'connectIdentity', function() {
         return Promise.resolve();
       });
       return User.loginWithMIC(randomString(), AuthorizationGrant.AuthorizationCodeLoginPage).then(() => {
         expect(stub).to.have.been.called.once;
-        expect(connectStub).to.have.been.called.once;
+        expect(connectIdentityStub).to.have.been.called.once;
       });
     });
   });
@@ -522,9 +522,9 @@ describe('User', function () {
     });
   });
 
-  describe('loginWithFacebook()', function() {
+  describe('connectFacebook()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('loginWithFacebook');
+      expect(User).itself.to.respondTo('connectFacebook');
     });
 
     // it('should call User.prototype.connect()', function() {
@@ -538,9 +538,9 @@ describe('User', function () {
     // });
   });
 
-  describe('loginWithGoogle()', function() {
+  describe('connectGoogle()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('loginWithGoogle');
+      expect(User).itself.to.respondTo('connectGoogle');
     });
 
     // it('should call User.prototype.connect()', function() {
@@ -554,9 +554,9 @@ describe('User', function () {
     // });
   });
 
-  describe('loginWithLinkedIn()', function() {
+  describe('connectLinkedIn()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('loginWithLinkedIn');
+      expect(User).itself.to.respondTo('connectLinkedIn');
     });
 
     // it('should call User.prototype.connect()', function() {
