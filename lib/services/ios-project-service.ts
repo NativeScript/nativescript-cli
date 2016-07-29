@@ -835,7 +835,7 @@ We will now place an empty obsolete compatability white screen LauncScreen.xib f
 				this.$errors.failWithoutHelp(`The bundle at ${libraryPath} does not contain a valid static library in the '.a' file format.`);
 			}
 
-			let expectedArchs = ["armv7", "arm64", "i386", "x86_64"];
+			let expectedArchs = ["armv7", "arm64", "i386"];
 			let archsInTheFatFile = this.$childProcess.exec("lipo -i " + libraryPath).wait();
 
 			expectedArchs.forEach(expectedArch => {
