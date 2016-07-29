@@ -18,7 +18,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $projectData: IProjectData,
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
-		private $liveSyncServiceBase: ILiveSyncServiceBase,
+		private $liveSyncProvider: ILiveSyncProvider,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $resources: IResourceLoader,
 		private $httpClient: Server.IHttpClient,
@@ -231,7 +231,8 @@ class TestExecutionService implements ITestExecutionService {
 				excludedProjectDirsAndFiles: this.$options.release ? constants.LIVESYNC_EXCLUDED_FILE_PATTERNS : []
 			};
 
-			this.$liveSyncServiceBase.sync([liveSyncData]).wait();
+			let liveSyncService = this.$injector.resolve(this.$liveSyncProvider.platformSpecificLiveSyncServices[platform.toLowerCase()], { _liveSyncData: liveSyncData });
+			liveSyncService.fullSync().wait();
 		}).future<void>()();
 	}
 }

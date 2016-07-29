@@ -2,6 +2,9 @@ import * as constants from "../../constants";
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as semver from "semver";
+import * as fiberBootstrap from "../../common/fiber-bootstrap";
+
+let gaze = require("gaze");
 
 class LiveSyncService implements ILiveSyncService {
 	public forceExecuteFullSync = false;
@@ -9,16 +12,19 @@ class LiveSyncService implements ILiveSyncService {
 
 	constructor(private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $errors: IErrors,
-		private $liveSyncServiceBase: ILiveSyncServiceBase,
 		private $platformsData: IPlatformsData,
 		private $platformService: IPlatformService,
 		private $projectData: IProjectData,
 		private $projectDataService: IProjectDataService,
 		private $prompter: IPrompter,
 		private $injector: IInjector,
+		private $liveSyncProvider: ILiveSyncProvider,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $devicesService: Mobile.IDevicesService,
-		private $options: IOptions) { }
+		private $options: IOptions,
+		private $logger: ILogger,
+		private $dispatcher: IFutureDispatcher,
+		private $hooksService: IHooksService) { }
 
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
@@ -42,7 +48,7 @@ class LiveSyncService implements ILiveSyncService {
 		return this._isInitialized;
 	}
 
-	public liveSync(platform: string): IFuture<void> {
+	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
 		return (() => {
 			let liveSyncData: ILiveSyncData[] = [];
 			if (platform) {
@@ -67,12 +73,12 @@ class LiveSyncService implements ILiveSyncService {
             }
 			this._isInitialized = true; // If we want before-prepare hooks to work properly, this should be set after preparePlatform function
 
-			this.liveSyncCore(liveSyncData).wait();
+			this.liveSyncCore(liveSyncData, applicationReloadAction).wait();
 		}).future<void>()();
 	}
 
 	private prepareLiveSyncData(platform: string): ILiveSyncData {
-		platform = this.$liveSyncServiceBase.getPlatform(platform).wait();
+		platform = platform || this.$devicesService.platform;
 		if (!this.$platformService.preparePlatform(platform.toLowerCase()).wait()) {
 			this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
 		}
@@ -93,11 +99,55 @@ class LiveSyncService implements ILiveSyncService {
 		return liveSyncData;
 	}
 
+	private resolvePlatformLiveSyncBaseService(platform: string, liveSyncData: ILiveSyncData): IPlatformLiveSyncService {
+		return this.$injector.resolve(this.$liveSyncProvider.platformSpecificLiveSyncServices[platform.toLowerCase()], { _liveSyncData: liveSyncData });
+	}
+
 	@helpers.hook('livesync')
-	private liveSyncCore(liveSyncData: ILiveSyncData[]): IFuture<void> {
+	private liveSyncCore(liveSyncData: ILiveSyncData[], applicationReloadAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
 		return (() => {
-			this.$liveSyncServiceBase.sync(liveSyncData).wait();
+			let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void)[] = [];
+			_.each(liveSyncData, (dataItem) => {
+				let service = this.resolvePlatformLiveSyncBaseService(dataItem.platform, dataItem);
+
+				watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) => {
+					if (!applicationReloadAction) {
+						applicationReloadAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => service.refreshApplication(deviceAppData, localToDevicePaths);
+					}
+
+					service.partialSync(event, filePath, dispatcher, applicationReloadAction);
+				});
+				service.fullSync(applicationReloadAction).wait();
+			});
+
+			if(this.$options.watch) {
+				this.$hooksService.executeBeforeHooks('watch').wait();
+				this.partialSync(liveSyncData[0].syncWorkingDirectory, watchForChangeActions);
+			}
 		}).future<void>()();
+	}
+
+	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void )[]): void {
+		let that = this;
+
+		gaze("**/*", { cwd: syncWorkingDirectory }, function (err: any, watcher: any) {
+			this.on('all', (event: string, filePath: string) => {
+				fiberBootstrap.run(() => {
+					that.$dispatcher.dispatch(() => (() => {
+						try {
+							for (let i = 0; i < onChangedActions.length; i++) {
+								onChangedActions[i](event, filePath, that.$dispatcher);
+							}
+						} catch (err) {
+							that.$logger.info(`Unable to sync file ${filePath}. Error is:${err.message}`.red.bold);
+							that.$logger.info("Try saving it again or restart the livesync operation.");
+						}
+					}).future<void>()());
+				});
+			});
+		});
+
+		this.$dispatcher.run();
 	}
 }
 $injector.register("usbLiveSyncService", LiveSyncService);

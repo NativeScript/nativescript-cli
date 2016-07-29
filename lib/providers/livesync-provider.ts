@@ -3,30 +3,53 @@ import * as temp from "temp";
 
 export class LiveSyncProvider implements ILiveSyncProvider {
 	constructor(private $androidLiveSyncServiceLocator: {factory: Function},
+		private $androidPlatformLiveSyncServiceLocator: {factory: Function},
 		private $iosLiveSyncServiceLocator: {factory: Function},
+		private $iosPlatformLiveSyncServiceLocator: {factory: Function},
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
-		private $childProcess: IChildProcess) { }
+		private $childProcess: IChildProcess,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants) { }
 
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml" ,".html"];
+
+	private deviceSpecificLiveSyncServicesCache: IDictionary<any> = {};
+	public get deviceSpecificLiveSyncServices(): IDictionary<any> {
+		return {
+			android: (_device: Mobile.IDevice, $injector: IInjector) => {
+				if(!this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
+					this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$androidLiveSyncServiceLocator.factory, {_device: _device});
+				}
+
+				return this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
+			},
+			ios: (_device: Mobile.IDevice, $injector: IInjector) => {
+				if(!this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
+					this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$iosLiveSyncServiceLocator.factory, {_device: _device});
+				}
+
+				return this.deviceSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
+			}
+		};
+	}
 
 	private platformSpecificLiveSyncServicesCache: IDictionary<any> = {};
 	public get platformSpecificLiveSyncServices(): IDictionary<any> {
 		return {
-			android: (_device: Mobile.IDevice, $injector: IInjector): IPlatformLiveSyncService => {
-				if(!this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
-					this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$androidLiveSyncServiceLocator.factory, {_device: _device});
+			android: (_liveSyncData: ILiveSyncData, $injector: IInjector) => {
+				if(!this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.Android]) {
+					this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.Android] = $injector.resolve(this.$androidPlatformLiveSyncServiceLocator.factory, { _liveSyncData: _liveSyncData });
 				}
 
-				return this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
+				return this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.Android];
 			},
-			ios: (_device: Mobile.IDevice, $injector: IInjector) => {
-				if(!this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier]) {
-					this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier] = $injector.resolve(this.$iosLiveSyncServiceLocator.factory, {_device: _device});
+			ios: (_liveSyncData: ILiveSyncData, $injector: IInjector) => {
+				if(!this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.iOS]) {
+					this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.iOS] = $injector.resolve(this.$iosPlatformLiveSyncServiceLocator.factory, { _liveSyncData: _liveSyncData });
 				}
 
-				return this.platformSpecificLiveSyncServicesCache[_device.deviceInfo.identifier];
+				return this.platformSpecificLiveSyncServicesCache[this.$devicePlatformsConstants.iOS];
 			}
 		};
 	}

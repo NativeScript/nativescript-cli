@@ -190,6 +190,10 @@ class AndroidDebugService implements IDebugService {
 		}).future<void>()();
 	}
 
+	public debugStop(): IFuture<void> {
+		return Future.fromResult();
+	}
+
 	private debugStartCore(): IFuture<void> {
 		return (() => {
 			let packageName = this.$projectData.projectId;
