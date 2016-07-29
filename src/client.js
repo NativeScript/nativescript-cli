@@ -68,27 +68,27 @@ export class Client {
     this.micHost = options.micHost;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appKey = options.appKey;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appSecret = options.appSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.masterSecret = options.masterSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.encryptionKey = options.encryptionKey;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appVersion = options.appVersion;
   }
