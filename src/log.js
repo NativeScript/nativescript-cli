@@ -1,6 +1,9 @@
 import Log from 'loglevel';
 const originalFactory = Log.methodFactory;
 
+/**
+ * @private
+ */
 Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   const rawMethod = originalFactory(methodName, logLevel, loggerName);
 
@@ -15,5 +18,12 @@ Log.methodFactory = function methodFactory(methodName, logLevel, loggerName) {
   };
 };
 
+/**
+ * @private
+ */
 Log.setDefaultLevel(Log.levels.SILENT);
+
+/**
+ * @private
+ */
 export { Log };

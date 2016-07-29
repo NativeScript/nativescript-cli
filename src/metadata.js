@@ -4,7 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 
 /**
- * Wrapper for accessing the `_kmd` properties of an entity.
+ * The Metadata class is used to as a wrapper for accessing the `_kmd` properties of an entity.
  */
 export class Metadata {
   constructor(entity = {}) {

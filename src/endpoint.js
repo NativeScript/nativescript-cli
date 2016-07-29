@@ -9,7 +9,7 @@ import isString from 'lodash/isString';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 
 /**
- * Executes a custom command.
+ * Executes a custom endpoint on the Kinvey backend.
  */
 export class CustomEndpoint {
   /**

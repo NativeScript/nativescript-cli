@@ -4,7 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';
 
 /**
- * Wrapper for reading and setting permissions on an entity level.
+ * The Acl class is used as a wrapper for reading and setting permissions on an entity level.
  *
  * @example
  * var entity = { _acl: {} };

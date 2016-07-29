@@ -23,7 +23,9 @@ hints.md
 Makefile
 README.md
 bower.json
-src
+/src
+*.test.js
+*.mock.js
 .npm_cache
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm

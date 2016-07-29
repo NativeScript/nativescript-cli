@@ -92,7 +92,6 @@ describe('Kinvey', function () {
       expect(Kinvey).to.have.property('SocialIdentity');
       expect(Kinvey).to.have.property('Sync');
       expect(Kinvey).to.have.property('User');
-      expect(Kinvey).to.have.property('UserStore');
     });
   });
 
