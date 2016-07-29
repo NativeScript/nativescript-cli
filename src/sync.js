@@ -285,7 +285,7 @@ export class SyncManager {
 
           // Get the results of syncing all of the entities
           const results = await Promise.all(map(batch, syncEntity => {
-            const { entityId, state } = syncEntity.entityId;
+            const { entityId, state } = syncEntity;
             const { method } = state;
 
             if (method === RequestMethod.DELETE) {
