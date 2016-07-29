@@ -402,35 +402,6 @@ export class User {
   }
 
   /**
-   * Login using a social identity.
-   *
-   * @param {string} identity Social identity.
-   * @param {Object} session Social identity session.
-   * @param {Object} [options] Options
-   * @return {Promise<User>} The user.
-   */
-  loginWithIdentity(identity, session, options) {
-    const data = {};
-    data[socialIdentityAttribute] = {};
-    data[socialIdentityAttribute][identity] = session;
-    return this.login(data, options);
-  }
-
-  /**
-   * Login using a social identity.
-   *
-   * @deprecated Use `loginWithIdentity()`.
-   *
-   * @param {string} identity Social identity.
-   * @param {Object} session Social identity session.
-   * @param {Object} [options] Options
-   * @return {Promise<User>} The user.
-   */
-  connectWithIdentity(identity, session, options) {
-    return this.loginWithIdentity(identity, session, options);
-  }
-
-  /**
    * Login using Mobile Identity Connect.
    *
    * @param {string} redirectUri The redirect uri.
@@ -452,7 +423,7 @@ export class User {
 
     const mic = new MobileIdentityConnect({ client: this.client });
     const session = await mic.login(redirectUri, authorizationGrant, options);
-    return this.connect(MobileIdentityConnect.identity, session, options);
+    return this.connectIdentity(MobileIdentityConnect.identity, session, options);
   }
 
   /**
@@ -470,84 +441,14 @@ export class User {
   }
 
   /**
-   * Login using Facebook.
+   * Connect an social identity.
    *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  async loginWithFacebook(clientId, options) {
-    const facebook = new Facebook({ client: this.client });
-    const session = await facebook.login(clientId, options);
-    return this.connect(Facebook.identity, session, options);
-  }
-
-  /**
-   * Login using Facebook.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  static loginWithFacebook(clientId, options) {
-    const user = new User({});
-    return user.loginWithFacebook(clientId, options);
-  }
-
-  /**
-   * Login using Google.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  async loginWithGoogle(clientId, options) {
-    const google = new Google({ client: this.client });
-    const session = await google.login(clientId, options);
-    return this.connect(Google.identity, session, options);
-  }
-
-  /**
-   * Login using Google.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  static loginWithGoogle(clientId, options) {
-    const user = new User({});
-    return user.loginWithGoogle(clientId, options);
-  }
-
-  /**
-   * Login using LinkedIn.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  async loginWithLinkedIn(clientId, options) {
-    const linkedIn = new LinkedIn({ client: this.client });
-    const session = await linkedIn.login(clientId, options);
-    return this.connect(LinkedIn.identity, session, options);
-  }
-
-  /**
-   * Login using LinkedIn.
-   *
-   * @param  {Object}         [options]     Options
-   * @return {Promise<User>}                The connected user.
-   */
-  static loginWithLinkedIn(clientId, options) {
-    const user = new User({});
-    return user.loginWithLinkedIn(clientId, options);
-  }
-
-  /**
-   * @private
-   * Connects the user with an identity.
-   *
-   * @param {SocialIdentity|string} identity Identity to connect the user.
-   * @param {string} session Identity session.
-   * @param  {Object} [options={}] Options
+   * @param {string} identity Social identity.
+   * @param {Object} session Social identity session.
+   * @param {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async connect(identity, session, options = {}) {
+  async connectIdentity(identity, session, options) {
     const data = this.data;
     const socialIdentity = data[socialIdentityAttribute] || {};
     socialIdentity[identity] = session;
@@ -567,11 +468,124 @@ export class User {
     } catch (error) {
       if (error instanceof NotFoundError) {
         await this.signup(data, options);
-        return this.connect(identity, session, options);
+        return this.connectIdentity(identity, session, options);
       }
 
       throw error;
     }
+  }
+
+  /**
+   * Connect an social identity.
+   *
+   * @deprecated Use connectIdentity().
+   *
+   * @param {string} identity Social identity.
+   * @param {Object} session Social identity session.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  async connectWithIdentity(identity, session, options) {
+    return this.connectIdentity(identity, session, options);
+  }
+
+  /**
+   * Connect a Facebook identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async connectFacebook(clientId, options) {
+    const facebook = new Facebook({ client: this.client });
+    const session = await facebook.login(clientId, options);
+    return this.connectIdentity(Facebook.identity, session, options);
+  }
+
+  /**
+   * Connect a Facebook identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  static connectFacebook(clientId, options) {
+    const user = new User({});
+    return user.connectFacebook(clientId, options);
+  }
+
+  /**
+   * Diconnect a Facebook identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async disconnectFacebook(options) {
+    return this.disconnectIdentity(Facebook.identity, options);
+  }
+
+  /**
+   * Connect a Google identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async connectGoogle(clientId, options) {
+    const google = new Google({ client: this.client });
+    const session = await google.login(clientId, options);
+    return this.connectIdentity(Google.identity, session, options);
+  }
+
+  /**
+   * Connect a Google identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  static connectGoogle(clientId, options) {
+    const user = new User({});
+    return user.connectGoogle(clientId, options);
+  }
+
+  /**
+   * Diconnect a Google identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async disconnectGoogle(options) {
+    return this.disconnectIdentity(Google.identity, options);
+  }
+
+  /**
+   * Connect a LinkedIn identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async connectLinkedIn(clientId, options) {
+    const linkedIn = new LinkedIn({ client: this.client });
+    const session = await linkedIn.login(clientId, options);
+    return this.connectIdentity(LinkedIn.identity, session, options);
+  }
+
+  /**
+   * Connect a LinkedIn identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  static connectLinkedIn(clientId, options) {
+    const user = new User({});
+    return user.connectLinkedIn(clientId, options);
+  }
+
+  /**
+   * Diconnect a LinkedIn identity.
+   *
+   * @param  {Object}         [options]     Options
+   * @return {Promise<User>}                The user.
+   */
+  async disconnectLinkedIn(options) {
+    return this.disconnectIdentity(LinkedIn.identity, options);
   }
 
   /**
@@ -582,7 +596,7 @@ export class User {
    * @param  {Object} [options] Options
    * @return {Promise<User>} The user.
    */
-  async disconnect(identity, options) {
+  async disconnectIdentity(identity, options) {
     try {
       if (identity === Facebook.identity) {
         await Facebook.logout();
@@ -596,7 +610,7 @@ export class User {
 
       setIdentitySession(this.client, identity, null);
     } catch (error) {
-      // Just catch the error
+      Log.error(error);
     }
 
     const data = this.data;
@@ -643,7 +657,7 @@ export class User {
     // Disconnect from connected identities
     try {
       const identities = Object.keys(this._socialIdentity);
-      const promises = identities.map(identity => this.disconnect(identity, options));
+      const promises = identities.map(identity => this.disconnectIdentity(identity, options));
       await Promise.all(promises);
     } catch (error) {
       Log.error(error);
