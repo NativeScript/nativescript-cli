@@ -93,6 +93,7 @@ interface IOptions extends ICommonOptions {
 	tnsModulesVersion: string;
 	teamId: string;
 	rebuild: boolean;
+	syncAllFiles: boolean;
 }
 
 interface IInitService {

@@ -7,6 +7,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 		private $platformService: IPlatformService,
 		private $platformsData: IPlatformsData,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $childProcess: IChildProcess) { }
 
 	private static FAST_SYNC_FILE_EXTENSIONS = [".css", ".xml" ,".html"];
@@ -65,7 +66,12 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 				temp.track();
 				let tempZip = temp.path({prefix: "sync", suffix: ".zip"});
 				this.$logger.trace("Creating zip file: " + tempZip);
-				this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
+
+   				if (this.$options.syncAllFiles) {
+					this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
+				} else {
+					this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app", "-x", "app/tns_modules/*" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
+				}
 
 				deviceAppData.device.fileSystem.transferFiles(deviceAppData, [{
 					getLocalPath: () => tempZip,
