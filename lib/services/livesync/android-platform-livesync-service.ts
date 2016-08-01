@@ -41,10 +41,10 @@ class AndroidPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 					}
 
 					if (postAction) {
-						return postAction(deviceAppData, localToDevicePaths);
+						return postAction(deviceAppData, localToDevicePaths).wait();
 					}
 
-					return afterSyncAction();
+					return afterSyncAction().wait();
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, canExecute).wait();
