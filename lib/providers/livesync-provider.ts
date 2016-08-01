@@ -88,7 +88,7 @@ export class LiveSyncProvider implements ILiveSyncProvider {
 				temp.track();
 				let tempZip = temp.path({prefix: "sync", suffix: ".zip"});
 				this.$logger.trace("Creating zip file: " + tempZip);
-				this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
+				this.$childProcess.spawnFromEvent("zip", [ "-r", "-0", tempZip, "app", "-x", "app/tns_modules/*" ], "close", { cwd: path.dirname(projectFilesPath) }).wait();
 
 				deviceAppData.device.fileSystem.transferFiles(deviceAppData, [{
 					getLocalPath: () => tempZip,
