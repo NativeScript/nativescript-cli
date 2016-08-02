@@ -457,57 +457,53 @@ export class NetworkStore {
     return stream.toPromise();
   }
 
-
   /**
-   * Subscribes an observer to a live stream
+   * Subscribe to a live stream for the Data Store.
    */
-  subscribe(subscriber) {
-    // Subscribe to KLS
-    if (typeof(EventSource) !== 'undefined') {
-      this.source = new EventSource(url.format({
-        protocol: this.client.liveServiceProtocol,
-        host: this.client.liveServiceHost,
-        pathname: this.pathname,
-      }));
-
-      this.source.onopen = (data) => {
-        Log.info('Subscription to Kinvey live service is now open.');
-        Log.info(data);
-      };
-
-      this.source.onmessage = (message) => {
-        try {
-          subscriber.onNext(JSON.parse(message.data));
-        } catch (error) {
-          subscriber.onError(error);
-          this.unsubscribe(subscriber);
-        }
-      };
-
-      this.source.onerror = (error) => {
-        subscriber.onError(error);
-        this.unsubscribe(subscriber);
-      };
-    } else {
+  subscribe() {
+    if (typeof(EventSource) === 'undefined') {
       throw new KinveyError('Your environment does not support server-sent events.');
     }
 
-    return () => {
-      this.unsubscribe(subscriber);
-    };
-  }
+    // Subscribe to KLS
+    const source = new EventSource(url.format({
+      protocol: this.client.liveServiceProtocol,
+      host: this.client.liveServiceHost,
+      pathname: this.pathname,
+    }));
 
-  unsubscribe(subscriber) {
-    if (subscriber) {
-      subscriber.complete();
-    }
+     // Create a live stream
+    const stream = KinveyObservable.create(async observer => {
+      // Open event
+      source.onopen = (event) => {
+        Log.info(`Subscription to Kinvey Live Service is now open at ${source.url}.`);
+        Log.info(event);
+      };
 
-    // Close the subscription
-    if (this.source) {
-      this.source.close();
-    }
+      // Message event
+      source.onmessage = (message) => {
+        try {
+          observer.next(JSON.parse(message.data));
+        } catch (error) {
+          observer.error(error);
+        }
+      };
 
-    this.source = null;
+      // Error event
+      source.onerror = (error) => {
+        observer.error(error);
+      };
+
+      // Dispose function
+      return () => {
+        observer.complete();
+      };
+    }).finally(() => {
+      source.close();
+    });
+
+    // Return the stream
+    return stream;
   }
 }
 
