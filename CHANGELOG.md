@@ -1,4 +1,8 @@
 ## Changelog
+### 3.0.1 (2016-07-29)
+* Bugfix (MLIBZ-1051): Fix social login.
+* Enhancement (MLIBZ-764): Add support for encryption.
+
 ### 3.0.0-beta.30 (2016-07-15)
 * Bugfix (MLIBZ-1228): Store results from a pull in the cache.
 * Bugfix (MLIBZ-1230): Return server generated `_id` when creating entities.

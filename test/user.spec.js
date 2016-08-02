@@ -3,7 +3,7 @@ import { User, UserStore } from '../src/user';
 import { Acl } from '../src/acl';
 import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
-import { MobileIdentityConnect, SocialIdentity, AuthorizationGrant } from '../src/mic';
+import { MobileIdentityConnect, SocialIdentity, AuthorizationGrant } from '../src/social';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
@@ -423,12 +423,12 @@ describe('User', function () {
       const stub = this.sandbox.stub(MobileIdentityConnect.prototype, 'login', function() {
         return Promise.resolve({});
       });
-      const connectStub = this.sandbox.stub(User.prototype, 'connect', function() {
+      const connectIdentityStub = this.sandbox.stub(User.prototype, 'connectIdentity', function() {
         return Promise.resolve();
       });
       return User.loginWithMIC(randomString(), AuthorizationGrant.AuthorizationCodeLoginPage).then(() => {
         expect(stub).to.have.been.called.once;
-        expect(connectStub).to.have.been.called.once;
+        expect(connectIdentityStub).to.have.been.called.once;
       });
     });
   });
@@ -522,111 +522,51 @@ describe('User', function () {
     });
   });
 
-  describe('isIdentitySupported', function() {
+  describe('connectFacebook()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('isIdentitySupported');
+      expect(User).itself.to.respondTo('connectFacebook');
     });
+
+    // it('should call User.prototype.connect()', function() {
+    //   const user = new User();
+    //   const stub = this.sandbox.stub(user, 'connect', function() {
+    //     return Promise.resolve();
+    //   });
+    //   return user.loginWithFacebook().then(() => {
+    //     expect(stub).to.have.been.called.once;
+    //   });
+    // });
   });
 
-  describe('connectWithFacebook', function() {
+  describe('connectGoogle()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('connectWithFacebook');
+      expect(User).itself.to.respondTo('connectGoogle');
     });
 
-    it('should call User.connectWithIdentity', function() {
-      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
-        return Promise.resolve();
-      });
-      return User.connectWithFacebook().then(() => {
-        expect(stub).to.have.been.called.once;
-      });
-    });
+    // it('should call User.prototype.connect()', function() {
+    //   const user = new User();
+    //   const stub = this.sandbox.stub(user, 'connect', function() {
+    //     return Promise.resolve();
+    //   });
+    //   return user.loginWithGoogle().then(() => {
+    //     expect(stub).to.have.been.called.once;
+    //   });
+    // });
   });
 
-  describe('connectWithGoogle', function() {
+  describe('connectLinkedIn()', function() {
     it('should be a static method', function() {
-      expect(User).itself.to.respondTo('connectWithGoogle');
+      expect(User).itself.to.respondTo('connectLinkedIn');
     });
 
-    it('should call User.connectWithIdentity', function() {
-      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
-        return Promise.resolve();
-      });
-      return User.connectWithGoogle().then(() => {
-        expect(stub).to.have.been.called.once;
-      });
-    });
-  });
-
-  describe('connectWithLinkedIn', function() {
-    it('should be a static method', function() {
-      expect(User).itself.to.respondTo('connectWithLinkedIn');
-    });
-
-    it('should call User.connectWithIdentity', function() {
-      const stub = this.sandbox.stub(User, 'connectWithIdentity', function() {
-        return Promise.resolve();
-      });
-      return User.connectWithLinkedIn().then(() => {
-        expect(stub).to.have.been.called.once;
-      });
-    });
-  });
-
-  describe('connectWithIdentity', function() {
-    it('should be a static method', function() {
-      expect(User).itself.to.respondTo('connectWithIdentity');
-    });
-
-    it('should be a method', function() {
-      expect(User).to.respondTo('connectWithIdentity');
-    });
-
-    it('should forward to the connectWithIdentity instance method', function() {
-      const stub = this.sandbox.stub(User.prototype, 'connectWithIdentity', function() {
-        return Promise.resolve();
-      });
-      return User.connectWithIdentity(randomString()).then(() => {
-        expect(stub).to.have.been.called.once;
-      });
-    });
-
-    it('should throw an error if an identity is not provided', function() {
-      const promise = User.connectWithIdentity();
-      return expect(promise).to.be.rejectedWith(KinveyError);
-    });
-
-    it('should throw an error if an identity is not supported', function() {
-      const promise = User.connectWithIdentity(randomString());
-      return expect(promise).to.be.rejectedWith(KinveyError);
-    });
-
-    it('should throw an error if an identity is not configured in the cloud', function() {
-      nock(this.client.baseUrl)
-        .get(`/${appdataNamespace}/${this.client.appKey}/identities`)
-        .query(true)
-        .reply(200, [], {
-          'content-type': 'application/json'
-        });
-
-      const promise = User.connectWithIdentity(SocialIdentity.Facebook);
-      return expect(promise).to.be.rejectedWith(KinveyError);
-    });
-
-    // it('should connect a user when the identity is configured in the cloud', function() {
-    //   nock(this.client.baseUrl)
-    //     .get(`/${appdataNamespace}/${this.client.appKey}/identities`)
-    //     .query(true)
-    //     .reply(200, [{
-    //       key: randomString(),
-    //       appId: randomString(),
-    //       clientId: randomString()
-    //     }], {
-    //       'content-type': 'application/json'
-    //     });
-
-    //   const promise = User.connectWithIdentity(SocialIdentity.Facebook);
-    //   return expect(promise).to.be.rejectedWith(KinveyError);
+    // it('should call User.prototype.connect()', function() {
+    //   const user = new User();
+    //   const stub = this.sandbox.stub(user, 'connect', function() {
+    //     return Promise.resolve();
+    //   });
+    //   return user.loginWithLinkedIn().then(() => {
+    //     expect(stub).to.have.been.called.once;
+    //   });
     // });
   });
 

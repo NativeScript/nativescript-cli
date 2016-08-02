@@ -37,7 +37,7 @@ Object.freeze(DataStoreType);
 export { DataStoreType };
 
 /**
- * @private
+ * The NetworkStore class is used to find, create, update, remove, count and group entities over the network.
  */
 export class NetworkStore {
   constructor(collection, options = {}) {
@@ -512,7 +512,8 @@ export class NetworkStore {
 }
 
 /**
- * @private
+ * The CacheStore class is used to find, create, update, remove, count and group entities. Entities are stored
+ * in a cache and synced with the backend.
  */
 export class CacheStore extends NetworkStore {
   constructor(collection, options = {}) {
@@ -1215,7 +1216,8 @@ export class CacheStore extends NetworkStore {
 }
 
 /**
- * @private
+ * The SyncStore class is used to find, create, update, remove, count and group entities. Entities are stored
+ * in a cache and synced with the backend.
  */
 export class SyncStore extends CacheStore {
   get syncAutomatically() {
@@ -1413,10 +1415,19 @@ export class DataStore {
     return store;
   }
 
+  /**
+   * @private
+   */
   static getInstance(collection, type, options) {
     return this.collection(collection, type, options);
   }
 
+  /**
+   * Clear the cache. This will delete all data in the cache.
+   *
+   * @param  {Object} [options={}] Options
+   * @return {Promise<Object>} The result of clearing the cache.
+   */
   static async clearCache(options = {}) {
     const client = options.client || Client.sharedInstance();
     const pathname = `/${appdataNamespace}/${client.appKey}`;

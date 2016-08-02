@@ -311,8 +311,9 @@ export class CacheMiddleware extends KinveyMiddleware {
 
   async handle(request) {
     request = await super.handle(request);
-    const { method, query, body, appKey, collection, entityId } = request;
-    const db = this.openDatabase(appKey);
+    const { method, query, body, appKey, collection, entityId, client } = request;
+    const { encryptionKey } = client;
+    const db = this.openDatabase(appKey, encryptionKey);
     let data;
 
     if (method === RequestMethod.GET) {

@@ -39,6 +39,7 @@ function byteCount(str) {
 }
 
 /**
+ * @private
  * Enum for Auth types.
  */
 const AuthType = {
@@ -159,6 +160,9 @@ const Auth = {
   }
 };
 
+/**
+ * @private
+ */
 export class Headers {
   constructor(headers = {}) {
     this.headers = {};
@@ -253,6 +257,9 @@ export class Headers {
   }
 }
 
+/**
+ * @private
+ */
 export class Properties {
   constructor(properties = {}) {
     this.addAll(properties);
@@ -328,6 +335,9 @@ export class Properties {
   }
 }
 
+/**
+ * @private
+ */
 export class RequestConfig {
   constructor(options = {}) {
     options = assign({
@@ -441,6 +451,9 @@ export class RequestConfig {
   }
 }
 
+/**
+ * @private
+ */
 export class KinveyRequestConfig extends RequestConfig {
   constructor(options = {}) {
     super(options);

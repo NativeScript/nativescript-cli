@@ -1,5 +1,5 @@
 import { KinveyError } from './errors';
-import { getActiveUser, getActiveSocialIdentity } from './utils/storage';
+import { getActiveUser } from './utils/storage';
 import url from 'url';
 import assign from 'lodash/assign';
 import isString from 'lodash/isString';
@@ -87,27 +87,27 @@ export class Client {
 
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appKey = options.appKey;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appSecret = options.appSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.masterSecret = options.masterSecret;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.encryptionKey = options.encryptionKey;
 
     /**
-     * @type {string|undefined}
+     * @type {?string}
      */
     this.appVersion = options.appVersion;
   }
@@ -170,14 +170,6 @@ export class Client {
    */
   get activeUser() {
     return getActiveUser(this);
-  }
-
-  /**
-   * Active social identity being used to authorize a user for your
-   * app.
-   */
-  get activeSocialIdentity() {
-    return getActiveSocialIdentity(this);
   }
 
   /**

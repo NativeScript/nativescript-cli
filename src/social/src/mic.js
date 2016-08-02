@@ -1,7 +1,8 @@
-import { KinveyError } from './errors';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
-import { Client } from './client';
+import { Social } from './social';
+import { SocialIdentity } from './enums';
+import { KinveyError } from '../../errors';
+import { NetworkRequest } from '../../requests/network';
+import { AuthType, RequestMethod, KinveyRequestConfig } from '../../requests/request';
 import { Promise } from 'es6-promise';
 import path from 'path';
 import url from 'url';
@@ -11,6 +12,8 @@ const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
+ * @property  {string}    AuthorizationCodeLoginPage   AuthorizationCodeLoginPage grant
+ * @property  {string}    AuthorizationCodeAPI         AuthorizationCodeAPI grant
  */
 const AuthorizationGrant = {
   AuthorizationCodeLoginPage: 'AuthorizationCodeLoginPage',
@@ -20,44 +23,42 @@ Object.freeze(AuthorizationGrant);
 export { AuthorizationGrant };
 
 /**
- * Enum for Social Identities.
- */
-const SocialIdentity = {
-  Facebook: 'facebook',
-  Google: 'google',
-  LinkedIn: 'linkedin'
-};
-Object.freeze(SocialIdentity);
-export { SocialIdentity };
-
-/**
  * @private
  */
-export class MobileIdentityConnect {
-  constructor(client = Client.sharedInstance()) {
-    this.client = client;
+export class MobileIdentityConnect extends Social {
+  get identity() {
+    return SocialIdentity.MobileIdentityConnect;
   }
 
   static get identity() {
-    return process.env.KINVEY_MIC_IDENTITY || 'kinveyAuth';
+    return SocialIdentity.MobileIdentityConnect;
   }
 
   login(redirectUri, authorizationGrant = AuthorizationGrant.AuthorizationCodeLoginPage, options = {}) {
     const clientId = this.client.appKey;
 
-    const promise = Promise.resolve().then(() => {
-      if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
-        // Step 1: Request a code
-        return this.requestCodeWithPopup(clientId, redirectUri, options);
-      } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
-        // Step 1a: Request a temp login url
-        return this.requestTempLoginUrl(clientId, redirectUri, options)
-          .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
-      }
+    const promise = Promise.resolve()
+      .then(() => {
+        if (authorizationGrant === AuthorizationGrant.AuthorizationCodeLoginPage) {
+          // Step 1: Request a code
+          return this.requestCodeWithPopup(clientId, redirectUri, options);
+        } else if (authorizationGrant === AuthorizationGrant.AuthorizationCodeAPI) {
+          // Step 1a: Request a temp login url
+          return this.requestTempLoginUrl(clientId, redirectUri, options)
+            .then(url => this.requestCodeWithUrl(url, clientId, redirectUri, options)); // Step 1b: Request a code
+        }
 
-      throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
-        'Please use a supported authorization grant.');
-    }).then(code => this.requestToken(code, clientId, redirectUri, options)); // Step 3: Request a token
+        throw new KinveyError(`The authorization grant ${authorizationGrant} is unsupported. ` +
+          'Please use a supported authorization grant.');
+      })
+      .then(code => this.requestToken(code, clientId, redirectUri, options)) // Step 3: Request a token
+      .then(session => {
+        session.client_id = clientId;
+        session.redirect_uri = redirectUri;
+        session.protocol = this.client.micProtocol;
+        session.host = this.client.micHost;
+        return session;
+      });
 
     return promise;
   }
@@ -77,6 +78,9 @@ export class MobileIdentityConnect {
 
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       url: url.format({
         protocol: this.client.micProtocol,
         host: this.client.micHost,
@@ -89,7 +93,6 @@ export class MobileIdentityConnect {
         response_type: 'code'
       }
     });
-    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
     const request = new NetworkRequest(config);
     return request.execute().then(response => response.data.temp_login_uri);
   }
@@ -180,6 +183,9 @@ export class MobileIdentityConnect {
     const promise = Promise.resolve().then(() => {
       const config = new KinveyRequestConfig({
         method: RequestMethod.POST,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
         url: loginUrl,
         properties: options.properties,
         body: {
@@ -191,7 +197,6 @@ export class MobileIdentityConnect {
         },
         followRedirect: false
       });
-      config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
       const request = new NetworkRequest(config);
       return request.execute();
     }).then(response => {
@@ -211,6 +216,9 @@ export class MobileIdentityConnect {
   requestToken(code, clientId, redirectUri, options = {}) {
     const config = new KinveyRequestConfig({
       method: RequestMethod.POST,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
       authType: AuthType.App,
       url: url.format({
         protocol: this.client.micProtocol,
@@ -225,9 +233,7 @@ export class MobileIdentityConnect {
         code: code
       }
     });
-    config.headers.set('Content-Type', 'application/x-www-form-urlencoded');
     const request = new NetworkRequest(config);
-    request.automaticallyRefreshAuthToken = false;
     const promise = request.execute().then(response => response.data);
     return promise;
   }
