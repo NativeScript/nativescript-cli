@@ -58,7 +58,7 @@ export class NetworkStore {
     /**
      * @type {boolean}
      */
-    this.useDeltaFetch = !!options.useDeltaFetch || false;
+    this.useDeltaFetch = options.useDeltaFetch === true;
   }
 
   /**
