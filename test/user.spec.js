@@ -5,6 +5,7 @@ import { Metadata } from '../src/metadata';
 import { ActiveUserError, KinveyError } from '../src/errors';
 import { MobileIdentityConnect, SocialIdentity, AuthorizationGrant } from '../src/social';
 import { randomString } from '../src/utils/string';
+import isEmpty from 'lodash/isEmpty';
 import nock from 'nock';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
@@ -589,6 +590,70 @@ describe('User', function () {
         });
 
       expect(User.resetPassword(username)).to.be.fulfilled;
+    });
+  });
+
+  describe('signup', function() {
+    afterEach(function() {
+      return this.logout();
+    });
+
+    it('should allow an anonymous user', async function() {
+      const kinveyUser = {
+        _id: randomString(),
+        _kmd: {
+          authtoken: randomString()
+        },
+        _acl: {},
+        username: randomString(),
+        password: randomString()
+      };
+
+      let user = new User();
+
+      // Kinvey API response
+      nock(user.client.baseUrl)
+        .post(user.pathname, body => {
+          return isEmpty(body);
+        })
+        .query(true)
+        .reply(201, kinveyUser, {
+          'content-type': 'application/json'
+        });
+
+      user = await user.signup();
+      expect(user.data).to.deep.equal(kinveyUser);
+    });
+
+    it('should allow a custom username and password', async function() {
+      const kinveyUser = {
+        _id: randomString(),
+        _kmd: {
+          authtoken: randomString()
+        },
+        _acl: {},
+        username: 'testusername',
+        password: 'testpassword'
+      };
+
+      let user = new User();
+
+      // Kinvey API response
+      nock(user.client.baseUrl)
+        .post(user.pathname, {
+          username: kinveyUser.username,
+          password: kinveyUser.password
+        })
+        .query(true)
+        .reply(201, kinveyUser, {
+          'content-type': 'application/json'
+        });
+
+      user = await user.signup({
+        username: kinveyUser.username,
+        password: kinveyUser.password
+      });
+      expect(user.data).to.deep.equal(kinveyUser);
     });
   });
 });
