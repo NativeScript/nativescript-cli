@@ -436,18 +436,21 @@ export class PlatformService implements IPlatformService {
 			let platformData = this.$platformsData.getPlatformData(platform);
 
 			this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
-			let packageFile: string = null;
+			let packageFileDict: IStringDictionary = {};
 
 			let action = (device: Mobile.IDevice): IFuture<void> => {
 				return (() => {
+
+					let packageFileKey = this.getPackageFileKey(device);
+					let packageFile = packageFileDict[packageFileKey];
 					if (!packageFile) {
 						if (this.$devicesService.isiOSSimulator(device)) {
 							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, buildConfig)).wait();
 							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						} else {
-							buildConfig = buildConfig || {};
-							buildConfig.buildForDevice = true;
-							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, buildConfig)).wait();
+							let deviceBuildConfig = buildConfig || {};
+							deviceBuildConfig.buildForDevice = true;
+							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, deviceBuildConfig)).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}
@@ -455,10 +458,20 @@ export class PlatformService implements IPlatformService {
 					platformData.platformProjectService.deploy(device.deviceInfo.identifier).wait();
 					device.applicationManager.reinstallApplication(this.$projectData.projectId, packageFile).wait();
 					this.$logger.info(`Successfully deployed on device with identifier '${device.deviceInfo.identifier}'.`);
+
+					packageFileDict[packageFileKey] = packageFile;
+
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, this.getCanExecuteAction(platform)).wait();
 		}).future<void>()();
+	}
+
+	private getPackageFileKey(device: Mobile.IDevice): string {
+		if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
+			return device.deviceInfo.platform.toLowerCase();
+		}
+		return device.deviceInfo.platform.toLowerCase() + device.deviceInfo.type;
 	}
 
 	public deployOnDevice(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
