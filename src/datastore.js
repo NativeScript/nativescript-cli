@@ -75,6 +75,10 @@ export class NetworkStore {
     return pathname;
   }
 
+  /**
+   * Returns the live stream for the store.
+   * @return {Observable} Observable
+   */
   get liveStream() {
     if (typeof(EventSource) === 'undefined') {
       throw new KinveyError('Your environment does not support server-sent events.');
