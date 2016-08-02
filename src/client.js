@@ -74,7 +74,6 @@ export class Client {
      */
     this.micHost = options.micHost;
 
-
     /**
      * @type {string}
      */
@@ -84,7 +83,6 @@ export class Client {
      * @type {string}
      */
     this.liveServiceHost = options.liveServiceHost;
-
 
     /**
      * @type {?string}
