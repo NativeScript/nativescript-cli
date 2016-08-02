@@ -330,23 +330,25 @@ export class PlatformService implements IPlatformService {
 	public buildPlatform(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			if (!this.preparePlatform(platform).wait()) {
-				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-			}
-
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildProject(platformData.projectRoot, buildConfig).wait();
 			this.$logger.out("Project successfully built.");
 		}).future<void>()();
 	}
 
+	public prepareAndExecute(platform: string, executeAction: () => IFuture<void>): IFuture<void> {
+ 		return (() => {
+ 			platform = platform.toLowerCase();
+ 			if (!this.preparePlatform(platform).wait()) {
+ 				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+ 			}
+ 			executeAction().wait();
+ 		}).future<void>()();
+ 	}
+
 	public buildForDeploy(platform: string, buildConfig?: IBuildConfig): IFuture<void> {
 		return (() => {
 			platform = platform.toLowerCase();
-			if (!this.preparePlatform(platform).wait()) {
-				this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-			}
-
 			let platformData = this.$platformsData.getPlatformData(platform);
 			platformData.platformProjectService.buildForDeploy(platformData.projectRoot, buildConfig).wait();
 			this.$logger.out("Project successfully built");
@@ -440,12 +442,12 @@ export class PlatformService implements IPlatformService {
 				return (() => {
 					if (!packageFile) {
 						if (this.$devicesService.isiOSSimulator(device)) {
-							this.buildForDeploy(platform, buildConfig).wait();
+							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, buildConfig)).wait();
 							packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						} else {
 							buildConfig = buildConfig || {};
 							buildConfig.buildForDevice = true;
-							this.buildForDeploy(platform, buildConfig).wait();
+							this.prepareAndExecute(platform, () => this.buildForDeploy(platform, buildConfig)).wait();
 							packageFile = this.getLatestApplicationPackageForDevice(platformData).wait().packageName;
 						}
 					}
@@ -533,7 +535,7 @@ export class PlatformService implements IPlatformService {
 						emulatorServices.checkAvailability().wait();
 						emulatorServices.checkDependencies().wait();
 
-						this.buildPlatform(platform, buildConfig).wait();
+						this.prepareAndExecute(platform, () => this.buildPlatform(platform, buildConfig)).wait();
 
 						packageFile = this.getLatestApplicationPackageForEmulator(platformData).wait().packageName;
 						this.$logger.out("Using ", packageFile);

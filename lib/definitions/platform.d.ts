@@ -21,6 +21,8 @@ interface IPlatformService {
 	copyLastOutput(platform: string, targetPath: string, settings: {isForDevice: boolean}): IFuture<void>;
 	lastOutputPath(platform: string, settings: { isForDevice: boolean }): string;
 	ensurePlatformInstalled(platform: string): IFuture<void>;
+
+	prepareAndExecute(platform: string, executeAction: () => IFuture<void>): IFuture<void>;
 }
 
 interface IPlatformData {
