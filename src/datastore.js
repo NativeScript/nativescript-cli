@@ -75,6 +75,55 @@ export class NetworkStore {
     return pathname;
   }
 
+  get liveStream() {
+    if (typeof(EventSource) === 'undefined') {
+      throw new KinveyError('Your environment does not support server-sent events.');
+    }
+
+    if (!this._liveStream) {
+      // Subscribe to KLS
+      const source = new EventSource(url.format({
+        protocol: this.client.liveServiceProtocol,
+        host: this.client.liveServiceHost,
+        pathname: this.pathname,
+      }));
+
+       // Create a live stream
+      this._liveStream = KinveyObservable.create(async observer => {
+        // Open event
+        source.onopen = (event) => {
+          Log.info(`Subscription to Kinvey Live Service is now open at ${source.url}.`);
+          Log.info(event);
+        };
+
+        // Message event
+        source.onmessage = (message) => {
+          try {
+            observer.next(JSON.parse(message.data));
+          } catch (error) {
+            observer.error(error);
+          }
+        };
+
+        // Error event
+        source.onerror = (error) => {
+          observer.error(error);
+        };
+
+        // Dispose function
+        return () => {
+          observer.complete();
+        };
+      }).finally(() => {
+        source.close();
+        delete this._liveStream;
+      });
+    }
+
+    // Return the stream
+    return this._liveStream;
+  }
+
   /**
    * Find all entities in the data store. A query can be optionally provided to return
    * a subset of all entities in a collection or omitted to return all entities in
