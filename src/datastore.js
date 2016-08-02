@@ -509,55 +509,6 @@ export class NetworkStore {
 
     return stream.toPromise();
   }
-
-  /**
-   * Subscribe to a live stream for the Data Store.
-   */
-  subscribe() {
-    if (typeof(EventSource) === 'undefined') {
-      throw new KinveyError('Your environment does not support server-sent events.');
-    }
-
-    // Subscribe to KLS
-    const source = new EventSource(url.format({
-      protocol: this.client.liveServiceProtocol,
-      host: this.client.liveServiceHost,
-      pathname: this.pathname,
-    }));
-
-     // Create a live stream
-    const stream = KinveyObservable.create(async observer => {
-      // Open event
-      source.onopen = (event) => {
-        Log.info(`Subscription to Kinvey Live Service is now open at ${source.url}.`);
-        Log.info(event);
-      };
-
-      // Message event
-      source.onmessage = (message) => {
-        try {
-          observer.next(JSON.parse(message.data));
-        } catch (error) {
-          observer.error(error);
-        }
-      };
-
-      // Error event
-      source.onerror = (error) => {
-        observer.error(error);
-      };
-
-      // Dispose function
-      return () => {
-        observer.complete();
-      };
-    }).finally(() => {
-      source.close();
-    });
-
-    // Return the stream
-    return stream;
-  }
 }
 
 /**
