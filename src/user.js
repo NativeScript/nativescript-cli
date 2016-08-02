@@ -21,6 +21,7 @@ import result from 'lodash/result';
 import isArray from 'lodash/isArray';
 import isString from 'lodash/isString';
 import isObject from 'lodash/isObject';
+import isEmpty from 'lodash/isEmpty';
 const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
@@ -33,6 +34,10 @@ const emailAttribute = process.env.KINVEY_EMAIL_ATTRIBUTE || 'email';
  * The UserStore class is used to find, save, update, remove, count and group users.
  */
 export class UserStore extends NetworkStore {
+  constructor(options) {
+    super(null, options);
+  }
+
   /**
    * The pathname for the store.
    *
@@ -397,7 +402,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static login(username, password, options) {
-    const user = new User();
+    const user = new User({}, options);
     return user.login(username, password, options);
   }
 
@@ -435,7 +440,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const user = new User();
+    const user = new User({}, options);
     user.client = options.client || Client.sharedInstance();
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
@@ -508,7 +513,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectFacebook(clientId, options) {
-    const user = new User({});
+    const user = new User({}, options);
     return user.connectFacebook(clientId, options);
   }
 
@@ -541,7 +546,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectGoogle(clientId, options) {
-    const user = new User({});
+    const user = new User({}, options);
     return user.connectGoogle(clientId, options);
   }
 
@@ -574,7 +579,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectLinkedIn(clientId, options) {
-    const user = new User({});
+    const user = new User({}, options);
     return user.connectLinkedIn(clientId, options);
   }
 
@@ -671,7 +676,7 @@ export class User {
   /**
    * Sign up a user with Kinvey.
    *
-   * @param {User|Object} data Users data.
+   * @param {?User|?Object} user Users data.
    * @param {Object} [options] Options
    * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
    *                                       being signed up.
@@ -702,7 +707,7 @@ export class User {
         host: this.client.host,
         pathname: this.pathname
       }),
-      body: user,
+      body: isEmpty(user) ? null : user,
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
@@ -728,7 +733,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static signup(data, options) {
-    const user = new User();
+    const user = new User({}, options);
     return user.signup(data, options);
   }
 
@@ -760,7 +765,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static signupWithIdentity(identity, session, options) {
-    const user = new User();
+    const user = new User({}, options);
     return user.signupWithIdentity(identity, session, options);
   }
 
@@ -920,7 +925,7 @@ export class User {
    * @return {boolean} True if the username already exists otherwise false.
    */
   static exists(username, options) {
-    const store = new UserStore();
+    const store = new UserStore(options);
     return store.exists(username, options);
   }
 
@@ -932,7 +937,7 @@ export class User {
    * @return {Promise<Object>} The response.
    */
   static restore(id, options) {
-    const store = new UserStore();
+    const store = new UserStore(options);
     return store.restore(id, options);
   }
 }
