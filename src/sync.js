@@ -239,6 +239,10 @@ export class SyncManager {
     const response = await request.execute();
     const networkEntities = response.data;
 
+    // If the result is empty then clear the cache
+    // If a query was used then just update the cache
+    // If a query was not used then replace the cache
+
     // Save network entities to cache
     const saveConfig = new KinveyRequestConfig({
       method: RequestMethod.PUT,
