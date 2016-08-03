@@ -46,26 +46,6 @@ class IOSPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 			this.$devicesService.execute(action, canExecute).wait();
 		}).future<void>()();
 	}
-
-	protected getCanExecuteActionCore(platform: string, appIdentifier: string): (dev: Mobile.IDevice) => boolean {
-		if (this.$options.emulator) {
-			return (device: Mobile.IDevice): boolean => this.$devicesService.isiOSSimulator(device);
-		} else {
-			let devices = this.$devicesService.getDevicesForPlatform(platform);
-			let simulator = _.find(devices, d => this.$devicesService.isiOSSimulator(d));
-			if (simulator) {
-				let iOSDevices = _.filter(devices, d => d.deviceInfo.identifier !== simulator.deviceInfo.identifier);
-				if (iOSDevices && iOSDevices.length) {
-					let isApplicationInstalledOnSimulator = simulator.applicationManager.isApplicationInstalled(appIdentifier).wait();
-					let isApplicationInstalledOnAllDevices = _.intersection.apply(null, iOSDevices.map(device => device.applicationManager.isApplicationInstalled(appIdentifier).wait()));
-					// In case the application is not installed on both device and simulator, syncs only on device.
-					if (!isApplicationInstalledOnSimulator && !isApplicationInstalledOnAllDevices) {
-						return (device: Mobile.IDevice): boolean => this.$devicesService.isiOSDevice(device);
-					}
-				}
-			}
-		}
-	}
 }
 
 $injector.register("iosPlatformLiveSyncServiceLocator", {factory: IOSPlatformLiveSyncService});

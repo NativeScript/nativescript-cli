@@ -31,8 +31,6 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 
 	public abstract fullSync(postAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void>;
 
-	protected abstract getCanExecuteActionCore(platform: string, appIdentifier: string): (dev: Mobile.IDevice) => boolean;
-
 	public partialSync(event: string, filePath: string, dispatcher: IFutureDispatcher, afterFileSyncAction: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): void {
 		if (filePath.indexOf(constants.APP_RESOURCES_FOLDER_NAME) !== -1) {
 			this.$logger.warn(`Skipping livesync for changed file ${filePath}. This change requires a full build to update your application. `.yellow.bold);
@@ -72,12 +70,6 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 		if (this.$options.device) {
 			return (device: Mobile.IDevice): boolean => isTheSamePlatformAction(device) && device.deviceInfo.identifier === this.$devicesService.getDeviceByDeviceOption().deviceInfo.identifier;
 		}
-
-		let platformCanExecuteAction = this.getCanExecuteActionCore(platform, appIdentifier);
-		if (platformCanExecuteAction) {
-			return (device: Mobile.IDevice): boolean => isTheSamePlatformAction(device) && platformCanExecuteAction(device);
-		}
-
 		return isTheSamePlatformAction;
 	}
 
