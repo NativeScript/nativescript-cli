@@ -76,4 +76,11 @@ gulp.task('lint', () => {
   return stream;
 });
 
+gulp.task('tag', () => {
+  const stream = gulp.src('./package.json')
+    .pipe(tag())
+    .on('error', errorHandler);
+  return stream;
+});
+
 gulp.task('default', ['build']);
