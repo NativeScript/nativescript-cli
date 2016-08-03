@@ -1,4 +1,8 @@
 ## Changelog
+### 3.0.2 (2016-08-03)
+* Enhancement (MLIBZ-1267): Support anonymouse user signup.
+* Enhancement (MLIBZ-1236): Support Kinvey Live Service.
+
 ### 3.0.1 (2016-07-29)
 * Bugfix (MLIBZ-1051): Fix social login.
 * Enhancement (MLIBZ-764): Add support for encryption.
