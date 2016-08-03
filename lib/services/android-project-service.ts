@@ -586,7 +586,16 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (alreadyHasAndroidManifest) {
 						this.backupOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
 					}
-					this.$fs.copyFile(templateAndroidManifest, originalAndroidManifestFilePath).wait();
+
+					let content = this.$fs.readText(templateAndroidManifest).wait();
+
+					// We do not want to force launch screens on old projects.
+					let themeMeta = `<meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />`;
+					content = content
+						.replace(`\n\t\t\tandroid:theme="@style/LaunchScreenTheme">\n`, `>\n\t\t\t<!-- android:theme="@style/LaunchScreenTheme" -->\n`)
+						.replace(themeMeta, "<!-- " + themeMeta + " -->");
+
+					this.$fs.writeFile(originalAndroidManifestFilePath, content).wait();
 				} catch (e) {
 					this.$logger.trace(`Copying template's ${this.platformData.configurationFileName} failed. `, e);
 					this.revertBackupOfOriginalAndroidManifest(originalAndroidManifestFilePath).wait();
