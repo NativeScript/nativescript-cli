@@ -50,10 +50,6 @@ class AndroidPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 			this.$devicesService.execute(action, canExecute).wait();
 		}).future<void>()();
 	}
-
-	protected getCanExecuteActionCore(platform: string, appIdentifier: string): (dev: Mobile.IDevice) => boolean {
-		return (device: Mobile.IDevice) => true;
-	}
 }
 
 $injector.register("androidPlatformLiveSyncServiceLocator", {factory: AndroidPlatformLiveSyncService});
