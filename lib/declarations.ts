@@ -100,6 +100,7 @@ interface IOptions extends ICommonOptions {
 	teamId: string;
 	rebuild: boolean;
 	syncAllFiles: boolean;
+	liveEdit: boolean;
 }
 
 interface IInitService {

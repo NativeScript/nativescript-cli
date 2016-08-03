@@ -1,13 +1,13 @@
 import {DeviceAndroidDebugBridge} from "../../common/mobile/android/device-android-debug-bridge";
 import {AndroidDeviceHashService} from "../../common/mobile/android/android-device-hash-service";
-import {DeviceLiveSyncServiceBase} from "./device-livesync-service-base";
 import Future = require("fibers/future");
 import * as helpers from "../../common/helpers";
 import * as path from "path";
 import * as net from "net";
 
-class AndroidLiveSyncService extends DeviceLiveSyncServiceBase<Mobile.IAndroidDevice> implements IDeviceLiveSyncService {
+class AndroidLiveSyncService implements IDeviceLiveSyncService {
 	private static BACKEND_PORT = 18182;
+	private device: Mobile.IAndroidDevice;
 
 	constructor(_device: Mobile.IDevice,
 		private $fs: IFileSystem,
@@ -16,15 +16,25 @@ class AndroidLiveSyncService extends DeviceLiveSyncServiceBase<Mobile.IAndroidDe
 		private $injector: IInjector,
 		private $projectData: IProjectData,
 		private $androidDebugService: IDebugService,
-		$liveSyncProvider: ILiveSyncProvider) {
-		super(_device, $liveSyncProvider);
+		private $liveSyncProvider: ILiveSyncProvider) {
+		this.device = <Mobile.IAndroidDevice>(_device);
 	}
 
 	public get debugService(): IDebugService {
 		return this.$androidDebugService;
 	}
 
-	public restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
+	public refreshApplication(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[], forceExecuteFullSync: boolean): IFuture<void> {
+		let canExecuteFastSync = !forceExecuteFullSync && !_.some(localToDevicePaths, (localToDevicePath:any) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
+
+		if (canExecuteFastSync) {
+			return this.reloadPage(deviceAppData, localToDevicePaths);
+		}
+
+		return this.restartApplication(deviceAppData);
+	}
+
+	private restartApplication(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
 		return (() => {
 			this.device.adb.executeShellCommand(["chmod", "777", deviceAppData.deviceProjectRootPath, `/data/local/tmp/${deviceAppData.appIdentifier}`]).wait();
 
@@ -56,7 +66,7 @@ class AndroidLiveSyncService extends DeviceLiveSyncServiceBase<Mobile.IAndroidDe
 		}).future<void>()();
 	}
 
-	public reloadPage(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
+	private reloadPage(deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> {
 		return (() => {
 			this.device.adb.executeCommand(["forward", `tcp:${AndroidLiveSyncService.BACKEND_PORT.toString()}`, `localabstract:${deviceAppData.appIdentifier}-livesync`]).wait();
 			this.sendPageReloadMessage().wait();
