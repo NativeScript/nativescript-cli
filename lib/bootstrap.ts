@@ -41,6 +41,8 @@ $injector.requireCommand("run|android", "./commands/run");
 $injector.requireCommand("debug|ios", "./commands/debug");
 $injector.requireCommand("debug|android", "./commands/debug");
 
+$injector.requireCommand("rebuild", "./commands/rebuild");
+
 $injector.requireCommand("prepare", "./commands/prepare");
 $injector.requireCommand("build|ios", "./commands/build");
 $injector.requireCommand("build|android", "./commands/build");
