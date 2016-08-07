@@ -115,11 +115,15 @@ export class PluginsService implements IPluginsService {
 			let pluginDestinationPath = path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME, "tns_modules");
 			let pluginData = this.convertToPluginData(dependencyData);
 
+			let exists = this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait();
+
 			if (!this.isPluginDataValidForPlatform(pluginData, platform).wait()) {
+				// Still clean up platform in case other platforms were supported.
+				shelljs.rm("-rf", path.join(pluginDestinationPath, pluginData.name, "platforms"));
 				return;
 			}
 
-			if (this.$fs.exists(path.join(platformData.appDestinationDirectoryPath, constants.APP_FOLDER_NAME)).wait()) {
+			if (exists) {
 				this.$fs.ensureDirectoryExists(pluginDestinationPath).wait();
 				shelljs.cp("-Rf", pluginData.fullPath, pluginDestinationPath);
 
