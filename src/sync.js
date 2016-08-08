@@ -240,21 +240,20 @@ export class SyncManager {
     const networkEntities = response.data;
 
     // Clear the cache
-    if (!query) {
-      const clearConfig = new KinveyRequestConfig({
-        method: RequestMethod.DELETE,
-        url: url.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.backendPathname,
-          query: options.query
-        }),
-        properties: options.properties,
-        timeout: options.timeout
-      });
-      const clearRequest = new CacheRequest(clearConfig);
-      await clearRequest.execute();
-    }
+    const clearConfig = new KinveyRequestConfig({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.backendPathname,
+        query: options.query
+      }),
+      query: query,
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    const clearRequest = new CacheRequest(clearConfig);
+    await clearRequest.execute();
 
     // Save network entities to cache
     const saveConfig = new KinveyRequestConfig({

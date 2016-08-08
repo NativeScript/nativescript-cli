@@ -180,7 +180,7 @@ describe('Sync', function () {
       expect(entities2).to.deep.equal([]);
     });
 
-    it('should update entities in cache because a query was provided', async function() {
+    it('should update entities in cache when a query was provided', async function() {
       const store = new SyncStore(collection);
       const entity = {
         _id: randomString(),
@@ -208,7 +208,7 @@ describe('Sync', function () {
           'content-type': 'application/json'
         });
 
-      const query = new Query();
+      const query = new Query().equalTo('_id', randomString());
       await store.pull(query);
       const entities2 = await store.find().toPromise();
       expect(entities2).to.be.an('array');
