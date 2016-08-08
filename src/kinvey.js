@@ -1,4 +1,5 @@
 import { KinveyError } from './errors';
+import { Acl } from './acl';
 import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { CustomEndpoint } from './endpoint';
@@ -126,6 +127,7 @@ export class Kinvey {
     const client = Client.init(options);
 
     // Add all the modules to the Kinvey namespace
+    this.Acl = Acl;
     this.Aggregation = Aggregation;
     this.AuthorizationGrant = AuthorizationGrant;
     this.CustomEndpoint = CustomEndpoint;
