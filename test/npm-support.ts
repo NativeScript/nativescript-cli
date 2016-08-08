@@ -78,6 +78,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("mobilePlatformsCapabilities", MobilePlatformsCapabilities);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("xmlValidator", XmlValidator);
+	testInjector.register("config", StaticConfigLib.Configuration);
 
 	return testInjector;
 }
