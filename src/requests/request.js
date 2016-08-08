@@ -1,6 +1,7 @@
 import { KinveyRack } from '../rack/rack';
 import { Client } from '../client';
 import { KinveyError, NoActiveUserError } from '../errors';
+import { Device } from '../device';
 import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import qs from 'qs';
@@ -524,11 +525,8 @@ export class KinveyRequestConfig extends RequestConfig {
       headers.remove('X-Kinvey-Custom-Request-Properties');
     }
 
-    if (global.KinveyDevice) {
-      headers.set('X-Kinvey-Device-Information', JSON.stringify(global.KinveyDevice.toJSON()));
-    } else {
-      headers.remove('X-Kinvey-Device-Information');
-    }
+    // Set Device information
+    headers.set('X-Kinvey-Device-Information', Device.toString());
 
     if (this.authType) {
       let authInfo;
