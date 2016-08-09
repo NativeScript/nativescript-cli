@@ -19,7 +19,8 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 		private $iOSDebugService: IDebugService,
 		private $childProcess: IChildProcess,
 		private $fs: IFileSystem,
-		private $liveSyncProvider: ILiveSyncProvider) {
+		private $liveSyncProvider: ILiveSyncProvider,
+		private $processService: IProcessService) {
 		this.device = <Mobile.IiOSDevice>(_device);
 	}
 
@@ -137,7 +138,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 	}
 
 	private attachEventHandlers(): void {
-		this.attachProcessExitHandlers();
+		this.$processService.attachToProcessExitSignals(this, this.destroySocket);
 
 		this.socket.on("close", (hadError: boolean) => {
 			this.$logger.trace(`Socket closed, hadError is ${hadError}.`);
@@ -182,21 +183,6 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 				this.destroySocket();
 			}
 		}).future<void>()();
-	}
-
-	private attachProcessExitHandlers(): void {
-		process.on("exit", (exitCode: number) => {
-			this.destroySocket();
-		});
-
-		process.on("SIGTERM", () => {
-			this.destroySocket();
-		});
-
-		process.on("SIGINT", () => {
-			this.destroySocket();
-			return process.exit();
-		});
 	}
 
 	private destroySocket(): void {

@@ -24,7 +24,8 @@ class LiveSyncService implements ILiveSyncService {
 		private $options: IOptions,
 		private $logger: ILogger,
 		private $dispatcher: IFutureDispatcher,
-		private $hooksService: IHooksService) { }
+		private $hooksService: IHooksService,
+		private $processService: IProcessService) { }
 
 	private ensureAndroidFrameworkVersion(platformData: IPlatformData): IFuture<void> { // TODO: this can be moved inside command or canExecute function
 		return (() => {
@@ -130,7 +131,7 @@ class LiveSyncService implements ILiveSyncService {
 	private partialSync(syncWorkingDirectory: string, onChangedActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void )[]): void {
 		let that = this;
 
-		gaze("**/*", { cwd: syncWorkingDirectory }, function (err: any, watcher: any) {
+		let gazeWatcher = gaze("**/*", { cwd: syncWorkingDirectory }, function (err: any, watcher: any) {
 			this.on('all', (event: string, filePath: string) => {
 				fiberBootstrap.run(() => {
 					that.$dispatcher.dispatch(() => (() => {
@@ -147,6 +148,7 @@ class LiveSyncService implements ILiveSyncService {
 			});
 		});
 
+		this.$processService.attachToProcessExitSignals(this, gazeWatcher.close);
 		this.$dispatcher.run();
 	}
 }
