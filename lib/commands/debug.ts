@@ -18,7 +18,10 @@
 
 					this.debugService.debugStop().wait();
 
-					let applicationId = deviceAppData.device.isEmulator ? projectData.projectName : deviceAppData.appIdentifier;
+					let applicationId = deviceAppData.appIdentifier;
+					if (deviceAppData.device.isEmulator && deviceAppData.platform.toLowerCase() === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+						applicationId = projectData.projectName;
+					}
 					deviceAppData.device.applicationManager.stopApplication(applicationId).wait();
 
 					this.debugService.debug().wait();
