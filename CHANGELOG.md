@@ -1,5 +1,28 @@
 NativeScript CLI Changelog
 ================
+2.2.0 (2016, August 10)
+==
+
+### New
+* [Implemented #1959](https://github.com/NativeScript/nativescript-cli/issues/1959): XCode8/iOS10 support
+* [Implemented #1948](https://github.com/NativeScript/nativescript-cli/issues/1948): npm WARN deprecated minimatch@0.2.14: Please update to minimatch 3.0.2 or higher to avoid a RegExp DoS issue 
+* [Implemented #1944](https://github.com/NativeScript/nativescript-cli/issues/1944): Enhancement: tns plugin INSTALL alias
+* [Implemented #1565](https://github.com/NativeScript/nativescript-cli/issues/1565): Livesync debugging support
+* [Implemented #526](https://github.com/NativeScript/nativescript-cli/issues/526): Update plugin command
+
+### Fixed
+* [Fixed #1958](https://github.com/NativeScript/nativescript-cli/issues/1958): CSS is not automatically livesynced in angular apps.
+* [Fixed #1955](https://github.com/NativeScript/nativescript-cli/issues/1955): Livesync does not inform the user if no platforms are added but kills the process.
+* [Fixed #1955](https://github.com/NativeScript/nativescript-cli/issues/1955): Livesync does not inform the user if no platforms are added but kills the process.
+* [Fixed #1920](https://github.com/NativeScript/nativescript-cli/issues/1920): "tns debug ios" does not work.
+* [Fixed #1912](https://github.com/NativeScript/nativescript-cli/issues/1912): "tns device run <bundle> --device <device>" noes no work.
+* [Fixed #1909](https://github.com/NativeScript/nativescript-cli/issues/1909): "tns run android --emulator" deploy to device.
+* [Fixed #1904](https://github.com/NativeScript/nativescript-cli/issues/1904): ERROR Provide a valid path to the desired application bundle.(with Device and Simulator running).
+* [Fixed #1900](https://github.com/NativeScript/nativescript-cli/issues/1900): livesync EISDIR error when changing ".ts" file.
+* [Fixed #1872](https://github.com/NativeScript/nativescript-cli/issues/1872): "tns livesync android" not updating application consistently.
+* [Fixed #1508](https://github.com/NativeScript/nativescript-cli/issues/1508): Project with plugin variables does not build.
+* [Fixed #1354](https://github.com/NativeScript/nativescript-cli/issues/1354): Livesync both Android and iOS at the same time, only android updates.
+
 2.1.0 (2016, June 30)
 ==
 
