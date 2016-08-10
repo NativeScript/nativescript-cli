@@ -9,6 +9,11 @@
 		protected $options: IOptions) { }
 
 	execute(args: string[]): IFuture<void> {
+
+		if (this.$options.watch) {
+			this.$options.rebuild = false;
+		}
+
 		if (!this.$options.rebuild && !this.$options.start) {
 			this.$config.debugLivesync = true;
 			let usbLiveSyncService: ILiveSyncService = this.$injector.resolve("usbLiveSyncService");

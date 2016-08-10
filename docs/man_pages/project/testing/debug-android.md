@@ -14,7 +14,7 @@ Livesync on device, run the app start Chrome DevTools, and attach the debugger |
 Livesync on device, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk [--device <Device ID>] [--debug-port <port>] [--timeout <timeout>]`
 Livesync in the native emulator, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --emulator [<Emulator Options>] [--timeout <timeout>]`
 Livesync in Genymotion, run the app and stop at the first code statement | `$ tns debug android --no-rebuild --debug-brk --geny <Geny Name> [--timeout <timeout>]`
-Livesync on device/emulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug android --no-rebuild --watch [--debug-brk]`
+Livesync on device/emulator, run the app, start and attach the debugger. Refresh everything automatically upon changes | `$ tns debug android --watch [--debug-brk]`
 Retrieve the device port on which you are debugging | `$ tns debug android [--device <Device ID>] --get-port`
 Detach the debug tools | `$ tns debug android --stop`
 
