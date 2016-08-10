@@ -10,6 +10,11 @@
 		protected $options: IOptions) { }
 
 	execute(args: string[]): IFuture<void> {
+
+		if (this.$options.watch) {
+			this.$options.rebuild = false;
+		}
+
 		if (!this.$options.rebuild && !this.$options.start) {
 			this.$config.debugLivesync = true;
 			let applicationReloadAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]): IFuture<void> => {
