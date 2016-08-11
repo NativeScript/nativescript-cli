@@ -220,8 +220,8 @@ class LiveSyncServiceBase extends EventEmitter implements ILiveSyncServiceBase {
 					if (!this.emit("sync", device, data)) {
 						platformLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, data.forceExecuteFullSync || !wasInstalled).wait();
 					}
-					this.$logger.info(`Successfully synced application ${data.appIdentifier} on device ${device.deviceInfo.identifier}.`);
 				}
+				this.$logger.info(`Successfully synced application ${data.appIdentifier} on device ${device.deviceInfo.identifier}.`);
 
 			}).future<void>()();
 		};
