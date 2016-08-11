@@ -110,12 +110,7 @@ class LiveSyncService implements ILiveSyncService {
 			let watchForChangeActions: ((event: string, filePath: string, dispatcher: IFutureDispatcher) => void)[] = [];
 			_.each(liveSyncData, (dataItem) => {
 				let service = this.resolvePlatformLiveSyncBaseService(dataItem.platform, dataItem);
-
 				watchForChangeActions.push((event: string, filePath: string, dispatcher: IFutureDispatcher) => {
-					if (!applicationReloadAction) {
-						applicationReloadAction = (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => service.refreshApplication(deviceAppData, localToDevicePaths);
-					}
-
 					service.partialSync(event, filePath, dispatcher, applicationReloadAction);
 				});
 				service.fullSync(applicationReloadAction).wait();

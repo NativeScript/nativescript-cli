@@ -96,6 +96,12 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 			let deviceLiveSyncService = this.resolveDeviceSpecificLiveSyncService(deviceAppData.device.deviceInfo.platform, deviceAppData.device);
 			this.$logger.info("Applying changes...");
 			deviceLiveSyncService.refreshApplication(deviceAppData, localToDevicePaths, this.liveSyncData.forceExecuteFullSync).wait();
+		}).future<void>()();
+	}
+
+	protected finishLivesync(deviceAppData: Mobile.IDeviceAppData): IFuture<void> {
+		return (() => {
+			// This message is important because it signals Visual Studio Code that livesync has finished and debugger can be attached.
 			this.$logger.info(`Successfully synced application ${deviceAppData.appIdentifier} on device ${deviceAppData.device.deviceInfo.identifier}.`);
 		}).future<void>()();
 	}
@@ -187,7 +193,13 @@ export abstract class PlatformLiveSyncServiceBase implements IPlatformLiveSyncSe
 				let localToDevicePaths = this.$projectFilesManager.createLocalToDevicePaths(deviceAppData, this.liveSyncData.projectFilesPath, filesToSync, this.liveSyncData.excludedProjectDirsAndFiles);
 
 				fileSyncAction(deviceAppData, localToDevicePaths).wait();
-				afterFileSyncAction(deviceAppData, localToDevicePaths).wait();
+				if (!afterFileSyncAction) {
+					this.refreshApplication(deviceAppData, localToDevicePaths).wait();
+				}
+				this.finishLivesync(deviceAppData).wait();
+				if (afterFileSyncAction) {
+					afterFileSyncAction(deviceAppData, localToDevicePaths).wait();
+				}
 			}).future<void>()();
 		};
 
