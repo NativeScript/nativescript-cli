@@ -33,6 +33,7 @@ import {DeviceAppDataProvider} from "../lib/providers/device-app-data-provider";
 import {MobilePlatformsCapabilities} from "../lib/mobile-platforms-capabilities";
 import {DevicePlatformsConstants} from "../lib/common/mobile/device-platforms-constants";
 import { XmlValidator } from "../lib/xml-validator";
+import StaticConfigLib = require("../lib/config");
 import * as path from "path";
 import * as temp from "temp";
 temp.track();
@@ -99,6 +100,7 @@ function createTestInjector() {
 		defaultTemplate: future.fromResult("")
 	});
 	testInjector.register("xmlValidator", XmlValidator);
+	testInjector.register("config", StaticConfigLib.Configuration);
 
 	return testInjector;
 }

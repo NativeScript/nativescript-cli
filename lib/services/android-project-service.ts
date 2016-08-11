@@ -41,6 +41,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $xmlValidator: IXmlValidator,
+		private $config: IConfiguration,
 		private $npm: INodePackageManager) {
 		super($fs, $projectData, $projectDataService);
 		this._androidProjectPropertiesManagers = Object.create(null);
@@ -405,16 +406,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public beforePrepareAllPlugins(): IFuture<void> {
-		let buildOptions = this.getBuildOptions();
-		buildOptions.unshift("clean");
+		if (!this.$config.debugLivesync) {
+			let buildOptions = this.getBuildOptions();
 
-		let projectRoot = this.platformData.projectRoot;
-		let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
-		if (this.$hostInfo.isWindows) {
-			gradleBin += ".bat";
+			buildOptions.unshift("clean");
+
+			let projectRoot = this.platformData.projectRoot;
+			let gradleBin = this.useGradleWrapper(projectRoot) ? path.join(projectRoot, "gradlew") : "gradle";
+			if (this.$hostInfo.isWindows) {
+				gradleBin += ".bat";
+			}
+			this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
 		}
-		this.spawn(gradleBin, buildOptions, { stdio: "inherit", cwd: this.platformData.projectRoot }).wait();
-
 		return Future.fromResult();
 	}
 
