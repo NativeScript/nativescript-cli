@@ -1,6 +1,6 @@
 {
   "name": "kinvey-javascript-sdk-core",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "Kinvey JavaScript SDK Core",
   "main": "./dist/kinvey.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "clean": "gulp clean",
     "docs": "esdoc -c esdoc.json",
     "lint": "gulp lint",
-    "test": "npm run test:ava && npm run test:mocha",
+    "test": "npm run test:mocha",
     "test:ava": "ava",
     "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100  --recursive test",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",

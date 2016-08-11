@@ -2,6 +2,7 @@ import './setup';
 import { SyncManager } from '../src/sync';
 import { SyncError } from '../src/errors';
 import { SyncStore } from '../src/datastore';
+import { Query } from '../src/query';
 import { randomString } from '../src/utils/string';
 import nock from 'nock';
 import chai from 'chai';
@@ -122,7 +123,7 @@ describe('Sync', function () {
   });
 
   describe('pull', function() {
-    it('should save entities to cache', async function() {
+    it('should save entities to cache to match remove collection', async function() {
       const store = new SyncStore(collection);
       const entity = {
         _id: randomString(),
@@ -142,6 +143,77 @@ describe('Sync', function () {
       expect(entities).to.be.an('array');
       expect(entities).to.have.length(1);
       expect(entities).to.deep.equal([entity]);
+    });
+
+    it('should remove entities in cache because remote collection is empty', async function() {
+      const store = new SyncStore(collection);
+      const entity = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities1 = await store.find().toPromise();
+      expect(entities1).to.be.an('array');
+      expect(entities1).to.have.length(1);
+      expect(entities1).to.deep.equal([entity]);
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities2 = await store.find().toPromise();
+      expect(entities2).to.be.an('array');
+      expect(entities2).to.have.length(0);
+      expect(entities2).to.deep.equal([]);
+    });
+
+    it('should update entities in cache when a query was provided', async function() {
+      const store = new SyncStore(collection);
+      const entity = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities1 = await store.find().toPromise();
+      expect(entities1).to.be.an('array');
+      expect(entities1).to.have.length(1);
+      expect(entities1).to.deep.equal([entity]);
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [], {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query().equalTo('_id', randomString());
+      await store.pull(query);
+      const entities2 = await store.find().toPromise();
+      expect(entities2).to.be.an('array');
+      expect(entities2).to.have.length(1);
+      expect(entities2).to.deep.equal([entity]);
     });
   });
 

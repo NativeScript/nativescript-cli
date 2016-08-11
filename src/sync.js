@@ -239,9 +239,21 @@ export class SyncManager {
     const response = await request.execute();
     const networkEntities = response.data;
 
-    // If the result is empty then clear the cache
-    // If a query was used then just update the cache
-    // If a query was not used then replace the cache
+    // Clear the cache
+    const clearConfig = new KinveyRequestConfig({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.backendPathname,
+        query: options.query
+      }),
+      query: query,
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    const clearRequest = new CacheRequest(clearConfig);
+    await clearRequest.execute();
 
     // Save network entities to cache
     const saveConfig = new KinveyRequestConfig({
@@ -586,7 +598,7 @@ export class SyncManager {
 
   /**
    * Clear the sync table. A query can be provided to
-   * only clear a subet of the sync table.
+   * only clear a subset of the sync table.
    *
    * @param   {Query}         [query]                     Query
    * @param   {Object}        [options={}]                Options

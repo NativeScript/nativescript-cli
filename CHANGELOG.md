@@ -1,4 +1,9 @@
 ## Changelog
+### 3.0.3 (2016-08-11)
+* Bug (MLIBZ-1226): Send correct `X-Kinvey-Device-Information` header format.
+* Bug (MLIBZ-1270): Update the cache to represent the state of the backend correctly when a sync pull is performed.
+* Bug (MLIBZ-1276): Expose the `Acl` class on the Kinvey namespace.
+
 ### 3.0.2 (2016-08-03)
 * Enhancement (MLIBZ-1267): Support anonymouse user signup.
 * Enhancement (MLIBZ-1236): Support Kinvey Live Service.
