@@ -148,7 +148,7 @@ class LiveSyncService implements ILiveSyncService {
 			});
 		});
 
-		this.$processService.attachToProcessExitSignals(this, gazeWatcher.close);
+		this.$processService.attachToProcessExitSignals(this, () => gazeWatcher.close());
 		this.$dispatcher.run();
 	}
 }
