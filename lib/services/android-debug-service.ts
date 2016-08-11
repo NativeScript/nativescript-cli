@@ -171,7 +171,7 @@ class AndroidDebugService implements IDebugService {
 
 	private startAppWithDebugger(packageFile: string, packageName: string): IFuture<void> {
 		return (() => {
-			if (!this.$options.emulator) {
+			if (!this.$options.emulator && !this.$config.debugLivesync) {
 				this.device.applicationManager.uninstallApplication(packageName).wait();
 				this.device.applicationManager.installApplication(packageFile).wait();
 			}
