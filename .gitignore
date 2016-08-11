@@ -3,7 +3,6 @@ node_modules
 .tmp
 tmp
 .DS_Store
-dist
 coverage
 npm-debug.log
 report.xml

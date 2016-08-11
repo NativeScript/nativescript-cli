@@ -55,7 +55,6 @@ gulp.task('bump', () => {
       version: args.version
     }))
     .pipe(gulp.dest(`${__dirname}/`))
-    .pipe(tag())
     .on('error', errorHandler);
   return stream;
 });
