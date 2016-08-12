@@ -9,7 +9,7 @@ function shallowCopy(obj) {
 }
 
 var travis = process.env["TRAVIS"];
-var buildNumber = process.env["TRAVIS_BUILD_NUMBER"] || process.env["BUILD_NUMBER"] || "non-ci";
+var buildNumber = process.env["PACKAGE_VERSION"] || process.env["BUILD_NUMBER"] || "non-ci";
 
 module.exports = function(grunt) {
 	var path = require("path");
