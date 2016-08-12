@@ -134,8 +134,6 @@ class AndroidDebugService implements IDebugService {
 				this.attachDebugger(device.deviceInfo.identifier, packageName).wait();
 			} else if (this.$options.stop) {
 				this.detachDebugger(packageName).wait();
-			} else if (this.$options.debugBrk) {
-				this.startAppWithDebugger(packageFile, packageName).wait();
 			} else {
 				this.startAppWithDebugger(packageFile, packageName).wait();
 				this.attachDebugger(device.deviceInfo.identifier, packageName).wait();
@@ -210,12 +208,6 @@ class AndroidDebugService implements IDebugService {
 			this.device.applicationManager.startApplication(packageName).wait();
 
 			this.waitForDebugger(packageName);
-
-			if (this.$options.client) {
-				let localDebugPort = this.getForwardedLocalDebugPortForPackageName(this.device.deviceInfo.identifier, packageName).wait();
-				this.startDebuggerClient(localDebugPort).wait();
-				this.openDebuggerClient(AndroidDebugService.DEFAULT_NODE_INSPECTOR_URL + "?port=" + localDebugPort);
-			}
 
 		}).future<void>()();
 	}
