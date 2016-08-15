@@ -1,6 +1,7 @@
 NativeScript Command-Line Interface
 ================
-[![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2]
+Master Branch [![Build Status](https://travis-ci.org/NativeScript/nativescript-cli.svg?branch=build)][2].
+Get it using: `npm install nativescript@next -g`
 
 *Create, build, and run native apps for iOS and Android using JavaScript or TypeScript*
 
