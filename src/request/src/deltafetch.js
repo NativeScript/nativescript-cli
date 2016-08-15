@@ -2,7 +2,7 @@ import { KinveyRequest } from './network';
 import { RequestMethod } from './request';
 import { CacheRequest } from './cache';
 import { Response, StatusCode } from './response';
-import { NotFoundError } from '../../errors';
+import { NotFoundError } from './errors';
 import { Query } from '../../query';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars

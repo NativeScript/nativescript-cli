@@ -1,8 +1,15 @@
-import { NetworkRequest, KinveyRequest, StatusCode, AuthType, RequestMethod, Headers } from './request';
+import {
+  KinveyError,
+  NetworkRequest,
+  KinveyRequest,
+  StatusCode,
+  AuthType,
+  RequestMethod,
+  Headers
+} from '../../request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
-import { Log } from './log';
-import { KinveyError } from './errors';
+import { Log } from '../../utils';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import map from 'lodash/map';

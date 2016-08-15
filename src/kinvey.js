@@ -1,19 +1,11 @@
-import { KinveyError } from './errors';
-import { Acl } from './acl';
-import { Aggregation } from './aggregation';
 import { Client } from './client';
 import { CustomEndpoint } from './endpoint';
-import { Log } from './log';
-import { Metadata } from './metadata';
-import { Query } from './query';
-import { DataStore, DataStoreType } from './datastore';
-import { FileStore } from './filestore';
-import { Sync } from './sync';
-import { User, UserStore } from './user';
+import { Log } from './utils';
+import { DataStore, DataStoreType, FileStore, Sync, Query, Aggregation } from './datastore';
+import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { KinveyRequest } from './request';
-import { AuthType, RequestMethod } from './requests/request';
-import { KinveyRackManager } from './rack/rack';
+import { AuthType, RequestMethod, KinveyError, KinveyRequest } from './request';
+import { KinveyRackManager } from './rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';

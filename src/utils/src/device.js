@@ -1,4 +1,4 @@
-import pkg from '../package.json';
+import pkg from '../../../package.json';
 
 // Helper function to detect the browser name and version.
 function browserDetect(ua) {

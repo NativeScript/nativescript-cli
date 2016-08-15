@@ -13,7 +13,7 @@ import {
   NotFoundError,
   ParameterValueOutOfRangeError,
   ServerError
-} from '../../errors';
+} from './errors';
 import { Headers } from './request';
 import assign from 'lodash/assign';
 

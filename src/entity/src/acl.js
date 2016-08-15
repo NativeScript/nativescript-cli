@@ -1,4 +1,4 @@
-import { KinveyError } from './errors';
+import { KinveyError } from '../../request';
 import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const aclAttribute = process.env.KINVEY_ACL_ATTRIBUTE || '_acl';

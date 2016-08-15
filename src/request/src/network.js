@@ -1,6 +1,6 @@
 import { Request, RequestMethod } from './request';
-import { KinveyRackManager } from '../../rack/rack';
-import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError  } from '../../errors';
+import { KinveyRackManager } from '../../rack';
+import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError } from './errors';
 import { KinveyResponse } from './response';
 import { Client } from '../../client';
 import { SocialIdentity } from '../../social/src/enums';

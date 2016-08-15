@@ -1,4 +1,4 @@
-import { KinveyError } from './errors';
+import { KinveyError } from '../../request';
 import clone from 'lodash/clone';
 import isPlainObject from 'lodash/isPlainObject';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
