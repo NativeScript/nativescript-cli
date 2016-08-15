@@ -1,8 +1,5 @@
 import { KinveyError } from './errors';
-import { CacheRequest } from './requests/cache';
-import { DeltaFetchRequest } from './requests/deltafetch';
-import { NetworkRequest } from './requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
+import { CacheRequest, DeltaFetchRequest, KinveyRequest, AuthType, RequestMethod } from './request';
 import { Query } from './query';
 import { KinveyObservable } from './utils/observable';
 import { Client } from './client';
@@ -152,7 +149,7 @@ export class NetworkStore {
         }
 
         // Create the request
-        const config = new KinveyRequestConfig({
+        const config = {
           method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
@@ -165,8 +162,8 @@ export class NetworkStore {
           query: query,
           timeout: options.timeout,
           client: this.client
-        });
-        let request = new NetworkRequest(config);
+        };
+        let request = new KinveyRequest(config);
 
         // Should we use delta fetch?
         if (useDeltaFetch === true) {
@@ -207,7 +204,7 @@ export class NetworkStore {
           observer.next(undefined);
         } else {
           // Fetch data from the network
-          const config = new KinveyRequestConfig({
+          const config = {
             method: RequestMethod.GET,
             authType: AuthType.Default,
             url: url.format({
@@ -219,8 +216,8 @@ export class NetworkStore {
             properties: options.properties,
             timeout: options.timeout,
             client: this.client
-          });
-          let request = new NetworkRequest(config);
+          };
+          let request = new KinveyRequest(config);
 
           if (useDeltaFetch === true) {
             request = new DeltaFetchRequest(config);
@@ -261,7 +258,7 @@ export class NetworkStore {
         }
 
         // Create the request
-        const config = new KinveyRequestConfig({
+        const request = new KinveyRequest({
           method: RequestMethod.GET,
           authType: AuthType.Default,
           url: url.format({
@@ -275,7 +272,6 @@ export class NetworkStore {
           timeout: options.timeout,
           client: this.client
         });
-        const request = new NetworkRequest(config);
 
         // Execute the request
         const response = await request.execute();
@@ -317,7 +313,7 @@ export class NetworkStore {
           }
 
           const responses = await Promise.all(map(data, entity => {
-            const config = new KinveyRequestConfig({
+            const request = new KinveyRequest({
               method: RequestMethod.POST,
               authType: AuthType.Default,
               url: url.format({
@@ -331,7 +327,6 @@ export class NetworkStore {
               timeout: options.timeout,
               client: this.client
             });
-            const request = new NetworkRequest(config);
             return request.execute();
           }));
 
@@ -372,7 +367,7 @@ export class NetworkStore {
           }
 
           const responses = await Promise.all(map(data, entity => {
-            const config = new KinveyRequestConfig({
+            const request = new KinveyRequest({
               method: RequestMethod.PUT,
               authType: AuthType.Default,
               url: url.format({
@@ -386,7 +381,6 @@ export class NetworkStore {
               timeout: options.timeout,
               client: this.client
             });
-            const request = new NetworkRequest(config);
             return request.execute();
           }));
 
@@ -441,7 +435,7 @@ export class NetworkStore {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         }
 
-        const config = new KinveyRequestConfig({
+        const request = new KinveyRequest({
           method: RequestMethod.DELETE,
           authType: AuthType.Default,
           url: url.format({
@@ -455,7 +449,6 @@ export class NetworkStore {
           timeout: options.timeout,
           client: this.client
         });
-        const request = new NetworkRequest(config);
         const response = await request.execute();
         observer.next(response.data);
       } catch (error) {
@@ -484,7 +477,7 @@ export class NetworkStore {
         if (!id) {
           observer.next(undefined);
         } else {
-          const config = new KinveyRequestConfig({
+          const request = new KinveyRequest({
             method: RequestMethod.DELETE,
             authType: AuthType.Default,
             url: url.format({
@@ -496,7 +489,6 @@ export class NetworkStore {
             properties: options.properties,
             timeout: options.timeout
           });
-          const request = new NetworkRequest(config);
           const response = await request.execute();
           observer.next(response.data);
         }
@@ -603,29 +595,16 @@ export class CacheStore extends NetworkStore {
   find(query, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
-        // Check that the query is valid
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
-
-        // Attempt to push any pending sync data before fetching from the network.
-        let syncCount = await this.pendingSyncCount(null, options);
-        if (syncCount > 0) {
-          await this.push(null, options);
-          syncCount = await this.pendingSyncCount(null, options);
-        }
-
-        // Throw an error if there are still items that need to be synced
-        if (syncCount > 0) {
-          throw new KinveyError('Unable to load data from the network.'
-            + ` There are ${syncCount} entities that need`
-            + ' to be synced before data is loaded from the network.');
-        }
-
         let cacheEntities = [];
+
         try {
+          // Check that the query is valid
+          if (query && !(query instanceof Query)) {
+            throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+          }
+
           // Fetch the cache entities
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
@@ -637,7 +616,6 @@ export class CacheStore extends NetworkStore {
             query: query,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -649,33 +627,48 @@ export class CacheStore extends NetworkStore {
           // Just catch the error
         }
 
-        // Fetch the network entities
-        const networkEntities = await super.find(query, options).toPromise();
+        if (this.syncAutomatically === true) {
+          // Attempt to push any pending sync data before fetching from the network.
+          let syncCount = await this.pendingSyncCount(null, options);
+          if (syncCount > 0) {
+            await this.push(null, options);
+            syncCount = await this.pendingSyncCount(null, options);
+          }
 
-        // Remove entities from the cache that no longer exists
-        const removedEntities = differenceBy(cacheEntities, networkEntities, idAttribute);
-        const removedIds = Object.keys(keyBy(removedEntities, idAttribute));
-        const removeQuery = new Query().contains(idAttribute, removedIds);
-        await this.clear(removeQuery, options);
+          // Throw an error if there are still items that need to be synced
+          if (syncCount > 0) {
+            throw new KinveyError('Unable to load data from the network.'
+              + ` There are ${syncCount} entities that need`
+              + ' to be synced before data is loaded from the network.');
+          }
 
-        // Save network entities to cache
-        const saveConfig = new KinveyRequestConfig({
-          method: RequestMethod.PUT,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
-          }),
-          properties: options.properties,
-          body: networkEntities,
-          timeout: options.timeout
-        });
-        const saveRequest = new CacheRequest(saveConfig);
-        await saveRequest.execute();
+          // Fetch the network entities
+          const networkEntities = await super.find(query, options).toPromise();
 
-        // Emit the network entities
-        observer.next(networkEntities);
+          // Remove entities from the cache that no longer exists
+          const removedEntities = differenceBy(cacheEntities, networkEntities, idAttribute);
+          const removedIds = Object.keys(keyBy(removedEntities, idAttribute));
+          const removeQuery = new Query().contains(idAttribute, removedIds);
+          await this.clear(removeQuery, options);
+
+          // Save network entities to cache
+          const saveRequest = new CacheRequest({
+            method: RequestMethod.PUT,
+            url: url.format({
+              protocol: this.client.protocol,
+              host: this.client.host,
+              pathname: this.pathname,
+              query: options.query
+            }),
+            properties: options.properties,
+            body: networkEntities,
+            timeout: options.timeout
+          });
+          await saveRequest.execute();
+
+          // Emit the network entities
+          observer.next(networkEntities);
+        }
       } catch (error) {
         return observer.error(error);
       }
@@ -703,23 +696,9 @@ export class CacheStore extends NetworkStore {
         if (!id) {
           observer.next(undefined);
         } else {
-          // Attempt to push any pending sync data before fetching from the network.
-          let syncCount = await this.pendingSyncCount(null, options);
-          if (syncCount > 0) {
-            await this.push(null, options);
-            syncCount = await this.pendingSyncCount(null, options);
-          }
-
-          // Throw an error if there are still items that need to be synced
-          if (syncCount > 0) {
-            throw new KinveyError('Unable to load data from the network.'
-              + ` There are ${syncCount} entities that need`
-              + ' to be synced before data is loaded from the network.');
-          }
-
           try {
             // Fetch from the cache
-            const config = new KinveyRequestConfig({
+            const request = new CacheRequest({
               method: RequestMethod.GET,
               url: url.format({
                 protocol: this.client.protocol,
@@ -730,7 +709,6 @@ export class CacheStore extends NetworkStore {
               properties: options.properties,
               timeout: options.timeout
             });
-            const request = new CacheRequest(config);
             const response = await request.execute();
             const cacheEntity = response.data;
 
@@ -740,27 +718,42 @@ export class CacheStore extends NetworkStore {
             // Just catch the error
           }
 
-          // Fetch from the network
-          const networkEntity = await super.findById(id, options).toPromise();
+          if (this.syncAutomatically === true) {
+            // Attempt to push any pending sync data before fetching from the network.
+            let syncCount = await this.pendingSyncCount(null, options);
+            if (syncCount > 0) {
+              await this.push(null, options);
+              syncCount = await this.pendingSyncCount(null, options);
+            }
 
-          // Save the network entity to cache
-          const saveConfig = new KinveyRequestConfig({
-            method: RequestMethod.PUT,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            body: networkEntity,
-            timeout: options.timeout
-          });
-          const saveRequest = new CacheRequest(saveConfig);
-          await saveRequest.execute();
+            // Throw an error if there are still items that need to be synced
+            if (syncCount > 0) {
+              throw new KinveyError('Unable to load data from the network.'
+                + ` There are ${syncCount} entities that need`
+                + ' to be synced before data is loaded from the network.');
+            }
 
-          // Emit the network entity
-          observer.next(networkEntity);
+            // Fetch from the network
+            const networkEntity = await super.findById(id, options).toPromise();
+
+            // Save the network entity to cache
+            const saveRequest = new CacheRequest({
+              method: RequestMethod.PUT,
+              url: url.format({
+                protocol: this.client.protocol,
+                host: this.client.host,
+                pathname: this.pathname,
+                query: options.query
+              }),
+              properties: options.properties,
+              body: networkEntity,
+              timeout: options.timeout
+            });
+            await saveRequest.execute();
+
+            // Emit the network entity
+            observer.next(networkEntity);
+          }
         }
       } catch (error) {
         // Emit the error
@@ -794,23 +787,9 @@ export class CacheStore extends NetworkStore {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         }
 
-        // Attempt to push any pending sync data before fetching from the network.
-        let syncCount = await this.pendingSyncCount(null, options);
-        if (syncCount > 0) {
-          await this.push(null, options);
-          syncCount = await this.pendingSyncCount(null, options);
-        }
-
-        // Throw an error if there are still items that need to be synced
-        if (syncCount > 0) {
-          throw new KinveyError('Unable to load data from the network.'
-            + ` There are ${syncCount} entities that need`
-            + ' to be synced before data is loaded from the network.');
-        }
-
         try {
           // Count the entities in the cache
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.GET,
             url: url.format({
               protocol: this.client.protocol,
@@ -822,7 +801,6 @@ export class CacheStore extends NetworkStore {
             query: query,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -834,11 +812,27 @@ export class CacheStore extends NetworkStore {
           // Just catch the error
         }
 
-        // Get the count from the network
-        const networkCount = await super.count(query, options).toPromise();
+        if (this.syncAutomatically === true) {
+          // Attempt to push any pending sync data before fetching from the network.
+          let syncCount = await this.pendingSyncCount(null, options);
+          if (syncCount > 0) {
+            await this.push(null, options);
+            syncCount = await this.pendingSyncCount(null, options);
+          }
 
-        // Emit the network count
-        observer.next(networkCount);
+          // Throw an error if there are still items that need to be synced
+          if (syncCount > 0) {
+            throw new KinveyError('Unable to load data from the network.'
+              + ` There are ${syncCount} entities that need`
+              + ' to be synced before data is loaded from the network.');
+          }
+
+          // Get the count from the network
+          const networkCount = await super.count(query, options).toPromise();
+
+          // Emit the network count
+          observer.next(networkCount);
+        }
       } catch (error) {
         return observer.error(error);
       }
@@ -874,7 +868,7 @@ export class CacheStore extends NetworkStore {
           }
 
           // Save the data to the cache
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.POST,
             url: url.format({
               protocol: this.client.protocol,
@@ -886,7 +880,6 @@ export class CacheStore extends NetworkStore {
             body: data,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -944,7 +937,7 @@ export class CacheStore extends NetworkStore {
           }
 
           // Save the data to the cache
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.PUT,
             url: url.format({
               protocol: this.client.protocol,
@@ -956,7 +949,6 @@ export class CacheStore extends NetworkStore {
             body: data,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -1010,7 +1002,7 @@ export class CacheStore extends NetworkStore {
         }
 
         // Remove the data from the cache
-        const config = new KinveyRequestConfig({
+        const request = new CacheRequest({
           method: RequestMethod.DELETE,
           url: url.format({
             protocol: this.client.protocol,
@@ -1022,7 +1014,6 @@ export class CacheStore extends NetworkStore {
           query: query,
           timeout: options.timeout
         });
-        const request = new CacheRequest(config);
 
         // Execute the request
         const response = await request.execute();
@@ -1079,7 +1070,7 @@ export class CacheStore extends NetworkStore {
           observer.next(undefined);
         } else {
           // Remove from cache
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
@@ -1091,7 +1082,6 @@ export class CacheStore extends NetworkStore {
             authType: AuthType.Default,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -1149,7 +1139,7 @@ export class CacheStore extends NetworkStore {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         } else {
           // Create the request
-          const config = new KinveyRequestConfig({
+          const request = new CacheRequest({
             method: RequestMethod.DELETE,
             url: url.format({
               protocol: this.client.protocol,
@@ -1161,7 +1151,6 @@ export class CacheStore extends NetworkStore {
             query: query,
             timeout: options.timeout
           });
-          const request = new CacheRequest(config);
 
           // Execute the request
           const response = await request.execute();
@@ -1275,157 +1264,6 @@ export class SyncStore extends CacheStore {
   get syncAutomatically() {
     return false;
   }
-
-  /**
-   * Find all entities in the data store. A query can be optionally provided to return
-   * a subset of all entities in a collection or omitted to return all entities in
-   * a collection. The number of entities returned adheres to the limits specified
-   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-   *
-   * @param   {Query}                 [query]                             Query used to filter entities.
-   * @param   {Object}                [options]                           Options
-   * @param   {Properties}            [options.properties]                Custom properties to send with
-   *                                                                      the request.
-   * @param   {Number}                [options.timeout]                   Timeout for the request.
-   * @param   {Boolean}               [options.useDeltaFetch]             Turn on or off the use of delta fetch.
-   * @return  {Observable}                                                Observable.
-   */
-  find(query, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
-      try {
-        // Check that the query is valid
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
-
-        // Create the request
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: this.pathname,
-            query: options.query
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout
-        });
-        const request = new CacheRequest(config);
-
-        // Execute the request
-        const response = await request.execute();
-
-        // Send the response
-        observer.next(response.data);
-      } catch (error) {
-        return observer.error(error);
-      }
-
-      return observer.complete();
-    });
-
-    return stream;
-  }
-
-  /**
-   * Find a single entity in the data store by id.
-   *
-   * @param   {string}                id                               Entity by id to find.
-   * @param   {Object}                [options]                        Options
-   * @param   {Properties}            [options.properties]             Custom properties to send with
-   *                                                                   the request.
-   * @param   {Number}                [options.timeout]                Timeout for the request.
-   * @param   {Boolean}               [options.useDeltaFetch]          Turn on or off the use of delta fetch.
-   * @return  {Observable}                                             Observable.
-   */
-  findById(id, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
-      try {
-        if (!id) {
-          observer.next(undefined);
-        } else {
-          // Create the request
-          const config = new KinveyRequestConfig({
-            method: RequestMethod.GET,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            timeout: options.timeout
-          });
-          const request = new CacheRequest(config);
-
-          // Execute the request
-          const response = await request.execute();
-
-          // Emit the data
-          observer.next(response.data);
-        }
-      } catch (error) {
-        return observer.error(error);
-      }
-
-      return observer.complete();
-    });
-
-    return stream;
-  }
-
-  /**
-   * Count all entities in the data store. A query can be optionally provided to return
-   * a subset of all entities in a collection or omitted to return all entities in
-   * a collection. The number of entities returned adheres to the limits specified
-   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
-   *
-   * @param   {Query}                 [query]                          Query used to filter entities.
-   * @param   {Object}                [options]                        Options
-   * @param   {Properties}            [options.properties]             Custom properties to send with
-   *                                                                   the request.
-   * @param   {Number}                [options.timeout]                Timeout for the request.
-   * @return  {Observable}                                             Observable.
-   */
-  count(query, options = {}) {
-    const stream = KinveyObservable.create(async observer => {
-      try {
-        if (query && !(query instanceof Query)) {
-          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
-        }
-
-        // Count the entities in the cache
-        const config = new KinveyRequestConfig({
-          method: RequestMethod.GET,
-          url: url.format({
-            protocol: this.client.protocol,
-            host: this.client.host,
-            pathname: `${this.pathname}/_count`,
-            query: options.query
-          }),
-          properties: options.properties,
-          query: query,
-          timeout: options.timeout
-        });
-        const request = new CacheRequest(config);
-
-        // Execute the request
-        const response = await request.execute();
-        const data = response.data;
-
-        // Emit the cache count
-        observer.next(data ? data.count : 0);
-      } catch (error) {
-        return observer.error(error);
-      }
-
-      return observer.complete();
-    });
-
-    return stream;
-  }
-
 }
 
 /**
@@ -1483,7 +1321,7 @@ export class DataStore {
   static async clearCache(options = {}) {
     const client = options.client || Client.sharedInstance();
     const pathname = `/${appdataNamespace}/${client.appKey}`;
-    const config = new KinveyRequestConfig({
+    const request = new CacheRequest({
       method: RequestMethod.DELETE,
       url: url.format({
         protocol: client.protocol,
@@ -1494,7 +1332,6 @@ export class DataStore {
       properties: options.properties,
       timeout: options.timeout
     });
-    const request = new CacheRequest(config);
     const response = await request.execute();
     return response.data;
   }

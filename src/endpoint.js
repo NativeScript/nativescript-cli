@@ -1,7 +1,6 @@
 import { Client } from './client';
-import { RequestMethod, AuthType } from './requests/request';
+import { RequestMethod, AuthType, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import { NetworkRequest } from './requests/network';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -44,7 +43,7 @@ export class CustomEndpoint {
       throw new KinveyError('The endpoint must be a string.');
     }
 
-    const request = new NetworkRequest({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({

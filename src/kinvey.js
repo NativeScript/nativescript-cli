@@ -11,7 +11,7 @@ import { FileStore } from './filestore';
 import { Sync } from './sync';
 import { User, UserStore } from './user';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { NetworkRequest } from './requests/network';
+import { KinveyRequest } from './request';
 import { AuthType, RequestMethod } from './requests/request';
 import { KinveyRackManager } from './rack/rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -158,7 +158,7 @@ export class Kinvey {
    * });
    */
   static async ping(client = Client.sharedInstance()) {
-    const request = new NetworkRequest({
+    const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.All,
       url: url.format({

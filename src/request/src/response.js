@@ -13,7 +13,7 @@ import {
   NotFoundError,
   ParameterValueOutOfRangeError,
   ServerError
-} from '../errors';
+} from '../../errors';
 import { Headers } from './request';
 import assign from 'lodash/assign';
 
@@ -38,7 +38,7 @@ export { StatusCode };
 /**
  * @private
  */
-export class ResponseConfig {
+export class Response {
   constructor(options = {}) {
     options = assign({
       statusCode: StatusCode.Empty,
@@ -51,82 +51,15 @@ export class ResponseConfig {
     this.data = options.data;
   }
 
-  get headers() {
-    return this.configHeaders;
-  }
-
-  set headers(headers) {
-    if (!(headers instanceof Headers)) {
-      headers = new Headers(headers);
-    }
-
-    this.configHeaders = headers;
-  }
-
-  get data() {
-    return this.configData;
-  }
-
-  set data(data) {
-    this.configData = data;
-  }
-}
-
-/**
- * @private
- */
-export class KinveyResponseConfig extends ResponseConfig {}
-
-/**
- * @private
- */
-export class Response {
-  constructor(config = new ResponseConfig()) {
-    this.config = config;
-  }
-
-  get config() {
-    return this.responseConfig;
-  }
-
-  set config(config) {
-    if (config && !(config instanceof ResponseConfig)) {
-      config = new ResponseConfig(config);
-    }
-
-    this.responseConfig = config;
-  }
-
-  get statusCode() {
-    return this.config.statusCode;
-  }
-
-  set statusCode(statusCode) {
-    this.config.statusCode = statusCode;
-  }
-
-  get headers() {
-    return this.config.headers;
-  }
-
-  set headers(headers) {
-    this.config.headers = headers;
-  }
-
-  get data() {
-    return this.config.data;
-  }
-
-  set data(data) {
-    this.config.data = data;
-  }
-
   get error() {
     if (this.isSuccess()) {
       return null;
     }
 
-    return new Error();
+    const data = this.data || {};
+    const message = data.message || data.description;
+
+    return new Error(message);
   }
 
   isSuccess() {
@@ -140,18 +73,6 @@ export class Response {
  * @private
  */
 export class KinveyResponse extends Response {
-  get config() {
-    return super.config;
-  }
-
-  set config(config) {
-    if (config && !(config instanceof KinveyResponseConfig)) {
-      config = new KinveyResponseConfig(config);
-    }
-
-    super.config = config;
-  }
-
   get error() {
     if (this.isSuccess()) {
       return null;

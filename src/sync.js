@@ -1,8 +1,5 @@
-import { KinveyRequestConfig, RequestMethod, AuthType } from './requests/request';
+import { KinveyRequest, RequestMethod, AuthType, CacheRequest, DeltaFetchRequest } from './request';
 import { InsufficientCredentialsError, SyncError } from './errors';
-import { CacheRequest } from './requests/cache';
-import { NetworkRequest } from './requests/network';
-import { DeltaFetchRequest } from './requests/deltafetch';
 import { Client } from './client';
 import { Query } from './query';
 import { Promise } from 'es6-promise';
@@ -152,7 +149,7 @@ export class SyncManager {
 
       // Find an existing sync operation for the entity
       const query = new Query().equalTo('entityId', id);
-      const findConfig = new KinveyRequestConfig({
+      const findRequest = new CacheRequest({
         method: RequestMethod.GET,
         url: url.format({
           protocol: this.client.protocol,
@@ -163,7 +160,6 @@ export class SyncManager {
         query: query,
         timeout: options.timeout
       });
-      const findRequest = new CacheRequest(findConfig);
       const response = await findRequest.execute();
       const syncEntities = response.data;
       const syncEntity = syncEntities.length === 1
@@ -214,7 +210,7 @@ export class SyncManager {
         + ' to be synced before data is loaded from the network.');
     }
 
-    const config = new KinveyRequestConfig({
+    const config = {
       method: RequestMethod.GET,
       authType: AuthType.Default,
       url: url.format({
@@ -227,8 +223,8 @@ export class SyncManager {
       query: query,
       timeout: options.timeout,
       client: this.client
-    });
-    let request = new NetworkRequest(config);
+    };
+    let request = new KinveyRequest(config);
 
     // Should we use delta fetch?
     if (options.useDeltaFetch === true) {
@@ -240,7 +236,7 @@ export class SyncManager {
     const networkEntities = response.data;
 
     // Clear the cache
-    const clearConfig = new KinveyRequestConfig({
+    const clearRequest = new CacheRequest({
       method: RequestMethod.DELETE,
       url: url.format({
         protocol: this.client.protocol,
@@ -252,11 +248,10 @@ export class SyncManager {
       properties: options.properties,
       timeout: options.timeout
     });
-    const clearRequest = new CacheRequest(clearConfig);
     await clearRequest.execute();
 
     // Save network entities to cache
-    const saveConfig = new KinveyRequestConfig({
+    const saveRequest = new CacheRequest({
       method: RequestMethod.PUT,
       url: url.format({
         protocol: this.client.protocol,
@@ -268,7 +263,6 @@ export class SyncManager {
       body: networkEntities,
       timeout: options.timeout
     });
-    const saveRequest = new CacheRequest(saveConfig);
     await saveRequest.execute();
 
     // Return the network entities
@@ -306,7 +300,7 @@ export class SyncManager {
 
             if (method === RequestMethod.DELETE) {
               // Remove the entity from the network.
-              const request = new NetworkRequest({
+              const request = new KinveyRequest({
                 method: RequestMethod.DELETE,
                 authType: AuthType.Default,
                 url: url.format({
@@ -321,7 +315,7 @@ export class SyncManager {
               return request.execute()
                 .then(() => {
                   // Remove the sync entity from the cache
-                  const config = new KinveyRequestConfig({
+                  const request = new CacheRequest({
                     method: RequestMethod.DELETE,
                     url: url.format({
                       protocol: this.client.protocol,
@@ -331,7 +325,6 @@ export class SyncManager {
                     properties: options.properties,
                     timeout: options.timeout
                   });
-                  const request = new CacheRequest(config);
                   return request.execute();
                 })
                 .then(() => {
@@ -345,7 +338,7 @@ export class SyncManager {
                   if (error instanceof InsufficientCredentialsError) {
                     try {
                       // Get the original entity
-                      const getNetworkRequest = new NetworkRequest({
+                      const getNetworkRequest = new KinveyRequest({
                         method: RequestMethod.GET,
                         authType: AuthType.Default,
                         url: url.format({
@@ -398,7 +391,7 @@ export class SyncManager {
                 });
             } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
               // Get the entity from cache
-              const config = new KinveyRequestConfig({
+              const request = new CacheRequest({
                 method: RequestMethod.GET,
                 url: url.format({
                   protocol: this.client.protocol,
@@ -408,12 +401,11 @@ export class SyncManager {
                 properties: options.properties,
                 timeout: options.timeout
               });
-              const request = new CacheRequest(config);
               return request.execute().then(response => {
                 const entity = response.data;
 
                 // Save the entity to the backend.
-                const request = new NetworkRequest({
+                const request = new KinveyRequest({
                   method: method,
                   authType: AuthType.Default,
                   url: url.format({
@@ -444,7 +436,7 @@ export class SyncManager {
                   .then(response => response.data)
                   .then(async entity => {
                     // Remove the sync entity
-                    const deleteConfig = new KinveyRequestConfig({
+                    const deleteRequest = new CacheRequest({
                       method: RequestMethod.DELETE,
                       url: url.format({
                         protocol: this.client.protocol,
@@ -454,7 +446,6 @@ export class SyncManager {
                       properties: options.properties,
                       timeout: options.timeout
                     });
-                    const deleteRequest = new CacheRequest(deleteConfig);
                     await deleteRequest.execute();
 
                     // Save the result of the network request locally.
@@ -502,7 +493,7 @@ export class SyncManager {
                         // is not local
                         if (method !== RequestMethod.POST) {
                           // Get the original entity
-                          const getNetworkRequest = new NetworkRequest({
+                          const getNetworkRequest = new KinveyRequest({
                             method: RequestMethod.GET,
                             authType: AuthType.Default,
                             url: url.format({

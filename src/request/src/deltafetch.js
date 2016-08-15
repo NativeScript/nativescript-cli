@@ -1,10 +1,9 @@
-/* eslint-disable no-underscore-dangle */
-import { KinveyRequest, RequestMethod } from './request';
+import { KinveyRequest } from './network';
+import { RequestMethod } from './request';
 import { CacheRequest } from './cache';
-import { NetworkRequest } from './network';
-import { KinveyResponse, KinveyResponseConfig, StatusCode } from './response';
-import { NotFoundError } from '../errors';
-import { Query } from '../query';
+import { Response, StatusCode } from './response';
+import { NotFoundError } from '../../errors';
+import { Query } from '../../query';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import keyBy from 'lodash/keyBy';
@@ -75,7 +74,7 @@ export class DeltaFetchRequest extends KinveyRequest {
       const cacheDocuments = keyBy(cacheData, idAttribute);
       const query = new Query(result(this.query, 'toJSON', this.query));
       query.fields = [idAttribute, `${kmdAttribute}.lmt`];
-      const networkRequest = new NetworkRequest({
+      const request = new KinveyRequest({
         method: RequestMethod.GET,
         url: this.url,
         headers: this.headers,
@@ -85,7 +84,7 @@ export class DeltaFetchRequest extends KinveyRequest {
         client: this.client
       });
 
-      const networkData = await networkRequest.execute().then(response => response.data);
+      const networkData = await request.execute().then(response => response.data);
       const networkDocuments = keyBy(networkData, idAttribute);
       const deltaSet = networkDocuments;
       const cacheDocumentIds = Object.keys(cacheDocuments);
@@ -115,7 +114,7 @@ export class DeltaFetchRequest extends KinveyRequest {
         const ids = deltaSetIds.slice(i, deltaSetIds.length > maxIdsPerRequest + i ?
                                          maxIdsPerRequest : deltaSetIds.length);
         query.contains(idAttribute, ids);
-        const networkRequest = new NetworkRequest({
+        const request = new KinveyRequest({
           method: RequestMethod.GET,
           url: this.url,
           headers: this.headers,
@@ -125,7 +124,7 @@ export class DeltaFetchRequest extends KinveyRequest {
           client: this.client
         });
 
-        const promise = networkRequest.execute();
+        const promise = request.execute();
         promises.push(promise);
         i += maxIdsPerRequest;
       }
@@ -140,10 +139,10 @@ export class DeltaFetchRequest extends KinveyRequest {
         }
 
         return result;
-      }, new KinveyResponse(new KinveyResponseConfig({
+      }, new Response({
         statusCode: StatusCode.Ok,
         data: []
-      })));
+      }));
 
       response.data = response.data.concat(values(cacheDocuments));
 
@@ -156,7 +155,7 @@ export class DeltaFetchRequest extends KinveyRequest {
       return response;
     }
 
-    const networkRequest = new NetworkRequest({
+    const request = new KinveyRequest({
       method: RequestMethod.GET,
       url: this.url,
       headers: this.headers,
@@ -165,6 +164,6 @@ export class DeltaFetchRequest extends KinveyRequest {
       timeout: this.timeout,
       client: this.client
     });
-    return networkRequest.execute();
+    return request.execute();
   }
 }

@@ -2,16 +2,10 @@ import { Client } from './client';
 import { Acl } from './acl';
 import { Metadata } from './metadata';
 import { KinveyError, NotFoundError, ActiveUserError } from './errors';
-import { AuthType, RequestMethod, KinveyRequestConfig } from './requests/request';
+import { AuthType, RequestMethod, KinveyRequest } from './request';
 import { DataStore, NetworkStore } from './datastore';
-import { NetworkRequest } from './requests/network';
 import { Promise } from 'es6-promise';
-import {
-  Facebook,
-  Google,
-  LinkedIn,
-  MobileIdentityConnect
-} from './social';
+import { Facebook, Google, LinkedIn, MobileIdentityConnect } from './social';
 import { setActiveUser, setIdentitySession } from './utils/storage';
 import { Log } from './log';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
@@ -77,17 +71,6 @@ export class UserStore extends NetworkStore {
       throw new KinveyError('User must have an _id.');
     }
 
-    // if (options._identity) {
-    //   const socialIdentity = data[socialIdentityAttribute];
-    //   if (socialIdentity) {
-    //     for (const [key] of socialIdentity) {
-    //       if (socialIdentity[key] && options._identity !== key) {
-    //         delete socialIdentity[key];
-    //       }
-    //     }
-    //   }
-    // }
-
     return super.update(data, options);
   }
 
@@ -101,7 +84,7 @@ export class UserStore extends NetworkStore {
    * @return {boolean} True if the username already exists otherwise false.
    */
   async exists(username, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -114,7 +97,6 @@ export class UserStore extends NetworkStore {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     const data = response.data || {};
     return data.usernameExists === true;
@@ -130,7 +112,7 @@ export class UserStore extends NetworkStore {
    * @return {Promise<Object>} The response.
    */
   async restore(id, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Master,
       url: url.format({
@@ -142,7 +124,6 @@ export class UserStore extends NetworkStore {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }
@@ -373,7 +354,7 @@ export class User {
         'Please provide both a username and password to login.'));
     }
 
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -386,7 +367,6 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const { data } = await request.execute();
     this.data = data;
     setActiveUser(this.client, this.data);
@@ -641,7 +621,7 @@ export class User {
   async logout(options = {}) {
     // Logout from Kinvey
     try {
-      const config = new KinveyRequestConfig({
+      const request = new KinveyRequest({
         method: RequestMethod.POST,
         authType: AuthType.Session,
         url: url.format({
@@ -653,7 +633,6 @@ export class User {
         timeout: options.timeout,
         client: this.client
       });
-      const request = new NetworkRequest(config);
       await request.execute();
     } catch (error) {
       Log.error(error);
@@ -699,7 +678,7 @@ export class User {
       user = user.data;
     }
 
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -712,7 +691,6 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     this.data = response.data;
 
@@ -795,7 +773,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   async me(options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.GET,
       authType: AuthType.Session,
       url: url.format({
@@ -806,7 +784,6 @@ export class User {
       properties: options.properties,
       timeout: options.timeout
     });
-    const request = new NetworkRequest(config);
     const { data } = await request.execute();
     this.data = data;
 
@@ -829,7 +806,7 @@ export class User {
    * @return {Promise<Object>} The response.
    */
   async verifyEmail(options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -841,7 +818,6 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const { data } = await request.execute();
     return data;
   }
@@ -853,7 +829,7 @@ export class User {
    * @return {Promise<Object>} The response.
    */
   async forgotUsername(options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -866,7 +842,6 @@ export class User {
       timeout: options.timeout,
       client: this.client
     });
-    const request = new NetworkRequest(config);
     const { data } = await request.execute();
     return data;
   }
@@ -900,7 +875,7 @@ export class User {
     }
 
     const client = options.client || Client.sharedInstance();
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.App,
       url: url.format({
@@ -912,7 +887,6 @@ export class User {
       timeout: options.timeout,
       client: client
     });
-    const request = new NetworkRequest(config);
     const { data } = await request.execute();
     return data;
   }

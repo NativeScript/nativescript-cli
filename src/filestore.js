@@ -1,7 +1,4 @@
-/* eslint-disable no-underscore-dangle */
-import { NetworkRequest } from './requests/network';
-import { StatusCode } from './requests/response';
-import { AuthType, RequestMethod, KinveyRequestConfig, Headers } from './requests/request';
+import { NetworkRequest, KinveyRequest, StatusCode, AuthType, RequestMethod, Headers } from './request';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import { Log } from './log';
@@ -141,13 +138,11 @@ export class FileStore extends NetworkStore {
    * @return  {Promise<string>}                                             File content.
   */
   async downloadByUrl(url, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new NetworkRequest({
       method: RequestMethod.GET,
       url: url,
       timeout: options.timeout
     });
-    config.headers.clear();
-    const request = new NetworkRequest(config);
     const response = await request.execute();
     return response.data;
   }
@@ -202,7 +197,7 @@ export class FileStore extends NetworkStore {
     delete metadata.public;
 
     // Create the file on Kinvey
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       authType: AuthType.Default,
       url: url.format({
@@ -212,11 +207,11 @@ export class FileStore extends NetworkStore {
       }),
       properties: options.properties,
       timeout: options.timeout,
-      data: metadata,
+      body: metadata,
       client: this.client
     });
-    config.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
-    const request = new NetworkRequest(config);
+    request.headers.set('X-Kinvey-Content-Type', metadata.mimeType);
+
 
     // If the file metadata contains an _id then
     // update the file
@@ -242,22 +237,15 @@ export class FileStore extends NetworkStore {
     delete data._requiredHeaders;
     delete data._uploadURL;
 
-    // Create status check request config
-    const statusCheckConfig = new KinveyRequestConfig({
+    // Execute the status check request
+    const statusCheckRequest = new NetworkRequest({
       method: RequestMethod.PUT,
       url: uploadUrl,
       timeout: options.timeout
     });
-    statusCheckConfig.headers.clear();
-    statusCheckConfig.headers.addAll(headers.toJSON());
-    statusCheckConfig.headers.set('content-length', '0');
-    statusCheckConfig.headers.set('content-range', `bytes */${metadata.size}`);
-
-    Log.debug('File upload status check request config', statusCheckConfig);
-    Log.debug('Execute file upload status check request');
-
-    // Execute the status check request
-    const statusCheckRequest = new NetworkRequest(statusCheckConfig);
+    statusCheckRequest.headers.addAll(headers.toJSON());
+    statusCheckRequest.headers.set('Content-Length', '0');
+    statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
     const statusCheckResponse = await statusCheckRequest.execute(true);
 
     Log.debug('File upload status check response', statusCheckResponse);
@@ -298,23 +286,16 @@ export class FileStore extends NetworkStore {
     const fileSlice = isFunction(file.slice) ? file.slice(options.start) : file;
     const fileSliceSize = fileSlice.size || fileSlice.length;
 
-    // Create upload file request config
-    const config = new KinveyRequestConfig({
+    // Execute the file upload request
+    const request = new NetworkRequest({
       method: RequestMethod.PUT,
       url: uploadUrl,
       body: fileSlice,
       timeout: options.timeout
     });
-    config.headers.clear();
-    config.headers.addAll(headers.toJSON());
-    config.headers.set('content-length', fileSliceSize);
-    config.headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
-
-    Log.debug('File upload request config', config);
-    Log.debug('Execute file upload request');
-
-    // Execute the file upload request
-    const request = new NetworkRequest(config);
+    request.headers.addAll(headers.toJSON());
+    request.headers.set('content-length', fileSliceSize);
+    request.headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
     const response = await request.execute(true);
 
     Log.debug('File upload response', response);

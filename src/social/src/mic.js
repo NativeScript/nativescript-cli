@@ -1,8 +1,7 @@
 import { Social } from './social';
 import { SocialIdentity } from './enums';
 import { KinveyError } from '../../errors';
-import { NetworkRequest } from '../../requests/network';
-import { AuthType, RequestMethod, KinveyRequestConfig } from '../../requests/request';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
 import { Promise } from 'es6-promise';
 import path from 'path';
 import url from 'url';
@@ -76,7 +75,7 @@ export class MobileIdentityConnect extends Social {
       pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
     }
 
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -93,7 +92,6 @@ export class MobileIdentityConnect extends Social {
         response_type: 'code'
       }
     });
-    const request = new NetworkRequest(config);
     return request.execute().then(response => response.data.temp_login_uri);
   }
 
@@ -181,7 +179,7 @@ export class MobileIdentityConnect extends Social {
 
   requestCodeWithUrl(loginUrl, clientId, redirectUri, options = {}) {
     const promise = Promise.resolve().then(() => {
-      const config = new KinveyRequestConfig({
+      const request = new KinveyRequest({
         method: RequestMethod.POST,
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -197,7 +195,6 @@ export class MobileIdentityConnect extends Social {
         },
         followRedirect: false
       });
-      const request = new NetworkRequest(config);
       return request.execute();
     }).then(response => {
       const location = response.getHeader('location');
@@ -214,7 +211,7 @@ export class MobileIdentityConnect extends Social {
   }
 
   requestToken(code, clientId, redirectUri, options = {}) {
-    const config = new KinveyRequestConfig({
+    const request = new KinveyRequest({
       method: RequestMethod.POST,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -233,7 +230,6 @@ export class MobileIdentityConnect extends Social {
         code: code
       }
     });
-    const request = new NetworkRequest(config);
     const promise = request.execute().then(response => response.data);
     return promise;
   }
