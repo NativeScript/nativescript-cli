@@ -1,7 +1,8 @@
 import { Client } from '../../client';
 import { Acl } from './acl';
 import { Metadata } from './metadata';
-import { AuthType, RequestMethod, KinveyRequest, KinveyError, NotFoundError, ActiveUserError } from '../../request';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError, NotFoundError, ActiveUserError } from '../../errors';
 import { DataStore, UserStore } from '../../datastore';
 import { Promise } from 'es6-promise';
 import { Facebook, Google, LinkedIn, MobileIdentityConnect } from '../../social';

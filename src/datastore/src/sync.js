@@ -3,12 +3,11 @@ import {
   RequestMethod,
   AuthType,
   CacheRequest,
-  DeltaFetchRequest,
-  InsufficientCredentialsError,
-  SyncError
+  DeltaFetchRequest
 } from '../../request';
+import { InsufficientCredentialsError, SyncError } from '../../errors';
 import { Client } from '../../client';
-import { Query } from './query';
+import { Query } from '../../query';
 import { Promise } from 'es6-promise';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

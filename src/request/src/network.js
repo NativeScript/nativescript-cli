@@ -1,11 +1,10 @@
 import { Request, RequestMethod } from './request';
 import { KinveyRackManager } from '../../rack';
-import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError } from './errors';
+import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { KinveyResponse } from './response';
 import { Client } from '../../client';
-import { SocialIdentity } from '../../social/src/enums';
-import { setActiveUser, getIdentitySession, setIdentitySession } from '../../utils/storage';
-import { Device } from '../../device';
+import { SocialIdentity } from '../../social';
+import { Device, setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
 import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

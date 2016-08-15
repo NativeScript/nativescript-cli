@@ -1,4 +1,5 @@
-import { AuthType, RequestMethod, KinveyRequest, KinveyError } from '../../request';
+import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError } from '../../errors';
 import { NetworkStore } from './networkstore';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

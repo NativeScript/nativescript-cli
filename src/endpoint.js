@@ -1,5 +1,6 @@
 import { Client } from './client';
-import { RequestMethod, AuthType, KinveyRequest, KinveyError } from './request';
+import { RequestMethod, AuthType, KinveyRequest } from './request';
+import { KinveyError } from './errors';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import assign from 'lodash/assign';
@@ -10,6 +11,9 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  * Executes a custom endpoint on the Kinvey backend.
  */
 export class CustomEndpoint {
+  constructor() {
+    throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.', 'Please use `CustomEndpoint.execute()` function.');
+  }
   /**
    * Execute a custom endpoint. A promise will be returned that will be resolved
    * with the result of the command or rejected with an error.

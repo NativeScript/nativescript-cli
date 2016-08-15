@@ -1,8 +1,7 @@
 import { Query } from '../../query';
 import { Aggregation } from '../../aggregation';
-import { KinveyError, NotFoundError } from '../../errors';
 import { KinveyMiddleware } from './middleware';
-import { RequestMethod, StatusCode } from '../../request';
+import { KinveyError, NotFoundError } from '../../errors';
 import { Promise } from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
@@ -16,6 +15,7 @@ import values from 'lodash/values';
 import find from 'lodash/find';
 import isString from 'lodash/isString';
 import isArray from 'lodash/isArray';
+import isEmpty from 'lodash/isEmpty';
 const idAttribute = process.env.KINVEY_ID_ATTRIBUTE || '_id';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 Queue.configure(Promise);
@@ -314,7 +314,7 @@ export class CacheMiddleware extends KinveyMiddleware {
     const db = this.openDatabase(appKey, encryptionKey);
     let data;
 
-    if (method === RequestMethod.GET) {
+    if (method === 'GET') {
       if (entityId) {
         if (entityId === '_count') {
           data = await db.count(collection, query);
@@ -326,9 +326,9 @@ export class CacheMiddleware extends KinveyMiddleware {
       } else {
         data = await db.find(collection, query);
       }
-    } else if (method === RequestMethod.POST || method === RequestMethod.PUT) {
+    } else if (method === 'POST' || method === 'PUT') {
       data = await db.save(collection, body);
-    } else if (method === RequestMethod.DELETE) {
+    } else if (method === 'DELETE') {
       if (collection && entityId) {
         data = await db.removeById(collection, entityId);
       } else if (!collection) {
@@ -339,13 +339,13 @@ export class CacheMiddleware extends KinveyMiddleware {
     }
 
     request.response = {
-      statusCode: method === RequestMethod.POST ? StatusCode.Created : StatusCode.Ok,
+      statusCode: method === 'POST' ? 201 : 200,
       headers: {},
       data: data
     };
 
-    if (!data) {
-      request.response.statusCode = StatusCode.Empty;
+    if (!data || isEmpty(data)) {
+      request.response.statusCode = 204;
     }
 
     return request;

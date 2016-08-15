@@ -1,5 +1,5 @@
-import { QueryError } from '../../request';
-import { nested } from '../../utils';
+import { QueryError } from './errors';
+import { nested } from './utils';
 import sift from 'sift';
 import assign from 'lodash/assign';
 import isArray from 'lodash/isArray';

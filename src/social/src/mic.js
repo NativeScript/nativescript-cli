@@ -1,7 +1,7 @@
 import { Social } from './social';
 import { SocialIdentity } from './enums';
-import { KinveyError } from '../../errors';
 import { AuthType, RequestMethod, KinveyRequest } from '../../request';
+import { KinveyError } from '../../errors';
 import { Promise } from 'es6-promise';
 import path from 'path';
 import url from 'url';

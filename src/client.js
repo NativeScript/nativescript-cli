@@ -1,4 +1,4 @@
-import { KinveyError } from './request';
+import { KinveyError } from './errors';
 import { getActiveUser } from './utils';
 import url from 'url';
 import assign from 'lodash/assign';

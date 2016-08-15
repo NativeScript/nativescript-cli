@@ -1,4 +1,5 @@
-import { KinveyError, CacheRequest, RequestMethod } from '../../request';
+import { CacheRequest, RequestMethod } from '../../request';
+import { KinveyError } from '../../errors';
 import { Client } from '../../client';
 import { NetworkStore } from './networkstore';
 import { CacheStore } from './cachestore';

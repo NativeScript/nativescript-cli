@@ -1,4 +1,4 @@
-import { KinveyError } from '../../request';
+import { KinveyError } from './errors';
 import { Query } from './query';
 import result from 'lodash/result';
 import assign from 'lodash/assign';

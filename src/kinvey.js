@@ -1,10 +1,13 @@
 import { Client } from './client';
 import { CustomEndpoint } from './endpoint';
 import { Log } from './utils';
-import { DataStore, DataStoreType, FileStore, Sync, Query, Aggregation } from './datastore';
+import { Query } from './query';
+import { Aggregation } from './aggregation';
+import { DataStore, DataStoreType, FileStore, Sync } from './datastore';
 import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { AuthType, RequestMethod, KinveyError, KinveyRequest } from './request';
+import { AuthType, RequestMethod, KinveyRequest } from './request';
+import { KinveyError } from './errors';
 import { KinveyRackManager } from './rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';

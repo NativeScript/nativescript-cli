@@ -1,6 +1,7 @@
 import { NetworkStore } from './networkstore';
-import { KinveyError, CacheRequest, AuthType, RequestMethod } from '../../request';
-import { Query } from './query';
+import { CacheRequest, AuthType, RequestMethod } from '../../request';
+import { KinveyError } from '../../errors';
+import { Query } from '../../query';
 import { SyncManager } from './sync';
 import { Metadata } from '../../entity';
 import { KinveyObservable } from '../../utils';

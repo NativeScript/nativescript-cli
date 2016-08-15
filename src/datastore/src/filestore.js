@@ -1,5 +1,4 @@
 import {
-  KinveyError,
   NetworkRequest,
   KinveyRequest,
   StatusCode,
@@ -7,6 +6,7 @@ import {
   RequestMethod,
   Headers
 } from '../../request';
+import { KinveyError } from '../../errors';
 import { NetworkStore } from './datastore';
 import { Promise } from 'es6-promise';
 import { Log } from '../../utils';

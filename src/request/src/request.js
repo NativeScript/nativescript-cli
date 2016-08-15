@@ -8,7 +8,6 @@ import isNumber from 'lodash/isNumber';
 import isPlainObject from 'lodash/isPlainObject';
 const defaultTimeout = process.env.KINVEY_DEFAULT_TIMEOUT || 30;
 
-
 /**
  * @private
  * Enum for Request Methods.
