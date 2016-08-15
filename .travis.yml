@@ -1,30 +1,31 @@
+env:
+  global:
+    - DATE=$(date +%Y-%m-%d)
+    - PACKAGE_VERSION=$DATE-$TRAVIS_BUILD_NUMBER
+    - NATIVESCRIPT_SKIP_POSTINSTALL_TASKS=1
 language: node_js
 node_js:
 - '4'
-before_install:
-- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
-- git submodule update --init --recursive
-- npm install -g grunt-cli
-install:
-- npm install
-- grunt pack --no-color
-script:
-- npm test
 git:
   submodules: false
+before_script:
+- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
+- npm install grunt
+- node_modules/.bin/grunt enableScripts:false
+- npm install
+- npm test
+- node_modules/.bin/grunt enableScripts:true
+script:
+- node_modules/.bin/grunt lint
+- node_modules/.bin/grunt pack --no-color
+before_deploy:
+- node .travis/add-publishConfig.js next
 deploy:
-- provider: releases
   skip_cleanup: true
-  api_key:
-    secure: eUmm52zfs68StxqUkPWuuNa85vBrlYmjuRw4FR8kZSyBWKkCySU8xuZVRpxLdqE3VRAsORsP2Ggf4UKqDM4BtTNl0lZGLeyT2OuL/9AB1r/IqzylLI2xAmibboLktFL4BQL8uqWnBkyYHSC0Ufv7C8poXdbyubLrSMuP9hRBy/0=
-  file: travis/nativescript.tgz
-  on:
-    tags: true
-    all_branches: true
-- provider: npm
+  provider: npm
   email: nativescript@telerik.com
-  api_key:
-    secure: KISJen/tS+355itLT6eI5rBAwL9utOLDT1l8z6dJKLdt24l9LvKxhHlYI/WOCVPvNCUQ8cQAqGcVgmD+SmTpoCkBAHMml3C/zGZSwYd6Km1/1Eu0JtodbtLjLaTaPYpU+I7Z2bC6eFdb8hIrFEZhf92oQAyLCgBQJpu3ECjxXgI=
   on:
-    tags: true
-    all_branches: true
+    branch: master
+  api_key:
+    secure: Ugq6m/y4P5gF15zffYzTKhusn1Csu3ymYLdD+yXgyK3hek9Ms5PKTz4MKgPinlViRCBoQV2fGh0JsCikawIpmQyD+M+FRDKlP2GcXPhFmSN1wVEloxTCwe7H6m7Kl9mo+MJOTS0BN7waCc6yTJBJPxo5nwFgz+DT2srIYndA2h4=
