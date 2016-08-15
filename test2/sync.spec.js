@@ -182,24 +182,35 @@ describe('Sync', function () {
 
     it('should update entities in cache when a query was provided', async function() {
       const store = new SyncStore(collection);
-      const entity = {
+      const entity1 = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+      const entity2 = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+      const entity3 = {
         _id: randomString(),
         _kmd: {},
         prop: randomString()
       };
 
+
       nock(this.client.baseUrl)
         .get(store.pathname, () => true)
         .query(true)
-        .reply(200, [entity], {
+        .reply(200, [entity1, entity2, entity3], {
           'content-type': 'application/json'
         });
 
       await store.pull();
       const entities1 = await store.find().toPromise();
       expect(entities1).to.be.an('array');
-      expect(entities1).to.have.length(1);
-      expect(entities1).to.deep.equal([entity]);
+      expect(entities1).to.have.length(3);
+      expect(entities1).to.deep.equal([entity1, entity2, entity3]);
 
       nock(this.client.baseUrl)
         .get(store.pathname, () => true)
@@ -208,12 +219,12 @@ describe('Sync', function () {
           'content-type': 'application/json'
         });
 
-      const query = new Query().equalTo('_id', randomString());
+      const query = new Query().equalTo('_id', entity1._id);
       await store.pull(query);
       const entities2 = await store.find().toPromise();
       expect(entities2).to.be.an('array');
-      expect(entities2).to.have.length(1);
-      expect(entities2).to.deep.equal([entity]);
+      expect(entities2).to.have.length(2);
+      expect(entities2).to.deep.equal([entity2, entity3]);
     });
   });
 
