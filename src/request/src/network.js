@@ -198,7 +198,7 @@ export class KinveyRequest extends NetworkRequest {
       authType: AuthType.None,
       query: null,
       apiVersion: defaultApiVersion,
-      properties: new Properties(),
+      properties: new Headers(),
       skipBL: false,
       trace: false,
       client: Client.sharedInstance()
@@ -456,7 +456,7 @@ export class KinveyRequest extends NetworkRequest {
           setIdentitySession(this.client, SocialIdentity.MobileIdentityConnect, micSession);
 
           // Execute the original request
-          return this.execute();
+          return this.execute(rawResponse);
         }
       }
 

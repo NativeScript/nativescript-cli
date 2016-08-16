@@ -1,5 +1,4 @@
 // Karma configuration
-
 module.exports = function(config) {
   config.set({
 
@@ -14,7 +13,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'tests.webpack.js'
+      'test/index.js'
     ],
 
 
@@ -26,14 +25,14 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'tests.webpack.js': ['webpack', 'sourcemap']
+      'test/index.js': ['webpack', 'sourcemap']
     },
 
 
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['mocha'],
 
 
     // web server port
@@ -46,7 +45,7 @@ module.exports = function(config) {
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_ERROR,
 
 
     // enable / disable watching file and executing tests whenever any file changes
@@ -68,7 +67,7 @@ module.exports = function(config) {
 
     // Webpack config
     webpack: {
-      // devtool: 'inline-source-map', // just do inline source maps instead of the default
+      devtool: 'inline-source-map', // just do inline source maps instead of the default
       module: {
         loaders: [
           {
@@ -76,8 +75,7 @@ module.exports = function(config) {
             exclude: /(node_modules)/,
             loader: 'babel',
             query: {
-              presets: ['es2015', 'stage-2'],
-              cacheDirectory: ''
+              presets: ['es2015', 'stage-2']
             }
           },
           {

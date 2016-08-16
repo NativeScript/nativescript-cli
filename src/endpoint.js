@@ -12,7 +12,8 @@ const rpcNamespace = process.env.KINVEY_RPC_NAMESPACE || 'rpc';
  */
 export class CustomEndpoint {
   constructor() {
-    throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.', 'Please use `CustomEndpoint.execute()` function.');
+    throw new KinveyError('Not allowed to create an instance of the `CustomEndpoint` class.',
+      'Please use `CustomEndpoint.execute()` function.');
   }
   /**
    * Execute a custom endpoint. A promise will be returned that will be resolved
@@ -39,11 +40,11 @@ export class CustomEndpoint {
     }, options);
 
     if (!endpoint) {
-      throw new KinveyError('An endpoint is required.');
+      throw new KinveyError('An endpoint argument is required.');
     }
 
     if (!isString(endpoint)) {
-      throw new KinveyError('The endpoint must be a string.');
+      throw new KinveyError('The endpoint argument must be a string.');
     }
 
     const request = new KinveyRequest({

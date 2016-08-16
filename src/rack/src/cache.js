@@ -308,10 +308,8 @@ export class CacheMiddleware extends KinveyMiddleware {
   }
 
   async handle(request) {
-    request = await super.handle(request);
     const { method, query, body, appKey, collection, entityId, client } = request;
-    const { encryptionKey } = client;
-    const db = this.openDatabase(appKey, encryptionKey);
+    const db = this.openDatabase(appKey, client ? client.encryptionKey : undefined);
     let data;
 
     if (method === 'GET') {
@@ -338,16 +336,16 @@ export class CacheMiddleware extends KinveyMiddleware {
       }
     }
 
-    request.response = {
+    const response = {
       statusCode: method === 'POST' ? 201 : 200,
       headers: {},
       data: data
     };
 
     if (!data || isEmpty(data)) {
-      request.response.statusCode = 204;
+      response.statusCode = 204;
     }
 
-    return request;
+    return { response: response };
   }
 }

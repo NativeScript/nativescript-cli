@@ -10,8 +10,6 @@ export class SerializeMiddleware extends KinveyMiddleware {
   }
 
   async handle(request) {
-    request = await super.handle(request);
-
     if (request && request.body) {
       const contentType = request.headers.get('content-type');
 
@@ -32,6 +30,6 @@ export class SerializeMiddleware extends KinveyMiddleware {
       }
     }
 
-    return request;
+    return { request: request };
   }
 }

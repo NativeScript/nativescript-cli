@@ -10,6 +10,6 @@ export class HttpMiddleware extends KinveyMiddleware {
   }
 
   async handle() {
-    throw new Error('http middleware not installed');
+    throw new Error('Http middleware not installed');
   }
 }

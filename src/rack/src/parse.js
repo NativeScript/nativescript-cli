@@ -9,10 +9,7 @@ export class ParseMiddleware extends KinveyMiddleware {
     super(name);
   }
 
-  async handle(request) {
-    request = await super.handle(request);
-    const response = request.response;
-
+  async handle(request, response) {
     if (response && response.data) {
       const contentType = response.headers['content-type'] || response.headers['Content-Type'];
 
@@ -23,12 +20,10 @@ export class ParseMiddleware extends KinveyMiddleware {
           } catch (error) {
             response.data = response.data;
           }
-
-          request.response = response;
         }
       }
     }
 
-    return request;
+    return { response: response };
   }
 }

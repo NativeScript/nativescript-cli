@@ -179,12 +179,12 @@ export class Request {
     // If `cache` is true, add a cache busting query string.
     // This is useful for Android < 4.0 which caches all requests aggressively.
     if (this.cache === true) {
-      return appendQuery(this.configUrl, qs.stringify({
+      return appendQuery(this._url, qs.stringify({
         _: Math.random().toString(36).substr(2)
       }));
     }
 
-    return this.configUrl;
+    return this._url;
   }
 
   set url(urlString) {

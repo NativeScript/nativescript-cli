@@ -7,7 +7,7 @@ import {
   Headers
 } from '../../request';
 import { KinveyError } from '../../errors';
-import { NetworkStore } from './datastore';
+import { NetworkStore } from './networkstore';
 import { Promise } from 'es6-promise';
 import { Log } from '../../utils';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
