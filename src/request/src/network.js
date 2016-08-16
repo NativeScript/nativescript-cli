@@ -1,4 +1,4 @@
-import { Request, RequestMethod } from './request';
+import { Request, RequestMethod, Headers } from './request';
 import { KinveyRackManager } from '../../rack';
 import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { KinveyResponse } from './response';

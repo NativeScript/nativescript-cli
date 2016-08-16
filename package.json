@@ -11,7 +11,7 @@
     "test": "npm run test:ava",
     "test:ci": "karma start",
     "test:ava": "ava",
-    "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100  --recursive test",
+    "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
     "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover"
   },
@@ -85,9 +85,13 @@
     "nock": "^8.0.0",
     "parse-headers": "^2.0.1",
     "request": "^2.72.0",
+    "selenium-webdriver": "2.47.0",
     "semver": "^5.1.0",
     "sinon": "^1.17.4",
     "sinon-chai": "^2.8.0",
+    "wdio-dot-reporter": "0.0.6",
+    "wdio-mocha-framework": "^0.4.0",
+    "webdriverio": "^4.2.5",
     "webpack": "^1.13.1",
     "yargs": "^4.7.1"
   },
