@@ -51,6 +51,18 @@ export class Response {
     this.data = options.data;
   }
 
+  get headers() {
+    return this._headers;
+  }
+
+  set headers(headers) {
+    if (!(headers instanceof Headers)) {
+      headers = new Headers(headers);
+    }
+
+    this._headers = headers;
+  }
+
   get error() {
     if (this.isSuccess()) {
       return null;

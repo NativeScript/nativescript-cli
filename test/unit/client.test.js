@@ -4,7 +4,7 @@ import expect from 'expect';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 describe('Client', () => {
-  describe('construct', () => {
+  describe('constructor', () => {
     it('should be able to create an instance', () => {
       const client = new Client();
       expect(client).toBeA(Client);
@@ -58,6 +58,15 @@ describe('Client', () => {
     it('should be able to provide an appVersion', () => {
       const appVersion = randomString();
       const client = new Client({ appVersion: appVersion });
+      expect(client.appVersion).toEqual(appVersion);
+    });
+  });
+
+  describe('appVersion', function() {
+    it('should set the appVersion', function() {
+      const appVersion = randomString();
+      const client = new Client();
+      client.appVersion = appVersion;
       expect(client.appVersion).toEqual(appVersion);
     });
   });

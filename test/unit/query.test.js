@@ -1,98 +1,96 @@
-import './setup';
-import { Query } from '../src/query';
-import chai from 'chai';
-const expect = chai.expect;
+import { Query } from '../../src/query';
+import expect from 'expect';
 
-describe('Query', function () {
+describe('Query', function() {
   describe('isSupportedOffline()', function() {
     it('should be false when trying to filter geo queries', function() {
       const query = new Query();
       query.near('loc', [0, 0]);
-      expect(query.isSupportedOffline()).to.be.false;
+      expect(query.isSupportedOffline()).toEqual(false);
     });
 
     it('should be true', function() {
       const query = new Query();
       query.equalTo('foo', 'bar');
-      expect(query.isSupportedOffline()).to.be.true;
+      expect(query.isSupportedOffline()).toEqual(true);
     });
   });
 
   describe('process()', function() {
     it('throw an error when a query is not supported local', function() {
-      expect(function() {
+      expect(() => {
         const query = new Query();
         query.near('loc', [0, 0]);
         return query.process([]);
-      }).to.throw(/This query is not able to run locally./);
+      }).toThrow(/This query is not able to run locally./);
     });
   });
 
-  describe('toQueryString()', function () {
-    it('should have a query property', function () {
+  describe('toQueryString()', function() {
+    it('should have a query property', function() {
       const query = new Query();
       query.equalTo('name', 'tests');
       const queryString = query.toQueryString();
-      expect(queryString).to.have.property('query', '{"name":"tests"}');
+      expect(queryString).toInclude({ query: '{"name":"tests"}' });
     });
 
     it('should not have a query property', function () {
       const query = new Query();
       const queryString = query.toQueryString();
-      expect(queryString).to.not.have.property('query');
+      expect(queryString).toExcludeKey('query');
     });
 
     it('should have a fields property', function () {
       const query = new Query();
       query.fields = ['foo', 'bar'];
       const queryString = query.toQueryString();
-      expect(queryString).to.have.property('fields', 'foo,bar');
+      expect(queryString).toInclude({ fields: 'foo,bar' });
     });
 
     it('should not have a fields property', function () {
       const query = new Query();
       const queryString = query.toQueryString();
-      expect(queryString).to.not.have.property('fields');
+      expect(queryString).toExcludeKey('fields');
     });
 
     it('should have a limit property', function () {
       const query = new Query();
       query.limit = 10;
       const queryString = query.toQueryString();
-      expect(queryString).to.have.property('limit', '10');
+      expect(queryString).toInclude({ limit: 10 });
     });
 
     it('should not have a limit property', function () {
       const query = new Query();
       const queryString = query.toQueryString();
-      expect(queryString).to.not.have.property('limit');
+      expect(queryString).toExcludeKey('limit');
     });
 
     it('should have a skip property', function () {
       const query = new Query();
       query.skip = 10;
       const queryString = query.toQueryString();
-      expect(queryString).to.have.property('skip', '10');
+      expect(queryString).toInclude({ skip: 10 });
     });
 
     it('should not have a skip property', function () {
       const query = new Query();
       query.skip = 0;
       const queryString = query.toQueryString();
-      expect(queryString).to.not.have.property('skip');
+      expect(queryString).toExcludeKey('skip');
     });
 
     it('should have a sort property', function () {
       const query = new Query();
       query.ascending('foo');
       const queryString = query.toQueryString();
-      expect(queryString).to.have.property('sort', '{"foo":1}');
+      expect(queryString).toInclude({ sort: '{"foo":1}' });
     });
 
     it('should not have a sort property', function () {
       const query = new Query();
       const queryString = query.toQueryString();
-      expect(queryString).to.not.have.property('sort');
+      expect(queryString).toExcludeKey('sort');
     });
   });
 });

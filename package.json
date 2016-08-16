@@ -8,9 +8,7 @@
     "clean": "gulp clean",
     "docs": "esdoc -c esdoc.json",
     "lint": "gulp lint",
-    "test": "npm run test:ava",
-    "test:ci": "karma start",
-    "test:ava": "ava",
+    "test": "npm run test:mocha",
     "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
     "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test",
     "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover"
@@ -125,39 +123,5 @@
       "src/**/*.test.js",
       "src/**/*.mock.js"
     ]
-  },
-  "eslintConfig": {
-    "extends": "airbnb",
-    "parser": "babel-eslint",
-    "rules": {
-      "comma-dangle": "off",
-      "func-names": "off",
-      "id-length": "off",
-      "max-len": [
-        "warn",
-        {
-          "code": 120,
-          "tabWidth": 2,
-          "ignoreComments": true,
-          "ignoreTrailingComments": true
-        }
-      ],
-      "no-console": "error",
-      "no-loop-func": "warn",
-      "no-param-reassign": "off",
-      "no-shadow": "off",
-      "no-underscore-dangle": "off",
-      "object-shorthand": [
-        "error",
-        "methods"
-      ],
-      "space-before-function-paren": "off"
-    },
-    "env": {
-      "browser": true,
-      "es6": true,
-      "mocha": true,
-      "node": true
-    }
   }
 }

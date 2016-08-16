@@ -2,7 +2,7 @@ import { HttpMiddleware as CoreHttpMiddleware, KinveyRackManager } from '../../s
 import { HttpMiddleware } from './mocks';
 import { Kinvey } from '../../src/kinvey';
 import { User } from './helpers';
-// import nock from 'nock';
+import nock from 'nock';
 
 // Record for nock
 // nock.recorder.rec();
@@ -38,4 +38,9 @@ after(() => {
 // Cleanup
 after(function() {
   delete this.client;
+});
+
+// Clear nock
+afterEach(function() {
+  nock.cleanAll();
 });
