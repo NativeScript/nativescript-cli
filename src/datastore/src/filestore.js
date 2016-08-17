@@ -250,7 +250,7 @@ export class FileStore extends NetworkStore {
       url: uploadUrl,
       timeout: options.timeout
     });
-    statusCheckRequest.headers.addAll(headers.toJSON());
+    statusCheckRequest.headers.addAll(headers.toPlainObject());
     statusCheckRequest.headers.set('Content-Length', '0');
     statusCheckRequest.headers.set('Content-Range', `bytes */${metadata.size}`);
     const statusCheckResponse = await statusCheckRequest.execute(true);
@@ -284,7 +284,7 @@ export class FileStore extends NetworkStore {
 
     Log.debug('Start file upload');
     Log.debug('File upload upload url', uploadUrl);
-    Log.debug('File upload headers', headers.toJSON());
+    Log.debug('File upload headers', headers.toPlainObject());
     Log.debug('File upload file', file);
     Log.debug('File upload metadata', metadata);
     Log.debug('File upload options', options);
@@ -300,7 +300,7 @@ export class FileStore extends NetworkStore {
       body: fileSlice,
       timeout: options.timeout
     });
-    request.headers.addAll(headers.toJSON());
+    request.headers.addAll(headers.toPlainObject());
     request.headers.set('content-length', fileSliceSize);
     request.headers.set('content-range', `bytes ${options.start}-${metadata.size - 1}/${metadata.size}`);
     const response = await request.execute(true);

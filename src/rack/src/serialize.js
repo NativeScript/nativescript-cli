@@ -11,7 +11,7 @@ export class SerializeMiddleware extends KinveyMiddleware {
 
   async handle(request) {
     if (request && request.body) {
-      const contentType = request.headers.get('content-type');
+      const contentType = request.headers['content-type'] || request.headers['Content-Type'];
 
       if (contentType) {
         if (contentType.indexOf('application/json') === 0) {

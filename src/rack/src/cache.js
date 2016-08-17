@@ -174,6 +174,14 @@ export class DB {
     }
   }
 
+  async findById(collection, id) {
+    if (!isString(id)) {
+      throw new KinveyError('id must be a string', id);
+    }
+
+    return this.adapter.findById(collection, id);
+  }
+
   async count(collection, query) {
     const entities = await this.find(collection, query);
     return { count: entities.length };
@@ -191,22 +199,6 @@ export class DB {
     }
 
     return null;
-  }
-
-  async findById(collection, id) {
-    try {
-      if (!isString(id)) {
-        throw new KinveyError('id must be a string', id);
-      }
-
-      return this.adapter.findById(collection, id);
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        return undefined;
-      }
-
-      throw error;
-    }
   }
 
   save(collection, entities = []) {

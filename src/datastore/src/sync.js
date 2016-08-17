@@ -606,8 +606,8 @@ export class SyncManager {
     if (!(query instanceof Query)) {
       query = new Query(result(query, 'toJSON', query));
     }
-
     query.equalTo('collection', this.collection);
+
     const request = new CacheRequest({
       method: RequestMethod.DELETE,
       url: url.format({

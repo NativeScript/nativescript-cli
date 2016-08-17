@@ -196,7 +196,7 @@ export class User {
     let user = null;
 
     if (data) {
-      user = new User(data);
+      user = new this(data);
       user.client = client;
     }
 
@@ -275,7 +275,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static login(username, password, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.login(username, password, options);
   }
 
@@ -313,7 +313,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     user.client = options.client || Client.sharedInstance();
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
@@ -386,7 +386,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectFacebook(clientId, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.connectFacebook(clientId, options);
   }
 
@@ -419,7 +419,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectGoogle(clientId, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.connectGoogle(clientId, options);
   }
 
@@ -452,7 +452,7 @@ export class User {
    * @return {Promise<User>}                The user.
    */
   static connectLinkedIn(clientId, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.connectLinkedIn(clientId, options);
   }
 
@@ -604,7 +604,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static signup(data, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.signup(data, options);
   }
 
@@ -636,7 +636,7 @@ export class User {
    * @return {Promise<User>} The user.
    */
   static signupWithIdentity(identity, session, options) {
-    const user = new User({}, options);
+    const user = new this({}, options);
     return user.signupWithIdentity(identity, session, options);
   }
 

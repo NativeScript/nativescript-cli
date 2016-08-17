@@ -75,4 +75,13 @@ export class CacheRequest extends Request {
     await super.cancel();
     return this.rack.cancel();
   }
+
+  toPlainObject() {
+    const obj = super.toPlainObject();
+    obj.query = this.query;
+    obj.appKey = this.appKey;
+    obj.collection = this.collection;
+    obj.entityId = this.entityId;
+    return obj;
+  }
 }

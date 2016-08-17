@@ -1,10 +1,21 @@
 import { CustomEndpoint } from '../../src/endpoint';
+import { Client } from '../../src/client';
 import { KinveyError, NotFoundError } from '../../src/errors';
 import nock from 'nock';
 import expect from 'expect';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 describe('Endpoint', function() {
+  // Get the shared client instance
+  before(function() {
+    this.client = Client.sharedInstance();
+  });
+
+  // Cleanup
+  after(function() {
+    delete this.client;
+  });
+
   describe('constructor', function() {
     it('should not be able to create an instance of the CustomEndpoint class', function() {
       expect(() => {

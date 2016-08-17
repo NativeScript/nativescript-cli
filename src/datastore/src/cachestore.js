@@ -489,9 +489,9 @@ export class CacheStore extends NetworkStore {
           await this.clearSync(query, options);
 
           // Create delete operations for non local data in the sync table
-          const syncData = xorWith(entities, localEntities,
+          const syncEntities = xorWith(entities, localEntities,
             (entity, localEntity) => entity[idAttribute] === localEntity[idAttribute]);
-          await this.syncManager.addDeleteOperation(syncData, options);
+          await this.syncManager.addDeleteOperation(syncEntities, options);
         }
 
         // Push the data
@@ -526,51 +526,47 @@ export class CacheStore extends NetworkStore {
   removeById(id, options = {}) {
     const stream = KinveyObservable.create(async observer => {
       try {
-        if (!id) {
-          observer.next(undefined);
-        } else {
-          // Remove from cache
-          const request = new CacheRequest({
-            method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: `${this.pathname}/${id}`,
-              query: options.query
-            }),
-            properties: options.properties,
-            authType: AuthType.Default,
-            timeout: options.timeout
-          });
+        // Remove from cache
+        const request = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `${this.pathname}/${id}`,
+            query: options.query
+          }),
+          properties: options.properties,
+          authType: AuthType.Default,
+          timeout: options.timeout
+        });
 
-          // Execute the request
-          const response = await request.execute();
-          const entity = response.data;
+        // Execute the request
+        const response = await request.execute();
+        const entity = response.data;
 
-          if (entity) {
-            const metadata = new Metadata(entity);
+        if (entity) {
+          const metadata = new Metadata(entity);
 
-            // Clear any pending sync items if the entity
-            // was created locally
-            if (metadata.isLocal()) {
-              const query = new Query();
-              query.equalTo('entityId', entity[idAttribute]);
-              await this.clearSync(query, options);
-            } else {
-              // Add a delete operation to sync
-              await this.syncManager.addDeleteOperation(entity, options);
-            }
+          // Clear any pending sync items if the entity
+          // was created locally
+          if (metadata.isLocal()) {
+            const query = new Query();
+            query.equalTo('entityId', entity[idAttribute]);
+            await this.clearSync(query, options);
+          } else {
+            // Add a delete operation to sync
+            await this.syncManager.addDeleteOperation(entity, options);
           }
-
-          // Push the data
-          if (this.syncAutomatically === true) {
-            const query = new Query().equalTo('entityId', entity[idAttribute]);
-            await this.push(query, options);
-          }
-
-          // Emit the data
-          observer.next(entity);
         }
+
+        // Push the data
+        if (this.syncAutomatically === true) {
+          const query = new Query().equalTo('entityId', entity[idAttribute]);
+          await this.push(query, options);
+        }
+
+        // Emit the data
+        observer.next(entity);
       } catch (error) {
         return observer.error(error);
       }
@@ -617,11 +613,11 @@ export class CacheStore extends NetworkStore {
           const data = response.data;
 
           // Remove the data from sync
-          if (data && data.length > 0) {
+          if (!query) {
+            await this.clearSync(null, options);
+          } else if (data && data.length > 0) {
             const syncQuery = new Query().contains('entityId', Object.keys(keyBy(data, idAttribute)));
             await this.clearSync(syncQuery, options);
-          } else if (!query) {
-            await this.clearSync(null, options);
           }
 
           observer.next(data);

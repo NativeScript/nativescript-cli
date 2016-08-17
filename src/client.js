@@ -195,9 +195,9 @@ export class Client {
   /**
    * Returns an object containing all the information for this Client.
    *
-   * @return {Object} JSON
+   * @return {Object} Object
    */
-  toJSON() {
+  toPlainObject() {
     return {
       apiHostname: this.apiHostname,
       apiProtocol: this.apiProtocol,

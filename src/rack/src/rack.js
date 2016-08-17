@@ -4,14 +4,15 @@ import { ParseMiddleware } from './parse';
 import { SerializeMiddleware } from './serialize';
 import { HttpMiddleware } from './http';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
+import result from 'lodash/result';
 
 /**
  * @private
  */
 export class KinveyRack extends Rack {
   async execute(request) {
-    const result = await super.execute(request);
-    return result.response;
+    const { response } = await super.execute(result(request, 'toPlainObject', request));
+    return response;
   }
 }
 

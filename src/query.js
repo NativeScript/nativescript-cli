@@ -222,8 +222,7 @@ export class Query {
    * @returns {Query} The query.
    */
   equalTo(field, value) {
-    this.filter[field] = value;
-    return this;
+    return this.addFilter(field, '$eq', value);
   }
 
   /**

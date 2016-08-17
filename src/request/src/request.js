@@ -106,12 +106,12 @@ export class Headers {
     return this;
   }
 
-  toJSON() {
+  toPlainObject() {
     return this.headers;
   }
 
   toString() {
-    return JSON.stringify(this.headers);
+    return JSON.stringify(this.toPlainObject());
   }
 }
 
@@ -234,6 +234,17 @@ export class Request {
 
     // Flip the executing flag to true
     this.executing = true;
+  }
+
+  toPlainObject() {
+    return {
+      method: this.method,
+      headers: this.headers.toPlainObject(),
+      url: this.url,
+      body: this.body,
+      timeout: this.timeout,
+      followRedirect: this.followRedirect
+    };
   }
 }
 

@@ -14,7 +14,7 @@ export class HttpMiddleware extends KinveyMiddleware {
       http({
         url: url,
         method: method,
-        headers: headers.toJSON(),
+        headers: headers,
         body: body,
         followRedirect: followRedirect
       }, (error, response, data) => {
