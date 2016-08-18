@@ -604,11 +604,11 @@ export class User {
   async disconnectIdentity(identity, options) {
     try {
       if (identity === Facebook.identity) {
-        await Facebook.logout(options);
+        await Facebook.logout(this, options);
       } else if (identity === Google.identity) {
-        await Google.logout(options);
+        await Google.logout(this, options);
       } else if (identity === LinkedIn.identity) {
-        await LinkedIn.logout(options);
+        await LinkedIn.logout(this, options);
       } else if (identity === MobileIdentityConnect.identity) {
         await MobileIdentityConnect.logout(this, options);
       }
@@ -661,7 +661,7 @@ export class User {
 
     // Disconnect from connected identities
     try {
-      const identities = Object.keys(this._socialIdentity);
+      const identities = Object.keys(this._socialIdentity || {});
       const promises = identities.map(identity => this.disconnectIdentity(identity, options));
       await Promise.all(promises);
     } catch (error) {
