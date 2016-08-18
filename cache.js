@@ -4,7 +4,7 @@ import {
   DBAdapter
 } from 'kinvey-html5-sdk/dist/cache';
 import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
-import { Log } from 'kinvey-javascript-sdk-core/dist/log';
+import { Log } from 'kinvey-javascript-sdk-core/dist/utils';
 import { LocalStorage, SessionStorage } from 'kinvey-html5-sdk/dist/storage';
 import { IndexedDB } from 'kinvey-html5-sdk/dist/indexeddb';
 import { WebSQL } from 'kinvey-html5-sdk/dist/websql';

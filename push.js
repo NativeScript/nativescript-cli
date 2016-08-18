@@ -1,9 +1,8 @@
 import { Device } from './device';
 import { KinveyError } from 'kinvey-javascript-sdk-core/dist/errors';
 import { EventEmitter } from 'events';
-import { RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/dist/requests/request';
-import { User } from 'kinvey-javascript-sdk-core/dist/user';
-import { NetworkRequest } from 'kinvey-javascript-sdk-core/dist/requests/network';
+import { NetworkRequest, RequestMethod, AuthType } from 'kinvey-javascript-sdk-core/dist/request';
+import { User } from 'kinvey-javascript-sdk-core/dist/entity';
 import { Client } from 'kinvey-javascript-sdk-core/dist/client';
 import { Promise } from 'es6-promise';
 import url from 'url';

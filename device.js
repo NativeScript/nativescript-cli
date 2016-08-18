@@ -23,11 +23,19 @@ export class Device {
   }
 
   static isPhoneGap() {
-    return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
+    if (typeof document !== 'undefined') {
+      return document.URL.indexOf('http://') === -1 && document.URL.indexOf('https://') === -1;
+    }
+
+    return false;
   }
 
   static isBrowser() {
-    return document.URL.indexOf('http://') !== -1 || document.URL.indexOf('https://') !== -1;
+    if (typeof document !== 'undefined') {
+      return document.URL.indexOf('http://') !== -1 || document.URL.indexOf('https://') !== -1;
+    }
+
+    return false;
   }
 
   static isiOS() {
