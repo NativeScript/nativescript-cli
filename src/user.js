@@ -604,13 +604,13 @@ export class User {
   async disconnectIdentity(identity, options) {
     try {
       if (identity === Facebook.identity) {
-        await Facebook.logout();
+        await Facebook.logout(options);
       } else if (identity === Google.identity) {
-        await Google.logout();
+        await Google.logout(options);
       } else if (identity === LinkedIn.identity) {
-        await LinkedIn.logout();
+        await LinkedIn.logout(options);
       } else if (identity === MobileIdentityConnect.identity) {
-        await MobileIdentityConnect.logout();
+        await MobileIdentityConnect.logout(this, options);
       }
 
       setIdentitySession(this.client, identity, null);
