@@ -28,7 +28,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var HttpMiddleware = exports.HttpMiddleware = function (_KinveyMiddleware) {
   _inherits(HttpMiddleware, _KinveyMiddleware);
 

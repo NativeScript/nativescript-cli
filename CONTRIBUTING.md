@@ -28,4 +28,4 @@ When contributing to the repository, please follow these guidelines -
 - Each commit should include a commit message describing the change; and each pull request should include a high level summary of the bug or enhancement being addressed by the pull request.
 - The core team (Kinvey engineering) is currently responsible for reviewing, merging and releasing new code.
 
-We require that all contributors agree to our [CLA]() prior to making a contribution.
+We require that all contributors sign a [CLA](https://docs.google.com/document/d/1_PqkVpqgCL7psLuGCzZ6_OHbOS567E1JZ1hNMpfvZ-M/edit?usp=sharing) prior to making a contribution. Please download, sign and submit the CLA so we can accept your contributions. If you have questions, you can email mobile@kinvey.com.

@@ -33,6 +33,8 @@ var _isString2 = _interopRequireDefault(_isString);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new _es6Promise.Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return _es6Promise.Promise.resolve(value).then(function (value) { return step("next", value); }, function (err) { return step("throw", err); }); } } return step("next"); }); }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -41,6 +43,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+var invalidatePathname = process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate';
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
@@ -293,6 +296,52 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
       });
       return promise;
     }
+  }, {
+    key: 'logout',
+    value: function () {
+      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(user) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var config, request, response;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                config = new _request.KinveyRequestConfig({
+                  method: _request.RequestMethod.GET,
+                  headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                  },
+                  authType: _request.AuthType.App,
+                  url: _url2.default.format({
+                    protocol: this.client.micProtocol,
+                    host: this.client.micHost,
+                    pathname: invalidatePathname,
+                    query: { user: user._id }
+                  }),
+                  properties: options.properties
+                });
+                request = new _network.NetworkRequest(config);
+                _context.next = 4;
+                return request.execute();
+
+              case 4:
+                response = _context.sent;
+                return _context.abrupt('return', response.data);
+
+              case 6:
+              case 'end':
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function logout(_x7, _x8) {
+        return _ref.apply(this, arguments);
+      }
+
+      return logout;
+    }()
   }, {
     key: 'identity',
     get: function get() {

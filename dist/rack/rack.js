@@ -38,7 +38,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var KinveyRack = exports.KinveyRack = function (_Rack) {
   _inherits(KinveyRack, _Rack);
 

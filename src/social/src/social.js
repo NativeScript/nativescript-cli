@@ -97,8 +97,8 @@ export class Social {
     this.session = null;
   }
 
-  static logout() {
+  static logout(user, options) {
     const social = new this();
-    return social.logout();
+    return social.logout(user, options);
   }
 }

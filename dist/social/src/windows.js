@@ -20,7 +20,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var Windows = exports.Windows = function (_Social) {
   _inherits(Windows, _Social);
 

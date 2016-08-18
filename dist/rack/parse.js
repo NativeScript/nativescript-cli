@@ -30,7 +30,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var ParseMiddleware = exports.ParseMiddleware = function (_KinveyMiddleware) {
   _inherits(ParseMiddleware, _KinveyMiddleware);
 

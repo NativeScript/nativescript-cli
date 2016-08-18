@@ -20,7 +20,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var KinveyError = exports.KinveyError = function (_ExtendableError) {
   _inherits(KinveyError, _ExtendableError);
 

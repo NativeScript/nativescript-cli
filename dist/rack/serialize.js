@@ -30,7 +30,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var SerializeMiddleware = exports.SerializeMiddleware = function (_KinveyMiddleware) {
   _inherits(SerializeMiddleware, _KinveyMiddleware);
 

@@ -80,7 +80,6 @@ var Query = function () {
    * @param {number} [options.skip=0] Number of entities to skip from the start.
    * @return {Query} The query.
    */
-
   function Query(options) {
     _classCallCheck(this, Query);
 

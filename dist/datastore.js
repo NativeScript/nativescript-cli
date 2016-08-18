@@ -968,7 +968,6 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     /**
      * @type {number|undefined}
      */
-
     var _this9 = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheStore).call(this, collection, options));
 
     _this9.ttl = options.ttl || undefined;

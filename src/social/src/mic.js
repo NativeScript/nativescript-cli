@@ -9,6 +9,8 @@ import url from 'url';
 import isString from 'lodash/isString';
 const authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 const tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
+const invalidatePathname = process.env.KINVEY_MIC_INVALIDATE_PATHNAME || '/oauth/invalidate';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * Enum for Mobile Identity Connect authorization grants.
@@ -236,5 +238,25 @@ export class MobileIdentityConnect extends Social {
     const request = new NetworkRequest(config);
     const promise = request.execute().then(response => response.data);
     return promise;
+  }
+
+  async logout(user, options = {}) {
+    const config = new KinveyRequestConfig({
+      method: RequestMethod.GET,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      authType: AuthType.App,
+      url: url.format({
+        protocol: this.client.micProtocol,
+        host: this.client.micHost,
+        pathname: invalidatePathname,
+        query: { user: user._id }
+      }),
+      properties: options.properties
+    });
+    const request = new NetworkRequest(config);
+    const response = await request.execute();
+    return response.data;
   }
 }
