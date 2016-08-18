@@ -36,7 +36,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var CacheRequest = exports.CacheRequest = function (_KinveyRequest) {
   _inherits(CacheRequest, _KinveyRequest);
 

@@ -20,7 +20,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var LinkedIn = exports.LinkedIn = function (_Social) {
   _inherits(LinkedIn, _Social);
 

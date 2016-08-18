@@ -20,7 +20,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var Google = exports.Google = function (_Social) {
   _inherits(Google, _Social);
 

@@ -54,7 +54,6 @@ var Client = exports.Client = function () {
    *   appSecret: '<appSecret>'
    * });
    */
-
   function Client() {
     var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 

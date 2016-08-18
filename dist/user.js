@@ -328,7 +328,6 @@ var User = exports.User = function () {
    * @param {Object} [options={}] Options.
    * @return {User} User
    */
-
   function User() {
     var data = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
     var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
@@ -964,7 +963,7 @@ var User = exports.User = function () {
                 }
 
                 _context15.next = 4;
-                return _social.Facebook.logout();
+                return _social.Facebook.logout(options);
 
               case 4:
                 _context15.next = 19;
@@ -977,7 +976,7 @@ var User = exports.User = function () {
                 }
 
                 _context15.next = 9;
-                return _social.Google.logout();
+                return _social.Google.logout(options);
 
               case 9:
                 _context15.next = 19;
@@ -990,7 +989,7 @@ var User = exports.User = function () {
                 }
 
                 _context15.next = 14;
-                return _social.LinkedIn.logout();
+                return _social.LinkedIn.logout(options);
 
               case 14:
                 _context15.next = 19;
@@ -1003,7 +1002,7 @@ var User = exports.User = function () {
                 }
 
                 _context15.next = 19;
-                return _social.MobileIdentityConnect.logout();
+                return _social.MobileIdentityConnect.logout(this, options);
 
               case 19:
 

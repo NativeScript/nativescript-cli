@@ -48,7 +48,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var Facebook = exports.Facebook = function (_Social) {
   _inherits(Facebook, _Social);
 

@@ -42,7 +42,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * @private
  */
-
 var Aggregation = exports.Aggregation = function () {
   function Aggregation(options) {
     _classCallCheck(this, Aggregation);

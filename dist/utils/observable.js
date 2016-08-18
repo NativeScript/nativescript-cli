@@ -20,7 +20,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**
  * @private
  */
-
 var KinveyObservable = exports.KinveyObservable = function (_Observable) {
   _inherits(KinveyObservable, _Observable);
 

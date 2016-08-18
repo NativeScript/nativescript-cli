@@ -142,7 +142,6 @@ var Auth = {
    *
    * @returns {Object}
    */
-
   all: function all(client) {
     try {
       return Auth.session(client);
