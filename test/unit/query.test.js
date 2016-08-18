@@ -31,7 +31,7 @@ describe('Query', function() {
       const query = new Query();
       query.equalTo('name', 'tests');
       const queryString = query.toQueryString();
-      expect(queryString).toInclude({ query: '{"name":"tests"}' });
+      expect(queryString).toInclude({ query: '{"name":{"$eq":"tests"}}' });
     });
 
     it('should not have a query property', function () {

@@ -707,6 +707,9 @@ export class CacheStore extends NetworkStore {
     return this.syncManager.clear(query, options);
   }
 
+  /**
+   * @deprecated Use clearSync() instead of this.
+   */
   purge(query, options) {
     return this.clearSync(query, options);
   }

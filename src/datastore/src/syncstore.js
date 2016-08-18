@@ -110,4 +110,54 @@ export class SyncStore extends CacheStore {
 
     return stream;
   }
+
+  /**
+   * Count all entities in the data store. A query can be optionally provided to return
+   * a subset of all entities in a collection or omitted to return all entities in
+   * a collection. The number of entities returned adheres to the limits specified
+   * at http://devcenter.kinvey.com/rest/guides/datastore#queryrestrictions.
+   *
+   * @param   {Query}                 [query]                          Query used to filter entities.
+   * @param   {Object}                [options]                        Options
+   * @param   {Properties}            [options.properties]             Custom properties to send with
+   *                                                                   the request.
+   * @param   {Number}                [options.timeout]                Timeout for the request.
+   * @return  {Observable}                                             Observable.
+   */
+  count(query, options = {}) {
+    const stream = KinveyObservable.create(async observer => {
+      try {
+        if (query && !(query instanceof Query)) {
+          throw new KinveyError('Invalid query. It must be an instance of the Query class.');
+        }
+
+        // Count the entities in the cache
+        const request = new CacheRequest({
+          method: RequestMethod.GET,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: `${this.pathname}/_count`,
+            query: options.query
+          }),
+          properties: options.properties,
+          query: query,
+          timeout: options.timeout
+        });
+
+        // Execute the request
+        const response = await request.execute();
+        const data = response.data;
+
+        // Emit the cache count
+        observer.next(data ? data.count : 0);
+      } catch (error) {
+        return observer.error(error);
+      }
+
+      return observer.complete();
+    });
+
+    return stream;
+  }
 }
