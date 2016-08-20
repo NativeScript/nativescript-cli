@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/dist/rack/middleware';
+import { KinveyMiddleware } from 'kinvey-javascript-sdk-core/dist/rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import angular from 'angular'; // eslint-disable-line import/no-unresolved
 const $injector = angular.injector(['ng']);
@@ -18,7 +18,7 @@ export class HttpMiddleware extends KinveyMiddleware {
       const response = await $http({
         url: url,
         method: method,
-        headers: headers.toJSON(),
+        headers: headers,
         data: body
       });
 
