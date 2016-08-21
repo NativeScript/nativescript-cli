@@ -9,7 +9,6 @@ export class HttpMiddleware extends KinveyMiddleware {
   }
 
   async handle(request) {
-    await super.handle(request);
     const { url, method, headers, body } = request;
     const $http = $injector.get('$http');
 
@@ -22,21 +21,21 @@ export class HttpMiddleware extends KinveyMiddleware {
         data: body
       });
 
-      request.response = {
-        statusCode: response.status,
-        headers: response.headers(),
-        data: response.data
+      return {
+        response: {
+          statusCode: response.status,
+          headers: response.headers(),
+          data: response.data
+        }
       };
-
-      return request;
     } catch (responseError) {
-      request.response = {
-        statusCode: responseError.status,
-        headers: responseError.headers(),
-        data: responseError.data
+      return {
+        response: {
+          statusCode: responseError.status,
+          headers: responseError.headers(),
+          data: responseError.data
+        }
       };
-
-      return request;
     }
   }
 }
