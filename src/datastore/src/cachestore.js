@@ -683,8 +683,41 @@ export class CacheStore extends NetworkStore {
    * @param   {Number}                [options.timeout]                         Timeout for the request.
    * @return  {Promise}                                                         Promise
    */
-  pull(query, options) {
-    return this.syncManager.pull(query, options);
+  async pull(query, options = {}) {
+    const entities = await this.syncManager.pull(query, options);
+
+    // Clear the cache
+    const clearRequest = new CacheRequest({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname,
+        query: options.query
+      }),
+      query: query,
+      properties: options.properties,
+      timeout: options.timeout
+    });
+    await clearRequest.execute();
+
+    // Save network entities to cache
+    const saveRequest = new CacheRequest({
+      method: RequestMethod.PUT,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname,
+        query: options.query
+      }),
+      properties: options.properties,
+      body: entities,
+      timeout: options.timeout
+    });
+    await saveRequest.execute();
+
+    // Return the entities
+    return entities;
   }
 
   /**

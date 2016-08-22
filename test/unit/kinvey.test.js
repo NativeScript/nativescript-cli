@@ -1,11 +1,10 @@
-import './setup';
-import { Kinvey } from '../src/kinvey';
-import { Client } from '../src/client';
-import { loginUser, logoutUser } from './utils/user';
-import { randomString } from '../src/utils/string';
+import { Kinvey } from '../../src/kinvey';
+import { Client } from '../../src/client';
+import { TestUser } from './helpers';
+import { randomString } from '../../src/utils';
+import expect from 'expect';
 import nock from 'nock';
-import chai from 'chai';
-const expect = chai.expect;
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 const defaultMicProtocol = process.env.KINVEY_MIC_PROTOCOL || 'https:';
 const defaultMicHost = process.env.KINVEY_MIC_HOST || 'auth.kinvey.com';
@@ -23,21 +22,17 @@ describe('Kinvey', function () {
     it('should set the appVersion', function() {
       const appVersion = '1.0.0';
       Kinvey.appVersion = appVersion;
-      expect(Kinvey.appVersion).to.equal(appVersion);
+      expect(Kinvey.appVersion).toEqual(appVersion);
     });
   });
 
   describe('init()', function () {
-    it('should respond', function () {
-      expect(Kinvey).itself.to.respondTo('init');
-    });
-
     it('should throw an error if an appKey is not provided', function() {
       expect(function() {
         Kinvey.init({
           appSecret: randomString()
         });
-      }).to.throw();
+      }).toThrow();
     });
 
     it('should throw an error if an appSecret or masterSecret is not provided', function() {
@@ -45,14 +40,14 @@ describe('Kinvey', function () {
         Kinvey.init({
           appKey: randomString()
         });
-      }).to.throw();
+      }).toThrow();
     });
 
     it('should return a client', function() {
       expect(Kinvey.init({
         appKey: randomString(),
         appSecret: randomString()
-      })).to.be.an.instanceof(Client);
+      })).toBeA(Client);
     });
 
     it('should set default MIC host name when a custom one is not provided', function() {
@@ -60,8 +55,8 @@ describe('Kinvey', function () {
         appKey: randomString(),
         appSecret: randomString()
       });
-      expect(client).to.have.property('micProtocol', defaultMicProtocol);
-      expect(client).to.have.property('micHost', defaultMicHost);
+      expect(client).toInclude({ micProtocol: defaultMicProtocol });
+      expect(client).toInclude({ micHost: defaultMicHost });
     });
 
     it('should set a custom MIC host name when one is provided', function() {
@@ -71,42 +66,47 @@ describe('Kinvey', function () {
         appSecret: randomString(),
         micHostname: micHostname
       });
-      expect(client).to.have.property('micProtocol', 'https:');
-      expect(client).to.have.property('micHost', 'auth.example.com');
+      expect(client).toInclude({ micProtocol: 'https:' });
+      expect(client).toInclude({ micHost: 'auth.example.com' });
     });
 
     it('should set additional modules after init', function() {
+      // Initialize Kinvey
       Kinvey.init({
         appKey: randomString(),
         appSecret: randomString()
       });
-      expect(Kinvey).to.have.property('Aggregation');
-      expect(Kinvey).to.have.property('AuthorizationGrant');
-      expect(Kinvey).to.have.property('CustomEndpoint');
-      expect(Kinvey).to.have.property('DataStore');
-      expect(Kinvey).to.have.property('DataStoreType');
-      expect(Kinvey).to.have.property('Files');
-      expect(Kinvey).to.have.property('Log');
-      expect(Kinvey).to.have.property('Metadata');
-      expect(Kinvey).to.have.property('Query');
-      expect(Kinvey).to.have.property('SocialIdentity');
-      expect(Kinvey).to.have.property('Sync');
-      expect(Kinvey).to.have.property('User');
+
+      // Expectations
+      expect(Kinvey.Acl).toNotEqual(undefined);
+      expect(Kinvey.Aggregation).toNotEqual(undefined);
+      expect(Kinvey.AuthorizationGrant).toNotEqual(undefined);
+      expect(Kinvey.CustomEndpoint).toNotEqual(undefined);
+      expect(Kinvey.DataStore).toNotEqual(undefined);
+      expect(Kinvey.DataStoreType).toNotEqual(undefined);
+      expect(Kinvey.Files).toNotEqual(undefined);
+      expect(Kinvey.Log).toNotEqual(undefined);
+      expect(Kinvey.Metadata).toNotEqual(undefined);
+      expect(Kinvey.Query).toNotEqual(undefined);
+      expect(Kinvey.SocialIdentity).toNotEqual(undefined);
+      expect(Kinvey.Sync).toNotEqual(undefined);
+      expect(Kinvey.User).toNotEqual(undefined);
     });
   });
 
   describe('ping()', function() {
-    it('should respond', function() {
-      expect(Kinvey).itself.to.respondTo('ping');
-    });
-
-    it('should return a response when there is no active user', function() {
+    it('should return a response when there is no active user', async function() {
       const reply = {
         version: 1,
         kinvey: 'hello tests',
         appName: 'tests',
         environmentName: 'development'
       };
+
+      // Logout the active user
+      await TestUser.logout();
+
+      // Kinvey API Response
       nock(this.client.baseUrl)
         .get(`/${appdataNamespace}/${this.client.appKey}`)
         .query(true)
@@ -114,18 +114,22 @@ describe('Kinvey', function () {
           'content-type': 'application/json'
         });
 
-      return Kinvey.ping().then(response => {
-        expect(response).to.deep.equal(reply);
-      });
+      // Ping Kinvey
+      const response = await Kinvey.ping();
+
+      // Expectations
+      expect(response).toEqual(reply);
     });
 
-    it('should return a response when there is an active user', function() {
+    it('should return a response when there is an active user', async function() {
       const reply = {
         version: 1,
         kinvey: 'hello tests',
         appName: 'tests',
         environmentName: 'development'
       };
+
+      // Kinvey API Response
       nock(this.client.baseUrl)
         .get(`/${appdataNamespace}/${this.client.appKey}`)
         .query(true)
@@ -133,9 +137,11 @@ describe('Kinvey', function () {
           'content-type': 'application/json'
         });
 
-      return Kinvey.ping().then(response => {
-        expect(response).to.deep.equal(reply);
-      });
+      // Ping Kinvey
+      const response = await Kinvey.ping();
+
+      // Expectations
+      expect(response).toEqual(reply);
     });
   });
 });

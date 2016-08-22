@@ -806,4 +806,215 @@ describe('SyncStore', function() {
       });
     });
   });
+
+  describe('pull()', function() {
+    it('should save entities from the backend in cache', async function() {
+      const entity = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+      const store = new SyncStore(collection);
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities = await store.find().toPromise();
+      expect(entities).toEqual([entity]);
+    });
+
+    it('should remove entities in cache when backend collection is empty', async function() {
+      const store = new SyncStore(collection);
+      const entity = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities1 = await store.find().toPromise();
+      expect(entities1).toEqual([entity]);
+
+      // Kinvey API Response
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities2 = await store.find().toPromise();
+      expect(entities2).toEqual([]);
+    });
+
+    it('should update entities in cache when a query was provided', async function() {
+      const store = new SyncStore(collection);
+      const entity1 = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+      const entity2 = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+      const entity3 = {
+        _id: randomString(),
+        _kmd: {},
+        prop: randomString()
+      };
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [entity1, entity2, entity3], {
+          'content-type': 'application/json'
+        });
+
+      await store.pull();
+      const entities1 = await store.find().toPromise();
+      expect(entities1).toEqual([entity1, entity2, entity3]);
+
+      nock(this.client.baseUrl)
+        .get(store.pathname, () => true)
+        .query(true)
+        .reply(200, [], {
+          'content-type': 'application/json'
+        });
+
+      const query = new Query().equalTo('_id', entity1._id);
+      await store.pull(query);
+      const entities2 = await store.find().toPromise();
+      expect(entities2).toEqual([entity2, entity3]);
+    });
+  });
+
+  describe('push()', function() {
+    it('should save an entity to the backend', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .post(store.pathname, () => true)
+        .query(true)
+        .reply(200, entity, {
+          'content-type': 'application/json'
+        });
+
+      const result = await store.push();
+      expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+
+      const syncCount = await store.syncCount();
+      expect(syncCount).toEqual(0);
+    });
+
+    it('should delete an entity from the backend', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        _id: randomString(),
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+      await store.removeById(entity._id);
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .delete(`${store.pathname}/${entity._id}`, () => true)
+        .query(true)
+        .reply(204);
+
+      const result = await store.push();
+      expect(result).toEqual([{ _id: entity._id }]);
+
+      const syncCount = await store.syncCount();
+      expect(syncCount).toEqual(0);
+    });
+
+    it('should not delete an entity on the network if it was created locally', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+      await store.removeById(entity._id);
+      const result = await store.push();
+      expect(result).toEqual([]);
+    });
+
+    it('should succeed after a failed push attempt when creating an entity', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+      let result = await store.push();
+
+      expect(result).toBeA(Array);
+      expect(result.length).toEqual(1);
+      expect(result[0]).toIncludeKey('error');
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .post(store.pathname, () => true)
+        .query(true)
+        .reply(201, entity, {
+          'content-type': 'application/json'
+        });
+
+      result = await store.push();
+      expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+
+      const syncCount = await store.syncCount();
+      expect(syncCount).toEqual(0);
+    });
+
+    it('should succeed after a failed push attempt when updating an entity', async function() {
+      const store = new SyncStore(collection);
+      let entity = {
+        _id: randomString(),
+        prop: randomString()
+      };
+      entity = await store.save(entity);
+      let result = await store.push();
+
+      expect(result).toBeA(Array);
+      expect(result.length).toEqual(1);
+      expect(result[0]).toIncludeKey('error');
+
+      // Kinvey API Response
+      nock(store.client.baseUrl)
+        .put(`${store.pathname}/${entity._id}`, () => true)
+        .query(true)
+        .reply(200, entity, {
+          'content-type': 'application/json'
+        });
+
+      result = await store.push();
+      expect(result).toEqual([{ _id: entity._id, entity: entity }]);
+
+      const syncCount = await store.syncCount();
+      expect(syncCount).toEqual(0);
+    });
+  });
 });

@@ -198,7 +198,7 @@ export class KinveyRequest extends NetworkRequest {
       authType: AuthType.None,
       query: null,
       apiVersion: defaultApiVersion,
-      properties: new Headers(),
+      properties: new Properties(),
       skipBL: false,
       trace: false,
       client: Client.sharedInstance()

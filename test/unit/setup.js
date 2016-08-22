@@ -1,7 +1,7 @@
 import { HttpMiddleware as CoreHttpMiddleware, KinveyRackManager } from '../../src/rack';
 import { HttpMiddleware } from './mocks';
 import { Kinvey } from '../../src/kinvey';
-import { User } from './helpers';
+import { TestUser } from './helpers';
 import nock from 'nock';
 
 // Record for nock
@@ -13,29 +13,24 @@ networkRack.swap(CoreHttpMiddleware, new HttpMiddleware());
 
 // Init Kinvey
 before(function() {
-  Kinvey.init({
+  this.client = Kinvey.init({
     appKey: 'kid_HkTD2CJc',
     appSecret: 'cd7f658ed0a548dd8dfadf5a1787568b'
   });
 });
 
-// Login a user
-before(() => User.login('test', 'test'));
-
-// Logout a user
-after(() => {
-  // Get the active user
-  const user = User.getActiveUser();
-
-  if (user) {
-    // Logout the user
-    return user.logout();
-  }
-
-  return null;
+// Clean up
+after(function() {
+  delete this.client;
 });
 
-// Clear nock
+// Login a user
+beforeEach(() => TestUser.login('test', 'test'));
+
+// Logout the active user
+afterEach(() => TestUser.logout());
+
+// Clean up nock
 afterEach(function() {
   nock.cleanAll();
 });

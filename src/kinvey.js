@@ -3,7 +3,7 @@ import { CustomEndpoint } from './endpoint';
 import { Log } from './utils';
 import { Query } from './query';
 import { Aggregation } from './aggregation';
-import { DataStore, DataStoreType, FileStore, Sync } from './datastore';
+import { DataStore, DataStoreType, FileStore, SyncManager as Sync } from './datastore';
 import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
 import { AuthType, RequestMethod, KinveyRequest } from './request';

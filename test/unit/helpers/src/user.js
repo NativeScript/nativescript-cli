@@ -1,8 +1,8 @@
-import { User as CoreUser } from '../../../../src/entity';
+import { User } from '../../../../src/entity';
 import { Client } from '../../../../src/client';
 import nock from 'nock';
 
-export class User extends CoreUser {
+export class TestUser extends User {
   static getActiveUser(client = Client.sharedInstance()) {
     const data = client.activeUser;
     let user = null;

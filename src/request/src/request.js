@@ -74,7 +74,11 @@ export class Headers {
     return this.set(header.name, header.value);
   }
 
-  addAll(headers) {
+  addAll(headers = {}) {
+    if (headers instanceof Headers) {
+      headers = headers.toPlainObject();
+    }
+
     if (!isPlainObject(headers)) {
       throw new Error('Headers argument must be an object.');
     }

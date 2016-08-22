@@ -9,9 +9,9 @@
     "docs": "esdoc -c esdoc.json",
     "lint": "gulp lint",
     "test": "npm run test:mocha",
-    "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
-    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/index test/unit",
-    "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test > test.tap && istanbul report clover"
+    "test:mocha": "mocha --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
+    "test:watch": "mocha -w --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit",
+    "test:jenkins": "istanbul cover _mocha -- --reporter tap --compilers js:babel-core/register -r babel-polyfill -s 100 --recursive test/unit/setup test/unit > test.tap && istanbul report clover"
   },
   "repository": {
     "type": "git",

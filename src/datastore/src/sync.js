@@ -239,40 +239,7 @@ export class SyncManager {
 
     // Execute the request
     const response = await request.execute();
-    const networkEntities = response.data;
-
-    // Clear the cache
-    const clearRequest = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.backendPathname,
-        query: options.query
-      }),
-      query: query,
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    await clearRequest.execute();
-
-    // Save network entities to cache
-    const saveRequest = new CacheRequest({
-      method: RequestMethod.PUT,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.backendPathname,
-        query: options.query
-      }),
-      properties: options.properties,
-      body: networkEntities,
-      timeout: options.timeout
-    });
-    await saveRequest.execute();
-
-    // Return the network entities
-    return networkEntities;
+    return response.data;
   }
 
   /*
@@ -552,7 +519,7 @@ export class SyncManager {
                       error: error
                     };
                   });
-              });
+              }).catch(error => ({ _id: entityId, entity: undefined, error: error }));
             }
 
             return {

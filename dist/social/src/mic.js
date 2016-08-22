@@ -17,6 +17,10 @@ var _errors = require('../../errors');
 
 var _es6Promise = require('es6-promise');
 
+var _regeneratorRuntime = require('regenerator-runtime');
+
+var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
+
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
@@ -37,7 +41,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // eslint-disable-line no-unused-vars
+
 
 var authPathname = process.env.KINVEY_MIC_AUTH_PATHNAME || '/oauth/auth';
 var tokenPathname = process.env.KINVEY_MIC_TOKEN_PATHNAME || '/oauth/token';
@@ -294,14 +299,14 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
   }, {
     key: 'logout',
     value: function () {
-      var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(user) {
+      var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee(user) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var config, request, response;
-        return regeneratorRuntime.wrap(function _callee$(_context) {
+        var request, response;
+        return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                config = new _request.KinveyRequestConfig({
+                request = new _request.KinveyRequest({
                   method: _request.RequestMethod.GET,
                   headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -315,15 +320,14 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
                   }),
                   properties: options.properties
                 });
-                request = new _network.NetworkRequest(config);
-                _context.next = 4;
+                _context.next = 3;
                 return request.execute();
 
-              case 4:
+              case 3:
                 response = _context.sent;
                 return _context.abrupt('return', response.data);
 
-              case 6:
+              case 5:
               case 'end':
                 return _context.stop();
             }

@@ -311,7 +311,7 @@ export class CacheMiddleware extends KinveyMiddleware {
         } else if (entityId === '_group') {
           data = await db.group(collection, body);
         } else {
-          data = await db.findById(collection, request.entityId);
+          data = await db.findById(collection, entityId);
         }
       } else {
         data = await db.find(collection, query);

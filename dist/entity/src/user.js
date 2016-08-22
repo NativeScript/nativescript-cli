@@ -715,7 +715,7 @@ var User = exports.User = function () {
                 }
 
                 _context11.next = 4;
-                return _social.Facebook.logout();
+                return _social.Facebook.logout(this, options);
 
               case 4:
                 _context11.next = 19;
@@ -728,7 +728,7 @@ var User = exports.User = function () {
                 }
 
                 _context11.next = 9;
-                return _social.Google.logout();
+                return _social.Google.logout(this, options);
 
               case 9:
                 _context11.next = 19;
@@ -741,7 +741,7 @@ var User = exports.User = function () {
                 }
 
                 _context11.next = 14;
-                return _social.LinkedIn.logout();
+                return _social.LinkedIn.logout(this, options);
 
               case 14:
                 _context11.next = 19;
@@ -754,7 +754,7 @@ var User = exports.User = function () {
                 }
 
                 _context11.next = 19;
-                return _social.MobileIdentityConnect.logout();
+                return _social.MobileIdentityConnect.logout(this, options);
 
               case 19:
 
@@ -852,7 +852,7 @@ var User = exports.User = function () {
 
               case 9:
                 _context12.prev = 9;
-                identities = Object.keys(this._socialIdentity);
+                identities = Object.keys(this._socialIdentity || {});
                 promises = identities.map(function (identity) {
                   return _this.disconnectIdentity(identity, options);
                 });

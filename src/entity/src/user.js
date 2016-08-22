@@ -546,6 +546,22 @@ export class User {
   }
 
   /**
+   * Logout the active user.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  static async logout(options = {}) {
+    const user = User.getActiveUser(options.client);
+
+    if (user) {
+      return user.logout(options);
+    }
+
+    return null;
+  }
+
+  /**
    * Sign up a user with Kinvey.
    *
    * @param {?User|?Object} user Users data.
