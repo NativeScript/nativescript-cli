@@ -1,7 +1,7 @@
-import { Query } from '../../query';
-import { Aggregation } from '../../aggregation';
+import { Query } from '../../../../src/query';
+import { Aggregation } from '../../../../src/aggregation';
 import { KinveyMiddleware } from './middleware';
-import { KinveyError, NotFoundError } from '../../errors';
+import { KinveyError, NotFoundError } from '../../../../src/errors';
 import { Promise } from 'es6-promise';
 import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
@@ -26,7 +26,7 @@ const caches = [];
 /**
  * @private
  */
-export class Memory {
+class Memory {
   constructor(name) {
     if (!name) {
       throw new KinveyError('A name for the collection is required to use the memory persistence adapter.', name);
@@ -123,7 +123,7 @@ export class Memory {
 /**
  * @private
  */
-export class DB {
+class DB {
   constructor(name) {
     if (!name) {
       throw new KinveyError('Unable to create a DB instance without a name.');

@@ -4,38 +4,62 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _cache = require('./src/cache');
+var _cacherequest = require('./src/cacherequest');
 
-Object.keys(_cache).forEach(function (key) {
+Object.keys(_cacherequest).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function get() {
-      return _cache[key];
+      return _cacherequest[key];
     }
   });
 });
 
-var _deltafetch = require('./src/deltafetch');
+var _deltafetchrequest = require('./src/deltafetchrequest');
 
-Object.keys(_deltafetch).forEach(function (key) {
+Object.keys(_deltafetchrequest).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function get() {
-      return _deltafetch[key];
+      return _deltafetchrequest[key];
     }
   });
 });
 
-var _network = require('./src/network');
+var _kinveyrequest = require('./src/kinveyrequest');
 
-Object.keys(_network).forEach(function (key) {
+Object.keys(_kinveyrequest).forEach(function (key) {
   if (key === "default" || key === "__esModule") return;
   Object.defineProperty(exports, key, {
     enumerable: true,
     get: function get() {
-      return _network[key];
+      return _kinveyrequest[key];
+    }
+  });
+});
+
+var _kinveyresponse = require('./src/kinveyresponse');
+
+Object.keys(_kinveyresponse).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _kinveyresponse[key];
+    }
+  });
+});
+
+var _networkrequest = require('./src/networkrequest');
+
+Object.keys(_networkrequest).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _networkrequest[key];
     }
   });
 });

@@ -13,11 +13,11 @@ var _get = function get(object, property, receiver) { if (object === null) objec
 
 var _request = require('./request');
 
-var _rack = require('../../rack');
-
 var _errors = require('../../errors');
 
 var _response = require('./response');
+
+var _rack = require('kinvey-javascript-rack/dist/rack');
 
 var _urlPattern = require('url-pattern');
 
@@ -26,10 +26,6 @@ var _urlPattern2 = _interopRequireDefault(_urlPattern);
 var _regeneratorRuntime = require('regenerator-runtime');
 
 var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
-
-var _assign = require('lodash/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
 
 var _url = require('url');
 
@@ -55,15 +51,10 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
   function CacheRequest(options) {
     _classCallCheck(this, CacheRequest);
 
-    // Set default options
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheRequest).call(this, options));
 
-    options = (0, _assign2.default)({
-      query: null
-    }, options);
-
     _this.query = options.query;
-    _this.rack = _rack.KinveyRackManager.cacheRack;
+    _this.rack = CacheRequest.rack;
     return _this;
   }
 
@@ -76,8 +67,12 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                _context.next = 2;
-                return _get(Object.getPrototypeOf(CacheRequest.prototype), 'execute', this).call(this);
+                if (this.rack) {
+                  _context.next = 2;
+                  break;
+                }
+
+                throw new _errors.KinveyError('Unable to execute the request. Please provide a rack to execute the request.');
 
               case 2:
                 _context.next = 4;
@@ -196,6 +191,18 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
       this.appKey = !!appKey ? global.unescape(appKey) : appKey;
       this.collection = !!collection ? global.unescape(collection) : collection;
       this.entityId = !!entityId ? global.unescape(entityId) : entityId;
+    }
+  }], [{
+    key: 'rack',
+    get: function get() {
+      return CacheRequest._rack;
+    },
+    set: function set(rack) {
+      if (!rack || !(rack instanceof _rack.Rack)) {
+        throw new _errors.KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
+      }
+
+      CacheRequest._rack = rack;
     }
   }]);
 

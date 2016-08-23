@@ -1,4 +1,4 @@
-import { KinveyMiddleware } from '../../../../src/rack';
+import { KinveyMiddleware } from './middleware';
 import { Promise } from 'es6-promise';
 import http from 'request';
 

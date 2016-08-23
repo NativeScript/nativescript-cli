@@ -1,12 +1,10 @@
 import { Request } from './request';
-import { KinveyRackManager } from '../../rack';
-import { NoResponseError } from '../../errors';
+import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
+import { Rack } from 'kinvey-javascript-rack/dist/rack';
 import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
-import assign from 'lodash/assign';
 import url from 'url';
-
 
 /**
  * @private
@@ -14,14 +12,20 @@ import url from 'url';
 export class CacheRequest extends Request {
   constructor(options) {
     super(options);
-
-    // Set default options
-    options = assign({
-      query: null
-    }, options);
-
     this.query = options.query;
-    this.rack = KinveyRackManager.cacheRack;
+    this.rack = CacheRequest.rack;
+  }
+
+  static get rack() {
+    return CacheRequest._rack;
+  }
+
+  static set rack(rack) {
+    if (!rack || !(rack instanceof Rack)) {
+      throw new KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
+    }
+
+    CacheRequest._rack = rack;
   }
 
   get url() {
@@ -39,7 +43,10 @@ export class CacheRequest extends Request {
   }
 
   async execute() {
-    await super.execute();
+    if (!this.rack) {
+      throw new KinveyError('Unable to execute the request. Please provide a rack to execute the request.');
+    }
+
     let response = await this.rack.execute(this);
 
     // Flip the executing flag to false

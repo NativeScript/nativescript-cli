@@ -1263,9 +1263,72 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
   }, {
     key: 'pull',
-    value: function pull(query, options) {
-      return this.syncManager.pull(query, options);
-    }
+    value: function () {
+      var _ref9 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee9(query) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var entities, clearRequest, saveRequest;
+        return _regeneratorRuntime2.default.wrap(function _callee9$(_context9) {
+          while (1) {
+            switch (_context9.prev = _context9.next) {
+              case 0:
+                _context9.next = 2;
+                return this.syncManager.pull(query, options);
+
+              case 2:
+                entities = _context9.sent;
+
+
+                // Clear the cache
+                clearRequest = new _request.CacheRequest({
+                  method: _request.RequestMethod.DELETE,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname,
+                    query: options.query
+                  }),
+                  query: query,
+                  properties: options.properties,
+                  timeout: options.timeout
+                });
+                _context9.next = 6;
+                return clearRequest.execute();
+
+              case 6:
+
+                // Save network entities to cache
+                saveRequest = new _request.CacheRequest({
+                  method: _request.RequestMethod.PUT,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname,
+                    query: options.query
+                  }),
+                  properties: options.properties,
+                  body: entities,
+                  timeout: options.timeout
+                });
+                _context9.next = 9;
+                return saveRequest.execute();
+
+              case 9:
+                return _context9.abrupt('return', entities);
+
+              case 10:
+              case 'end':
+                return _context9.stop();
+            }
+          }
+        }, _callee9, this);
+      }));
+
+      function pull(_x18, _x19) {
+        return _ref9.apply(this, arguments);
+      }
+
+      return pull;
+    }()
 
     /**
      * Sync items for the data store. This will push pending sync items first and then

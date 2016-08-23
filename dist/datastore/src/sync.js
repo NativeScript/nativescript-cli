@@ -405,7 +405,7 @@ var SyncManager = exports.SyncManager = function () {
     value: function () {
       var _ref8 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee8(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var count, config, request, response, networkEntities, clearRequest, saveRequest;
+        var count, config, request, response;
         return _regeneratorRuntime2.default.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
@@ -476,47 +476,9 @@ var SyncManager = exports.SyncManager = function () {
 
               case 18:
                 response = _context8.sent;
-                networkEntities = response.data;
+                return _context8.abrupt('return', response.data);
 
-                // Clear the cache
-
-                clearRequest = new _request2.CacheRequest({
-                  method: _request2.RequestMethod.DELETE,
-                  url: _url2.default.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: this.backendPathname,
-                    query: options.query
-                  }),
-                  query: query,
-                  properties: options.properties,
-                  timeout: options.timeout
-                });
-                _context8.next = 23;
-                return clearRequest.execute();
-
-              case 23:
-
-                // Save network entities to cache
-                saveRequest = new _request2.CacheRequest({
-                  method: _request2.RequestMethod.PUT,
-                  url: _url2.default.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: this.backendPathname,
-                    query: options.query
-                  }),
-                  properties: options.properties,
-                  body: networkEntities,
-                  timeout: options.timeout
-                });
-                _context8.next = 26;
-                return saveRequest.execute();
-
-              case 26:
-                return _context8.abrupt('return', networkEntities);
-
-              case 27:
+              case 20:
               case 'end':
                 return _context8.stop();
             }
@@ -946,6 +908,8 @@ var SyncManager = exports.SyncManager = function () {
                                                     return _ref14.apply(this, arguments);
                                                   };
                                                 }());
+                                              }).catch(function (error) {
+                                                return { _id: entityId, entity: undefined, error: error };
                                               });
                                             }
 

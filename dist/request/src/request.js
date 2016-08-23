@@ -127,8 +127,14 @@ var Headers = exports.Headers = function () {
     }
   }, {
     key: 'addAll',
-    value: function addAll(headers) {
+    value: function addAll() {
       var _this = this;
+
+      var headers = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      if (headers instanceof Headers) {
+        headers = headers.toPlainObject();
+      }
 
       if (!(0, _isPlainObject2.default)(headers)) {
         throw new Error('Headers argument must be an object.');
@@ -221,19 +227,6 @@ var Request = exports.Request = function () {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                if (!this.isExecuting()) {
-                  _context.next = 2;
-                  break;
-                }
-
-                throw new Error('Unable to execute the request. The request is already executing.');
-
-              case 2:
-
-                // Flip the executing flag to true
-                this.executing = true;
-
-              case 3:
               case 'end':
                 return _context.stop();
             }

@@ -232,12 +232,12 @@ export class Request {
   }
 
   async execute() {
-    if (this.isExecuting()) {
-      throw new Error('Unable to execute the request. The request is already executing.');
-    }
+    // if (this.isExecuting()) {
+    //   throw new Error('Unable to execute the request. The request is already executing.');
+    // }
 
-    // Flip the executing flag to true
-    this.executing = true;
+    // // Flip the executing flag to true
+    // this.executing = true;
   }
 
   toPlainObject() {

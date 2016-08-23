@@ -1,6 +1,6 @@
-import { KinveyRequest } from './network';
+import { KinveyRequest } from './kinveyrequest';
 import { RequestMethod } from './request';
-import { CacheRequest } from './cache';
+import { CacheRequest } from './cacherequest';
 import { Response, StatusCode } from './response';
 import { NotFoundError } from '../../errors';
 import { Query } from '../../query';

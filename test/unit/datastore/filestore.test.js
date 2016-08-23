@@ -1,5 +1,5 @@
 import { FileStore } from '../../../src/datastore';
-import { NotFoundError, ServerError } from '../../../src/errors';
+import { KinveyError, NotFoundError, ServerError } from '../../../src/errors';
 import fs from 'fs';
 import path from 'path';
 import nock from 'nock';
@@ -521,7 +521,8 @@ describe('FileStore', function() {
           maxBackoff: 250
         });
       } catch (error) {
-        expect(error).toBeA(ServerError);
+        expect(error).toBeA(KinveyError);
+        expect(error.code).toEqual(500);
       }
     });
 
@@ -620,7 +621,8 @@ describe('FileStore', function() {
           maxBackoff: 250
         });
       } catch (error) {
-        expect(error).toBeA(NotFoundError);
+        expect(error).toBeA(KinveyError);
+        expect(error.code).toEqual(404);
       }
     });
   });

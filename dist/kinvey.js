@@ -28,8 +28,6 @@ var _request = require('./request');
 
 var _errors = require('./errors');
 
-var _rack = require('./rack');
-
 var _regeneratorRuntime = require('regenerator-runtime');
 
 var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
@@ -106,7 +104,7 @@ var Kinvey = exports.Kinvey = function () {
       this.Metadata = _entity.Metadata;
       this.Query = _query.Query;
       this.SocialIdentity = _social.SocialIdentity;
-      this.Sync = _datastore.Sync;
+      this.Sync = _datastore.SyncManager;
       this.User = _entity.User;
       this.UserStore = _entity.UserStore;
 
@@ -214,21 +212,6 @@ var Kinvey = exports.Kinvey = function () {
     ,
     set: function set(appVersion) {
       this.client.appVersion = appVersion;
-    }
-
-    /**
-     * Get the rack manager module.
-     *
-     * @return {KinveyRackManager} The KinveyRackManager module.
-     *
-     * @example
-     * var RackManager = Kinvey.RackManager;
-     */
-
-  }, {
-    key: 'RackManager',
-    get: function get() {
-      return _rack.KinveyRackManager;
     }
 
     /**

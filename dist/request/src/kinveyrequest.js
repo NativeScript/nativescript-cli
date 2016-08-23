@@ -3,21 +3,21 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.KinveyRequest = exports.Properties = exports.AuthType = exports.NetworkRequest = undefined;
-
-var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
+exports.KinveyRequest = exports.Properties = exports.AuthType = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _set = function set(object, property, value, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent !== null) { set(parent, property, value, receiver); } } else if ("value" in desc && desc.writable) { desc.value = value; } else { var setter = desc.set; if (setter !== undefined) { setter.call(receiver, value); } } return value; };
 
 var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
 var _request = require('./request');
 
-var _rack = require('../../rack');
+var _networkrequest = require('./networkrequest');
+
+var _kinveyresponse = require('./kinveyresponse');
 
 var _errors = require('../../errors');
-
-var _response = require('./response');
 
 var _client = require('../../client');
 
@@ -75,104 +75,10 @@ var kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 var defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
 var customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
 
-var NetworkRequest = exports.NetworkRequest = function (_Request) {
-  _inherits(NetworkRequest, _Request);
-
-  function NetworkRequest() {
-    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-
-    _classCallCheck(this, NetworkRequest);
-
-    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(NetworkRequest).call(this, options));
-
-    _this.rack = _rack.KinveyRackManager.networkRack;
-    return _this;
-  }
-
-  _createClass(NetworkRequest, [{
-    key: 'execute',
-    value: function () {
-      var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee() {
-        var rawResponse = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
-        var response;
-        return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _context.next = 2;
-                return _get(Object.getPrototypeOf(NetworkRequest.prototype), 'execute', this).call(this);
-
-              case 2:
-                _context.next = 4;
-                return this.rack.execute(this);
-
-              case 4:
-                response = _context.sent;
-
-                this.executing = false;
-
-                if (response) {
-                  _context.next = 8;
-                  break;
-                }
-
-                throw new _errors.NoResponseError();
-
-              case 8:
-
-                if (!(response instanceof _response.KinveyResponse)) {
-                  response = new _response.KinveyResponse({
-                    statusCode: response.statusCode,
-                    headers: response.headers,
-                    data: response.data
-                  });
-                }
-
-                if (!(rawResponse === false && response.isSuccess() === false)) {
-                  _context.next = 11;
-                  break;
-                }
-
-                throw response.error;
-
-              case 11:
-                return _context.abrupt('return', response);
-
-              case 12:
-              case 'end':
-                return _context.stop();
-            }
-          }
-        }, _callee, this);
-      }));
-
-      function execute(_x2) {
-        return _ref.apply(this, arguments);
-      }
-
-      return execute;
-    }()
-  }, {
-    key: 'cancel',
-    value: function cancel() {
-      var _this2 = this;
-
-      var promise = _get(Object.getPrototypeOf(NetworkRequest.prototype), 'cancel', this).call(this).then(function () {
-        return _this2.rack.cancel();
-      });
-      return promise;
-    }
-  }]);
-
-  return NetworkRequest;
-}(_request.Request);
-
 /**
  * @private
  * Enum for Auth types.
  */
-
-
 var AuthType = {
   All: 'All',
   App: 'App',
@@ -326,51 +232,70 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
     _classCallCheck(this, KinveyRequest);
 
     // Set default options
-    var _this4 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
+    var _this2 = _possibleConstructorReturn(this, Object.getPrototypeOf(KinveyRequest).call(this, options));
 
     options = (0, _assign2.default)({
       authType: AuthType.None,
       query: null,
       apiVersion: defaultApiVersion,
-      properties: new _request.Headers(),
+      properties: new Properties(),
       skipBL: false,
       trace: false,
       client: _client.Client.sharedInstance()
     }, options);
 
-    _this4.authType = options.authType;
-    _this4.query = options.query;
-    _this4.apiVersion = options.apiVersion;
-    _this4.properties = options.properties;
-    _this4.client = options.client;
-    _this4.skipBL = options.skipBL;
-    _this4.trace = options.trace;
-    return _this4;
+    _this2.authType = options.authType;
+    _this2.query = options.query;
+    _this2.apiVersion = options.apiVersion;
+    _this2.properties = options.properties;
+    _this2.client = options.client;
+    _this2.skipBL = options.skipBL;
+    _this2.trace = options.trace;
+    return _this2;
   }
 
   _createClass(KinveyRequest, [{
     key: 'execute',
     value: function () {
-      var _ref2 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee2(rawResponse) {
+      var _ref = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee() {
+        var rawResponse = arguments.length <= 0 || arguments[0] === undefined ? false : arguments[0];
         var response, micSession, refreshMICRequest, newMicSession, data, loginRequest, activeUser;
-        return _regeneratorRuntime2.default.wrap(function _callee2$(_context2) {
+        return _regeneratorRuntime2.default.wrap(function _callee$(_context) {
           while (1) {
-            switch (_context2.prev = _context2.next) {
+            switch (_context.prev = _context.next) {
               case 0:
-                _context2.prev = 0;
-                _context2.next = 3;
-                return _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this, rawResponse);
+                _context.prev = 0;
+                _context.next = 3;
+                return _get(Object.getPrototypeOf(KinveyRequest.prototype), 'execute', this).call(this);
 
               case 3:
-                response = _context2.sent;
-                return _context2.abrupt('return', response);
+                response = _context.sent;
+
+
+                if (!(response instanceof _kinveyresponse.KinveyResponse)) {
+                  response = new _kinveyresponse.KinveyResponse({
+                    statusCode: response.statusCode,
+                    headers: response.headers,
+                    data: response.data
+                  });
+                }
+
+                if (!(rawResponse === false && response.isSuccess() === false)) {
+                  _context.next = 7;
+                  break;
+                }
+
+                throw response.error;
 
               case 7:
-                _context2.prev = 7;
-                _context2.t0 = _context2['catch'](0);
+                return _context.abrupt('return', response);
 
-                if (!(_context2.t0 instanceof _errors.InvalidCredentialsError)) {
-                  _context2.next = 27;
+              case 10:
+                _context.prev = 10;
+                _context.t0 = _context['catch'](0);
+
+                if (!(_context.t0 instanceof _errors.InvalidCredentialsError)) {
+                  _context.next = 30;
                   break;
                 }
 
@@ -378,7 +303,7 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                 micSession = (0, _utils.getIdentitySession)(this.client, _social.SocialIdentity.MobileIdentityConnect);
 
                 if (!micSession) {
-                  _context2.next = 27;
+                  _context.next = 30;
                   break;
                 }
 
@@ -403,13 +328,13 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                   timeout: this.timeout,
                   properties: this.properties
                 });
-                _context2.next = 15;
+                _context.next = 18;
                 return refreshMICRequest.execute().then(function (response) {
                   return response.data;
                 });
 
-              case 15:
-                newMicSession = _context2.sent;
+              case 18:
+                newMicSession = _context.sent;
 
                 micSession = (0, _assign2.default)(micSession, newMicSession);
 
@@ -433,13 +358,13 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                   timeout: this.timeout,
                   client: this.client
                 });
-                _context2.next = 23;
+                _context.next = 26;
                 return loginRequest.execute().then(function (response) {
                   return response.data;
                 });
 
-              case 23:
-                activeUser = _context2.sent;
+              case 26:
+                activeUser = _context.sent;
 
 
                 // Store the updated active user
@@ -449,21 +374,21 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
                 (0, _utils.setIdentitySession)(this.client, _social.SocialIdentity.MobileIdentityConnect, micSession);
 
                 // Execute the original request
-                return _context2.abrupt('return', this.execute(rawResponse));
+                return _context.abrupt('return', this.execute(rawResponse));
 
-              case 27:
-                throw _context2.t0;
+              case 30:
+                throw _context.t0;
 
-              case 28:
+              case 31:
               case 'end':
-                return _context2.stop();
+                return _context.stop();
             }
           }
-        }, _callee2, this, [[0, 7]]);
+        }, _callee, this, [[0, 10]]);
       }));
 
-      function execute(_x5) {
-        return _ref2.apply(this, arguments);
+      function execute(_x2) {
+        return _ref.apply(this, arguments);
       }
 
       return execute;
@@ -606,11 +531,11 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
       var pathname = global.escape(_url2.default.parse(urlString).pathname);
       var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
 
-      var _ref3 = pattern.match(pathname) || {};
+      var _ref2 = pattern.match(pathname) || {};
 
-      var appKey = _ref3.appKey;
-      var collection = _ref3.collection;
-      var entityId = _ref3.entityId;
+      var appKey = _ref2.appKey;
+      var collection = _ref2.collection;
+      var entityId = _ref2.entityId;
 
       this.appKey = !!appKey ? global.unescape(appKey) : appKey;
       this.collection = !!collection ? global.unescape(collection) : collection;
@@ -655,4 +580,4 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
   }]);
 
   return KinveyRequest;
-}(NetworkRequest);
+}(_networkrequest.NetworkRequest);

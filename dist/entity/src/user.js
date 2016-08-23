@@ -894,6 +894,17 @@ var User = exports.User = function () {
     }()
 
     /**
+     * Logout the active user.
+     *
+     * @param {Object} [options={}] Options
+     * @return {Promise<User>} The user.
+     */
+
+  }, {
+    key: 'signup',
+
+
+    /**
      * Sign up a user with Kinvey.
      *
      * @param {?User|?Object} user Users data.
@@ -902,9 +913,6 @@ var User = exports.User = function () {
      *                                       being signed up.
      * @return {Promise<User>} The user.
      */
-
-  }, {
-    key: 'signup',
     value: function () {
       var _ref14 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee13(user) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
@@ -1446,6 +1454,42 @@ var User = exports.User = function () {
       return user.connectLinkedIn(clientId, options);
     }
   }, {
+    key: 'logout',
+    value: function () {
+      var _ref22 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee18() {
+        var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+        var user;
+        return _regeneratorRuntime2.default.wrap(function _callee18$(_context18) {
+          while (1) {
+            switch (_context18.prev = _context18.next) {
+              case 0:
+                user = User.getActiveUser(options.client);
+
+                if (!user) {
+                  _context18.next = 3;
+                  break;
+                }
+
+                return _context18.abrupt('return', user.logout(options));
+
+              case 3:
+                return _context18.abrupt('return', null);
+
+              case 4:
+              case 'end':
+                return _context18.stop();
+            }
+          }
+        }, _callee18, this);
+      }));
+
+      function logout(_x44) {
+        return _ref22.apply(this, arguments);
+      }
+
+      return logout;
+    }()
+  }, {
     key: 'signup',
     value: function signup(data, options) {
       var user = new this({}, options);
@@ -1460,17 +1504,17 @@ var User = exports.User = function () {
   }, {
     key: 'resetPassword',
     value: function () {
-      var _ref22 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee18(username) {
+      var _ref23 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee19(username) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-        var client, request, _ref23, data;
+        var client, request, _ref24, data;
 
-        return _regeneratorRuntime2.default.wrap(function _callee18$(_context18) {
+        return _regeneratorRuntime2.default.wrap(function _callee19$(_context19) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context19.prev = _context19.next) {
               case 0:
                 if (username) {
-                  _context18.next = 2;
+                  _context19.next = 2;
                   break;
                 }
 
@@ -1478,7 +1522,7 @@ var User = exports.User = function () {
 
               case 2:
                 if ((0, _isString2.default)(username)) {
-                  _context18.next = 4;
+                  _context19.next = 4;
                   break;
                 }
 
@@ -1498,24 +1542,24 @@ var User = exports.User = function () {
                   timeout: options.timeout,
                   client: client
                 });
-                _context18.next = 8;
+                _context19.next = 8;
                 return request.execute();
 
               case 8:
-                _ref23 = _context18.sent;
-                data = _ref23.data;
-                return _context18.abrupt('return', data);
+                _ref24 = _context19.sent;
+                data = _ref24.data;
+                return _context19.abrupt('return', data);
 
               case 11:
               case 'end':
-                return _context18.stop();
+                return _context19.stop();
             }
           }
-        }, _callee18, this);
+        }, _callee19, this);
       }));
 
-      function resetPassword(_x44, _x45) {
-        return _ref22.apply(this, arguments);
+      function resetPassword(_x46, _x47) {
+        return _ref23.apply(this, arguments);
       }
 
       return resetPassword;

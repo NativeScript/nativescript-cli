@@ -1,7 +1,7 @@
-import { Request, RequestMethod, Headers } from './request';
-import { KinveyRackManager } from '../../rack';
-import { NoResponseError, KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
-import { KinveyResponse } from './response';
+import { RequestMethod, Headers } from './request';
+import { NetworkRequest } from './networkrequest';
+import { KinveyResponse } from './kinveyresponse';
+import { KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../errors';
 import { Client } from '../../client';
 import { SocialIdentity } from '../../social';
 import { Device, setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
@@ -19,42 +19,6 @@ const usersNamespace = process.env.KINVEY_USERS_NAMESPACE || 'user';
 const kmdAttribute = process.env.KINVEY_KMD_ATTRIBUTE || '_kmd';
 const defaultApiVersion = process.env.KINVEY_DEFAULT_API_VERSION || 4;
 const customPropertiesMaxBytesAllowed = process.env.KINVEY_MAX_HEADER_BYTES || 2000;
-
-export class NetworkRequest extends Request {
-  constructor(options = {}) {
-    super(options);
-    this.rack = KinveyRackManager.networkRack;
-  }
-
-  async execute(rawResponse = false) {
-    await super.execute();
-    let response = await this.rack.execute(this);
-    this.executing = false;
-
-    if (!response) {
-      throw new NoResponseError();
-    }
-
-    if (!(response instanceof KinveyResponse)) {
-      response = new KinveyResponse({
-        statusCode: response.statusCode,
-        headers: response.headers,
-        data: response.data
-      });
-    }
-
-    if (rawResponse === false && response.isSuccess() === false) {
-      throw response.error;
-    }
-
-    return response;
-  }
-
-  cancel() {
-    const promise = super.cancel().then(() => this.rack.cancel());
-    return promise;
-  }
-}
 
 /**
  * @private
@@ -394,9 +358,22 @@ export class KinveyRequest extends NetworkRequest {
     this._client = client;
   }
 
-  async execute(rawResponse) {
+  async execute(rawResponse = false) {
     try {
-      const response = await super.execute(rawResponse);
+      let response = await super.execute();
+
+      if (!(response instanceof KinveyResponse)) {
+        response = new KinveyResponse({
+          statusCode: response.statusCode,
+          headers: response.headers,
+          data: response.data
+        });
+      }
+
+      if (rawResponse === false && response.isSuccess() === false) {
+        throw response.error;
+      }
+
       return response;
     } catch (error) {
       if (error instanceof InvalidCredentialsError) {

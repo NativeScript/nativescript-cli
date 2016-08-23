@@ -8,7 +8,6 @@ import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
 import { AuthType, RequestMethod, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import { KinveyRackManager } from './rack';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -57,18 +56,6 @@ export class Kinvey {
    */
   static set appVersion(appVersion) {
     this.client.appVersion = appVersion;
-  }
-
-  /**
-   * Get the rack manager module.
-   *
-   * @return {KinveyRackManager} The KinveyRackManager module.
-   *
-   * @example
-   * var RackManager = Kinvey.RackManager;
-   */
-  static get RackManager() {
-    return KinveyRackManager;
   }
 
   /**
