@@ -103,7 +103,7 @@ unless ENV["ANDROID_HOME"]
 end
 
 unless ENV["JAVA_HOME"]
-  execute('echo "export JAVA_HOME=$(/usr/libexec/java_home)" >> ~/.profile', "Unable to set JAVA_HOME")
+  execute('echo "export JAVA_HOME=$(/Library/Java/Home)" >> ~/.profile', "Unable to set JAVA_HOME")
 end
 
 # the -p flag is set in order to ensure zero status code even if the directory exists
@@ -120,8 +120,10 @@ android_executable = File.join(ENV["ANDROID_HOME"], "tools", "android")
 execute("echo y | #{android_executable} update sdk --filter platform-tools --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter tools --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter android-23 --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter build-tools-24.0.2 --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter build-tools-23.0.3 --all --no-ui", error_msg)
 execute("echo y | #{android_executable} update sdk --filter extra-android-m2repository --all --no-ui", error_msg)
+execute("echo y | #{android_executable} update sdk --filter extra-google-m2repository --all --no-ui", error_msg)
 
 puts "Do you want to install Android emulator? (y/n)"
 if gets.chomp.downcase == "y"
