@@ -37,10 +37,12 @@ class IOSPlatformLiveSyncService extends PlatformLiveSyncServiceBase {
 					}
 
 					if (postAction) {
+						this.finishLivesync(deviceAppData).wait();
 						return postAction(deviceAppData, localToDevicePaths).wait();
 					}
 
-					return afterSyncAction().wait();
+					afterSyncAction().wait();
+					this.finishLivesync(deviceAppData).wait();
 				}).future<void>()();
 			};
 			this.$devicesService.execute(action, canExecute).wait();

@@ -21,8 +21,6 @@
 				return (() => {
 					let projectData: IProjectData = this.$injector.resolve("projectData");
 
-					this.$logger.info(`Successfully synced application ${deviceAppData.appIdentifier} on device ${deviceAppData.device.deviceInfo.identifier}.`);
-
 					this.debugService.debugStop().wait();
 
 					let applicationId = deviceAppData.appIdentifier;
