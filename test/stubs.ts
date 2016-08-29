@@ -2,7 +2,6 @@
 
 import Future = require("fibers/future");
 import * as util from "util";
-
 import * as chai from "chai";
 
 export class LoggerStub implements ILogger {
@@ -482,4 +481,77 @@ function unexpected(msg: string): Error {
 	let err = new chai.AssertionError(msg);
 	err.showDiff = false;
 	return err;
+}
+
+export class DebugServiceStub implements IDebugService {
+	public debug(shouldBreak?: boolean): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public debugStart(): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public debugStop(): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public platform: string;
+}
+
+export class LiveSyncServiceStub implements ILiveSyncService {
+	public liveSync(platform: string, applicationReloadAction?: (deviceAppData: Mobile.IDeviceAppData, localToDevicePaths: Mobile.ILocalToDevicePathData[]) => IFuture<void>): IFuture<void> {
+		return Future.fromResult();
+	}
+
+	public forceExecuteFullSync: boolean;
+}
+
+export class AndroidToolsInfoStub implements IAndroidToolsInfo {
+	public getToolsInfo(): IFuture<IAndroidToolsInfoData> {
+		let infoData: IAndroidToolsInfoData = Object.create(null);
+		infoData.androidHomeEnvVar = "";
+		infoData.compileSdkVersion = 23;
+		infoData.buildToolsVersion = "23";
+		infoData.targetSdkVersion = 23;
+		infoData.supportRepositoryVersion = "23";
+		return Future.fromResult(infoData);
+	}
+
+	public validateInfo(options?: { showWarningsAsErrors: boolean, validateTargetSdk: boolean }): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
+	public validateJavacVersion(installedJavaVersion: string, options?: { showWarningsAsErrors: boolean }): IFuture<boolean> {
+		return Future.fromResult(true);
+	}
+
+	public getPathToAndroidExecutable(options?: { showWarningsAsErrors: boolean }): IFuture<string> {
+		return Future.fromResult("");
+	}
+
+	getPathToAdbFromAndroidHome(): IFuture<string> {
+		return Future.fromResult("");
+	}
+}
+
+export class ChildProcessStub {
+	public spawnCount = 0;
+	public spawnFromEventCount = 0;
+	public lastCommand = "";
+	public lastCommandArgs: string[] = [];
+
+	public spawn(command: string, args?: string[], options?: any): any {
+		this.spawnCount ++;
+		this.lastCommand = command;
+		this.lastCommandArgs = args;
+		return null;
+	}
+
+	public spawnFromEvent(command: string, args: string[], event: string, options?: any, spawnFromEventOptions?: ISpawnFromEventOptions): IFuture<ISpawnResult> {
+		this.spawnFromEventCount ++;
+		this.lastCommand = command;
+		this.lastCommandArgs = args;
+		return Future.fromResult(null);
+	}
 }
