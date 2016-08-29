@@ -768,7 +768,7 @@ var Query = function () {
     value: function process(data) {
       var _this3 = this;
 
-      if (!this.isSupportedOffline()) {
+      if (this.isSupportedOffline() === false) {
         (function () {
           var message = 'This query is not able to run locally. The following filters are not supported' + ' locally:';
 
@@ -856,16 +856,16 @@ var Query = function () {
     }
 
     /**
-     * Returns JSON representation of the query.
+     * Returns Object representation of the query.
      *
-     * @returns {Object} JSON object-literal.
+     * @returns {Object} Object
      */
 
   }, {
-    key: 'toJSON',
-    value: function toJSON() {
+    key: 'toPlainObject',
+    value: function toPlainObject() {
       if (this._parent) {
-        return this._parent.toJSON();
+        return this._parent.toPlainObject();
       }
 
       // Return set of parameters.
@@ -878,6 +878,19 @@ var Query = function () {
       };
 
       return json;
+    }
+
+    /**
+     * Returns Object representation of the query.
+     *
+     * @returns {Object} Object
+     * @deprecated Use toPlainObject() instead.
+     */
+
+  }, {
+    key: 'toJSON',
+    value: function toJSON() {
+      return this.toPlainObject();
     }
 
     /**

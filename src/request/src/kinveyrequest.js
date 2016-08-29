@@ -5,7 +5,6 @@ import { KinveyError, InvalidCredentialsError, NoActiveUserError } from '../../e
 import { Client } from '../../client';
 import { SocialIdentity } from '../../social';
 import { Device, setActiveUser, getIdentitySession, setIdentitySession } from '../../utils';
-import UrlPattern from 'url-pattern';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 import qs from 'qs';
@@ -314,12 +313,6 @@ export class KinveyRequest extends NetworkRequest {
 
   set url(urlString) {
     super.url = urlString;
-    const pathname = global.escape(url.parse(urlString).pathname);
-    const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
-    const { appKey, collection, entityId } = pattern.match(pathname) || {};
-    this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-    this.collection = !!collection ? global.unescape(collection) : collection;
-    this.entityId = !!entityId ? global.unescape(entityId) : entityId;
   }
 
   get apiVersion() {

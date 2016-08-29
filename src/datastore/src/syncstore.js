@@ -131,13 +131,13 @@ export class SyncStore extends CacheStore {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         }
 
-        // Count the entities in the cache
+        // Fetch the entities in the cache
         const request = new CacheRequest({
           method: RequestMethod.GET,
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
-            pathname: `${this.pathname}/_count`,
+            pathname: this.pathname,
             query: options.query
           }),
           properties: options.properties,
@@ -150,7 +150,7 @@ export class SyncStore extends CacheStore {
         const data = response.data;
 
         // Emit the cache count
-        observer.next(data ? data.count : 0);
+        observer.next(data ? data.length : 0);
       } catch (error) {
         return observer.error(error);
       }

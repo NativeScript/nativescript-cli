@@ -676,6 +676,23 @@ export class User {
   }
 
   /**
+   * Update the active user.
+   *
+   * @param {Object} data Data.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  static async update(data, options) {
+    const user = User.getActiveUser(options.client);
+
+    if (user) {
+      return user.update(data, options);
+    }
+
+    return null;
+  }
+
+  /**
    * Retfresh the users data.
    *
    * @param {Object} [options={}] Options
@@ -706,6 +723,22 @@ export class User {
 
     setActiveUser(this.client, this.data);
     return this;
+  }
+
+  /**
+   * Refresh the active user.
+   *
+   * @param {Object} [options={}] Options
+   * @return {Promise<User>} The user.
+   */
+  static async me(data, options) {
+    const user = User.getActiveUser(options.client);
+
+    if (user) {
+      return user.me(options);
+    }
+
+    return null;
   }
 
   /**

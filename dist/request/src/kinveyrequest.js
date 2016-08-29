@@ -25,10 +25,6 @@ var _social = require('../../social');
 
 var _utils = require('../../utils');
 
-var _urlPattern = require('url-pattern');
-
-var _urlPattern2 = _interopRequireDefault(_urlPattern);
-
 var _regeneratorRuntime = require('regenerator-runtime');
 
 var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
@@ -528,18 +524,6 @@ var KinveyRequest = exports.KinveyRequest = function (_NetworkRequest) {
     },
     set: function set(urlString) {
       _set(Object.getPrototypeOf(KinveyRequest.prototype), 'url', urlString, this);
-      var pathname = global.escape(_url2.default.parse(urlString).pathname);
-      var pattern = new _urlPattern2.default('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
-
-      var _ref2 = pattern.match(pathname) || {};
-
-      var appKey = _ref2.appKey;
-      var collection = _ref2.collection;
-      var entityId = _ref2.entityId;
-
-      this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-      this.collection = !!collection ? global.unescape(collection) : collection;
-      this.entityId = !!entityId ? global.unescape(entityId) : entityId;
     }
   }, {
     key: 'apiVersion',

@@ -479,7 +479,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                     url: _url2.default.format({
                       protocol: _this4.client.protocol,
                       host: _this4.client.host,
-                      pathname: _this4.pathname + '/_count',
+                      pathname: _this4.pathname,
                       query: options.query
                     }),
                     properties: options.properties,
@@ -498,7 +498,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                   // Emit the cache count
 
-                  observer.next(data ? data.count : 0);
+                  observer.next(data ? data.length : 0);
                   _context3.next = 14;
                   break;
 
@@ -861,7 +861,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
       var stream = _utils.KinveyObservable.create(function () {
         var _ref6 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee6(observer) {
-          var request, response, entities, localEntities, _query, syncEntities, ids, _query2;
+          var fetchRequest, fetchResponse, entities, removeRequest, removeResponse, localEntities, _query, syncEntities, ids, _query2;
 
           return _regeneratorRuntime2.default.wrap(function _callee6$(_context6) {
             while (1) {
@@ -878,9 +878,9 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
                 case 3:
 
-                  // Remove the data from the cache
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.DELETE,
+                  // Fetch the cache entities
+                  fetchRequest = new _request.CacheRequest({
+                    method: _request.RequestMethod.GET,
                     url: _url2.default.format({
                       protocol: _this7.client.protocol,
                       host: _this7.client.host,
@@ -895,14 +895,39 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                   // Execute the request
 
                   _context6.next = 6;
-                  return request.execute();
+                  return fetchRequest.execute();
 
                 case 6:
-                  response = _context6.sent;
-                  entities = response.data;
+                  fetchResponse = _context6.sent;
+                  entities = fetchResponse.data;
+
+                  // Remove the data from the cache
+
+                  removeRequest = new _request.CacheRequest({
+                    method: _request.RequestMethod.DELETE,
+                    url: _url2.default.format({
+                      protocol: _this7.client.protocol,
+                      host: _this7.client.host,
+                      pathname: _this7.pathname,
+                      query: options.query
+                    }),
+                    properties: options.properties,
+                    body: entities,
+                    timeout: options.timeout
+                  });
+
+                  // Execite the request
+
+                  _context6.next = 11;
+                  return removeRequest.execute();
+
+                case 11:
+                  removeResponse = _context6.sent;
+
+                  entities = removeResponse.data;
 
                   if (!(entities && entities.length > 0)) {
-                    _context6.next = 16;
+                    _context6.next = 21;
                     break;
                   }
 
@@ -912,50 +937,50 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                     return metadata.isLocal();
                   });
                   _query = new _query4.Query().contains('entityId', Object.keys((0, _keyBy2.default)(localEntities, idAttribute)));
-                  _context6.next = 13;
+                  _context6.next = 18;
                   return _this7.clearSync(_query, options);
 
-                case 13:
+                case 18:
 
                   // Create delete operations for non local data in the sync table
                   syncEntities = (0, _xorWith2.default)(entities, localEntities, function (entity, localEntity) {
                     return entity[idAttribute] === localEntity[idAttribute];
                   });
-                  _context6.next = 16;
+                  _context6.next = 21;
                   return _this7.syncManager.addDeleteOperation(syncEntities, options);
 
-                case 16:
+                case 21:
                   if (!(_this7.syncAutomatically === true)) {
-                    _context6.next = 21;
+                    _context6.next = 26;
                     break;
                   }
 
                   ids = Object.keys((0, _keyBy2.default)(entities, idAttribute));
                   _query2 = new _query4.Query().contains('entityId', ids);
-                  _context6.next = 21;
+                  _context6.next = 26;
                   return _this7.push(_query2, options);
 
-                case 21:
+                case 26:
 
                   // Emit the data
                   observer.next(entities);
-                  _context6.next = 27;
+                  _context6.next = 32;
                   break;
 
-                case 24:
-                  _context6.prev = 24;
+                case 29:
+                  _context6.prev = 29;
                   _context6.t0 = _context6['catch'](0);
                   return _context6.abrupt('return', observer.error(_context6.t0));
 
-                case 27:
+                case 32:
                   return _context6.abrupt('return', observer.complete());
 
-                case 28:
+                case 33:
                 case 'end':
                   return _context6.stop();
               }
             }
-          }, _callee6, _this7, [[0, 24]]);
+          }, _callee6, _this7, [[0, 29]]);
         }));
 
         return function (_x13) {
@@ -1107,7 +1132,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
       var stream = _utils.KinveyObservable.create(function () {
         var _ref8 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee8(observer) {
-          var request, response, data, syncQuery;
+          var entities, syncQuery;
           return _regeneratorRuntime2.default.wrap(function _callee8$(_context8) {
             while (1) {
               switch (_context8.prev = _context8.next) {
@@ -1122,75 +1147,56 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                   throw new _errors.KinveyError('Invalid query. It must be an instance of the Query class.');
 
                 case 5:
-                  // Create the request
-                  request = new _request.CacheRequest({
-                    method: _request.RequestMethod.DELETE,
-                    url: _url2.default.format({
-                      protocol: _this9.client.protocol,
-                      host: _this9.client.host,
-                      pathname: _this9.pathname,
-                      query: options.query
-                    }),
-                    properties: options.properties,
-                    query: query,
-                    timeout: options.timeout
-                  });
+                  _context8.next = 7;
+                  return _this9.remove(query, options);
 
-                  // Execute the request
-
-                  _context8.next = 8;
-                  return request.execute();
-
-                case 8:
-                  response = _context8.sent;
-                  data = response.data;
-
-                  // Remove the data from sync
+                case 7:
+                  entities = _context8.sent;
 
                   if (query) {
-                    _context8.next = 15;
+                    _context8.next = 13;
                     break;
                   }
 
-                  _context8.next = 13;
+                  _context8.next = 11;
                   return _this9.clearSync(null, options);
 
-                case 13:
-                  _context8.next = 19;
+                case 11:
+                  _context8.next = 17;
                   break;
 
-                case 15:
-                  if (!(data && data.length > 0)) {
-                    _context8.next = 19;
+                case 13:
+                  if (!(entities && entities.length > 0)) {
+                    _context8.next = 17;
                     break;
                   }
 
-                  syncQuery = new _query4.Query().contains('entityId', Object.keys((0, _keyBy2.default)(data, idAttribute)));
-                  _context8.next = 19;
+                  syncQuery = new _query4.Query().contains('entityId', Object.keys((0, _keyBy2.default)(entities, idAttribute)));
+                  _context8.next = 17;
                   return _this9.clearSync(syncQuery, options);
 
-                case 19:
+                case 17:
 
-                  observer.next(data);
+                  observer.next(entities);
 
-                case 20:
-                  _context8.next = 25;
+                case 18:
+                  _context8.next = 23;
                   break;
 
-                case 22:
-                  _context8.prev = 22;
+                case 20:
+                  _context8.prev = 20;
                   _context8.t0 = _context8['catch'](0);
                   return _context8.abrupt('return', observer.error(_context8.t0));
 
-                case 25:
+                case 23:
                   return _context8.abrupt('return', observer.complete());
 
-                case 26:
+                case 24:
                 case 'end':
                   return _context8.stop();
               }
             }
-          }, _callee8, _this9, [[0, 22]]);
+          }, _callee8, _this9, [[0, 20]]);
         }));
 
         return function (_x17) {
@@ -1266,7 +1272,7 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
     value: function () {
       var _ref9 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee9(query) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-        var entities, clearRequest, saveRequest;
+        var entities, saveRequest;
         return _regeneratorRuntime2.default.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
@@ -1276,25 +1282,10 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
 
               case 2:
                 entities = _context9.sent;
+                _context9.next = 5;
+                return this.clear(query, options);
 
-
-                // Clear the cache
-                clearRequest = new _request.CacheRequest({
-                  method: _request.RequestMethod.DELETE,
-                  url: _url2.default.format({
-                    protocol: this.client.protocol,
-                    host: this.client.host,
-                    pathname: this.pathname,
-                    query: options.query
-                  }),
-                  query: query,
-                  properties: options.properties,
-                  timeout: options.timeout
-                });
-                _context9.next = 6;
-                return clearRequest.execute();
-
-              case 6:
+              case 5:
 
                 // Save network entities to cache
                 saveRequest = new _request.CacheRequest({
@@ -1309,13 +1300,13 @@ var CacheStore = exports.CacheStore = function (_NetworkStore) {
                   body: entities,
                   timeout: options.timeout
                 });
-                _context9.next = 9;
+                _context9.next = 8;
                 return saveRequest.execute();
 
-              case 9:
+              case 8:
                 return _context9.abrupt('return', entities);
 
-              case 10:
+              case 9:
               case 'end':
                 return _context9.stop();
             }

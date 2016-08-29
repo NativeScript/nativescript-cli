@@ -1,5 +1,3 @@
-import { Query } from '../../../../src/query';
-import { Aggregation } from '../../../../src/aggregation';
 import { KinveyMiddleware } from './middleware';
 import { KinveyError, NotFoundError } from '../../../../src/errors';
 import { Promise } from 'es6-promise';
@@ -7,7 +5,6 @@ import MemoryCache from 'fast-memory-cache';
 import Queue from 'promise-queue';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import map from 'lodash/map';
-import result from 'lodash/result';
 import reduce from 'lodash/reduce';
 import keyBy from 'lodash/keyBy';
 import forEach from 'lodash/forEach';
@@ -148,20 +145,12 @@ class DB {
     return objectId;
   }
 
-  async find(collection, query) {
+  async find(collection) {
     try {
-      let entities = await this.adapter.find(collection);
+      const entities = await this.adapter.find(collection);
 
       if (!entities) {
         return [];
-      }
-
-      if (query && !(query instanceof Query)) {
-        query = new Query(result(query, 'toJSON', query));
-      }
-
-      if (entities.length > 0 && query) {
-        entities = query.process(entities);
       }
 
       return entities;
@@ -182,24 +171,19 @@ class DB {
     return this.adapter.findById(collection, id);
   }
 
-  async count(collection, query) {
-    const entities = await this.find(collection, query);
-    return { count: entities.length };
-  }
+  // async group(collection, aggregation) {
+  //   const entities = await this.find(collection);
 
-  async group(collection, aggregation) {
-    const entities = await this.find(collection);
+  //   if (!(aggregation instanceof Aggregation)) {
+  //     aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
+  //   }
 
-    if (!(aggregation instanceof Aggregation)) {
-      aggregation = new Aggregation(result(aggregation, 'toJSON', aggregation));
-    }
+  //   if (entities.length > 0 && aggregation) {
+  //     return aggregation.process(entities);
+  //   }
 
-    if (entities.length > 0 && aggregation) {
-      return aggregation.process(entities);
-    }
-
-    return null;
-  }
+  //   return null;
+  // }
 
   save(collection, entities = []) {
     return queue.add(async () => {
@@ -238,19 +222,7 @@ class DB {
     });
   }
 
-  async remove(collection, query) {
-    if (query && !(query instanceof Query)) {
-      query = new Query(query);
-    }
-
-    // Removing should not take the query sort, limit, and skip into account.
-    if (query) {
-      query.sort = null;
-      query.limit = null;
-      query.skip = 0;
-    }
-
-    const entities = await this.find(collection, query);
+  async remove(collection, entities = []) {
     const responses = await Promise.all(entities.map(entity => this.removeById(collection, entity[idAttribute])));
     return reduce(responses, (entities, entity) => {
       entities.push(entity);
@@ -300,21 +272,15 @@ export class CacheMiddleware extends KinveyMiddleware {
   }
 
   async handle(request) {
-    const { method, query, body, appKey, collection, entityId, client } = request;
-    const db = this.openDatabase(appKey, client ? client.encryptionKey : undefined);
+    const { method, body, appKey, collection, entityId } = request;
+    const db = this.openDatabase(appKey);
     let data;
 
     if (method === 'GET') {
       if (entityId) {
-        if (entityId === '_count') {
-          data = await db.count(collection, query);
-        } else if (entityId === '_group') {
-          data = await db.group(collection, body);
-        } else {
-          data = await db.findById(collection, entityId);
-        }
+        data = await db.findById(collection, entityId);
       } else {
-        data = await db.find(collection, query);
+        data = await db.find(collection);
       }
     } else if (method === 'POST' || method === 'PUT') {
       data = await db.save(collection, body);
@@ -324,7 +290,7 @@ export class CacheMiddleware extends KinveyMiddleware {
       } else if (!collection) {
         data = await db.clear();
       } else {
-        data = await db.remove(collection, query);
+        data = await db.remove(collection, body);
       }
     }
 

@@ -731,7 +731,7 @@ export class Query {
    * @returns {Array} The processed data.
    */
   process(data) {
-    if (!this.isSupportedOffline()) {
+    if (this.isSupportedOffline() === false) {
       let message = 'This query is not able to run locally. The following filters are not supported'
         + ' locally:';
 
@@ -810,13 +810,13 @@ export class Query {
   }
 
   /**
-   * Returns JSON representation of the query.
+   * Returns Object representation of the query.
    *
-   * @returns {Object} JSON object-literal.
+   * @returns {Object} Object
    */
-  toJSON() {
+  toPlainObject() {
     if (this._parent) {
-      return this._parent.toJSON();
+      return this._parent.toPlainObject();
     }
 
     // Return set of parameters.
@@ -829,6 +829,16 @@ export class Query {
     };
 
     return json;
+  }
+
+  /**
+   * Returns Object representation of the query.
+   *
+   * @returns {Object} Object
+   * @deprecated Use toPlainObject() instead.
+   */
+  toJSON() {
+    return this.toPlainObject();
   }
 
   /**

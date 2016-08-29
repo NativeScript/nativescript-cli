@@ -1076,14 +1076,23 @@ var User = exports.User = function () {
     }()
 
     /**
-     * Retfresh the users data.
+     * Update the active user.
      *
-     * @param {Object} [options={}] Options
+     * @param {Object} data Data.
+     * @param {Object} [options] Options
      * @return {Promise<User>} The user.
      */
 
   }, {
     key: 'me',
+
+
+    /**
+     * Retfresh the users data.
+     *
+     * @param {Object} [options={}] Options
+     * @return {Promise<User>} The user.
+     */
     value: function () {
       var _ref16 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee15() {
         var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
@@ -1142,14 +1151,22 @@ var User = exports.User = function () {
     }()
 
     /**
+     * Refresh the active user.
+     *
+     * @param {Object} [options={}] Options
+     * @return {Promise<User>} The user.
+     */
+
+  }, {
+    key: 'verifyEmail',
+
+
+    /**
      * Request an email to be sent to verify the users email.
      *
      * @param {Object} [options={}] Options
      * @return {Promise<Object>} The response.
      */
-
-  }, {
-    key: 'verifyEmail',
     value: function () {
       var _ref18 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee16() {
         var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
@@ -1502,19 +1519,89 @@ var User = exports.User = function () {
       return user.signupWithIdentity(identity, session, options);
     }
   }, {
-    key: 'resetPassword',
+    key: 'update',
     value: function () {
-      var _ref23 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee19(username) {
-        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-        var client, request, _ref24, data;
-
+      var _ref23 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee19(data, options) {
+        var user;
         return _regeneratorRuntime2.default.wrap(function _callee19$(_context19) {
           while (1) {
             switch (_context19.prev = _context19.next) {
               case 0:
+                user = User.getActiveUser(options.client);
+
+                if (!user) {
+                  _context19.next = 3;
+                  break;
+                }
+
+                return _context19.abrupt('return', user.update(data, options));
+
+              case 3:
+                return _context19.abrupt('return', null);
+
+              case 4:
+              case 'end':
+                return _context19.stop();
+            }
+          }
+        }, _callee19, this);
+      }));
+
+      function update(_x46, _x47) {
+        return _ref23.apply(this, arguments);
+      }
+
+      return update;
+    }()
+  }, {
+    key: 'me',
+    value: function () {
+      var _ref24 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee20(data, options) {
+        var user;
+        return _regeneratorRuntime2.default.wrap(function _callee20$(_context20) {
+          while (1) {
+            switch (_context20.prev = _context20.next) {
+              case 0:
+                user = User.getActiveUser(options.client);
+
+                if (!user) {
+                  _context20.next = 3;
+                  break;
+                }
+
+                return _context20.abrupt('return', user.me(options));
+
+              case 3:
+                return _context20.abrupt('return', null);
+
+              case 4:
+              case 'end':
+                return _context20.stop();
+            }
+          }
+        }, _callee20, this);
+      }));
+
+      function me(_x48, _x49) {
+        return _ref24.apply(this, arguments);
+      }
+
+      return me;
+    }()
+  }, {
+    key: 'resetPassword',
+    value: function () {
+      var _ref25 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee21(username) {
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+        var client, request, _ref26, data;
+
+        return _regeneratorRuntime2.default.wrap(function _callee21$(_context21) {
+          while (1) {
+            switch (_context21.prev = _context21.next) {
+              case 0:
                 if (username) {
-                  _context19.next = 2;
+                  _context21.next = 2;
                   break;
                 }
 
@@ -1522,7 +1609,7 @@ var User = exports.User = function () {
 
               case 2:
                 if ((0, _isString2.default)(username)) {
-                  _context19.next = 4;
+                  _context21.next = 4;
                   break;
                 }
 
@@ -1542,24 +1629,24 @@ var User = exports.User = function () {
                   timeout: options.timeout,
                   client: client
                 });
-                _context19.next = 8;
+                _context21.next = 8;
                 return request.execute();
 
               case 8:
-                _ref24 = _context19.sent;
-                data = _ref24.data;
-                return _context19.abrupt('return', data);
+                _ref26 = _context21.sent;
+                data = _ref26.data;
+                return _context21.abrupt('return', data);
 
               case 11:
               case 'end':
-                return _context19.stop();
+                return _context21.stop();
             }
           }
-        }, _callee19, this);
+        }, _callee21, this);
       }));
 
-      function resetPassword(_x46, _x47) {
-        return _ref23.apply(this, arguments);
+      function resetPassword(_x50, _x51) {
+        return _ref25.apply(this, arguments);
       }
 
       return resetPassword;

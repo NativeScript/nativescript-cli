@@ -569,14 +569,14 @@ export class SyncManager {
    * @param   {Number}        [options.timeout]           Timeout for the request.
    * @return  {Promise}                                   Promise
    */
-  clear(query = new Query(), options = {}) {
+  async clear(query = new Query(), options = {}) {
     if (!(query instanceof Query)) {
-      query = new Query(result(query, 'toJSON', query));
+      query = new Query(query);
     }
     query.equalTo('collection', this.collection);
 
-    const request = new CacheRequest({
-      method: RequestMethod.DELETE,
+    const fetchRequest = new CacheRequest({
+      method: RequestMethod.GET,
       url: url.format({
         protocol: this.client.protocol,
         host: this.client.host,
@@ -586,6 +586,21 @@ export class SyncManager {
       query: query,
       timeout: options.timeout
     });
-    return request.execute();
+    const fetchResponse = await fetchRequest.execute();
+    const entities = fetchResponse.data;
+
+    const removeRequest = new CacheRequest({
+      method: RequestMethod.DELETE,
+      url: url.format({
+        protocol: this.client.protocol,
+        host: this.client.host,
+        pathname: this.pathname
+      }),
+      properties: options.properties,
+      body: entities,
+      timeout: options.timeout
+    });
+    const removeResponse = await removeRequest.execute();
+    return removeResponse.data;
   }
 }

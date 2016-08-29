@@ -1048,28 +1048,69 @@ var SyncManager = exports.SyncManager = function () {
 
   }, {
     key: 'clear',
-    value: function clear() {
-      var query = arguments.length <= 0 || arguments[0] === undefined ? new _query.Query() : arguments[0];
-      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+    value: function () {
+      var _ref16 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee16() {
+        var query = arguments.length <= 0 || arguments[0] === undefined ? new _query.Query() : arguments[0];
+        var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+        var fetchRequest, fetchResponse, entities, removeRequest, removeResponse;
+        return _regeneratorRuntime2.default.wrap(function _callee16$(_context16) {
+          while (1) {
+            switch (_context16.prev = _context16.next) {
+              case 0:
+                if (!(query instanceof _query.Query)) {
+                  query = new _query.Query(query);
+                }
+                query.equalTo('collection', this.collection);
 
-      if (!(query instanceof _query.Query)) {
-        query = new _query.Query((0, _result2.default)(query, 'toJSON', query));
+                fetchRequest = new _request2.CacheRequest({
+                  method: _request2.RequestMethod.GET,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname
+                  }),
+                  properties: options.properties,
+                  query: query,
+                  timeout: options.timeout
+                });
+                _context16.next = 5;
+                return fetchRequest.execute();
+
+              case 5:
+                fetchResponse = _context16.sent;
+                entities = fetchResponse.data;
+                removeRequest = new _request2.CacheRequest({
+                  method: _request2.RequestMethod.DELETE,
+                  url: _url2.default.format({
+                    protocol: this.client.protocol,
+                    host: this.client.host,
+                    pathname: this.pathname
+                  }),
+                  properties: options.properties,
+                  body: entities,
+                  timeout: options.timeout
+                });
+                _context16.next = 10;
+                return removeRequest.execute();
+
+              case 10:
+                removeResponse = _context16.sent;
+                return _context16.abrupt('return', removeResponse.data);
+
+              case 12:
+              case 'end':
+                return _context16.stop();
+            }
+          }
+        }, _callee16, this);
+      }));
+
+      function clear(_x39, _x40) {
+        return _ref16.apply(this, arguments);
       }
-      query.equalTo('collection', this.collection);
 
-      var request = new _request2.CacheRequest({
-        method: _request2.RequestMethod.DELETE,
-        url: _url2.default.format({
-          protocol: this.client.protocol,
-          host: this.client.host,
-          pathname: this.pathname
-        }),
-        properties: options.properties,
-        query: query,
-        timeout: options.timeout
-      });
-      return request.execute();
-    }
+      return clear;
+    }()
   }, {
     key: 'pathname',
     get: function get() {

@@ -17,19 +17,25 @@ var _errors = require('../../errors');
 
 var _response = require('./response');
 
+var _client = require('../../client');
+
 var _rack = require('kinvey-javascript-rack/dist/rack');
 
 var _urlPattern = require('url-pattern');
 
 var _urlPattern2 = _interopRequireDefault(_urlPattern);
 
-var _regeneratorRuntime = require('regenerator-runtime');
-
-var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
-
 var _url = require('url');
 
 var _url2 = _interopRequireDefault(_url);
+
+var _assign = require('lodash/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
+var _regeneratorRuntime = require('regenerator-runtime');
+
+var _regeneratorRuntime2 = _interopRequireDefault(_regeneratorRuntime);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -39,8 +45,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // eslint-disable-line no-unused-vars
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+// eslint-disable-line no-unused-vars
 
 /**
  * @private
@@ -48,12 +55,21 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var CacheRequest = exports.CacheRequest = function (_Request) {
   _inherits(CacheRequest, _Request);
 
-  function CacheRequest(options) {
+  function CacheRequest() {
+    var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
     _classCallCheck(this, CacheRequest);
 
+    // Set default options
     var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(CacheRequest).call(this, options));
 
+    options = (0, _assign2.default)({
+      query: null,
+      client: _client.Client.sharedInstance()
+    }, options);
+
     _this.query = options.query;
+    _this.client = options.client;
     _this.rack = CacheRequest.rack;
     return _this;
   }
@@ -118,9 +134,16 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
                 throw response.error;
 
               case 11:
+
+                // If a query was provided then process the data with the query
+                if (this.query) {
+                  response.data = this.query.process(response.data);
+                }
+
+                // Just return the response
                 return _context.abrupt('return', response);
 
-              case 12:
+              case 13:
               case 'end':
                 return _context.stop();
             }
@@ -166,10 +189,10 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
     key: 'toPlainObject',
     value: function toPlainObject() {
       var obj = _get(Object.getPrototypeOf(CacheRequest.prototype), 'toPlainObject', this).call(this);
-      obj.query = this.query;
       obj.appKey = this.appKey;
       obj.collection = this.collection;
       obj.entityId = this.entityId;
+      obj.encryptionKey = this.client ? this.client.encryptionKey : undefined;
       return obj;
     }
   }, {
@@ -188,9 +211,23 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
       var collection = _ref3.collection;
       var entityId = _ref3.entityId;
 
-      this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-      this.collection = !!collection ? global.unescape(collection) : collection;
-      this.entityId = !!entityId ? global.unescape(entityId) : entityId;
+      this.appKey = appKey;
+      this.collection = collection;
+      this.entityId = entityId;
+    }
+  }, {
+    key: 'client',
+    get: function get() {
+      return this._client;
+    },
+    set: function set(client) {
+      if (client) {
+        if (!(client instanceof _client.Client)) {
+          throw new _errors.KinveyError('client must be an instance of the Client class.');
+        }
+      }
+
+      this._client = client;
     }
   }], [{
     key: 'rack',

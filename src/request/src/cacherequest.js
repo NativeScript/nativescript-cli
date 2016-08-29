@@ -1,18 +1,28 @@
 import { Request } from './request';
 import { NoResponseError, KinveyError } from '../../errors';
 import { Response } from './response';
+import { Client } from '../../client';
 import { Rack } from 'kinvey-javascript-rack/dist/rack';
 import UrlPattern from 'url-pattern';
-import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
+import assign from 'lodash/assign';
+import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 
 /**
  * @private
  */
 export class CacheRequest extends Request {
-  constructor(options) {
+  constructor(options = {}) {
     super(options);
+
+    // Set default options
+    options = assign({
+      query: null,
+      client: Client.sharedInstance()
+    }, options);
+
     this.query = options.query;
+    this.client = options.client;
     this.rack = CacheRequest.rack;
   }
 
@@ -37,9 +47,23 @@ export class CacheRequest extends Request {
     const pathname = global.escape(url.parse(urlString).pathname);
     const pattern = new UrlPattern('(/:namespace)(/)(:appKey)(/)(:collection)(/)(:entityId)(/)');
     const { appKey, collection, entityId } = pattern.match(pathname) || {};
-    this.appKey = !!appKey ? global.unescape(appKey) : appKey;
-    this.collection = !!collection ? global.unescape(collection) : collection;
-    this.entityId = !!entityId ? global.unescape(entityId) : entityId;
+    this.appKey = appKey;
+    this.collection = collection;
+    this.entityId = entityId;
+  }
+
+  get client() {
+    return this._client;
+  }
+
+  set client(client) {
+    if (client) {
+      if (!(client instanceof Client)) {
+        throw new KinveyError('client must be an instance of the Client class.');
+      }
+    }
+
+    this._client = client;
   }
 
   async execute() {
@@ -74,6 +98,11 @@ export class CacheRequest extends Request {
       throw response.error;
     }
 
+    // If a query was provided then process the data with the query
+    if (this.query) {
+      response.data = this.query.process(response.data);
+    }
+
     // Just return the response
     return response;
   }
@@ -85,10 +114,10 @@ export class CacheRequest extends Request {
 
   toPlainObject() {
     const obj = super.toPlainObject();
-    obj.query = this.query;
     obj.appKey = this.appKey;
     obj.collection = this.collection;
     obj.entityId = this.entityId;
+    obj.encryptionKey = this.client ? this.client.encryptionKey : undefined;
     return obj;
   }
 }

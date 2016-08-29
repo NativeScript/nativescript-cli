@@ -264,13 +264,13 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
                 case 3:
 
-                  // Count the entities in the cache
+                  // Fetch the entities in the cache
                   request = new _request.CacheRequest({
                     method: _request.RequestMethod.GET,
                     url: _url2.default.format({
                       protocol: _this4.client.protocol,
                       host: _this4.client.host,
-                      pathname: _this4.pathname + '/_count',
+                      pathname: _this4.pathname,
                       query: options.query
                     }),
                     properties: options.properties,
@@ -289,7 +289,7 @@ var SyncStore = exports.SyncStore = function (_CacheStore) {
 
                   // Emit the cache count
 
-                  observer.next(data ? data.count : 0);
+                  observer.next(data ? data.length : 0);
                   _context3.next = 14;
                   break;
 

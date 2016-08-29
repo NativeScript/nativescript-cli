@@ -254,7 +254,7 @@ export class CacheStore extends NetworkStore {
             url: url.format({
               protocol: this.client.protocol,
               host: this.client.host,
-              pathname: `${this.pathname}/_count`,
+              pathname: this.pathname,
               query: options.query
             }),
             properties: options.properties,
@@ -267,7 +267,7 @@ export class CacheStore extends NetworkStore {
           const data = response.data;
 
           // Emit the cache count
-          observer.next(data ? data.count : 0);
+          observer.next(data ? data.length : 0);
         } catch (error) {
           // Just catch the error
         }
@@ -461,9 +461,9 @@ export class CacheStore extends NetworkStore {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         }
 
-        // Remove the data from the cache
-        const request = new CacheRequest({
-          method: RequestMethod.DELETE,
+        // Fetch the cache entities
+        const fetchRequest = new CacheRequest({
+          method: RequestMethod.GET,
           url: url.format({
             protocol: this.client.protocol,
             host: this.client.host,
@@ -476,8 +476,26 @@ export class CacheStore extends NetworkStore {
         });
 
         // Execute the request
-        const response = await request.execute();
-        const entities = response.data;
+        const fetchResponse = await fetchRequest.execute();
+        let entities = fetchResponse.data;
+
+        // Remove the data from the cache
+        const removeRequest = new CacheRequest({
+          method: RequestMethod.DELETE,
+          url: url.format({
+            protocol: this.client.protocol,
+            host: this.client.host,
+            pathname: this.pathname,
+            query: options.query
+          }),
+          properties: options.properties,
+          body: entities,
+          timeout: options.timeout
+        });
+
+        // Execite the request
+        const removeResponse = await removeRequest.execute();
+        entities = removeResponse.data;
 
         if (entities && entities.length > 0) {
           // Clear local entities from the sync table
@@ -594,33 +612,18 @@ export class CacheStore extends NetworkStore {
         if (query && !(query instanceof Query)) {
           throw new KinveyError('Invalid query. It must be an instance of the Query class.');
         } else {
-          // Create the request
-          const request = new CacheRequest({
-            method: RequestMethod.DELETE,
-            url: url.format({
-              protocol: this.client.protocol,
-              host: this.client.host,
-              pathname: this.pathname,
-              query: options.query
-            }),
-            properties: options.properties,
-            query: query,
-            timeout: options.timeout
-          });
-
-          // Execute the request
-          const response = await request.execute();
-          const data = response.data;
+          // Clear the cache
+          const entities = await this.remove(query, options);
 
           // Remove the data from sync
           if (!query) {
             await this.clearSync(null, options);
-          } else if (data && data.length > 0) {
-            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(data, idAttribute)));
+          } else if (entities && entities.length > 0) {
+            const syncQuery = new Query().contains('entityId', Object.keys(keyBy(entities, idAttribute)));
             await this.clearSync(syncQuery, options);
           }
 
-          observer.next(data);
+          observer.next(entities);
         }
       } catch (error) {
         return observer.error(error);
@@ -687,19 +690,7 @@ export class CacheStore extends NetworkStore {
     const entities = await this.syncManager.pull(query, options);
 
     // Clear the cache
-    const clearRequest = new CacheRequest({
-      method: RequestMethod.DELETE,
-      url: url.format({
-        protocol: this.client.protocol,
-        host: this.client.host,
-        pathname: this.pathname,
-        query: options.query
-      }),
-      query: query,
-      properties: options.properties,
-      timeout: options.timeout
-    });
-    await clearRequest.execute();
+    await this.clear(query, options);
 
     // Save network entities to cache
     const saveRequest = new CacheRequest({

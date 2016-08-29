@@ -6,8 +6,10 @@ import { Aggregation } from './aggregation';
 import { DataStore, DataStoreType, FileStore, SyncManager as Sync } from './datastore';
 import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
-import { AuthType, RequestMethod, KinveyRequest } from './request';
+import { AuthType, RequestMethod, CacheRequest, NetworkRequest, KinveyRequest } from './request';
 import { KinveyError } from './errors';
+import { Rack } from 'kinvey-javascript-rack/dist/rack';
+import { Middleware } from 'kinvey-javascript-rack/dist/middleware';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -15,7 +17,7 @@ const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
 /**
  * The Kinvey class is used as the entry point for the Kinvey JavaScript SDK.
  */
-export class Kinvey {
+class Kinvey {
   /**
    * Returns the shared instance of the Client class used by the SDK.
    *
@@ -59,18 +61,6 @@ export class Kinvey {
   }
 
   /**
-   * Get the logging module.
-   *
-   * @return {Log}  The log module.
-   *
-   * @example
-   * var Log = Kinvey.Log;
-   */
-  static get Log() {
-    return Log;
-  }
-
-  /**
    * Initializes the library with your app's information.
    *
    * @param {Object}    options                                            Options
@@ -108,17 +98,10 @@ export class Kinvey {
     // Initialize the client
     const client = Client.init(options);
 
-    // Add all the modules to the Kinvey namespace
-    this.Acl = Acl;
-    this.Aggregation = Aggregation;
-    this.AuthorizationGrant = AuthorizationGrant;
+    // Add modules that require initialization
     this.CustomEndpoint = CustomEndpoint;
     this.DataStore = DataStore;
-    this.DataStoreType = DataStoreType;
     this.Files = new FileStore();
-    this.Metadata = Metadata;
-    this.Query = Query;
-    this.SocialIdentity = SocialIdentity;
     this.Sync = Sync;
     this.User = User;
     this.UserStore = UserStore;
@@ -153,3 +136,20 @@ export class Kinvey {
     return response.data;
   }
 }
+
+// Add modules
+Kinvey.Acl = Acl;
+Kinvey.Aggregation = Aggregation;
+Kinvey.AuthorizationGrant = AuthorizationGrant;
+Kinvey.CacheRequest = CacheRequest;
+Kinvey.DataStoreType = DataStoreType;
+Kinvey.Log = Log;
+Kinvey.Metadata = Metadata;
+Kinvey.Middleware = Middleware;
+Kinvey.NetworkRequest = NetworkRequest;
+Kinvey.Query = Query;
+Kinvey.Rack = Rack;
+Kinvey.SocialIdentity = SocialIdentity;
+
+// Export
+export { Kinvey };
