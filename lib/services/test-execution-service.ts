@@ -28,7 +28,7 @@ class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $errors: IErrors,
-		private $androidDebugService:IDebugService,
+		private $androidDebugService: IDebugService,
 		private $iOSDebugService: IDebugService,
 		private $devicesService: Mobile.IDevicesService,
 		private $childProcess: IChildProcess) {
@@ -36,7 +36,7 @@ class TestExecutionService implements ITestExecutionService {
 
 	public platform: string;
 
-	public startTestRunner(platform: string) : IFuture<void> {
+	public startTestRunner(platform: string): IFuture<void> {
 		return (() => {
 			this.platform = platform;
 			this.$options.justlaunch = true;
@@ -72,7 +72,7 @@ class TestExecutionService implements ITestExecutionService {
 							debugService.debugStart().wait();
 						}
 						blockingOperationFuture.return();
-					} catch(err) {
+					} catch (err) {
 						// send the error to the real future
 						blockingOperationFuture.throw(err);
 					}
@@ -91,45 +91,49 @@ class TestExecutionService implements ITestExecutionService {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
-		if(this.$options.debugBrk && this.$options.watch) {
+		if (this.$options.debugBrk && this.$options.watch) {
 			this.$errors.failWithoutHelp("You cannot use --watch and --debug-brk simultaneously. Remove one of the flags and try again.");
 		}
 
-		if (!this.$platformService.preparePlatform(platform).wait()) {
-			this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
-		}
+		// We need the dependencies installed here, so we can start the Karma server.
+		this.$pluginsService.ensureAllDependenciesAreInstalled().wait();
 
 		let projectDir = this.$projectData.projectDir;
 		this.$devicesService.initialize({ platform: platform, deviceId: this.$options.device }).wait();
 
 		let karmaConfig = this.getKarmaConfiguration(platform),
 			karmaRunner = this.$childProcess.fork(path.join(__dirname, "karma-execution.js"));
-
-		karmaRunner.send({karmaConfig: karmaConfig});
 		karmaRunner.on("message", (karmaData: any) => {
 			fiberBootstrap.run(() => {
 				this.$logger.trace("## Unit-testing: Parent process received message", karmaData);
 				let port: string;
-				if(karmaData.url) {
+				if (karmaData.url) {
 					port = karmaData.url.port;
 					let socketIoJsUrl = `http://${karmaData.url.host}/socket.io/socket.io.js`;
 					let socketIoJs = this.$httpClient.httpRequest(socketIoJsUrl).wait().body;
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.SOCKETIO_JS_FILE_NAME), socketIoJs).wait();
 				}
 
-				if(karmaData.launcherConfig) {
+				if (karmaData.launcherConfig) {
 					let configOptions: IKarmaConfigOptions = JSON.parse(karmaData.launcherConfig);
 					let configJs = this.generateConfig(port, configOptions);
 					this.$fs.writeFile(path.join(projectDir, TestExecutionService.CONFIG_FILE_NAME), configJs).wait();
 				}
 
-				if(this.$options.debugBrk) {
+				// Prepare the project AFTER the TestExecutionService.CONFIG_FILE_NAME file is created in node_modules
+				// so it will be sent to device.
+				if (!this.$platformService.preparePlatform(platform).wait()) {
+					this.$errors.failWithoutHelp("Verify that listed files are well-formed and try again the operation.");
+				}
+
+				if (this.$options.debugBrk) {
 					this.getDebugService(platform).debug().wait();
 				} else {
 					this.liveSyncProject(platform).wait();
 				}
 			});
 		});
+
 		karmaRunner.on("exit", (exitCode: number) => {
 			if (exitCode !== 0) {
 				//End our process with a non-zero exit code
@@ -140,6 +144,9 @@ class TestExecutionService implements ITestExecutionService {
 				karmaFuture.return();
 			}
 		});
+
+		karmaRunner.send({ karmaConfig: karmaConfig });
+
 		return karmaFuture;
 	}
 
@@ -172,9 +179,9 @@ class TestExecutionService implements ITestExecutionService {
 
 	private getDebugService(platform: string): IDebugService {
 		let lowerCasedPlatform = platform.toLowerCase();
-		if(lowerCasedPlatform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
+		if (lowerCasedPlatform === this.$devicePlatformsConstants.iOS.toLowerCase()) {
 			return this.$iOSDebugService;
-		} else if(lowerCasedPlatform === this.$devicePlatformsConstants.Android.toLowerCase()) {
+		} else if (lowerCasedPlatform === this.$devicePlatformsConstants.Android.toLowerCase()) {
 			return this.$androidDebugService;
 		}
 
