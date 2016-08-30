@@ -445,10 +445,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if (!this._canUseGradle) {
 				if (!frameworkVersion) {
 					this.$projectDataService.initialize(this.$projectData.projectDir);
-					frameworkVersion = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait().version;
+					let frameworkInfoInProjectFile = this.$projectDataService.getValue(this.platformData.frameworkPackageName).wait();
+					frameworkVersion = frameworkInfoInProjectFile && frameworkInfoInProjectFile.version;
 				}
 
-				this._canUseGradle = semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
+				this._canUseGradle = !frameworkVersion || semver.gte(frameworkVersion, AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE);
 			}
 
 			return this._canUseGradle;
