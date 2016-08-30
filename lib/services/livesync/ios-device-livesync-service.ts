@@ -1,4 +1,6 @@
 import * as helpers from "../../common/helpers";
+import * as constants from "../../constants";
+import * as minimatch from "minimatch";
 import * as net from "net";
 import Future = require("fibers/future");
 
@@ -75,8 +77,11 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 				this.restartApplication(deviceAppData).wait();
 				return;
 			}
+			let scriptRelatedFiles: Mobile.ILocalToDevicePathData[] = [];
 			let scriptFiles = _.filter(localToDevicePaths, localToDevicePath => _.endsWith(localToDevicePath.getDevicePath(), ".js"));
-			let otherFiles = _.difference(localToDevicePaths, scriptFiles);
+			constants.LIVESYNC_EXCLUDED_FILE_PATTERNS.forEach(pattern => scriptRelatedFiles = _.concat(scriptRelatedFiles, localToDevicePaths.filter(file => minimatch(file.getDevicePath(), pattern, { nocase: true }))));
+
+			let otherFiles = _.difference(localToDevicePaths, _.concat(scriptFiles, scriptRelatedFiles));
 			let shouldRestart = _.some(otherFiles, (localToDevicePath: Mobile.ILocalToDevicePathData) => !this.$liveSyncProvider.canExecuteFastSync(localToDevicePath.getLocalPath(), deviceAppData.platform));
 
 			if (shouldRestart) {
