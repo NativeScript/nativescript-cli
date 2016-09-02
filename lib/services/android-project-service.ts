@@ -461,7 +461,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.cp(cpArg, paths, projectRoot);
 	}
 
-	private spawn(command: string, args: string[], opts?: any): IFuture<void> {
+	private spawn(command: string, args: string[], opts?: any): IFuture<ISpawnResult> {
 		return this.$childProcess.spawnFromEvent(command, args, "close", opts || { stdio: "inherit" });
 	}
 
