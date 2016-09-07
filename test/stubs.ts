@@ -172,6 +172,10 @@ export class FileSystemStub implements IFileSystem {
 	rm(options: string, ...files: string[]): void {
 		// Mock
 	}
+
+	deleteEmptyParents(directory: string): IFuture<void> {
+		return Future.fromResult();
+	}
 }
 
 export class ErrorsStub implements IErrors {
