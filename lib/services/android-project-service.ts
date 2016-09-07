@@ -532,7 +532,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					isFileCorrect = !!(~fileContent.indexOf("android:minSdkVersion") && ~fileContent.indexOf("android:targetSdkVersion")
 						&& ~fileContent.indexOf("uses-permission") && ~fileContent.indexOf("<application")
 						&& ~fileContent.indexOf("<activity") && ~fileContent.indexOf("<intent-filter>")
-						&& ~fileContent.indexOf("android.intent.action.MAIN") && ~fileContent.indexOf("com.tns.ErrorReportActivity")
+						&& ~fileContent.indexOf("android.intent.action.MAIN")
 						&& ~fileContent.indexOf("android:versionCode")
 						&& !this.$xmlValidator.getXmlFileErrors(pathToAndroidManifest).wait());
 
