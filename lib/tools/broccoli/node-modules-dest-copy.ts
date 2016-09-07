@@ -56,7 +56,7 @@ export class DestCopy implements IBroccoliPlugin {
 								let currentDependencyMajorVersion = semver.major(currentDependency.version);
 								let addedDependencyMajorVersion = semver.major(addedDependency.version);
 
-								let message = `The depedency located at ${addedDependency.directory} with version  ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
+								let message = `The dependency located at ${addedDependency.directory} with version ${addedDependency.version} will be replaced with dependency located at ${currentDependency.directory} with version ${currentDependency.version}`;
 								let logger = $injector.resolve("$logger");
 								currentDependencyMajorVersion === addedDependencyMajorVersion ? logger.out(message) : logger.warn(message);
 
