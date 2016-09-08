@@ -42,7 +42,6 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 				return true;
 			}
 
-			let enableDebuggerMessage = `{ "method":"Debugger.enable","id":${++currentPageReloadId} }`;
 			if (this.device.isEmulator) {
 				this.$iOSEmulatorServices.postDarwinNotification(this.$iOSNotification.attachRequest).wait();
 				try {
@@ -59,7 +58,6 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 			}
 
 			this.attachEventHandlers();
-			this.sendMessage(enableDebuggerMessage).wait();
 
 			return true;
  		}).future<boolean>()();
@@ -131,7 +129,7 @@ class IOSLiveSyncService implements IDeviceLiveSyncService {
 				let message = JSON.stringify({
 					method: "Debugger.setScriptSource",
 					params: {
-						scriptUrl: localToDevicePath.getDevicePath(),
+						scriptUrl: localToDevicePath.getRelativeToProjectBasePath(),
 						scriptSource: content
 					},
 					id: ++currentPageReloadId
