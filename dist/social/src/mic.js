@@ -166,8 +166,8 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           pathname = _path2.default.join(pathname, version.indexOf('v') === 0 ? version : 'v' + version);
         }
 
-        if (global.KinveyPopup) {
-          var popup = new global.KinveyPopup();
+        if (global.Kinvey.Popup) {
+          var popup = new global.Kinvey.Popup();
           return popup.open(_url2.default.format({
             protocol: _this3.client.micProtocol,
             host: _this3.client.micHost,
@@ -180,7 +180,7 @@ var MobileIdentityConnect = exports.MobileIdentityConnect = function (_Social) {
           }));
         }
 
-        throw new _errors.KinveyError('KinveyPopup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
+        throw new _errors.KinveyError('Kinvey.Popup is undefined.' + (' Unable to login using authorization grant ' + AuthorizationGrant.AuthorizationCodeLoginPage + '.'));
       }).then(function (popup) {
         var promise = new _es6Promise.Promise(function (resolve, reject) {
           var redirected = false;

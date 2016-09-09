@@ -60,7 +60,7 @@ var Facebook = exports.Facebook = function (_Social) {
   _createClass(Facebook, [{
     key: 'isSupported',
     value: function isSupported() {
-      return !!global.KinveyPopup;
+      return !!global.Kinvey.Popup;
     }
   }, {
     key: 'login',
@@ -108,7 +108,7 @@ var Facebook = exports.Facebook = function (_Social) {
                 promise = new _es6Promise.Promise(function (resolve, reject) {
                   var redirectUri = options.redirectUri || global.location.href;
                   var originalState = (0, _utils.randomString)();
-                  var popup = new global.KinveyPopup();
+                  var popup = new global.Kinvey.Popup();
                   var redirected = false;
 
                   // Handle the response from a login request

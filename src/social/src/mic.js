@@ -111,8 +111,8 @@ export class MobileIdentityConnect extends Social {
         pathname = path.join(pathname, version.indexOf('v') === 0 ? version : `v${version}`);
       }
 
-      if (global.KinveyPopup) {
-        const popup = new global.KinveyPopup();
+      if (global.Kinvey.Popup) {
+        const popup = new global.Kinvey.Popup();
         return popup.open(url.format({
           protocol: this.client.micProtocol,
           host: this.client.micHost,
@@ -125,7 +125,7 @@ export class MobileIdentityConnect extends Social {
         }));
       }
 
-      throw new KinveyError('KinveyPopup is undefined.'
+      throw new KinveyError('Kinvey.Popup is undefined.'
         + ` Unable to login using authorization grant ${AuthorizationGrant.AuthorizationCodeLoginPage}.`);
     }).then((popup) => {
       const promise = new Promise((resolve, reject) => {

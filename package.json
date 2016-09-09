@@ -2,7 +2,7 @@
   "name": "kinvey-javascript-sdk-core",
   "version": "3.0.3",
   "description": "Kinvey JavaScript SDK Core",
-  "main": "./dist/kinvey.js",
+  "main": "./dist/export.js",
   "scripts": {
     "build": "BABEL_ENV=production gulp build",
     "clean": "gulp clean",

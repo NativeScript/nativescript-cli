@@ -32,7 +32,7 @@ export class CacheRequest extends Request {
 
   static set rack(rack) {
     if (!rack || !(rack instanceof Rack)) {
-      throw new KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
+      throw new KinveyError('Unable to set the rack of a CacheRequest. It must be an instance of a Rack');
     }
 
     CacheRequest._rack = rack;

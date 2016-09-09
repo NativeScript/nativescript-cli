@@ -52,9 +52,14 @@ var Metadata = exports.Metadata = function () {
       return !!this.kmd.local;
     }
   }, {
+    key: 'toPlainObject',
+    value: function toPlainObject() {
+      return this.kmd;
+    }
+  }, {
     key: 'toJSON',
     value: function toJSON() {
-      return this.kmd;
+      return this.toPlainObject();
     }
   }, {
     key: 'createdAt',

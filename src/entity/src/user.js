@@ -84,7 +84,7 @@ export class User {
    * @param {Metadata|Object} metadata The metadata.
    */
   set metadata(metadata) {
-    this.data[kmdAttribute] = result(metadata, 'toJSON', metadata);
+    this.data[kmdAttribute] = result(metadata, 'toPlainObjecta', metadata);
   }
 
   /**
@@ -224,7 +224,9 @@ export class User {
     }
 
     let credentials = username;
-    if (!isObject(credentials)) {
+    if (isObject(credentials)) {
+      options = password;
+    } else {
       credentials = {
         username: username,
         password: password
@@ -314,12 +316,11 @@ export class User {
    */
   static loginWithMIC(redirectUri, authorizationGrant, options = {}) {
     const user = new this({}, options);
-    user.client = options.client || Client.sharedInstance();
     return user.loginWithMIC(redirectUri, authorizationGrant, options);
   }
 
   /**
-   * Connect an social identity.
+   * Connect a social identity.
    *
    * @param {string} identity Social identity.
    * @param {Object} session Social identity session.
@@ -340,7 +341,7 @@ export class User {
         return this.update(data, options);
       }
 
-      await this.login(data, null, options);
+      await this.login(data, options);
       setIdentitySession(this.client, identity, session);
       return this;
     } catch (error) {
@@ -351,6 +352,19 @@ export class User {
 
       throw error;
     }
+  }
+
+  /**
+   * Connect a social identity.
+   *
+   * @param {string} identity Social identity.
+   * @param {Object} session Social identity session.
+   * @param {Object} [options] Options
+   * @return {Promise<User>} The user.
+   */
+  static connectIdentity(identity, session, options) {
+    const user = new this({}, options);
+    return user.connectIdentity(identity, session, options);
   }
 
   /**
@@ -564,13 +578,13 @@ export class User {
   /**
    * Sign up a user with Kinvey.
    *
-   * @param {?User|?Object} user Users data.
+   * @param {?User|?Object} data Users data.
    * @param {Object} [options] Options
    * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
    *                                       being signed up.
    * @return {Promise<User>} The user.
    */
-  async signup(user, options = {}) {
+  async signup(data, options = {}) {
     options = assign({
       state: true
     }, options);
@@ -583,8 +597,8 @@ export class User {
       }
     }
 
-    if (user instanceof User) {
-      user = user.data;
+    if (data instanceof User) {
+      data = data.data;
     }
 
     const request = new KinveyRequest({
@@ -595,7 +609,7 @@ export class User {
         host: this.client.host,
         pathname: this.pathname
       }),
-      body: isEmpty(user) ? null : user,
+      body: isEmpty(data) ? null : data,
       properties: options.properties,
       timeout: options.timeout,
       client: this.client
@@ -731,7 +745,7 @@ export class User {
    * @param {Object} [options={}] Options
    * @return {Promise<User>} The user.
    */
-  static async me(data, options) {
+  static async me(options) {
     const user = User.getActiveUser(options.client);
 
     if (user) {
@@ -794,7 +808,7 @@ export class User {
    * @param {Object} [options = {}] Options
    * @return {Promise<Object>} The response.
    */
-  resetPassword(options = {}) {
+  rc(options = {}) {
     options.client = this.client;
     return User.resetPassword(this.username, options);
   }

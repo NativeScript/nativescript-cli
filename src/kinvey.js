@@ -3,13 +3,11 @@ import { CustomEndpoint } from './endpoint';
 import { Log } from './utils';
 import { Query } from './query';
 import { Aggregation } from './aggregation';
-import { DataStore, DataStoreType, FileStore, SyncManager as Sync } from './datastore';
+import { DataStore, DataStoreType, FileStore } from './datastore';
 import { Acl, Metadata, User, UserStore } from './entity';
 import { AuthorizationGrant, SocialIdentity } from './social';
 import { AuthType, RequestMethod, CacheRequest, NetworkRequest, KinveyRequest } from './request';
 import { KinveyError } from './errors';
-import { Rack } from 'kinvey-javascript-rack/dist/rack';
-import { Middleware } from 'kinvey-javascript-rack/dist/middleware';
 import regeneratorRuntime from 'regenerator-runtime'; // eslint-disable-line no-unused-vars
 import url from 'url';
 const appdataNamespace = process.env.KINVEY_DATASTORE_NAMESPACE || 'appdata';
@@ -102,7 +100,6 @@ class Kinvey {
     this.CustomEndpoint = CustomEndpoint;
     this.DataStore = DataStore;
     this.Files = new FileStore();
-    this.Sync = Sync;
     this.User = User;
     this.UserStore = UserStore;
 
@@ -145,10 +142,8 @@ Kinvey.CacheRequest = CacheRequest;
 Kinvey.DataStoreType = DataStoreType;
 Kinvey.Log = Log;
 Kinvey.Metadata = Metadata;
-Kinvey.Middleware = Middleware;
 Kinvey.NetworkRequest = NetworkRequest;
 Kinvey.Query = Query;
-Kinvey.Rack = Rack;
 Kinvey.SocialIdentity = SocialIdentity;
 
 // Export

@@ -61,7 +61,11 @@ export class Metadata {
     return !!this.kmd.local;
   }
 
-  toJSON() {
+  toPlainObject() {
     return this.kmd;
+  }
+
+  toJSON() {
+    return this.toPlainObject();
   }
 }

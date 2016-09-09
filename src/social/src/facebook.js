@@ -22,7 +22,7 @@ export class Facebook extends Social {
   }
 
   isSupported() {
-    return !!global.KinveyPopup;
+    return !!global.Kinvey.Popup;
   }
 
   async login(clientId, options = {}) {
@@ -48,7 +48,7 @@ export class Facebook extends Social {
     const promise = new Promise((resolve, reject) => {
       const redirectUri = options.redirectUri || global.location.href;
       const originalState = randomString();
-      const popup = new global.KinveyPopup();
+      const popup = new global.Kinvey.Popup();
       let redirected = false;
 
       // Handle the response from a login request

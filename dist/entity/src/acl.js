@@ -169,9 +169,14 @@ var Acl = exports.Acl = function () {
       return this;
     }
   }, {
+    key: 'toPlainObject',
+    value: function toPlainObject() {
+      return this.acl;
+    }
+  }, {
     key: 'toJSON',
     value: function toJSON() {
-      return this.acl;
+      return this.toPlainObject();
     }
   }, {
     key: 'creator',

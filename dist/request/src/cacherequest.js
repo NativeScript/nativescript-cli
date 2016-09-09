@@ -236,7 +236,7 @@ var CacheRequest = exports.CacheRequest = function (_Request) {
     },
     set: function set(rack) {
       if (!rack || !(rack instanceof _rack.Rack)) {
-        throw new _errors.KinveyError('Unable to set the rack of a NetworkRequest. It must be an instance of a Rack');
+        throw new _errors.KinveyError('Unable to set the rack of a CacheRequest. It must be an instance of a Rack');
       }
 
       CacheRequest._rack = rack;

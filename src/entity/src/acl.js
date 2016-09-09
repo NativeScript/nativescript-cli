@@ -161,7 +161,11 @@ export class Acl {
     return this;
   }
 
-  toJSON() {
+  toPlainObject() {
     return this.acl;
+  }
+
+  toJSON() {
+    return this.toPlainObject();
   }
 }

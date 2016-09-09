@@ -194,7 +194,9 @@ var User = exports.User = function () {
               case 6:
                 credentials = username;
 
-                if (!(0, _isObject2.default)(credentials)) {
+                if ((0, _isObject2.default)(credentials)) {
+                  options = password;
+                } else {
                   credentials = {
                     username: username,
                     password: password
@@ -344,7 +346,7 @@ var User = exports.User = function () {
 
 
     /**
-     * Connect an social identity.
+     * Connect a social identity.
      *
      * @param {string} identity Social identity.
      * @param {Object} session Social identity session.
@@ -377,7 +379,7 @@ var User = exports.User = function () {
 
               case 9:
                 _context3.next = 11;
-                return this.login(data, null, options);
+                return this.login(data, options);
 
               case 11:
                 (0, _utils.setIdentitySession)(this.client, identity, session);
@@ -417,9 +419,7 @@ var User = exports.User = function () {
     }()
 
     /**
-     * Connect an social identity.
-     *
-     * @deprecated Use connectIdentity().
+     * Connect a social identity.
      *
      * @param {string} identity Social identity.
      * @param {Object} session Social identity session.
@@ -429,6 +429,18 @@ var User = exports.User = function () {
 
   }, {
     key: 'connectWithIdentity',
+
+
+    /**
+     * Connect an social identity.
+     *
+     * @deprecated Use connectIdentity().
+     *
+     * @param {string} identity Social identity.
+     * @param {Object} session Social identity session.
+     * @param {Object} [options] Options
+     * @return {Promise<User>} The user.
+     */
     value: function () {
       var _ref5 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee4(identity, session, options) {
         return _regeneratorRuntime2.default.wrap(function _callee4$(_context4) {
@@ -907,14 +919,14 @@ var User = exports.User = function () {
     /**
      * Sign up a user with Kinvey.
      *
-     * @param {?User|?Object} user Users data.
+     * @param {?User|?Object} data Users data.
      * @param {Object} [options] Options
      * @param {boolean} [options.state=true] If set to true, the user will be set as the active user after successfully
      *                                       being signed up.
      * @return {Promise<User>} The user.
      */
     value: function () {
-      var _ref14 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee13(user) {
+      var _ref14 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee13(data) {
         var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
         var activeUser, request, response;
         return _regeneratorRuntime2.default.wrap(function _callee13$(_context13) {
@@ -941,8 +953,8 @@ var User = exports.User = function () {
 
               case 5:
 
-                if (user instanceof User) {
-                  user = user.data;
+                if (data instanceof User) {
+                  data = data.data;
                 }
 
                 request = new _request.KinveyRequest({
@@ -953,7 +965,7 @@ var User = exports.User = function () {
                     host: this.client.host,
                     pathname: this.pathname
                   }),
-                  body: (0, _isEmpty2.default)(user) ? null : user,
+                  body: (0, _isEmpty2.default)(data) ? null : data,
                   properties: options.properties,
                   timeout: options.timeout,
                   client: this.client
@@ -1275,8 +1287,8 @@ var User = exports.User = function () {
      */
 
   }, {
-    key: 'resetPassword',
-    value: function resetPassword() {
+    key: 'rc',
+    value: function rc() {
       var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
 
       options.client = this.client;
@@ -1328,7 +1340,7 @@ var User = exports.User = function () {
      */
     ,
     set: function set(metadata) {
-      this.data[kmdAttribute] = (0, _result2.default)(metadata, 'toJSON', metadata);
+      this.data[kmdAttribute] = (0, _result2.default)(metadata, 'toPlainObjecta', metadata);
     }
 
     /**
@@ -1449,8 +1461,13 @@ var User = exports.User = function () {
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
       var user = new this({}, options);
-      user.client = options.client || _client.Client.sharedInstance();
       return user.loginWithMIC(redirectUri, authorizationGrant, options);
+    }
+  }, {
+    key: 'connectIdentity',
+    value: function connectIdentity(identity, session, options) {
+      var user = new this({}, options);
+      return user.connectIdentity(identity, session, options);
     }
   }, {
     key: 'connectFacebook',
@@ -1556,7 +1573,7 @@ var User = exports.User = function () {
   }, {
     key: 'me',
     value: function () {
-      var _ref24 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee20(data, options) {
+      var _ref24 = _asyncToGenerator(_regeneratorRuntime2.default.mark(function _callee20(options) {
         var user;
         return _regeneratorRuntime2.default.wrap(function _callee20$(_context20) {
           while (1) {
@@ -1582,7 +1599,7 @@ var User = exports.User = function () {
         }, _callee20, this);
       }));
 
-      function me(_x48, _x49) {
+      function me(_x48) {
         return _ref24.apply(this, arguments);
       }
 
@@ -1645,7 +1662,7 @@ var User = exports.User = function () {
         }, _callee21, this);
       }));
 
-      function resetPassword(_x50, _x51) {
+      function resetPassword(_x49, _x50) {
         return _ref25.apply(this, arguments);
       }
 
